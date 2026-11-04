@@ -1,0 +1,21 @@
+# Uploaded files are only ever served, never executed.
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .pl .py .cgi .sh
+RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .pl .py .cgi .sh
+<FilesMatch "\.(php\d?|phtml|phar|pl|cgi|sh|htaccess)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+<FilesMatch "\.(py|r|R|rmd|Rmd|sas|ipynb|txt|csv)$">
+  ForceType text/plain
+  <IfModule mod_headers.c>
+    Header set Content-Disposition attachment
+  </IfModule>
+</FilesMatch>
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options nosniff
+</IfModule>

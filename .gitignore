@@ -1,0 +1,13 @@
+# User content and secrets live only on the server (data/auth.php holds the password hash and 2FA secret)
+data/*
+!data/.htaccess
+!data/index.html
+files/*
+!files/.htaccess
+!files/index.html
+# Local / generated
+*.tmp
+*.zip
+node_modules/
+__pycache__/
+.DS_Store
