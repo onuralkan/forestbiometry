@@ -30,21 +30,24 @@ CLAUDE.md            Yeni oturumlar için kısa çalışma kuralları (yayın pa
 tests/               Sayısal doğrulama testleri (yayın paketine girmez)
 scripts/             Paketleme betikleri (yayın paketine girmez)
 ```
-**Planlanan (Modül 1 ile kurulacak):**
+**Araçlar bölümü (Modül 1 ile kuruldu):**
 ```
-araclar/index.php            Araçlar bölümü dizini (TR/EN, ?lang=)
-araclar/<arac>.php           Her araç için ince PHP kabuğu (başlık, dil, tezgâh düzeni)
-inc/bench.php                Tezgâh düzeni (adımlar, sekmeli sonuçlar) + ortak <head>
-assets/lab/core/*.js         Ortak çekirdek (ES modülleri): içe aktarma, sütun eşleme, birimler,
-                             istatistik, NLS (Levenberg–Marquardt), grafik, dışa aktarma, i18n
-assets/lab/<arac>/calc.js    Saf hesaplama (DOM yok; Node'da test edilebilir)
-assets/lab/<arac>/ui.js      Arayüz
-assets/lab/<arac>/i18n.js    TR/EN metinler
-assets/vendor/               Dışarıdan alınan kütüphaneler (sürüm ve lisans dosya başında)
+araclar/index.php            Araçlar bölümü dizini (TR/EN, ?lang=); onaylanmış veri durumunu gösterir
+araclar/veri-denetcisi.php   Araç 1: Ormancılık Verisi Denetçisi (ince PHP kabuğu)
+inc/bench.php                Tezgâh düzeni: küçük gazete başlığı, araç başlığı, altbilgi; bench_tools() listesi
+assets/lab/lab.css           Tezgâh düzeni stilleri, renk ve önem düzeyi paleti (açık/koyu)
+assets/lab/core/num.js       Sayı okuma (ondalık ayarı), ondalık kanıtı, birim dönüştürme
+assets/lab/core/table.js     CSV/TSV/yapıştırma ayrıştırıcı, ayırıcı algılama, kodlama, XLSX → ham tablo
+assets/lab/core/store.js     IndexedDB anahtar–değer deposu (oturum + veri aktarımı)
+assets/lab/core/export.js    CSV (dile göre ayırıcı), XLSX yazma, JSON indirme, SheetJS tembel yükleme
+assets/lab/core/i18n.js      Dil, sayı biçimi, HTML kaçışı
+assets/lab/checker/          calc.js (saf), ui.js, i18n.js, ornek/ (uydurma örnek CSV'ler)
+assets/vendor/sheetjs/       SheetJS CE 0.20.3 mini (Apache-2.0), README'de köken ve sağlama
 ```
+Henüz yok (ilgili modülle gelecek): istatistik, NLS (Levenberg–Marquardt), grafik çekirdeği.
 
 ## 3. Veri akışı (dürüst beyan)
-- **Araçlar:** Kullanıcının dosyası tarayıcıda `FileReader` ile okunur ve **sunucuya gönderilmez**. Bütün hesaplar tarayıcıda yapılır. Sunucu yalnızca sayfayı ve JS dosyalarını verir.
+- **Araçlar:** Kullanıcının dosyası tarayıcıda (`File.arrayBuffer`) okunur ve **sunucuya gönderilmez**. Bütün hesaplar tarayıcıda yapılır. Sunucu yalnızca sayfayı ve JS dosyalarını verir.
   Bir araç ileride sunucu tarafı hesap gerektirirse, veri akışı o aracın sayfasında ve burada açıkça yazılır; "cihazdan çıkmaz" ifadesi kullanılmaz.
 - **İstisnalar (araç dışı):** Admin panelindeki yayın içe aktarma, DOI ve ORCID numaralarını Crossref/ORCID/Unpaywall'a gönderir (tarayıcıdan veya sunucu üzerinden). Profil e-postası Unpaywall isteğine eklenir.
 - **Tarayıcı depolaması:** Yalnızca kolaylık amaçlı (tema, son girilen form değerleri). Kalıcılık beklenmez.
@@ -66,7 +69,29 @@ Bütün araçlar içe aktarılan tabloyu, sütun eşleme ekranından sonra bu **
 | `x`, `y` | sayı | m | İsteğe bağlı koordinatlar |
 | `extra.*` | – | – | Eşlenmeyen sütunlar korunur, dışa aktarmada geri yazılır |
 
+Ek alanlar (Modül 1): `stem_id` (metin, çok gövdeli ağaçlar), `stratum` (metin, tabaka). Kimlikler (`plot_id`, `tree_id`, `stem_id`) **metin olarak** korunur: "001" ile "1" farklıdır, boşluklar kendiliğinden kırpılmaz (uyarı + öneri). XLSX'te kimlik hücrenin görünen metnidir; tarih biçimli hücreler ISO metne (YYYY-AA-GG) çevrilir.
+
 Kurallar: Eksik değer `null`'dur, **asla 0 değildir**. Tahmin edilen değerler (örneğin boy) ölçülenlerden ayrı bir bayrakla işaretlenir. Ondalık ayırıcı virgül de nokta da olabilir; içeride sayıya çevrilir.
+
+## 4b. Araçlar arası veri aktarımı (`forest-dataset/1`)
+Veri Denetçisi'nde onaylanan veri, tarayıcının IndexedDB deposunda (`onuralkan-lab` / `kv`) **`dataset:approved`** anahtarıyla saklanır ve JSON olarak indirilebilir. Sonraki araçlar bu nesneyi okur; sunucuya gitmez. Katmanlar ayrıdır:
+- **Ham veri:** Kullanıcının dosyası; hiç değiştirilmez (oturumda `sources`).
+- **Onaylanmış veri:** Düzeltmeler uygulanmış, dışlananlar çıkarılmış, iç birimlere çevrilmiş ölçümler (`plots`, `trees`).
+- **Türetilen değerler:** `derived` altında, ölçülen veriden ayrı.
+```
+{ schema: 'forest-dataset/1', created: ISO, tool: {id, version},
+  units: {dbh:'cm', height:'m', plot_area:'m2', x:'m', y:'m'},
+  source: {trees:{name,kind,meta,records}, plots:{…}|null, mapping:{trees:{alan:başlık}, plots:{…}},
+           settings:{decimal, units (kaynak birimleri), limits}, lang},
+  plots: [{plot_id, plot_area, stratum, area_source:'plots'|'trees'|'plots+trees', n_records}],
+  trees: [{row, plot_id, tree_id, stem_id, period, species, dbh, height, status, stratum, x, y, extra:{başlık:metin}}],
+  derived: {note, trees:[{row, basal_area_m2}], plots:[{plot_id, expansion_factor}]},
+  warnings: [{code, table, row, plot, field, accepted: gerekçe|null}],
+  excluded: [kaynak satır no], changelog: [{seq, time, action, table, row, field, column, old, new, reason, issue}] }
+```
+Boş örnek alanlar `plots` içinde `n_records: 0` ile yer alır. Onay ancak **hata sayısı 0** iken verilir; açık uyarılar `warnings` içinde kalır. Şema değişirse sürüm numarası artar (`forest-dataset/2`) ve okuyucu araçlar eski sürümü reddeder veya çevirir.
+
+Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfayı yeniden yükler ve oturum geri gelir.
 
 ## 5. Ortak kurallar (her modül)
 1. Bir turda yalnızca istenen modül uygulanır; tamamlanmış modüller yeniden yazılmaz.
@@ -81,27 +106,27 @@ Kurallar: Eksik değer `null`'dur, **asla 0 değildir**. Tahmin edilen değerler
 
 ## 6. Arayüz kuralları
 - **İki katlı tasarım:** Gazete bölümü (ön sayfa, notlar, yayınlar, bulmaca) siyah beyaz kalır. **Araçlar bölümü** ortak bir "tezgâh" düzeni kullanır: küçük gazete başlığı → araç başlığı → adımlar (1 Veri, 2 Sütun eşleme, 3 Ayarlar, 4 Sonuçlar) → tam genişlikte, sekmeli sonuçlar.
-- **Renk:** Araçlar bölümünde serbest; veri görselleştirme ve hata/uyarı/bilgi düzeyleri için renk körlüğüne dayanıklı tek bir palet (Modül 1'de tanımlanır).
+- **Renk:** Araçlar bölümünde serbest. `assets/lab/lab.css` değişkenleri: vurgu `--acc` (koyu deniz yeşili #155e63 / koyu temada #4fb3b0); önem düzeyleri Okabe–Ito paletinden türetildi (yazı kontrastı için koyulaştırıldı): hata `--err` (kırmızı-turuncu, ◆), uyarı `--warn` (koyu sarı, ▲), bilgi `--info` (mavi, ●), tamam `--ok` (mavimsi yeşil). Her düzey renkle birlikte **şekil ve sözcükle** gösterilir; yalnız renge dayanılmaz.
 - **Sayı biçimi:** Ekranda dile göre (TR: 1.234,5; EN: 1,234.5). CSV: TR'de `;` ayırıcı ve `,` ondalık, EN'de `,` ve `.`. XLSX hücreleri sayısal kalır.
 - **Erişilebilirlik:** Klavyeyle kullanılabilir, görünür odak, hareketi azalt tercihine uyum, telefonda yatay kaydırma yok.
 
 ## 7. Ortak çekirdek (Modül 1 ile kurulacak)
-1. İçe aktarma: CSV (papaparse veya kendi ayrıştırıcımız) ve XLSX. **Kütüphane kararı Modül 1'de:** npm'deki `xlsx` 0.18.5 bilinen açıklar içeriyor, kullanılmayacak; adaylar `@e965/xlsx` 0.20.3 (SheetJS CE yeniden yayımı, Apache-2.0) veya `exceljs` 4.4.0 (MIT).
-2. Sütun eşleme ve birim dönüştürme ekranı (veri sözleşmesine göre), eşlemenin hatırlanması.
-3. Dışa aktarma: CSV, XLSX, yazdırılabilir rapor (yöntem, sürüm, tarih, kullanılan ayarlar raporda yer alır).
+1. ✔ İçe aktarma: CSV/TSV/yapıştırma kendi RFC 4180 ayrıştırıcımızla; XLSX için **SheetJS CE 0.20.3 mini** (Apache-2.0), npm `@e965/xlsx` yeniden yayımından alındı, `assets/vendor/sheetjs/` altında, yalnızca gerektiğinde yüklenir. Okuma ayarları formül, VBA ve HTML'yi kapatır; yalnızca kayıtlı hücre değerleri okunur. npm `xlsx` 0.18.5 (CVE-2023-30533, CVE-2024-22363) kullanılmadı. Risk: üçüncü taraf yeniden yayımı; sağlama toplamı README'de. Resmî SheetJS dağıtımına erişilebildiğinde aynı sürümle karşılaştırılmalı. Eski `.xls` desteklenmez.
+2. ✔ Sütun eşleme ve birim dönüştürme ekranı (Veri Denetçisi içinde; öneriler yalnızca birebir başlık eşleşmesinden). Eşleme oturumla birlikte hatırlanır. Diğer araçlar onaylanmış veriyi kullanacağı için eşlemeyi tekrar istemez.
+3. ✔ Dışa aktarma: CSV (TR `;`/`,`; EN `,`/`.`), çok sayfalı XLSX raporu (araç, sürüm, tarih, dil, ayarlar özet sayfasında), JSON veri paketi. Yazdırılabilir rapor henüz yok.
 4. Doğrusal olmayan en küçük kareler (Levenberg–Marquardt), standart hatalarla. **Modül 5 ile birlikte** kurulur.
 5. Mevcut `assets/tools.js` içindeki test edilmiş matematik ES modüllerine **taşınır** (yeniden yazılmaz; testleri korunur).
 
 ## 8. Eski "Ekler" ve yeni bölüm
 - Meşcere Hesaplayıcı ve Çap Dağılımı Laboratuvarı, yeni bölümdeki Modül 2 ve 4'ün öncülleridir. Bu modüller tamamlanana kadar olduğu gibi kalırlar; sonra eski adresler yeni araçlara yönlendirilir. Hesap kodları testleriyle birlikte taşınır.
 - Bulmaca Köşesi gazete bölümünde kalır.
-- Ön sayfadaki "Ekler" kutusu, araçlar bölümü açıldığında o bölümün dizinine bağlanır.
+- ✔ Ön sayfadaki "Ekler" kutusunun ilk maddesi araçlar bölümü dizinine bağlanır (`paper_supplements()`).
 
 ## 9. Uygulama planı
 | Sıra | Modül | İçerik / bağımlılık |
 |---|---|---|
 | 0 | Çalışma zemini | Bu belge, METHODS.md, PROGRESS.md, `tests/`, paketleme betiği ✔ |
-| 1 | Ormancılık Verisi Denetçisi / Forest Data Checker | + araçlar bölümü dizini, tezgâh düzeni, içe aktarma, sütun eşleme, dışa aktarma, renk paleti |
+| 1 | Ormancılık Verisi Denetçisi / Forest Data Checker | + araçlar bölümü dizini, tezgâh düzeni, içe aktarma, sütun eşleme, dışa aktarma, renk paleti ✔ |
 | 2 | Örnek Alan ve Meşcere Hesaplayıcısı / Plot & Stand Metrics | Çekirdeği kullanır; eski Meşcere Hesaplayıcı'nın yerini alır |
 | 3 | Model Başarısı Değerlendiricisi / Model Evaluation | Gözlenen–tahmin; kırılımlar |
 | 4 | Çap Dağılımı Laboratuvarı / Diameter Distribution Lab | Mevcut 5 dağılımlı kod taşınır; birikimli dağılım, beklenen ağaç sayısı tablosu |

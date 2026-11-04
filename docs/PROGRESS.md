@@ -1,6 +1,6 @@
 # PROGRESS.md: Durum, kontroller, eksikler, sıradaki adım
 
-Son güncelleme: 5 Kasım 2026, Modül 0 + hacim katsayısı düzeltmesi + Git deposu
+Son güncelleme: 5 Kasım 2026, Modül 1 (Ormancılık Verisi Denetçisi)
 
 ## Tamamlananlar
 | Bölüm | Durum | Kontroller |
@@ -11,6 +11,7 @@ Son güncelleme: 5 Kasım 2026, Modül 0 + hacim katsayısı düzeltmesi + Git d
 | Ek 1 Meşcere Hesaplayıcı | Teslim edildi | numpy ile bağımsız hesap karşılaştırması |
 | Ek 2 Çap Dağılımı Laboratuvarı (5 dağılım, 8 tahmin, KS/EI/AIC) | Teslim edildi | `tests/test_math.js`: 53/53 (SciPy referansı) |
 | Ek 3 Bulmaca Köşesi | Teslim edildi | 10 bulmacada ızgara tutarlılığı; klavyeyle çözüm testi |
+| Modül 1: Ormancılık Verisi Denetçisi + araçlar bölümü (`araclar/`), tezgâh düzeni, ortak çekirdek (`assets/lab/core/`), SheetJS | Tamam, canlıya yüklenmedi | `tests/checker/test_checker.mjs` 87/87 (kabul örnekleri, XLSX, kodlama, dil bağımsızlığı); `tests/checker/e2e.mjs` 33/33 (Chromium: örnek veri → düzeltme → onay → dışa aktarma, dil değişimi, belirsiz ondalık, XLSX yükleme, 10 000 satır, telefon + koyu tema) |
 | Modül 0: çalışma zemini | Tamam | `docs/` kayıtları, `tests/` (53/53 geçiyor), `scripts/build-zip.sh`, GitHub deposu, `CLAUDE.md` |
 
 ## Bilinen eksikler ve çelişkiler (karar bekleyenler ⚑)
@@ -20,12 +21,15 @@ Son güncelleme: 5 Kasım 2026, Modül 0 + hacim katsayısı düzeltmesi + Git d
 4. Laboratuvarda konum (γ = dmin/2) ve SB sınırı (±1 cm) varsayılanları literatür önerisi değil; ekranda "varsayılan" olarak yazıyor, METHODS.md'de belirtildi.
 5. KS sınırı 1,36/√n, tahmin edilmiş parametrelerle yaklaşık. Ekranda ve METHODS.md'de belirtildi.
 6. METHODS.md'de **[D]** ile işaretli künyeler doğrulanmadı.
-7. Tarayıcı düzeyi (Playwright) testleri geliştirme sırasında çalıştırıldı ama betikleri projeye kaydedilmedi; modül bazında eklenecek.
-8. Excel (XLSX) kütüphanesi seçilmedi. npm'deki `xlsx` 0.18.5 güvenlik açıkları nedeniyle kullanılmayacak. Adaylar `@e965/xlsx` 0.20.3 ve `exceljs` 4.4.0. Karar Modül 1'de.
+7. Tarayıcı testleri: Modül 1'den itibaren betik olarak kayıtlı (`tests/checker/e2e.mjs`). Eski ekler (Meşcere, Laboratuvar, Bulmaca) için kayıtlı betik yok; taşındıklarında eklenecek.
+8. ✔ Karar verildi (Modül 1): SheetJS CE 0.20.3 mini, npm `@e965/xlsx` yeniden yayımından (PROJECT.md §7). ⚑ Resmî SheetJS dağıtımıyla karşılaştırma yapılamadı (derleme ortamından cdn.sheetjs.com'a erişilemedi).
+9. Veri Denetçisi eksikleri: (a) Yazdırılabilir rapor yok (Excel raporu var). (b) Düzeltmeyi geri almak için ayrı "geri al" yok; aynı alan yeniden düzeltilerek veya dışlama geri alınarak düzeltilir, hepsi günlüğe yazılır. (c) Tür kodu eşleme tablosu (kullanıcı kodu → tam ad) yok. (d) Koordinat ve durum alanları okunuyor ama denetlenmiyor (yalnızca biçim). (e) Kaynak dosya yeniden yüklenirse önceki düzeltmeler bırakılır. (f) CSV'de "001" gibi kimlikleri Excel açarken bozabilir; ekranda uyarılıyor, Excel raporu güvenli. (g) Ölçüm tarihi metin olarak karşılaştırılır; "2024" ile "2024-07-01" farklı dönemdir.
+10. Eşik varsayılanları (çap 1–200 cm, boy 2–60 m, incelik 15–200) literatür değeri değil, ayarlanabilir tarama eşikleri; ekranda ve METHODS.md §5'te böyle yazıyor.
 
 ## Riskler
 - ✔ Giderildi (5 Kasım 2026): kaynak kod GitHub'da, özel depo `onuralkan/onuralkan-site`. `data/` ve `files/` içeriği `.gitignore` ile dışarıda; depoda kullanıcı verisi ve sır yok (kontrol edildi). Belgeler ayrıca claude.ai projesinde.
 - Sunucu PHP 7.4 (güvenlik desteği bitmiş). 8.2+ önerildi; kod 7.4 uyumlu tutuluyor.
 
 ## Sıradaki adım
-**Modül 1: Ormancılık Verisi Denetçisi / Forest Data Checker.** Kullanıcının promptuyla birlikte araçlar bölümü dizini (`araclar/`), tezgâh düzeni, içe aktarma, sütun eşleme, renk paleti ve dışa aktarma çekirdeği kurulacak.
+1. Kullanıcı paketi (`scripts/build-zip.sh`) cPanel'den yükleyip `/araclar/` ve `/araclar/veri-denetcisi.php` adreslerini denetler.
+2. **Modül 2: Örnek Alan ve Meşcere Hesaplayıcısı.** `dataset:approved` (`forest-dataset/1`) verisini okuyacak; eski Meşcere Hesaplayıcı'nın hesap kodu testleriyle taşınacak.

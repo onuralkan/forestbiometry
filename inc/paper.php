@@ -81,6 +81,10 @@ function paper_top(array $o = []): void {
 function paper_supplements(): array {
     $tr = paper_ctx()['tr'];
     return [
+        ['araclar/', $tr ? 'Yeni bölüm' : 'New section', $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools',
+         $tr ? 'Tarayıcıda çalışan araç tezgâhı. İlk araç: Ormancılık Verisi Denetçisi; ağaç ve örnek alan tablolarını denetler, düzeltmeleri gerekçesiyle kaydeder.'
+             : 'A workbench of in-browser tools. First tool: the Forest Data Checker, which checks tree and plot tables and logs every fix with its reason.',
+         $tr ? 'Veri Denetçisi ve sıradaki araçlar' : 'Data Checker and the tools to come'],
         ['mescere.php', $tr ? 'Ek 1' : 'Supplement 1', $tr ? 'Meşcere Hesaplayıcı' : 'Stand Calculator',
          $tr ? 'Çap ve boy listesini yapıştırın; hektardaki ağaç sayısı, göğüs yüzeyi, orta çap, üst boy ve hacim hemen hesaplansın.'
              : 'Paste a list of diameters and heights; stems, basal area, mean diameter, top height and volume per hectare are computed at once.',

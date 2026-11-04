@@ -5,7 +5,7 @@ Kaynak durumu işaretleri:
 - **[İ]** İkincil bir kaynağın kaynakçasında künyesi doğrulandı.
 - **[D]** Henüz doğrulanmadı; künye bilgiden yazıldı, **kullanmadan önce doğrulanmalı**.
 
-Sayısal doğrulama: `node tests/test_math.js` (SciPy referansı: `tests/ref/make_reference.py`).
+Sayısal doğrulama: `node tests/test_math.js` (SciPy referansı: `tests/ref/make_reference.py`); Veri Denetçisi: `node tests/checker/test_checker.mjs` ve tarayıcı testi `tests/checker/e2e.mjs`.
 
 ---
 
@@ -107,3 +107,47 @@ Weibull, gamma, normal ve lognormal için ortalama, standart sapma, çarpıklık
 - Ön sayfadaki ve laboratuvardaki **meşcere çizimleri**: çaplar seçili dağılımdan, boylar Chapman–Richards biçiminde sabit örnek parametrelerle (h = 1,3 + 30·(1 − e^(−0,045·d))^1,3 + gürültü) üretilir. Bu parametreler herhangi bir türe veya yöreye ait değildir; yalnızca çizim içindir.
 - Richards, F.J. 1959. A flexible growth function for empirical use. *J. Exp. Bot.* 10: 290–300. **[D]**
 - Meşcere Hesaplayıcı ve Laboratuvardaki "Örnek veri" düğmeleri, belirtilen dağılımlardan rastgele üretilmiş benzetim verisidir ve böyle etiketlenmiştir.
+
+---
+
+## 5. Ormancılık Verisi Denetçisi (Modül 1, `assets/lab/checker/calc.js`)
+Denetçi bilimsel bir hesap yapmaz; veriyi **okur, dönüştürür ve tarar**. Aşağıdaki eşikler literatür değeri değil, kullanıcının değiştirebildiği tarama varsayılanlarıdır.
+
+### Okuma ve dönüştürme
+- **Ondalık ayırıcı** kullanıcı ayarıdır (`.` veya `,`), arayüz dilinden bağımsızdır. Binlik ayırıcı ve sayı içi boşluk kabul edilmez; bu değerler biçim hatası olur, tahmin yapılmaz.
+- **Ondalık kanıtı:** Eşlenen sayısal sütunlardaki metin hücreleri sayılır. `^[+-]?\d{1,3}[.,]\d{3}$` biçimindekiler (ör. "1,234") **belirsiz** sayılır ve tek başına karar vermez. Yalnızca belirsiz değer varsa ya da nokta ve virgül birlikte görülürse ayar boş kalır, kullanıcı seçmeden devam edilemez. Kanıt açıksa (ör. "24,5") seçim önceden işaretlenir ve ekranda gerekçesiyle yazılır.
+- **XLSX:** Sayı hücreleri sayı olarak alınır (ondalık ayarı gerekmez). Formüller okunmaz, yalnızca dosyada kayıtlı son değer kullanılır; makrolar yüklenmez. Tarih biçimli hücreler ISO tarihe çevrilir. Kimlik ve kod alanlarında hücrenin **görünen metni** kullanılır ("000" biçimli 2 → "002").
+- **Birimler** kullanıcı seçimidir: çap cm/mm/m → cm (×1; ×0,1; ×100), boy m/dm/cm → m (×1; ×0,1; ×0,01), alan m²/ha → m² (×1; ×10 000). Başlık soneki (`cap_cm`, `alan_m2`) yalnızca öneri verir; değerlerin büyüklüğüne bakılarak birim değiştirilmez.
+- **Kimlikler** metindir; "001" ≠ "1", "7 " ≠ "7".
+
+### Kontroller
+| Kod | Önem | Tür | Tanım |
+|---|---|---|---|
+| `num.bad` | Hata | Biçim (kesin) | Sayısal alan seçilen ayarla sayıya çevrilemiyor |
+| `req.missing` | Hata | Eksik | Zorunlu alan boş (alan kimliği, ağaç kimliği, tür, çap; alan tablosunda kimlik ve büyüklük) |
+| `num.nonpos` | Hata | Geçersiz | Çap, boy veya alan ≤ 0 |
+| `key.dup` | Hata | Mükerrer | Aynı bileşik anahtar: alan + ağaç (+ gövde) (+ dönem). Dönem eşlenmişse aynı ağacın farklı dönem kayıtları mükerrer değildir |
+| `plot.dup` | Hata | Mükerrer | Alan tablosunda aynı kimlik birden çok satırda |
+| `plot.unknown` | Hata | Başvuru | Alan tablosu yüklüyken ağaç kaydındaki alan kimliği tabloda yok |
+| `area.conflict` | Hata | Çelişki | Bir alan için alan tablosu ve/veya ağaç satırlarında birden fazla farklı büyüklük (göreli fark > 10⁻⁹) |
+| `stratum.conflict` | Hata | Çelişki | Bir alan için birden fazla tabaka |
+| `area.none` | Hata | Eksik | Alanın hiçbir kaynakta büyüklüğü yok |
+| `text.space` | Uyarı | Biçim | Kimlik/kodda baştaki veya sondaki boşluk (kırpma önerilir, kendiliğinden yapılmaz) |
+| `sp.variant` | Uyarı | Tutarlılık | Büyük/küçük harf ve boşluk dışında aynı tür kodunun farklı yazımları; en sık yazım önerilir |
+| `sp.change` | Uyarı | Tutarlılık | Aynı ağacın türü dönemler arasında değişiyor |
+| `dbh.range` | Uyarı | Biyolojik | Çap [dbhMin, dbhMax] dışında; varsayılan 1–200 cm |
+| `h.belowbh` | Uyarı | Biyolojik | Çap ölçülmüş ama boy < 1,3 m |
+| `h.range` | Uyarı | Biyolojik | Boy [hMin, hMax] dışında; varsayılan 2–60 m |
+| `sl.range` | Uyarı | Biyolojik | İncelik h/d (m/m) = h / (d/100), [slMin, slMax] dışında; varsayılan 15–200 |
+| `plot.empty` | Bilgi | – | Alan tablosunda olup ağaç kaydı olmayan alan; veride n = 0 ile kalır |
+
+Hatalar onayı engeller; uyarılar gerekçeyle kabul edilebilir ve onaylanan veriyle birlikte kaydedilir. Hiçbir kayıt kendiliğinden silinmez veya değiştirilmez; düzeltme, dışlama, kabul ve öneri uygulama gerekçe ister ve değişiklik günlüğüne eski/yeni değerle yazılır. Düzeltmeler kaynak birimi ve ondalık biçimiyle metin olarak saklanır, her değerlendirmede yeniden okunur.
+
+### Türetilen değerler (onaylanan verinin `derived` bölümü)
+- Göğüs yüzeyi: g = π/4 · (d/100)² [m²], d cm.
+- Hektara çevirme katsayısı: EF = 10 000 / A [1/ha], A yatay örnek alan büyüklüğü (m²).
+
+Bu iki tanım standart orman ölçümü bağıntılarıdır; doğrulama `tests/checker/test_checker.mjs` içinde elle hesaplanan değerlerle yapılır.
+
+### Renk paleti
+- Okabe, M., Ito, K. 2008. Color Universal Design (CUD): How to make figures and presentations that are friendly to colorblind people. J*Fly web sayfası. **[D]**
