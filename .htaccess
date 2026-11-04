@@ -1,0 +1,19 @@
+DirectoryIndex index.php
+
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options nosniff
+  Header always set Referrer-Policy strict-origin-when-cross-origin
+</IfModule>
+
+# Larger uploads (works on Apache mod_php; on most cPanel/LiteSpeed hosts set these
+# in "Select PHP Version → Options" or "MultiPHP INI Editor" instead).
+<IfModule mod_php.c>
+  php_value upload_max_filesize 50M
+  php_value post_max_size 55M
+  php_value max_execution_time 120
+</IfModule>
