@@ -13,7 +13,7 @@ Hedef kullanıcı: araştırmacılar, öğrenciler, uygulayıcılar. Diller: Tü
 | İstemci | Bağımlılıksız JavaScript; SVG grafikler elle çiziliyor (`assets/tools.js`) |
 | Yazı tipleri | Kendi sunucumuzda: Playfair Display, Old Standard TT |
 | Yayına alma | `scripts/build-zip.sh` ile paket → kullanıcı cPanel'den yükler. **Geliştirme turları canlıya yayın yapmaz.** |
-| Kaynak kodun kalıcılığı | ⚠ Sürüm kontrolü yok; geliştirme ortamı geçici. Bkz. PROGRESS.md "Riskler". |
+| Kaynak kod | GitHub, özel depo: `onuralkan/onuralkan-site` (dal: `main`). Her modül ayrı commit |
 
 ## 2. Dizin yapısı
 ```
@@ -26,6 +26,7 @@ inc/                 PHP yardımcıları (web erişimine kapalı)
 assets/              CSS, JS, yazı tipleri
 data/, files/        İçerik ve yüklenen dosyalar (koruma .htaccess'leri var)
 docs/                PROJECT.md, METHODS.md, PROGRESS.md (yayın paketine girmez)
+CLAUDE.md            Yeni oturumlar için kısa çalışma kuralları (yayın paketine girmez)
 tests/               Sayısal doğrulama testleri (yayın paketine girmez)
 scripts/             Paketleme betikleri (yayın paketine girmez)
 ```

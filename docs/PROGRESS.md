@@ -11,7 +11,7 @@ Son güncelleme: 5 Kasım 2026, Modül 0 + hacim katsayısı düzeltmesi + Git d
 | Ek 1 Meşcere Hesaplayıcı | Teslim edildi | numpy ile bağımsız hesap karşılaştırması |
 | Ek 2 Çap Dağılımı Laboratuvarı (5 dağılım, 8 tahmin, KS/EI/AIC) | Teslim edildi | `tests/test_math.js`: 53/53 (SciPy referansı) |
 | Ek 3 Bulmaca Köşesi | Teslim edildi | 10 bulmacada ızgara tutarlılığı; klavyeyle çözüm testi |
-| **Modül 0: çalışma zemini** | **Bu tur** | `docs/` kayıtları, `tests/` (53/53 geçiyor), `scripts/build-zip.sh` |
+| Modül 0: çalışma zemini | Tamam | `docs/` kayıtları, `tests/` (53/53 geçiyor), `scripts/build-zip.sh`, GitHub deposu, `CLAUDE.md` |
 
 ## Bilinen eksikler ve çelişkiler (karar bekleyenler ⚑)
 1. ✔ Giderildi (5 Kasım 2026): `mescere.php` içindeki kaynaksız örnek hacim katsayıları ve f = 0,50 varsayılanı kaldırıldı. Hacim yalnızca kullanıcının girdiği değerlerle hesaplanıyor; dayanağı özet tablosunda yazıyor. Eski tarayıcı kayıtlarındaki örnek değerler geri yüklenmiyor (`localStorage` anahtarı v2). Test: katsayısız → hacim yok; f = 0,5 ve b₀ = 0,0001, b₁ = 2, b₂ = 0,8 → numpy ile aynı (146,4 ve 201,8 m³/ha).
@@ -24,7 +24,7 @@ Son güncelleme: 5 Kasım 2026, Modül 0 + hacim katsayısı düzeltmesi + Git d
 8. Excel (XLSX) kütüphanesi seçilmedi. npm'deki `xlsx` 0.18.5 güvenlik açıkları nedeniyle kullanılmayacak. Adaylar `@e965/xlsx` 0.20.3 ve `exceljs` 4.4.0. Karar Modül 1'de.
 
 ## Riskler
-- ⚑ **Kaynak kodun tek kopyası geçici geliştirme ortamında ve kullanıcıya verilen zip'lerde.** Uzun soluklu proje için özel bir Git deposu (ör. GitHub, private) önerilir. Depo olmadan her yeni oturum, sunucudaki veya son zip'teki dosyalardan başlamak zorunda kalır. Belgeler (`docs/`) ayrıca claude.ai projesinde saklanıyor.
+- ✔ Giderildi (5 Kasım 2026): kaynak kod GitHub'da, özel depo `onuralkan/onuralkan-site`. `data/` ve `files/` içeriği `.gitignore` ile dışarıda; depoda kullanıcı verisi ve sır yok (kontrol edildi). Belgeler ayrıca claude.ai projesinde.
 - Sunucu PHP 7.4 (güvenlik desteği bitmiş). 8.2+ önerildi; kod 7.4 uyumlu tutuluyor.
 
 ## Sıradaki adım
