@@ -1,7 +1,7 @@
 # Push to main → run the numerical tests → upload changed files through the cPanel API over HTTPS (port 2083).
 # Script: .github/deploy-cpanel.sh. data/ and files/ are never uploaded or deleted; nothing on the server is deleted;
 # the upload stops unless DEPLOY_PATH already holds this site (inc/paper.php).
-# Repository secrets: SSH_HOST (cPanel server name), SSH_USER (cPanel user), DEPLOY_PATH (document root), CPANEL_TOKEN.
+# Only repository secret: CPANEL_TOKEN. Server, account and folder are written below (not secret).
 # History: FTPS is not offered by the host; SSH (22/3131) is closed to GitHub's runners; 2083 is reachable.
 name: Deploy to onuralkan.com.tr
 on:
@@ -31,19 +31,19 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     env:
-      HAS_TOKEN: ${{ secrets.CPANEL_TOKEN != '' && secrets.DEPLOY_PATH != '' }}
+      HAS_TOKEN: ${{ secrets.CPANEL_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Secrets missing, nothing uploaded
         if: env.HAS_TOKEN != 'true'
-        run: echo "::notice::CPANEL_TOKEN / DEPLOY_PATH secrets are not set; skipping the upload."
+        run: echo "::notice::CPANEL_TOKEN secret is not set; skipping the upload."
       - name: Upload through the cPanel API (HTTPS, port 2083)
         if: env.HAS_TOKEN == 'true'
         env:
-          CP_HOST: ${{ secrets.SSH_HOST }}
-          CP_USER: ${{ secrets.SSH_USER }}
+          CP_HOST: mt-enchant.guzelhosting.com          # cPanel server (not secret)
+          CP_USER: zirveolu                             # cPanel account
+          DIR: /home/zirveolu/public_html/onuralkan.com.tr   # document root of onuralkan.com.tr (addon domain)
           CP_TOKEN: ${{ secrets.CPANEL_TOKEN }}
-          DIR: ${{ secrets.DEPLOY_PATH }}
         run: bash .github/deploy-cpanel.sh
