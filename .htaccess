@@ -1,7 +1,7 @@
 DirectoryIndex index.php
 
 # Last deployed commit (written by the GitHub upload): not public
-<Files ".deploy-commit">
+<Files "deploy-commit.txt">
   Require all denied
 </Files>
 

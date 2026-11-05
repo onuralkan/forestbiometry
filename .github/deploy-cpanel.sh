@@ -2,7 +2,7 @@
 # Upload the site through the cPanel API over HTTPS (port 2083). Used by .github/workflows/deploy.yml.
 # Env: CP_HOST, CP_USER, CP_TOKEN (cPanel API token), DIR (document root of onuralkan.com.tr), DRY_RUN=1 to only list.
 # - Only git-tracked files, minus development folders; data/ and files/ are never uploaded or deleted.
-# - Only files changed since the last deployed commit (kept in DIR/.deploy-commit) are sent; first run sends all.
+# - Only files changed since the last deployed commit (kept in DIR/deploy-commit.txt) are sent; first run sends all.
 # - Nothing on the server is deleted.
 # - Refuses to upload unless DIR already holds this site (inc/paper.php): protects the other domain on the account.
 set -euo pipefail
@@ -22,7 +22,7 @@ fi
 
 # 2. what to send
 filter() { grep -Ev '^(\.github/|data/|files/|docs/|tests/|scripts/|\.gitignore$|README\.md$|CLAUDE\.md$|check\.php$)' || true; }
-last=$(uapi -G "$API/execute/Fileman/get_file_content" --data-urlencode "dir=$DIR" --data-urlencode "file=.deploy-commit" | jq -r 'if .status == 1 then .data.content else "" end' | tr -d '[:space:]')
+last=$(uapi -G "$API/execute/Fileman/get_file_content" --data-urlencode "dir=$DIR" --data-urlencode "file=deploy-commit.txt" | jq -r 'if .status == 1 then .data.content else "" end' | tr -d '[:space:]')
 if [ -n "$last" ] && git cat-file -e "$last^{commit}" 2>/dev/null; then
   git diff --name-only --diff-filter=ACMRT "$last" HEAD | filter > "$RUNNER_TEMP/list.txt"
   echo "Changes since ${last:0:7}: $(wc -l < "$RUNNER_TEMP/list.txt") file(s)"
@@ -57,5 +57,5 @@ done
 [ "$fail" = 0 ] || exit 1
 
 # 5. remember what is live now
-uapi -X POST "$API/execute/Fileman/save_file_content" --data-urlencode "dir=$DIR" --data-urlencode "file=.deploy-commit" \
+uapi -X POST "$API/execute/Fileman/save_file_content" --data-urlencode "dir=$DIR" --data-urlencode "file=deploy-commit.txt" \
   --data-urlencode "content=$(git rev-parse HEAD)" | ok && echo "Deployed $(git rev-parse --short HEAD)"
