@@ -1,5 +1,10 @@
 DirectoryIndex index.php
 
+# Last deployed commit (written by the GitHub upload): not public
+<Files ".deploy-commit">
+  Require all denied
+</Files>
+
 # Force HTTPS
 RewriteEngine On
 RewriteCond %{HTTPS} !=on

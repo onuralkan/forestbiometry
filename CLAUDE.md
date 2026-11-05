@@ -7,5 +7,5 @@
 - Her bilimsel hesap bağımsız referansla test edilir: `node tests/test_math.js` (referanslar `tests/ref/`).
 - PHP 7.4 uyumlu kal (sunucu 7.4.33). Veritabanı yok. Araçlarda veri tarayıcıdan çıkmaz.
 - `data/` ve `files/` içeriği (kullanıcı verisi, şifre özeti, 2FA anahtarı) asla commit edilmez.
-- Yayın (5 Kasım 2026, kullanıcı kararı): `main` dalına her push, GitHub Actions ile sayısal testlerden sonra SSH (rsync/tar) ile sunucuya yüklenir (`.github/workflows/deploy.yml`). Yani push = canlıya çıkış; push etmeden önce testleri çalıştır. `data/` ve `files/` hiçbir zaman yüklenmez ve silinmez. Yedek yol: `scripts/build-zip.sh` + cPanel.
+- Yayın (5 Kasım 2026, kullanıcı kararı): `main` dalına her push, GitHub Actions ile sayısal testlerden sonra cPanel API'si üzerinden HTTPS ile (2083) sunucuya yüklenir (`.github/deploy-cpanel.sh`) (`.github/workflows/deploy.yml`). Yani push = canlıya çıkış; push etmeden önce testleri çalıştır. `data/` ve `files/` hiçbir zaman yüklenmez ve silinmez. Yedek yol: `scripts/build-zip.sh` + cPanel.
 - Her modül sonunda PROGRESS.md (ve gerekirse METHODS.md) güncellenir, ayrı commit atılır.
