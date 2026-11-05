@@ -195,3 +195,34 @@ Tahmin birimi örnek alandır: y_i, i. örnek alanın hektar değeridir (N/ha, G
 
 ### Doğrulama
 `tests/ref/make_stand_reference.py` (numpy, ayrı yazılmış kod) sentetik `tests/stand/fixture.json` üzerinde iki senaryo (bütün kayıtlar + boş birleşimler; yalnızca canlı + ölçülmedi) için birim ölçülerini, sınıf frekanslarını, tür paylarını, boy sayılarını, alanlar arası özeti, basit rastgele ve tabakalı tahminleri hesaplar; `tests/stand/test_stand.mjs` 10⁻¹⁰ göreli toleransla karşılaştırır.
+
+---
+
+## 7. Model Başarısı Değerlendiricisi (Modül 3, `assets/lab/eval/calc.js`)
+**Girdi:** Herhangi bir tablo (CSV/TSV/yapıştırma/XLSX) veya onaylanmış veri paketi. Kullanıcı bir gözlenen sütunu, bir veya daha fazla tahmin sütunu ve isteğe bağlı örnek alan, tür, çap (sınıflara ayrılır) ve doğrulama katı sütunlarını seçer. Sayı okuma kuralları Veri Denetçisi'yle aynıdır (§5): ondalık ayırıcı kullanıcı seçimi; belirsiz/çelişkili kanıtta tahmin yapılmaz; XLSX sayı hücreleri doğrudan sayıdır.
+
+**İşaret kuralı (bütün çıktılarda):** e_i = ŷ_i − y_i (tahmin − gözlenen). Pozitif yanlılık ortalamada fazla tahmin demektir.
+
+| Ölçüt | Tanım |
+|---|---|
+| n | Geçerli çift sayısı (gözlenen ve tahmin ikisi de okunabilir sayı) |
+| Yanlılık | ē = Σe_i / n |
+| MAE | Σ\|e_i\| / n |
+| RMSE | √(Σe_i² / n); payda **n** (n − p değil; model parametre sayısı bilinmiyor) |
+| Tahmin R² | 1 − SSE/SST; SSE = Σe_i², SST = Σ(y_i − ȳ)². Korelasyonun karesiyle **değiştirilmez**; negatif olabilir ve **sıfıra kırpılmaz**; bütün gözlenen değerler eşitse (SST = 0) **tanımsız** |
+| Bağıl ölçütler (isteğe bağlı) | Ölçüt / payda × 100. Payda kullanıcı seçer ve tabloda yazılır: gözlenen ortalama ȳ (ȳ ≤ 0 ise tanımsız), gözlenen aralık max − min (0 ise tanımsız), gözlenen standart sapma s_y, payda n − 1 (n < 2 veya s_y = 0 ise tanımsız) |
+| Ek bilgi | Gözlenen ve tahmin ortalamaları, en küçük/en büyük e |
+
+**Satır kümeleri:** Varsayılan **ortak geçerli satırlar**dır: gözlenen ve seçilen bütün tahminlerin okunabildiği satırlar; modeller aynı örneklemle karşılaştırılır. İsteğe bağlı "her model kendi geçerli satırlarıyla": örneklemler farklıysa uyarı verilir ve model × model ortak satır tablosu gösterilir. Her model için gözlenen boş, gözlenen okunamayan, tahmin boş, tahmin okunamayan, kendi geçerli çifti, kullanılan ve dışarıda kalan satır sayıları raporlanır.
+
+**Gruplar:** Aynı ölçütler örnek alan, tür, çap sınıfı (yarı açık [alt, üst) sınıflar, §6 ile aynı kural) ve doğrulama katına göre, seçili satır kümesi içinde hesaplanır. Çap okunamayan satır "(boş)" grubunda kalır.
+
+**Tahminlerin kaynağı:** Kullanıcı her model için belirtir: belirtilmedi (varsayılan), eğitim verisi, bağımsız test verisi, çapraz doğrulama. Araç dış doğrulama olduğunu varsaymaz; belirtilmeyen ve eğitim verisi durumlarında uyarı yazar. Kaynak beyanı hesapları değiştirmez, yalnızca raporlanır.
+
+**Hesaplanmayanlar:** Yalnızca gözlenen/tahmin sütunlarından AIC, parametre güven aralığı, model anlamlılığı, düzeltilmiş R² veya parametre sayısına dayalı ölçütler üretilmez (parametre sayısı ve kalıntı yapısı bilinmez).
+
+**Grafikler:** Gözlenen (x) – tahmin (y), eşit eksen aralığı ve kesikli 1:1 doğrusu; artık e (y) – tahmin (x), kesikli e = 0 doğrusu. SVG olarak indirilir.
+
+**Kabul örneği:** y = [10, 20, 30], ŷ = [12, 18, 33] → e = [2, −2, 3]; ē = 1; MAE = 7/3 ≈ 2,3333333333; RMSE = √(17/3) ≈ 2,3804761428; SSE = 17, SST = 200, R² = 0,915 (aynı verinin Pearson r² değeri ≈ 0,9423'tür; R² ile karıştırılmaz).
+
+**Doğrulama:** `tests/ref/make_eval_reference.py`, scikit-learn (`mean_absolute_error`, `root_mean_squared_error`, `r2_score`) ve numpy ile sentetik `tests/eval/fixture.csv` üzerinde ortak ve kendi satır kümeleri, gruplar ve bağıl ölçütler için referans üretir. scikit-learn'ün `r2_score` işlevi sabit gözlenende sonlu bir yer tutucu döndürdüğü için referansta bu durum ayrıca "tanımsız" yazılır.

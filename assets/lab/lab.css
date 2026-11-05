@@ -221,3 +221,10 @@ tr.st-empty td:nth-child(3) { color: var(--info); }
 .field.inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .panel h3 { font: 700 17px/1.3 var(--head); margin: 22px 0 8px; }
 .panel h3:first-child { margin-top: 0; }
+.ch-frame { fill: none; stroke: var(--line); } .ch-ref { stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 6 4; } .ch-pts { fill-opacity: .6; }
+.charts2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 14px; }
+.models { display: grid; gap: 8px; }
+.modelrow { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 10px; border: 1px solid var(--line2); border-radius: 8px; background: var(--sunk); }
+.modelrow.on { border-color: var(--acc); background: var(--acc-soft); }
+.statement { border-left: 4px solid var(--warn); background: var(--warn-bg); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 13.5px; margin: 8px 0; }
+td.undef { color: var(--muted); }

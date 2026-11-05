@@ -35,6 +35,7 @@ scripts/             Paketleme betikleri (yayın paketine girmez)
 araclar/index.php            Araçlar bölümü dizini (TR/EN, ?lang=); onaylanmış veri durumunu gösterir
 araclar/veri-denetcisi.php   Araç 1: Ormancılık Verisi Denetçisi (ince PHP kabuğu)
 araclar/ornek-alan.php       Araç 2: Örnek Alan ve Meşcere Hesaplayıcısı
+araclar/model-degerlendirme.php  Araç 3: Model Başarısı Değerlendiricisi
 inc/bench.php                Tezgâh düzeni: küçük gazete başlığı, araç başlığı, altbilgi; bench_tools() listesi
 assets/lab/lab.css           Tezgâh düzeni stilleri, renk ve önem düzeyi paleti (açık/koyu)
 assets/lab/core/num.js       Sayı okuma (ondalık ayarı), ondalık kanıtı, birim dönüştürme
@@ -42,12 +43,14 @@ assets/lab/core/table.js     CSV/TSV/yapıştırma ayrıştırıcı, ayırıcı 
 assets/lab/core/store.js     IndexedDB anahtar–değer deposu (oturum + veri aktarımı)
 assets/lab/core/export.js    CSV (dile göre ayırıcı), XLSX yazma, JSON indirme, SheetJS tembel yükleme
 assets/lab/core/i18n.js      Dil, sayı biçimi, HTML kaçışı
-assets/lab/core/chart.js     SVG çubuk grafik (kütüphanesiz), tema renkleriyle SVG indirme
+assets/lab/core/chart.js     SVG çubuk ve saçılım grafikleri (kütüphanesiz), tema renkleriyle SVG indirme
+assets/lab/core/importer.js  Tek tablo içe aktarma paneli (dosya/yapıştırma/ayırıcı/kodlama/sayfa/önizleme); Modül 3'ten itibaren
 assets/lab/checker/          calc.js (saf), ui.js, i18n.js, ornek/ (uydurma örnek CSV'ler)
 assets/lab/stand/            calc.js (saf), ui.js, i18n.js, ornek/ornek-veri.json (scripts/make-stand-sample.mjs ile üretilir)
+assets/lab/eval/             calc.js (saf), ui.js, i18n.js, ornek/ornek-tahminler.csv (uydurma)
 assets/vendor/sheetjs/       SheetJS CE 0.20.3 mini (Apache-2.0), README'de köken ve sağlama
 ```
-Henüz yok (ilgili modülle gelecek): istatistik çekirdeği, NLS (Levenberg–Marquardt), çizgi/saçılım grafikleri.
+Henüz yok (ilgili modülle gelecek): istatistik çekirdeği (t dağılımı vb.), NLS (Levenberg–Marquardt), çizgi grafikleri. Veri Denetçisi kendi içe aktarma panelini kullanır; ortak `importer.js`'e geçirilmesi, o modül yeniden açılırsa yapılır.
 
 ## 3. Veri akışı (dürüst beyan)
 - **Araçlar:** Kullanıcının dosyası tarayıcıda (`File.arrayBuffer`) okunur ve **sunucuya gönderilmez**. Bütün hesaplar tarayıcıda yapılır. Sunucu yalnızca sayfayı ve JS dosyalarını verir.
@@ -131,7 +134,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 | 0 | Çalışma zemini | Bu belge, METHODS.md, PROGRESS.md, `tests/`, paketleme betiği ✔ |
 | 1 | Ormancılık Verisi Denetçisi / Forest Data Checker | + araçlar bölümü dizini, tezgâh düzeni, içe aktarma, sütun eşleme, dışa aktarma, renk paleti ✔ |
 | 2 | Örnek Alan ve Meşcere Hesaplayıcısı / Plot & Stand Metrics | Çekirdeği kullanır ✔ (eski hesaplayıcının üst boy ve hacim kısmı henüz taşınmadı) |
-| 3 | Model Başarısı Değerlendiricisi / Model Evaluation | Gözlenen–tahmin; kırılımlar |
+| 3 | Model Başarısı Değerlendiricisi / Model Evaluation | Gözlenen–tahmin; kırılımlar ✔ |
 | 4 | Çap Dağılımı Laboratuvarı / Diameter Distribution Lab | Mevcut 5 dağılımlı kod taşınır; birikimli dağılım, beklenen ağaç sayısı tablosu |
 | 5 | Boy–Çap Modelleme / Height–Diameter Modelling | Levenberg–Marquardt çekirdeği burada kurulur |
 | 6 | Envanter Örnekleme Planlayıcısı / Inventory Sampling Planner | Basit rastgele → tabakalı |

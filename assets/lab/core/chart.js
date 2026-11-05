@@ -45,9 +45,44 @@ export function barChart(o) {
 /** Standalone SVG with the current theme colours written in (for download). */
 export function svgForDownload(svgEl) {
   const cs = getComputedStyle(svgEl), v = n => cs.getPropertyValue(n).trim();
-  const css = `.ch-grid{stroke:${v('--line2')};stroke-width:1}.ch-axis{stroke:${v('--ink')};stroke-width:1}.ch-tick{fill:${v('--muted')};font:12px system-ui,sans-serif}`
+  const css = `.ch-grid{stroke:${v('--line2')};stroke-width:1}.ch-axis{stroke:${v('--ink')};stroke-width:1}.ch-frame{fill:none;stroke:${v('--line')}}.ch-ref{stroke:${v('--ink')};stroke-width:1.2;stroke-dasharray:6 4}.ch-pts{fill-opacity:.6}.ch-tick{fill:${v('--muted')};font:12px system-ui,sans-serif}`
     + `.ch-lab{fill:${v('--ink')};font:600 12.5px system-ui,sans-serif}` + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-s${i}{fill:${v('--c' + k)}}`).join('');
   const clone = svgEl.cloneNode(true);
   clone.insertAdjacentHTML('afterbegin', `<style>${css}</style><rect width="100%" height="100%" fill="${v('--surface')}"/>`);
   return '<?xml version="1.0" encoding="UTF-8"?>\n' + clone.outerHTML;
+}
+
+/**
+ * Scatter plot. o = { title, points:[[x,y]], xLabel, yLabel, fmt, line11?:bool (y = x), hline?:number (y = c),
+ *   equal?:bool (same range on both axes), width?, height? }
+ */
+export function scatterChart(o) {
+  const W = o.width || 560, H = o.height || 460, L = 64, R = 16, T = 14, B = 52;
+  const pw = W - L - R, ph = H - T - B, pts = o.points, fmt = o.fmt || (v => String(v));
+  if (!pts.length) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title></svg>`;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const [a, b] of pts) { if (a < x0) x0 = a; if (a > x1) x1 = a; if (b < y0) y0 = b; if (b > y1) y1 = b; }
+  if (o.hline != null) { y0 = Math.min(y0, o.hline); y1 = Math.max(y1, o.hline); }
+  if (o.equal) { x0 = y0 = Math.min(x0, y0); x1 = y1 = Math.max(x1, y1); }
+  const pad = (a, b) => { const d = b - a || Math.abs(a) || 1; return [a - d * 0.05, b + d * 0.05]; };
+  [x0, x1] = pad(x0, x1); [y0, y1] = pad(y0, y1);
+  const tx = linTicks(x0, x1), ty = linTicks(y0, y1);
+  const sx = v => L + (v - x0) / (x1 - x0) * pw, sy = v => T + ph - (v - y0) / (y1 - y0) * ph;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title>`;
+  for (const t of ty) s += `<line class="ch-grid" x1="${L}" x2="${W - R}" y1="${sy(t)}" y2="${sy(t)}"/><text class="ch-tick" x="${L - 6}" y="${sy(t) + 4}" text-anchor="end">${esc(fmt(t))}</text>`;
+  for (const t of tx) s += `<line class="ch-grid" x1="${sx(t)}" x2="${sx(t)}" y1="${T}" y2="${T + ph}"/><text class="ch-tick" x="${sx(t)}" y="${T + ph + 16}" text-anchor="middle">${esc(fmt(t))}</text>`;
+  s += `<rect class="ch-frame" x="${L}" y="${T}" width="${pw}" height="${ph}"/>`;
+  if (o.line11) { const a = Math.max(x0, y0), b = Math.min(x1, y1); if (b > a) s += `<line class="ch-ref" x1="${sx(a)}" y1="${sy(a)}" x2="${sx(b)}" y2="${sy(b)}"/>`; }
+  if (o.hline != null) s += `<line class="ch-ref" x1="${L}" x2="${W - R}" y1="${sy(o.hline)}" y2="${sy(o.hline)}"/>`;
+  const r = pts.length > 2000 ? 1.6 : pts.length > 300 ? 2.4 : 3.4;
+  s += '<g class="ch-s0 ch-pts">' + pts.map(p => `<circle cx="${sx(p[0]).toFixed(1)}" cy="${sy(p[1]).toFixed(1)}" r="${r}"/>`).join('') + '</g>';
+  if (o.xLabel) s += `<text class="ch-lab" x="${L + pw / 2}" y="${H - 8}" text-anchor="middle">${esc(o.xLabel)}</text>`;
+  if (o.yLabel) s += `<text class="ch-lab" transform="translate(14,${T + ph / 2}) rotate(-90)" text-anchor="middle">${esc(o.yLabel)}</text>`;
+  return s + '</svg>';
+}
+function linTicks(a, b, n = 6) {
+  const raw = (b - a) / n, p = 10 ** Math.floor(Math.log10(raw)), f = raw / p;
+  const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  const out = []; for (let v = Math.ceil(a / step) * step; v <= b + step * 1e-9; v += step) out.push(+v.toPrecision(12));
+  return out;
 }
