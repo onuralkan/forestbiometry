@@ -1,5 +1,10 @@
 DirectoryIndex index.php
 
+# Bookkeeping file of the GitHub upload (list of deployed files): not public
+<Files ".ftp-deploy-sync-state.json">
+  Require all denied
+</Files>
+
 # Force HTTPS
 RewriteEngine On
 RewriteCond %{HTTPS} !=on

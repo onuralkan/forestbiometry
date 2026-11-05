@@ -12,7 +12,7 @@ Hedef kullanıcı: araştırmacılar, öğrenciler, uygulayıcılar. Diller: Tü
 | Sayfa katmanı | Sade PHP; ortak gazete başlığı `inc/paper.php`; yardımcılar `inc/common.php` |
 | İstemci | Bağımlılıksız JavaScript; SVG grafikler elle çiziliyor (`assets/tools.js`) |
 | Yazı tipleri | Kendi sunucumuzda: Playfair Display, Old Standard TT |
-| Yayına alma | `scripts/build-zip.sh` ile paket → kullanıcı cPanel'den yükler. **Geliştirme turları canlıya yayın yapmaz.** |
+| Yayına alma | **5 Kasım 2026'dan beri otomatik (kullanıcı kararı):** `main` dalına push → GitHub Actions (`.github/workflows/deploy.yml`) sayısal testleri çalıştırır → geçerse değişen dosyalar FTPS ile `public_html`'e yüklenir (`SamKirkland/FTP-Deploy-Action` v4.4.0; ayrı FTP hesabı, gizli değerler `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`). `data/`, `files/`, `docs/`, `tests/`, `scripts/`, `.github/`, `CLAUDE.md` yüklenmez; eylem yalnızca kendi yüklediği dosyaları izler, sunucudaki başka dosyalara dokunmaz. Yükleme kaydı `.ftp-deploy-sync-state.json` `.htaccess` ile dışarıya kapalı. Actions sekmesinden elle de çalıştırılabilir. Yedek yol: `scripts/build-zip.sh` + cPanel. |
 | Kaynak kod | GitHub, özel depo: `onuralkan/onuralkan-site` (dal: `main`). Her modül ayrı commit |
 
 ## 2. Dizin yapısı
@@ -112,7 +112,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 5. Her bilimsel hesap bağımsız bir referansla (SciPy, R veya elle doğrulanabilir örnek) test edilir; test `tests/` altına kaydedilir.
 6. Hesaplar tarayıcıda yapılır (bkz. §3).
 7. Çalışmayan düğme, rastgele sonuç veya bitmiş gibi duran yer tutucu yoktur. Örnek veri düğmeleri, verinin örnek olduğunu açıkça söyler.
-8. Mevcut içerik korunur; geliştirme turu canlıya yayın değildir.
+8. Mevcut içerik korunur. `main`'e push canlıya çıkıştır (otomatik yükleme); push'tan önce testler çalıştırılır.
 9. Rutin teknik kararlar alınır ve buraya yazılır; yalnızca işi durduran eksikler için soru sorulur.
 
 ## 6. Arayüz kuralları
@@ -153,4 +153,4 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 - `calc.js` için `tests/` altında bağımsız referanslı test var ve geçiyor.
 - METHODS.md ve PROGRESS.md güncellendi.
 - Masaüstü + telefon + koyu tema ekran kontrolü yapıldı.
-- Paket üretildi; canlıya yükleme kullanıcı tarafından yapılır.
+- Testler geçti ve `main`'e push edildi (otomatik yükleme); Actions çalışmasının başarılı olduğu kontrol edildi.

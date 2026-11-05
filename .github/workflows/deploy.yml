@@ -1,0 +1,62 @@
+# Push to main → run the numerical tests → upload the site to the server over FTPS.
+# Only changed files are sent; data/ and files/ on the server (users' content, password hash, 2FA key) are never touched.
+# Needs three repository secrets (Settings → Secrets and variables → Actions): FTP_SERVER, FTP_USERNAME, FTP_PASSWORD.
+# The FTP account is rooted at public_html (server-dir ./). Without the secrets the upload step is skipped.
+name: Deploy to onuralkan.com.tr
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Numerical tests
+        run: |
+          node tests/test_math.js
+          node tests/checker/test_checker.mjs
+          node tests/stand/test_stand.mjs
+          node tests/eval/test_eval.mjs
+          node tests/weibull/test_weibull.mjs
+          node tests/rank/test_rank.mjs
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      HAS_FTP: ${{ secrets.FTP_PASSWORD != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secrets missing, nothing uploaded
+        if: env.HAS_FTP != 'true'
+        run: echo "::notice::FTP_SERVER / FTP_USERNAME / FTP_PASSWORD secrets are not set; skipping the upload."
+      - name: Upload changed files (FTPS)
+        if: env.HAS_FTP == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./
+          server-dir: ./
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .github/**
+            data/**
+            files/**
+            docs/**
+            tests/**
+            scripts/**
+            README.md
+            CLAUDE.md
+            check.php
