@@ -36,6 +36,7 @@ araclar/index.php            Araçlar bölümü dizini (TR/EN, ?lang=); onaylanm
 araclar/veri-denetcisi.php   Araç 1: Ormancılık Verisi Denetçisi (ince PHP kabuğu)
 araclar/ornek-alan.php       Araç 2: Örnek Alan ve Meşcere Hesaplayıcısı
 araclar/model-degerlendirme.php  Araç 3: Model Başarısı Değerlendiricisi
+araclar/nispi-siralama.php   Araç 7: Nispi Sıralama / Relative Ranking (5 ve 6'dan önce yapıldı)
 araclar/cap-dagilimi.php     Araç 4: Çap Dağılımı Laboratuvarı (Weibull sürümü); eski weibull.php buraya 301 ile yönlenir
 inc/bench.php                Tezgâh düzeni: küçük gazete başlığı, araç başlığı, altbilgi; bench_tools() listesi
 assets/lab/lab.css           Tezgâh düzeni stilleri, renk ve önem düzeyi paleti (açık/koyu)
@@ -44,11 +45,12 @@ assets/lab/core/table.js     CSV/TSV/yapıştırma ayrıştırıcı, ayırıcı 
 assets/lab/core/store.js     IndexedDB anahtar–değer deposu (oturum + veri aktarımı)
 assets/lab/core/export.js    CSV (dile göre ayırıcı), XLSX yazma, JSON indirme, SheetJS tembel yükleme
 assets/lab/core/i18n.js      Dil, sayı biçimi, HTML kaçışı
-assets/lab/core/chart.js     SVG çubuk, saçılım ve sürekli eksenli (histogram + eğri/basamak) grafikler (kütüphanesiz), tema renkleriyle SVG indirme
-assets/lab/core/importer.js  Tek tablo içe aktarma paneli (dosya/yapıştırma/ayırıcı/kodlama/sayfa/önizleme); Modül 3'ten itibaren
+assets/lab/core/chart.js     SVG çubuk, saçılım, sürekli eksenli (histogram + eğri/basamak) ve radar grafikleri (kütüphanesiz), tema renkleriyle SVG indirme
+assets/lab/core/importer.js  Tek tablo içe aktarma paneli (dosya/yapıştırma/ayırıcı/kodlama/sayfa/önizleme); Modül 3'ten itibaren. `rawRows` seçeneği başlık satırını aracın seçmesine bırakır (Modül 7)
 assets/lab/checker/          calc.js (saf), ui.js, i18n.js, ornek/ (uydurma örnek CSV'ler)
 assets/lab/stand/            calc.js (saf), ui.js, i18n.js, ornek/ornek-veri.json (scripts/make-stand-sample.mjs ile üretilir)
 assets/lab/eval/             calc.js (saf), ui.js, i18n.js, ornek/ornek-tahminler.csv (uydurma)
+assets/lab/rank/             calc.js (saf), ui.js, i18n.js, ornek/ornek-olcutler.xlsx (uydurma)
 assets/lab/weibull/          calc.js (saf), ui.js, i18n.js, ornek/ornek-caplar.csv (sabit tohumlu benzetim)
 assets/lab/core/special.js   lnGamma (tools.js'ten değişmeden taşındı)
 assets/vendor/sheetjs/       SheetJS CE 0.20.3 mini (Apache-2.0), README'de köken ve sağlama
@@ -143,6 +145,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 | 4 | Çap Dağılımı Laboratuvarı / Diameter Distribution Lab | Weibull sürümü ✔ (ML, momentler, sabit a, sınıflar, kuyruklar, eğri gezgini); gamma, normal, lognormal, SB, kesilmiş ve gruplanmış veri sonraki turlarda |
 | 5 | Boy–Çap Modelleme / Height–Diameter Modelling | Levenberg–Marquardt çekirdeği burada kurulur |
 | 6 | Envanter Örnekleme Planlayıcısı / Inventory Sampling Planner | Basit rastgele → tabakalı |
+| 7 | Nispi Sıralama / Relative Ranking | Başarı ölçütleri tablosundan Poudel ve Cao (2013) nispi sıraları ve radar grafiği ✔ (kullanıcının isteğiyle 5 ve 6'dan önce yapıldı) |
 | sonra | Seksiyon hacmi, Gövde profili, Biyokütle–karbon, Tekrarlı ölçüm, Meşcere yapısı, Bonitet | Katsayı gerektirenlerde kullanıcı girişi |
 
 ## 10. Bir modülün "bitti" sayılma ölçütü

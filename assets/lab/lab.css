@@ -235,3 +235,11 @@ td.undef { color: var(--muted); }
 .range { display: grid; grid-template-columns: 70px 1fr 90px; gap: 8px; align-items: center; margin: 6px 0; }
 .range input[type=range] { width: 100%; }
 tr.tail td, tr.tail th { font-style: italic; background: var(--sunk); }
+.ch-dot { stroke-dasharray: 1.5 3.5; } .ch-radar { stroke-width: 2; fill-opacity: .06; }
+.ch-f0 { fill: var(--c1); } .ch-f1 { fill: var(--c2); } .ch-f2 { fill: var(--c3); } .ch-f3 { fill: var(--c4); } .ch-f4 { fill: var(--c5); } .ch-f5 { fill: var(--c6); }
+.crits { display: grid; gap: 8px; }
+.crit { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 10px; border: 1px solid var(--line2); border-radius: 8px; background: var(--sunk); }
+.crit.off { opacity: .6; } .crit.need { border-color: var(--err); }
+.modelpick { columns: 4 160px; font-size: 13.5px; } .modelpick label { display: block; break-inside: avoid; }
+tr.excl td, tr.excl th { color: var(--muted); text-decoration: line-through; }
+.chartbox.radar { max-width: 760px; margin: 12px auto 0; }

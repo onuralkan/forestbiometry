@@ -49,9 +49,9 @@ export function previewHTML(src, k = 6) {
 }
 /**
  * Renders the panel into el. state = { imp, src } (mutated). onChange(state) after every successful read;
- * onError(message) when a file cannot be read.
+ * onError(message) when a file cannot be read. rawRows: read every row as data (no header) and hide the header option.
  */
-export function renderImport(el, state, { base, title, sub = '', onChange, onError }) {
+export function renderImport(el, state, { base, title, sub = '', onChange, onError, rawRows = false }) {
   const imp = state.imp, src = state.src, dn = DN();
   let h = `<div class="card imp"><h2>${title}</h2>${sub ? `<p class="muted">${sub}</p>` : ''}<div class="imp-in">
     <label class="filebtn"><input type="file" accept=".csv,.txt,.tsv,.xlsx,.xlsm" data-act="file"><span>${T('file')}</span></label>
@@ -64,7 +64,7 @@ export function renderImport(el, state, { base, title, sub = '', onChange, onErr
       h += `<label>${T('delim')} <select data-act="delim"><option value="">${T('auto', { d: dn[imp.detected] })}</option>${Object.entries(dn).map(([d, n]) => `<option value="${esc(d)}"${imp.delim === d ? ' selected' : ''}>${n}</option>`).join('')}</select></label>`;
       if (imp.kind === 'csv') h += `<label>${T('enc')} <select data-act="enc">${['utf-8', 'windows-1254', 'iso-8859-9'].map(e => `<option${imp.encoding === e ? ' selected' : ''}>${e}</option>`).join('')}</select></label>`;
     }
-    if (imp.kind !== 'dataset') h += `<label class="chk"><input type="checkbox" data-act="header"${imp.header ? ' checked' : ''}> ${T('header')}</label>`;
+    if (imp.kind !== 'dataset' && !rawRows) h += `<label class="chk"><input type="checkbox" data-act="header"${imp.header ? ' checked' : ''}> ${T('header')}</label>`;
     h += `<button type="button" class="btn ghost small" data-act="clear">${T('clear')}</button></div>`;
     if (imp.warn) h += `<p class="note warn">${T(imp.warn)}</p>`;
     if (imp.kind === 'xlsx') h += `<p class="note">${T('xlsxnote')}</p>`;
@@ -73,6 +73,7 @@ export function renderImport(el, state, { base, title, sub = '', onChange, onErr
   el.innerHTML = h + '</div>';
   const q = a => el.querySelector(`[data-act="${a}"]`);
   const reread = async next => {
+    if (rawRows) next.header = false;          // the tool picks the header row itself
     try { state.imp = next; state.src = await readImport(next, base); onChange(state); }
     catch (e) { onError(e.message || T('fail')); }
   };

@@ -11,5 +11,8 @@
 - `node tests/weibull/test_weibull.mjs`: Diameter Distribution Lab (Weibull) tests against `tests/ref/weibull.json`.
 - `python3 tests/ref/make_weibull_reference.py`: regenerates `tests/weibull/fixture.json` and `tests/ref/weibull.json` (fixed seed; numpy + SciPy).
 - `node tests/weibull/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Weibull lab.
+- `node tests/rank/test_rank.mjs`: Relative Ranking tests against `tests/ref/rank.json`.
+- `python3 tests/ref/make_rank_reference.py`: regenerates the synthetic sample workbook and `tests/ref/rank.json` (numpy + openpyxl).
+- `node tests/rank/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Relative Ranking.
 - `node tests/checker/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test with Playwright/Chromium against a local `php -S 127.0.0.1:8092` in the site folder.
 Older supplements (Meşcere, Laboratuvar, Bulmaca) were checked in the browser during development; scripted tests come when they move to the tools section.

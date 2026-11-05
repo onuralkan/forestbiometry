@@ -24,6 +24,9 @@ function bench_tools(): array {
                        : 'Weibull version: maximum likelihood and moment estimation from tree diameters, three-parameter form with a fixed location, class frequencies with tails, per-plot fits, curve explorer. Other distributions in later versions.'],
         ['n' => 5, 'file' => null, 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling', 'desc' => ''],
         ['n' => 6, 'file' => null, 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner', 'desc' => ''],
+        ['n' => 7, 'file' => 'nispi-siralama.php', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
+         'desc' => $tr ? 'Başarı ölçütleri tablosundan (R², FI, RMSE, MAE, Bias, AIC, BIC…) ölçüt bazında ve genel nispi sıralar; en iyi ve en kötü modellerin radar grafiği.'
+                       : 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.'],
     ];
 }
 
@@ -42,7 +45,7 @@ function bench_top(array $o = []): void {
 <meta name="theme-color" content="#f3f1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="<?= $b ?>assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="<?= $b ?>assets/lab/lab.css?v=4">
+<link rel="stylesheet" href="<?= $b ?>assets/lab/lab.css?v=5">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23155e63'/><text x='16' y='23' font-family='Georgia,serif' font-weight='900' font-size='20' fill='%23fff' text-anchor='middle'>A</text></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 </head>

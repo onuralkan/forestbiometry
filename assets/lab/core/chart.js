@@ -45,7 +45,7 @@ export function barChart(o) {
 /** Standalone SVG with the current theme colours written in (for download). */
 export function svgForDownload(svgEl) {
   const cs = getComputedStyle(svgEl), v = n => cs.getPropertyValue(n).trim();
-  const css = `.ch-grid{stroke:${v('--line2')};stroke-width:1}.ch-axis{stroke:${v('--ink')};stroke-width:1}.ch-frame{fill:none;stroke:${v('--line')}}.ch-ref{stroke:${v('--ink')};stroke-width:1.2;stroke-dasharray:6 4}.ch-pts{fill-opacity:.6}.ch-bar{fill:${v('--line')}}.ch-line{fill:none;stroke-width:2}.ch-dash{stroke-dasharray:6 4}` + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-l${i}{stroke:${v('--c' + k)}}`).join('') + `.ch-tick{fill:${v('--muted')};font:12px system-ui,sans-serif}`
+  const css = `.ch-grid{stroke:${v('--line2')};stroke-width:1}.ch-axis{stroke:${v('--ink')};stroke-width:1}.ch-frame{fill:none;stroke:${v('--line')}}.ch-ref{stroke:${v('--ink')};stroke-width:1.2;stroke-dasharray:6 4}.ch-pts{fill-opacity:.6}.ch-bar{fill:${v('--line')}}.ch-line{fill:none;stroke-width:2}.ch-dash{stroke-dasharray:6 4}.ch-dot{stroke-dasharray:1.5 3.5}.ch-radar{stroke-width:2;fill-opacity:.06}` + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-f${i}{fill:${v('--c' + k)}}`).join('') + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-l${i}{stroke:${v('--c' + k)}}`).join('') + `.ch-tick{fill:${v('--muted')};font:12px system-ui,sans-serif}`
     + `.ch-lab{fill:${v('--ink')};font:600 12.5px system-ui,sans-serif}` + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-s${i}{fill:${v('--c' + k)}}`).join('');
   const clone = svgEl.cloneNode(true);
   clone.insertAdjacentHTML('afterbegin', `<style>${css}</style><rect width="100%" height="100%" fill="${v('--surface')}"/>`);
@@ -117,5 +117,39 @@ export function plotChart(o) {
   let lx = L; (o.lines || []).forEach((l, i) => { if (!l.name) return; s += `<line class="ch-line ch-l${(l.k ?? i) % 6}${l.dash ? ' ch-dash' : ''}" x1="${lx}" x2="${lx + 18}" y1="16" y2="16"/><text class="ch-tick" x="${lx + 23}" y="20">${esc(l.name)}</text>`; lx += 34 + l.name.length * 6.8; });
   if (o.xLabel) s += `<text class="ch-lab" x="${L + pw / 2}" y="${H - 8}" text-anchor="middle">${esc(o.xLabel)}</text>`;
   if (o.yLabel) s += `<text class="ch-lab" transform="translate(14,${T + ph / 2}) rotate(-90)" text-anchor="middle">${esc(o.yLabel)}</text>`;
+  return s + '</svg>';
+}
+
+/**
+ * Radar chart. o = { title, axes:[name], series:[{ name, values:[number] }], rmin, rmax, fmt, note? }
+ * Radius grows from rmin (centre) to rmax (outer ring). Colours cycle through --c1…--c6; after six series the
+ * line pattern changes (solid → dashed → dotted) so series stay distinguishable without colour.
+ */
+export function radarChart(o) {
+  const n = o.axes.length, ns = o.series.length, cols = ns > 8 ? 2 : 1, legendH = Math.ceil(ns / cols) * 18 + 10;
+  const W = o.width || 640, R = Math.min(W / 2 - 110, 230), cx = W / 2, cy = R + 60, H = cy + R + 50 + legendH;
+  const fmt = o.fmt || (v => String(v)), span = (o.rmax - o.rmin) || 1;
+  const pt = (k, v) => { const a = -Math.PI / 2 + 2 * Math.PI * k / n, r = R * (Math.min(Math.max(v, o.rmin), o.rmax) - o.rmin) / span; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+  const ticks = linTicks(o.rmin, o.rmax, 4).filter(t => t > o.rmin && t <= o.rmax);
+  if (ticks[ticks.length - 1] !== o.rmax) ticks.push(o.rmax);
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title>`;
+  for (const t of ticks) s += `<polygon class="ch-grid" fill="none" points="${o.axes.map((_, k) => pt(k, t).map(x => x.toFixed(1)).join(',')).join(' ')}"/>`;
+  o.axes.forEach((a, k) => {
+    const [x, y] = pt(k, o.rmax), [lx, ly] = [cx + (x - cx) * 1.12, cy + (y - cy) * 1.12];
+    s += `<line class="ch-grid" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/><text class="ch-lab" x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="${Math.abs(lx - cx) < 8 ? 'middle' : lx > cx ? 'start' : 'end'}">${esc(a)}</text>`;
+  });
+  for (const t of ticks) { const [x, y] = pt(0, t); s += `<text class="ch-tick" x="${(x + 4).toFixed(1)}" y="${(y + 12).toFixed(1)}">${esc(fmt(t))}</text>`; }
+  s += `<text class="ch-tick" x="${cx + 4}" y="${cy + 12}">${esc(fmt(o.rmin))}</text>`;
+  const dash = i => ['', ' ch-dash', ' ch-dot'][Math.floor(i / 6) % 3];
+  o.series.forEach((se, i) => {
+    const pts = se.values.map((v, k) => pt(k, v).map(x => x.toFixed(1)).join(',')).join(' ');
+    s += `<polygon class="ch-radar ch-l${i % 6} ch-f${i % 6}${dash(i)}" points="${pts}"><title>${esc(se.name)}</title></polygon>`;
+  });
+  const top = cy + R + 44, colW = W / cols;
+  o.series.forEach((se, i) => {
+    const c = i % cols, r = Math.floor(i / cols), x = 20 + c * colW, y = top + r * 18;
+    s += `<line class="ch-line ch-l${i % 6}${dash(i)}" x1="${x}" x2="${x + 26}" y1="${y}" y2="${y}"/><text class="ch-tick" x="${x + 32}" y="${y + 4}">${esc(se.name)}</text>`;
+  });
+  if (o.note) s += `<text class="ch-tick" x="${cx}" y="${top - 14}" text-anchor="middle">${esc(o.note)}</text>`;
   return s + '</svg>';
 }

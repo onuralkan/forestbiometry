@@ -266,3 +266,30 @@ Kullanıcının verdiği a, b, c ile yoğunluk, birikimli dağılım, ortalama, 
 - Bailey, R.L., Dell, T.R. 1973. Quantifying diameter distributions with the Weibull function. *Forest Science* 19: 97–104. **[İ]**
 - Anderson, T.W., Darling, D.A. 1954. A test of goodness of fit. *J. Am. Stat. Assoc.* 49: 765–769. **[D]**
 - Cohen, A.C. 1965. Maximum likelihood estimation in the Weibull distribution based on complete and on censored samples. *Technometrics* 7: 579–588. **[D]**
+
+---
+
+## 9. Nispi Sıralama / Relative Ranking (Modül 7, `assets/lab/rank/calc.js`)
+**Girdi:** Kullanıcının istatistik programından aldığı başarı ölçütleri tablosu (XLSX/CSV/yapıştırma): satırlar modeller, sütunlar ölçütler; ölçüt sayısı serbest. Başlık satırı kendiliğinden bulunur (ilk hücresi metin, en az iki başka metin hücresi olan ve altında sayı bulunan ilk satır), kullanıcı değiştirebilir. Model Başarısı Değerlendiricisi'nden bağımsızdır (kullanıcı kararı).
+
+**Ölçüt yönü** (kullanıcı onaylar; sütun adından önerilir, tanınmayan adda kullanıcı seçmeden sıralama yapılmaz):
+- *En büyük iyi:* R², düzeltilmiş R², Fit Index (FI), model etkinliği (EF/NSE).
+- *En küçük iyi:* RMSE, MSE, MAE, MAB, AAE, MAPE, AIC, AICc, BIC, SSE, KS, AD, EI, −ln L.
+- *Sıfıra en yakın iyi:* işaretli ölçütler (Bias, ME, MPE…); |değer| ile sıralanır.
+
+**Nispi sıra** (Poudel ve Cao 2013, Eş. 10; orada bütün ölçütler "küçük iyi"dir, burada yöne göre genelleştirildi):
+Rᵢⱼ = 1 + (m − 1)(Sᵢⱼ − S_en iyi,ⱼ)/(S_en kötü,ⱼ − S_en iyi,ⱼ). "En büyük iyi" için en iyi = maks, en kötü = min; "en küçük iyi" için tersi; "sıfıra yakın" için S = |değer| ve en iyi = min |değer|. En iyi model 1, en kötü m alır.
+**Genel nispi sıra:** Toplamᵢ = Σⱼ Rᵢⱼ (bütün seçili ölçütler, eşit ağırlık); Genelᵢ = 1 + (m − 1)(Toplamᵢ − min Toplam)/(maks Toplam − min Toplam). Ayrıca sıra numarası (eşitlikte 1, 2, 2, 4) verilir.
+
+**Özel durumlar:**
+- Bir ölçütte bütün modeller eşitse payda sıfırdır: o ölçütte herkes 1 alır ve durum raporlanır (sıralamayı değiştirmez).
+- Bir ölçütte değeri eksik veya okunamayan model sıralanmaz, listelenir; o ölçüt çıkarılırsa model geri gelir.
+- Kullanıcı modelleri sıralama dışı bırakabilir; m ve bütün sıralar kalan modellerle yeniden hesaplanır. Nispi sıra en iyi/en kötü değerlere göre ölçeklendiği için tek bir aşırı kötü model ötekileri birbirine yaklaştırır (Poudel ve Cao 2013 iki yöntemi bu nedenle çıkarmıştır).
+- Bütün modellerde aynı nispi sırayı veren ölçütler (ör. FI = 1 − SSE/SST ile tahmin R²; RMSE ile MSE) bildirilir; eşit ağırlıkla aynı bilgi iki kez sayılır. Araç ölçütü kendiliğinden atmaz.
+- Tekrarlanan model adları satır numarasıyla ayrılır.
+- AIC ve BIC yalnızca aynı veriye uydurulmuş modeller arasında karşılaştırılabilir; araç bunu denetleyemez, ekranda not olarak yazar.
+
+**Radar grafiği:** Eksenler seçili ölçütler, her model bir çokgen; yarıçap merkezde 1 (en iyi), dış çemberde m (en kötü). Küçük alan iyi modeldir (Poudel ve Cao 2013, Şekil 2). Kullanıcı en iyi n, en kötü n ve ayrıca adıyla seçtiği modelleri gösterir. En az 3 ölçüt gerekir.
+
+**Doğrulama:** `tests/ref/make_rank_reference.py` sentetik örnek çalışma kitabını (`assets/lab/rank/ornek/ornek-olcutler.xlsx`; başlık üstünde açıklama satırı, tekrarlanan ad, eksik değer, R² = FI, aşırı kötü model) üretir ve numpy ile üç senaryoda (bütün modeller; aşırı kötü model dışarıda; bir ölçüt çıkarılınca eksik değerli modelin geri gelmesi) referans sıraları hesaplar. Geliştirme sırasında kullanıcının örnek Excel dosyasındaki ölçüt bazında nispi sıralar da (aynı yön seçimleriyle) birebir yeniden üretildi; bu dosya araştırma verisi olduğu için depoya konmadı.
+- Poudel, K.P., Cao, Q.V. 2013. Evaluation of methods to predict Weibull parameters for characterizing diameter distributions. *Forest Science* 59(2): 243–252. **[B]** (kullanıcının verdiği PDF'te Eş. 10 ve Şekil 2 kontrol edildi)
