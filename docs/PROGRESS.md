@@ -1,6 +1,6 @@
 # PROGRESS.md: Durum, kontroller, eksikler, sıradaki adım
 
-Son güncelleme: 5 Kasım 2026, Modül 3 (Model Başarısı Değerlendiricisi)
+Son güncelleme: 5 Kasım 2026, Modül 4 (Çap Dağılımı Laboratuvarı, Weibull sürümü)
 
 ## Tamamlananlar
 | Bölüm | Durum | Kontroller |
@@ -9,8 +9,9 @@ Son güncelleme: 5 Kasım 2026, Modül 3 (Model Başarısı Değerlendiricisi)
 | Admin paneli: dosya yükleme, yayın ekleme/düzenleme, DOI/ORCID/JSON içe aktarma | Canlıda | Uçtan uca tarayıcı testleri; içe aktarmada mükerrer kontrolü |
 | Güvenlik: CSRF, giriş kilidi, yükleme filtresi, HTTPS + yönlendirme, TOTP 2FA + kurtarma kodları | Canlıda (2FA paketi kullanıcıya teslim edildi) | RFC 6238 test vektörleri; 12 adımlı 2FA akış testi |
 | Ek 1 Meşcere Hesaplayıcı | Teslim edildi | numpy ile bağımsız hesap karşılaştırması |
-| Ek 2 Çap Dağılımı Laboratuvarı (5 dağılım, 8 tahmin, KS/EI/AIC) | Teslim edildi | `tests/test_math.js`: 53/53 (SciPy referansı) |
+| Ek 2 Çap Dağılımı Laboratuvarı (5 dağılım, 8 tahmin, KS/EI/AIC) | Kaldırıldı (5 Kasım 2026); `weibull.php` → Modül 4'e yönlenir | `tests/test_math.js`: 53/53 (SciPy referansı) |
 | Ek 3 Bulmaca Köşesi | Teslim edildi | 10 bulmacada ızgara tutarlılığı; klavyeyle çözüm testi |
+| Modül 4: Çap Dağılımı Laboratuvarı, Weibull sürümü (`araclar/cap-dagilimi.php`), sürekli eksenli grafik, `core/special.js` | Tamam, canlıya yüklenmedi | `tests/weibull/test_weibull.mjs` 368/368 (SciPy referansı `tests/ref/weibull.json`, sabit tohumlu sentetik örnekler: CDF/pdf/yüzdelik sınırları, ML ve moment tahminleri a = 0 ve sabit a ile, KS D, AD A², ln L, AIC/BIC, sınıf ve kuyruk olasılıkları, sabit/tek ağaç/az değer/sınır çözümü/yakınsamama, çoklu örnek alan); `tests/weibull/e2e.mjs` 23/23 (Chromium: eski adres 301, eşik sorusu ve kesilme engeli, örnek alan bazında uydurma, grafikler, kuyruklu sınıf tablosu, havuz uyarısı, TR/EN CSV ve Excel, eğri gezgini, telefon + koyu tema) |
 | Modül 3: Model Başarısı Değerlendiricisi (`araclar/model-degerlendirme.php`), saçılım grafiği, ortak içe aktarma paneli (`assets/lab/core/importer.js`) | Tamam, canlıya yüklenmedi | `tests/eval/test_eval.mjs` 178/178 (kabul örneği, mükemmel tahmin, sabit gözlenen, negatif R², bağıl ölçüt paydaları, eksik/okunamayan çiftler, iki modelde ortak/kendi satırlar, gruplar; scikit-learn referansı `tests/ref/eval.json`); `tests/eval/e2e.mjs` 22/22 (Chromium: TR/EN değerler ve CSV başlıkları, grafikler ve SVG, gruplar, örneklem farkı uyarısı, Excel, telefon + koyu tema) |
 | Modül 2: Örnek Alan ve Meşcere Hesaplayıcısı (`araclar/ornek-alan.php`), SVG grafik çekirdeği (`assets/lab/core/chart.js`) | Tamam, canlıya yüklenmedi | `tests/stand/test_stand.mjs` 414/414 (kabul örneği + numpy referansı `tests/ref/stand.json`: birim ölçüleri, sınıflar, tür payları, boylar, alanlar arası özet, basit rastgele ve tabakalı tahmin); `tests/stand/e2e.mjs` 23/23 (Chromium: kabul örneği TR/EN ve CSV, örnek paket, karar bekleyen birleşimler, çakışan sınıf reddi, grafikler, Excel, tabakalı tahmin, telefon + koyu tema); 20 000 kayıt / 600 birim ≈ 45 ms |
 | Modül 1: Ormancılık Verisi Denetçisi + araçlar bölümü (`araclar/`), tezgâh düzeni, ortak çekirdek (`assets/lab/core/`), SheetJS | Tamam, canlıya yüklenmedi | `tests/checker/test_checker.mjs` 87/87 (kabul örnekleri, XLSX, kodlama, dil bağımsızlığı); `tests/checker/e2e.mjs` 33/33 (Chromium: örnek veri → düzeltme → onay → dışa aktarma, dil değişimi, belirsiz ondalık, XLSX yükleme, 10 000 satır, telefon + koyu tema) |
@@ -19,9 +20,9 @@ Son güncelleme: 5 Kasım 2026, Modül 3 (Model Başarısı Değerlendiricisi)
 ## Bilinen eksikler ve çelişkiler (karar bekleyenler ⚑)
 1. ✔ Giderildi (5 Kasım 2026): `mescere.php` içindeki kaynaksız örnek hacim katsayıları ve f = 0,50 varsayılanı kaldırıldı. Hacim yalnızca kullanıcının girdiği değerlerle hesaplanıyor; dayanağı özet tablosunda yazıyor. Eski tarayıcı kayıtlarındaki örnek değerler geri yüklenmiyor (`localStorage` anahtarı v2). Test: katsayısız → hacim yok; f = 0,5 ve b₀ = 0,0001, b₁ = 2, b₂ = 0,8 → numpy ile aynı (146,4 ve 201,8 m³/ha).
 2. (1. maddeyle birlikte giderildi.)
-3. Laboratuvarda yüzdelik çifti notu "Dubey (1967)'nin önerdiği klasik seçim" diyor. Doğru ama eksik: çift, **ölçek + şekil birlikte** tahmini için en verimli olanı (METHODS.md §2). Modül 4'te metin düzeltilecek.
-4. Laboratuvarda konum (γ = dmin/2) ve SB sınırı (±1 cm) varsayılanları literatür önerisi değil; ekranda "varsayılan" olarak yazıyor, METHODS.md'de belirtildi.
-5. KS sınırı 1,36/√n, tahmin edilmiş parametrelerle yaklaşık. Ekranda ve METHODS.md'de belirtildi.
+3. ✔ Geçersiz (5 Kasım 2026): eski laboratuvar kaldırıldı; yüzdelik tahmincisi yeni Weibull sürümüne alınmadı. Eklenirse not düzeltilmiş hâliyle yazılacak. Eski not: laboratuvarda yüzdelik çifti notu "Dubey (1967)'nin önerdiği klasik seçim" diyor. Doğru ama eksik: çift, **ölçek + şekil birlikte** tahmini için en verimli olanı (METHODS.md §2). Modül 4'te metin düzeltilecek.
+4. ✔ Giderildi (Modül 4): yeni araçta konum otomatik seçilmez (a = 0 veya kullanıcının sabitlediği değer). Eski not: laboratuvarda konum (γ = dmin/2) ve SB sınırı (±1 cm) varsayılanları literatür önerisi değil; ekranda "varsayılan" olarak yazıyor, METHODS.md'de belirtildi.
+5. ✔ Giderildi (Modül 4): yeni araçta kritik değer ve p değeri verilmez. Eski not: KS sınırı 1,36/√n, tahmin edilmiş parametrelerle yaklaşık. Ekranda ve METHODS.md'de belirtildi.
 6. METHODS.md'de **[D]** ile işaretli künyeler doğrulanmadı.
 7. Tarayıcı testleri: Modül 1'den itibaren betik olarak kayıtlı (`tests/checker/e2e.mjs`). Eski ekler (Meşcere, Laboratuvar, Bulmaca) için kayıtlı betik yok; taşındıklarında eklenecek.
 8. ✔ Karar verildi (Modül 1): SheetJS CE 0.20.3 mini, npm `@e965/xlsx` yeniden yayımından (PROJECT.md §7). ⚑ Resmî SheetJS dağıtımıyla karşılaştırma yapılamadı (derleme ortamından cdn.sheetjs.com'a erişilemedi).
@@ -29,11 +30,12 @@ Son güncelleme: 5 Kasım 2026, Modül 3 (Model Başarısı Değerlendiricisi)
 10. Eşik varsayılanları (çap 1–200 cm, boy 2–60 m, incelik 15–200) literatür değeri değil, ayarlanabilir tarama eşikleri; ekranda ve METHODS.md §5'te böyle yazıyor.
 11. Örnek Alan ve Meşcere Hesaplayıcısı eksikleri: (a) Güven aralığı yok (yalnız SH; t dağılımı Modül 6). (b) Üst boy, Lorey boyu, hacim ve boy tahmini yok; eski `mescere.php` bu yüzden yönlendirilmedi. (c) İç içe alan / açı sayımı desteklenmiyor; yalnızca kullanıcı onayıyla sabit alan varsayılıyor. (d) Dönemler arası değişim (büyüme, ölüm, giriş) hesaplanmıyor ("Tekrarlı ölçüm" modülü). (e) Varsayılan çap sınıfı başlangıcı veriden önerilir (4 cm genişlik); literatür değeri değil, ekranda öneri olarak yazıyor. (f) Sistematik örnekleme SH'si basit rastgele formülüyle yaklaşık; ekranda ve METHODS.md §6'da yazıyor. (g) Cochran (1977) künyesi [D].
 12. Model Başarısı Değerlendiricisi eksikleri: (a) Güven aralığı, eşdeğerlik testi veya bootstrap yok. (b) Ağırlıklı ölçütler (ör. örnekleme ağırlıklı RMSE) yok. (c) Grafiklerde grup renklendirmesi yok; gruplar tabloda. (d) Satır bazında artık tablosu ekranda yok, Excel/CSV'de var. (e) Kaynak beyanı (eğitim/test/çapraz doğrulama) hesapları değiştirmez; kullanıcının beyanıdır, doğrulanmaz.
+13. Çap Dağılımı Laboratuvarı (Weibull) eksikleri: (a) Konum a tahmini (üç parametreli tam ML) yok; a yalnızca sabitlenebilir. (b) Kesilmiş (ölçüm eşikli) ve gruplanmış (sınıf frekansı) veri olabilirlikleri yok; eşik beyan edilirse uydurma yapılmaz. (c) Parametre standart hataları/güven aralıkları ve uyum testlerinin p değerleri yok (kalibrasyon, ör. parametrik bootstrap, gerekli). (d) Yüzdelik tahmincisi ve gamma, normal, lognormal, Johnson SB henüz taşınmadı; eski sayfa yönlendirildiği için bu dağılımlar şu an sitede yok (kullanıcı kararı). (e) Örnek alan ağırlıklı (hektar başına) dağılım yok; havuz her ağaca eşit ağırlık verir. (f) Anderson–Darling ve Cohen (1965) künyeleri [D].
 
 ## Riskler
 - ✔ Giderildi (5 Kasım 2026): kaynak kod GitHub'da, özel depo `onuralkan/onuralkan-site`. `data/` ve `files/` içeriği `.gitignore` ile dışarıda; depoda kullanıcı verisi ve sır yok (kontrol edildi). Belgeler ayrıca claude.ai projesinde.
 - Sunucu PHP 7.4 (güvenlik desteği bitmiş). 8.2+ önerildi; kod 7.4 uyumlu tutuluyor.
 
 ## Sıradaki adım
-1. Kullanıcı paketi (`scripts/build-zip.sh`) cPanel'den yükleyip `/araclar/model-degerlendirme.php` adresini denetler.
-2. **Modül 4: Çap Dağılımı Laboratuvarı** (kullanıcının promptuyla; `weibull.php` kodu testleriyle taşınacak, ⚑ 3. madde düzeltilecek).
+1. Kullanıcı paketi (`scripts/build-zip.sh`) cPanel'den yükleyip `/araclar/cap-dagilimi.php` ve eski `/weibull.php` yönlendirmesini denetler.
+2. **Modül 5: Boy–Çap Modelleme** (kullanıcının promptuyla) ya da Çap Dağılımı Laboratuvarı'nın sonraki sürümü (diğer dağılımlar, kesilmiş/gruplanmış veri).

@@ -45,7 +45,7 @@ export function barChart(o) {
 /** Standalone SVG with the current theme colours written in (for download). */
 export function svgForDownload(svgEl) {
   const cs = getComputedStyle(svgEl), v = n => cs.getPropertyValue(n).trim();
-  const css = `.ch-grid{stroke:${v('--line2')};stroke-width:1}.ch-axis{stroke:${v('--ink')};stroke-width:1}.ch-frame{fill:none;stroke:${v('--line')}}.ch-ref{stroke:${v('--ink')};stroke-width:1.2;stroke-dasharray:6 4}.ch-pts{fill-opacity:.6}.ch-tick{fill:${v('--muted')};font:12px system-ui,sans-serif}`
+  const css = `.ch-grid{stroke:${v('--line2')};stroke-width:1}.ch-axis{stroke:${v('--ink')};stroke-width:1}.ch-frame{fill:none;stroke:${v('--line')}}.ch-ref{stroke:${v('--ink')};stroke-width:1.2;stroke-dasharray:6 4}.ch-pts{fill-opacity:.6}.ch-bar{fill:${v('--line')}}.ch-line{fill:none;stroke-width:2}.ch-dash{stroke-dasharray:6 4}` + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-l${i}{stroke:${v('--c' + k)}}`).join('') + `.ch-tick{fill:${v('--muted')};font:12px system-ui,sans-serif}`
     + `.ch-lab{fill:${v('--ink')};font:600 12.5px system-ui,sans-serif}` + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-s${i}{fill:${v('--c' + k)}}`).join('');
   const clone = svgEl.cloneNode(true);
   clone.insertAdjacentHTML('afterbegin', `<style>${css}</style><rect width="100%" height="100%" fill="${v('--surface')}"/>`);
@@ -85,4 +85,37 @@ function linTicks(a, b, n = 6) {
   const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
   const out = []; for (let v = Math.ceil(a / step) * step; v <= b + step * 1e-9; v += step) out.push(+v.toPrecision(12));
   return out;
+}
+
+/**
+ * Continuous x axis with optional bars (histogram) and lines/steps.
+ * o = { title, xLabel, yLabel, fmt, xmin, xmax, ymin?, ymax?, bars?: [{ lo, hi, v }],
+ *       lines?: [{ name, pts:[[x,y]], step?:bool, dash?:bool, k?:colour index }], width?, height? }
+ */
+export function plotChart(o) {
+  const W = o.width || 680, H = o.height || 380, L = 62, R = 14, T = (o.lines || []).some(l => l.name) ? 34 : 14, B = 52;
+  const pw = W - L - R, ph = H - T - B, fmt = o.fmt || (v => String(v));
+  let ymax = o.ymax;
+  if (ymax == null) { ymax = 0; for (const b of o.bars || []) ymax = Math.max(ymax, b.v); for (const l of o.lines || []) for (const p of l.pts) if (Number.isFinite(p[1]) && p[0] >= o.xmin && p[0] <= o.xmax) ymax = Math.max(ymax, p[1]); ymax = ymax * 1.06 || 1; }
+  const ymin = o.ymin || 0, tx = linTicks(o.xmin, o.xmax), ty = linTicks(ymin, ymax);
+  const sx = v => L + (v - o.xmin) / (o.xmax - o.xmin) * pw, sy = v => T + ph - (Math.min(v, ymax) - ymin) / (ymax - ymin) * ph;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title>`;
+  for (const t of ty) s += `<line class="ch-grid" x1="${L}" x2="${W - R}" y1="${sy(t)}" y2="${sy(t)}"/><text class="ch-tick" x="${L - 6}" y="${sy(t) + 4}" text-anchor="end">${esc(fmt(t))}</text>`;
+  for (const t of tx) s += `<text class="ch-tick" x="${sx(t)}" y="${T + ph + 16}" text-anchor="middle">${esc(fmt(t))}</text>`;
+  s += `<defs><clipPath id="clp${W}${H}"><rect x="${L}" y="${T}" width="${pw}" height="${ph}"/></clipPath></defs><g clip-path="url(#clp${W}${H})">`;
+  for (const b of o.bars || []) { const x0 = sx(Math.max(b.lo, o.xmin)), x1 = sx(Math.min(b.hi, o.xmax)); if (x1 > x0) s += `<rect class="ch-bar" x="${x0}" y="${sy(b.v)}" width="${Math.max(0, x1 - x0 - 1)}" height="${Math.max(0, T + ph - sy(b.v))}"/>`; }
+  (o.lines || []).forEach((l, i) => {
+    let d = '';
+    l.pts.forEach((p, j) => {
+      if (!Number.isFinite(p[1])) return;
+      const X = sx(p[0]).toFixed(1), Y = sy(p[1]).toFixed(1);
+      if (!d) d = `M${X},${Y}`; else if (l.step) d += `H${X}V${Y}`; else d += `L${X},${Y}`;
+    });
+    s += `<path class="ch-line ch-l${(l.k ?? i) % 6}${l.dash ? ' ch-dash' : ''}" d="${d}"/>`;
+  });
+  s += `</g><rect class="ch-frame" x="${L}" y="${T}" width="${pw}" height="${ph}"/>`;
+  let lx = L; (o.lines || []).forEach((l, i) => { if (!l.name) return; s += `<line class="ch-line ch-l${(l.k ?? i) % 6}${l.dash ? ' ch-dash' : ''}" x1="${lx}" x2="${lx + 18}" y1="16" y2="16"/><text class="ch-tick" x="${lx + 23}" y="20">${esc(l.name)}</text>`; lx += 34 + l.name.length * 6.8; });
+  if (o.xLabel) s += `<text class="ch-lab" x="${L + pw / 2}" y="${H - 8}" text-anchor="middle">${esc(o.xLabel)}</text>`;
+  if (o.yLabel) s += `<text class="ch-lab" transform="translate(14,${T + ph / 2}) rotate(-90)" text-anchor="middle">${esc(o.yLabel)}</text>`;
+  return s + '</svg>';
 }

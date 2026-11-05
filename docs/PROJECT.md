@@ -20,7 +20,7 @@ Hedef kullanıcı: araştırmacılar, öğrenciler, uygulayıcılar. Diller: Tü
 index.php            Gazete ön sayfası (ders notları, yayınlar, iletişim)
 admin.php            Yönetim paneli (dosya yükleme, yayın içe aktarma, profil, 2FA)
 mescere.php          Ek 1: Meşcere Hesaplayıcı (eski "ekler"; araçlar bölümüne taşınacak)
-weibull.php          Ek 2: Çap Dağılımı Laboratuvarı (eski "ekler"; taşınacak)
+weibull.php          Yönlendirme (301) → araclar/cap-dagilimi.php
 bulmaca.php          Ek 3: Bulmaca Köşesi (gazete bölümünde kalır)
 inc/                 PHP yardımcıları (web erişimine kapalı)
 assets/              CSS, JS, yazı tipleri
@@ -36,6 +36,7 @@ araclar/index.php            Araçlar bölümü dizini (TR/EN, ?lang=); onaylanm
 araclar/veri-denetcisi.php   Araç 1: Ormancılık Verisi Denetçisi (ince PHP kabuğu)
 araclar/ornek-alan.php       Araç 2: Örnek Alan ve Meşcere Hesaplayıcısı
 araclar/model-degerlendirme.php  Araç 3: Model Başarısı Değerlendiricisi
+araclar/cap-dagilimi.php     Araç 4: Çap Dağılımı Laboratuvarı (Weibull sürümü); eski weibull.php buraya 301 ile yönlenir
 inc/bench.php                Tezgâh düzeni: küçük gazete başlığı, araç başlığı, altbilgi; bench_tools() listesi
 assets/lab/lab.css           Tezgâh düzeni stilleri, renk ve önem düzeyi paleti (açık/koyu)
 assets/lab/core/num.js       Sayı okuma (ondalık ayarı), ondalık kanıtı, birim dönüştürme
@@ -43,11 +44,13 @@ assets/lab/core/table.js     CSV/TSV/yapıştırma ayrıştırıcı, ayırıcı 
 assets/lab/core/store.js     IndexedDB anahtar–değer deposu (oturum + veri aktarımı)
 assets/lab/core/export.js    CSV (dile göre ayırıcı), XLSX yazma, JSON indirme, SheetJS tembel yükleme
 assets/lab/core/i18n.js      Dil, sayı biçimi, HTML kaçışı
-assets/lab/core/chart.js     SVG çubuk ve saçılım grafikleri (kütüphanesiz), tema renkleriyle SVG indirme
+assets/lab/core/chart.js     SVG çubuk, saçılım ve sürekli eksenli (histogram + eğri/basamak) grafikler (kütüphanesiz), tema renkleriyle SVG indirme
 assets/lab/core/importer.js  Tek tablo içe aktarma paneli (dosya/yapıştırma/ayırıcı/kodlama/sayfa/önizleme); Modül 3'ten itibaren
 assets/lab/checker/          calc.js (saf), ui.js, i18n.js, ornek/ (uydurma örnek CSV'ler)
 assets/lab/stand/            calc.js (saf), ui.js, i18n.js, ornek/ornek-veri.json (scripts/make-stand-sample.mjs ile üretilir)
 assets/lab/eval/             calc.js (saf), ui.js, i18n.js, ornek/ornek-tahminler.csv (uydurma)
+assets/lab/weibull/          calc.js (saf), ui.js, i18n.js, ornek/ornek-caplar.csv (sabit tohumlu benzetim)
+assets/lab/core/special.js   lnGamma (tools.js'ten değişmeden taşındı)
 assets/vendor/sheetjs/       SheetJS CE 0.20.3 mini (Apache-2.0), README'de köken ve sağlama
 ```
 Henüz yok (ilgili modülle gelecek): istatistik çekirdeği (t dağılımı vb.), NLS (Levenberg–Marquardt), çizgi grafikleri. Veri Denetçisi kendi içe aktarma panelini kullanır; ortak `importer.js`'e geçirilmesi, o modül yeniden açılırsa yapılır.
@@ -124,7 +127,9 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 5. Mevcut `assets/tools.js` içindeki test edilmiş matematik ES modüllerine **taşınır** (yeniden yazılmaz; testleri korunur).
 
 ## 8. Eski "Ekler" ve yeni bölüm
-- Meşcere Hesaplayıcı ve Çap Dağılımı Laboratuvarı, yeni bölümdeki Modül 2 ve 4'ün öncülleridir. Modül 2 (5 Kasım 2026) N, G, ortalama çaplar ve sınıflar için eski hesaplayıcının yerini aldı; ancak eski sayfadaki üst boy, Näslund boy tahmini ve kullanıcı katsayılı hacim yeni araçta yok. Bu yüzden `mescere.php` yönlendirilmedi; yönlendirme, boy (Modül 5) ve hacim taşındıktan sonra yapılacak. Bu modüller tamamlanana kadar olduğu gibi kalırlar; sonra eski adresler yeni araçlara yönlendirilir. Hesap kodları testleriyle birlikte taşınır.
+- Meşcere Hesaplayıcı ve Çap Dağılımı Laboratuvarı, yeni bölümdeki Modül 2 ve 4'ün öncülleridir. Modül 2 (5 Kasım 2026) N, G, ortalama çaplar ve sınıflar için eski hesaplayıcının yerini aldı; ancak eski sayfadaki üst boy, Näslund boy tahmini ve kullanıcı katsayılı hacim yeni araçta yok. Bu yüzden `mescere.php` yönlendirilmedi; yönlendirme, boy (Modül 5) ve hacim taşındıktan sonra yapılacak.
+- Çap Dağılımı Laboratuvarı (5 Kasım 2026, kullanıcı kararı): eski `weibull.php` yeni araca 301 ile yönlendirildi; kopya araç tutulmadı. Gamma, normal, lognormal ve Johnson SB, yeni araca taşınana kadar sitede yok. Eski hesap kodu ve testleri `assets/tools.js` / `tests/test_math.js` içinde duruyor (taşımada kullanılacak).
+- Genel kural: eski ekler, karşılıkları hazır olana kadar olduğu gibi kalır; sonra eski adresler yeni araçlara yönlendirilir. Hesap kodları testleriyle birlikte taşınır.
 - Bulmaca Köşesi gazete bölümünde kalır.
 - ✔ Ön sayfadaki "Ekler" kutusunun ilk maddesi araçlar bölümü dizinine bağlanır (`paper_supplements()`).
 
@@ -135,7 +140,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 | 1 | Ormancılık Verisi Denetçisi / Forest Data Checker | + araçlar bölümü dizini, tezgâh düzeni, içe aktarma, sütun eşleme, dışa aktarma, renk paleti ✔ |
 | 2 | Örnek Alan ve Meşcere Hesaplayıcısı / Plot & Stand Metrics | Çekirdeği kullanır ✔ (eski hesaplayıcının üst boy ve hacim kısmı henüz taşınmadı) |
 | 3 | Model Başarısı Değerlendiricisi / Model Evaluation | Gözlenen–tahmin; kırılımlar ✔ |
-| 4 | Çap Dağılımı Laboratuvarı / Diameter Distribution Lab | Mevcut 5 dağılımlı kod taşınır; birikimli dağılım, beklenen ağaç sayısı tablosu |
+| 4 | Çap Dağılımı Laboratuvarı / Diameter Distribution Lab | Weibull sürümü ✔ (ML, momentler, sabit a, sınıflar, kuyruklar, eğri gezgini); gamma, normal, lognormal, SB, kesilmiş ve gruplanmış veri sonraki turlarda |
 | 5 | Boy–Çap Modelleme / Height–Diameter Modelling | Levenberg–Marquardt çekirdeği burada kurulur |
 | 6 | Envanter Örnekleme Planlayıcısı / Inventory Sampling Planner | Basit rastgele → tabakalı |
 | sonra | Seksiyon hacmi, Gövde profili, Biyokütle–karbon, Tekrarlı ölçüm, Meşcere yapısı, Bonitet | Katsayı gerektirenlerde kullanıcı girişi |

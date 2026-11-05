@@ -94,10 +94,10 @@ $ICON_OUT = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-w
       <div class="copy cols2">
         <?php if ($tr): ?>
           <p class="drop">ISPARTA. Gazetemizin ön sayfasındaki orman, her ziyarette yeniden üretiliyor. Ağaç çapları üç parametreli Weibull dağılımından çekiliyor, boylar ise çapa bağlı Chapman–Richards boy–çap modeliyle hesaplanıyor. Gövdelerin uca doğru incelmesi de gövde çapı modellerine küçük bir selam.</p>
-          <p>Okurlar herhangi bir ağacın üzerine gelerek göğüs çapını ve boyunu görebiliyor. Dağılım parametreleri her baskıda rastgele seçildiği için aynı meşcereye iki kez rastlamak pek olası değil. Parametrelerle kendiniz oynamak isterseniz <a href="weibull.php">Çap Dağılımı Laboratuvarı</a> ekimize bakın; orada gamma, lognormal ve Johnson SB de var. Ders notları sayfa 2'de, yayınlar sayfa 3'te.</p>
+          <p>Okurlar herhangi bir ağacın üzerine gelerek göğüs çapını ve boyunu görebiliyor. Dağılım parametreleri her baskıda rastgele seçildiği için aynı meşcereye iki kez rastlamak pek olası değil. Parametrelerle kendiniz oynamak isterseniz <a href="araclar/cap-dagilimi.php">Çap Dağılımı Laboratuvarı</a>'nın eğri gezginine bakın. Ders notları sayfa 2'de, yayınlar sayfa 3'te.</p>
         <?php else: ?>
           <p class="drop">ISPARTA. The forest on our front page is regenerated on every visit. Tree diameters are drawn from a three-parameter Weibull distribution, while heights follow a Chapman–Richards height–diameter model. The taper of each stem is a small nod to stem taper models.</p>
-          <p>Readers may hover over any tree to see its diameter at breast height and its total height. Because the parameters change with every edition, the same stand is unlikely to appear twice. To play with the parameters yourself, see our <a href="weibull.php">Diameter Distribution Lab</a> supplement, which also has gamma, lognormal and Johnson SB. Lecture notes on page 2, publications on page 3.</p>
+          <p>Readers may hover over any tree to see its diameter at breast height and its total height. Because the parameters change with every edition, the same stand is unlikely to appear twice. To play with the parameters yourself, see the curve explorer in our <a href="araclar/cap-dagilimi.php">Diameter Distribution Lab</a>. Lecture notes on page 2, publications on page 3.</p>
         <?php endif; ?>
       </div>
     </article>

@@ -89,10 +89,10 @@ function paper_supplements(): array {
          $tr ? 'Çap ve boy listesini yapıştırın; hektardaki ağaç sayısı, göğüs yüzeyi, orta çap, üst boy ve hacim hemen hesaplansın.'
              : 'Paste a list of diameters and heights; stems, basal area, mean diameter, top height and volume per hectare are computed at once.',
          $tr ? 'Çap ve boydan hektarda N, G, Dg, üst boy ve hacim' : 'N, G, Dg, top height and volume per ha from d and h'],
-        ['weibull.php', $tr ? 'Ek 2' : 'Supplement 2', $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
-         $tr ? 'Weibull, gamma, normal, lognormal ve Johnson SB ile oynayın, meşcerenin nasıl değiştiğini görün; kendi verinizi beş dağılımla uydurup karşılaştırın.'
-             : 'Play with Weibull, gamma, normal, lognormal and Johnson SB and watch the stand change; fit and compare all five on your own data.',
-         $tr ? 'Weibull, gamma, normal, lognormal, Johnson SB' : 'Weibull, gamma, normal, lognormal, Johnson SB'],
+        ['araclar/cap-dagilimi.php', $tr ? 'Ek 2' : 'Supplement 2', $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
+         $tr ? 'Araçlar bölümüne taşındı. Weibull sürümü: kendi çaplarınıza en çok olabilirlik ve momentlerle uydurun, sınıf frekanslarını kuyruklarıyla görün, eğri gezgininde a, b, c ile oynayın.'
+             : 'Moved to the tools section. Weibull version: fit your own diameters by maximum likelihood and moments, see class frequencies with their tails, play with a, b, c in the curve explorer.',
+         $tr ? 'Weibull: uydurma, sınıflar, eğri gezgini' : 'Weibull: fitting, classes, curve explorer'],
         ['bulmaca.php', $tr ? 'Ek 3' : 'Supplement 3', $tr ? 'Bulmaca Köşesi' : 'Crossword Corner',
          $tr ? 'Her gün yeni bir ormancılık bulmacası. Ağaç türleri, ölçüm aletleri, silvikültür ve biraz da istatistik.'
              : 'A new forestry crossword every day. Tree species, measuring instruments, silviculture and a little statistics.',

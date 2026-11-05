@@ -35,7 +35,9 @@ h = 1,3 + d² / (a + b·d)². Doğrusal biçimi d / √(h − 1,3) = a + b·d ol
 
 ---
 
-## 2. Çap dağılımları (`weibull.php`, gelecekte Modül 4)
+## 2. Çap dağılımları (eski `weibull.php`; 5 Kasım 2026'da kaldırıldı, bkz. §8)
+**Arşiv:** Bu bölüm eski gazete ekinin tanımlarını kayıt için tutar. Eski sayfa Modül 4 ile yeni araca yönlendirildi; gamma, normal, lognormal ve Johnson SB yeni araca sonraki turlarda taşınacak. Eski sayfadaki Weibull gösterimi (α şekil, β ölçek, γ konum) yeni araçta **c şekil, b ölçek, a konum** olarak yazılır. Eski hesap kodu `assets/tools.js` içinde ve `tests/test_math.js` testleriyle duruyor.
+
 Bütün dağılımlarda x = göğüs çapı (cm).
 
 | Dağılım | Yoğunluk | Parametreler |
@@ -226,3 +228,41 @@ Tahmin birimi örnek alandır: y_i, i. örnek alanın hektar değeridir (N/ha, G
 **Kabul örneği:** y = [10, 20, 30], ŷ = [12, 18, 33] → e = [2, −2, 3]; ē = 1; MAE = 7/3 ≈ 2,3333333333; RMSE = √(17/3) ≈ 2,3804761428; SSE = 17, SST = 200, R² = 0,915 (aynı verinin Pearson r² değeri ≈ 0,9423'tür; R² ile karıştırılmaz).
 
 **Doğrulama:** `tests/ref/make_eval_reference.py`, scikit-learn (`mean_absolute_error`, `root_mean_squared_error`, `r2_score`) ve numpy ile sentetik `tests/eval/fixture.csv` üzerinde ortak ve kendi satır kümeleri, gruplar ve bağıl ölçütler için referans üretir. scikit-learn'ün `r2_score` işlevi sabit gözlenende sonlu bir yer tutucu döndürdüğü için referansta bu durum ayrıca "tanımsız" yazılır.
+
+---
+
+## 8. Çap Dağılımı Laboratuvarı, Weibull sürümü (Modül 4, `assets/lab/weibull/calc.js`)
+**Parametreler (her yerde aynı):** a = konum, b > 0 = ölçek, c > 0 = şekil.
+F(d) = 1 − exp(−((d − a)/b)^c), d > a; d ≤ a için F(d) = 0. f(d) = (c/b)((d − a)/b)^(c−1) exp(−((d − a)/b)^c), d > a.
+Ortalama a + bΓ(1 + 1/c); varyans b²[Γ(1 + 2/c) − Γ²(1 + 1/c)]; ortanca a + b(ln 2)^(1/c); tepe değer a + b((c − 1)/c)^(1/c) (c > 1), aksi hâlde a. Yüzdelik a + b(−ln(1 − q))^(1/c). Sayısal kayıp olmasın diye F = −expm1(−t^c) ve 1 − F = exp(−t^c) ile hesaplanır.
+
+**Girdi:** Tek ağaç çapları (cm; mm seçilirse ×0,1) ve isteğe bağlı örnek alan kimliği; isteğe bağlı bir süzgeç (ör. dönem). Boş/okunamayan ve sıfır veya negatif çaplar hesap dışı bırakılır ve sayıları raporlanır.
+
+**Analiz birimi:** Her örnek alan ayrı uydurulur (varsayılan) ya da bütün ağaçlar tek havuzda. Havuzda her ağaç aynı ağırlığı alır; örnek alanlar eşit büyüklükte değilse havuzlanmış dağılım hektar başına çap dağılımını temsil etmez (ekranda uyarı).
+
+**Konum a tahmin edilmez.** İki parametreli biçimde a = 0. Üç parametreli biçimde a kullanıcının **sabitlediği** değerdir; b ve c tahmin edilir; serbest parametre sayısı 2'dir. a örneklem minimumundan otomatik alınmaz. Kısıtlar: a sayı, a ≥ 0 (araç kuralı: çap için negatif konum kabul edilmez) ve her analiz biriminde a < min(d), yani her d − a > 0. Sağlanmazsa o birim için uydurma yapılmaz ve nedeni yazılır.
+
+### Tahmin yöntemleri (x = d − a)
+- **En çok olabilirlik:** ln L = n ln c − n c ln b + (c − 1) Σ ln x − Σ (x/b)^c. Profil denklemi g(c) = Σ x^c ln x / Σ x^c − 1/c − ortalama(ln x) = 0 (c'ye göre artan; sabit olmayan veride tek kök), sonra b = (ortalama x^c)^(1/c). Sayısal taşma olmasın diye x en büyük değerine bölünerek hesaplanır.
+- **Momentler:** Ortalama ve örneklem varyansı (payda n − 1) eşlenir: s²/x̄² = Γ(1 + 2/c)/Γ²(1 + 1/c) − 1 (c'ye göre azalan), b = x̄/Γ(1 + 1/c).
+- **Çözüm ve durum raporu:** Kök c ∈ [0,01; 1000] aralığında geometrik ikiye bölmeyle aranır (göreli tolerans 10⁻¹⁴, en çok 300 yineleme). Durumlar: *yakınsadı*; *sınır çözümü* (kök aralığın dışında: c > 1000, neredeyse sabit veri, ya da c < 0,01) — parametre verilmez; *yakınsamadı* (denklem sayısal olarak tanımsız veya yineleme sınırı); *uydurulmadı* (n < 2, bütün çaplar eşit, geçersiz a).
+- **Uyarılar (uydurmayı durdurmaz):** Farklı çap sayısı < 10 ise "az sayıda farklı değer" (araç eşiği, literatür değeri değil); n ≥ 20, farklı değer ≤ 15 ve farklı/n < 0,2 ise "sınıf ortası gibi görünüyor" (gruplanmış veri olabilirliği gerekir); c ≤ 1 ise yoğunluk a'da en büyüktür.
+- **Kesilme:** Kullanıcı ölçüm eşiği sorusunu yanıtlamadan uydurma yapılmaz. Bilinen bir eşikle kesilmiş veri bu sürümde uydurulmaz; doğru yöntem kesilmiş olabilirliktir: f(d)/[1 − F(t)], d ≥ t. Konumu eşiğe eşitlemek kesilmeyi düzeltmez. Sınıf frekansı biçimindeki veri (sınıf ortası + sayı) bu sürümde kabul edilmez.
+
+### Uyum istatistikleri (p değeri yok)
+- KS D = max_i max(F(x₍ᵢ₎) − (i − 1)/n, i/n − F(x₍ᵢ₎)).
+- AD A² = −n − (1/n) Σ (2i − 1)[ln F(x₍ᵢ₎) + ln(1 − F(x₍ₙ₊₁₋ᵢ₎))], logaritmik ölçekte.
+- Parametreler aynı veriden tahmin edildiği için standart tablo kritik değerleri ve p değerleri geçerli değildir; doğrulanmış kalibrasyon (ör. parametrik bootstrap) olmadığı için p değeri verilmez.
+- AIC = 2k − 2 ln L, BIC = k ln n − 2 ln L, k = 2; yalnızca en çok olabilirlik satırlarında (moment tahminleri olabilirliği en büyüklemez). İki ML satırı (a = 0 ve sabit a) aynı veri ve aynı yoğunluk birimiyle karşılaştırılabilir; a veriye bakılarak seçildiyse bu seçim AIC'ye yansımaz. Farklı örnek alanlar veya farklı süzgeçlerle elde edilen AIC'ler karşılaştırılmaz.
+
+### Sınıf frekansları
+Sınıflar yarı açık [alt, üst) (§6 ile aynı kural, çakışma yok). Sınıf olasılığı F(üst) − F(alt), sayısal olarak 1 − F farkıyla hesaplanır; beklenen sayı n·[F(üst) − F(alt)]. Alt kuyruk F(b₀) ve üst kuyruk 1 − F(b_k) ayrı satırlardır; görünür sınıflar yeniden normalize edilmez, olasılıkların toplamı ancak kuyruklarla 1'dir. Histogram yoğunluğu sınıf sayısı/(n·genişlik).
+
+### Eğri gezgini
+Kullanıcının verdiği a, b, c ile yoğunluk, birikimli dağılım, ortalama, standart sapma, ortanca ve yüzdelikler. Hiçbir veriden tahmin yapılmaz; ekranda ayrı bölümde "gösterim, veriye uydurma değildir" etiketiyle durur.
+
+### Doğrulama
+`tests/ref/make_weibull_reference.py`: numpy `default_rng(20261105)` ile üretilmiş sentetik örnekler (iki parametreli, kaydırılmış, küçük örnek, c < 1) ve çoklu örnek alan verisi; SciPy `brentq` aynı tahmin denklemlerinde, `weibull_min` cdf/sf/pdf/ppf/mean/std, `kstest`, `logcdf`/`logsf` ile A², sınıf olasılıkları; `weibull_min.fit(floc=0)` ML kökünü gevşek toleransla çapraz denetler. `tests/weibull/test_weibull.mjs` ayrıca F sınırlarını, sabit/az/tek ağaçlı örnekleri, sınır çözümünü ve yakınsamama raporunu sınar. `lnGamma` `assets/tools.js`'ten değişmeden `assets/lab/core/special.js`'e taşındı; iki uygulamanın aynı sonucu verdiği test edilir.
+- Bailey, R.L., Dell, T.R. 1973. Quantifying diameter distributions with the Weibull function. *Forest Science* 19: 97–104. **[İ]**
+- Anderson, T.W., Darling, D.A. 1954. A test of goodness of fit. *J. Am. Stat. Assoc.* 49: 765–769. **[D]**
+- Cohen, A.C. 1965. Maximum likelihood estimation in the Weibull distribution based on complete and on censored samples. *Technometrics* 7: 579–588. **[D]**

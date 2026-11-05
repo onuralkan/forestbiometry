@@ -228,3 +228,10 @@ tr.st-empty td:nth-child(3) { color: var(--info); }
 .modelrow.on { border-color: var(--acc); background: var(--acc-soft); }
 .statement { border-left: 4px solid var(--warn); background: var(--warn-bg); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 13.5px; margin: 8px 0; }
 td.undef { color: var(--muted); }
+.ch-bar { fill: var(--line); } .ch-line { fill: none; stroke-width: 2; } .ch-dash { stroke-dasharray: 6 4; }
+.ch-l0 { stroke: var(--c1); } .ch-l1 { stroke: var(--c2); } .ch-l2 { stroke: var(--c3); } .ch-l3 { stroke: var(--c4); } .ch-l4 { stroke: var(--c5); } .ch-l5 { stroke: var(--c6); }
+.explore { border: 2px dashed var(--c4); border-radius: var(--r); padding: 14px 16px; background: var(--surface); }
+.explore .tag { color: var(--c4); border-color: var(--c4); }
+.range { display: grid; grid-template-columns: 70px 1fr 90px; gap: 8px; align-items: center; margin: 6px 0; }
+.range input[type=range] { width: 100%; }
+tr.tail td, tr.tail th { font-style: italic; background: var(--sunk); }

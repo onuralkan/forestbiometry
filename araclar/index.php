@@ -44,7 +44,6 @@ bench_top([
     <p class="muted"><?= $tr ? 'Bu araçlar yeni bölümdeki karşılıkları hazır olana kadar eski adreslerinde çalışmaya devam eder.' : 'These keep working at their old addresses until their counterparts in this section are ready.' ?></p>
     <ul class="oldlist">
       <li><a href="../mescere.php"><?= $tr ? 'Meşcere Hesaplayıcı' : 'Stand Calculator' ?></a></li>
-      <li><a href="../weibull.php"><?= $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab' ?></a></li>
       <li><a href="../bulmaca.php"><?= $tr ? 'Bulmaca Köşesi' : 'Crossword Corner' ?></a></li>
     </ul>
   </section>

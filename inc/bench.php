@@ -19,7 +19,9 @@ function bench_tools(): array {
         ['n' => 3, 'file' => 'model-degerlendirme.php', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
          'desc' => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE ve tahmin R²; gözlenen–tahmin ve artık grafikleri, gruplara göre başarı tabloları.'
                        : 'Bias, MAE, RMSE and prediction R² from observed and predicted values; observed–predicted and residual plots, performance tables by group.'],
-        ['n' => 4, 'file' => null, 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab', 'desc' => ''],
+        ['n' => 4, 'file' => 'cap-dagilimi.php', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
+         'desc' => $tr ? 'Weibull sürümü: tek ağaç çaplarından en çok olabilirlik ve moment tahmini, sabit konumlu üç parametreli biçim, sınıf frekansları ve kuyruklar, örnek alan bazında uydurma, eğri gezgini. Diğer dağılımlar sonraki sürümlerde.'
+                       : 'Weibull version: maximum likelihood and moment estimation from tree diameters, three-parameter form with a fixed location, class frequencies with tails, per-plot fits, curve explorer. Other distributions in later versions.'],
         ['n' => 5, 'file' => null, 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling', 'desc' => ''],
         ['n' => 6, 'file' => null, 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner', 'desc' => ''],
     ];
@@ -40,7 +42,7 @@ function bench_top(array $o = []): void {
 <meta name="theme-color" content="#f3f1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="<?= $b ?>assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="<?= $b ?>assets/lab/lab.css?v=3">
+<link rel="stylesheet" href="<?= $b ?>assets/lab/lab.css?v=4">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23155e63'/><text x='16' y='23' font-family='Georgia,serif' font-weight='900' font-size='20' fill='%23fff' text-anchor='middle'>A</text></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 </head>
