@@ -51,6 +51,7 @@ jobs:
           printf '%s\n' "$KEY" | tr -d '\r' > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
           echo "Resolving and probing $HOST:${PORT:-22} ..."
           getent ahosts "$HOST" | head -3 || true
+          for pt in 21 22 2083 "${PORT:-22}"; do timeout 8 bash -c "exec 3<>/dev/tcp/$HOST/$pt" 2>/dev/null && echo "port $pt: open" || echo "port $pt: closed/filtered"; done
           if ! timeout 20 bash -c "exec 3<>/dev/tcp/$HOST/${PORT:-22}" 2>/dev/null; then
             echo "::error::TCP connection to the SSH port failed from GitHub's runner (firewall or wrong host/port). Nothing was uploaded."; exit 1
           fi
