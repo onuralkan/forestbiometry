@@ -1,7 +1,10 @@
-# Push to main → run the numerical tests → upload the site to the server over FTPS.
-# Only changed files are sent; data/ and files/ on the server (users' content, password hash, 2FA key) are never touched.
-# Needs three repository secrets (Settings → Secrets and variables → Actions): FTP_SERVER, FTP_USERNAME, FTP_PASSWORD.
-# The FTP account is rooted at public_html (server-dir ./). Without the secrets the upload step is skipped.
+# Push to main → run the numerical tests → upload the site to the server over SSH (rsync, or tar if rsync is missing).
+# Only files tracked in git are sent, minus docs/tests/scripts/.github; data/ and files/ (users' content, password hash,
+# 2FA key) are never uploaded or deleted, and nothing on the server is ever deleted.
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   SSH_HOST, SSH_PORT, SSH_USER, SSH_PRIVATE_KEY (no passphrase), DEPLOY_PATH (document root of onuralkan.com.tr),
+#   SSH_KNOWN_HOSTS (optional at first; the first run prints the value to save).
+# Before uploading, the run checks that DEPLOY_PATH already holds this site (inc/paper.php), so it cannot spill into another domain.
 name: Deploy to onuralkan.com.tr
 on:
   push:
@@ -30,33 +33,53 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     env:
-      HAS_FTP: ${{ secrets.FTP_PASSWORD != '' }}
+      HAS_SSH: ${{ secrets.SSH_PRIVATE_KEY != '' && secrets.DEPLOY_PATH != '' }}
     steps:
       - uses: actions/checkout@v4
       - name: Secrets missing, nothing uploaded
-        if: env.HAS_FTP != 'true'
-        run: echo "::notice::FTP_SERVER / FTP_USERNAME / FTP_PASSWORD secrets are not set; skipping the upload."
-      - name: Upload changed files (FTPS)
-        if: env.HAS_FTP == 'true'
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: ./
-          server-dir: ./
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            .github/**
-            data/**
-            files/**
-            docs/**
-            tests/**
-            scripts/**
-            README.md
-            CLAUDE.md
-            check.php
+        if: env.HAS_SSH != 'true'
+        run: echo "::notice::SSH_HOST / SSH_PORT / SSH_USER / SSH_PRIVATE_KEY / DEPLOY_PATH secrets are not set; skipping the upload."
+      - name: Set up SSH
+        if: env.HAS_SSH == 'true'
+        env:
+          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          KNOWN: ${{ secrets.SSH_KNOWN_HOSTS }}
+          HOST: ${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" | tr -d '\r' > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          if [ -n "$KNOWN" ]; then
+            printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "${PORT:-22}" "$HOST" 2>/dev/null > ~/.ssh/known_hosts
+            echo "::warning::SSH_KNOWN_HOSTS is not set, so the server key was accepted on first use. Save the lines printed below as the SSH_KNOWN_HOSTS secret."
+            cat ~/.ssh/known_hosts
+            ssh-keygen -lf ~/.ssh/known_hosts
+          fi
+          chmod 600 ~/.ssh/known_hosts
+      - name: Upload over SSH
+        if: env.HAS_SSH == 'true'
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+          USR: ${{ secrets.SSH_USER }}
+          DIR: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          SSH="ssh -i $HOME/.ssh/deploy_key -p ${PORT:-22} -o StrictHostKeyChecking=yes -o BatchMode=yes"
+          DIR="${DIR%/}"
+          # 1. the target must already be this site (protects the other domain on the same hosting account)
+          if ! $SSH "$USR@$HOST" "test -f '$DIR/inc/paper.php' && test -f '$DIR/index.php'"; then
+            echo "::error::$DIR does not look like the onuralkan.com.tr folder (inc/paper.php not found). Nothing was uploaded."; exit 1
+          fi
+          # 2. files to send: tracked files minus development folders; data/ and files/ never
+          git ls-files | grep -Ev '^(\.github/|data/|files/|docs/|tests/|scripts/|\.gitignore$|README\.md$|CLAUDE\.md$|check\.php$)' > "$RUNNER_TEMP/list.txt"
+          echo "$(wc -l < "$RUNNER_TEMP/list.txt") files"
+          # 3. rsync sends only what changed; without rsync on the server, tar sends everything. Nothing is deleted.
+          if $SSH "$USR@$HOST" 'command -v rsync >/dev/null'; then
+            rsync -ltz --checksum --itemize-changes --chmod=D755,F644 --files-from="$RUNNER_TEMP/list.txt" -e "$SSH" ./ "$USR@$HOST:$DIR/"
+          else
+            echo "::notice::rsync not found on the server; using tar (all files are sent)."
+            tar -czf - -T "$RUNNER_TEMP/list.txt" | $SSH "$USR@$HOST" "tar -xzf - -C '$DIR' --no-same-owner"
+          fi
