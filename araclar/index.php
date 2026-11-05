@@ -14,7 +14,8 @@ bench_top([
   <section class="card" id="handoff" aria-live="polite" hidden>
     <h2><?= $tr ? 'Onaylanmış veri' : 'Approved dataset' ?></h2>
     <p id="handoff-text"></p>
-    <p class="b-actions"><a class="btn" href="veri-denetcisi.php"><?= $tr ? 'Denetçide aç' : 'Open in the checker' ?></a>
+    <p class="b-actions"><a class="btn" href="ornek-alan.php"><?= $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı\'nda kullan' : 'Use in Plot & Stand Metrics' ?></a>
+      <a class="btn ghost" href="veri-denetcisi.php"><?= $tr ? 'Denetçide aç' : 'Open in the checker' ?></a>
       <button type="button" class="btn ghost" id="handoff-clear"><?= $tr ? 'Bu tarayıcıdan sil' : 'Remove from this browser' ?></button></p>
   </section>
 
@@ -59,8 +60,8 @@ async function show() {
   const when = new Date(ds.created).toLocaleString(tr ? 'tr-TR' : 'en-GB');
   const src = ds.source && ds.source.trees ? ds.source.trees.name : '';
   document.getElementById('handoff-text').textContent = tr
-    ? `${src ? '"' + src + '", ' : ''}${ds.trees.length} ağaç kaydı, ${ds.plots.length} örnek alan; ${when} tarihinde onaylandı. Bu veri yalnızca bu tarayıcıda saklanıyor; hazır olduğunda sonraki araçlar kullanmayı önerecek.`
-    : `${src ? '"' + src + '", ' : ''}${ds.trees.length} tree records, ${ds.plots.length} plots; approved ${when}. Stored only in this browser; the next tools will offer to use it once they are ready.`;
+    ? `${src ? '"' + src + '", ' : ''}${ds.trees.length} ağaç kaydı, ${ds.plots.length} örnek alan; ${when} tarihinde onaylandı. Bu veri yalnızca bu tarayıcıda saklanıyor; Örnek Alan ve Meşcere Hesaplayıcısı bu veriyi kullanır.`
+    : `${src ? '"' + src + '", ' : ''}${ds.trees.length} tree records, ${ds.plots.length} plots; approved ${when}. Stored only in this browser; Plot & Stand Metrics uses it.`;
   box.hidden = false;
 }
 document.getElementById('handoff-clear').addEventListener('click', async () => { await del('dataset:approved'); show(); });

@@ -1,0 +1,557 @@
+{
+ "schema": "forest-dataset/1",
+ "created": "2026-11-05T00:00:00.000Z",
+ "tool": {
+  "id": "veri-denetcisi",
+  "version": "1.0.0"
+ },
+ "units": {
+  "dbh": "cm",
+  "height": "m",
+  "plot_area": "m2",
+  "x": "m",
+  "y": "m"
+ },
+ "source": {
+  "trees": {
+   "name": "agaclar.csv (örnek / sample)",
+   "kind": "csv",
+   "meta": {
+    "delim": ";",
+    "header": true,
+    "width": 7
+   },
+   "records": 18
+  },
+  "plots": {
+   "name": "ornek-alanlar.csv (örnek / sample)",
+   "kind": "csv",
+   "meta": {
+    "delim": ";",
+    "header": true,
+    "width": 3
+   },
+   "records": 5
+  },
+  "mapping": {
+   "trees": {
+    "plot_id": "alan_no",
+    "tree_id": "agac_no",
+    "species": "tur",
+    "dbh": "cap_cm",
+    "height": "boy_m",
+    "period": "yil",
+    "plot_area": "alan_m2"
+   },
+   "plots": {
+    "plot_id": "alan_no",
+    "plot_area": "alan_m2",
+    "stratum": "tabaka"
+   }
+  },
+  "settings": {
+   "decimal": ",",
+   "units": {
+    "dbh": "cm",
+    "height": "m",
+    "area": "m2",
+    "xy": "m"
+   },
+   "limits": {
+    "dbhMin": 1,
+    "dbhMax": 200,
+    "hMin": 2,
+    "hMax": 60,
+    "slMin": 15,
+    "slMax": 200
+   }
+  },
+  "note": "SYNTHETIC SAMPLE, NOT REAL DATA / UYDURMA ÖRNEK, GERÇEK VERİ DEĞİL"
+ },
+ "plots": [
+  {
+   "plot_id": "001",
+   "plot_area": 400,
+   "stratum": "A",
+   "area_source": "plots+trees",
+   "n_records": 7
+  },
+  {
+   "plot_id": "002",
+   "plot_area": 400,
+   "stratum": "A",
+   "area_source": "plots+trees",
+   "n_records": 4
+  },
+  {
+   "plot_id": "003",
+   "plot_area": 800,
+   "stratum": "B",
+   "area_source": "plots+trees",
+   "n_records": 4
+  },
+  {
+   "plot_id": "004",
+   "plot_area": 400,
+   "stratum": "B",
+   "area_source": "plots",
+   "n_records": 0
+  },
+  {
+   "plot_id": "1",
+   "plot_area": 400,
+   "stratum": "A",
+   "area_source": "plots+trees",
+   "n_records": 2
+  }
+ ],
+ "trees": [
+  {
+   "row": 2,
+   "plot_id": "001",
+   "tree_id": "1",
+   "species": "Pb",
+   "dbh": 24.5,
+   "height": 17.2,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 3,
+   "plot_id": "001",
+   "tree_id": "1",
+   "species": "Pb",
+   "dbh": 26.1,
+   "height": 18,
+   "period": "2024",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 4,
+   "plot_id": "001",
+   "tree_id": "2",
+   "species": "Pb",
+   "dbh": 31,
+   "height": 19.4,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 5,
+   "plot_id": "001",
+   "tree_id": "2",
+   "species": "Pb",
+   "dbh": 32.4,
+   "height": 20.1,
+   "period": "2024",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 6,
+   "plot_id": "001",
+   "tree_id": "3",
+   "species": "Pn",
+   "dbh": 18.2,
+   "height": 14,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 7,
+   "plot_id": "001",
+   "tree_id": "3",
+   "species": "Pn",
+   "dbh": 19,
+   "height": null,
+   "period": "2024",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 8,
+   "plot_id": "001",
+   "tree_id": "4",
+   "species": "Pb",
+   "dbh": 12.7,
+   "height": 11.3,
+   "period": "2024",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 9,
+   "plot_id": "002",
+   "tree_id": "1",
+   "species": "Ca",
+   "dbh": 41.3,
+   "height": 22.5,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 10,
+   "plot_id": "002",
+   "tree_id": "2",
+   "species": "Ca",
+   "dbh": 8.4,
+   "height": 7.1,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 12,
+   "plot_id": "002",
+   "tree_id": "3",
+   "species": "Ca",
+   "dbh": 36,
+   "height": 23,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 13,
+   "plot_id": "002",
+   "tree_id": "5",
+   "species": "Ca",
+   "dbh": 27.4,
+   "height": 19,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 14,
+   "plot_id": "003",
+   "tree_id": "1",
+   "species": "Qc",
+   "dbh": 15.5,
+   "height": 9.8,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 15,
+   "plot_id": "003",
+   "tree_id": "2",
+   "species": "Qc",
+   "dbh": 22.1,
+   "height": 12.4,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 16,
+   "plot_id": "003",
+   "tree_id": "3",
+   "species": "Qc",
+   "dbh": 19.9,
+   "height": 11.7,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 17,
+   "plot_id": "003",
+   "tree_id": "4",
+   "species": "Qc",
+   "dbh": 245,
+   "height": 13,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 18,
+   "plot_id": "1",
+   "tree_id": "1",
+   "species": "Pb",
+   "dbh": 29.3,
+   "height": 18.8,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  },
+  {
+   "row": 19,
+   "plot_id": "1",
+   "tree_id": "2",
+   "species": "Pb",
+   "dbh": 33.8,
+   "height": 20.5,
+   "period": "2019",
+   "stem_id": null,
+   "stratum": null,
+   "status": null,
+   "x": null,
+   "y": null,
+   "extra": {}
+  }
+ ],
+ "derived": {
+  "note": "Computed from approved values; not part of the measured data.",
+  "trees": [
+   {
+    "row": 2,
+    "basal_area_m2": 0.04714352475793183
+   },
+   {
+    "row": 3,
+    "basal_area_m2": 0.053502108288797576
+   },
+   {
+    "row": 4,
+    "basal_area_m2": 0.07547676350249478
+   },
+   {
+    "row": 5,
+    "basal_area_m2": 0.08244795760081053
+   },
+   {
+    "row": 6,
+    "basal_area_m2": 0.02601552876437708
+   },
+   {
+    "row": 7,
+    "basal_area_m2": 0.028352873698647883
+   },
+   {
+    "row": 8,
+    "basal_area_m2": 0.012667686977437444
+   },
+   {
+    "row": 9,
+    "basal_area_m2": 0.13396457933253933
+   },
+   {
+    "row": 10,
+    "basal_area_m2": 0.005541769440932396
+   },
+   {
+    "row": 12,
+    "basal_area_m2": 0.10178760197630929
+   },
+   {
+    "row": 13,
+    "basal_area_m2": 0.05896455251522681
+   },
+   {
+    "row": 14,
+    "basal_area_m2": 0.018869190875623696
+   },
+   {
+    "row": 15,
+    "basal_area_m2": 0.038359631698494774
+   },
+   {
+    "row": 16,
+    "basal_area_m2": 0.031102552668702342
+   },
+   {
+    "row": 17,
+    "basal_area_m2": 4.714352475793184
+   },
+   {
+    "row": 18,
+    "basal_area_m2": 0.06742564692950753
+   },
+   {
+    "row": 19,
+    "basal_area_m2": 0.08972702777917807
+   }
+  ],
+  "plots": [
+   {
+    "plot_id": "001",
+    "expansion_factor": 25
+   },
+   {
+    "plot_id": "002",
+    "expansion_factor": 25
+   },
+   {
+    "plot_id": "003",
+    "expansion_factor": 12.5
+   },
+   {
+    "plot_id": "004",
+    "expansion_factor": 25
+   },
+   {
+    "plot_id": "1",
+    "expansion_factor": 25
+   }
+  ]
+ },
+ "warnings": [
+  {
+   "code": "dbh.range",
+   "table": "trees",
+   "row": 17,
+   "plot": null,
+   "field": "dbh",
+   "accepted": "Örnek veri / sample data"
+  },
+  {
+   "code": "sl.range",
+   "table": "trees",
+   "row": 17,
+   "plot": null,
+   "field": "height",
+   "accepted": "Örnek veri / sample data"
+  }
+ ],
+ "excluded": [
+  11
+ ],
+ "changelog": [
+  {
+   "seq": 1,
+   "time": "2026-11-05T00:00:00.000Z",
+   "action": "edit",
+   "table": "trees",
+   "row": 13,
+   "field": "dbh",
+   "column": "cap_cm",
+   "old": "27,x",
+   "new": "27,4",
+   "reason": "Örnek düzeltme / sample fix",
+   "issue": null
+  },
+  {
+   "seq": 2,
+   "time": "2026-11-05T00:00:00.000Z",
+   "action": "exclude",
+   "table": "trees",
+   "row": 11,
+   "field": null,
+   "old": null,
+   "new": null,
+   "reason": "Mükerrer kayıt / duplicate record"
+  },
+  {
+   "seq": 3,
+   "time": "2026-11-05T00:00:00.000Z",
+   "action": "edit",
+   "table": "trees",
+   "row": 16,
+   "field": "plot_area",
+   "column": "alan_m2",
+   "old": "600",
+   "new": "800",
+   "reason": "Alan tablosuyla uyumlu / matches plot table",
+   "issue": "area.conflict"
+  },
+  {
+   "seq": 4,
+   "time": "2026-11-05T00:00:00.000Z",
+   "action": "edit",
+   "table": "trees",
+   "row": 8,
+   "field": "species",
+   "column": "tur",
+   "old": "pb ",
+   "new": "Pb",
+   "reason": "Tür kodu birleştirildi / species code unified",
+   "issue": "sp.variant"
+  },
+  {
+   "seq": 5,
+   "time": "2026-11-05T00:00:00.000Z",
+   "action": "accept",
+   "table": "trees",
+   "row": 17,
+   "field": "dbh",
+   "old": "245",
+   "new": "245",
+   "reason": "Örnek veri / sample data",
+   "issue": "dbh.range"
+  },
+  {
+   "seq": 6,
+   "time": "2026-11-05T00:00:00.000Z",
+   "action": "accept",
+   "table": "trees",
+   "row": 17,
+   "field": "height",
+   "old": "13,0",
+   "new": "13,0",
+   "reason": "Örnek veri / sample data",
+   "issue": "sl.range"
+  }
+ ]
+}

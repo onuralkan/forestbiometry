@@ -34,6 +34,7 @@ scripts/             Paketleme betikleri (yayın paketine girmez)
 ```
 araclar/index.php            Araçlar bölümü dizini (TR/EN, ?lang=); onaylanmış veri durumunu gösterir
 araclar/veri-denetcisi.php   Araç 1: Ormancılık Verisi Denetçisi (ince PHP kabuğu)
+araclar/ornek-alan.php       Araç 2: Örnek Alan ve Meşcere Hesaplayıcısı
 inc/bench.php                Tezgâh düzeni: küçük gazete başlığı, araç başlığı, altbilgi; bench_tools() listesi
 assets/lab/lab.css           Tezgâh düzeni stilleri, renk ve önem düzeyi paleti (açık/koyu)
 assets/lab/core/num.js       Sayı okuma (ondalık ayarı), ondalık kanıtı, birim dönüştürme
@@ -41,10 +42,12 @@ assets/lab/core/table.js     CSV/TSV/yapıştırma ayrıştırıcı, ayırıcı 
 assets/lab/core/store.js     IndexedDB anahtar–değer deposu (oturum + veri aktarımı)
 assets/lab/core/export.js    CSV (dile göre ayırıcı), XLSX yazma, JSON indirme, SheetJS tembel yükleme
 assets/lab/core/i18n.js      Dil, sayı biçimi, HTML kaçışı
+assets/lab/core/chart.js     SVG çubuk grafik (kütüphanesiz), tema renkleriyle SVG indirme
 assets/lab/checker/          calc.js (saf), ui.js, i18n.js, ornek/ (uydurma örnek CSV'ler)
+assets/lab/stand/            calc.js (saf), ui.js, i18n.js, ornek/ornek-veri.json (scripts/make-stand-sample.mjs ile üretilir)
 assets/vendor/sheetjs/       SheetJS CE 0.20.3 mini (Apache-2.0), README'de köken ve sağlama
 ```
-Henüz yok (ilgili modülle gelecek): istatistik, NLS (Levenberg–Marquardt), grafik çekirdeği.
+Henüz yok (ilgili modülle gelecek): istatistik çekirdeği, NLS (Levenberg–Marquardt), çizgi/saçılım grafikleri.
 
 ## 3. Veri akışı (dürüst beyan)
 - **Araçlar:** Kullanıcının dosyası tarayıcıda (`File.arrayBuffer`) okunur ve **sunucuya gönderilmez**. Bütün hesaplar tarayıcıda yapılır. Sunucu yalnızca sayfayı ve JS dosyalarını verir.
@@ -89,7 +92,7 @@ Veri Denetçisi'nde onaylanan veri, tarayıcının IndexedDB deposunda (`onuralk
   warnings: [{code, table, row, plot, field, accepted: gerekçe|null}],
   excluded: [kaynak satır no], changelog: [{seq, time, action, table, row, field, column, old, new, reason, issue}] }
 ```
-Boş örnek alanlar `plots` içinde `n_records: 0` ile yer alır. Onay ancak **hata sayısı 0** iken verilir; açık uyarılar `warnings` içinde kalır. Şema değişirse sürüm numarası artar (`forest-dataset/2`) ve okuyucu araçlar eski sürümü reddeder veya çevirir.
+Boş örnek alanlar `plots` içinde `n_records: 0` ile yer alır. İsteğe bağlı ağaç alanı `height_source: 'measured'|'estimated'` (yoksa ölçülmüş sayılır); boy tahmin eden araçlar (Modül 5) bunu yazar, tüketen araçlar tahmini boyları ayrı tutar. Onay ancak **hata sayısı 0** iken verilir; açık uyarılar `warnings` içinde kalır. Şema değişirse sürüm numarası artar (`forest-dataset/2`) ve okuyucu araçlar eski sürümü reddeder veya çevirir.
 
 Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfayı yeniden yükler ve oturum geri gelir.
 
@@ -118,7 +121,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 5. Mevcut `assets/tools.js` içindeki test edilmiş matematik ES modüllerine **taşınır** (yeniden yazılmaz; testleri korunur).
 
 ## 8. Eski "Ekler" ve yeni bölüm
-- Meşcere Hesaplayıcı ve Çap Dağılımı Laboratuvarı, yeni bölümdeki Modül 2 ve 4'ün öncülleridir. Bu modüller tamamlanana kadar olduğu gibi kalırlar; sonra eski adresler yeni araçlara yönlendirilir. Hesap kodları testleriyle birlikte taşınır.
+- Meşcere Hesaplayıcı ve Çap Dağılımı Laboratuvarı, yeni bölümdeki Modül 2 ve 4'ün öncülleridir. Modül 2 (5 Kasım 2026) N, G, ortalama çaplar ve sınıflar için eski hesaplayıcının yerini aldı; ancak eski sayfadaki üst boy, Näslund boy tahmini ve kullanıcı katsayılı hacim yeni araçta yok. Bu yüzden `mescere.php` yönlendirilmedi; yönlendirme, boy (Modül 5) ve hacim taşındıktan sonra yapılacak. Bu modüller tamamlanana kadar olduğu gibi kalırlar; sonra eski adresler yeni araçlara yönlendirilir. Hesap kodları testleriyle birlikte taşınır.
 - Bulmaca Köşesi gazete bölümünde kalır.
 - ✔ Ön sayfadaki "Ekler" kutusunun ilk maddesi araçlar bölümü dizinine bağlanır (`paper_supplements()`).
 
@@ -127,7 +130,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 |---|---|---|
 | 0 | Çalışma zemini | Bu belge, METHODS.md, PROGRESS.md, `tests/`, paketleme betiği ✔ |
 | 1 | Ormancılık Verisi Denetçisi / Forest Data Checker | + araçlar bölümü dizini, tezgâh düzeni, içe aktarma, sütun eşleme, dışa aktarma, renk paleti ✔ |
-| 2 | Örnek Alan ve Meşcere Hesaplayıcısı / Plot & Stand Metrics | Çekirdeği kullanır; eski Meşcere Hesaplayıcı'nın yerini alır |
+| 2 | Örnek Alan ve Meşcere Hesaplayıcısı / Plot & Stand Metrics | Çekirdeği kullanır ✔ (eski hesaplayıcının üst boy ve hacim kısmı henüz taşınmadı) |
 | 3 | Model Başarısı Değerlendiricisi / Model Evaluation | Gözlenen–tahmin; kırılımlar |
 | 4 | Çap Dağılımı Laboratuvarı / Diameter Distribution Lab | Mevcut 5 dağılımlı kod taşınır; birikimli dağılım, beklenen ağaç sayısı tablosu |
 | 5 | Boy–Çap Modelleme / Height–Diameter Modelling | Levenberg–Marquardt çekirdeği burada kurulur |

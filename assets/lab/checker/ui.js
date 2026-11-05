@@ -511,7 +511,7 @@ function tabApprove(p) {
     <button type="button" class="btn" id="x-xlsx">${T('ex.all')}</button>
     <button type="button" class="btn ghost" id="x-json"${approvedDs ? '' : ' disabled'}>${T('ex.json')}</button></div>
     ${approvedDs ? '' : `<p class="muted small">${T('ex.need')}</p>`}<p class="muted small">${T('ex.csvnote')}</p>
-    <p><a href="./">${T('to.tools')}</a></p></div>`;
+    <p>${approvedDs ? `<a class="btn" href="ornek-alan.php">${T('to.stand')}</a> ` : ''}<a href="./">${T('to.tools')}</a></p></div>`;
   p.innerHTML = h;
   $('approve').addEventListener('click', async () => {
     const ds = C.approve(S.sources, S.work, S.mapping, S.settings, ev, { lang });

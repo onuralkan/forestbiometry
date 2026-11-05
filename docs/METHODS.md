@@ -151,3 +151,47 @@ Bu iki tanım standart orman ölçümü bağıntılarıdır; doğrulama `tests/c
 
 ### Renk paleti
 - Okabe, M., Ito, K. 2008. Color Universal Design (CUD): How to make figures and presentations that are friendly to colorblind people. J*Fly web sayfası. **[D]**
+
+---
+
+## 6. Örnek Alan ve Meşcere Hesaplayıcısı (Modül 2, `assets/lab/stand/calc.js`)
+**Kapsam:** Sabit alanlı örnek alanlar; bir örnek alandaki her ağacın örneklenme olasılığı aynıdır (alanın tamamında, ölçüm eşiğinin üstündeki her ağaç ölçülür). Alan büyüklükleri örnek alanlar arasında farklı olabilir. **İç içe alanlar, çapa göre değişen alanlar ve açı sayımı (Bitterlich)** ağaç başına ayrı örnekleme ağırlığı (hektara çevirme katsayısı) gerektirir; bu araç onları kendiliğinden işlemez, kullanıcıdan "sabit alanlı" onayı ister.
+
+**Girdi:** Veri Denetçisi'nde onaylanmış `forest-dataset/1` (PROJECT.md §4b). Birimler: d cm, h m, A m² (yatay).
+
+### Örnek alan × ölçüm dönemi birimi
+- Her (örnek alan, dönem) birleşimi bir birimdir. Dönem bilgisi yoksa her örnek alan tek birimdir; kaydı olmayan alan **geçerli boş alandır**.
+- Dönem bilgisi varsa kaydı olmayan birleşimlerin ölçülüp boş mu bulunduğu, yoksa ölçülmediği mi veriden anlaşılamaz. Kullanıcı seçer: "ölçüldü, boş" (N = G = 0) veya "ölçülmedi" (hesap dışı). Seçilmezse bu birleşimler hiçbir özete girmez ve o dönem için orman tahmini yapılmaz.
+- Durum (status) değerlerine göre hangi kayıtların sayılacağını kullanıcı seçer (varsayılan: hepsi). Bir birleşimin "ölçülmüş" sayılması süzgeçten önceki kayıtlara bakar; süzgeçten sonra ağacı kalmayan birim geçerli boş birimdir.
+- `stem_id` varsa her kayıt bir gövde olarak sayılır (N gövde sayısıdır); ayrıca farklı ağaç kimliği sayısı raporlanır.
+
+### Birim düzeyinde ölçüler
+| Ölçü | Tanım |
+|---|---|
+| Hektara çevirme katsayısı | EF = 10 000 / A |
+| Ağaç sayısı | n (sayılan kayıt), N/ha = n · EF |
+| Göğüs yüzeyi | g = π d² / 40 000 (m²); G = Σg; G/ha = Σg · EF |
+| Aritmetik ortalama çap | d̄ = Σd / n |
+| Kuadratik ortalama çap | Dq = √(Σd² / n) |
+| Çap standart sapması | s_d = √(Σ(d − d̄)² / (n − 1)), n ≥ 2 |
+| En küçük / en büyük çap | min d, max d |
+| Çap sınıfları | Sınıflar yarı açık [alt, üst): sınırdaki ağaç üst sınıfa girer, sınıflar çakışmaz. Sınırlar kesin artan olmalıdır (eşit/azalan sınır reddedilir). İsteğe bağlı açık üst sınıf [b_k, ∞). Alt sınırın altındaki ve (açık sınıf yoksa) son sınırın üstündeki ağaçlar ayrıca sayılır. Her sınıf için n, N/ha, G/ha |
+| Tür katılımı | Ağaç sayısı payı = n_tür / n; göğüs yüzeyi payı = g_tür / Σg. Paydalar o birimin toplamlarıdır ve ekranda yazılır |
+| Boylar | Ölçülmüş boylar (n, ortalama, s, min, max); veri paketinde `height_source: 'estimated'` olan boylar **ayrı** özetlenir, birleştirilmez; boyu olmayan kayıt sayısı ayrıca verilir. Bu sürüm boy tahmin etmez |
+
+**Boş fakat geçerli birim:** n = 0, N/ha = 0, G/ha = 0; d̄, Dq, s_d, min ve max **tanımsızdır** (null, ekranda "–"); tür payları tanımsızdır.
+
+**Kabul örneği** (`tests/stand/test_stand.mjs`): A = 500 m², d = 10, 20, 30 cm → EF = 20; N = 60 ağaç/ha; G = π(100+400+900)/40 000 · 20 = 0,7π ≈ 2,1991148575 m²/ha; d̄ = 20 cm; Dq = √(1400/3) ≈ 21,6024689947 cm; s_d = 10 cm.
+
+### Örnek alanlar arası betimsel özet (dönem başına)
+Her geçerli birim bir gözlemdir; N/ha, G/ha ve alan büyüklüğü için birim sayısı, ortalama, standart sapma (n − 1), en küçük, ortanca, en büyük. d̄ ve Dq satırları yalnızca ağacı olan birimlerden. **Alan büyüklüğüyle ağırlıklandırılmaz, ağaçlar birleştirilmez; bu bir orman tahmini değildir.**
+
+### Orman için tasarıma dayalı tahmin (dönem başına)
+Tahmin birimi örnek alandır: y_i, i. örnek alanın hektar değeridir (N/ha, G/ha ve türlere göre N/ha, G/ha; türün bulunmadığı alanda 0). **Farklı büyüklükteki alanların ağaçları tek bir "orman alanı" gibi birleştirilmez; ağaçlar bağımsız gözlem sayılmaz.** Tasarım kullanıcı tarafından belirtilmezse tahmin üretilmez.
+- **Basit rastgele** (sistematik ızgara yaklaşık olarak bu formülle): ȳ = Σy_i / m; s² = Σ(y_i − ȳ)² / (m − 1); SH(ȳ) = s / √m; sd = m − 1. Örnek alan konumlarının popülasyonu sonsuz kabul edilir, sonlu popülasyon düzeltmesi uygulanmaz. Orman alanı A_F (ha) girilirse toplam = ȳ · A_F, SH = SH(ȳ) · A_F. m ≥ 2 gerekir. Sistematik örneklemede varyansın tam yansız bir tahmincisi yoktur; bu formül yaklaşık sonuç verir.
+- **Tabakalı rastgele:** W_h = A_h / ΣA_h (A_h kullanıcı girer, ha); ȳ_st = Σ W_h ȳ_h; SH = √(Σ W_h² s_h² / m_h). Her tabakada m_h ≥ 2; tabakası olmayan alan, alanı girilmemiş tabaka hata olarak raporlanır. Toplam = ȳ_st · ΣA_h.
+- Güven aralığı bu sürümde verilmez (Modül 6).
+- Cochran, W.G. 1977. *Sampling Techniques*, 3. baskı. Wiley, New York. **[D]**
+
+### Doğrulama
+`tests/ref/make_stand_reference.py` (numpy, ayrı yazılmış kod) sentetik `tests/stand/fixture.json` üzerinde iki senaryo (bütün kayıtlar + boş birleşimler; yalnızca canlı + ölçülmedi) için birim ölçülerini, sınıf frekanslarını, tür paylarını, boy sayılarını, alanlar arası özeti, basit rastgele ve tabakalı tahminleri hesaplar; `tests/stand/test_stand.mjs` 10⁻¹⁰ göreli toleransla karşılaştırır.

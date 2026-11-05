@@ -13,7 +13,9 @@ function bench_tools(): array {
         ['n' => 1, 'file' => 'veri-denetcisi.php', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
          'desc' => $tr ? 'Ağaç ve örnek alan tablolarınızı içe aktarın, sütunları eşleyin, biçim hatalarını ve şüpheli ölçümleri bulun; düzeltmeleri gerekçesiyle kaydedip veriyi onaylayın.'
                        : 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
-        ['n' => 2, 'file' => null, 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics', 'desc' => ''],
+        ['n' => 2, 'file' => 'ornek-alan.php', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
+         'desc' => $tr ? 'Onaylanmış veriden her örnek alan ve dönem için hektarda ağaç sayısı ve göğüs yüzeyi, ortalama çaplar, çap sınıfları ve tür katılımı; örnek alanlar arası özet ve tasarıma dayalı orman tahmini.'
+                       : 'From approved data, per plot and period: stems and basal area per hectare, mean diameters, diameter classes and species composition; between-plot summary and design-based forest estimate.'],
         ['n' => 3, 'file' => null, 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation', 'desc' => ''],
         ['n' => 4, 'file' => null, 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab', 'desc' => ''],
         ['n' => 5, 'file' => null, 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling', 'desc' => ''],
