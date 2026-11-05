@@ -21,4 +21,4 @@ bench_top([
   <section id="step3" class="step" data-step="3" hidden></section>
   <section id="step4" class="step wide" data-step="4" hidden></section>
   <dialog id="dlg" class="dlg"></dialog>
-<?php bench_bottom('<script type="module" src="../assets/lab/checker/ui.js?v=1"></script>');
+<?php bench_bottom('<script type="module" src="../assets/lab/checker/ui.js?v=2"></script>');
