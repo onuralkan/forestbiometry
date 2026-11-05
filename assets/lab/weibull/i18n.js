@@ -58,6 +58,10 @@ const tr = {
   'ex.sub': 'a, b ve c değerlerini kendiniz verin; eğri hiçbir veriden tahmin edilmez. Uydurma sonuçlarıyla karıştırmamak için ayrı tutulur.',
   'ex.pdf': p => `Yoğunluk f(d), a = ${p.a}, b = ${p.b}, c = ${p.c} (gösterim)`, 'ex.cdf': p => `Birikimli F(d), a = ${p.a}, b = ${p.b}, c = ${p.c} (gösterim)`,
   'ex.bad': 'b > 0, c > 0 ve a ≥ 0 olmalı.', 'ex.q': 'Yüzdelikler',
+  'nav.list': 'Örnek alan listesi', 'nav.search': 'Örnek alan ara', 'nav.sort': 'Sırala', 'nav.sort.id': 'kimlik', 'nav.sort.n': 'ağaç sayısı', 'nav.sort.ks': 'KS D (büyükten)', 'nav.sort.state': 'önce sorunlular',
+  'nav.bad': 'yalnızca sorunlu', 'nav.count': p => `${p.k} / ${p.n} örnek alan`, 'nav.none': 'Eşleşen örnek alan yok.', 'nav.prev': 'Önceki örnek alan', 'nav.next': 'Sonraki örnek alan',
+  'nav.keys': '← → tuşlarıyla da gezebilirsiniz', 'nav.outside': 'süzgeç dışında', 'nav.open': 'Grafiklerde aç',
+  'nav.st.ok': 'uydurmalar yakınsadı', 'nav.st.warning': 'uyarı var ya da bazı uydurmalar yapılamadı', 'nav.st.error': 'en çok olabilirlik (a = 0) uydurulamadı',
 };
 const en = {
   'step.1': 'Data', 'step.2': 'Settings', 'step.3': 'Results',
@@ -116,5 +120,9 @@ const en = {
   'ex.sub': 'Give a, b and c yourself; the curve is not estimated from any data. It is kept apart so it cannot be confused with the fitted results.',
   'ex.pdf': p => `Density f(d), a = ${p.a}, b = ${p.b}, c = ${p.c} (illustration)`, 'ex.cdf': p => `Cumulative F(d), a = ${p.a}, b = ${p.b}, c = ${p.c} (illustration)`,
   'ex.bad': 'b > 0, c > 0 and a ≥ 0 are needed.', 'ex.q': 'Percentiles',
+  'nav.list': 'Plot list', 'nav.search': 'Search plots', 'nav.sort': 'Sort', 'nav.sort.id': 'ID', 'nav.sort.n': 'number of trees', 'nav.sort.ks': 'KS D (largest first)', 'nav.sort.state': 'problems first',
+  'nav.bad': 'problems only', 'nav.count': p => `${p.k} of ${p.n} plots`, 'nav.none': 'No matching plot.', 'nav.prev': 'Previous plot', 'nav.next': 'Next plot',
+  'nav.keys': 'you can also use the ← → keys', 'nav.outside': 'outside the filter', 'nav.open': 'Open in charts',
+  'nav.st.ok': 'fits converged', 'nav.st.warning': 'a notice, or some fits could not be made', 'nav.st.error': 'maximum likelihood (a = 0) could not be fitted',
 };
 export const T = makeT({ tr, en });

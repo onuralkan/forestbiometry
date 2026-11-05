@@ -40,7 +40,7 @@ await page.fill('#afix', '5'); await page.locator('#afix').dispatchEvent('change
 await shot('wb-2-ayarlar');
 await page.click('#calc'); await page.waitForSelector('#panel table');
 // unit P01: values against SciPy (per-plot reference)
-await page.selectOption('#usel', 'P01');
+await page.click('#ulist [data-u="P01"]');
 const row0 = await page.evaluate(() => [...document.querySelector('#panel tbody tr').children].map(td => td.textContent.trim()));
 const rP = REF.per_plot.P01;
 ok(row0[2] === rP.b.toFixed(4).replace('.', ',') || Math.abs(parseFloat(row0[2].replace(',', '.')) - rP.b) < 6e-5, 'P01 ML b matches SciPy: ' + row0[2]);
@@ -53,10 +53,26 @@ ok((await page.locator('#panel tr', { hasText: 'K1' }).locator('td.undef', { has
 ok((await page.locator('#panel tr', { hasText: 'K2' }).locator('td.undef', { hasText: 'En az 2 çap' }).count()) >= 1, 'single-tree plot reported');
 await shot('wb-4-alanlar');
 await page.click('#tab-charts');
-await page.selectOption('#usel', 'P02');
+// navigator: list, prev/next buttons and arrow keys
+ok((await page.locator('#ulist .uitem').count()) === 5, 'navigator lists the 5 plots');
+const lab = async () => (await page.locator('.navlab b').textContent());
+const startLab = await lab();
+await page.click('#unext'); const afterNext = await lab();
+await page.click('#uprev'); ok(await lab() === startLab && afterNext !== startLab, 'next / previous buttons');
+await page.locator('h1').click(); await page.keyboard.press('ArrowRight');
+ok(await lab() === afterNext, '→ key moves to the next plot');
+await page.check('#ubad');
+ok((await page.locator('#ulist [data-u="K1"]').count()) === 1 && (await page.locator('#ulist [data-u="K2"]').count()) === 1 && (await page.locator('#ulist .uitem .st-ok').count()) === 0, 'problems-only filter keeps only plots with problems (incl. K1, K2)');
+await page.uncheck('#ubad');
+await page.selectOption('#usort', 'ks');
+await page.fill('#uq', 'P0');
+ok((await page.locator('#ulist .uitem').count()) === 2, 'search filters the list');
+await page.fill('#uq', '');
+await page.click('#ulist [data-u="P02"]');
 ok((await page.locator('#ch-h path.ch-line').count()) >= 2 && (await page.locator('#ch-c path.ch-line').count()) >= 3, 'histogram with densities, ECDF with fitted CDFs');
 await shot('wb-5-grafik');
 await page.click('#tab-classes');
+ok((await page.locator('.navlab b').textContent()).includes('P02'), 'selected plot kept across tabs');
 const tails = await page.locator('#panel tr.tail').count();
 ok(tails === 2, 'lower and upper tail rows shown');
 ok((await page.locator('#panel tr', { hasText: 'Toplam (sınıflar + kuyruklar)' }).locator('td').nth(1).textContent()) === '1', 'probabilities incl. tails sum to 1');

@@ -19,4 +19,4 @@ bench_top([
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
   <section id="explore" class="explore" aria-label="<?= $tr ? 'Eğri gezgini' : 'Curve explorer' ?>"></section>
-<?php bench_bottom('<script type="module" src="../assets/lab/weibull/ui.js?v=1"></script>');
+<?php bench_bottom('<script type="module" src="../assets/lab/weibull/ui.js?v=2"></script>');
