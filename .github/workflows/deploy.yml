@@ -49,10 +49,17 @@ jobs:
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "$KEY" | tr -d '\r' > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          echo "Resolving and probing $HOST:${PORT:-22} ..."
+          getent ahosts "$HOST" | head -3 || true
+          if ! timeout 20 bash -c "exec 3<>/dev/tcp/$HOST/${PORT:-22}" 2>/dev/null; then
+            echo "::error::TCP connection to the SSH port failed from GitHub's runner (firewall or wrong host/port). Nothing was uploaded."; exit 1
+          fi
+          echo "TCP connection OK"
           if [ -n "$KNOWN" ]; then
             printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
           else
-            ssh-keyscan -p "${PORT:-22}" "$HOST" 2>/dev/null > ~/.ssh/known_hosts
+            ssh-keyscan -T 20 -p "${PORT:-22}" "$HOST" > ~/.ssh/known_hosts || true
+            [ -s ~/.ssh/known_hosts ] || { echo "::error::ssh-keyscan returned no host key."; exit 1; }
             echo "::warning::SSH_KNOWN_HOSTS is not set, so the server key was accepted on first use. Save the lines printed below as the SSH_KNOWN_HOSTS secret."
             cat ~/.ssh/known_hosts
             ssh-keygen -lf ~/.ssh/known_hosts
