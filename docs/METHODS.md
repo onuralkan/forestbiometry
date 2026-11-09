@@ -109,6 +109,7 @@ Weibull, gamma, normal ve lognormal için ortalama, standart sapma, çarpıklık
 ## 4. Yalnızca görsel amaçlı (bilimsel çıktı değildir)
 - Ön sayfadaki ve laboratuvardaki **meşcere çizimleri**: çaplar seçili dağılımdan, boylar Chapman–Richards biçiminde sabit örnek parametrelerle (h = 1,3 + 30·(1 − e^(−0,045·d))^1,3 + gürültü) üretilir. Bu parametreler herhangi bir türe veya yöreye ait değildir; yalnızca çizim içindir.
 - Richards, F.J. 1959. A flexible growth function for empirical use. *J. Exp. Bot.* 10: 290–300. **[D]**
+- **Ana sayfadaki gövde haritası (9 Kasım 2026):** 500 m²'lik (r = 12,62 m) dairesel bir örnek alan; ağaç konumları alanda düzgün, çaplar 8 + 46·u^2,1 cm (u tekdüze), iki tür %68/%32; sabit tohumlu doğrusal eşlikli üreteç (PHP, `index.php`). Daireler çapın 12 katıyla çizilir. Hiçbir veriye veya türe ait değildir; ekranda "çizim, ağaçlar benzetim" diye yazılır.
 - Meşcere Hesaplayıcı ve Laboratuvardaki "Örnek veri" düğmeleri, belirtilen dağılımlardan rastgele üretilmiş benzetim verisidir ve böyle etiketlenmiştir.
 
 ---
