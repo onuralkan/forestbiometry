@@ -53,6 +53,28 @@ for (const u of ['/?lang=tr', '/hakkinda.php?lang=tr']) {
 }
 await shot('site-3-telefon-koyu', phone);
 
+// 6. sidebar: categories, current tool, narrow mode remembered, drawer on phones; stem map labelled as illustration
+await page.goto(BASE + '/?lang=tr');
+ok((await page.locator('#side .b-cat').count()) === 4 && (await page.locator('#side .b-side-nav a').count()) === 7, 'sidebar: 4 categories, 7 tools');
+ok((await page.locator('.dir-group').count()) === 4, 'home directory grouped in 4 categories');
+ok((await page.locator('svg.stemmap title', { hasText: 'çizim, gerçek ölçüm değil' }).count()) === 1 && (await page.locator('.stemmap .sm-t').count()) > 20, 'stem map drawn and labelled as an illustration');
+await page.click('#side a[href="boy-cap.php"]'); await page.waitForURL(/boy-cap/);
+ok((await page.locator('#side a[aria-current="page"]').getAttribute('href')) === 'boy-cap.php' && (await page.locator('.b-headico svg').count()) === 1, 'current tool marked in the sidebar, icon in the page head');
+await page.click('#sidenarrow'); await page.reload();
+ok(await page.evaluate(() => document.documentElement.classList.contains('side-narrow')) && (await page.locator('#sidenarrow').getAttribute('aria-pressed')) === 'true', 'narrow sidebar remembered after reload');
+await page.click('#sidenarrow');
+const ph = await browser.newPage({ viewport: { width: 390, height: 844 } });
+ph.on('pageerror', e => errors.push(e.message));
+await ph.goto(BASE + '/ornekleme.php?lang=tr');
+ok(!(await ph.locator('#side').isVisible()) && (await ph.locator('#navopen').isVisible()), 'phone: sidebar hidden, menu button shown');
+await ph.click('#navopen'); await ph.waitForTimeout(300);
+ok(await ph.locator('#side').isVisible() && (await ph.locator('#navopen').getAttribute('aria-expanded')) === 'true', 'phone: menu opens the drawer');
+await ph.keyboard.press('Escape'); await ph.waitForTimeout(300);
+ok(!(await ph.locator('#side').isVisible()) && (await ph.locator('#scrim').isHidden()), 'phone: Escape closes the drawer');
+await ph.click('#navopen'); await ph.waitForTimeout(300); await ph.click('#side a[href="cap-dagilimi.php"]'); await ph.waitForURL(/cap-dagilimi/);
+ok(!(await ph.locator('#side').isVisible()), 'phone: following a link leaves the drawer closed on the new page');
+ok(await ph.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal scroll with the sidebar');
+
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();
 console.log(`site e2e: ${pass} passed, ${fail} failed`);
