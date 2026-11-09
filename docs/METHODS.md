@@ -5,7 +5,7 @@ Kaynak durumu işaretleri:
 - **[İ]** İkincil bir kaynağın kaynakçasında künyesi doğrulandı.
 - **[D]** Henüz doğrulanmadı; künye bilgiden yazıldı, **kullanmadan önce doğrulanmalı**.
 
-Sayısal doğrulama: `node legacy/test_math.js` (SciPy referansı: `tests/ref/make_reference.py`); Veri Denetçisi: `node tests/checker/test_checker.mjs` ve tarayıcı testi `tests/checker/e2e.mjs`.
+Sayısal doğrulama: her aracın `tests/<araç>/test_*.mjs` testi (referanslar `tests/ref/`); eski kod için `node legacy/test_math.js`. Tarayıcı testleri `tests/*/e2e.mjs`.
 
 ---
 
@@ -31,7 +31,7 @@ Varsayımlar ve notlar:
 - Hacim için site **hiçbir katsayı veya biçim sayısı vermez**. Kullanıcı f'yi ya da b₀, b₁, b₂'yi kendi kaynağından girer; girilmezse hacim hesaplanmaz. Özet tablosunda ve CSV'de "hacmin dayanağı" satırı kullanılan değerleri gösterir (5 Kasım 2026 düzeltmesi).
 
 ### Näslund boy–çap modeli (eksik boyların tahmini)
-h = 1,3 + d² / (a + b·d)². Doğrusal biçimi d / √(h − 1,3) = a + b·d olarak, boyu ölçülmüş (h > 1,3) ağaçlarla **en küçük kareler (OLS)** yöntemiyle uydurulur. En az 3 ölçülmüş boy gerekir. Doğrusallaştırılmış biçimdeki OLS, h ölçeğinde en küçük kareler çözümüyle aynı değildir; bu bir yaklaşımdır. Modül 5'te doğrusal olmayan uydurma seçeneği eklenecek.
+h = 1,3 + d² / (a + b·d)². Doğrusal biçimi d / √(h − 1,3) = a + b·d olarak, boyu ölçülmüş (h > 1,3) ağaçlarla **en küçük kareler (OLS)** yöntemiyle uydurulur. En az 3 ölçülmüş boy gerekir. Doğrusallaştırılmış biçimdeki OLS, h ölçeğinde en küçük kareler çözümüyle aynı değildir; bu bir yaklaşımdır. **Arşiv:** Modül 5 (§10) Näslund'u h ölçeğinde doğrusal olmayan en küçük karelerle uydurur; doğrusallaştırılmış OLS yalnızca başlangıç değeri olarak kullanılır.
 - Näslund, M. 1936. Skogsförsöksanstaltens gallringsförsök i tallskog. *Meddelanden från Statens Skogsförsöksanstalt* 29. **[D]**
 
 ---
@@ -294,3 +294,77 @@ Rᵢⱼ = 1 + (m − 1)(Sᵢⱼ − S_en iyi,ⱼ)/(S_en kötü,ⱼ − S_en iyi,
 
 **Doğrulama:** `tests/ref/make_rank_reference.py` sentetik örnek çalışma kitabını (`assets/lab/rank/ornek/ornek-olcutler.xlsx`; başlık üstünde açıklama satırı, tekrarlanan ad, eksik değer, R² = FI, aşırı kötü model) üretir ve numpy ile üç senaryoda (bütün modeller; aşırı kötü model dışarıda; bir ölçüt çıkarılınca eksik değerli modelin geri gelmesi) referans sıraları hesaplar. Geliştirme sırasında kullanıcının örnek Excel dosyasındaki ölçüt bazında nispi sıralar da (aynı yön seçimleriyle) birebir yeniden üretildi; bu dosya araştırma verisi olduğu için depoya konmadı.
 - Poudel, K.P., Cao, Q.V. 2013. Evaluation of methods to predict Weibull parameters for characterizing diameter distributions. *Forest Science* 59(2): 243–252. **[B]** (kullanıcının verdiği PDF'te Eş. 10 ve Şekil 2 kontrol edildi)
+
+---
+
+## 10. Boy–Çap Modelleme, sabit etkili sürüm (Modül 5, `assets/lab/hd/calc.js`, `assets/lab/core/nls.js`, `assets/lab/core/stats.js`)
+**Girdi:** Ağaç tablosu (CSV/TSV/yapıştırma/XLSX) veya onaylanmış veri paketi: çap (cm veya mm → cm), ölçülen boy (m, dm veya cm → m; boş olabilir), isteğe bağlı örnek alan, tür (tek tür seçilebilir) ve süzgeç sütunu (ör. dönem). Sayı okuma kuralları §5 ile aynı.
+**Göğüs yüksekliği bh** kullanıcı ayarıdır (varsayılan 1,30 m; 0 < bh < 3). Bütün modeller h = bh + f(d) biçimindedir; z = h − bh'ye uydurulur.
+**Satır durumları** (hiçbiri silinmez, sayıları raporlanır): çap boş / okunamayan / ≤ 0; boy okunamayan; **boy ≤ bh** (göğüs çapı olamaz: uydurmaya alınmaz, ölçülen değer dışa aktarmada aynen kalır); **boy boş** → tahmin edilecek ağaç; çap ve boy geçerli → uydurma verisi.
+
+### Modeller (d cm, h m; parametreler bu birimler içindir)
+| Kimlik | Ad | Biçim | p | Asimptot | Kaynak |
+|---|---|---|---|---|---|
+| naslund | Näslund | h = bh + d²/(a + b·d)² | 2 | bh + 1/b² (b > 0) | Näslund (1936) |
+| michailoff | Michailoff | h = bh + a·exp(−b/d) | 2 | bh + a | Michailoff (1943) |
+| curtis | Curtis | h = bh + a·(d/(1 + d))^b | 2 | bh + a | Curtis (1967) |
+| power | Kuvvet | h = bh + a·d^b | 2 | yok | Stoffels ve van Soest (1953) |
+| richards | Chapman–Richards | h = bh + a·(1 − exp(−b·d))^c | 3 | bh + a | Richards (1959) |
+| weibull | Weibull | h = bh + a·(1 − exp(−b·d^c)) | 3 | bh + a | Yang, Kozak ve Smith (1978) |
+
+**Parametrelemenin doğrulanması:** Biçimler, Mehtätalo'nun `lmfor` R paketindeki `HDmodels` yardım sayfasıyla (CRAN, search.r-project.org, 9 Kasım 2026'da okundu) birebir aynıdır **[B]**; Chapman–Richards, Weibull ve kuvvet biçimleri ayrıca Zhang ve ark. (2014, Tablo 2) ile karşılaştırıldı **[B]**. Dikkat: Curtis biçimi a·(d/(1+d))^b'dir, a·d/(1+d)^b değildir. Michailoff'un işlevi Türkçe literatürde "Schumacher" adıyla da anılıyor gibi görünür (Carus ve Çatal 2017'nin tablosu metin olarak okunamadı) **[D]**; araçta lmfor'daki adı kullanılır. "Chapman" künyesi doğrulanmadığı için yalnızca Richards (1959) verilir.
+**Beklenen işaretler:** Bütün parametrelerin > 0 olması beklenir; aksi hâlde uydurma verilir ama uyarı yazılır. Näslund için ayrıca uydurma verisindeki her d için a + b·d > 0 olmalıdır (aksi hâlde eğrinin kutbu var; adım reddedilir). Chapman–Richards ve Weibull'da b > 0 zorunludur.
+
+### Uydurma
+- **Yöntem:** z ölçeğinde en küçük kareler, Levenberg–Marquardt (Marquardt'ın köşegen ölçeklemesi, Nielsen'in sönüm güncellemesi), analitik türevler (testte merkezî farklarla denetlenir).
+- **Başlangıç değerleri** yalnızca uydurulan verinin kendisinden: Näslund d/√z = a + b·d (OLS); Michailoff ln z = ln a − b/d; Curtis ln z = ln a + b·ln(d/(1+d)); kuvvet ln z = ln a + b·ln d; Chapman–Richards a ∈ {1,05; 1,3; 1,8; 3}·maks z ve c ∈ {0,6; 1; 1,5; 2,5} ızgarasında b = Σd·(−ln(1 − (z/a)^(1/c)))/Σd²; Weibull aynı a değerleriyle ln(−ln(1 − z/a)) = ln b + c·ln d (OLS). En küçük başlangıç SSE'li en çok dört başlangıç denenir; iki başlangıç aynı minimuma (bağıl SSE farkı ≤ 10⁻¹⁰) ulaşınca durulur; en küçük SSE'li yakınsamış çözüm alınır.
+- **Yakınsama:** bağıl adım ≤ 10⁻¹⁰; ya da kabul edilen adımda bağıl SSE azalması ≤ 10⁻¹⁴ ve bağıl adım ≤ 10⁻⁶; ya da ölçeklenmiş gradyan max_j |Jⱼᵀr| / √(‖Jⱼ‖²·SSE) ≤ 10⁻⁸ (MINPACK/SciPy'deki kosinüs ölçütü). Bütün adımlar reddedilirse (sönüm tükendi) nokta ancak ölçeklenmiş gradyan ≤ 10⁻⁶ ise yakınsamış sayılır. En çok 1000 yineleme.
+- **Durumlar:** *yakınsadı*; *yetersiz veri* (n < p + 2 veya farklı çap sayısı < p + 1); *başlangıç değeri bulunamadı*; *yakınsamadı* (yineleme sınırı veya adım yok); *ıraksadı*: herhangi bir |θ| > 10⁸ ya da asimptot (bh hariç) > 50 × maks(h − bh) — **araç kuralıdır, literatür değeri değildir**; anlamı "asimptot bu veriyle belirlenemiyor". Yakınsamayan modelin parametresi gösterilmez ve tahminde kullanılmaz.
+- **Uyarı:** iki parametrenin tahmin korelasyonu |r| > 0,99 ise (yalnızca kovaryans hesaplanabildiğinde) "zor ayrılıyor" notu.
+
+### Başarı ölçütleri (e = tahmin − ölçülen)
+Yanlılık ē, MAE, RMSE = √(SSE/n) (§7 ile aynı tanım), artık standart hatası σ̂ = √(SSE/(n − p)). Bütün modeller **aynı uydurma ağaçlarıyla** uydurulur ve karşılaştırılır.
+
+### Çıkarım: standart hata, aralıklar, AIC (ne zaman verilir?)
+- Örnek alan sütunu seçilmişse ve uydurma verisinde **≥ 2 örnek alan** varsa: aynı alandaki ağaçlar bağımsız değildir; sabit etkili modelin standart hataları olduğundan küçük çıkar. Bu sürümde **standart hata, parametre güven aralığı, ortalama eğri güven aralığı, tek ağaç tahmin aralığı ve AIC/BIC verilmez** (karma etkili modeller sonraki aşamadadır). Karşılaştırma örnek alan bazında çapraz doğrulamayla yapılır.
+- Tek örnek alan ya da örnek alan sütunu yok: ağaçlar bağımsız kabul edilir ve ekranda yazılır (sütun yoksa "veri birden çok alandan geliyorsa geçersizdir" uyarısıyla).
+- **Kovaryans:** V = σ̂²(JᵀJ)⁻¹, σ̂² = SSE/(n − p) (asimptotik; `nls`/`curve_fit` ile aynı). Parametre %95 güven aralığı θ̂ ± t(0,975; n − p)·SH.
+- **Ortalama eğrinin %95 güven aralığı:** ŷ(d) ± t·√(gᵀVg), g = ∂f/∂θ (delta yöntemi). Belirli bir çaptaki **ortalama** boyun belirsizliğidir.
+- **Tek ağacın %95 tahmin aralığı:** ŷ(d) ± t·√(σ̂² + gᵀVg). Tek bir ağacın boyu içindir; bağımsız, normal dağılımlı ve sabit varyanslı hata varsayar. Bilgi amaçlı olarak tahmin edilen boyun üçte birlik dilimlerinde artık standart sapmaları gösterilir (varsayımın gözle denetimi için; eşik yok).
+- **AIC/BIC:** ln L = −n/2·[ln 2π + ln(SSE/n) + 1], k = p + 1 (σ dahil); AIC = 2k − 2 ln L, BIC = k ln n − 2 ln L (R'nin `logLik.nls` tanımıyla aynı). Bütün modeller aynı gözlemlere ve aynı yanıt ölçeğine (h, m, dönüştürülmemiş) uydurulduğu için karşılaştırılabilir; ΔAIC en küçük AIC'ye göredir.
+
+### Çapraz doğrulama
+- **Örnek alan bazında** (≥ 2 örnek alan; varsayılan): ≤ 20 örnek alanda her kat bir örnek alan (leave-one-plot-out); daha fazlasında örnek alanlar tohum 20261109 ile karıştırılıp 10 kata sırayla dağıtılır; bir örnek alanın ağaçları hiçbir zaman bölünmez. 5'ten az örnek alanda uyarı.
+- **Ağaç bazında:** ağaçlar aynı tohumla karıştırılıp min(10, n) kata dağıtılır; yeni örnek alanlara genellemeyi ölçmediği ekranda yazılır. Tek örnek alanda örnek alan bazında doğrulama **sunulmaz** (ağaç bazında yapılır ve öyle adlandırılır).
+- **Sızıntı yok:** her katta başlangıç değerleri ve uydurma yalnızca eğitim ağaçlarıyla; dışarıdaki ağaçlar yalnızca tahmin edilir. Ön işlemenin veriye dayalı adımı yoktur (satır kuralları satır başınadır).
+- **Aynı gözlemler:** Bir katta herhangi bir model yakınsamazsa o katın ağaçları **bütün modeller için** karşılaştırmadan çıkarılır ve kat listelenir.
+- **Seçim süreci:** her katta eğitim verisindeki AIC'si (n·ln(SSE/n) + 2k biçimi; yalnızca seçim ölçütü olarak) en küçük model seçilir, dışarıdaki ağaçlar onunla tahmin edilir; bu satırın hatası, seçilmiş bir modelin beklenen hatasıdır. Kendi satırındaki en küçük ÇD hatası iyimserdir.
+- Dışarıdaki ağaçlardan eğitim çap aralığı dışında kalanların sayısı raporlanır.
+
+### Tahmin
+- **Eksik boylar:** yalnızca boyu boş, çapı geçerli satırlara; kullanıcının seçtiği tek modelle (araç kendiliğinden model seçmez). Ayrı sütunda (`boy_tahmin_m`); ölçülen boy sütunu (`boy_olculen_m`) ve kaynak metin (`boy_kaynak`) değişmez; `durum` sütunu satırın ölçülen mi tahmin mi olduğunu söyler.
+- **Aralık dışı:** d < min(d) veya d > maks(d) (uydurma verisi) olan tahmin "aralık dışı" işaretlenir; tahmin verilir ama işaretli kalır (dışa aktarmada `cap_araligi_disinda`).
+- **Yeni çaplar:** kullanıcının yazdığı çap listesi (ondalık ayarıyla okunur; okunamayan ve ≤ 0 değerler listelenir).
+- Onaylanmış veri paketine (`dataset:approved`) tahmin edilen boy **yazılmaz** (bu turda; `height_source` alanı sonraki iş).
+
+### Sayısal çekirdek ve doğrulama
+| İşlev | Yöntem | Doğrulama |
+|---|---|---|
+| Düzenlenmiş eksik beta I_x(a, b) | Lentz sürekli kesri (Numerical Recipes `betacf`) | t dağılımı üzerinden |
+| Student t dağılım işlevi ve yüzdeliği | I_x ile; yüzdelik ikiye bölme (10⁻¹³) | SciPy `t.cdf`/`t.ppf`, < 10⁻⁹ |
+| Tohumlu karıştırma | mulberry32 + Fisher–Yates | Python eşleniği, birebir |
+| Levenberg–Marquardt, kovaryans | yukarıda | SciPy `least_squares` |
+
+`tests/ref/make_hd_reference.py` JS kodundan bağımsızdır: kendi başlangıç değerleriyle `scipy.optimize.least_squares(method='lm')` (sayısal Jacobian), merkezî farklarla Jacobian'dan kovaryans, `scipy.stats.t`. Sentetik veri numpy `default_rng(20261109)` ile üretilir (8 örnek alan, alan etkili asimptot, %15 eksik boy, iki tür, uç durum satırları; **gerçek ölçüm değildir**). Referanslar: bütün veride altı modelin parametreleri, SSE, RMSE, MAE, yanlılık, AIC/BIC; P1 örnek alanında ayrıca SH, t yüzdeliği, d = 8, 20, 35, 60 cm'de ortalama eğri güven ve tek ağaç tahmin aralıkları; örnek alan bazında ve ağaç bazında ÇD (aynı katlar, katta seçim, havuzlanmış RMSE/MAE/yanlılık, aralık dışı sayısı); tek tür süzgeci; t yüzdelikleri ve dağılım işlevi; karıştırma sırası. `tests/hd/test_hd.mjs` ayrıca analitik türevleri, yakınsamayan (asimptotu belirlenemeyen doğrusal) veriyi, yetersiz veriyi, tek örnek alanda örnek alan bazında ÇD'nin reddini, 30 örnek alanda gruplu katları, başarısız katın bütün modellerden çıkarılmasını, eksik boy tahminlerinin yalnızca eksik satırlara gitmesini ve aralık dışı işaretlerini sınar. Tarayıcı testi `tests/hd/e2e.mjs` dışa aktarmada ölçülen ve tahmin edilen boyların ayrı sütunlarda kaldığını denetler.
+- Näslund, M. 1936. Skogsförsöksanstaltens gallringsförsök i tallskog. *Meddelanden från Statens Skogsförsöksanstalt* 29: 1–169. **[İ]**
+- Michailoff, I. 1943. Zahlenmässiges Verfahren für die Ausführung der Bestandeshöhenkurven. *Forstwissenschaftliches Centralblatt und Tharandter Forstliches Jahrbuch* 6: 273–279. **[İ]**
+- Curtis, R.O. 1967. Height–diameter and height–diameter–age equations for second-growth Douglas-fir. *Forest Science* 13: 365–375. **[İ]**
+- Stoffels, A., van Soest, J. 1953. The main problems in sample plots. *Nederlands Bosbouwtijdschrift* 25: 190–199. **[İ]**
+- Richards, F.J. 1959. A flexible growth function for empirical use. *Journal of Experimental Botany* 10: 290–300. **[İ]**
+- Yang, R.C., Kozak, A., Smith, J.H.G. 1978. The potential of Weibull-type functions as flexible growth curves. *Canadian Journal of Forest Research* 8: 424–431. **[İ]**
+- Huang, S., Titus, S.J., Wiens, D.P. 1992. Comparison of nonlinear height–diameter functions for major Alberta tree species. *Canadian Journal of Forest Research* 22: 1297–1304. **[İ]**
+- Mehtätalo, L., de-Miguel, S., Gregoire, T.G. 2015. Modeling height–diameter curves for prediction. *Canadian Journal of Forest Research* 45(7): 826–837. **[İ]** (lmfor yardım sayfasının kaynakçasından; başlık orada "...for height prediction" diye geçer)
+- Mehtätalo, L. `lmfor`: Functions for Forest Biometrics, R paketi, `HDmodels` yardım sayfası. **[B]** (model biçimleri)
+- Zhang, X., Duan, A., Zhang, J., Xiang, C. 2014. Estimating tree height–diameter models with the Bayesian method. *The Scientific World Journal* 2014: 683691. **[B]** (Tablo 2: Chapman–Richards, Weibull, kuvvet biçimleri)
+- İkincil kaynak olarak kullanılan kaynakça: Mixed-effects modeling for tree height prediction models of Oriental beech in the Hyrcanian forests, *Journal of Forestry Research* (doi 10.1007/s11676-017-0551-z). Yukarıdaki [İ] künyeler bu makalenin kaynakçasında doğrulandı.
+- Marquardt, D.W. 1963. An algorithm for least-squares estimation of nonlinear parameters. *J. SIAM* 11: 431–441. **[D]**; Nielsen, H.B. 1999. Damping parameter in Marquardt's method. IMM-REP-1999-05, DTU. **[D]**; Press ve ark., *Numerical Recipes* (`betacf`). **[D]**
