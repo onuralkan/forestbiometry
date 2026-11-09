@@ -1,7 +1,7 @@
 # PROJECT.md: Mimari, veri sözleşmesi, ortak kararlar
 
 Proje: **forestbiometry.online**, bağımsız **Ormancılık Biyometrisi Araçları / Forest Biometrics Tools** platformu. Yazar ve sorumlu: Onur Alkan.
-Geçmiş (9 Kasım 2026, kullanıcı kararı): araçlar onuralkan.com.tr kişisel sitesinin bir bölümüydü. Kişisel site (gazete ön sayfası, ders notları, yayınlar, yönetim paneli, 2FA, Bulmaca Köşesi) ve onuralkan.com.tr alan adı **tamamen kapatılıyor**; yalnızca araçlar bu alan adına taşınıyor. Eski sitenin son hâli git'te `onuralkan-son` etiketinde duruyor.
+Geçmiş (9 Kasım 2026, kullanıcı kararı): araçlar onuralkan.com.tr kişisel sitesinin bir bölümüydü. Kişisel site (gazete ön sayfası, ders notları, yayınlar, yönetim paneli, 2FA, Bulmaca Köşesi) ve onuralkan.com.tr alan adı **tamamen kapatılıyor**; yalnızca araçlar bu alan adına taşınıyor. Eski sitenin son hâli git geçmişinde `8a002d2` commit'inde duruyor.
 Hedef kullanıcı: araştırmacılar, öğrenciler, uygulayıcılar. Diller: Türkçe ve İngilizce.
 
 ## 1. Barındırma ve teknoloji
@@ -118,7 +118,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 5. `legacy/tools.js` içindeki test edilmiş matematik ES modüllerine **taşınır** (yeniden yazılmaz; testleri korunur). lnGamma taşındı (`core/special.js`).
 
 ## 8. Kapatılan kişisel siteden kalanlar (9 Kasım 2026, kullanıcı kararı)
-- Gazete, ders notları, yayınlar, yönetim paneli, 2FA ve Bulmaca Köşesi kapatıldı; geri gelmeyecek. Kodları `onuralkan-son` etiketinde.
+- Gazete, ders notları, yayınlar, yönetim paneli, 2FA ve Bulmaca Köşesi kapatıldı; geri gelmeyecek. Kodları `8a002d2` commit'inde.
 - Eski **Meşcere Hesaplayıcı**'nın Modül 2'de karşılığı olmayan kısımları **sonraki modüllerde yeniden yazılmak üzere planda**: üst boy, Näslund boy tahmini (Modül 5 ile), kullanıcı katsayılı hacim. Eski sayfa yayından kalktı; yeniden yazım bağımsız referans testleriyle yapılır.
 - Eski Çap Dağılımı ekinin gamma, normal, lognormal ve Johnson SB uydurmaları Modül 4'ün sonraki sürümlerine taşınacak; kod ve SciPy testleri `legacy/` içinde.
 - Eski adreslerden (onuralkan.com.tr) yönlendirme yapılmaz; alan adı kapatılıyor.
