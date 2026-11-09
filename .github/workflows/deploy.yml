@@ -31,6 +31,7 @@ jobs:
           node tests/eval/test_eval.mjs
           node tests/weibull/test_weibull.mjs
           node tests/rank/test_rank.mjs
+          node tests/hd/test_hd.mjs
   deploy:
     needs: test
     runs-on: ubuntu-latest

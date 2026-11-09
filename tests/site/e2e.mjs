@@ -18,9 +18,9 @@ const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('h1').textContent()).trim() === 'Ormancılık Biyometrisi Araçları', 'home page is the tools index (TR)');
 const links = await page.locator('.toollist li.ready h3 a').evaluateAll(a => a.map(x => x.getAttribute('href')));
-ok(links.length === 5, 'five ready tools listed: ' + links.join(', '));
+ok(links.length === 6, 'six ready tools listed: ' + links.join(', '));
 for (const l of links) { const r = await page.request.get(BASE + '/' + l); ok(r.status() === 200, l + ' opens'); }
-ok((await page.locator('.toollist li.planned').count()) === 2, 'two planned tools without links');
+ok((await page.locator('.toollist li.planned').count()) === 1, 'one planned tool without a link');
 ok((await page.locator('text=/Meşcere Postası|Stand Gazette|Bulmaca/').count()) === 0, 'no trace of the gazette');
 await shot('site-1-dizin');
 

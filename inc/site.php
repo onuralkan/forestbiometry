@@ -51,7 +51,9 @@ function site_tools(): array {
         ['n' => 4, 'file' => 'cap-dagilimi.php', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
          'desc' => $tr ? 'Weibull sürümü: tek ağaç çaplarından en çok olabilirlik ve moment tahmini, sabit konumlu üç parametreli biçim, sınıf frekansları ve kuyruklar, örnek alan bazında uydurma, eğri gezgini. Diğer dağılımlar sonraki sürümlerde.'
                        : 'Weibull version: maximum likelihood and moment estimation from tree diameters, three-parameter form with a fixed location, class frequencies with tails, per-plot fits, curve explorer. Other distributions in later versions.'],
-        ['n' => 5, 'file' => null, 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling', 'desc' => ''],
+        ['n' => 5, 'file' => 'boy-cap.php', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
+         'desc' => $tr ? 'Sabit etkili sürüm: Näslund, Michailoff, Curtis, kuvvet, Chapman–Richards ve Weibull denklemlerini doğrusal olmayan en küçük karelerle uydurun; aynı ağaçlar üzerinde karşılaştırma, örnek alan bazında çapraz doğrulama, eksik boylar için ayrı tahmin sütunu. Karma etkili modeller sonraki aşamada.'
+                       : 'Fixed-effects version: fit the Näslund, Michailoff, Curtis, power, Chapman–Richards and Weibull equations by nonlinear least squares; comparison on the same trees, plot-based cross-validation, a separate prediction column for missing heights. Mixed-effects models in a later stage.'],
         ['n' => 6, 'file' => null, 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner', 'desc' => ''],
         ['n' => 7, 'file' => 'nispi-siralama.php', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
          'desc' => $tr ? 'Başarı ölçütleri tablosundan (R², FI, RMSE, MAE, Bias, AIC, BIC…) ölçüt bazında ve genel nispi sıralar; en iyi ve en kötü modellerin radar grafiği.'

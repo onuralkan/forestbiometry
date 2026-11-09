@@ -1,0 +1,60 @@
+// Small statistics core (no DOM): regularised incomplete beta, Student t distribution and quantile,
+// a seeded random generator and a stable shuffle. Checked against SciPy in tests/hd/test_hd.mjs.
+import { lnGamma } from './special.js';
+
+/** Continued fraction for the incomplete beta function (modified Lentz; Numerical Recipes "betacf"). */
+function betacf(a, b, x) {
+  const TINY = 1e-300, EPS = 1e-16;
+  let c = 1, d = 1 - (a + b) * x / (a + 1);
+  if (Math.abs(d) < TINY) d = TINY;
+  d = 1 / d; let h = d;
+  for (let m = 1; m <= 1000; m++) {
+    const m2 = 2 * m;
+    let aa = m * (b - m) * x / ((a + m2 - 1) * (a + m2));
+    d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY; c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY; d = 1 / d; h *= d * c;
+    aa = -(a + m) * (a + b + m) * x / ((a + m2) * (a + m2 + 1));
+    d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY; c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY; d = 1 / d;
+    const del = d * c; h *= del;
+    if (Math.abs(del - 1) < EPS) break;
+  }
+  return h;
+}
+/** Regularised incomplete beta I_x(a, b). */
+export function betaInc(a, b, x) {
+  if (x <= 0) return 0; if (x >= 1) return 1;
+  const lbt = lnGamma(a + b) - lnGamma(a) - lnGamma(b) + a * Math.log(x) + b * Math.log1p(-x);
+  return x < (a + 1) / (a + b + 2) ? Math.exp(lbt) * betacf(a, b, x) / a : 1 - Math.exp(lbt) * betacf(b, a, 1 - x) / b;
+}
+/** Student t cumulative distribution P(T ≤ t), ν > 0 degrees of freedom. */
+export function tCdf(t, nu) {
+  const x = nu / (nu + t * t), tail = 0.5 * betaInc(nu / 2, 0.5, x);
+  return t >= 0 ? 1 - tail : tail;
+}
+/** Student t quantile: the t with P(T ≤ t) = p (0 < p < 1). Bisection on the cdf to 1e-13. */
+export function tQuantile(p, nu) {
+  if (!(p > 0 && p < 1) || !(nu > 0)) return NaN;
+  if (p === 0.5) return 0;
+  if (p < 0.5) return -tQuantile(1 - p, nu);
+  let lo = 0, hi = 1;
+  while (tCdf(hi, nu) < p) { lo = hi; hi *= 2; if (hi > 1e12) return Infinity; }
+  for (let i = 0; i < 200 && hi - lo > 1e-13 * Math.max(1, hi); i++) { const m = (lo + hi) / 2; if (tCdf(m, nu) < p) lo = m; else hi = m; }
+  return (lo + hi) / 2;
+}
+
+/** mulberry32: small seeded generator returning numbers in [0, 1). Same sequence in tests/ref/make_hd_reference.py. */
+export function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+/** Fisher–Yates shuffle of a copy, driven by rng(seed). */
+export function shuffle(arr, seed) {
+  const a = arr.slice(), r = rng(seed);
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}

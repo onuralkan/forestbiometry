@@ -16,3 +16,6 @@
 - `node tests/rank/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Relative Ranking.
 - `node tests/checker/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test with Playwright/Chromium against a local `php -S 127.0.0.1:8092` in the site folder.
 - `node tests/site/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the site shell (tools index, About, language, removed pages).
+- `node tests/hd/test_hd.mjs`: Height–Diameter Modelling tests against `tests/ref/hd.json` (SciPy least_squares, scipy.stats.t, numpy) plus acceptance cases.
+- `python3 tests/ref/make_hd_reference.py`: regenerates `tests/hd/fixture.csv`, the sample file `assets/lab/hd/ornek/ornek-boy-cap.csv` and `tests/ref/hd.json` (fixed seed; numpy + SciPy).
+- `node tests/hd/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Height–Diameter Modelling (incl. measured vs predicted heights in the export).
