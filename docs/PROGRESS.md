@@ -51,5 +51,6 @@ Son güncelleme: 10 Kasım 2026, atıf menüsü
 - Eski onuralkan.com.tr kullanıcılarının tarayıcılarındaki araç oturumları yeni alan adına geçmez (IndexedDB alan adına bağlı).
 
 ## Sıradaki adım
-1. Kullanıcının sıradaki promptu: Modül 5'in karma etkili aşaması, Modül 6'nın ileri tasarımları ya da plandaki sonraki araçlar (seksiyon hacmi, gövde profili, biyokütle…).
-2. Çıplak alan adının DNS'i: kullanıcı 9 Kasım 2026'da DNS Yönetimi panelinde @ A kaydını 164.132.247.15 yapacaktı; yayılınca `https://forestbiometry.online` denetlenir.
+1. Planlananlar (PROJECT.md §9): "R kodunu da ver" düğmesi (ilk olarak boy–çapın karma etkili aşamasıyla), Zenodo ile DOI.
+2. Kullanıcının sıradaki promptu: Modül 5'in karma etkili aşaması, Modül 6'nın ileri tasarımları ya da plandaki sonraki araçlar (seksiyon hacmi, gövde profili, biyokütle…).
+3. Çıplak alan adının DNS'i: kullanıcı 9 Kasım 2026'da DNS Yönetimi panelinde @ A kaydını 164.132.247.15 yapacaktı; yayılınca `https://forestbiometry.online` denetlenir.
