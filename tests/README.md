@@ -22,3 +22,4 @@
 - `node tests/sampling/test_sampling.mjs`: Inventory Sampling Planner tests against `tests/ref/sampling.json` (scipy.stats.norm, numpy) plus acceptance cases.
 - `python3 tests/ref/make_sampling_reference.py`: regenerates the sample pilot file, `tests/sampling/fixture.csv` and `tests/ref/sampling.json`.
 - `node tests/sampling/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Inventory Sampling Planner.
+- `node tests/site/test_cite.mjs`: citation strings of the Cite dialog and tool versions shown by the site (= `TOOL.version`).

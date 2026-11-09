@@ -2,6 +2,7 @@
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/site/e2e.mjs http://127.0.0.1:8092 [screenshot-dir]
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null;
@@ -74,6 +75,32 @@ ok(!(await ph.locator('#side').isVisible()) && (await ph.locator('#scrim').isHid
 await ph.click('#navopen'); await ph.waitForTimeout(300); await ph.click('#side a[href="cap-dagilimi.php"]'); await ph.waitForURL(/cap-dagilimi/);
 ok(!(await ph.locator('#side').isVisible()), 'phone: following a link leaves the drawer closed on the new page');
 ok(await ph.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal scroll with the sidebar');
+
+// 7. cite dialog: tool by default on a tool page, platform on the home page; language, date, copy, .bib download
+const cp = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] });
+const cpg = await cp.newPage(); cpg.on('pageerror', e => errors.push(e.message));
+await cpg.goto(BASE + '/boy-cap.php?lang=tr'); await cpg.click('#citebtn');
+await cpg.waitForSelector('#citedlg[open] .cite-row');
+ok((await cpg.locator('#citedlg .cite-row').count()) === 8 && await cpg.isChecked('input[name="cscope"][value="tool"]'), 'cite: 8 formats, this tool chosen by default');
+const apaTR = await cpg.locator('.cite-row[data-f="apa"] .cite-text').textContent();
+ok(apaTR.startsWith('Alkan, O. (2026). Boy–Çap Modelleme (Sürüm 1.0.0) [Web uygulaması].') && apaTR.includes('https://forestbiometry.online/boy-cap.php adresinden erişildi'), 'cite: APA in Turkish with version and URL');
+ok((await cpg.locator('.cite-row[data-f="apa"] .cite-text i').textContent()) === 'Boy–Çap Modelleme', 'cite: title in italics');
+await cpg.check('input[name="clang"][value="en"]'); await cpg.fill('#cdate', '2026-03-05'); await cpg.locator('#cdate').dispatchEvent('change');
+const apaEN = await cpg.locator('.cite-row[data-f="apa"] .cite-text').textContent();
+ok(apaEN.includes('Height–Diameter Modelling (Version 1.0.0) [Web application]') && apaEN.includes('Retrieved March 5, 2026'), 'cite: English and chosen access date');
+await cpg.click('.cite-row[data-f="apa"] [data-copy]');
+ok((await cpg.evaluate(() => navigator.clipboard.readText())) === apaEN, 'cite: copy puts the citation on the clipboard');
+const [bd] = await Promise.all([cpg.waitForEvent('download'), cpg.click('[data-dl="bibtex"]')]);
+const bibt = await readFile(await bd.path(), 'utf8');
+ok(bd.suggestedFilename() === 'boy-cap-en.bib' && bibt.startsWith('@misc{alkan2026boycap,') && bibt.includes('urldate      = {2026-03-05}'), 'cite: .bib download');
+await cpg.check('input[name="cscope"][value="platform"]');
+ok((await cpg.locator('.cite-row[data-f="apa"] .cite-text').textContent()).startsWith('Alkan, O. (2026). Forest Biometrics Tools [Web application].'), 'cite: whole platform');
+await cpg.keyboard.press('Escape'); ok(!(await cpg.locator('#citedlg').evaluate(d => d.open)), 'cite: Escape closes the dialog');
+await cpg.goto(BASE + '/?lang=tr'); await cpg.click('#citebtn'); await cpg.waitForSelector('#citedlg[open] .cite-row');
+ok((await cpg.locator('input[name="cscope"]').count()) === 0 && (await cpg.locator('.cite-row[data-f="apa"] .cite-text').textContent()).startsWith('Alkan, O. (2026). Ormancılık Biyometrisi Araçları [Web uygulaması].'), 'cite: home page cites the platform');
+await cpg.goto(BASE + '/hakkinda.php?lang=en');
+ok((await cpg.locator('#cite-inline').textContent()).startsWith('Alkan, O. (2026). Forest Biometrics Tools [Web application].'), 'About: platform citation shown');
+await cp.close();
 
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();

@@ -362,3 +362,24 @@ tr.excl td, tr.excl th { color: var(--muted); text-decoration: line-through; }
 .planner .confirm input { margin-top: 4px; }
 .planner ul.assume { margin: 6px 0 10px; padding-left: 20px; } .planner ul.assume li { margin: 3px 0; }
 .planner code { white-space: normal; }
+
+/* cite button and dialog */
+.b-citebtn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--acc); border-radius: 8px; background: var(--acc-soft); color: var(--acc); font: 600 13px var(--ui); cursor: pointer; }
+.b-citebtn .ico { width: 17px; height: 17px; } .b-citebtn:hover { background: var(--acc); color: var(--acc-ink); }
+@media (max-width: 520px) { .b-citebtn span { display: none; } .b-citebtn { width: 34px; padding: 0; justify-content: center; } }
+.citedlg { width: min(860px, calc(100vw - 24px)); max-height: calc(100vh - 32px); }
+.cite-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.cite-head h2 { margin: 0; }
+.cite-opts { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: flex-end; margin: 12px 0; padding: 10px 12px; background: var(--sunk); border: 1px solid var(--line2); border-radius: 10px; }
+.cite-opts fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.cite-opts legend { font-weight: 600; font-size: 13px; color: var(--muted); padding: 0; margin-bottom: 4px; }
+.cite-opts label { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; }
+.cite-date { flex-direction: column; align-items: flex-start !important; font-weight: 600; font-size: 13px !important; color: var(--muted); }
+.cite-list { display: grid; gap: 0; }
+.cite-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 6px 14px; align-items: start; padding: 12px 2px; border-top: 1px solid var(--line2); }
+.cite-name { font-weight: 700; font-size: 13.5px; padding-top: 2px; }
+.cite-text { margin: 0; font: 15px/1.55 Georgia, "Times New Roman", serif; overflow-wrap: anywhere; user-select: all; }
+.cite-code { margin: 0; font: 12.5px/1.45 var(--mono); background: var(--sunk); border: 1px solid var(--line2); border-radius: 6px; padding: 8px 10px; overflow-x: auto; white-space: pre; }
+.cite-acts { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+@media (max-width: 640px) { .cite-row { grid-template-columns: minmax(0, 1fr); } .cite-acts { flex-direction: row; } }
+.cite-inline { font: 15.5px/1.6 Georgia, "Times New Roman", serif; margin: 6px 0 12px; overflow-wrap: anywhere; }

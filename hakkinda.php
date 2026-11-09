@@ -19,6 +19,13 @@ site_top([
       <?php endif; ?>
     </dl>
   </section>
+  <section class="card about" aria-labelledby="h-cite">
+    <h2 id="h-cite" class="b-h2"><?= $tr ? 'Kaynak gösterme' : 'How to cite' ?></h2>
+    <p><?= $tr ? 'Çalışmanızda bu platformu kullandıysanız lütfen kaynak gösterin. Platformun tamamı için (APA 7):' : 'If you used this platform in your work, please cite it. For the whole platform (APA 7):' ?></p>
+    <p class="cite-inline" id="cite-inline"></p>
+    <p><?= $tr ? 'Tek bir aracı kullandıysanız aracın sayfasındaki "Atıf" düğmesi o aracı ve sürümünü verir. Öteki biçimler (MLA, Chicago, Harvard, IEEE, Vancouver, BibTeX, RIS) de oradadır.' : 'If you used a single tool, the "Cite" button on the tool\'s page gives that tool and its version. Other formats (MLA, Chicago, Harvard, IEEE, Vancouver, BibTeX, RIS) are there too.' ?></p>
+    <p class="b-actions"><button type="button" class="btn" data-cite-open><?= site_icon('cite') ?><?= $tr ? 'Bütün atıf biçimleri' : 'All citation formats' ?></button></p>
+  </section>
   <section class="card about" aria-labelledby="h-data">
     <h2 id="h-data" class="b-h2"><?= $tr ? 'Verileriniz' : 'Your data' ?></h2>
     <p><?= $tr ? 'Araçlar tarayıcınızda çalışır. Yüklediğiniz tablolar sunucuya gönderilmez; oturumlar yalnızca bu tarayıcının yerel deposunda (IndexedDB) tutulur ve araçlardaki silme düğmeleriyle kaldırılabilir. Sitede kullanıcı hesabı, veritabanı ve izleme kodu yoktur; yalnızca dil ve tema tercihiniz tarayıcınızda saklanır.'

@@ -7,10 +7,15 @@ declare(strict_types=1);
 date_default_timezone_set('Europe/Istanbul');
 
 /** Author and responsible person, shown on the About page and in the footer. Empty values are not shown. */
+/** For citations: canonical address and the year the platform was first published. */
+const SITE_BASE = 'https://forestbiometry.online/';
+const SITE_YEAR = 2026;
+
 const SITE_AUTHOR = [
     'name'  => 'Onur Alkan',
     'email' => 'onuralkan@isparta.edu.tr',
-    'orcid' => '0000-0001-5798-3421',   // shown only when filled in
+    'orcid' => '0000-0001-5798-3421',
+    'family' => 'Alkan', 'given' => 'Onur',      // for citations   // shown only when filled in
 ];
 
 function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
@@ -36,28 +41,28 @@ function site_ctx(): array {
 }
 
 /** Tools of the platform. 'file' null = planned (no link, no placeholder page). 'cat' = sidebar group, 'icon' = site_icon() name, 'short' = sidebar label. */
-function site_tools(): array {
-    $tr = site_ctx()['tr'];
+function site_tools(?bool $tr = null): array {
+    $tr = $tr ?? site_ctx()['tr'];
     return [
-        ['n' => 1, 'cat' => 'data', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
+        ['n' => 1, 'cat' => 'data', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.0.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
          'desc' => $tr ? 'Ağaç ve örnek alan tablolarınızı içe aktarın, sütunları eşleyin, biçim hatalarını ve şüpheli ölçümleri bulun; düzeltmeleri gerekçesiyle kaydedip veriyi onaylayın.'
                        : 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
-        ['n' => 2, 'cat' => 'inventory', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
+        ['n' => 2, 'cat' => 'inventory', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.0.0', 'lab' => 'stand', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
          'desc' => $tr ? 'Onaylanmış veriden her örnek alan ve dönem için hektarda ağaç sayısı ve göğüs yüzeyi, ortalama çaplar, çap sınıfları ve tür katılımı; örnek alanlar arası özet ve tasarıma dayalı orman tahmini.'
                        : 'From approved data, per plot and period: stems and basal area per hectare, mean diameters, diameter classes and species composition; between-plot summary and design-based forest estimate.'],
-        ['n' => 3, 'cat' => 'model', 'icon' => 'eval', 'short' => $tr ? 'Model Başarısı' : 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
+        ['n' => 3, 'cat' => 'model', 'icon' => 'eval', 'short' => $tr ? 'Model Başarısı' : 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.0.0', 'lab' => 'eval', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
          'desc' => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE ve tahmin R²; gözlenen–tahmin ve artık grafikleri, gruplara göre başarı tabloları.'
                        : 'Bias, MAE, RMSE and prediction R² from observed and predicted values; observed–predicted and residual plots, performance tables by group.'],
-        ['n' => 4, 'cat' => 'dist', 'icon' => 'dist', 'short' => $tr ? 'Çap Dağılımı' : 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
+        ['n' => 4, 'cat' => 'dist', 'icon' => 'dist', 'short' => $tr ? 'Çap Dağılımı' : 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'v' => '1.0.0', 'lab' => 'weibull', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
          'desc' => $tr ? 'Weibull sürümü: tek ağaç çaplarından en çok olabilirlik ve moment tahmini, sabit konumlu üç parametreli biçim, sınıf frekansları ve kuyruklar, örnek alan bazında uydurma, eğri gezgini. Diğer dağılımlar sonraki sürümlerde.'
                        : 'Weibull version: maximum likelihood and moment estimation from tree diameters, three-parameter form with a fixed location, class frequencies with tails, per-plot fits, curve explorer. Other distributions in later versions.'],
-        ['n' => 5, 'cat' => 'model', 'icon' => 'hd', 'short' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter', 'file' => 'boy-cap.php', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
+        ['n' => 5, 'cat' => 'model', 'icon' => 'hd', 'short' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter', 'file' => 'boy-cap.php', 'v' => '1.0.0', 'lab' => 'hd', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
          'desc' => $tr ? 'Sabit etkili sürüm: Näslund, Michailoff, Curtis, kuvvet, Chapman–Richards ve Weibull denklemlerini doğrusal olmayan en küçük karelerle uydurun; aynı ağaçlar üzerinde karşılaştırma, örnek alan bazında çapraz doğrulama, eksik boylar için ayrı tahmin sütunu. Karma etkili modeller sonraki aşamada.'
                        : 'Fixed-effects version: fit the Näslund, Michailoff, Curtis, power, Chapman–Richards and Weibull equations by nonlinear least squares; comparison on the same trees, plot-based cross-validation, a separate prediction column for missing heights. Mixed-effects models in a later stage.'],
-        ['n' => 6, 'cat' => 'inventory', 'icon' => 'sampling', 'short' => $tr ? 'Örnekleme Planlayıcısı' : 'Sampling Planner', 'file' => 'ornekleme.php', 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner',
+        ['n' => 6, 'cat' => 'inventory', 'icon' => 'sampling', 'short' => $tr ? 'Örnekleme Planlayıcısı' : 'Sampling Planner', 'file' => 'ornekleme.php', 'v' => '1.0.0', 'lab' => 'sampling', 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner',
          'desc' => $tr ? 'Basit rastgele örneklemede bir ortalamayı hedeflenen bağıl hatayla tahmin etmek için yaklaşık örnek alan sayısı: pilot ölçümlerden veya girilen CV\'den, isteğe bağlı sonlu çerçeve düzeltmesiyle. Tabakalı, sistematik ve kümeli tasarımlar sonraki sürümlerde.'
                        : 'Approximate number of plots to estimate a mean with a target relative error under simple random sampling: from pilot measurements or a CV you enter, with an optional finite-frame correction. Stratified, systematic and cluster designs in later versions.'],
-        ['n' => 7, 'cat' => 'model', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
+        ['n' => 7, 'cat' => 'model', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.0.0', 'lab' => 'rank', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
          'desc' => $tr ? 'Başarı ölçütleri tablosundan (R², FI, RMSE, MAE, Bias, AIC, BIC…) ölçüt bazında ve genel nispi sıralar; en iyi ve en kötü modellerin radar grafiği.'
                        : 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.'],
     ];
@@ -88,6 +93,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'hd'       => '<circle cx="9.5" cy="8" r="5"/><path d="M9.5 13v8M6.5 21h6"/><path d="M18.5 3v18M16.8 3h3.4M16.8 21h3.4M17.5 12h2" class="acc"/>',
         'sampling' => '<circle cx="6" cy="6" r="1" class="f"/><circle cx="12" cy="6" r="1" class="f"/><circle cx="18" cy="6" r="1" class="f"/><circle cx="6" cy="12" r="1" class="f"/><circle cx="18" cy="12" r="1" class="f"/><circle cx="6" cy="18" r="1" class="f"/><circle cx="12" cy="18" r="1" class="f"/><circle cx="12" cy="12" r="3.2" class="acc"/><circle cx="18" cy="18" r="3.2" class="acc"/>',
         'rank'     => '<path d="m12 3 7.8 4.5v9L12 21l-7.8-4.5v-9Z"/><path d="m12 7.2 4.6 2.6-.9 5.1-4.3 1.6-3.6-3.9Z" class="acc"/><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke-width=".8" opacity=".45"/>',
+        'cite'     => '<path d="M5 11.5h4.5V17H5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5M14.5 11.5H19V17h-4.5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5"/>',
         'about'    => '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".9" class="f"/>',
         'home'     => '<circle cx="12" cy="12" r="8.6" stroke-dasharray="2.2 1.8"/><circle cx="10" cy="10.5" r="2" class="f"/><circle cx="14.5" cy="14" r="1.4" class="f"/>',
         'menu'     => '<path d="M4 7h16M4 12h16M4 17h16"/>',
@@ -121,7 +127,7 @@ function site_top(array $o = []): void {
 <meta name="theme-color" content="#eef1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121814" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/lab/lab.css?v=10">
+<link rel="stylesheet" href="assets/lab/lab.css?v=11">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231d5b45'/><circle cx='16' cy='16' r='10.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-dasharray='3 2.4'/><circle cx='13' cy='14' r='3' fill='%23fff'/><circle cx='19.5' cy='19' r='2' fill='%23fff'/></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
@@ -135,6 +141,7 @@ function site_top(array $o = []): void {
     <a href="hakkinda.php"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Hakkında' : 'About' ?></a>
   </nav>
   <span class="b-tools">
+    <button type="button" class="b-citebtn" id="citebtn" data-cite-open aria-haspopup="dialog"><?= site_icon('cite') ?><span><?= $tr ? 'Atıf' : 'Cite' ?></span></button>
     <button type="button" id="theme" class="b-iconbtn" aria-label="<?= $tr ? 'Koyu / açık tema' : 'Dark / light theme' ?>"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
     <a id="langlink" href="<?= h($langHref) ?>" hreflang="<?= $c['other'] ?>" lang="<?= $c['other'] ?>"><?= $c['other'] === 'en' ? 'English' : 'Türkçe' ?></a>
   </span>
@@ -211,6 +218,15 @@ function site_bottom(string $script = ''): void {
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && root.classList.contains('side-open')) close(true); });
 })();
 </script>
+<?php
+    $cur = site_current_tool(); $en = site_tools(false); $trT = site_tools(true); $ct = null;
+    if ($cur) foreach ($trT as $i => $t) if ($t['file'] === $cur['file']) $ct = ['file' => $t['file'], 'v' => $t['v'], 'tr' => $t['title'], 'en' => $en[$i]['title']];
+    $cd = ['author' => ['family' => SITE_AUTHOR['family'], 'given' => SITE_AUTHOR['given']], 'year' => SITE_YEAR, 'base' => SITE_BASE,
+           'site' => ['tr' => 'Ormancılık Biyometrisi Araçları', 'en' => 'Forest Biometrics Tools'], 'tool' => $ct];
+?>
+<dialog id="citedlg" class="dlg citedlg" aria-label="<?= $tr ? 'Kaynak gösterme' : 'How to cite' ?>"></dialog>
+<script type="application/json" id="cite-data"><?= json_encode($cd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
+<script type="module" src="assets/lab/core/cite-ui.js?v=1"></script>
 <?= $script ?>
 </body>
 </html>
