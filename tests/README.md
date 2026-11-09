@@ -19,3 +19,6 @@
 - `node tests/hd/test_hd.mjs`: Height–Diameter Modelling tests against `tests/ref/hd.json` (SciPy least_squares, scipy.stats.t, numpy) plus acceptance cases.
 - `python3 tests/ref/make_hd_reference.py`: regenerates `tests/hd/fixture.csv`, the sample file `assets/lab/hd/ornek/ornek-boy-cap.csv` and `tests/ref/hd.json` (fixed seed; numpy + SciPy).
 - `node tests/hd/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Height–Diameter Modelling (incl. measured vs predicted heights in the export).
+- `node tests/sampling/test_sampling.mjs`: Inventory Sampling Planner tests against `tests/ref/sampling.json` (scipy.stats.norm, numpy) plus acceptance cases.
+- `python3 tests/ref/make_sampling_reference.py`: regenerates the sample pilot file, `tests/sampling/fixture.csv` and `tests/ref/sampling.json`.
+- `node tests/sampling/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Inventory Sampling Planner.

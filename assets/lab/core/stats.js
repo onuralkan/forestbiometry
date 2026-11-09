@@ -1,4 +1,4 @@
-// Small statistics core (no DOM): regularised incomplete beta, Student t distribution and quantile,
+// Small statistics core (no DOM): regularised incomplete beta and gamma, normal and Student t distributions and quantiles,
 // a seeded random generator and a stable shuffle. Checked against SciPy in tests/hd/test_hd.mjs.
 import { lnGamma } from './special.js';
 
@@ -38,6 +38,35 @@ export function tQuantile(p, nu) {
   let lo = 0, hi = 1;
   while (tCdf(hi, nu) < p) { lo = hi; hi *= 2; if (hi > 1e12) return Infinity; }
   for (let i = 0; i < 200 && hi - lo > 1e-13 * Math.max(1, hi); i++) { const m = (lo + hi) / 2; if (tCdf(m, nu) < p) lo = m; else hi = m; }
+  return (lo + hi) / 2;
+}
+
+/** Regularised lower incomplete gamma P(a, x): series for x < a + 1, Lentz continued fraction otherwise. */
+export function gammaP(a, x) {
+  if (x <= 0) return 0;
+  const lg = lnGamma(a);
+  if (x < a + 1) {
+    let ap = a, sum = 1 / a, del = sum;
+    for (let n = 0; n < 1000; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-16) break; }
+    return sum * Math.exp(-x + a * Math.log(x) - lg);
+  }
+  const TINY = 1e-300; let b = x + 1 - a, c = 1 / TINY, d = 1 / b, h = d;
+  for (let i = 1; i < 1000; i++) {
+    const an = -i * (i - a); b += 2;
+    d = an * d + b; if (Math.abs(d) < TINY) d = TINY; c = b + an / c; if (Math.abs(c) < TINY) c = TINY;
+    d = 1 / d; const del = d * c; h *= del; if (Math.abs(del - 1) < 1e-16) break;
+  }
+  return 1 - Math.exp(-x + a * Math.log(x) - lg) * h;
+}
+/** Standard normal cumulative distribution Φ(z) = ½[1 + sign(z)·P(½, z²/2)]. */
+export function normCdf(z) { const p = gammaP(0.5, z * z / 2); return z >= 0 ? 0.5 + 0.5 * p : 0.5 - 0.5 * p; }
+/** Standard normal quantile Φ⁻¹(p), bisection on Φ to 1e-14 (0 < p < 1). */
+export function normQuantile(p) {
+  if (!(p > 0 && p < 1)) return NaN;
+  if (p === 0.5) return 0;
+  if (p < 0.5) return -normQuantile(1 - p);
+  let lo = 0, hi = 1; while (normCdf(hi) < p) { lo = hi; hi *= 2; if (hi > 64) return Infinity; }
+  for (let i = 0; i < 200 && hi - lo > 1e-14; i++) { const m = (lo + hi) / 2; if (normCdf(m) < p) lo = m; else hi = m; }
   return (lo + hi) / 2;
 }
 
