@@ -5,7 +5,7 @@
 # - Only files changed since the last deployed commit (kept in DIR/deploy-commit.txt) are sent; first run sends all.
 # - Nothing on the server is deleted.
 # - Safety: uploads only if DIR already holds this site (inc/site.php) or is a fresh, empty cPanel document root
-#   (nothing but cgi-bin, .well-known, .htaccess and a default index page). Protects other folders on the account.
+#   (nothing but cgi-bin, .well-known, .htaccess, PHP settings files written by cPanel (.user.ini, php.ini), error_log and a default index page). Protects other folders on the account.
 # - The server's own cPanel PHP-handler block in .htaccess (PHP version choice) is kept when .htaccess is replaced.
 set -euo pipefail
 API="https://$CP_HOST:2083"
@@ -24,7 +24,7 @@ else
     echo "$listing" | jq -c '{status, errors}' 2>/dev/null || echo "$listing" | head -c 300
     exit 1
   fi
-  others=$(echo "$listing" | jq -r '.data[].file' | grep -Ev '^(cgi-bin|\.well-known|\.htaccess|index\.html?|default\.html?)$' || true)
+  others=$(echo "$listing" | jq -r '.data[].file' | grep -Ev '^(cgi-bin|\.well-known|\.htaccess|\.user\.ini|php\.ini|error_log|index\.html?|default\.html?)$' || true)
   if [ -n "$others" ]; then
     echo "::error::$DIR is neither this site (no inc/site.php) nor an empty document root. Nothing was uploaded. Found:"
     echo "$others" | head -20
