@@ -25,6 +25,7 @@ ornek-alan.php               Araç 2: Örnek Alan ve Meşcere Hesaplayıcısı
 model-degerlendirme.php      Araç 3: Model Başarısı Değerlendiricisi
 cap-dagilimi.php             Araç 4: Çap Dağılımı Laboratuvarı (Weibull sürümü)
 boy-cap.php                  Araç 5: Boy–Çap Modelleme (sabit etkili sürüm)
+ornekleme.php                Araç 6: Envanter Örnekleme Planlayıcısı (basit rastgele örnekleme, ilk sürüm; tek sayfa, adım yok)
 nispi-siralama.php           Araç 7: Nispi Sıralama / Relative Ranking (5 ve 6'dan önce yapıldı)
 inc/site.php                 Ortak kabuk: site_top(), site_bottom(), site_tools(), SITE_AUTHOR (web erişimine kapalı)
 legacy/                      Yayınlanmaz. Eski sitenin test edilmiş hesap kodu (tools.js: gamma, normal, lognormal, SB, Weibull yüzdelik) ve testi; sonraki modüllere taşınacak
@@ -43,12 +44,13 @@ assets/lab/eval/             calc.js (saf), ui.js, i18n.js, ornek/ornek-tahminle
 assets/lab/rank/             calc.js (saf), ui.js, i18n.js, ornek/ornek-olcutler.xlsx (uydurma)
 assets/lab/weibull/          calc.js (saf), ui.js, i18n.js, ornek/ornek-caplar.csv (sabit tohumlu benzetim)
 assets/lab/core/special.js   lnGamma (tools.js'ten değişmeden taşındı)
-assets/lab/core/stats.js     Düzenlenmiş eksik beta, Student t dağılımı ve yüzdeliği, tohumlu üreteç (mulberry32) ve karıştırma (Modül 5)
+assets/lab/core/stats.js     Düzenlenmiş eksik beta ve gamma, normal ve Student t dağılımı ve yüzdelikleri (Modül 6'da normal eklendi), tohumlu üreteç (mulberry32) ve karıştırma (Modül 5)
 assets/lab/core/nls.js       Levenberg–Marquardt, küçük doğrusal cebir, σ̂²(JᵀJ)⁻¹ kovaryansı, delta yöntemi, OLS (Modül 5)
+assets/lab/sampling/         calc.js (saf), ui.js, i18n.js, ornek/ornek-pilot.csv (tests/ref/make_sampling_reference.py ile üretilen benzetim)
 assets/lab/hd/               calc.js (saf), ui.js, i18n.js, ornek/ornek-boy-cap.csv (tests/ref/make_hd_reference.py ile üretilen benzetim)
 assets/vendor/sheetjs/       SheetJS CE 0.20.3 mini (Apache-2.0), README'de köken ve sağlama
 ```
-Henüz yok (ilgili modülle gelecek): karma etkili model çekirdeği (Modül 5'in sonraki aşaması), örnekleme çekirdeği (Modül 6). `plotChart` Modül 5'te isteğe bağlı nokta katmanı ve noktalı çizgi seçeneği kazandı (geriye uyumlu). Veri Denetçisi kendi içe aktarma panelini kullanır; ortak `importer.js`'e geçirilmesi, o modül yeniden açılırsa yapılır.
+Henüz yok (ilgili modülle gelecek): karma etkili model çekirdeği (Modül 5'in sonraki aşaması), ileri örnekleme tasarımları (tabakalı dağıtım, sistematik, kümeli; Modül 6'nın sonraki sürümleri). `plotChart` Modül 5'te isteğe bağlı nokta katmanı ve noktalı çizgi seçeneği kazandı (geriye uyumlu). Veri Denetçisi kendi içe aktarma panelini kullanır; ortak `importer.js`'e geçirilmesi, o modül yeniden açılırsa yapılır.
 
 ## 3. Veri akışı (dürüst beyan)
 - **Araçlar:** Kullanıcının dosyası tarayıcıda (`File.arrayBuffer`) okunur ve **sunucuya gönderilmez**. Bütün hesaplar tarayıcıda yapılır. Sunucu yalnızca sayfayı ve JS dosyalarını verir.
@@ -136,7 +138,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 | 3 | Model Başarısı Değerlendiricisi / Model Evaluation | Gözlenen–tahmin; kırılımlar ✔ |
 | 4 | Çap Dağılımı Laboratuvarı / Diameter Distribution Lab | Weibull sürümü ✔ (ML, momentler, sabit a, sınıflar, kuyruklar, eğri gezgini); gamma, normal, lognormal, SB, kesilmiş ve gruplanmış veri sonraki turlarda |
 | 5 | Boy–Çap Modelleme / Height–Diameter Modelling | Sabit etkili sürüm ✔ (altı model, LM, örnek alan bazında ÇD, eksik boy tahmini; eski Näslund tahmini bunun içinde). Karma etkili modeller (örnek alan rastgele etkisi, EBLUP kalibrasyonu) sonraki aşama |
-| 6 | Envanter Örnekleme Planlayıcısı / Inventory Sampling Planner | Basit rastgele → tabakalı |
+| 6 | Envanter Örnekleme Planlayıcısı / Inventory Sampling Planner | İlk sürüm ✔: basit rastgele örneklemede ortalama için örnek alan sayısı, z yaklaşımı, isteğe bağlı sonlu çerçeve düzeltmesi. Sonraki: t ile yineleme, tabakalı (orantılı/Neyman dağıtım), sistematik ve kümeli tasarımlar, örnek alan büyüklüğü seçimi, maliyet |
 | 7 | Nispi Sıralama / Relative Ranking | Başarı ölçütleri tablosundan Poudel ve Cao (2013) nispi sıraları ve radar grafiği ✔ (kullanıcının isteğiyle 5 ve 6'dan önce yapıldı) |
 | sonra | Üst boy (eski hesaplayıcıdan, Modül 2'ye ek), kullanıcı katsayılı hacim (eski hesaplayıcıdan), Seksiyon hacmi, Gövde profili, Biyokütle–karbon, Tekrarlı ölçüm, Meşcere yapısı, Bonitet | Katsayı gerektirenlerde kullanıcı girişi |
 

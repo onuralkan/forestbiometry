@@ -368,3 +368,34 @@ Yanlılık ē, MAE, RMSE = √(SSE/n) (§7 ile aynı tanım), artık standart ha
 - Zhang, X., Duan, A., Zhang, J., Xiang, C. 2014. Estimating tree height–diameter models with the Bayesian method. *The Scientific World Journal* 2014: 683691. **[B]** (Tablo 2: Chapman–Richards, Weibull, kuvvet biçimleri)
 - İkincil kaynak olarak kullanılan kaynakça: Mixed-effects modeling for tree height prediction models of Oriental beech in the Hyrcanian forests, *Journal of Forestry Research* (doi 10.1007/s11676-017-0551-z). Yukarıdaki [İ] künyeler bu makalenin kaynakçasında doğrulandı.
 - Marquardt, D.W. 1963. An algorithm for least-squares estimation of nonlinear parameters. *J. SIAM* 11: 431–441. **[D]**; Nielsen, H.B. 1999. Damping parameter in Marquardt's method. IMM-REP-1999-05, DTU. **[D]**; Press ve ark., *Numerical Recipes* (`betacf`). **[D]**
+
+---
+
+## 11. Envanter Örnekleme Planlayıcısı, ilk sürüm (Modül 6, `assets/lab/sampling/calc.js`)
+**Kapsam:** Basit rastgele örneklemede, örnek alan düzeyindeki bir değişkenin **ortalamasını** hedeflenen **bağıl hatayla** tahmin etmek için yaklaşık örnek alan sayısı. Bu bir hipotez testi güç analizi değildir. Tabakalı (tabaka başına dağıtım), sistematik (varyans), kümeli ve çok aşamalı örnekleme bu formülle çözülmez ve sonuç öyle sunulmaz (ekranda ve özette yazılı).
+
+**Formüller (CV ve E aynı yüzde ölçeğinde):**
+- z = Φ⁻¹(1 − α/2), güven düzeyi %80, 90, 95, 99 ya da 50–100 arası başka bir değer.
+- n₀ = z²·(CV/E)².
+- Sonlu çerçeve düzeltmesi **yalnızca kullanıcı sonlu, sayılabilir bir çerçeve olduğunu seçerse**: n = n₀ / [1 + (n₀ − 1)/M], M çerçevedeki birim sayısı (tam sayı ≥ 2). Seçilmezse M girilmiş olsa bile kullanılmaz. Araç toplam orman alanı / örnek alan büyüklüğünü M kabul etmez ve böyle bir yardımcı sunmaz.
+- Raporlanan sayılar yukarı yuvarlanır (kayan nokta gürültüsü için 10⁻⁹ bağıl pay: 35,0000000001 → 35). Yuvarlanmamış n₀ ve n de gösterilir.
+- Mevcut örnek: kullanıcı mevcut örnek alanların aynı tasarımın parçası olduğunu (aynı çerçeveden basit rastgele seçildi, aynı büyüklük ve yöntem) beyan ederse ek = maks(0, n − n_mevcut); beyan edilmezse "ek" sayısı verilmez. M < n_mevcut reddedilir.
+- Notlar: n < 2 (ortalamanın SH'si için en az 2 gerekir); n₀ > 0,05·M (düzeltme belirgin).
+
+**CV kaynağı:**
+- *Pilot veri:* her satır bir örnek alan değeri (ör. m³/ha, m²/ha, ağaç/ha). Ortalama ȳ, s (payda n − 1), CV = 100·s/ȳ. Boş, okunamayan ve **negatif** değerler (örnek alan düzeyindeki toplamlar negatif olamaz) satır numaralarıyla raporlanıp dışarıda bırakılır; sıfır geçerli değerdir (boş örnek alan). Örnek alan kimliği seçilmişse **tekrarlanan kimlik hesabı durdurur** (ağaç düzeyinde satırlar veya birden çok dönem; süzgeçle tek dönem seçilir). Değer sütununun adı ağaç düzeyinde bir ölçümü andırıyorsa (dbh, çap, boy, h…) uyarı verilir. Kullanıcı, satırların örnek alan değerleri olduğunu ve pilotun planlanan örnek alan büyüklüğü ve yöntemiyle ölçüldüğünü onaylamadan hesap yapılmaz. Ağaç düzeyindeki çap değişkenliği örnek alan düzeyindeki bir değişkenin CV'si yerine kullanılmaz.
+- *Tanımsızlık:* n = 0 veya 1 → s yok; ȳ ≤ 0 → CV ve bağıl hata tanımsız (sonuç verilmez); s = 0 → CV = 0 (sonuç verilmez). Pilot n < 10 ise "CV belirsiz" uyarısı (araç eşiği, literatür değeri değil).
+- *Elle CV:* pozitif sayı; kaynağı serbest metin olarak özete yazılır. İsteğe bağlı mevcut örnek alan sayısı.
+**Geçersiz girdiler:** CV ≤ 0 veya okunamaz, E ∉ (0, 100), güven düzeyi ∉ (50, 100), M eksik/tam sayı değil/< 2: sonuç yerine nedenleri listelenir.
+
+**Varsayımlar (özette ve ekranda):** basit rastgele ve bağımsız seçim; ortalamanın örnekleme dağılımı yaklaşık normal (z); küçük örneklerde t gerekir ve gerçek sayı biraz daha büyüktür; CV bilinen kabul edilir (pilottan tahmin edildiyse belirsizdir); CV aynı değişken, örnek alan büyüklüğü ve popülasyon içindir; E ortalamaya göre bağıldır; ulaşılamayan/ölçülemeyen örnek alanlar için pay eklenmez.
+
+**Çıktılar:** toplam gerekli sayı, (beyan edildiyse) ek sayı, n₀, z ve sayılarla yazılmış hesap; E ∈ {2,5; 5; 7,5; 10; 12,5; 15; 20; 25; 30} ve kullanıcının E'si için tablo ve n–E grafiği; varsayım özeti (TXT), tablo (CSV), Excel (özet, tablo, pilot değerleri).
+
+**Kabul örneği:** z = 1,96, CV = %30, E = %10, düzeltme yok: n₀ = 1,96²·9 = 34,5744 → **35**. z(%95) = 1,959964 ile n₀ = 34,5731 → 35.
+
+**Doğrulama:** `tests/ref/make_sampling_reference.py` (JS'den bağımsız): `scipy.stats.norm.ppf` ile z; numpy ile pilot ortalama, s (ddof = 1), CV; düz Python ile n₀, düzeltme ve yukarı yuvarlama; E ızgarası (M yok, M = 500, M = 60). Örnek pilot dosyası numpy `default_rng(20261109)` ile üretilir (14 örnek alan, lognormal; **gerçek ölçüm değildir**). `tests/sampling/test_sampling.mjs` ayrıca E azaldıkça n'nin artmasını, düzeltmenin yalnızca seçildiğinde uygulanmasını ve n'yi hiç artırmamasını, geçersiz girdileri, tekrarlanan kimlikleri, negatif/okunamayan satırları, sıfır ortalamayı ve sabit pilotu sınar. Normal dağılım: Φ(z) = ½[1 + P(½, z²/2)] (düzenlenmiş eksik gamma: seri / Lentz sürekli kesri), Φ⁻¹ ikiye bölmeyle (10⁻¹⁴); SciPy ile < 10⁻¹².
+- Israel, G.D. 1992 (gözden geçirilmiş 2009). *Determining Sample Size.* University of Florida IFAS Extension, PEOD6. doi:10.32473/EDIS-PD006-1992. **[B]** (Eş. 3: n = n₀/[1 + (n₀ − 1)/N]; Eş. 7: ortalama için n₀ = Z²σ²/e²; Cochran'a dayanır)
+- Cochran, W.G. 1963. *Sampling Techniques*, 2. baskı. Wiley. **[İ]** (Israel'in kaynakçasından); 3. baskı (1977) **[D]**.
+- FAO. *Assessing the status of logged-over production forests: the development of a rapid appraisal technique* (fao.org/4/ac838e). **[B]** (n = 4·CV²/AE%², %95 için z² ≈ 4; bağıl CV/E biçiminin ormancılık kullanımı)
+- Bağıl biçim: n₀ = Z²σ²/e² eşitliğinde σ = CV·ȳ/100 ve e = E·ȳ/100 yazılınca n₀ = z²(CV/E)² elde edilir (cebirsel, kaynak gerektirmez).
