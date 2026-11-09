@@ -2,8 +2,8 @@
 // and against closed-form / hand-checkable results. Run: node tests/test_math.js
 const path = require('path');
 global.window = global; global.document = { documentElement: { lang: 'en' } };
-require(path.join(__dirname, '..', 'assets', 'tools.js'));
-const T = window.MP, W = T.weibull, D = T.dists, R = require('./ref/distributions.json');
+require(path.join(__dirname, 'tools.js'));
+const T = window.MP, W = T.weibull, D = T.dists, R = require('../tests/ref/distributions.json');
 let fails = 0, n = 0;
 function near(name, got, want, rel = 1e-6) {
   n++; const err = Math.abs(got - want) / Math.max(1, Math.abs(want));

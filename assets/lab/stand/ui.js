@@ -6,7 +6,7 @@ import { put, get, del } from '../core/store.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { barChart, svgForDownload } from '../core/chart.js';
 
-const BASE = '../', KEY = 'session:' + C.TOOL.id;
+const BASE = './', KEY = 'session:' + C.TOOL.id;
 const $ = id => document.getElementById(id);
 const LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
 const f = (x, d = 2) => fmtNum(x, d);

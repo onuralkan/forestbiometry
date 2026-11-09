@@ -1,9 +1,9 @@
-# Push to main → run the numerical tests → upload changed files through the cPanel API over HTTPS (port 2083).
-# Script: .github/deploy-cpanel.sh. data/ and files/ are never uploaded or deleted; nothing on the server is deleted;
-# the upload stops unless DEPLOY_PATH already holds this site (inc/paper.php).
-# Only repository secret: CPANEL_TOKEN. Server, account and folder are written below (not secret).
-# History: FTPS is not offered by the host; SSH (22/3131) is closed to GitHub's runners; 2083 is reachable.
-name: Deploy to onuralkan.com.tr
+# Push to main → run the numerical tests → upload changed files to forestbiometry.online through the cPanel API
+# over HTTPS (port 2083). Script: .github/deploy-cpanel.sh. Nothing on the server is deleted; the upload stops
+# unless DIR already holds this site (inc/site.php) or is an empty cPanel document root.
+# Only repository secret: CPANEL_TOKEN (API token of the forestbiometry.online cPanel account).
+# Server, account and folder are written below (not secret). While any of them is empty, nothing is uploaded.
+name: Deploy to forestbiometry.online
 on:
   push:
     branches: [main]
@@ -11,6 +11,10 @@ on:
 concurrency:
   group: deploy
   cancel-in-progress: false
+env:
+  CP_HOST: ''      # cPanel server of forestbiometry.online, e.g. the "Server Name" / hostname shown in cPanel (to be filled in)
+  CP_USER: ''      # cPanel account name (to be filled in)
+  DIR: ''          # document root of forestbiometry.online, e.g. /home/<account>/public_html (to be filled in)
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,7 +25,7 @@ jobs:
           node-version: 22
       - name: Numerical tests
         run: |
-          node tests/test_math.js
+          node legacy/test_math.js
           node tests/checker/test_checker.mjs
           node tests/stand/test_stand.mjs
           node tests/eval/test_eval.mjs
@@ -30,20 +34,19 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    env:
-      HAS_TOKEN: ${{ secrets.CPANEL_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Secrets missing, nothing uploaded
-        if: env.HAS_TOKEN != 'true'
-        run: echo "::notice::CPANEL_TOKEN secret is not set; skipping the upload."
-      - name: Upload through the cPanel API (HTTPS, port 2083)
-        if: env.HAS_TOKEN == 'true'
+      - name: Check configuration
+        id: cfg
         env:
-          CP_HOST: mt-enchant.guzelhosting.com          # cPanel server (not secret)
-          CP_USER: zirveolu                             # cPanel account
-          DIR: /home/zirveolu/public_html/onuralkan.com.tr   # document root of onuralkan.com.tr (addon domain)
+          HAS_TOKEN: ${{ secrets.CPANEL_TOKEN != '' }}
+        run: |
+          if [ "$HAS_TOKEN" = true ] && [ -n "$CP_HOST" ] && [ -n "$CP_USER" ] && [ -n "$DIR" ]; then echo "ready=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::Server details (CP_HOST, CP_USER, DIR) or the CPANEL_TOKEN secret are not set yet; skipping the upload."; fi
+      - name: Upload through the cPanel API (HTTPS, port 2083)
+        if: steps.cfg.outputs.ready == 'true'
+        env:
           CP_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: bash .github/deploy-cpanel.sh

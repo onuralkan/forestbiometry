@@ -20,7 +20,7 @@ const FX = JSON.parse(readFileSync(path.join(here, 'fixture.json'), 'utf8'));
 /* 0. lnGamma moved unchanged from assets/tools.js */
 {
   globalThis.window = globalThis; globalThis.document = { documentElement: { lang: 'en' } };
-  createRequire(import.meta.url)(path.join(root, 'assets/tools.js'));
+  createRequire(import.meta.url)(path.join(root, 'legacy/tools.js'));
   for (const zz of [0.1, 0.5, 1, 1.5, 2.7, 10, 101]) ok(lnGamma(zz) === globalThis.MP.lnGamma(zz), `lnGamma(${zz}) identical to tools.js`);
 }
 

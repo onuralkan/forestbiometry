@@ -2,7 +2,7 @@
 // Nothing here leaves the browser. Keys in use:
 //   'session:<tool>'     autosaved working state of a tool (survives reloads and language switches)
 //   'dataset:approved'   the last dataset approved in the Data Checker (handoff to other tools; schema in docs/PROJECT.md §4b)
-const DB = 'onuralkan-lab', OS = 'kv';
+const DB = 'forestbiometry', OS = 'kv';
 const mem = new Map();
 let dbp = null;
 function db() {

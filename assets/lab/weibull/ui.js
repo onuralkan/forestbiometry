@@ -11,7 +11,7 @@ import { renderImport, readImport } from '../core/importer.js';
 import { readNum } from '../eval/calc.js';
 import { classesFromBreaks, breaksFromWidth } from '../stand/calc.js';
 
-const BASE = '../', KEY = 'session:' + W.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', POOL = '\u0000pool';
+const BASE = './', KEY = 'session:' + W.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', POOL = '\u0000pool';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : NaN; };

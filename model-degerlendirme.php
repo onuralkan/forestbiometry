@@ -1,9 +1,7 @@
 <?php
-require __DIR__ . '/../inc/common.php';
-require __DIR__ . '/../inc/paper.php';
-require __DIR__ . '/../inc/bench.php';
-$c = paper_ctx(); $tr = $c['tr'];
-bench_top([
+require __DIR__ . '/inc/site.php';
+$tr = site_ctx()['tr'];
+site_top([
     'title'  => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
     'kicker' => $tr ? 'Araç 3 · Model doğrulama' : 'Tool 3 · Model validation',
     'lede'   => $tr ? 'Gözlenen değerleri bir veya daha fazla modelin tahminleriyle karşılaştırın: yanlılık, MAE, RMSE ve tahmin R²; gözlenen–tahmin ve artık grafikleri, örnek alan, tür, çap sınıfı ve doğrulama katına göre tablolar. Hata işareti her yerde e = tahmin − gözlenen.'
@@ -18,4 +16,4 @@ bench_top([
   <section id="step1" class="step"></section>
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
-<?php bench_bottom('<script type="module" src="../assets/lab/eval/ui.js?v=1"></script>');
+<?php site_bottom('<script type="module" src="assets/lab/eval/ui.js?v=1"></script>');

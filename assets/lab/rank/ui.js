@@ -9,7 +9,7 @@ import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { radarChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 
-const BASE = '../', KEY = 'session:' + C.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + C.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const fv = x => x == null ? '–' : fmtNum(x, 6);

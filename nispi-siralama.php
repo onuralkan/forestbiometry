@@ -1,9 +1,7 @@
 <?php
-require __DIR__ . '/../inc/common.php';
-require __DIR__ . '/../inc/paper.php';
-require __DIR__ . '/../inc/bench.php';
-$c = paper_ctx(); $tr = $c['tr'];
-bench_top([
+require __DIR__ . '/inc/site.php';
+$tr = site_ctx()['tr'];
+site_top([
     'title'  => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
     'kicker' => $tr ? 'Araç 7 · Model karşılaştırma' : 'Tool 7 · Model comparison',
     'lede'   => $tr ? 'Modellerinizin başarı ölçütleri tablosunu (R², FI, RMSE, MAE, Bias, AIC, BIC…) yükleyin; her ölçüt için ve genel olarak nispi sıraları (Poudel ve Cao 2013) hesaplayın, radar grafiğinde en iyi ve en kötü modelleri karşılaştırın.'
@@ -18,4 +16,4 @@ bench_top([
   <section id="step1" class="step"></section>
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
-<?php bench_bottom('<script type="module" src="../assets/lab/rank/ui.js?v=1"></script>');
+<?php site_bottom('<script type="module" src="assets/lab/rank/ui.js?v=1"></script>');

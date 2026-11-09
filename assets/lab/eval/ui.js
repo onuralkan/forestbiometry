@@ -10,7 +10,7 @@ import { scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { classesFromBreaks } from '../stand/calc.js';
 
-const BASE = '../', KEY = 'session:' + E.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + E.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : NaN; };

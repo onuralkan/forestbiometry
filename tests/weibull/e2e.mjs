@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const XLSX = require(path.join(root, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const REF = JSON.parse(await readFile(path.join(root, 'tests/ref/weibull.json'), 'utf8'));
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null;
-const URL = BASE + '/araclar/cap-dagilimi.php';
+const URL = BASE + '/cap-dagilimi.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -21,10 +21,6 @@ page.on('pageerror', e => errors.push(e.message + ' @ ' + (e.stack || '').split(
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const csvOf = async btn => { const [d] = await Promise.all([page.waitForEvent('download'), page.click(btn)]); return (await readFile(await d.path(), 'utf8')).replace(/^﻿/, '').split('\r\n'); };
-
-// 0. old address redirects to the new tool (no duplicate)
-const r0 = await page.request.get(BASE + '/weibull.php?lang=en', { maxRedirects: 0 });
-ok(r0.status() === 301 && r0.headers().location === 'araclar/cap-dagilimi.php?lang=en', 'weibull.php → 301 to the new lab');
 
 // 1. sample data, TR; truncation question must be answered; known threshold blocks fitting
 await page.goto(URL + '?lang=tr');

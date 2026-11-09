@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const XLSX = require(path.join(root, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null;
-const URL = BASE + '/araclar/veri-denetcisi.php';
+const URL = BASE + '/veri-denetcisi.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -72,7 +72,7 @@ await shot('6-veri');
 await page.click('#tab-approve');
 await page.click('#approve');
 await page.waitForSelector('.note.ok');
-const ds = await page.evaluate(() => new Promise(res => { const r = indexedDB.open('onuralkan-lab'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('dataset:approved'); q.onsuccess = () => res(q.result); }; }));
+const ds = await page.evaluate(() => new Promise(res => { const r = indexedDB.open('forestbiometry'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('dataset:approved'); q.onsuccess = () => res(q.result); }; }));
 ok(ds && ds.schema === 'forest-dataset/1' && ds.trees.length === 17, 'approved dataset stored for other tools');
 ok(ds.trees.find(t => t.row === 2).plot_id === '001' && ds.trees.find(t => t.row === 13).dbh === 27.4, 'approved values');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
@@ -155,7 +155,7 @@ await page.click('#tab-data');
 ok((await page.locator('table.data tbody tr').count()) === 200, 'data view paged (200)');
 
 // 5. tools index shows the handoff; phone and dark screenshots
-await page.goto(BASE + '/araclar/?lang=tr');
+await page.goto(BASE + '/?lang=tr');
 ok(await page.waitForSelector('#handoff:not([hidden])', { timeout: 5000 }).then(() => true, () => false), 'tools index shows the approved dataset');
 await shot('10-dizin');
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });

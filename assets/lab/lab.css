@@ -1,4 +1,4 @@
-/* Forest Biometrics Tools: workbench layout. Colours allowed here (the gazette stays black & white).
+/* forestbiometry.online: workbench layout of the Forest Biometrics Tools.
    Severity palette after Okabe & Ito (colour-blind safe); every severity also carries a shape and a word. */
 @font-face { font-family: "Playfair"; font-style: normal; font-display: swap; font-weight: 400 900;
   src: url(../fonts/playfair-display-latin-ext-wght-normal.woff2) format("woff2");
@@ -40,12 +40,14 @@ code { font: 13px var(--mono); background: var(--sunk); border: 1px solid var(--
 .muted { color: var(--muted); } .small { font-size: 13px; } .nowrap { white-space: nowrap; } .num { text-align: right; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-/* masthead: a thin strip that ties the section to the gazette */
+/* masthead: site name, navigation, theme and language */
 .b-mast { background: var(--surface); border-bottom: 1px solid var(--line); }
 .b-mast-in { max-width: 1240px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .b-paper { font: 900 19px/1 var(--head); color: var(--ink); text-decoration: none; letter-spacing: .01em; }
-.b-sep { color: var(--muted); }
-.b-section { font-weight: 600; color: var(--acc); text-decoration: none; font-size: 14px; }
+.b-nav { display: flex; gap: 14px; }
+.b-nav a { font-weight: 600; color: var(--muted); text-decoration: none; font-size: 14px; }
+.b-nav a:hover, .b-nav a[aria-current] { color: var(--acc); }
+.b-nav a[aria-current] { text-decoration: underline; text-underline-offset: 4px; }
 .b-tools { margin-left: auto; display: flex; gap: 10px; align-items: center; }
 .b-tools button { background: none; border: 1px solid var(--line); border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; color: var(--ink); cursor: pointer; }
 .b-tools a { font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
@@ -193,7 +195,10 @@ tr.empty td { color: var(--muted); font-style: italic; }
 .toollist h3 a { text-decoration: none; } .toollist h3 a:hover { text-decoration: underline; }
 .toollist p { margin: 0; }
 .toollist .planned h3 { color: var(--muted); }
-.oldlist { margin: 0; padding-left: 18px; }
+.about { max-width: 860px; }
+.about .b-h2 { margin-top: 0; }
+dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 8px 0 0; }
+dl.kv dt { color: var(--muted); } dl.kv dd { margin: 0; overflow-wrap: anywhere; }
 .b-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* charts: categorical colours after Okabe & Ito */

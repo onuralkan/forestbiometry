@@ -7,7 +7,7 @@ import { parseNumber, UNITS } from '../core/num.js';
 import { put, get, del } from '../core/store.js';
 import { csvText, download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX, XLSX_READ_OPTS } from '../core/export.js';
 
-const BASE = '../', KEY = 'session:' + C.TOOL.id, PAGE = 200;
+const BASE = './', KEY = 'session:' + C.TOOL.id, PAGE = 200;
 const $ = id => document.getElementById(id);
 const UNIT_LABEL = { cm: 'cm', mm: 'mm', m: 'm', dm: 'dm', m2: 'm²', ha: 'ha' };
 const SEV_RANK = { info: 1, warning: 2, error: 3 };

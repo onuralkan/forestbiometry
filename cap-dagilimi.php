@@ -1,9 +1,7 @@
 <?php
-require __DIR__ . '/../inc/common.php';
-require __DIR__ . '/../inc/paper.php';
-require __DIR__ . '/../inc/bench.php';
-$c = paper_ctx(); $tr = $c['tr'];
-bench_top([
+require __DIR__ . '/inc/site.php';
+$tr = site_ctx()['tr'];
+site_top([
     'title'  => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
     'kicker' => $tr ? 'Araç 4 · Çap dağılımları · Weibull sürümü' : 'Tool 4 · Diameter distributions · Weibull version',
     'lede'   => $tr ? 'Tek ağaç çaplarına iki parametreli Weibull\'u en çok olabilirlik ve momentlerle, üç parametreli biçimi sizin sabitlediğiniz konumla uydurun; histogram, birikimli dağılım ve sınıf frekanslarını kuyruklarıyla birlikte görün. Eğri gezgini, veriden ayrı bir gösterimdir.'
@@ -19,4 +17,4 @@ bench_top([
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
   <section id="explore" class="explore" aria-label="<?= $tr ? 'Eğri gezgini' : 'Curve explorer' ?>"></section>
-<?php bench_bottom('<script type="module" src="../assets/lab/weibull/ui.js?v=2"></script>');
+<?php site_bottom('<script type="module" src="assets/lab/weibull/ui.js?v=2"></script>');

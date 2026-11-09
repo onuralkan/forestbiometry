@@ -1,14 +1,43 @@
 <?php
-// "Workbench" layout for the Forest Biometrics Tools section (araclar/).
-// A small gazette masthead links the section to the paper; below it the tools use their own,
-// colour-capable design (assets/lab/lab.css). Pages live one level down, so $base = '../'.
-// Usage: bench_top(['title' => ..., 'desc' => ..., 'kicker' => ...]); ...; bench_bottom('<script ...>');
+// Shared shell of forestbiometry.online: language, header, footer, tool list, author details.
+// Not web-accessible (see inc/.htaccess). No database, no sessions, no server-side user data.
+// Usage: site_top(['title' => ..., 'desc' => ..., 'kicker' => ..., 'lede' => ...]); ...; site_bottom('<script ...>');
+declare(strict_types=1);
 
-const BENCH_BASE = '../';
+date_default_timezone_set('Europe/Istanbul');
 
-/** Tools of the section. 'file' null = planned (no link, no placeholder page). */
-function bench_tools(): array {
-    $tr = paper_ctx()['tr'];
+/** Author and responsible person, shown on the About page and in the footer. Empty values are not shown. */
+const SITE_AUTHOR = [
+    'name'  => 'Onur Alkan',
+    'email' => 'onuralkan@isparta.edu.tr',
+    'orcid' => '',   // 0000-0000-0000-0000 form; shown only when filled in
+];
+
+function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+
+/** ?lang= wins and is remembered in a cookie; otherwise the cookie, otherwise the browser language. */
+function lang(): string {
+    if (isset($_GET['lang']) && in_array($_GET['lang'], ['tr', 'en'], true)) {
+        setcookie('lang', $_GET['lang'], ['expires' => time() + 31536000, 'path' => '/', 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
+        return $_GET['lang'];
+    }
+    if (isset($_COOKIE['lang']) && in_array($_COOKIE['lang'], ['tr', 'en'], true)) return $_COOKIE['lang'];
+    $al = strtolower($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '');
+    return substr($al, 0, 2) === 'tr' ? 'tr' : 'en';
+}
+
+function site_ctx(): array {
+    static $c = null;
+    if ($c) return $c;
+    $L = lang(); $tr = $L === 'tr';
+    $c = ['L' => $L, 'tr' => $tr, 'other' => $tr ? 'en' : 'tr',
+          'site' => $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools'];
+    return $c;
+}
+
+/** Tools of the platform. 'file' null = planned (no link, no placeholder page). */
+function site_tools(): array {
+    $tr = site_ctx()['tr'];
     return [
         ['n' => 1, 'file' => 'veri-denetcisi.php', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
          'desc' => $tr ? 'Ağaç ve örnek alan tablolarınızı içe aktarın, sütunları eşleyin, biçim hatalarını ve şüpheli ölçümleri bulun; düzeltmeleri gerekçesiyle kaydedip veriyi onaylayın.'
@@ -30,11 +59,11 @@ function bench_tools(): array {
     ];
 }
 
-function bench_top(array $o = []): void {
-    $c = paper_ctx(); $tr = $c['tr']; $b = BENCH_BASE;
-    $section = $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools';
-    $pageTitle = ($o['title'] ?? '') !== '' ? $o['title'] . ' | ' . $section : $section . ' | ' . $c['paper'];
+function site_top(array $o = []): void {
+    $c = site_ctx(); $tr = $c['tr'];
+    $pageTitle = ($o['title'] ?? '') !== '' && $o['title'] !== $c['site'] ? $o['title'] . ' | ' . $c['site'] : $c['site'] . ' | forestbiometry.online';
     $q = $_GET; $q['lang'] = $c['other']; $langHref = '?' . http_build_query($q);
+    $here = basename($_SERVER['SCRIPT_NAME'] ?? '');
     ?><!doctype html>
 <html lang="<?= $c['L'] ?>">
 <head>
@@ -42,20 +71,23 @@ function bench_top(array $o = []): void {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= h($pageTitle) ?></title>
 <meta name="description" content="<?= h($o['desc'] ?? '') ?>">
+<meta name="author" content="<?= h(SITE_AUTHOR['name']) ?>">
 <meta name="theme-color" content="#f3f1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
-<link rel="preload" href="<?= $b ?>assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="<?= $b ?>assets/lab/lab.css?v=6">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23155e63'/><text x='16' y='23' font-family='Georgia,serif' font-weight='900' font-size='20' fill='%23fff' text-anchor='middle'>A</text></svg>">
+<link rel="preload" href="assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/lab/lab.css?v=7">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23155e63'/><text x='16' y='23' font-family='Georgia,serif' font-weight='900' font-size='20' fill='%23fff' text-anchor='middle'>F</text></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 </head>
 <body class="bench">
 <a class="skip" href="#main"><?= $tr ? 'İçeriğe geç' : 'Skip to content' ?></a>
 <header class="b-mast">
   <div class="b-mast-in">
-    <a class="b-paper" href="<?= $b ?>"><?= h($c['paper']) ?></a>
-    <span class="b-sep" aria-hidden="true">/</span>
-    <a class="b-section" href="<?= $b ?>araclar/"><?= h($section) ?></a>
+    <a class="b-paper" href="./"><?= h($c['site']) ?></a>
+    <nav class="b-nav" aria-label="<?= $tr ? 'Site' : 'Site' ?>">
+      <a href="./"<?= $here === 'index.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Araçlar' : 'Tools' ?></a>
+      <a href="hakkinda.php"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Hakkında' : 'About' ?></a>
+    </nav>
     <span class="b-tools">
       <button type="button" id="theme" aria-label="<?= $tr ? 'Koyu / açık tema' : 'Dark / light theme' ?>"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
       <a id="langlink" href="<?= h($langHref) ?>" hreflang="<?= $c['other'] ?>" lang="<?= $c['other'] ?>"><?= $c['other'] === 'en' ? 'English' : 'Türkçe' ?></a>
@@ -66,19 +98,19 @@ function bench_top(array $o = []): void {
 <?php if (!empty($o['kicker']) || !empty($o['title'])): ?>
   <header class="b-head">
     <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?= h($o['kicker']) ?></p><?php endif; ?>
-    <h1><?= h($o['title'] ?? $section) ?></h1>
+    <h1><?= h($o['title'] ?? $c['site']) ?></h1>
     <?php if (!empty($o['lede'])): ?><p class="b-lede"><?= h($o['lede']) ?></p><?php endif; ?>
   </header>
 <?php endif;
 }
 
-function bench_bottom(string $script = ''): void {
-    $c = paper_ctx(); $tr = $c['tr']; $b = BENCH_BASE;
+function site_bottom(string $script = ''): void {
+    $c = site_ctx(); $tr = $c['tr'];
     ?>
 </main>
 <footer class="b-foot">
-  <span><?= h($c['paper']) ?> · <?= $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools' ?> · © <?= date('Y') ?> <?= h($c['S']['name']) ?></span>
-  <span><a href="<?= $b ?>araclar/"><?= $tr ? 'Araçlar dizini' : 'Tools index' ?></a> · <a href="<?= $b ?>"><?= $tr ? 'Ön sayfa' : 'Front page' ?></a></span>
+  <span>forestbiometry.online · © <?= date('Y') ?> · <?= $tr ? 'Yazar ve sorumlu' : 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
+  <span><a href="./"><?= $tr ? 'Araçlar dizini' : 'Tools index' ?></a> · <a href="hakkinda.php"><?= $tr ? 'Hakkında' : 'About' ?></a></span>
 </footer>
 <script>
 document.getElementById('theme').addEventListener('click', () => {

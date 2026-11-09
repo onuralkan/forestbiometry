@@ -1,5 +1,5 @@
 # Tests
-- `node tests/test_math.js`: checks the maths in `assets/tools.js` against SciPy reference values.
+- `node legacy/test_math.js`: checks the maths in `legacy/tools.js` (old site, not published; to be ported) against SciPy reference values.
 - `python3 tests/ref/make_reference.py`: regenerates `tests/ref/distributions.json` (needs numpy + scipy).
 - `node tests/checker/test_checker.mjs`: Forest Data Checker acceptance tests (pure logic + vendored SheetJS); expected values written by hand.
 - `node tests/stand/test_stand.mjs`: Plot & Stand Metrics tests; references are the acceptance example and `tests/ref/stand.json`.
@@ -15,4 +15,4 @@
 - `python3 tests/ref/make_rank_reference.py`: regenerates the synthetic sample workbook and `tests/ref/rank.json` (numpy + openpyxl).
 - `node tests/rank/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Relative Ranking.
 - `node tests/checker/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test with Playwright/Chromium against a local `php -S 127.0.0.1:8092` in the site folder.
-Older supplements (Meşcere, Laboratuvar, Bulmaca) were checked in the browser during development; scripted tests come when they move to the tools section.
+- `node tests/site/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the site shell (tools index, About, language, removed pages).

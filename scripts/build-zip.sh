@@ -1,6 +1,6 @@
 #!/bin/sh
-# Builds the upload package from site/ without docs, tests, scripts or dev files.
+# Fallback: builds the upload package (same file set as the automatic upload) for cPanel → File Manager → Upload + Extract.
 cd "$(dirname "$0")/.." || exit 1
-rm -f ../onuralkan-site.zip
-zip -qr ../onuralkan-site.zip . -x 'docs/*' 'tests/*' 'scripts/*' 'README.md' 'check.php' '.git/*' '.gitignore' 'CLAUDE.md'
-unzip -l ../onuralkan-site.zip | tail -1
+rm -f ../forestbiometry.zip
+git ls-files | grep -Ev '^(\.github/|docs/|tests/|scripts/|legacy/|\.gitignore$|README\.md$|CLAUDE\.md$)' | zip -q ../forestbiometry.zip -@
+unzip -l ../forestbiometry.zip | tail -1

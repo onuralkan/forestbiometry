@@ -1,9 +1,7 @@
 <?php
-require __DIR__ . '/../inc/common.php';
-require __DIR__ . '/../inc/paper.php';
-require __DIR__ . '/../inc/bench.php';
-$c = paper_ctx(); $tr = $c['tr'];
-bench_top([
+require __DIR__ . '/inc/site.php';
+$tr = site_ctx()['tr'];
+site_top([
     'title'  => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
     'kicker' => $tr ? 'Araç 2 · Orman envanteri' : 'Tool 2 · Forest inventory',
     'lede'   => $tr ? 'Onaylanmış verinizden her örnek alan ve ölçüm dönemi için hektardaki ağaç sayısı, göğüs yüzeyi, ortalama ve kuadratik ortalama çap, çap sınıfı dağılımı ve tür katılımı. Örnek alanlar arası betimsel özet ile orman için tasarıma dayalı tahmin ayrı tutulur.'
@@ -19,4 +17,4 @@ bench_top([
   <section id="step1" class="step"></section>
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
-<?php bench_bottom('<script type="module" src="../assets/lab/stand/ui.js?v=1"></script>');
+<?php site_bottom('<script type="module" src="assets/lab/stand/ui.js?v=1"></script>');
