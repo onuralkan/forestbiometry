@@ -77,7 +77,7 @@ function site_top(array $o = []): void {
 <meta name="theme-color" content="#f3f1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/lab/lab.css?v=7">
+<link rel="stylesheet" href="assets/lab/lab.css?v=8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23155e63'/><text x='16' y='23' font-family='Georgia,serif' font-weight='900' font-size='20' fill='%23fff' text-anchor='middle'>F</text></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 </head>
