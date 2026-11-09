@@ -5,11 +5,12 @@ Kaynak durumu işaretleri:
 - **[İ]** İkincil bir kaynağın kaynakçasında künyesi doğrulandı.
 - **[D]** Henüz doğrulanmadı; künye bilgiden yazıldı, **kullanmadan önce doğrulanmalı**.
 
-Sayısal doğrulama: `node tests/test_math.js` (SciPy referansı: `tests/ref/make_reference.py`); Veri Denetçisi: `node tests/checker/test_checker.mjs` ve tarayıcı testi `tests/checker/e2e.mjs`.
+Sayısal doğrulama: `node legacy/test_math.js` (SciPy referansı: `tests/ref/make_reference.py`); Veri Denetçisi: `node tests/checker/test_checker.mjs` ve tarayıcı testi `tests/checker/e2e.mjs`.
 
 ---
 
-## 1. Meşcere ölçüleri (`mescere.php`, gelecekte Modül 2)
+## 1. Meşcere ölçüleri (eski `mescere.php`, arşiv)
+**Arşiv (9 Kasım 2026):** eski sayfa kaldırıldı. N, G ve ortalama çaplar Modül 2'de (§6). Üst boy, Näslund boy tahmini ve kullanıcı katsayılı hacim sonraki modüllerde yeniden yazılacak; aşağıdaki tanımlar o zaman bağımsız referansla yeniden doğrulanır.
 | Büyüklük | Tanım | Birim |
 |---|---|---|
 | Hektara çevirme katsayısı | EF = 10 000 / A, A = örnek alan (m²) | – |
@@ -36,7 +37,7 @@ h = 1,3 + d² / (a + b·d)². Doğrusal biçimi d / √(h − 1,3) = a + b·d ol
 ---
 
 ## 2. Çap dağılımları (eski `weibull.php`; 5 Kasım 2026'da kaldırıldı, bkz. §8)
-**Arşiv:** Bu bölüm eski gazete ekinin tanımlarını kayıt için tutar. Eski sayfa Modül 4 ile yeni araca yönlendirildi; gamma, normal, lognormal ve Johnson SB yeni araca sonraki turlarda taşınacak. Eski sayfadaki Weibull gösterimi (α şekil, β ölçek, γ konum) yeni araçta **c şekil, b ölçek, a konum** olarak yazılır. Eski hesap kodu `assets/tools.js` içinde ve `tests/test_math.js` testleriyle duruyor.
+**Arşiv:** Bu bölüm eski gazete ekinin tanımlarını kayıt için tutar. Eski sayfa Modül 4 ile kaldırıldı (site 9 Kasım 2026'da forestbiometry.online'a taşındı); gamma, normal, lognormal ve Johnson SB yeni araca sonraki turlarda taşınacak. Eski sayfadaki Weibull gösterimi (α şekil, β ölçek, γ konum) yeni araçta **c şekil, b ölçek, a konum** olarak yazılır. Eski hesap kodu `legacy/tools.js` içinde ve `legacy/test_math.js` testleriyle duruyor (yayınlanmaz).
 
 Bütün dağılımlarda x = göğüs çapı (cm).
 
