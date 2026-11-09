@@ -2,7 +2,7 @@
 # over HTTPS (port 2083). Script: .github/deploy-cpanel.sh. Nothing on the server is deleted; the upload stops
 # unless DIR already holds this site (inc/site.php) or is an empty cPanel document root.
 # Only repository secret: CPANEL_TOKEN (API token of the forestbiometry.online cPanel account).
-# Server, account and folder are written below (not secret). While any of them is empty, nothing is uploaded.
+# Server, account and folder are written below (not secret). If any of them is emptied, nothing is uploaded.
 name: Deploy to forestbiometry.online
 on:
   push:
@@ -12,9 +12,9 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 env:
-  CP_HOST: ''      # cPanel server of forestbiometry.online, e.g. the "Server Name" / hostname shown in cPanel (to be filled in)
-  CP_USER: ''      # cPanel account name (to be filled in)
-  DIR: ''          # document root of forestbiometry.online, e.g. /home/<account>/public_html (to be filled in)
+  CP_HOST: fr-collins.guzelhosting.com   # cPanel server (164.132.247.15; valid certificate on 2083)
+  CP_USER: forestbi                      # cPanel account
+  DIR: /home/forestbi/public_html        # document root of forestbiometry.online (main domain of the account)
 jobs:
   test:
     runs-on: ubuntu-latest
