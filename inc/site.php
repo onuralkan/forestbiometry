@@ -10,7 +10,7 @@ date_default_timezone_set('Europe/Istanbul');
 const SITE_AUTHOR = [
     'name'  => 'Onur Alkan',
     'email' => 'onuralkan@isparta.edu.tr',
-    'orcid' => '',   // 0000-0000-0000-0000 form; shown only when filled in
+    'orcid' => '0000-0001-5798-3421',   // shown only when filled in
 ];
 
 function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
