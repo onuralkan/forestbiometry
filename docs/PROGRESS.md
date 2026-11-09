@@ -40,7 +40,7 @@ Son güncelleme: 10 Kasım 2026, atıf menüsü
 
 16. Envanter Örnekleme Planlayıcısı eksikleri (ilk sürüm): (a) Yalnızca z yaklaşımı; t ile yinelemeli hesap yok (küçük n'de sayı biraz az çıkar; ekranda yazılı). (b) Tabakalı (orantılı/Neyman dağıtım), sistematik, kümeli ve çok aşamalı tasarımlar yok. (c) Toplam için (ör. orman toplam hacmi) mutlak hata hedefi yok; yalnızca bağıl hata. (d) Pilot CV'nin belirsizliği (ör. CV için güven aralığı) sonuca yansıtılmıyor. (e) Ulaşılamayan örnek alanlar ve maliyet için pay yok. (f) Örnek alan büyüklüğü/şekli seçimi yok. (g) Cochran (1977) künyesi [D].
 
-17. Atıf: (a) DOI yok; kalıcı tanımlayıcı için sürümlerin Zenodo gibi bir arşive bırakılması gerekir (kullanıcı kararı). (b) Biçimler kılavuzların yazılım/web uygulaması kalıbına göre yazıldı; dergi kurallarıyla karşılaştırılması ekranda öneriliyor. (c) Kurallı adres çıplak alan adıdır; DNS düzelmeden bu adres açılmayabilir.
+17. Atıf: (a) DOI yok. **Planlandı (10 Kasım 2026, kullanıcı kararı): Zenodo ile DOI** (bkz. PROJECT.md §9). (b) Biçimler kılavuzların yazılım/web uygulaması kalıbına göre yazıldı; dergi kurallarıyla karşılaştırılması ekranda öneriliyor. (c) Kurallı adres çıplak alan adıdır; DNS düzelmeden bu adres açılmayabilir.
 
 ## Riskler
 - Kaynak kod GitHub'da, özel depo `onuralkan/onuralkan-site`; depoda kullanıcı verisi ve sır yok. Belgeler ayrıca claude.ai projesinde.
