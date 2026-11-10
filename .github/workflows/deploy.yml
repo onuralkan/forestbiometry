@@ -35,6 +35,7 @@ jobs:
           node tests/sampling/test_sampling.mjs
           node tests/site/test_cite.mjs
           node tests/site/test_format.mjs
+          node tests/dist/test_p01.mjs
   deploy:
     needs: test
     runs-on: ubuntu-latest

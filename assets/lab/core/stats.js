@@ -41,6 +41,16 @@ export function tQuantile(p, nu) {
   return (lo + hi) / 2;
 }
 
+/** Lentz continued fraction h with Q(a, x) = exp(−x + a ln x − lnΓ(a)) · h (used for x ≥ a + 1). */
+function gammaCF(a, x) {
+  const TINY = 1e-300; let b = x + 1 - a, c = 1 / TINY, d = 1 / b, h = d;
+  for (let i = 1; i < 1000; i++) {
+    const an = -i * (i - a); b += 2;
+    d = an * d + b; if (Math.abs(d) < TINY) d = TINY; c = b + an / c; if (Math.abs(c) < TINY) c = TINY;
+    d = 1 / d; const del = d * c; h *= del; if (Math.abs(del - 1) < 1e-16) break;
+  }
+  return h;
+}
 /** Regularised lower incomplete gamma P(a, x): series for x < a + 1, Lentz continued fraction otherwise. */
 export function gammaP(a, x) {
   if (x <= 0) return 0;
@@ -50,16 +60,36 @@ export function gammaP(a, x) {
     for (let n = 0; n < 1000; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-16) break; }
     return sum * Math.exp(-x + a * Math.log(x) - lg);
   }
-  const TINY = 1e-300; let b = x + 1 - a, c = 1 / TINY, d = 1 / b, h = d;
-  for (let i = 1; i < 1000; i++) {
-    const an = -i * (i - a); b += 2;
-    d = an * d + b; if (Math.abs(d) < TINY) d = TINY; c = b + an / c; if (Math.abs(c) < TINY) c = TINY;
-    d = 1 / d; const del = d * c; h *= del; if (Math.abs(del - 1) < 1e-16) break;
-  }
-  return 1 - Math.exp(-x + a * Math.log(x) - lg) * h;
+  return 1 - Math.exp(-x + a * Math.log(x) - lg) * gammaCF(a, x);
 }
-/** Standard normal cumulative distribution Φ(z) = ½[1 + sign(z)·P(½, z²/2)]. */
-export function normCdf(z) { const p = gammaP(0.5, z * z / 2); return z >= 0 ? 0.5 + 0.5 * p : 0.5 - 0.5 * p; }
+/** Regularised upper incomplete gamma Q(a, x) = 1 − P(a, x), computed directly in the tail (no cancellation). */
+export function gammaQ(a, x) {
+  if (x <= 0) return 1;
+  return x < a + 1 ? 1 - gammaP(a, x) : Math.exp(-x + a * Math.log(x) - lnGamma(a)) * gammaCF(a, x);
+}
+/** ln Q(a, x) for x ≥ a + 1 without underflow. */
+const lnGammaQTail = (a, x) => -x + a * Math.log(x) - lnGamma(a) + Math.log(gammaCF(a, x));
+/**
+ * Standard normal cumulative distribution Φ(z). The tail beyond |z| ≈ 1.73 comes from the upper incomplete gamma
+ * directly (Φ(−z) = ½·Q(½, z²/2)), so small tail probabilities keep their relative accuracy.
+ */
+export function normCdf(z) {
+  if (Number.isNaN(z)) return NaN;
+  const x = z * z / 2, tail = x >= 1.5 ? 0.5 * gammaQ(0.5, x) : 0.5 - 0.5 * gammaP(0.5, x);   // P(Z > |z|)
+  return z >= 0 ? 1 - tail : tail;
+}
+/** Upper tail 1 − Φ(z), accurate for large z. */
+export const normSf = z => normCdf(-z);
+/** ln Φ(z), finite far into the lower tail (z = −40 gives about −804.6). */
+export function logNormCdf(z) {
+  if (Number.isNaN(z)) return NaN;
+  const x = z * z / 2;
+  if (z < 0 && x >= 1.5) return Math.log(0.5) + lnGammaQTail(0.5, x);
+  const t = normCdf(-z);                                    // upper tail
+  return z > 0 ? Math.log1p(-t) : Math.log(normCdf(z));
+}
+/** ln[1 − Φ(z)]. */
+export const logNormSf = z => logNormCdf(-z);
 /** Standard normal quantile Φ⁻¹(p), bisection on Φ to 1e-14 (0 < p < 1). */
 export function normQuantile(p) {
   if (!(p > 0 && p < 1)) return NaN;

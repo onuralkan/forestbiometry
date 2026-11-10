@@ -388,3 +388,10 @@ tr.excl td, tr.excl th { color: var(--muted); text-decoration: line-through; }
 .cite-acts { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
 @media (max-width: 640px) { .cite-row { grid-template-columns: minmax(0, 1fr); } .cite-acts { flex-direction: row; } }
 .cite-inline { font: 15.5px/1.6 Georgia, "Times New Roman", serif; margin: 6px 0 12px; overflow-wrap: anywhere; }
+
+/* diameter distribution tool, engine version */
+fieldset.fam { border: 1px solid var(--line2); border-radius: 8px; margin: 8px 0 0; padding: 8px 12px 10px; }
+fieldset.fam legend { font-weight: 600; padding: 0 6px; }
+table.ptab tr.st-bad td, table.ptab tr.st-bad th { color: var(--muted); }
+ul.notes { margin: 6px 0 0; padding-left: 18px; }
+table.ptab tbody th { min-width: 150px; }
