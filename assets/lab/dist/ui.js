@@ -29,6 +29,7 @@ let S = blank(), R = null;
 function blank() {
   return { v: 1, step: 1, tab: 'params', imp: null, src: null, dcol: null, unit: 'cm', pcol: null, percol: null, fcol: null, fval: null, decimal: null, decimalChosen: false,
     wf: 'raw', sum: { mean: '', which: 'var', v: '', div: 'n', n: '', dq: '', methods: {}, done: false },
+    prs: { xi: '', mean: '', median: '', qmode: 'ng', nha: '', g: '', dq: '', origin: 'measured', from: null, unit: 0, done: false },
     wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
     mode: 'each', methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
@@ -363,9 +364,9 @@ function renderRecover() {
     <p class="muted small">${T('rec.note')}</p></div>
     <div class="card"><h2>${T('rec.fam')}</h2><div class="radios col">${recMethods().map(m => `<label><input type="checkbox" data-rm="${m.id}"${S.sum.methods[m.id] !== false ? ' checked' : ''}> ${esc(T('fam.' + m.family))}: ${esc(T('m.' + m.id))}</label>${has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}`).join('')}</div></div>
     <div class="nav"><button type="button" class="btn" id="s-calc"${recChosen().length ? '' : ' disabled'}>${T('calc')}</button>${recChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="s-out"></div>
-    <div id="wb"></div>`;
+    <div id="wb"></div><div id="prs"></div>`;
   el.innerHTML = h;
-  renderWb();
+  renderWb(); renderPrs();
   const re = () => { S.sum.done = false; RS = null; save(); renderRecover(); };
   for (const [id, k] of [['s-mean', 'mean'], ['s-v', 'v'], ['s-dq', 'dq'], ['s-n', 'n']]) $(id) && $(id).addEventListener('change', e => { S.sum[k] = e.target.value; re(); });
   el.querySelectorAll('input[name="s-which"]').forEach(x => x.addEventListener('change', () => { S.sum.which = x.value; re(); }));
@@ -497,6 +498,73 @@ function drawWb() {
   $('ch-w-svg') && $('ch-w-svg').addEventListener('click', () => download('weibull-geri-kazanim.svg', svgForDownload($('ch-w').querySelector('svg')), 'image/svg+xml'));
   $('w-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-weibull-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), results: RW }));
 }
+/* ---------------- Johnson SB recovery, Parresol (2003): ξ fixed, λ, γ, δ recovered ---------------- */
+function prsSummary() {
+  const q = S.prs, val = t => { const x = String(t ?? '').trim(); return x === '' ? null : num(x); }, out = { origin: q.origin };
+  for (const k of ['xi', 'mean', 'median']) { const v = val(q[k]); if (v != null) out[k] = v; }
+  if (q.qmode !== 'dq') { const n = val(q.nha), g = val(q.g); if (n != null) out.nha = n; if (g != null) out.g = g; if (n == null && g == null) { out.nha = null; } }
+  if (q.qmode !== 'ng') { const d = val(q.dq); if (d != null) out.dq = d; }
+  if (out.nha === null) delete out.nha;
+  if (q.from) { out.from = 'raw'; out.unit = q.from.label; }
+  return out;
+}
+let RP = null, prsBusy = false;
+function renderPrs() {
+  const el = $('prs'); if (!el || prsBusy) return;
+  prsBusy = true;
+  try { if (el.contains(document.activeElement)) document.activeElement.blur(); drawPrsCard(el); } finally { prsBusy = false; }
+  if (S.prs.done) { RP = [D.runMethod('johnsonsb.parresol', { type: 'summary', summary: prsSummary() })]; drawPrs(); }
+}
+function drawPrsCard(el) {
+  const q = S.prs, us = wbUnits(), inp = (id, v, lab) => `<label>${lab} <input type="text" inputmode="decimal" size="9" id="${id}" value="${esc(v)}"></label>`;
+  el.innerHTML = `<div class="card" id="prscard"><h2>${T('prs.h')}</h2><p class="muted">${T('prs.sub')}</p>
+    <div class="lims">${inp('p-xi', q.xi, T('prs.f.xi'))} ${inp('p-mean', q.mean, T('wb.f.mean'))} ${inp('p-median', q.median, T('prs.f.median'))}</div>
+    <h3>${T('prs.q.h')}</h3><div class="radios">${['ng', 'dq', 'both'].map(v => `<label><input type="radio" name="p-qmode" value="${v}"${q.qmode === v ? ' checked' : ''}> ${T('prs.q.' + v)}</label>`).join('')}</div>
+    <div class="lims">${q.qmode !== 'dq' ? inp('p-nha', q.nha, T('prs.f.nha')) + ' ' + inp('p-g', q.g, T('prs.f.g')) : ''} ${q.qmode !== 'ng' ? inp('p-dq', q.dq, T('wb.f.dq')) : ''}</div>
+    <p class="muted small">${T('prs.q.note')}</p>
+    <h3>${T('wb.t.h')}</h3><div class="radios">${['measured', 'predicted'].map(v => `<label><input type="radio" name="p-origin" value="${v}"${q.origin === v ? ' checked' : ''}> ${T('wb.origin.' + v)}</label>`).join('')}</div>
+    ${q.from ? `<p class="note small" id="p-from">${esc(T('prs.from', { u: q.from.label, n: fmtNum(q.from.n, 0) }))}</p>` : ''}
+    <details class="wbfill"><summary>${T('prs.fill.h')}</summary><p class="muted small">${T('prs.fill.sub')}</p>
+      ${us.length ? `<div class="lims"><label>${T('wb.fill.unit')} <select id="p-unit">${us.map((u, i) => `<option value="${i}"${+q.unit === i ? ' selected' : ''}>${esc(unitLabel(u))} (n = ${u.d.length})</option>`).join('')}</select></label>
+        <button type="button" class="btn ghost small" id="p-fill">${T('wb.fill.btn')}</button></div>` : `<p class="small">${T('wb.fill.none')}</p>`}</details>
+    <div class="nav"><button type="button" class="btn" id="p-calc">${T('calc')}</button></div><div id="p-out"></div></div>`;
+  const re = (keepFrom = true) => { if (!keepFrom) q.from = null; q.done = false; RP = null; save(); renderPrs(); };
+  for (const k of ['mean', 'median', 'nha', 'g', 'dq']) $('p-' + k) && $('p-' + k).addEventListener('change', e => { q[k] = e.target.value; re(false); });
+  $('p-xi').addEventListener('change', e => { q.xi = e.target.value; re(); });
+  el.querySelectorAll('input[name="p-qmode"]').forEach(x => x.addEventListener('change', () => { q.qmode = x.value; re(); }));
+  el.querySelectorAll('input[name="p-origin"]').forEach(x => x.addEventListener('change', () => { q.origin = x.value; if (x.value === 'predicted') q.from = null; re(); }));
+  $('p-unit') && $('p-unit').addEventListener('change', e => { q.unit = +e.target.value; save(); });
+  $('p-fill') && $('p-fill').addEventListener('click', () => {                 // mean, median (type 7), Dq from the loaded diameters; N, G are not in tree data
+    const u = us[+q.unit] || us[0], s = D.describe(u.d), srt = [...u.d].sort((a, b) => a - b);
+    Object.assign(q, { mean: String(s.mean), median: String(D.quantile7(srt, 0.5)), dq: String(s.dq), qmode: 'dq', origin: 'measured', from: { label: unitLabel(u), n: s.n } });
+    re();
+  });
+  $('p-calc').addEventListener('click', () => { q.done = true; save(); renderPrs(); });
+}
+function drawPrs() {
+  const out = $('p-out'); if (!out || !RP) return;
+  const r = RP[0], okr = r.status === 'ok', g = r.diagnostics || {}, tg = r.targets || {}, fam = D.family('johnsonsb');
+  const why = [...(r.problems || []).map(p => T('pr.' + p.code, { ...p, key: p.key ? T('prs.k.' + p.key) : p.key })), ...(r.warnings || []).map(w => T('w.' + w.code, w))].join('; ');
+  const cands = r.status === 'multiple' ? (g.candidates || []).map(c => fam.params.map(q => `${q.label} = ${f(c[q.key], 4)}`).join(', ')).join(' | ') : '';
+  const back = okr ? [['mean', 'backMean'], ['median', 'backMedian'], ['dq', 'backDq']].map(([k, b]) => `<span style="white-space:nowrap">${T('prs.k.' + k)}: ${f(tg[k], 4)} → ${f(g[b], 4)}</span>`).join('<br>') : '–';
+  let h = `<div class="tscroll"><table class="grid ptab prtab"><thead><tr><th>${T('t.method')}</th>${fam.params.map(q => `<th>${esc(parHead(q))}</th>`).join('')}<th>${T('wb.t.targets')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
+    <tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('m.' + r.method))}</th>${fam.params.map(q => `<td class="num">${okr ? f(r.params[q.key], 6) : q.key === 'xi' && tg.xi != null ? f(tg.xi, 4) : '–'}</td>`).join('')}
+      <td class="num small">${back}</td><td>${T('st.' + r.status)}${why ? `: ${esc(why)}` : ''}${cands ? `<br><span class="small">${esc(cands)}</span>` : ''}</td>
+      <td class="small">${esc(T('sol.newton'))}${r.convergence && r.convergence.starts ? ` · ${T('prs.starts', { k: r.convergence.starts, s: r.convergence.solutions })}` : ''}</td></tr></tbody></table></div>`;
+  if (tg.dq != null) h += `<p class="small">${T('prs.used', { dq: f(tg.dq, 4), src: T('prs.src.' + tg.source), ng: tg.dqNG != null ? f(tg.dqNG, 4) : '–' })}</p>`;
+  h += `<p class="muted small">${T('prs.p.note')}</p>`;
+  if (okr) {
+    const xmin = r.params.xi, xmax = r.params.xi + r.params.lambda, xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * (i + 0.5) / 401);
+    h += `<figure class="chartbox" id="ch-p">${plotChart({ title: T('prs.chart'), xmin, xmax, lines: [{ name: T('fam.johnsonsb'), k: 0, pts: xs.map(x => [x, fam.pdf(x, r.params)]) }], xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
+      <figcaption><button type="button" class="btn ghost small" id="ch-p-svg">${T('ch.svg')}</button></figcaption></figure>`;
+  }
+  h += exportButtons('p', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  out.innerHTML = h;
+  $('ch-p-svg') && $('ch-p-svg').addEventListener('click', () => download('johnson-sb-parresol.svg', svgForDownload($('ch-p').querySelector('svg')), 'image/svg+xml'));
+  const pInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(prsSummary()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('prs.p.note')], ['', T('x.n.num')]];
+  for (const k of ['xlsx', 'csv']) $('p-' + k).addEventListener('click', () => exportRec(k, RP, pInfo(), ['cap-dagilimi-johnson-sb-parresol', 'diameter-distribution-johnson-sb-parresol']));
+  $('p-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-johnson-sb-parresol-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), results: RP }));
+}
 function renderWf() {
   $('wf').innerHTML = `<div class="tabs wftabs" role="tablist" aria-label="${esc(T('wf.label'))}">${['raw', 'summary'].map(w => `<button type="button" role="tab" id="wf-${w}" aria-selected="${S.wf === w}" data-wf="${w}">${T('wf.' + w)}</button>`).join('')}</div>`;
   $('wf').querySelectorAll('[data-wf]').forEach(b => b.addEventListener('click', () => { S.wf = b.dataset.wf; save(); render(); }));
@@ -521,6 +589,6 @@ function render() {
 }
 (async function init() {
   $('privacy').textContent = T('privacy');
-  try { const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, sum: { ...blank().sum, ...(saved.sum || {}) }, wb: { ...blank().wb, ...(saved.wb || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); } } catch (e) { S = blank(); }
+  try { const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, sum: { ...blank().sum, ...(saved.sum || {}) }, wb: { ...blank().wb, ...(saved.wb || {}) }, prs: { ...blank().prs, ...(saved.prs || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); } } catch (e) { S = blank(); }
   render();
 })();

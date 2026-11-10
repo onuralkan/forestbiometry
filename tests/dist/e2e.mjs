@@ -31,7 +31,7 @@ await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=tr');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.5') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && (await page.locator('#devnote').textContent()).includes('ölçüm eşiği'), 'stage notice: version and what is missing (exports no longer listed)');
+ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.6') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && (await page.locator('#devnote').textContent()).includes('ölçüm eşiği'), 'stage notice: version and what is missing (exports no longer listed)');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting
@@ -110,7 +110,7 @@ await page.click('#tab-params');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dl.path(), 'utf8'));
 const r0 = js.results[0];
-ok(js.tool.version === '2.0.0-beta.5' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
+ok(js.tool.version === '2.0.0-beta.6' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
 ok(r0.params.b === ml0.b && r0.params.c === ml0.c && r0.fixed.a.origin === 'zero' && r0.free.join() === 'b,c' && r0.estimator === 'ml' && r0.convergence.solver === 'bisection' && r0.objective.name === 'logLik' && r0.fit.aic > 0 && js.settings.methods['weibull.mom'].varDivisor === 'n' && js.results[4].settings.p === 0.24 && js.results[4].targets.quantile === 'type7' && js.results[2].targets.varDivisor === 'n', 'JSON: full-precision parameters, fixed/free, estimator, solver, objective');
 ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid' && r.params === null && r.problems[0].code === 'constant'), 'JSON: failed fits carry a status and a reason, no parameters');
 // Excel report and CSV files (all units)
@@ -125,7 +125,7 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
   ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('eşit')), 'Excel: plot C rows carry no parameters, the reason in words');
   const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parametreler, { header: 1 });
   ok(pars.some(r => r[0] === 'A' && r[4] === 'gamma.ml' && r[6] === 'theta' && r[7] === E0.runMethod('gamma.ml', { d: d1 }).params.theta), 'Excel parameters: gamma θ exact');
-  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.5') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
+  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.6') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
   const units = XLSX.utils.sheet_to_json(wb.Sheets['Ornek alanlar'], { header: 1 });
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
@@ -246,7 +246,7 @@ await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (kullanıcı)'), 'user a = 5: the same parameters, labelled as the user\'s');
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
-  ok(j.tool.version === '2.0.0-beta.5' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
+  ok(j.tool.version === '2.0.0-beta.6' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
   ok(rows.length === 5 && rows.slice(1).every(r => r[4] === 'ok' && r[7] === 5 && Math.abs(r[11] - 2.5) < 1e-9) && rows.slice(1).every(r => /origin = predicted/.test(r[r.length - 1])), 'Weibull recovery Excel: a = 5, c = 2.5, origin of the targets'); }
 for (const m of ['weibull.m2', 'weibull.m3']) await page.uncheck(`[data-wm="${m}"]`);
@@ -255,7 +255,7 @@ await fillW('#w-q63', '17'); await page.click('#w-calc'); await page.waitForSele
 ok(wr[0].s === 'invalid' && wr[0].c[2] === '–' && wr[0].c[5].includes('alttakinden') && wr[1].s === 'ok', 'Q63 ≤ Q31: no parameters, reason shown; M5 unaffected');
 for (const m of ['weibull.m2', 'weibull.m3']) await page.check(`[data-wm="${m}"]`);
 await page.check('input[name="w-loc"][value="half-dmin"]');
-await page.locator('.wbfill summary').click(); await page.selectOption('#w-unit', '0'); await page.click('#w-fill');
+await page.locator('#wbcard .wbfill summary').click(); await page.selectOption('#w-unit', '0'); await page.click('#w-fill');
 ok((await page.locator('#w-from').textContent()).includes('n = 25') && await page.isChecked('input[name="w-origin"][value="measured"]'), 'targets from the raw data (pooled 2019, n = 25), origin measured');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], ex = ['m2', 'm3', 'm4', 'm5'].map(m => E.runMethod('weibull.' + m, { type: 'raw', d: pool }));
@@ -277,6 +277,24 @@ ok(wr[0].c[4].includes('Q25: 17.1505 → 17.1505 *') && (await page.locator('#w-
 await fillW('#w-n', '8'); await fillW('#w-dmin', '5'); await fillW('#w-q50', '15'); await fillW('#w-mean', '6');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr[4].s === 'invalid' && wr[4].c[5].includes('negatif bir a') && wr[2].s === 'invalid' && wr[2].c[5].includes('çözüm yok'), 'M10 negative location and M8 without a root: no result, reasons shown');
+// 2h. Johnson SB, Parresol (2003): ξ fixed, λ, γ, δ recovered (DIST_SPEC §8.3)
+{ const fillP = async (id, v) => { await page.fill(id, v); await page.locator(id).dispatchEvent('change'); };
+  ok((await page.locator('#prscard').count()) === 1 && (await page.locator('#prscard', { hasText: 'türe özgü regresyon katsayıları' }).count()) === 1, 'Parresol card; species-specific equations stated as not used');
+  for (const [k, v] of [['xi', '5'], ['mean', '20.972673017674087'], ['median', '20.464836861498966'], ['nha', '500'], ['g', '18.979383683389663']]) await fillP('#p-' + k, v);
+  await page.click('#p-calc'); await page.waitForSelector('table.prtab');
+  let pr = await page.evaluate(() => [...document.querySelectorAll('table.prtab tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
+  ok(pr.length === 1 && pr[0].s === 'ok' && pr[0].c.slice(1, 5).join('|') === '5|40|0.6|1.3', '§8.3: ξ = 5, λ = 40, γ = 0.6, δ = 1.3: ' + pr[0].c.slice(1, 5));
+  ok(pr[0].c[5].includes('ortalama: 20.9727 → 20.9727') && pr[0].c[5].includes('medyan: 20.4648 → 20.4648') && pr[0].c[5].includes('Dq: 21.9842 → 21.9842') && pr[0].c[7].includes('12 başlangıç, 1 çözüm'), 'mean, median, Dq re-checked; starts and solutions reported');
+  ok((await page.locator('#ch-p svg path').count()) >= 1, 'density drawn');
+  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#p-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
+  ok(rows.length === 2 && rows[1][2] === 'johnsonsb.parresol' && Math.abs(rows[1][9] - 40) < 1e-10 && Math.abs(rows[1][13] - 1.3) < 1e-10, 'Parresol Excel: λ and δ at full precision');
+  await page.check('input[name="p-qmode"][value="both"]'); await fillP('#p-dq', '22.5'); await page.click('#p-calc'); await page.waitForSelector('table.prtab');
+  pr = await page.evaluate(() => [...document.querySelectorAll('table.prtab tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
+  ok(pr[0].s === 'invalid' && pr[0].c[2] === '–' && pr[0].c[6].includes('tutarsız'), 'N, G and Dq disagree: no result, reason shown');
+  await page.check('input[name="p-qmode"][value="dq"]'); await fillP('#p-dq', '20.05'); await fillP('#p-mean', '20'); await fillP('#p-median', '30'); await fillP('#p-xi', '0');
+  await page.click('#p-calc'); await page.waitForSelector('table.prtab');
+  pr = await page.evaluate(() => [...document.querySelectorAll('table.prtab tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
+  ok(pr[0].s === 'noconverge' && pr[0].c[2] === '–' && pr[0].c[6].includes('başlangıçtan hiçbiri'), 'no SB with these moments: "did not converge", no parameters'); }
 await page.click('#wf-raw');
 
 // 3. sample data, phone + dark

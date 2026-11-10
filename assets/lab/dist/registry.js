@@ -7,7 +7,7 @@
 //              kind 'recover' parameters from summaries (mean, Dq, percentiles)
 //              kind 'stand'   prediction from stand variables
 //   solver     the numerical algorithm a method uses (bisection, Brent, …); reported, never a choice of "method"
-export const TOOL = { id: 'cap-dagilimi', version: '2.0.0-beta.5' };
+export const TOOL = { id: 'cap-dagilimi', version: '2.0.0-beta.6' };
 export const CONTRACT = 'dist-result/1';
 
 /** Structured error: code + detail (never a number that looks like a result). */
