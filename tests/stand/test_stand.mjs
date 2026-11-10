@@ -120,5 +120,71 @@ for (const [name, opts] of Object.entries(scen)) {
 eq(C.validateDataset({ schema: 'x', plots: [], trees: [] }), ['ds.schema'], 'wrong schema');
 eq(C.validateDataset(DS([{ plot_id: 'a', plot_area: 0 }], [tree('z', '1', -1)])), ['ds.plotarea', 'ds.treeplot', 'ds.dbh'], 'bad plot area, unknown plot, bad dbh');
 
+
+/* D0, H0 (100 largest trees per hectare, by diameter or by height), hm, dm, N, BA, age, Dq
+   reference: tests/ref/stand_dominant.json from tests/ref/make_stand_dominant_reference.py (numpy, stems per hectare) */
+{
+  const REF = JSON.parse(readFileSync(path.join(root, 'tests/ref/stand_dominant.json'), 'utf8'));
+  for (const c of REF.cases) {
+    const trees = c.dbh.map((d, i) => tree('P', String(i + 1), d, { height: c.h[i], age: c.age[i] }));
+    const ds = DS([{ plot_id: 'P', plot_area: c.area }], trees);
+    eq(C.validateDataset(ds), [], c.name + ': valid');
+    const m = C.computeAll(ds, {}, null, null).metrics[0];
+    near(m.dom.k, c.k, c.name + ': k');
+    near(m.dom.d.D0, c.D0_dbh, c.name + ': D0 by diameter', 1e-12); near(m.dom.d.H0, c.H0_dbh, c.name + ': H0 by diameter', 1e-12);
+    near(m.dom.h.D0, c.D0_height, c.name + ': D0 by height', 1e-12); near(m.dom.h.H0, c.H0_height, c.name + ': H0 by height', 1e-12);
+    near(m.age.mean, c.age_mean, c.name + ': mean age of aged trees', 1e-12); eq(m.age.n, c.age_n, c.name + ': aged trees');
+    near(m.h_measured.mean, c.hm, c.name + ': hm', 1e-12); near(m.d_mean, c.dm, c.name + ': dm', 1e-12); near(m.dq, c.dq, c.name + ': Dq', 1e-12);
+    near(m.Nha, c.N, c.name + ': N', 1e-12); near(m.Gha, c.BA, c.name + ': BA', 1e-12);
+    // row order must not matter (ties at the boundary share the weight)
+    const rev = C.computeAll(DS([{ plot_id: 'P', plot_area: c.area }], trees.slice().reverse()), {}, null, null).metrics[0];
+    near(rev.dom.d.H0, c.H0_dbh, c.name + ': H0 by diameter, reversed rows', 1e-12); near(rev.dom.h.D0, c.D0_height, c.name + ': D0 by height, reversed rows', 1e-12);
+  }
+  // hand examples
+  const t = (d, h) => tree('A', String(d) + '-' + h, d, { height: h });
+  let m = C.computeAll(DS([{ plot_id: 'A', plot_area: 1250 }], Array.from({ length: 20 }, (_, i) => t(20 + i, 10 + i / 2))), {}, null, null).metrics[0];
+  near(m.dom.d.D0, 415.5 / 12.5, 'hand: 1250 m², 12 trees + half of the 13th');
+  m = C.computeAll(DS([{ plot_id: 'A', plot_area: 400 }], [t(50, 18), t(48, 17), t(30, 24), t(29, 23), t(28, 22), t(20, 10)]), {}, null, null).metrics[0];
+  near(m.dom.d.D0, (50 + 48 + 30 + 29) / 4, 'hand: by diameter takes the 4 thickest'); near(m.dom.h.H0, (24 + 23 + 22 + 18) / 4, 'hand: by height takes the 4 tallest');
+  ok(m.dom.d.short === false && m.dom.d.nSel === 4, 'hand: 4 selected, not short');
+  m = C.computeAll(DS([{ plot_id: 'A', plot_area: 1800 }], [t(30, 15), t(25, 13)]), {}, null, null).metrics[0];
+  ok(m.dom.d.short === true && m.dom.d.D0 === 27.5, 'fewer trees than k: all trees, flagged');
+  m = C.computeAll(DS([{ plot_id: 'A', plot_area: 400 }], [t(50, 21), tree('A', 'x', 48), t(46, 19), t(44, 18), t(20, 15)]), {}, null, null).metrics[0];
+  ok(m.dom.d.D0 === 47 && m.dom.d.H0 === null && m.dom.d.why === 'h.sel', 'H0 not given when a dominant tree has no measured height');
+  ok(m.dom.h.D0 === null && m.dom.h.why === 'h.rank', 'selection by height impossible when a height is missing');
+  m = C.computeAll(DS([{ plot_id: 'A', plot_area: 400 }], [t(50, 21), tree('A', 'e', 48, { height: 30, height_source: 'estimated' }), t(46, 19), t(44, 18), t(20, 15)]), {}, null, null).metrics[0];
+  ok(m.dom.d.H0 === null && m.dom.h.D0 === null, 'estimated heights are not used for H0');
+  m = C.computeAll(DS([{ plot_id: 'E', plot_area: 400 }], []), {}, null, null).metrics[0];
+  ok(m.dom.d.D0 === null && m.dom.d.why === 'empty' && m.age.mean === null, 'empty plot: no D0, H0, age');
+  eq(C.validateDataset(DS([{ plot_id: 'A', plot_area: 400 }], [tree('A', '1', 20, { age: -3 })])), ['ds.age'], 'negative age rejected');
+}
+
+/* direct table import (Excel/CSV without the Data Checker) */
+{
+  const { parseNumber, toInternal } = await import('../../assets/lab/core/num.js');
+  const cell = v => v == null ? null : typeof v === 'number' ? { t: 'n', v } : { t: 's', v };
+  const tbl = (rows, name = 'x.xlsx') => ({ name, headers: ['species', 'plot', 'treeno', 'dbh', 'age', 'h', 'plotsize'], rows: rows.map(r => r.map(cell)), rowNumbers: rows.map((_, i) => i + 2) });
+  const map = { species: 0, plot: 1, tree: 2, dbh: 3, age: 4, height: 5, area: 6 }, spec = { decimal: '.', dbhUnit: 'cm', hUnit: 'm', areaUnit: 'm2' };
+  let r = C.tableToDataset(tbl([[1, 1, 1, 28.5, 75, 14.5, 700], [1, 1, 2, 48.2, 75, 18.8, 700], [1, 2, 1, 30, null, '', 400]]), map, spec, parseNumber, toInternal);
+  eq(r.problems, [], 'field file shape imported');
+  eq(C.validateDataset(r.ds), [], 'imported dataset valid');
+  eq(r.ds.plots, [{ plot_id: '1', plot_area: 700, stratum: null }, { plot_id: '2', plot_area: 400, stratum: null }], 'plots and areas from the plotsize column');
+  eq([r.ds.trees[0].dbh, r.ds.trees[0].height, r.ds.trees[0].age, r.ds.trees[0].species, r.ds.trees[0].row], [28.5, 14.5, 75, '1', 2], 'tree values and source row');
+  ok(r.ds.trees[2].height === null && r.ds.trees[2].age === null, 'empty height and age stay missing');
+  r = C.tableToDataset(tbl([[1, 'A', 1, '24,5', '75', '14,5', '0,07']]), map, { ...spec, decimal: ',', areaUnit: 'ha' }, parseNumber, toInternal);
+  eq([r.ds.trees[0].dbh, r.ds.trees[0].height], [24.5, 14.5], 'comma decimals'); near(r.ds.plots[0].plot_area, 700, 'hectare area → m²', 1e-12);
+  r = C.tableToDataset(tbl([[1, 'A', 1, 245, 75, 145, 700]]), map, { ...spec, dbhUnit: 'mm', hUnit: 'dm' }, parseNumber, toInternal);
+  near(r.ds.trees[0].dbh, 24.5, 'mm → cm'); near(r.ds.trees[0].height, 14.5, 'dm → m');
+  r = C.tableToDataset(tbl([[1, 'A', 1, 20, 75, 14, 700], [1, 'A', 2, 22, 75, 15, 800], [1, 'A', 2, 23, 75, 15, 700], [1, '', 3, 20, 1, 1, 700], [1, 'B', 1, 'x', 1, 1, 700], [1, 'B', 2, 20, 1, -2, 700], [1, 'B', 3, 20, 'old', 1, 700], [1, 'B', 4, 20, 1, 1, '']]), map, spec, parseNumber, toInternal);
+  ok(r.ds === null, 'problems block the import');
+  eq(r.problems.map(p => [p.code, p.row]), [['row.areaconf', 3], ['row.dup', 4], ['row.plot', 5], ['row.dbh', 6], ['row.height', 7], ['row.age', 8], ['row.area', 9]], 'every problem listed with its source row');
+  r = C.tableToDataset(tbl([[1, 'A', 1, 20, 75, 14, null]]), { ...map, area: null }, { ...spec, areaConst: 500 }, parseNumber, toInternal);
+  eq(r.ds.plots[0].plot_area, 500, 'one area for every plot when no area column');
+  eq(C.tableToDataset(tbl([[1, 'A', 1, 20, 75, 14, 700]]), { ...map, area: null }, spec, parseNumber, toInternal).problems, [{ code: 'map.area' }], 'no area column and no constant');
+  eq(C.tableToDataset(tbl([[1, 'A', 1, 20, 75, 14, 700]]), { ...map, dbh: null }, spec, parseNumber, toInternal).problems, [{ code: 'map.need' }], 'diameter column required');
+  r = C.tableToDataset(tbl([[1, 'A', 1, 20, 75, 14, 700], [1, 'A', 1, 21, 75, 14, 700]]), { ...map, tree: null }, spec, parseNumber, toInternal);
+  eq(r.ds.trees.map(t => t.tree_id), ['2', '3'], 'without a tree column the row number is the tree id');
+}
+
 console.log(`stand: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

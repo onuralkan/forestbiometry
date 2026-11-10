@@ -1,7 +1,9 @@
 // Plot & Stand Metrics: pure logic (no DOM). Definitions: docs/METHODS.md §6.
 // Scope: fixed-area plots, every tree on the plot has the same inclusion probability.
 // Nested plots and angle counts (Bitterlich) need per-tree expansion factors and are NOT handled here.
-export const TOOL = { id: 'ornek-alan-mescere', version: '1.0.0' };
+export const TOOL = { id: 'ornek-alan-mescere', version: '1.1.0' };
+/** Dominant trees per hectare for D0 and H0 (the user's definition: the 100 largest trees per hectare). */
+export const DOM_PER_HA = 100;
 export const SCHEMA = 'forest-dataset/1';
 
 const BA = d => Math.PI * d * d / 40000;          // basal area of one tree, m² (d in cm)
@@ -25,6 +27,7 @@ export function validateDataset(ds) {
     if (!plots.has(t.plot_id)) p.push('ds.treeplot');
     if (!(Number.isFinite(t.dbh) && t.dbh > 0)) p.push('ds.dbh');
     if (t.height != null && !(Number.isFinite(t.height) && t.height > 0)) p.push('ds.height');
+    if (t.age != null && !(Number.isFinite(t.age) && t.age > 0)) p.push('ds.age');
   }
   return [...new Set(p)];
 }
@@ -126,7 +129,110 @@ export function unitMetrics(u, classes) {
   const meas = [], est = [];
   for (const t of u.trees) if (t.height != null) (t.height_source === 'estimated' ? est : meas).push(t.height);
   out.h_measured = stats(meas); out.h_estimated = stats(est); out.h_missing = n - meas.length - est.length;
+  // age: mean of the trees whose age was recorded (all of them, or as many as were measured)
+  const ages = u.trees.map(t => t.age).filter(a => Number.isFinite(a));
+  out.age = stats(ages);
+  // dominant diameter and height: the DOM_PER_HA largest trees per hectare, chosen by diameter or by height
+  const k = DOM_PER_HA * u.area / 10000;
+  out.dom = { k, d: dominant(u.trees, k, 'dbh'), h: dominant(u.trees, k, 'height') };
   return out;
+}
+
+const measuredH = t => t.height != null && Number.isFinite(t.height) && t.height_source !== 'estimated';
+/**
+ * Weights of the k largest trees by `rank` ('dbh' or 'height'). k = 100 × A / 10000 is often fractional
+ * (A = 1250 m² → 12.5): the first ⌊k⌋ trees count fully and the next one with weight k − ⌊k⌋, so the selection is
+ * exactly 100 trees per hectare. Trees with equal rank values at the boundary share the remaining weight equally,
+ * so the result never depends on the row order. Fewer trees than k: all trees count (flag `short`).
+ * Returns weights aligned with `trees` (0 = not selected), or null when the ranking variable is missing somewhere.
+ */
+export function dominantWeights(trees, k, rank = 'dbh') {
+  const val = rank === 'height' ? (t => measuredH(t) ? t.height : null) : (t => t.dbh);
+  const v = trees.map(val);
+  if (v.some(x => x == null)) return null;
+  const w = new Array(trees.length).fill(0);
+  const idx = trees.map((_, i) => i).sort((a, b) => v[b] - v[a]);
+  let left = Math.min(k, trees.length);
+  for (let i = 0; i < idx.length && left > 1e-12;) {
+    let j = i; while (j < idx.length && v[idx[j]] === v[idx[i]]) j++;      // tie group idx[i..j)
+    const g = j - i, take = Math.min(left, g);
+    for (let q = i; q < j; q++) w[idx[q]] = take / g;
+    left -= take; i = j;
+  }
+  return w;
+}
+/** D0 and H0 for one ranking. H0 needs a measured height on every selected tree; otherwise it is not given. */
+export function dominant(trees, k, rank = 'dbh') {
+  const n = trees.length;
+  if (!n) return { D0: null, H0: null, used: 0, short: false, why: 'empty' };
+  const w = dominantWeights(trees, k, rank);
+  if (!w) return { D0: null, H0: null, used: 0, short: false, why: 'h.rank' };   // some tree without a measured height
+  let sw = 0, sd = 0, sh = 0, hOk = true, nSel = 0;
+  trees.forEach((t, i) => {
+    if (!w[i]) return;
+    nSel++; sw += w[i]; sd += w[i] * t.dbh;
+    if (measuredH(t)) sh += w[i] * t.height; else hOk = false;
+  });
+  return { D0: sd / sw, H0: hOk ? sh / sw : null, used: sw, nSel, short: n < k, why: hOk ? null : 'h.sel' };
+}
+
+/* ---------------- direct table import (without the Data Checker) ---------------- */
+/**
+ * Builds a forest-dataset/1 object from a raw table. map: column indices { plot, dbh (required), area (or
+ * spec.areaConst), tree, species, height, age, period, stratum, status }. spec: { decimal, dbhUnit, hUnit, areaUnit,
+ * areaConst }. Cells are { t:'n'|'s', v } (core/table.js). Nothing is guessed: problems are listed with the source
+ * row number and block the import; empty heights and ages are allowed (missing).
+ */
+export function tableToDataset(tbl, map, spec, parseNumber, toInternal) {
+  const problems = [], add = (code, row, extra = {}) => { if (problems.length < 500) problems.push({ code, row, ...extra }); };
+  const txt = c => c == null ? '' : c.t === 'n' ? String(c.v) : String(c.v ?? '').trim();
+  const num = c => c == null ? { status: 'empty' } : c.t === 'n' ? parseNumber(c.v, spec.decimal) : parseNumber(txt(c), spec.decimal);
+  if (map.plot == null || map.dbh == null) return { ds: null, problems: [{ code: 'map.need' }] };
+  if (map.area == null && !(Number.isFinite(spec.areaConst) && spec.areaConst > 0)) return { ds: null, problems: [{ code: 'map.area' }] };
+  const plots = new Map(), trees = [], seen = new Set();
+  tbl.rows.forEach((r, i) => {
+    const row = tbl.rowNumbers[i];
+    if (r.every(c => txt(c) === '')) return;                                // fully empty line
+    const plot = txt(r[map.plot]);
+    if (!plot) { add('row.plot', row); return; }
+    let area;                                                              // plot size first: conflicts are found on every row
+    if (map.area != null) {
+      const a = num(r[map.area]);
+      if (a.status !== 'ok' || !(a.value > 0)) { add('row.area', row, { v: txt(r[map.area]) }); return; }
+      area = toInternal('area', spec.areaUnit, a.value);
+    } else area = toInternal('area', spec.areaUnit, spec.areaConst);
+    const stratum = map.stratum != null ? txt(r[map.stratum]) || null : null;
+    const pl = plots.get(plot);
+    if (!pl) plots.set(plot, { plot_id: plot, plot_area: area, stratum, row });
+    else {
+      if (Math.abs(pl.plot_area - area) > 1e-9 * area) add('row.areaconf', row, { plot, a: pl.plot_area, b: area });
+      if ((pl.stratum ?? null) !== stratum) add('row.stratconf', row, { plot });
+    }
+    const d = num(r[map.dbh]);
+    if (d.status !== 'ok' || !(d.value > 0)) { add(d.status === 'empty' ? 'row.dbh.empty' : 'row.dbh', row, { v: txt(r[map.dbh]) }); return; }
+    const opt = (col, kind, unit, code) => {
+      if (col == null) return { v: null, ok: true };
+      const x = num(r[col]);
+      if (x.status === 'empty') return { v: null, ok: true };
+      if (x.status !== 'ok' || !(x.value > 0)) { add(code, row, { v: txt(r[col]) }); return { ok: false }; }
+      return { v: kind ? toInternal(kind, unit, x.value) : x.value, ok: true };
+    };
+    const h = opt(map.height, 'height', spec.hUnit, 'row.height'), age = opt(map.age, null, null, 'row.age');
+    if (!h.ok || !age.ok) return;
+    const period = map.period != null ? (txt(r[map.period]) || null) : null;
+    const tree_id = map.tree != null ? txt(r[map.tree]) || null : String(row);
+    if (map.tree != null) {
+      const key = plot + ' ' + (period ?? '') + ' ' + tree_id;
+      if (tree_id && seen.has(key)) { add('row.dup', row, { v: tree_id }); return; }
+      seen.add(key);
+    }
+    trees.push({ row, plot_id: plot, tree_id, stem_id: null, period, species: map.species != null ? txt(r[map.species]) || null : null,
+      dbh: toInternal('dbh', spec.dbhUnit, d.value), height: h.v, age: age.v, status: map.status != null ? txt(r[map.status]) || null : null, extra: {} });
+  });
+  if (!trees.length && !problems.length) problems.push({ code: 'map.norows' });
+  if (problems.length) return { ds: null, problems };
+  return { ds: { schema: SCHEMA, created: new Date().toISOString(), source: { trees: { name: tbl.name || '' } },
+    plots: [...plots.values()].map(({ row, ...p }) => p), trees }, problems };
 }
 
 /* ---------------- between-plot descriptive summary (each plot = one observation) ---------------- */
