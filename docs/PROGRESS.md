@@ -1,10 +1,11 @@
 # PROGRESS.md: Durum, kontroller, eksikler, sıradaki adım
 
-Son güncelleme: 10 Kasım 2026, çap dağılımı aracı P06 ile 2.0.0-beta.3
+Son güncelleme: 10 Kasım 2026, çap dağılımı aracı Excel/CSV çıktısı ile 2.0.0-beta.4
 
 ## Tamamlananlar
 | Bölüm | Durum | Kontroller |
 |---|---|---|
+| Çap dağılımı aracı: Excel ve CSV çıktısı, 2.0.0-beta.4 (kullanıcı isteği; P15'in dışa aktarma kısmı öne alındı) | Tamam | `dist/report.js` (DOM'suz tablolar); ham veri: Excel (Bilgi, Uydurmalar, Parametreler, Örnek alanlar) + iki CSV; iki geri kazanım iş akışı: Excel + CSV. `tests/dist/test_export.mjs` 188/188, `tests/dist/e2e.mjs` 101/101 (indirilen Excel SheetJS ile okunup sayılar motorla karşılaştırıldı); bütün diğer testler geçti; ayrıntı METHODS.md §12 "Dışa aktarma" |
 | Çap dağılımı revizyonu P06: Weibull geri kazanımı M2–M5 (Poudel ve Cao 2013), 2.0.0-beta.3 | Tamam | `tests/dist/test_p06.mjs` 491/491 (SciPy referansı `tests/ref/dist_p06.json`), `tests/dist/e2e.mjs` 88/88; ayrıntı METHODS.md §12 P06 |
 | Çap dağılımı revizyonu P10: üstel ve log-lojistik (Fisk), yayındaki araçta | Tamam | `tests/dist/test_p10.mjs` 1025/1025 (SciPy + mpmath referansı `tests/ref/dist_p10.json`), `tests/dist/e2e.mjs` 76/76; ayrıntı METHODS.md §12 P10 |
 | Lisans (kullanıcı kararı, 10 Kasım 2026): kod Apache-2.0, belgeler CC BY 4.0 | Tamam | `LICENSE` (apache.org'daki resmî metin, değiştirilmeden), `LICENSE-docs` (creativecommons.org resmî legalcode.txt), `NOTICE` (telif, kapsam, SheetJS), README'de lisans bölümü. Kodda değişiklik yok. DOI 2.0.0'a (P15) bırakıldı; Zenodo hazırlığı (`CITATION.cff`, `.zenodo.json`, ORCID, depo açık/elle yükleme kararı, geçmiş taraması) o zamana |
