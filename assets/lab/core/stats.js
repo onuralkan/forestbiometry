@@ -1,6 +1,7 @@
 // Small statistics core (no DOM): regularised incomplete beta and gamma, normal and Student t distributions and quantiles,
 // a seeded random generator and a stable shuffle. Checked against SciPy in tests/hd/test_hd.mjs.
 import { lnGamma } from './special.js';
+import { brent } from './roots.js';
 
 /** Continued fraction for the incomplete beta function (modified Lentz; Numerical Recipes "betacf"). */
 function betacf(a, b, x) {
@@ -69,6 +70,39 @@ export function gammaQ(a, x) {
 }
 /** ln Q(a, x) for x ≥ a + 1 without underflow. */
 const lnGammaQTail = (a, x) => -x + a * Math.log(x) - lnGamma(a) + Math.log(gammaCF(a, x));
+/** Series sum S with P(a, x) = S · exp(−x + a ln x − lnΓ(a)), for x < a + 1 (same series as gammaP). */
+function gammaSeries(a, x) {
+  let ap = a, del = 1 / a, sum = del;
+  for (let n = 0; n < 1000; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-16) break; }
+  return sum;
+}
+/** ln P(a, x), finite far into the lower tail (P below the smallest double). */
+export function lnGammaP(a, x) {
+  if (x <= 0) return -Infinity;
+  if (x < a + 1) return Math.log(gammaSeries(a, x)) - x + a * Math.log(x) - lnGamma(a);
+  return Math.log1p(-gammaQ(a, x));
+}
+/** ln Q(a, x), finite far into the upper tail. */
+export function lnGammaQ(a, x) {
+  if (x <= 0) return 0;
+  if (x >= a + 1) return lnGammaQTail(a, x);
+  return Math.log1p(-gammaP(a, x));
+}
+/**
+ * Inverse of the regularised incomplete gamma: x with P(a, x) = p (0 < p < 1). Brent on t = ln x, using ln P in the
+ * lower half and ln Q (with 1 − p, exact for p ≥ ½) in the upper half, so tail quantiles keep their relative accuracy.
+ */
+export function gammaPInv(a, p) {
+  if (!(a > 0) || !(p > 0 && p < 1)) return p === 0 ? 0 : p === 1 ? Infinity : NaN;
+  const lower = p <= 0.5, lp = lower ? Math.log(p) : Math.log1p(-p);
+  const f = t => { const x = Math.exp(t); return lower ? lnGammaP(a, x) - lp : lp - lnGammaQ(a, x); };   // increasing in t
+  let lo = Math.log(a) - 1, hi = Math.log(a) + 1, flo = f(lo), fhi = f(hi);
+  for (let i = 0; i < 200 && flo > 0; i++) { hi = lo; fhi = flo; lo -= Math.max(1, Math.abs(lo)); if (Math.exp(lo) === 0) return 0; flo = f(lo); }   // below the smallest double: 0
+  for (let i = 0; i < 200 && fhi < 0; i++) { lo = hi; flo = fhi; hi += 1; fhi = f(hi); }
+  if (!(flo <= 0 && fhi >= 0)) return NaN;
+  const r = brent(f, lo, hi, { xtol: 1e-15 });
+  return r.status === 'ok' ? Math.exp(r.root) : NaN;
+}
 /**
  * Standard normal cumulative distribution Φ(z). The tail beyond |z| ≈ 1.73 comes from the upper incomplete gamma
  * directly (Φ(−z) = ½·Q(½, z²/2)), so small tail probabilities keep their relative accuracy.

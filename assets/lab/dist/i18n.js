@@ -3,7 +3,7 @@
 import { makeT } from '../core/i18n.js';
 
 const tr = {
-  'dev': 'Geliştirme sürümü: bu sayfa yeni dağılım motorunun aşamalı kurulumudur; şimdilik Weibull, normal ve lognormal içerir. Yayındaki araç: Çap Dağılımı Laboratuvarı.',
+  'dev': 'Geliştirme sürümü: bu sayfa yeni dağılım motorunun aşamalı kurulumudur; şimdilik Weibull, normal, lognormal ve gamma içerir. Yayındaki araç: Çap Dağılımı Laboratuvarı.',
   'step.1': 'Veri', 'step.2': 'Ayarlar', 'step.3': 'Sonuçlar',
   'privacy': 'Dosyanız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Oturum yalnızca bu tarayıcıda (IndexedDB) saklanır.',
   'imp.h': 'Çap verisi', 'imp.sub': 'Her satır bir ağaç: çap sütunu zorunlu; örnek alan ve dönem (ölçüm yılı) sütunları isteğe bağlı.',
@@ -20,6 +20,13 @@ const tr = {
   'fam.h': 'Dağılımlar ve tahmin yöntemleri', 'fam.sub': 'Yalnızca uygulanmış ve bağımsız referansla sınanmış dağılım ve yöntemler listelenir. Yöntem (istatistiksel tahmin ilkesi) ile sayısal çözücü ayrı şeylerdir; çözücü sonuçta yazılır.',
   'fam.weibull': 'Weibull', 'fam.need': 'En az bir yöntem seçin.',
   'fam.normal': 'Normal', 'fam.lognormal': 'Lognormal (iki parametreli)',
+  'fam.gamma': 'Gamma (iki parametreli)', 'm.gamma.ml': 'En çok olabilirlik', 'm.gamma.mom': 'Momentler (ortalama ve varyans)', 'm.gamma.rec': 'ortalama ve varyans (ya da Dq)', 'sol.brent': 'Brent',
+  'mnote.gamma.ml': 'ln k − ψ(k) = ln(ortalama) − ortalama(ln d) denklemi k için çözülür (ψ digamma; sol taraf k ile azalır, tek kök), θ = ortalama/k. Çözüm bulunamazsa sonuç verilmez; moment tahmini bu etiketle gösterilmez.',
+  'opt.note.gamma.mom': 'k = ortalama²/v, θ = v/ortalama; v varsayılan olarak n bölenli moment varyansıdır, n − 1 seçenektir.',
+  'fnote.gamma': 'k şekil parametresidir (birimsiz), θ ölçek parametresidir (cm); ortalama kθ, varyans kθ². Bazı programlar ölçek yerine oran β = 1/θ (1/cm) kullanır. Yalnızca d > 0 için tanımlı; konum parametreli (kaydırılmış) gamma yok.',
+  'mnote.gamma.rec': 'k = ortalama²/v, θ = v/ortalama.',
+  'w.k.overflow': 'şekil k sayısal aralığı aşıyor (çaplar neredeyse eşit: ln(ortalama) − ortalama(ln d) sıfıra çok yakın); parametre verilmedi',
+  'w.k.boundary': 'şekil çözümü arama aralığının (10⁻⁴–10⁸) altında kaldı; parametre verilmedi', 'w.k.noconverge': 'şekil denklemi yakınsamadı; parametre verilmedi',
   'm.normal.ml': 'En çok olabilirlik (= momentler)', 'm.lognormal.ml': 'En çok olabilirlik', 'm.lognormal.mom': 'Momentler (ortalama ve varyans)',
   'm.normal.rec': 'ortalama ve varyans (ya da Dq)', 'm.lognormal.rec': 'ortalama ve varyans (ya da Dq)', 'est.moments': 'momentler',
   'mnote.normal.ml': 'Normalde en çok olabilirlik μ = ortalama, σ² = Σ(d − ortalama)²/n verir. Momentler yöntemi (ortalama ve n bölenli varyans) aynı denklemlerdir; bu yüzden tek sonuç gösterilir. n − 1 bölenli s² ikisi de değildir. Destek bütün gerçek sayılardır: negatif çap olasılığı Φ(−μ/σ) sonuçla birlikte verilir.',
@@ -79,7 +86,7 @@ const tr = {
   'ch.ecdf': 'Ampirik', 'ch.bins': p => `Histogram sınıf genişliği ${p.w} cm (yalnızca gösterim; uydurmayı etkilemez).`, 'ch.svg': 'Grafiği indir (SVG)',
 };
 const en = {
-  'dev': 'Development version: this page is the staged build of the new distribution engine; so far it holds the Weibull, the normal and the lognormal. Published tool: Diameter Distribution Lab.',
+  'dev': 'Development version: this page is the staged build of the new distribution engine; so far it holds the Weibull, the normal, the lognormal and the gamma. Published tool: Diameter Distribution Lab.',
   'step.1': 'Data', 'step.2': 'Settings', 'step.3': 'Results',
   'privacy': 'Your file is read and processed in this browser and is not sent to the server. The session is kept only in this browser (IndexedDB).',
   'imp.h': 'Diameter data', 'imp.sub': 'One tree per row: the diameter column is required; plot and period (measurement year) columns are optional.',
@@ -96,6 +103,13 @@ const en = {
   'fam.h': 'Distributions and estimation methods', 'fam.sub': 'Only distributions and methods that are implemented and checked against an independent reference are listed. The method (statistical estimation principle) and the numerical solver are different things; the solver is reported with the result.',
   'fam.weibull': 'Weibull', 'fam.need': 'Choose at least one method.',
   'fam.normal': 'Normal', 'fam.lognormal': 'Lognormal (two-parameter)',
+  'fam.gamma': 'Gamma (two-parameter)', 'm.gamma.ml': 'Maximum likelihood', 'm.gamma.mom': 'Moments (mean and variance)', 'm.gamma.rec': 'mean and variance (or Dq)', 'sol.brent': 'Brent',
+  'mnote.gamma.ml': 'ln k − ψ(k) = ln(mean) − mean(ln d) is solved for k (ψ is the digamma function; the left side decreases in k, one root), θ = mean/k. If no solution is found no result is given; the moment estimate is never shown under this label.',
+  'opt.note.gamma.mom': 'k = mean²/v, θ = v/mean; v is the moment variance with divisor n by default, n − 1 is an option.',
+  'fnote.gamma': 'k is the shape parameter (no unit), θ the scale parameter (cm); mean kθ, variance kθ². Some programs use the rate β = 1/θ (1/cm) instead of the scale. Defined for d > 0 only; no gamma with a location (shift) parameter.',
+  'mnote.gamma.rec': 'k = mean²/v, θ = v/mean.',
+  'w.k.overflow': 'the shape k exceeds the numerical range (diameters nearly equal: ln(mean) − mean(ln d) is extremely close to zero); no parameters are given',
+  'w.k.boundary': 'the shape solution fell below the search interval (10⁻⁴–10⁸); no parameters are given', 'w.k.noconverge': 'the shape equation did not converge; no parameters are given',
   'm.normal.ml': 'Maximum likelihood (= moments)', 'm.lognormal.ml': 'Maximum likelihood', 'm.lognormal.mom': 'Moments (mean and variance)',
   'm.normal.rec': 'mean and variance (or Dq)', 'm.lognormal.rec': 'mean and variance (or Dq)', 'est.moments': 'moments',
   'mnote.normal.ml': 'For the normal, maximum likelihood gives μ = mean, σ² = Σ(d − mean)²/n. The method of moments (mean and variance with divisor n) has the same equations, so a single result is shown. The n − 1 sample variance s² is neither. The support is the whole real line: the probability of a negative diameter, Φ(−μ/σ), is given with the result.',

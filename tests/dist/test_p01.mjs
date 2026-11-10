@@ -61,7 +61,7 @@ const FAMS0 = D.families().map(f => f.id);
 eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).map(m => m.id), ['weibull.ml', 'weibull.mom', 'weibull.pct'], 'Weibull raw-data methods (percentiles added in P05)');
 eq([D.methodsFor({ kind: 'stand' }).length, D.methodsFor({ dataType: 'classes' }).length, D.methodsFor({ kind: 'recover' }).filter(m => !m.dataTypes.every(t => t === 'summary')).length], [0, 0, 0], 'nothing unimplemented is offered (no stand models, no class data; recovery only from summaries)');
 const thrown = f => { try { f(); return null; } catch (e) { return e instanceof D.DistError ? e.code : 'other:' + e.message; } };
-eq(thrown(() => D.family('gamma')), 'family.unknown', 'unknown family');
+eq(thrown(() => D.family('nosuchfamily')), 'family.unknown', 'unknown family');
 eq(thrown(() => D.method('weibull.lmom')), 'method.unknown', 'unknown method');
 eq(thrown(() => D.runMethod('weibull.ml', { type: 'classes' })), 'method.datatype', 'data type the method does not support');
 ok(thrown(() => D.registerFamily({ id: 'x', params: [{ key: 'm' }], pdf() {} })).startsWith('other:family x'), 'incomplete family rejected');

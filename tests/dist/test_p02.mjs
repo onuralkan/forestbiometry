@@ -20,12 +20,12 @@ const run = (id, d, o) => D.runMethod(id, { d }, o);
 const rec = (id, summary) => D.runMethod(id, { type: 'summary', summary });
 
 /* 1. registry */
-eq(D.families().map(f => f.id), ['weibull', 'normal', 'lognormal'], 'families');
-eq(D.methodsFor({ kind: 'fit', dataType: 'raw' }).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised]),
+eq(D.families().map(f => f.id).slice(0, 3), ['weibull', 'normal', 'lognormal'], 'families (later stages append)');
+eq(D.methodsFor({ kind: 'fit', dataType: 'raw' }).filter(m => ['weibull', 'normal', 'lognormal'].includes(m.family)).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised]),
   [['weibull.ml', 'ml', 'bisection', true], ['weibull.mom', 'mom', 'bisection', false], ['weibull.pct', 'quantile', 'closed form', false],
    ['normal.ml', 'ml', 'closed form', true], ['lognormal.ml', 'ml', 'closed form', true], ['lognormal.mom', 'mom', 'closed form', false]], 'direct methods');
 ok(!D.methodsFor({ family: 'normal', kind: 'fit' }).some(m => m.estimator === 'mom'), 'normal: one method (ML = moments), no duplicate row');
-eq(D.methodsFor({ kind: 'recover' }).map(m => [m.id, m.dataTypes]), [['normal.rec', ['summary']], ['lognormal.rec', ['summary']]], 'recovery: separate kind and data type');
+eq(D.methodsFor({ kind: 'recover' }).filter(m => ['normal', 'lognormal'].includes(m.family)).map(m => [m.id, m.dataTypes]), [['normal.rec', ['summary']], ['lognormal.rec', ['summary']]], 'recovery: separate kind and data type');
 eq(D.methodsFor({ kind: 'recover', dataType: 'raw' }).length, 0, 'recovery is not offered for raw data');
 eq(LN.params.map(p => [p.key, p.unit, p.scale ?? null]), [['mu', 'ln cm', 'log'], ['sigma', null, 'log']], 'lognormal μ, σ labelled as log scale');
 eq(NO.params.map(p => [p.key, p.unit]), [['mu', 'cm'], ['sigma', 'cm']], 'normal μ, σ in cm');

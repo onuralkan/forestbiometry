@@ -10,3 +10,19 @@ export function lnGamma(z) {
   return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
 }
 export const gammaFn = z => Math.exp(lnGamma(z));
+
+/**
+ * g(x) = ln x − ψ(x) for x > 0, computed without the cancellation that ln x − digamma(x) suffers for large x.
+ * x ≥ 10: asymptotic series 1/(2x) + 1/(12x²) − 1/(120x⁴) + 1/(252x⁶) − 1/(240x⁸) + 1/(132x¹⁰) − 691/(32760x¹²);
+ * below, the recurrence ψ(x) = ψ(x + 1) − 1/x moves x up first. g decreases from +∞ (x → 0) to 0 (x → ∞).
+ */
+export function lnMinusDigamma(x) {
+  if (!(x > 0)) return NaN;
+  let add = 0, y = x;
+  while (y < 10) { add += 1 / y; y += 1; }                  // ψ(x) = ψ(y) − Σ 1/(x + i)
+  const r = 1 / (y * y);
+  const gy = 1 / (2 * y) + r * (1 / 12 - r * (1 / 120 - r * (1 / 252 - r * (1 / 240 - r * (1 / 132 - r * 691 / 32760)))));
+  return y === x ? gy : Math.log(x / y) + gy + add;          // ln x − ψ(x) = ln x − ln y + g(y) + Σ 1/(x + i)
+}
+/** Digamma ψ(x) for x > 0. */
+export const digamma = x => Math.log(x) - lnMinusDigamma(x);

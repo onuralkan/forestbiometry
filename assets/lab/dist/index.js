@@ -6,7 +6,9 @@ import { weibullML, weibullMoments, weibullPercentiles } from './fit/weibull.js'
 import { normal } from './families/normal.js';
 import { lognormal } from './families/lognormal.js';
 import { normalML, lognormalML, lognormalMoments } from './fit/normal.js';
-import { normalRecover, lognormalRecover } from './recover/moments.js';
+import { gamma } from './families/gamma.js';
+import { gammaML, gammaMoments } from './fit/gamma.js';
+import { normalRecover, lognormalRecover, gammaRecover } from './recover/moments.js';
 
 registerFamily(weibull);
 registerMethod(weibullML);
@@ -17,8 +19,12 @@ registerFamily(lognormal);
 registerMethod(normalML);
 registerMethod(lognormalML);
 registerMethod(lognormalMoments);
+registerFamily(gamma);
+registerMethod(gammaML);
+registerMethod(gammaMoments);
 registerMethod(normalRecover);
 registerMethod(lognormalRecover);
+registerMethod(gammaRecover);
 
 export * from './registry.js';
 export * as gof from './gof.js';

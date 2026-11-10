@@ -8,6 +8,7 @@
 // Normalised to the moment variance: v = s²(n − 1)/n, or v = Dq² − m²; then Dq = √(m² + v).
 import { normal } from '../families/normal.js';
 import { lognormal } from '../families/lognormal.js';
+import { gamma } from '../families/gamma.js';
 
 const pos = x => typeof x === 'number' && Number.isFinite(x) && x > 0;
 /** Returns { m, v, dq, source, problems }. Problems are never turned into numbers. */
@@ -43,4 +44,9 @@ export const normalRecover = {
 export const lognormalRecover = {
   id: 'lognormal.rec', family: 'lognormal', kind: 'recover', estimator: 'moments', solver: 'closed form', dataTypes: ['summary'], likelihoodMaximised: false,
   options: [], source: 'lognormal.rec', run: input => recover(lognormal, (m, v) => { const s2 = Math.log1p(v / (m * m)); return { mu: Math.log(m) - s2 / 2, sigma: Math.sqrt(s2) }; }, input),
+};
+/** Gamma: k = m²/v, θ = v/m (stage P03). */
+export const gammaRecover = {
+  id: 'gamma.rec', family: 'gamma', kind: 'recover', estimator: 'moments', solver: 'closed form', dataTypes: ['summary'], likelihoodMaximised: false,
+  options: [], source: 'gamma.rec', run: input => recover(gamma, (m, v) => ({ k: m * m / v, theta: v / m }), input),
 };
