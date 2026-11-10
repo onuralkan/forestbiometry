@@ -37,6 +37,7 @@ jobs:
           node tests/site/test_format.mjs
           node tests/dist/test_p01.mjs
           node tests/dist/test_p05.mjs
+          node tests/dist/test_p06.mjs
           node tests/dist/test_p02.mjs
           node tests/dist/test_p03.mjs
           node tests/dist/test_p04.mjs

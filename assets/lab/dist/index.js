@@ -16,6 +16,7 @@ import { exponential } from './families/exponential.js';
 import { exponentialML } from './fit/exponential.js';
 import { loglogistic } from './families/loglogistic.js';
 import { llML, llPCT, llLOGMOM } from './fit/loglogistic.js';
+import { weibullM2, weibullM3, weibullM4, weibullM5 } from './recover/weibull.js';
 import { normalRecover, lognormalRecover, gammaRecover } from './recover/moments.js';
 
 registerFamily(weibull);
@@ -47,7 +48,12 @@ registerMethod(llLOGMOM);
 registerMethod(normalRecover);
 registerMethod(lognormalRecover);
 registerMethod(gammaRecover);
+registerMethod(weibullM2);
+registerMethod(weibullM3);
+registerMethod(weibullM4);
+registerMethod(weibullM5);
 
 export * from './registry.js';
+export { weibullSummary } from './recover/weibull.js';
 export * as gof from './gof.js';
 export * from './data.js';

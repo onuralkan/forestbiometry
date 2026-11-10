@@ -29,7 +29,7 @@ eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).map(m => [m
   [['weibull.ml', 'ml', 'bisection', true], ['weibull.mom', 'mom', 'bisection', false], ['weibull.pct', 'quantile', 'closed form', false]], 'methods, estimators, solvers');
 eq(D.method('weibull.mom').options.map(o => [o.key, o.default ?? null]), [['a', null], ['varDivisor', 'n']], 'moments: location and divisor options, n by default');
 eq(D.method('weibull.pct').options.map(o => [o.key, o.default ?? null]), [['a', null], ['p', 0.24], ['r', 0.93]], 'percentiles: Dubey (1967) pair by default');
-eq([D.methodsFor({ family: 'weibull', kind: 'recover' }).length, D.methodsFor({ kind: 'stand' }).length], [0, 0], 'no Weibull recovery (P06) or stand methods yet');
+eq([D.methodsFor({ family: 'weibull', kind: 'fit' }).filter(m => m.group).length, D.methodsFor({ kind: 'stand' }).length], [0, 0], 'Weibull recovery (P06) is kind recover, never a direct fit; no stand methods yet');
 ok(!D.methodsFor({}).some(m => /3p|free|loc/.test(m.id)), 'no free-location method');
 
 /* 2. regression: ML and moments (n − 1) reproduce the published 1.0.0 tool exactly */

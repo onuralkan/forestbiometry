@@ -28,6 +28,7 @@ let S = blank(), R = null;
 function blank() {
   return { v: 1, step: 1, tab: 'params', imp: null, src: null, dcol: null, unit: 'cm', pcol: null, percol: null, fcol: null, fval: null, decimal: null, decimalChosen: false,
     wf: 'raw', sum: { mean: '', which: 'var', v: '', div: 'n', n: '', dq: '', methods: {}, done: false },
+    wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
     mode: 'each', methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
 let saveT = null;
@@ -310,7 +311,7 @@ function tabCharts(p) {
 }
 
 /* ---------------- separate workflow: parameters recovered from summary values (no raw diameters) ---------------- */
-const recMethods = () => D.methodsFor({ kind: 'recover', dataType: 'summary' });
+const recMethods = () => D.methodsFor({ kind: 'recover', dataType: 'summary' }).filter(m => !m.group);   // moment recovery (normal, lognormal, gamma); Poudel M2–M5 have their own card
 const recChosen = () => recMethods().filter(m => S.sum.methods[m.id] !== false);
 /** Summary from the typed fields: numbers, or null where a field is empty (the methods report what is missing). */
 function summaryInput() {
@@ -331,8 +332,10 @@ function renderRecover() {
       ${inp('s-n', q.n, q.which === 'var' && q.div === 'n-1' ? T('rec.nreq') : T('rec.nopt'))}</div>
     <p class="muted small">${T('rec.note')}</p></div>
     <div class="card"><h2>${T('rec.fam')}</h2><div class="radios col">${recMethods().map(m => `<label><input type="checkbox" data-rm="${m.id}"${S.sum.methods[m.id] !== false ? ' checked' : ''}> ${esc(T('fam.' + m.family))}: ${esc(T('m.' + m.id))}</label>${has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}`).join('')}</div></div>
-    <div class="nav"><button type="button" class="btn" id="s-calc"${recChosen().length ? '' : ' disabled'}>${T('calc')}</button>${recChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="s-out"></div>`;
+    <div class="nav"><button type="button" class="btn" id="s-calc"${recChosen().length ? '' : ' disabled'}>${T('calc')}</button>${recChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="s-out"></div>
+    <div id="wb"></div>`;
   el.innerHTML = h;
+  renderWb();
   const re = () => { S.sum.done = false; RS = null; save(); renderRecover(); };
   for (const [id, k] of [['s-mean', 'mean'], ['s-v', 'v'], ['s-dq', 'dq'], ['s-n', 'n']]) $(id) && $(id).addEventListener('change', e => { S.sum[k] = e.target.value; re(); });
   el.querySelectorAll('input[name="s-which"]').forEach(x => x.addEventListener('change', () => { S.sum.which = x.value; re(); }));
@@ -362,6 +365,101 @@ function drawRecover() {
   $('ch-r-svg') && $('ch-r-svg').addEventListener('click', () => download('geri-kazanim.svg', svgForDownload($('ch-r').querySelector('svg')), 'image/svg+xml'));
   $('s-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), results: RS }));
 }
+
+/* ---------------- Weibull recovery, Poudel and Cao (2013) M2–M5: targets typed, predicted, or computed from loaded data ---------------- */
+const wbMethods = () => D.methodsFor({ family: 'weibull', kind: 'recover' });
+const wbChosen = () => wbMethods().filter(m => S.wb.methods[m.id] !== false);
+const WB_FIELDS = ['mean', 'dq', 'variance', 'q31', 'q63', 'q50', 'q95'];
+const wbKey = k => k === 'variance' ? 'v' : k;
+/** Raw-data units available for "compute from data" (same column settings as the direct-fit workflow). */
+function wbUnits() {
+  if (!S.src || S.dcol == null) return [];
+  try { return D.extractUnits(S.src, { dcol: S.dcol, unit: S.unit, decimal: S.decimal, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval, mode: S.mode }).units.filter(u => u.d.length >= 2); } catch (e) { return []; }
+}
+function wbSummary() {
+  const q = S.wb, val = t => { const x = String(t ?? '').trim(); return x === '' ? null : num(x); }, need = new Set(wbChosen().flatMap(m => m.needs)), out = { origin: q.origin };
+  for (const k of WB_FIELDS) if (need.has(k)) { const v = val(q[wbKey(k)]); if (v != null) out[k] = v; }
+  if (need.has('variance')) out.varDivisor = q.div;
+  const n = val(q.n); if (n != null) out.n = n;
+  if (q.loc === 'half-dmin') { const v = val(q.dmin); if (v != null) out.dmin = v; }
+  if (q.from) { out.from = 'raw'; out.quantile = 'type7'; out.unit = q.from; }
+  return out;
+}
+const wbOpts = () => S.wb.loc === 'user' ? { loc: 'user', a: (t => t === '' ? NaN : num(t))(String(S.wb.a).trim()) } : { loc: 'half-dmin' };
+let RW = null;
+function computeWb() { const sm = wbSummary(), o = wbOpts(); RW = wbChosen().map(m => D.runMethod(m.id, { type: 'summary', summary: sm }, o)); }
+let wbBusy = false;
+function renderWb() {
+  const el = $('wb'); if (!el || wbBusy) return;
+  wbBusy = true;
+  try {
+    // a focused field that is about to be replaced fires its own change event on blur: let it update the state first
+    if (el.contains(document.activeElement)) document.activeElement.blur();
+    drawWbCard(el);
+  } finally { wbBusy = false; }
+  if (S.wb.done) { computeWb(); drawWb(); }
+}
+function drawWbCard(el) {
+  const q = S.wb, need = new Set(wbChosen().flatMap(m => m.needs)), inp = (id, v, lab) => `<label>${lab} <input type="text" inputmode="decimal" size="9" id="${id}" value="${esc(v)}"></label>`;
+  const us = wbUnits(), fields = WB_FIELDS.filter(k => need.has(k)).map(k => inp('w-' + wbKey(k), q[wbKey(k)], T('wb.f.' + k))).join(' ');
+  const varCtl = need.has('variance') ? `<div class="lims"><span class="small">${T('opt.varDivisor')}:</span> ${['n', 'n-1'].map(v => `<label class="small"><input type="radio" name="w-div" value="${v}"${q.div === v ? ' checked' : ''}> ${T('rec.div.' + v)}</label>`).join(' ')}
+    ${inp('w-n', q.n, q.div === 'n-1' ? T('rec.nreq') : T('rec.nopt'))}</div>` : '';
+  let h = `<div class="card" id="wbcard"><h2>${T('wb.h')}</h2><p class="muted">${T('wb.sub')}</p>
+    <div class="radios col">${wbMethods().map(m => `<label><input type="checkbox" data-wm="${m.id}"${S.wb.methods[m.id] !== false ? ' checked' : ''}> ${esc(T('m.' + m.id))}</label><p class="muted small mnote">${T('mnote.' + m.id)}</p>`).join('')}</div>
+    <h3>${T('wb.loc.h')}</h3><div class="radios col">${['half-dmin', 'user'].map(v => `<label><input type="radio" name="w-loc" value="${v}"${q.loc === v ? ' checked' : ''}> ${T('wb.loc.' + v)}</label>`).join('')}</div>
+    <div class="lims">${q.loc === 'half-dmin' ? inp('w-dmin', q.dmin, T('wb.dmin')) : inp('w-a', q.a, T('wb.a'))}</div>
+    ${q.loc === 'half-dmin' ? `<p class="muted small">${T('wb.dmin.note')}</p>` : `<p class="muted small">${T('wb.a.note')}</p>`}
+    <h3>${T('wb.t.h')}</h3><div class="radios">${['measured', 'predicted'].map(v => `<label><input type="radio" name="w-origin" value="${v}"${q.origin === v ? ' checked' : ''}> ${T('wb.origin.' + v)}</label>`).join('')}</div>
+    ${need.size ? `<div class="lims">${fields}</div>${varCtl}` : ''}
+    ${q.from ? `<p class="note small" id="w-from">${esc(T('wb.from', { u: q.from.label, n: fmtNum(q.from.n, 0) }))}</p>` : ''}
+    <details class="wbfill"><summary>${T('wb.fill.h')}</summary><p class="muted small">${T('wb.fill.sub')}</p>
+      ${us.length ? `<div class="lims"><label>${T('wb.fill.unit')} <select id="w-unit">${us.map((u, i) => `<option value="${i}"${+q.unit === i ? ' selected' : ''}>${esc(unitLabel(u))} (n = ${u.d.length})</option>`).join('')}</select></label>
+        <button type="button" class="btn ghost small" id="w-fill">${T('wb.fill.btn')}</button></div>` : `<p class="small">${T('wb.fill.none')}</p>`}</details>
+    <div class="nav"><button type="button" class="btn" id="w-calc"${wbChosen().length ? '' : ' disabled'}>${T('calc')}</button>${wbChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="w-out"></div></div>`;
+  el.innerHTML = h;
+  const re = (keepFrom = true) => { if (!keepFrom) q.from = null; q.done = false; RW = null; save(); renderWb(); };
+  for (const k of [...WB_FIELDS.map(wbKey), 'n', 'dmin']) $('w-' + k) && $('w-' + k).addEventListener('change', e => { q[k] = e.target.value; re(false); });   // a changed target is typed, no longer computed from data
+  $('w-a') && $('w-a').addEventListener('change', e => { q.a = e.target.value; re(); });
+  el.querySelectorAll('input[name="w-div"]').forEach(x => x.addEventListener('change', () => { q.div = x.value; re(false); }));
+  el.querySelectorAll('input[name="w-loc"]').forEach(x => x.addEventListener('change', () => { q.loc = x.value; re(); }));
+  el.querySelectorAll('input[name="w-origin"]').forEach(x => x.addEventListener('change', () => { q.origin = x.value; if (x.value === 'predicted') q.from = null; re(); }));
+  el.querySelectorAll('[data-wm]').forEach(x => x.addEventListener('change', () => { q.methods[x.dataset.wm] = x.checked; re(); }));
+  $('w-unit') && $('w-unit').addEventListener('change', e => { q.unit = +e.target.value; save(); });
+  $('w-fill') && $('w-fill').addEventListener('click', () => {
+    const u = us[+q.unit] || us[0], s = D.weibullSummary(u.d);
+    Object.assign(q, { mean: String(s.mean), v: String(s.variance), div: 'n', n: String(s.n), dq: String(s.dq), q31: String(s.q31), q63: String(s.q63), q50: String(s.q50), q95: String(s.q95), dmin: String(s.dmin), origin: 'measured',
+      from: { label: unitLabel(u), plot: u.plot === D.POOL ? null : u.plot, period: u.period ?? null, n: s.n } });
+    re();
+  });
+  $('w-calc').addEventListener('click', () => { q.done = true; save(); computeWb(); drawWb(); });
+}
+const WB_LAB = { mean: 'wb.k.mean', variance: 'wb.k.variance', dq: 'wb.k.dq', q31: 'wb.k.q31', q63: 'wb.k.q63', q50: 'wb.k.q50', q95: 'wb.k.q95' };
+const WB_BACK = { mean: 'backMean', variance: 'backVariance', dq: 'backDq', q31: 'backQ31', q63: 'backQ63', q50: 'backQ50', q95: 'backQ95' };
+function drawWb() {
+  const out = $('w-out'); if (!out || !RW) return;
+  const okR = RW.filter(r => r.status === 'ok'), m = id => D.method(id);
+  const locCell = r => { const a = r.fixed.a; return !a ? '–' : a.policy === 'half-dmin' ? T('wb.fx.half', { a: f(a.value, 4), d: f(a.dmin, 4) }) : T('wb.fx.user', { a: f(a.value, 4) }); };
+  let h = `<div class="tscroll"><table class="grid wtab"><thead><tr><th>${T('t.method')}</th><th>${T('wb.t.loc')}</th><th>b (cm)</th><th>c</th><th>${T('wb.t.targets')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
+    ${RW.map(r => { const okr = r.status === 'ok', g = r.diagnostics || {}, tg = r.targets || {};
+      const tcell = m(r.method).needs.map(k => `<span style="white-space:nowrap">${T(WB_LAB[k])}: ${f(tg[k], 4)}${okr ? ` → ${f(g[WB_BACK[k]], 4)}` : ''}</span>`).join('<br>');
+      const why = [...(r.problems || []).map(p => T('pr.' + p.code, { ...p, key: p.key ? T(WB_LAB[p.key]) : p.key })), ...(r.warnings || []).map(w => T('w.' + w.code, w))].join('; ');
+      const cands = r.status === 'multiple' ? `<br><span class="small">${(g.candidates || []).map(c => `b = ${f(c.b, 4)}, c = ${f(c.c, 4)}`).join('; ')}</span>` : '';
+      return `<tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('m.' + r.method))}</th><td>${esc(locCell(r))}</td><td class="num">${okr ? f(r.params.b, 6) : '–'}</td><td class="num">${okr ? f(r.params.c, 6) : '–'}</td>
+        <td class="num small">${tcell}</td><td>${T('st.' + r.status)}${why ? `: ${esc(why)}` : ''}${cands}</td><td class="small">${esc(T('sol.' + r.convergence.solver))}${r.convergence.roots != null ? ` · ${T('wb.roots', { k: r.convergence.roots, lo: fmtNum(r.convergence.interval[0], 2), hi: fmtNum(r.convergence.interval[1], 0) })}` : ''}</td></tr>`; }).join('')}</tbody></table></div>`;
+  const t0 = RW[0] && RW[0].targets;
+  if (t0) h += `<p class="small">${T('wb.used', { o: T('wb.origin.' + t0.origin), src: t0.from === 'raw' ? T('wb.src.raw') : T('wb.src.typed'), div: t0.varDivisor ? T('rec.src.variance' + (t0.varDivisor === 'n-1' ? '1' : '')) : null })}</p>`;
+  h += `<p class="muted small">${T('wb.p.note')}</p>`;
+  if (okR.length) {
+    const lo = Math.min(...okR.map(r => D.family('weibull').quantile(0.0005, r.params))), hi = Math.max(...okR.map(r => D.family('weibull').quantile(0.9995, r.params)));
+    const xmin = Math.max(0, lo - (hi - lo) * 0.03), xmax = hi, xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * i / 400);
+    h += `<figure class="chartbox" id="ch-w">${plotChart({ title: T('wb.chart'), xmin, xmax, lines: okR.map((r, i) => ({ name: T('m.' + r.method), k: i, pts: xs.map(x => [x, D.family('weibull').pdf(x, r.params)]) })), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
+      <figcaption><button type="button" class="btn ghost small" id="ch-w-svg">${T('ch.svg')}</button></figcaption></figure>`;
+  }
+  h += `<div class="exports"><button type="button" class="btn ghost" id="w-json">${T('p.json')}</button></div>`;
+  out.innerHTML = h;
+  $('ch-w-svg') && $('ch-w-svg').addEventListener('click', () => download('weibull-geri-kazanim.svg', svgForDownload($('ch-w').querySelector('svg')), 'image/svg+xml'));
+  $('w-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-weibull-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), results: RW }));
+}
 function renderWf() {
   $('wf').innerHTML = `<div class="tabs wftabs" role="tablist" aria-label="${esc(T('wf.label'))}">${['raw', 'summary'].map(w => `<button type="button" role="tab" id="wf-${w}" aria-selected="${S.wf === w}" data-wf="${w}">${T('wf.' + w)}</button>`).join('')}</div>`;
   $('wf').querySelectorAll('[data-wf]').forEach(b => b.addEventListener('click', () => { S.wf = b.dataset.wf; save(); render(); }));
@@ -386,6 +484,6 @@ function render() {
 }
 (async function init() {
   $('privacy').textContent = T('privacy');
-  try { const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, sum: { ...blank().sum, ...(saved.sum || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); } } catch (e) { S = blank(); }
+  try { const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, sum: { ...blank().sum, ...(saved.sum || {}) }, wb: { ...blank().wb, ...(saved.wb || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); } } catch (e) { S = blank(); }
   render();
 })();

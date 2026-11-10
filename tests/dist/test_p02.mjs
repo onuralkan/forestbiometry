@@ -26,7 +26,7 @@ eq(D.methodsFor({ kind: 'fit', dataType: 'raw' }).filter(m => ['weibull', 'norma
    ['normal.ml', 'ml', 'closed form', true], ['lognormal.ml', 'ml', 'closed form', true], ['lognormal.mom', 'mom', 'closed form', false]], 'direct methods');
 ok(!D.methodsFor({ family: 'normal', kind: 'fit' }).some(m => m.estimator === 'mom'), 'normal: one method (ML = moments), no duplicate row');
 eq(D.methodsFor({ kind: 'recover' }).filter(m => ['normal', 'lognormal'].includes(m.family)).map(m => [m.id, m.dataTypes]), [['normal.rec', ['summary']], ['lognormal.rec', ['summary']]], 'recovery: separate kind and data type');
-eq(D.methodsFor({ kind: 'recover', dataType: 'raw' }).length, 0, 'recovery is not offered for raw data');
+eq(D.methodsFor({ kind: 'recover', dataType: 'raw' }).filter(m => m.group !== 'poudel').length, 0, 'moment recovery is not offered for raw data (Poudel M2–M5 compute their targets from it, P06)');
 eq(LN.params.map(p => [p.key, p.unit, p.scale ?? null]), [['mu', 'ln cm', 'log'], ['sigma', null, 'log']], 'lognormal μ, σ labelled as log scale');
 eq(NO.params.map(p => [p.key, p.unit]), [['mu', 'cm'], ['sigma', 'cm']], 'normal μ, σ in cm');
 let thrown = null; try { D.runMethod('normal.rec', { d: [1, 2] }); } catch (e) { thrown = e.code; }
