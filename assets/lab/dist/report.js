@@ -1,0 +1,78 @@
+// Export tables of the diameter distribution tool (no DOM): rows for CSV (core/export.js csvText) and XLSX sheets.
+// Numbers are written at full precision as numbers (never formatted text); labels follow the interface language
+// through the T function the caller passes. Machine-readable codes (method id, status code) sit next to the labels so
+// that TR and EN files carry the same values.
+import * as D from './index.js';
+
+const MAXP = 4;                                            // largest number of parameters of any registered family
+const num = x => typeof x === 'number' && Number.isFinite(x) ? x : null;
+const unitPlot = u => u.plot === D.POOL ? null : u.plot;
+
+/**
+ * Fits of the raw-data workflow: one row per unit × result.
+ * h = { T, methodName(r), notes(r) → [text], poolLabel }
+ */
+export function fitRows(units, h) {
+  const { T } = h;
+  const head = [T('x.plot'), T('x.period'), 'n', T('x.family'), T('x.method'), 'method_id', T('x.estimator'), T('x.status'), 'status', T('x.reason'),
+    ...Array.from({ length: MAXP }, (_, i) => [T('x.par', { i: i + 1 }), T('x.val', { i: i + 1 })]).flat(),
+    T('x.fixed'), 'ln L', 'k', 'AIC', 'BIC', 'KS D', 'AD A²', T('x.pneg'), T('x.solver'), T('x.iter'), T('x.settings')];
+  const out = [head];
+  for (const u of units) for (const r of u.results) {
+    const fam = D.family(r.family), ok = r.status === 'ok', g = r.gof || {};
+    const pars = fam.params.flatMap(q => [q.label ?? q.key, ok ? num(r.params[q.key]) : null]);
+    while (pars.length < 2 * MAXP) pars.push(null);
+    const fixed = Object.entries(r.fixed || {}).map(([k, v]) => `${(fam.params.find(q => q.key === k) || {}).label ?? k} = ${v.value} (${T('x.origin.' + v.origin)})`).join('; ');
+    out.push([unitPlot(u) ?? h.poolLabel, u.period, r.data.n, T('fam.' + r.family), h.methodName(r), r.method, T('est.' + r.estimator), T('st.' + r.status), r.status, h.notes(r).join(' | ') || null,
+      ...pars, fixed || null, ok ? num(r.logLik) : null, ok && r.likelihoodMaximised ? r.free.length : null, num(g.aic), num(g.bic), ok ? num(g.ks) : null, ok ? num(g.ad) : null,
+      ok && r.diagnostics ? num(r.diagnostics.pBelowZero) : null, T('sol.' + r.convergence.solver), r.convergence.iter ?? null, settingsText(r.settings)]);
+  }
+  return out;
+}
+/** Parameters in long form: one row per unit × result × parameter (estimated or fixed, with unit and role). */
+export function paramRows(units, h) {
+  const { T } = h;
+  const out = [[T('x.plot'), T('x.period'), T('x.family'), T('x.method'), 'method_id', T('x.parname'), 'parameter', T('x.value'), T('x.punit'), T('x.role'), T('x.kind')]];
+  for (const u of units) for (const r of u.results) {
+    if (r.status !== 'ok') continue;
+    const fam = D.family(r.family);
+    for (const q of fam.params) {
+      const fx = r.fixed && r.fixed[q.key];
+      out.push([unitPlot(u) ?? h.poolLabel, u.period, T('fam.' + r.family), h.methodName(r), r.method, q.label ?? q.key, q.key, num(r.params[q.key]),
+        q.unit ?? (q.scale === 'log' ? T('unit.log') : null), T('role.' + q.role), fx ? T('x.origin.' + fx.origin) : T('x.estimated')]);
+    }
+  }
+  return out;
+}
+/** Descriptive summary per unit (the targets the moment methods use). */
+export function unitRows(units, h) {
+  const { T } = h;
+  const out = [[T('x.plot'), T('x.period'), 'n', T('x.unique'), 'min (cm)', 'max (cm)', T('x.mean'), 'Dq (cm)', T('x.varN'), T('x.varN1'), T('x.state')]];
+  for (const u of units) { const s = u.desc; out.push([unitPlot(u) ?? h.poolLabel, u.period, s.n, s.unique, s.min, s.max, s.mean, s.dq, s.varN, s.varN1, T('nav.st.' + u.state)]); }
+  return out;
+}
+/**
+ * Results of a recovery workflow (moment recovery or Weibull M2–M5): parameters, every numeric target and
+ * back-calculated value (columns from the union over the results), status and reason.
+ */
+export function recoverRows(results, h) {
+  const { T } = h;
+  const tKeys = [...new Set(results.flatMap(r => Object.entries(r.targets || {}).filter(([, v]) => typeof v === 'number').map(([k]) => k)))];
+  const dKeys = [...new Set(results.flatMap(r => Object.entries(r.diagnostics || {}).filter(([, v]) => typeof v === 'number').map(([k]) => k)))];
+  const head = [T('x.family'), T('x.method'), 'method_id', T('x.status'), 'status', T('x.reason'), ...Array.from({ length: MAXP }, (_, i) => [T('x.par', { i: i + 1 }), T('x.val', { i: i + 1 })]).flat(),
+    T('x.fixed'), ...tKeys.map(k => T('x.target', { k })), ...dKeys.map(k => T('x.diag', { k })), T('x.cands'), T('x.solver'), T('x.settings')];
+  const out = [head];
+  for (const r of results) {
+    const fam = D.family(r.family), ok = r.status === 'ok';
+    const pars = fam.params.flatMap(q => [q.label ?? q.key, ok ? num(r.params[q.key]) : null]); while (pars.length < 2 * MAXP) pars.push(null);
+    const fixed = Object.entries(r.fixed || {}).map(([k, v]) => `${k} = ${v.value}${v.policy ? ' (' + v.policy + (v.dmin != null ? ', Dmin = ' + v.dmin : '') + ')' : v.origin ? ' (' + T('x.origin.' + v.origin) + ')' : ''}`).join('; ');
+    const cands = r.status === 'multiple' && r.diagnostics && r.diagnostics.candidates ? r.diagnostics.candidates.map(c => fam.params.filter(q => c[q.key] != null).map(q => `${q.label ?? q.key} = ${c[q.key]}`).join(', ')).join(' | ') : null;
+    out.push([T('fam.' + r.family), h.methodName(r), r.method, T('st.' + r.status), r.status, h.notes(r).join(' | ') || null, ...pars, fixed || null,
+      ...tKeys.map(k => num((r.targets || {})[k])), ...dKeys.map(k => ok || r.status === 'multiple' ? num((r.diagnostics || {})[k]) : null), cands, T('sol.' + r.convergence.solver), settingsText({ ...(r.settings || {}), ...textTargets(r.targets) })]);
+  }
+  return out;
+}
+const textTargets = t => Object.fromEntries(Object.entries(t || {}).filter(([, v]) => typeof v === 'string'));
+function settingsText(s) { const e = Object.entries(s || {}).filter(([, v]) => v != null && typeof v !== 'object'); return e.length ? e.map(([k, v]) => `${k} = ${v}`).join('; ') : null; }
+/** Key–value rows of the Info sheet: [[label, value], …]. */
+export const infoRows = (pairs, T) => [[T('x.k'), T('x.v')], ...pairs.filter(p => p).map(([k, v]) => [k, v == null ? '–' : v])];

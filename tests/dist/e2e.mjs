@@ -8,6 +8,8 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const W = await import('../../legacy/weibull/calc.js');
+const XLSX = require(path.join(root, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
+const E0 = await import('../../assets/lab/dist/index.js');
 const F = await import('../../assets/lab/dist/fit/weibull.js');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/cap-dagilimi.php';
 let pass = 0, fail = 0;
@@ -29,7 +31,7 @@ await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=tr');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.3') && (await page.locator('#devnote').textContent()).includes('CSV/Excel'), 'stage notice: version and what is missing');
+ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.4') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && (await page.locator('#devnote').textContent()).includes('ölçüm eşiği'), 'stage notice: version and what is missing (exports no longer listed)');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting
@@ -108,9 +110,27 @@ await page.click('#tab-params');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dl.path(), 'utf8'));
 const r0 = js.results[0];
-ok(js.tool.version === '2.0.0-beta.3' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
+ok(js.tool.version === '2.0.0-beta.4' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
 ok(r0.params.b === ml0.b && r0.params.c === ml0.c && r0.fixed.a.origin === 'zero' && r0.free.join() === 'b,c' && r0.estimator === 'ml' && r0.convergence.solver === 'bisection' && r0.objective.name === 'logLik' && r0.fit.aic > 0 && js.settings.methods['weibull.mom'].varDivisor === 'n' && js.results[4].settings.p === 0.24 && js.results[4].targets.quantile === 'type7' && js.results[2].targets.varDivisor === 'n', 'JSON: full-precision parameters, fixed/free, estimator, solver, objective');
 ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid' && r.params === null && r.problems[0].code === 'constant'), 'JSON: failed fits carry a status and a reason, no parameters');
+// Excel report and CSV files (all units)
+{ const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
+  ok(/^cap-dagilimi-\d{4}-\d{2}-\d{2}\.xlsx$/.test(dx.suggestedFilename()), 'Excel file name: ' + dx.suggestedFilename());
+  const wb = XLSX.read(await readFile(await dx.path()));
+  ok(wb.SheetNames.join() === 'Bilgi,Uydurmalar,Parametreler,Ornek alanlar', 'Excel sheets: ' + wb.SheetNames.join());
+  const fits = XLSX.utils.sheet_to_json(wb.Sheets.Uydurmalar, { header: 1 }), H = fits[0], info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 });
+  ok(fits.length === 45 && H[5] === 'method_id' && H[8] === 'status', 'Excel fits: 44 results + header');
+  const f0 = fits.find(r => r[0] === 'A' && String(r[1]) === '2019' && r[5] === 'weibull.ml');
+  ok(f0 && f0[13] === ml0.b && f0[15] === ml0.c && typeof f0[13] === 'number', 'Excel: Weibull b, c are numeric cells at full precision: ' + (f0 && [f0[13], f0[15]]));
+  ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('eşit')), 'Excel: plot C rows carry no parameters, the reason in words');
+  const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parametreler, { header: 1 });
+  ok(pars.some(r => r[0] === 'A' && r[4] === 'gamma.ml' && r[6] === 'theta' && r[7] === E0.runMethod('gamma.ml', { d: d1 }).params.theta), 'Excel parameters: gamma θ exact');
+  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.4') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
+  const units = XLSX.utils.sheet_to_json(wb.Sheets['Ornek alanlar'], { header: 1 });
+  ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
+  const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
+  ok(/^cap-dagilimi-uydurmalar-.*\.csv$/.test(dc.suggestedFilename()) && csv.charCodeAt(0) === 0xFEFF && csv.includes(',' + ml0.b + ',') && csv.split('\r\n').length === 45, 'fits CSV: BOM, comma separator, full-precision b, 45 lines');
+  const [dp] = await Promise.all([page.waitForEvent('download'), page.click('#x-params')]); ok(/parametreler/.test(dp.suggestedFilename()) && (await readFile(await dp.path(), 'utf8')).includes(',theta,'), 'parameters CSV'); }
 
 // 2. English keeps the values; comma setting; pooled mode
 await page.click('#ulist [data-u="A"]');
@@ -139,6 +159,10 @@ ok((await page.locator('#ch-r svg path').count()) >= 2, 'recovered densities dra
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#s-json')]);
 const js2 = JSON.parse(await readFile(await dl2.path(), 'utf8'));
 ok(js2.results.length === 3 && js2.results[1].kind === 'recover' && js2.results[1].data.type === 'summary' && js2.results[1].targets.source === 'dq' && js2.results[1].logLik === null && js2.summary.dq === 21, 'recovery JSON: kind, data type, inputs, no likelihood');
+{ const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#s-xlsx')]), wb = XLSX.read(await readFile(await dx.path())), rows = XLSX.utils.sheet_to_json(wb.Sheets['Geri kazanim'], { header: 1 });
+  const ln = rows.find(r => r[2] === 'lognormal.rec'), H = rows[0];
+  ok(wb.SheetNames.join() === 'Bilgi,Geri kazanim' && rows.length === 4 && ln[7] === lr2.params.mu && ln[H.indexOf('Geri hesap: backDq')] === lr2.diagnostics.backDq, 'recovery Excel: exact μ and back-calculated Dq');
+  const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#s-csv')]); ok((await readFile(await dc.path(), 'utf8')).includes(String(lr2.params.mu)), 'recovery CSV: full-precision μ'); }
 await fillS('#s-dq', '19'); await page.click('#s-calc'); await page.waitForSelector('table.rtab');
 ok((await page.locator('table.rtab tr[data-status="invalid"]').count()) === 3 && (await page.locator('table.rtab', { hasText: 'Dq ortalama çaptan büyük olmalı' }).count()) === 1, 'Dq ≤ mean: no parameters, reason given');
 await page.check('input[name="s-which"][value="var"]'); await fillS('#s-v', '40'); await page.check('input[name="s-div"][value="n-1"]');
@@ -222,7 +246,9 @@ await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (kullanıcı)'), 'user a = 5: the same parameters, labelled as the user\'s');
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
-  ok(j.tool.version === '2.0.0-beta.3' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
+  ok(j.tool.version === '2.0.0-beta.4' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
+{ const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
+  ok(rows.length === 5 && rows.slice(1).every(r => r[4] === 'ok' && r[7] === 5 && Math.abs(r[11] - 2.5) < 1e-9) && rows.slice(1).every(r => /origin = predicted/.test(r[r.length - 1])), 'Weibull recovery Excel: a = 5, c = 2.5, origin of the targets'); }
 for (const m of ['weibull.m2', 'weibull.m3']) await page.uncheck(`[data-wm="${m}"]`);
 ok((await page.locator('#w-mean').count()) === 0 && (await page.locator('#w-v').count()) === 0 && (await page.locator('#w-dq').count()) === 0 && (await page.locator('#w-q31').count()) === 1 && (await page.locator('#w-q95').count()) === 1, 'only the fields the chosen methods need');
 await fillW('#w-q63', '17'); await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
