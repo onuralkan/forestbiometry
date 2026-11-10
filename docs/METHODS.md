@@ -413,7 +413,7 @@ Yanlılık ē, MAE, RMSE = √(SSE/n) (§7 ile aynı tanım), artık standart ha
 ---
 
 ## 12. Çap dağılımı motoru (revizyon, `assets/lab/dist/`; şartname `docs/DIST_SPEC.md`)
-Çok dağılımlı aracın hesap çekirdeği. 10 Kasım 2026'dan beri yayında (`cap-dagilimi.php`, 2.0.0-beta.1; kullanıcı kararı); §8'deki 1.0.0 Weibull aracı `legacy/weibull/`'ye taşındı ve formülleri bu motorda aynen sürer (P05). Aşamalar tamamlandıkça bu bölüm genişler.
+Çok dağılımlı aracın hesap çekirdeği. 10 Kasım 2026'dan beri yayında (`cap-dagilimi.php`, 2.0.0-beta.1; P10 ile 2.0.0-beta.2; kullanıcı kararları); §8'deki 1.0.0 Weibull aracı `legacy/weibull/`'ye taşındı ve formülleri bu motorda aynen sürer (P05). Aşamalar tamamlandıkça bu bölüm genişler.
 
 ### P01: kayıt sistemi, sonuç sözleşmesi, veri sözleşmesi (10 Kasım 2026)
 - **Kavramlar ayrı tutulur:** dağılım ailesi; yöntem (tür: veriden doğrudan tahmin `fit`, özetlerden geri kazanım `recover`, meşcere değişkenlerinden kestirim `stand`; tahmin ilkesi: en çok olabilirlik, momentler…); sayısal çözücü (sonuçta yazılır, seçenek değildir). Yalnızca kayıtlı (uygulanmış ve sınanmış) aile ve yöntemler arayüzde görünür.
