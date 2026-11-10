@@ -20,7 +20,7 @@ const rec = (m, summary, o) => D.runMethod('weibull.' + m, { type: 'summary', su
 const MS = ['m2', 'm3', 'm4', 'm5'];
 
 /* 1. registry: four methods, kind 'recover', separate ids; not in the direct-fit menu */
-eq(D.methodsFor({ family: 'weibull', kind: 'recover' }).map(m => [m.id, m.estimator, m.solver, m.needs.join('+'), m.dataTypes.join()]),
+eq(D.methodsFor({ family: 'weibull', kind: 'recover' }).filter(m => ['weibull.m2', 'weibull.m3', 'weibull.m4', 'weibull.m5'].includes(m.id)).map(m => [m.id, m.estimator, m.solver, m.needs.join('+'), m.dataTypes.join()]),
   [['weibull.m2', 'recovery', 'brent', 'mean+variance', 'summary,raw'], ['weibull.m3', 'recovery', 'brent', 'dq+variance', 'summary,raw'], ['weibull.m4', 'recovery', 'closed form', 'q31+q63', 'summary,raw'], ['weibull.m5', 'recovery', 'closed form', 'q50+q95', 'summary,raw']], 'M2–M5 registered with their inputs');
 ok(!D.methodsFor({ kind: 'fit', dataType: 'raw' }).some(m => m.kind === 'recover'), 'recovery methods are not direct-fit methods');
 

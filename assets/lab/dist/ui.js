@@ -341,7 +341,7 @@ function tabCharts(p) {
 }
 
 /* ---------------- separate workflow: parameters recovered from summary values (no raw diameters) ---------------- */
-const recMethods = () => D.methodsFor({ kind: 'recover', dataType: 'summary' }).filter(m => !m.group);   // moment recovery (normal, lognormal, gamma); Poudel M2–M5 have their own card
+const recMethods = () => D.methodsFor({ kind: 'recover', dataType: 'summary' }).filter(m => !m.group);   // moment recovery (normal, lognormal, gamma); Poudel M2–M10 have their own card
 const recChosen = () => recMethods().filter(m => S.sum.methods[m.id] !== false);
 /** Summary from the typed fields: numbers, or null where a field is empty (the methods report what is missing). */
 function summaryInput() {
@@ -398,10 +398,11 @@ function drawRecover() {
   $('s-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), results: RS }));
 }
 
-/* ---------------- Weibull recovery, Poudel and Cao (2013) M2–M5: targets typed, predicted, or computed from loaded data ---------------- */
+/* ---------------- Weibull recovery, Poudel and Cao (2013) M2–M10: targets typed, predicted, or computed from loaded data ---------------- */
 const wbMethods = () => D.methodsFor({ family: 'weibull', kind: 'recover' });
-const wbChosen = () => wbMethods().filter(m => S.wb.methods[m.id] !== false);
-const WB_FIELDS = ['mean', 'dq', 'variance', 'q31', 'q63', 'q50', 'q95'];
+const wbOn = m => S.wb.methods[m.id] ?? !m.hybrid;                   // hybrids (M6–M10) start unchecked: extra inputs, often several roots
+const wbChosen = () => wbMethods().filter(wbOn);
+const WB_FIELDS = ['mean', 'dq', 'variance', 'q25', 'q31', 'q63', 'q50', 'q95'];
 const wbKey = k => k === 'variance' ? 'v' : k;
 /** Raw-data units available for "compute from data" (same column settings as the direct-fit workflow). */
 function wbUnits() {
@@ -413,7 +414,7 @@ function wbSummary() {
   for (const k of WB_FIELDS) if (need.has(k)) { const v = val(q[wbKey(k)]); if (v != null) out[k] = v; }
   if (need.has('variance')) out.varDivisor = q.div;
   const n = val(q.n); if (n != null) out.n = n;
-  if (q.loc === 'half-dmin') { const v = val(q.dmin); if (v != null) out.dmin = v; }
+  if (q.loc === 'half-dmin' || need.has('dmin')) { const v = val(q.dmin); if (v != null) out.dmin = v; }   // Dmin: source location policy and/or M10
   if (q.from) { out.from = 'raw'; out.quantile = 'type7'; out.unit = q.from; }
   return out;
 }
@@ -433,11 +434,12 @@ function renderWb() {
 }
 function drawWbCard(el) {
   const q = S.wb, need = new Set(wbChosen().flatMap(m => m.needs)), inp = (id, v, lab) => `<label>${lab} <input type="text" inputmode="decimal" size="9" id="${id}" value="${esc(v)}"></label>`;
-  const us = wbUnits(), fields = WB_FIELDS.filter(k => need.has(k)).map(k => inp('w-' + wbKey(k), q[wbKey(k)], T('wb.f.' + k))).join(' ');
+  const us = wbUnits(), fields = WB_FIELDS.filter(k => need.has(k)).map(k => inp('w-' + wbKey(k), q[wbKey(k)], T('wb.f.' + k))).join(' ')
+    + (need.has('dmin') && q.loc !== 'half-dmin' ? ' ' + inp('w-dmin', q.dmin, T('wb.dmin')) : '') + (need.has('n') && !need.has('variance') ? ' ' + inp('w-n', q.n, T('wb.f.n')) : '');
   const varCtl = need.has('variance') ? `<div class="lims"><span class="small">${T('opt.varDivisor')}:</span> ${['n', 'n-1'].map(v => `<label class="small"><input type="radio" name="w-div" value="${v}"${q.div === v ? ' checked' : ''}> ${T('rec.div.' + v)}</label>`).join(' ')}
     ${inp('w-n', q.n, q.div === 'n-1' ? T('rec.nreq') : T('rec.nopt'))}</div>` : '';
   let h = `<div class="card" id="wbcard"><h2>${T('wb.h')}</h2><p class="muted">${T('wb.sub')}</p>
-    <div class="radios col">${wbMethods().map(m => `<label><input type="checkbox" data-wm="${m.id}"${S.wb.methods[m.id] !== false ? ' checked' : ''}> ${esc(T('m.' + m.id))}</label><p class="muted small mnote">${T('mnote.' + m.id)}</p>`).join('')}</div>
+    <div class="radios col">${wbMethods().map(m => `<label><input type="checkbox" data-wm="${m.id}"${wbOn(m) ? ' checked' : ''}> ${esc(T('m.' + m.id))}</label><p class="muted small mnote">${T('mnote.' + m.id)}</p>`).join('')}</div>
     <h3>${T('wb.loc.h')}</h3><div class="radios col">${['half-dmin', 'user'].map(v => `<label><input type="radio" name="w-loc" value="${v}"${q.loc === v ? ' checked' : ''}> ${T('wb.loc.' + v)}</label>`).join('')}</div>
     <div class="lims">${q.loc === 'half-dmin' ? inp('w-dmin', q.dmin, T('wb.dmin')) : inp('w-a', q.a, T('wb.a'))}</div>
     ${q.loc === 'half-dmin' ? `<p class="muted small">${T('wb.dmin.note')}</p>` : `<p class="muted small">${T('wb.a.note')}</p>`}
@@ -459,28 +461,28 @@ function drawWbCard(el) {
   $('w-unit') && $('w-unit').addEventListener('change', e => { q.unit = +e.target.value; save(); });
   $('w-fill') && $('w-fill').addEventListener('click', () => {
     const u = us[+q.unit] || us[0], s = D.weibullSummary(u.d);
-    Object.assign(q, { mean: String(s.mean), v: String(s.variance), div: 'n', n: String(s.n), dq: String(s.dq), q31: String(s.q31), q63: String(s.q63), q50: String(s.q50), q95: String(s.q95), dmin: String(s.dmin), origin: 'measured',
+    Object.assign(q, { mean: String(s.mean), v: String(s.variance), div: 'n', n: String(s.n), dq: String(s.dq), q25: String(s.q25), q31: String(s.q31), q63: String(s.q63), q50: String(s.q50), q95: String(s.q95), dmin: String(s.dmin), origin: 'measured',
       from: { label: unitLabel(u), plot: u.plot === D.POOL ? null : u.plot, period: u.period ?? null, n: s.n } });
     re();
   });
   $('w-calc').addEventListener('click', () => { q.done = true; save(); computeWb(); drawWb(); });
 }
-const WB_LAB = { mean: 'wb.k.mean', variance: 'wb.k.variance', dq: 'wb.k.dq', q31: 'wb.k.q31', q63: 'wb.k.q63', q50: 'wb.k.q50', q95: 'wb.k.q95' };
-const WB_BACK = { mean: 'backMean', variance: 'backVariance', dq: 'backDq', q31: 'backQ31', q63: 'backQ63', q50: 'backQ50', q95: 'backQ95' };
+const WB_LAB = { mean: 'wb.k.mean', variance: 'wb.k.variance', dq: 'wb.k.dq', q25: 'wb.k.q25', q31: 'wb.k.q31', q63: 'wb.k.q63', q50: 'wb.k.q50', q95: 'wb.k.q95', dmin: 'wb.k.dmin', n: 'wb.k.n' };
+const WB_BACK = { mean: 'backMean', variance: 'backVariance', dq: 'backDq', q25: 'backQ25', q31: 'backQ31', q63: 'backQ63', q50: 'backQ50', q95: 'backQ95' };
 function drawWb() {
   const out = $('w-out'); if (!out || !RW) return;
   const okR = RW.filter(r => r.status === 'ok'), m = id => D.method(id);
-  const locCell = r => { const a = r.fixed.a; return !a ? '–' : a.policy === 'half-dmin' ? T('wb.fx.half', { a: f(a.value, 4), d: f(a.dmin, 4) }) : T('wb.fx.user', { a: f(a.value, 4) }); };
+  const locCell = r => { const a = r.fixed.a; return !a ? '–' : a.policy === 'half-dmin' ? T('wb.fx.half', { a: f(a.value, 4), d: f(a.dmin, 4) }) : a.policy === 'm10' ? T('wb.fx.m10', { a: f(a.value, 4), d: f(a.dmin, 4), n: a.n }) : T('wb.fx.user', { a: f(a.value, 4) }); };
   let h = `<div class="tscroll"><table class="grid wtab"><thead><tr><th>${T('t.method')}</th><th>${T('wb.t.loc')}</th><th>b (cm)</th><th>c</th><th>${T('wb.t.targets')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
     ${RW.map(r => { const okr = r.status === 'ok', g = r.diagnostics || {}, tg = r.targets || {};
-      const tcell = m(r.method).needs.map(k => `<span style="white-space:nowrap">${T(WB_LAB[k])}: ${f(tg[k], 4)}${okr ? ` → ${f(g[WB_BACK[k]], 4)}` : ''}</span>`).join('<br>');
+      const ex = m(r.method).exact || [], tcell = m(r.method).needs.map(k => `<span style="white-space:nowrap">${T(WB_LAB[k])}: ${k === 'n' ? fmtNum(tg[k], 0) : f(tg[k], 4)}${okr && WB_BACK[k] ? ` → ${f(g[WB_BACK[k]], 4)}${m(r.method).hybrid && !ex.includes(k) ? ' *' : ''}` : ''}</span>`).join('<br>');
       const why = [...(r.problems || []).map(p => T('pr.' + p.code, { ...p, key: p.key ? T(WB_LAB[p.key]) : p.key })), ...(r.warnings || []).map(w => T('w.' + w.code, w))].join('; ');
       const cands = r.status === 'multiple' ? `<br><span class="small">${(g.candidates || []).map(c => `b = ${f(c.b, 4)}, c = ${f(c.c, 4)}`).join('; ')}</span>` : '';
       return `<tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('m.' + r.method))}</th><td>${esc(locCell(r))}</td><td class="num">${okr ? f(r.params.b, 6) : '–'}</td><td class="num">${okr ? f(r.params.c, 6) : '–'}</td>
         <td class="num small">${tcell}</td><td>${T('st.' + r.status)}${why ? `: ${esc(why)}` : ''}${cands}</td><td class="small">${esc(T('sol.' + r.convergence.solver))}${r.convergence.roots != null ? ` · ${T('wb.roots', { k: r.convergence.roots, lo: fmtNum(r.convergence.interval[0], 2), hi: fmtNum(r.convergence.interval[1], 0) })}` : ''}</td></tr>`; }).join('')}</tbody></table></div>`;
   const t0 = RW[0] && RW[0].targets;
   if (t0) h += `<p class="small">${T('wb.used', { o: T('wb.origin.' + t0.origin), src: t0.from === 'raw' ? T('wb.src.raw') : T('wb.src.typed'), div: t0.varDivisor ? T('rec.src.variance' + (t0.varDivisor === 'n-1' ? '1' : '')) : null })}</p>`;
-  h += `<p class="muted small">${T('wb.p.note')}</p>`;
+  h += `<p class="muted small">${T('wb.p.note')}</p>${RW.some(r => D.method(r.method).hybrid) ? `<p class="muted small">${T('wb.hybrid.note')}</p>` : ''}`;
   if (okR.length) {
     const lo = Math.min(...okR.map(r => D.family('weibull').quantile(0.0005, r.params))), hi = Math.max(...okR.map(r => D.family('weibull').quantile(0.9995, r.params)));
     const xmin = Math.max(0, lo - (hi - lo) * 0.03), xmax = hi, xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * i / 400);

@@ -52,7 +52,7 @@ export function unitRows(units, h) {
   return out;
 }
 /**
- * Results of a recovery workflow (moment recovery or Weibull M2–M5): parameters, every numeric target and
+ * Results of a recovery workflow (moment recovery or Weibull M2–M10): parameters, every numeric target and
  * back-calculated value (columns from the union over the results), status and reason.
  */
 export function recoverRows(results, h) {

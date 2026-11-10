@@ -31,7 +31,7 @@ await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=tr');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.4') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && (await page.locator('#devnote').textContent()).includes('ölçüm eşiği'), 'stage notice: version and what is missing (exports no longer listed)');
+ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.5') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && (await page.locator('#devnote').textContent()).includes('ölçüm eşiği'), 'stage notice: version and what is missing (exports no longer listed)');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting
@@ -110,7 +110,7 @@ await page.click('#tab-params');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dl.path(), 'utf8'));
 const r0 = js.results[0];
-ok(js.tool.version === '2.0.0-beta.4' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
+ok(js.tool.version === '2.0.0-beta.5' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
 ok(r0.params.b === ml0.b && r0.params.c === ml0.c && r0.fixed.a.origin === 'zero' && r0.free.join() === 'b,c' && r0.estimator === 'ml' && r0.convergence.solver === 'bisection' && r0.objective.name === 'logLik' && r0.fit.aic > 0 && js.settings.methods['weibull.mom'].varDivisor === 'n' && js.results[4].settings.p === 0.24 && js.results[4].targets.quantile === 'type7' && js.results[2].targets.varDivisor === 'n', 'JSON: full-precision parameters, fixed/free, estimator, solver, objective');
 ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid' && r.params === null && r.problems[0].code === 'constant'), 'JSON: failed fits carry a status and a reason, no parameters');
 // Excel report and CSV files (all units)
@@ -125,7 +125,7 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
   ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('eşit')), 'Excel: plot C rows carry no parameters, the reason in words');
   const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parametreler, { header: 1 });
   ok(pars.some(r => r[0] === 'A' && r[4] === 'gamma.ml' && r[6] === 'theta' && r[7] === E0.runMethod('gamma.ml', { d: d1 }).params.theta), 'Excel parameters: gamma θ exact');
-  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.4') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
+  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.5') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
   const units = XLSX.utils.sheet_to_json(wb.Sheets['Ornek alanlar'], { header: 1 });
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
@@ -231,7 +231,7 @@ await shot('dist-2e-p10');
 
 // 2f. Weibull recovery, Poudel and Cao M2–M5 (summary workflow): §8.2 targets, location policy, only the needed fields, targets from raw data
 await page.click('#wf-summary');
-ok((await page.locator('#recover [data-rm^="weibull."]').count()) === 0 && (await page.locator('#wbcard [data-wm]').count()) === 4, 'Weibull M2–M5 in their own card, not mixed with the moment recovery');
+ok((await page.locator('#recover [data-rm^="weibull."]').count()) === 0 && (await page.locator('#wbcard [data-wm]').count()) === 9 && (await page.locator('#wbcard [data-wm]:checked').count()) === 4 && !(await page.isChecked('[data-wm="weibull.m10"]')), 'Weibull M2–M10 in their own card (hybrids M6–M10 not preselected), not mixed with the moment recovery');
 const fillW = async (id, v) => { await page.fill(id, v); await page.locator(id).dispatchEvent('change'); };
 const S82 = { mean: '22.745276350061506', v: '57.65867565204488', dq: '23.979288394210368', q31: '18.45269745606343', q63: '24.95393865551951', q50: '22.272698012047496', q95: '36.01924299565496' };
 for (const [k, v] of Object.entries(S82)) await fillW('#w-' + k, v);
@@ -246,7 +246,7 @@ await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (kullanıcı)'), 'user a = 5: the same parameters, labelled as the user\'s');
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
-  ok(j.tool.version === '2.0.0-beta.4' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
+  ok(j.tool.version === '2.0.0-beta.5' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
   ok(rows.length === 5 && rows.slice(1).every(r => r[4] === 'ok' && r[7] === 5 && Math.abs(r[11] - 2.5) < 1e-9) && rows.slice(1).every(r => /origin = predicted/.test(r[r.length - 1])), 'Weibull recovery Excel: a = 5, c = 2.5, origin of the targets'); }
 for (const m of ['weibull.m2', 'weibull.m3']) await page.uncheck(`[data-wm="${m}"]`);
@@ -263,6 +263,20 @@ await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = awai
   ok((await page.locator('p.small', { hasText: 'yüklü ham veriden hesaplandı' }).count()) === 1, 'record says the targets were computed from the data'); }
 await fillW('#w-q50', '30');
 ok((await page.locator('#w-from').count()) === 0, 'a target changed by hand: no longer "computed from the data"');
+// 2g. hybrids M6–M10 (P07): §8.2 targets; M8/M9 two roots, M10 own location; states told apart
+for (const m of ['weibull.m2', 'weibull.m3', 'weibull.m4', 'weibull.m5']) await page.uncheck(`[data-wm="${m}"]`);
+for (const m of ['weibull.m6', 'weibull.m7', 'weibull.m8', 'weibull.m9', 'weibull.m10']) await page.check(`[data-wm="${m}"]`);
+await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5');
+ok((await page.locator('#w-q25').count()) === 1 && (await page.locator('#w-dmin').count()) === 1 && (await page.locator('#w-n').count()) === 1 && (await page.locator('#w-v').count()) === 0, 'hybrid inputs: Q25, Dmin and n (for M10) shown, variance not needed');
+for (const [k, v] of Object.entries({ ...S82, q25: '17.150527008986376', dmin: '8.4545396024095', n: '125' })) if (k !== 'v') await fillW('#w-' + k, v);
+await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
+ok(wr.map(r => r.m + ':' + r.s).join() === 'weibull.m6:ok,weibull.m7:ok,weibull.m8:multiple,weibull.m9:multiple,weibull.m10:ok', 'states: M6, M7, M10 one solution; M8, M9 several: ' + wr.map(r => r.s));
+ok(wr[0].c[2] === '20' && wr[0].c[3] === '2.5' && wr[4].c[2] === '20' && wr[4].c[1].startsWith('a = 5 (M10 kuralı: Dmin = 8.4545, n = 125)'), 'M6 and M10 recover b = 20, c = 2.5; M10 location rule shown');
+ok(wr[2].c[2] === '–' && wr[2].c[5].includes('birden çok çözüm') && wr[2].c[5].includes('c = 0.1915') && wr[2].c[5].includes('c = 2.5') && wr[3].c[5].includes('c = 0.3986'), 'M8/M9: no single result, both candidates listed: ' + wr[2].c[5]);
+ok(wr[0].c[4].includes('Q25: 17.1505 → 17.1505 *') && (await page.locator('#w-out', { hasText: 'yapı gereği eşleştirilmez' }).count()) === 1, 'hybrid: targets not matched by construction marked, note shown');
+await fillW('#w-n', '8'); await fillW('#w-dmin', '5'); await fillW('#w-q50', '15'); await fillW('#w-mean', '6');
+await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
+ok(wr[4].s === 'invalid' && wr[4].c[5].includes('negatif bir a') && wr[2].s === 'invalid' && wr[2].c[5].includes('çözüm yok'), 'M10 negative location and M8 without a root: no result, reasons shown');
 await page.click('#wf-raw');
 
 // 3. sample data, phone + dark
