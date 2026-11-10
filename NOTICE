@@ -1,0 +1,16 @@
+forestbiometry.online
+Ormancılık Biyometrisi Araçları / Forest Biometrics Tools
+Copyright 2026 Onur Alkan
+
+This product includes software developed by Onur Alkan
+(https://forestbiometry.online).
+
+Licensing
+- Source code (PHP, JavaScript, CSS, tests, scripts): Apache License 2.0, see LICENSE.
+- Documentation (the docs/ directory and README.md): Creative Commons
+  Attribution 4.0 International (CC BY 4.0), see LICENSE-docs.
+
+Third-party components
+- SheetJS Community Edition (assets/vendor/sheetjs/),
+  Copyright (C) 2012-present SheetJS LLC, Apache License 2.0,
+  see assets/vendor/sheetjs/LICENSE.

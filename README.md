@@ -26,3 +26,7 @@ cPanel → **SSL/TLS Status** (AutoSSL) or **Let's Encrypt SSL** must cover `for
 
 ## Development
 See `CLAUDE.md`, `docs/PROJECT.md`, `docs/METHODS.md`, `docs/PROGRESS.md` and `tests/README.md`.
+
+## License
+Source code: [Apache License 2.0](LICENSE). Documentation (`docs/`, this README): [CC BY 4.0](LICENSE-docs).
+Copyright and third-party notices: [NOTICE](NOTICE) (SheetJS in `assets/vendor/sheetjs/` keeps its own Apache-2.0 license).
