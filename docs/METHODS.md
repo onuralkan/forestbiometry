@@ -467,3 +467,22 @@ Doğrulama: n < 2, bütün çaplar eşit (sıfır varyans) → "hesaplanmadı"; 
 **Sonuç sözleşmesi:** `diagnostics` alanı eklendi (geriye uyumlu). Ailenin `params` girdisine isteğe bağlı `label` (μ, σ) ve `scale: 'log'` eklendi.
 
 **Doğrulama:** `tests/ref/make_dist_p02.py` (SciPy 1.18.1): iki ailenin işlevleri iki kuyruğa uzanan ızgaralarda; normal en çok olabilirlik `norm.fit`; lognormal en çok olabilirlik hem −Σ `lognorm.logpdf`'in Nelder–Mead ile en küçüklenmesi (çap ölçeği, Jacobian dahil) hem `lognorm.fit(floc=0)`; lognormal momentler ve bütün geri kazanımlar dağılımın ortalama ve E[D²]'sinin hedeflere `least_squares` ile birlikte eşlenmesi (JS'deki kapalı biçimler kullanılmaz). Örnekler `tests/weibull/fixture.json` ve `default_rng(20261111)` ile üretilmiş üç benzetim (gerçek ölçüm değildir); geri kazanımda şartname §8.2 momentleri dahil beş durum. `tests/dist/test_p02.mjs` 931/931: işlevler 2·10⁻¹² (göreli), Φ⁻¹ 10⁻¹³, şartname §8.1 normal ve lognormal satırları, normal en çok olabilirlik 10⁻¹², lognormal en çok olabilirlik 10⁻⁷ (Nelder–Mead'in duyarlılığı; JS'nin ln L'si her durumda SciPy'ninkine eşit ya da büyük), Jacobian özdeşliği, momentler 10⁻¹¹ ve uydurulan ortalama/varyansın hedeflere eşitliği, geri kazanımda verilen ortalama ve Dq'nun 10⁻¹³ içinde yeniden üretilmesi, bütün doğrulama hataları. `tests/dist/e2e.mjs` 53/53.
+
+### P03: iki parametreli gamma (10 Kasım 2026)
+Şartname §3.3. Kaynaklar: şartnamedeki [R12] (NIST) ve [R13] (lmomco) **[D]**, okunmadı; denklemler SciPy ile bağımsız doğrulandı. Minka, T.P. 2002. Estimating a gamma distribution (teknik not) **[D]**: yalnızca çözücünün başlangıç değeri için kullanıldı, sonucu etkilemez.
+
+**Aile** (`dist/families/gamma.js`): şekil k > 0 (birimsiz), **ölçek** θ > 0 (cm); f(d) = d^(k−1)e^(−d/θ)/(Γ(k)θ^k), d > 0; F(d) = P(k, d/θ); ortalama kθ, varyans kθ². Oran kullanan programlar için β = 1/θ (1/cm); SciPy referansında `gamma(a = k, scale = θ)` açıkça ölçekle kullanıldı. Konum parametresi yok; serbest konumlu gamma ayrı bir modeldir, sunulmaz. ln F ve ln(1 − F) doğrudan hesaplanır (`core/stats.js` `lnGammaP`, `lnGammaQ`); yüzdelik ters eksik gamma ile (`gammaPInv`: t = ln x üzerinde Brent, alt yarıda ln P, üst yarıda ln Q; çift duyarlıklı sayının altında kalan yüzdelik 0).
+
+**Sayısal çekirdek** (`core/special.js`): `lnMinusDigamma(x)` = ln x − ψ(x) doğrudan hesaplanır (x ≥ 10 asimptotik seri, altında ψ(x) = ψ(x + 1) − 1/x yinelemesi); ln x − digamma(x) farkındaki büyük k sadeleşme kaybı yoktur. `digamma(x)` bundan türetilir. SciPy `digamma` ile 3·10⁻¹⁴, `gammaincinv` ile 10⁻¹² (göreli).
+
+| Yöntem | Denklem | Çözücü |
+|---|---|---|
+| `gamma.ml` | s = ln m − ort(ln d) > 0; ln k − ψ(k) = s (sol taraf k ile kesin azalan, tek kök); θ = m/k | Brent, t = ln k üzerinde, mutlak 10⁻¹⁵; aralık başlangıçtan (Minka) genişletilir, k ∈ [10⁻⁴, 10⁸] |
+| `gamma.mom` | k = m²/v, θ = v/m; v n bölen (varsayılan) ya da n − 1 | kapalı biçim |
+| `gamma.rec` (özetlerden) | k = m²/v, θ = v/m; v P02'deki gibi moment varyansına çevrilir | kapalı biçim |
+
+**Ayrı durumlar:** sıfır/negatif çap (`d.nonpos`), n < 2 ve sıfır varyans → "hesaplanmadı"; çaplar farklı olduğu hâlde s kayan noktada pozitif değil ya da k > 10⁸ → "aralık sınırında" (`k.overflow`, şekil taşması); k < 10⁻⁴ → `k.boundary`; Brent başarısız ya da ln L sonlu değil → "yakınsamadı" (`k.noconverge`). Hiçbirinde parametre verilmez; **en çok olabilirlik başarısız olunca moment tahmini o etiketle döndürülmez** (testte moment tahmininin var olduğu ama ML satırına konmadığı denetlenir).
+
+**Doğruluk sınırı:** çok büyük k'de (çaplar neredeyse eşit; örn. k ≈ 10⁴) lnΓ(k) ≈ 8·10⁴ olduğundan ln L ancak yaklaşık 10⁻⁹ mutlak duyarlılıkla hesaplanabilir; olabilirlik yüzeyi bu bölgede çok düzdür (k'nin %0.001 değişmesi ln L'yi 10⁻⁹ değiştirir).
+
+**Doğrulama:** `tests/ref/make_dist_p03.py` (SciPy 1.18.1): işlevler k = 0.3 … 900 ızgaralarında iki kuyruğa kadar; en çok olabilirlik hem `gamma.fit(floc = 0)` hem (ln k, ln θ) üzerinde Nelder–Mead; momentler ve geri kazanım `gamma.stats` ile `least_squares`. Örnekler `tests/weibull/fixture.json` ve `default_rng(20261112)` ile üç benzetim (biri k ≈ 9645 veren dar dağılım; gerçek ölçüm değildir). `tests/dist/test_p03.mjs` 653/653: şartname §8.1 gamma satırı; ML `gamma.fit` ile 10⁻⁸, Nelder–Mead ile 2·10⁻⁶ (dar örnekte 10⁻⁵), JS ln L'si SciPy tahminlerinin JS'de hesaplanan ln L'sinden küçük değil, kθ = örnek ortalaması, skor ≈ 0; momentler 10⁻¹¹; geri kazanımda ortalama ve Dq 10⁻¹³ içinde; bütün ayrı durumlar. `tests/dist/e2e.mjs` 55/55.
