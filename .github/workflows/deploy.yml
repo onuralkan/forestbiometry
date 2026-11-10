@@ -44,6 +44,7 @@ jobs:
           node tests/dist/test_p03.mjs
           node tests/dist/test_p04.mjs
           node tests/dist/test_p08.mjs
+          node tests/dist/test_p09.mjs
           node tests/dist/test_p10.mjs
   deploy:
     needs: test
