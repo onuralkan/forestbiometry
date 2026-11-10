@@ -40,10 +40,10 @@ await page.waitForSelector('#impbox .fname'); await page.click('#to2');
 ok(await page.inputValue('#dcol') === '2' && await page.inputValue('#pcol') === '0' && await page.inputValue('#percol') === '1', 'diameter, plot and period columns recognised');
 ok(await page.isChecked('input[name="dec"][value="."]'), 'decimal point by default (Turkish interface)');
 const offered = await page.evaluate(() => ({ fams: [...document.querySelectorAll('fieldset.fam')].map(x => x.dataset.fam), ms: [...document.querySelectorAll('[data-m]')].map(x => x.dataset.m), on: [...document.querySelectorAll('[data-m]:checked')].map(x => x.dataset.m) }));
-ok(offered.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb' && offered.ms.join() === 'weibull.ml,weibull.mom,weibull.pct,normal.ml,lognormal.ml,lognormal.mom,gamma.ml,gamma.mom,beta.ml,beta.mom,johnsonsb.cml,johnsonsb.mom,johnsonsb.kb,johnsonsb.pct' && !offered.on.some(m => m.startsWith('beta.') || m.startsWith('johnsonsb.')) && (await page.locator('.bndcard').count()) === 0 && (await page.locator('[data-m*=".rec"]').count()) === 0, 'selector shows only registered families and methods: ' + JSON.stringify(offered));
+ok(offered.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb,exponential,loglogistic' && offered.ms.join() === 'weibull.ml,weibull.mom,weibull.pct,normal.ml,lognormal.ml,lognormal.mom,gamma.ml,gamma.mom,beta.ml,beta.mom,johnsonsb.cml,johnsonsb.mom,johnsonsb.kb,johnsonsb.pct,exponential.ml,loglogistic.ml,loglogistic.pct,loglogistic.logmom' && !offered.on.some(m => m.startsWith('beta.') || m.startsWith('johnsonsb.')) && (await page.locator('.bndcard').count()) === 0 && (await page.locator('[data-m*=".rec"]').count()) === 0, 'selector shows only registered families and methods: ' + JSON.stringify(offered));
 for (const m of offered.ms) await page.uncheck(`[data-m="${m}"]`);
 ok(await page.isDisabled('#calc') && (await page.locator('#atext').count()) === 0, 'no method chosen: cannot calculate, no location card');
-for (const m of offered.ms) if (!m.startsWith('beta.') && !m.startsWith('johnsonsb.')) await page.check(`[data-m="${m}"]`);
+for (const m of offered.ms) if (!/^(beta|johnsonsb|exponential|loglogistic)\./.test(m)) await page.check(`[data-m="${m}"]`);   // P10 families are checked in 2e
 ok((await page.locator('#famcard .note', { hasText: 'kesilmemiş veri varsayar' }).count()) === 1 && (await page.locator('#famcard .mnote', { hasText: 'aynı denklemlerdir' }).count()) === 1, 'truncation not supported: stated; normal ML = moments explained');
 ok(await page.isChecked('input[name="o-weibull.mom-varDivisor"][value="n"]') && await page.inputValue('#o-weibull-pct-p') === '0.24' && await page.inputValue('#o-weibull-pct-r') === '0.93', 'defaults: divisor n, percentiles 0.24 and 0.93 (Dubey)');
 await page.fill('#o-weibull-pct-p', '0.95'); await page.locator('#o-weibull-pct-p').dispatchEvent('change');
@@ -185,6 +185,25 @@ await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="john
   ok(sh.includes('ξ (cm)') && sh.includes('λ (cm)') && sh.includes('γ') && sh.includes('δ') && sr[0].c[1] === 'ξ = 5 (kullanıcı), λ = 45 (kullanıcı)' && sr[0].c[8] !== '–' && sr[1].c[8] === '–' && sr[3].c[0].includes('p = 0.1, r = 0.9'), 'SB header, user-fixed bounds, AIC only for CML, user pair named: ' + JSON.stringify([sh, sr.map(r => r.c.slice(0, 9))])); }
 await page.click('#steps [data-go="2"]'); await page.fill('#b-xi', '9.4'); await page.locator('#b-xi').dispatchEvent('change'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="johnsonsb"]');
 ok((await rowsOf('johnsonsb')).every(r => r.s === 'invalid') && (await page.locator('ul.notes li', { hasText: 'tam sınırın üzerinde' }).count()) >= 1, 'SB: observation on ξ refused');
+
+// 2e. exponential (same fixed location a as the Weibull) and log-logistic (ML, two percentiles, log-moments)
+await page.click('#steps [data-go="2"]');
+for (const m of ['johnsonsb.cml', 'johnsonsb.mom', 'johnsonsb.kb', 'johnsonsb.pct']) await page.uncheck(`[data-m="${m}"]`);
+for (const m of ['exponential.ml', 'loglogistic.ml', 'loglogistic.pct', 'loglogistic.logmom']) await page.check(`[data-m="${m}"]`);
+ok((await page.locator('#bnd-johnsonsb').count()) === 0 && (await page.locator('h2', { hasText: 'Sabit konum a (Weibull, üstel)' }).count()) === 1 && await page.isEnabled('#calc'), 'P10 families need no bounds; one location card for Weibull and exponential');
+ok(await page.inputValue('#o-loglogistic-pct-p') === '0.25' && await page.inputValue('#o-loglogistic-pct-r') === '0.75' && (await page.locator('#famcard .mnote', { hasText: 'sıradan momentler yöntemi değildir' }).count()) === 1 && (await page.locator('#famcard', { hasText: 'Ters J' }).count()) === 1, 'defaults 0.25/0.75; log-moments named apart from ordinary moments; exponential as a reverse-J reference');
+await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="loglogistic"]');
+{ const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20];
+  const e0 = E.runMethod('exponential.ml', { d: pool }, { a: 0 }), e5 = E.runMethod('exponential.ml', { d: pool }, { a: 5 });
+  const lx = [E.runMethod('loglogistic.ml', { d: pool }), E.runMethod('loglogistic.pct', { d: pool }), E.runMethod('loglogistic.logmom', { d: pool })];
+  const er = await rowsOf('exponential'), lr = await rowsOf('loglogistic');
+  const eh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="exponential"] thead th')].map(x => x.textContent));
+  const lh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="loglogistic"] thead th')].map(x => x.textContent));
+  ok(er.length === 2 && er.every(r => r.s === 'ok') && er[0].c[1] === 'a = 0' && er[1].c[1] === 'a = 5 (kullanıcı)' && Math.abs(parseFloat(er[0].c[3]) - e0.params.r) < 6e-5 && Math.abs(parseFloat(er[1].c[3]) - e5.params.r) < 6e-5 && er[0].c[7] !== '–', 'exponential: a = 0 and the user a; rate equals the engine; AIC (ML): ' + JSON.stringify(er.map(r => r.c.slice(0, 8))));
+  ok(eh.includes('r (1/cm)') && eh.includes('a (cm)') && (await page.locator('ul.notes li', { hasText: 'ölçek 1/r = ' + e0.diagnostics.scale.toFixed(4).replace(/0+$/, '') }).count()) === 1, 'rate r (1/cm) in the table, scale 1/r written separately: ' + eh.join('|'));
+  ok(lr.length === 3 && lr.every(r => r.s === 'ok') && lr.every((r, i) => Math.abs(parseFloat(r.c[2]) - lx[i].params.b) < 6e-5 && Math.abs(parseFloat(r.c[3]) - lx[i].params.c) < 6e-5) && lr[0].c[6] !== '–' && lr[1].c[6] === '–' && lr[2].c[6] === '–', 'log-logistic: three methods equal the engine; AIC only for ML: ' + JSON.stringify(lr.map(r => r.c.slice(0, 7))));
+  ok(lh.includes('b (cm)') && lh.includes('c') && lr[0].c[11].startsWith('Newton') && lr[1].c[0].includes('p = 0.25, r = 0.75'), 'log-logistic header, Newton solver, pair named'); }
+await shot('dist-2e-p10');
 
 // 3. sample data, phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });

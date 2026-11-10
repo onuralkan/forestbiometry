@@ -6,9 +6,9 @@ $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
     'kicker' => $tr ? 'Araç 4 · Çap dağılımları' : 'Tool 4 · Diameter distributions',
-    'lede'   => $tr ? 'Tek ağaç çaplarına Weibull, normal, lognormal, gamma, sabit sınırlı beta ve Johnson SB dağılımlarını uydurun; her örnek alan ve dönem ayrı. Ortalama ile varyans ya da Dq\'dan parametre geri kazanımı ayrı bir iş akışıdır. Araç aşamalı olarak genişletiliyor.'
-                    : 'Fit the Weibull, normal, lognormal, gamma, fixed-bound beta and Johnson SB distributions to individual tree diameters, each plot and period separately. Parameter recovery from the mean and the variance or Dq is a separate workflow. The tool is being extended in stages.',
-    'desc'   => $tr ? 'Çap dağılımları: Weibull, normal, lognormal, gamma, beta, Johnson SB; en çok olabilirlik, momentler, yüzdelikler; özetlerden geri kazanım.' : 'Diameter distributions: Weibull, normal, lognormal, gamma, beta, Johnson SB; maximum likelihood, moments, percentiles; recovery from summaries.',
+    'lede'   => $tr ? 'Tek ağaç çaplarına Weibull, normal, lognormal, gamma, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik dağılımlarını uydurun; her örnek alan ve dönem ayrı. Ortalama ile varyans ya da Dq\'dan parametre geri kazanımı ayrı bir iş akışıdır. Araç aşamalı olarak genişletiliyor.'
+                    : 'Fit the Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic distributions to individual tree diameters, each plot and period separately. Parameter recovery from the mean and the variance or Dq is a separate workflow. The tool is being extended in stages.',
+    'desc'   => $tr ? 'Çap dağılımları: Weibull, normal, lognormal, gamma, beta, Johnson SB, üstel, log-lojistik; en çok olabilirlik, momentler, yüzdelikler; özetlerden geri kazanım.' : 'Diameter distributions: Weibull, normal, lognormal, gamma, beta, Johnson SB, exponential, log-logistic; maximum likelihood, moments, percentiles; recovery from summaries.',
 ]);
 ?>
   <p class="privacy" id="privacy"></p>

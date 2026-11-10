@@ -259,6 +259,10 @@ function notesOf(r) {
   for (const w of r.warnings) out.push(T('w.' + w.code, w));
   if (r.error) out.push(T('e.' + r.error.code, r.error.detail));
   if (r.status === 'ok' && r.diagnostics && r.diagnostics.pBelowZero != null) out.push(T('dg.pBelowZero', { p: fP(r.diagnostics.pBelowZero) }));
+  if (r.status === 'ok' && r.diagnostics && r.diagnostics.scale != null) out.push(T('dg.scale', { s: f(r.diagnostics.scale, 4) }));
+  const mo = r.status === 'ok' && r.diagnostics && r.diagnostics.moments;                                    // log-logistic: moments that do not exist
+  if (mo && !mo.meanDefined) out.push(T('dg.ll.nomean', { c: f(r.params.c, 4) }));
+  else if (mo && !mo.varianceDefined) out.push(T('dg.ll.novar', { c: f(r.params.c, 4), m: f(mo.mean, 2) }));
   return out;
 }
 function tabParams(p) {
