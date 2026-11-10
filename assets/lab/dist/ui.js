@@ -16,12 +16,17 @@ const $ = id => document.getElementById(id);
 const LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).trim().replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
+const has = k => T(k) !== k;
+/** Probability: small values in exponent form (decimal point), never rounded to a misleading 0. */
+const fP = x => x == null || !Number.isFinite(x) ? '–' : x === 0 ? '0' : x < 1e-4 ? x.toExponential(2) : fmtNum(x, 4);
+const parHead = q => `${q.label ?? q.key}${q.unit ? ` (${q.unit})` : q.scale === 'log' ? ` (${T('unit.log')})` : ''}`;
 const perLabel = p => p == null ? T('per.none') : p;
 const samePer = (a, b) => (a ?? null) === (b ?? null);
 
 let S = blank(), R = null;
 function blank() {
   return { v: 1, step: 1, tab: 'params', imp: null, src: null, dcol: null, unit: 'cm', pcol: null, percol: null, fcol: null, fval: null, decimal: null, decimalChosen: false,
+    wf: 'raw', sum: { mean: '', which: 'var', v: '', div: 'n', n: '', dq: '', methods: {}, done: false },
     mode: 'each', methods: null, mopt: {}, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
 let saveT = null;
@@ -58,7 +63,8 @@ function renderStep1() {
 /* ---------------- step 2: settings (families and methods come from the registry) ---------------- */
 const fitMethods = fam => D.methodsFor({ family: fam, kind: 'fit', dataType: 'raw' });
 function chosenMethods() {
-  if (!S.methods) S.methods = Object.fromEntries(D.families().flatMap(fa => fitMethods(fa.id).map(m => [m.id, true])));
+  if (!S.methods) S.methods = {};
+  for (const fa of D.families()) for (const m of fitMethods(fa.id)) if (!(m.id in S.methods)) S.methods[m.id] = true;   // methods added since the session was saved start checked
   return D.families().flatMap(fa => fitMethods(fa.id)).filter(m => S.methods[m.id]);
 }
 function aFixed() { const t = String(S.aText).trim(); if (!t) return { a: null }; const a = num(t); return Number.isFinite(a) && a >= 0 ? { a } : { bad: true }; }
@@ -114,7 +120,8 @@ function renderStep2() {
   if (S.pcol != null) h += `<div class="card"><h2>${T('mode.h')}</h2><div class="radios col"><label><input type="radio" name="mode" value="each"${S.mode === 'each' ? ' checked' : ''}> ${T('mode.each')}</label>
     <label><input type="radio" name="mode" value="pool"${S.mode === 'pool' ? ' checked' : ''}> ${T('mode.pool')}</label></div>${S.mode === 'pool' ? `<p class="note warn">${T('mode.poolnote')}</p>` : ''}</div>`;
   h += `<div class="card" id="famcard"><h2>${T('fam.h')}</h2><p class="muted">${T('fam.sub')}</p>${D.families().map(fa => { const ms = fitMethods(fa.id); return !ms.length ? '' : `<fieldset class="fam" data-fam="${fa.id}"><legend>${esc(T('fam.' + fa.id))}</legend>
-      <div class="radios col">${ms.map(m => `<label><input type="checkbox" data-m="${m.id}"${S.methods[m.id] ? ' checked' : ''}> ${esc(T('m.' + m.id))}</label>${S.methods[m.id] ? optControls(m) : ''}`).join('')}</div></fieldset>`; }).join('')}</div>`;
+      <div class="radios col">${ms.map(m => `<label><input type="checkbox" data-m="${m.id}"${S.methods[m.id] ? ' checked' : ''}> ${esc(T('m.' + m.id))}</label>${has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}${S.methods[m.id] ? optControls(m) : ''}`).join('')}</div>${has('fnote.' + fa.id) ? `<p class="muted small">${T('fnote.' + fa.id)}</p>` : ''}</fieldset>`; }).join('')}
+    <p class="note small">${T('fam.trunc')}</p></div>`;
   if (needsLocation()) h += `<div class="card"><h2>${T('loc.h')}</h2><p class="muted">${T('loc.sub')}</p><label class="field inline"><span>${T('loc.label')}</span><input type="text" inputmode="decimal" id="atext" value="${esc(S.aText)}" size="8"></label>
     ${aFixed().bad ? `<p class="note err">${T('loc.bad')}</p>` : ''}</div>`;
   const pr = settingsProblems();
@@ -227,16 +234,17 @@ function notesOf(r) {
   for (const q of r.problems) out.push(T('pr.' + q.code, q));
   for (const w of r.warnings) out.push(T('w.' + w.code, w));
   if (r.error) out.push(T('e.' + r.error.code, r.error.detail));
+  if (r.status === 'ok' && r.diagnostics && r.diagnostics.pBelowZero != null) out.push(T('dg.pBelowZero', { p: fP(r.diagnostics.pBelowZero) }));
   return out;
 }
 function tabParams(p) {
   const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
   const s = u.desc, tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
-  let h = nav.bar(perSwitch(u)) + `<div class="tiles">${tile(fmtNum(s.n, 0), T('d.n'))}${tile(f(s.mean, 2), T('d.mean'))}${tile(f(s.dq, 2), T('d.dq'))}${tile(`${f(s.min, 1)}–${f(s.max, 1)}`, T('d.range'))}${tile(f(s.varN, 2), T('d.var'))}</div>`;
+  let h = nav.bar(perSwitch(u)) + `<div class="tiles">${tile(fmtNum(s.n, 0), T('d.n'))}${tile(f(s.mean, 2), T('d.mean'))}${tile(f(s.dq, 2), T('d.dq'))}${tile(`${f(s.min, 1)}–${f(s.max, 1)}`, T('d.range'))}${tile(f(s.varN, 2), T('d.var'))}${tile(f(s.varN1, 2), T('d.var1'))}</div>`;
   for (const fa of D.families()) {
     const rs = u.results.filter(r => r.family === fa.id); if (!rs.length) continue;
     h += `<h3>${esc(T('fam.' + fa.id))}</h3><div class="tscroll"><table class="grid ptab" data-fam="${fa.id}"><thead><tr><th>${T('t.method')}</th><th>${T('t.fixed')}</th>
-      ${fa.params.map(q => `<th title="${esc(T('role.' + q.role))}">${esc(q.key)}${q.unit ? ` (${q.unit})` : ''}</th>`).join('')}<th>${T('t.n')}</th><th>${T('t.ll')}</th><th>${T('t.aic')}</th><th>${T('t.bic')}</th><th>${T('t.ks')}</th><th>${T('t.ad')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
+      ${fa.params.map(q => `<th title="${esc(T('role.' + q.role) + (q.scale === 'log' ? ', ' + T('unit.logscale') : ''))}">${esc(parHead(q))}</th>`).join('')}<th>${T('t.n')}</th><th>${T('t.ll')}</th><th>${T('t.aic')}</th><th>${T('t.bic')}</th><th>${T('t.ks')}</th><th>${T('t.ad')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
       ${rs.map(r => { const okr = r.status === 'ok', g = r.gof || {}, fx = Object.entries(r.fixed).map(([k, v]) => T('fixed.' + (v.origin === 'zero' ? 'zero' : 'user'), { k, v: f(v.value, 4) })).join(', ') || T('fixed.none');
         return `<tr class="${okr ? '' : 'st-bad'}" data-method="${r.method}" data-status="${r.status}"><th>${esc(methodName(r))}</th><td>${esc(fx)}</td>${fa.params.map(q => `<td class="num">${okr ? f(r.params[q.key], 4) : '–'}</td>`).join('')}
           <td class="num">${fmtNum(r.data.n, 0)}</td><td class="num">${okr ? f(r.logLik, 3) : '–'}</td><td class="num">${g.aic != null ? f(g.aic, 2) : '–'}</td><td class="num">${g.bic != null ? f(g.bic, 2) : '–'}</td>
@@ -273,6 +281,64 @@ function tabCharts(p) {
   p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
 }
 
+/* ---------------- separate workflow: parameters recovered from summary values (no raw diameters) ---------------- */
+const recMethods = () => D.methodsFor({ kind: 'recover', dataType: 'summary' });
+const recChosen = () => recMethods().filter(m => S.sum.methods[m.id] !== false);
+/** Summary from the typed fields: numbers, or null where a field is empty (the methods report what is missing). */
+function summaryInput() {
+  const q = S.sum, val = t => { const x = String(t ?? '').trim(); return x === '' ? null : num(x); };
+  const out = { mean: val(q.mean) };
+  if (q.which === 'dq') out.dq = val(q.dq); else { out.variance = val(q.v); out.varDivisor = q.div; }
+  const n = val(q.n); if (n != null) out.n = n;
+  return out;
+}
+let RS = null;
+function computeRecover() { const sm = summaryInput(); RS = recChosen().map(m => D.runMethod(m.id, { type: 'summary', summary: sm })); }
+function renderRecover() {
+  const el = $('recover'), q = S.sum, inp = (id, v, lab) => `<label>${lab} <input type="text" inputmode="decimal" size="8" id="${id}" value="${esc(v)}"></label>`;
+  let h = `<p class="note warn">${T('dev')}</p><div class="card"><h2>${T('rec.h')}</h2><p class="muted">${T('rec.sub')}</p>
+    <div class="lims">${inp('s-mean', q.mean, T('rec.mean'))}</div>
+    <div class="radios"><label><input type="radio" name="s-which" value="var"${q.which === 'var' ? ' checked' : ''}> ${T('rec.byvar')}</label><label><input type="radio" name="s-which" value="dq"${q.which === 'dq' ? ' checked' : ''}> ${T('rec.bydq')}</label></div>
+    <div class="lims">${q.which === 'dq' ? inp('s-dq', q.dq, T('rec.dq')) : inp('s-v', q.v, T('rec.var')) + ` <span class="small">${T('opt.varDivisor')}:</span> ${['n', 'n-1'].map(v => `<label class="small"><input type="radio" name="s-div" value="${v}"${q.div === v ? ' checked' : ''}> ${T('rec.div.' + v)}</label>`).join(' ')}`}
+      ${inp('s-n', q.n, q.which === 'var' && q.div === 'n-1' ? T('rec.nreq') : T('rec.nopt'))}</div>
+    <p class="muted small">${T('rec.note')}</p></div>
+    <div class="card"><h2>${T('rec.fam')}</h2><div class="radios col">${recMethods().map(m => `<label><input type="checkbox" data-rm="${m.id}"${S.sum.methods[m.id] !== false ? ' checked' : ''}> ${esc(T('fam.' + m.family))}: ${esc(T('m.' + m.id))}</label>${has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}`).join('')}</div></div>
+    <div class="nav"><button type="button" class="btn" id="s-calc"${recChosen().length ? '' : ' disabled'}>${T('calc')}</button>${recChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="s-out"></div>`;
+  el.innerHTML = h;
+  const re = () => { S.sum.done = false; RS = null; save(); renderRecover(); };
+  for (const [id, k] of [['s-mean', 'mean'], ['s-v', 'v'], ['s-dq', 'dq'], ['s-n', 'n']]) $(id) && $(id).addEventListener('change', e => { S.sum[k] = e.target.value; re(); });
+  el.querySelectorAll('input[name="s-which"]').forEach(x => x.addEventListener('change', () => { S.sum.which = x.value; re(); }));
+  el.querySelectorAll('input[name="s-div"]').forEach(x => x.addEventListener('change', () => { S.sum.div = x.value; re(); }));
+  el.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('change', () => { S.sum.methods[x.dataset.rm] = x.checked; re(); }));
+  $('s-calc').addEventListener('click', () => { S.sum.done = true; save(); computeRecover(); drawRecover(); });
+  if (q.done) { computeRecover(); drawRecover(); }
+}
+function drawRecover() {
+  const out = $('s-out'); if (!out || !RS) return;
+  const okR = RS.filter(r => r.status === 'ok'), t0 = RS.find(r => r.targets) || null;
+  let h = `<div class="tscroll"><table class="grid rtab"><thead><tr><th>${T('t.dist')}</th><th>${T('t.params')}</th><th>${T('rec.back.mean')}</th><th>${T('rec.back.dq')}</th><th>${T('rec.back.var')}</th><th>${T('rec.pneg')}</th><th>${T('t.status')}</th></tr></thead><tbody>
+    ${RS.map(r => { const fam = D.family(r.family), okr = r.status === 'ok', g = r.diagnostics || {};
+      return `<tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('fam.' + r.family))}</th><td class="num">${okr ? fam.params.map(q => `<span style="white-space:nowrap">${esc(q.label ?? q.key)} = ${f(r.params[q.key], 6)}</span>`).join('<br>') : '–'}</td>
+        <td class="num">${okr ? f(g.backMean, 4) : '–'}</td><td class="num">${okr ? f(g.backDq, 4) : '–'}</td><td class="num">${okr ? f(g.backVariance, 4) : '–'}</td><td class="num">${okr && g.pBelowZero != null ? fP(g.pBelowZero) : '–'}</td>
+        <td>${T('st.' + r.status)}${okr ? '' : `: ${esc(r.problems.map(p => T('pr.' + p.code, p)).join('; '))}`}</td></tr>`; }).join('')}</tbody></table></div>`;
+  if (t0) h += `<p class="small">${T('rec.used', { m: f(t0.targets.mean, 4), v: f(t0.targets.variance, 4), dq: f(t0.targets.dq, 4), src: T('rec.src.' + t0.targets.source + (t0.targets.varDivisor === 'n-1' ? '1' : '')) })}</p>`;
+  h += `<p class="muted small">${T('rec.p.note')}</p>`;
+  if (okR.length) {
+    const lo = Math.min(...okR.map(r => D.family(r.family).quantile(0.0005, r.params))), hi = Math.max(...okR.map(r => D.family(r.family).quantile(0.9995, r.params)));
+    const xmin = Math.max(0, lo), xmax = hi, xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * i / 400);
+    h += `<figure class="chartbox" id="ch-r">${plotChart({ title: T('rec.chart'), xmin, xmax, lines: okR.map((r, i) => ({ name: T('fam.' + r.family), k: i, pts: xs.map(x => [x, D.family(r.family).pdf(x, r.params)]) })), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
+      <figcaption><button type="button" class="btn ghost small" id="ch-r-svg">${T('ch.svg')}</button></figcaption></figure>`;
+  }
+  h += `<div class="exports"><button type="button" class="btn ghost" id="s-json">${T('p.json')}</button></div>`;
+  out.innerHTML = h;
+  $('ch-r-svg') && $('ch-r-svg').addEventListener('click', () => download('geri-kazanim.svg', svgForDownload($('ch-r').querySelector('svg')), 'image/svg+xml'));
+  $('s-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), results: RS }));
+}
+function renderWf() {
+  $('wf').innerHTML = `<div class="tabs wftabs" role="tablist" aria-label="${esc(T('wf.label'))}">${['raw', 'summary'].map(w => `<button type="button" role="tab" id="wf-${w}" aria-selected="${S.wf === w}" data-wf="${w}">${T('wf.' + w)}</button>`).join('')}</div>`;
+  $('wf').querySelectorAll('[data-wf]').forEach(b => b.addEventListener('click', () => { S.wf = b.dataset.wf; save(); render(); }));
+}
+
 /* ---------------- shell ---------------- */
 function canGo(n) { if (n <= 1) return true; if (!S.src) return false; if (n === 2) return true; return !settingsProblems().length; }
 function go(n) { if (!canGo(n)) return; S.step = n; save(); render(); scrollTo({ top: $('steps').offsetTop - 8, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
@@ -281,6 +347,10 @@ function renderSteps() {
   $('steps').querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(+b.dataset.go)));
 }
 function render() {
+  renderWf();
+  const sum = S.wf === 'summary';
+  $('recover').hidden = !sum; $('steps').hidden = sum;
+  if (sum) { for (const n of [1, 2, 3]) $('step' + n).hidden = true; renderRecover(); return; }
   if (!canGo(S.step)) S.step = [3, 2, 1].find(canGo);
   renderSteps();
   for (const n of [1, 2, 3]) $('step' + n).hidden = S.step !== n;
@@ -288,6 +358,6 @@ function render() {
 }
 (async function init() {
   $('privacy').textContent = T('privacy');
-  try { const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); } } catch (e) { S = blank(); }
+  try { const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, sum: { ...blank().sum, ...(saved.sum || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); } } catch (e) { S = blank(); }
   render();
 })();

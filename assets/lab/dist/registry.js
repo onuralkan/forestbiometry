@@ -20,9 +20,9 @@ const FAMILY_FNS = ['support', 'pdf', 'logpdf', 'cdf', 'logcdf', 'sf', 'logsf', 
 const KINDS = ['fit', 'recover', 'stand'];
 
 /**
- * family = { id, params: [{ key, role: 'location'|'scale'|'shape', unit: 'cm'|null, min?, max?, minOpen?, maxOpen? }],
+ * family = { id, params: [{ key, label?, role: 'location'|'scale'|'shape', unit: 'cm'|'ln cm'|null, scale?: 'log', min?, max?, minOpen?, maxOpen? }],
  *            support(p) → [lo, hi] (cm), pdf, logpdf, cdf, logcdf, sf, logsf (d, p), quantile(q, p),
- *            mean?(p), variance?(p) (throw DistError('moment.undefined') where they do not exist), source }
+ *            mean?(p), variance?(p) (throw DistError('moment.undefined') where they do not exist), diagnostics?(p), source }
  */
 export function registerFamily(f) {
   if (!f || !f.id || FAMILIES.has(f.id)) throw new Error('family id missing or duplicate: ' + (f && f.id));
@@ -78,6 +78,7 @@ export function checkSupport(fam, p, d) {
  *   fixed       { key: { value, origin: 'zero'|'user'|'data' } }       free [keys]
  *   settings    method options actually used (e.g. { varDivisor: 'n' }, { p, r, quantile: 'type7' }); {} if none
  *   targets     sample summaries the method matched, with their definition (moments, percentiles); null for ML
+ *   diagnostics family/method extras, e.g. { pBelowZero } for the normal, back-calculated moments for recovery
  *   objective   { name: 'logLik' | …, value }     logLik (original diameter scale) when it can be evaluated
  *   convergence { status, iter, solver, tol }
  *   warnings    [{ code, … }]   problems [{ code, … }]   source: reference id (METHODS.md)
@@ -90,7 +91,7 @@ export function makeResult(o) {
     status: o.status,
     data: { plot: null, period: null, type: 'raw', n: null, unit: 'cm', ...(o.data || {}) },
     params: o.params || null, units: Object.fromEntries(fam.params.map(s => [s.key, s.unit])),
-    fixed: o.fixed || {}, settings: o.settings || {}, targets: o.targets || null, free: o.free || fam.params.map(s => s.key).filter(k => !(o.fixed && k in o.fixed)),
+    fixed: o.fixed || {}, settings: o.settings || {}, targets: o.targets || null, diagnostics: o.diagnostics || null, free: o.free || fam.params.map(s => s.key).filter(k => !(o.fixed && k in o.fixed)),
     objective: o.objective || null, logLik: o.logLik ?? null, likelihoodMaximised: !!m.likelihoodMaximised,
     convergence: { status: o.status, iter: null, solver: m.solver || null, tol: null, ...(o.convergence || {}) },
     warnings: o.warnings || [], problems: o.problems || [], error: o.error || null, source: m.source || null,

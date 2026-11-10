@@ -56,9 +56,10 @@ eq(brent(x => 1 / (x - 1) > 0 ? NaN : -1, 0, 2).status, 'nonfinite', 'brent: non
 ok(brent(x => x - 0.3, 0, 1).status === 'ok' && brent(x => x, 0, 1).root === 0, 'brent: root at an end point');
 
 /* 4. registry: only implemented things exist */
-eq(D.families().map(f => f.id), ['weibull'], 'one family registered');
+eq(D.families()[0].id, 'weibull', 'Weibull registered first (later stages add families after it)');
+const FAMS0 = D.families().map(f => f.id);
 eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).map(m => m.id), ['weibull.ml', 'weibull.mom', 'weibull.pct'], 'Weibull raw-data methods (percentiles added in P05)');
-eq([D.methodsFor({ kind: 'recover' }).length, D.methodsFor({ kind: 'stand' }).length, D.methodsFor({ dataType: 'classes' }).length], [0, 0, 0], 'nothing unimplemented is offered');
+eq([D.methodsFor({ kind: 'stand' }).length, D.methodsFor({ dataType: 'classes' }).length, D.methodsFor({ kind: 'recover' }).filter(m => !m.dataTypes.every(t => t === 'summary')).length], [0, 0, 0], 'nothing unimplemented is offered (no stand models, no class data; recovery only from summaries)');
 const thrown = f => { try { f(); return null; } catch (e) { return e instanceof D.DistError ? e.code : 'other:' + e.message; } };
 eq(thrown(() => D.family('gamma')), 'family.unknown', 'unknown family');
 eq(thrown(() => D.method('weibull.lmom')), 'method.unknown', 'unknown method');
@@ -76,7 +77,7 @@ ok(thrown(() => D.registerMethod({ id: 'q.ml', family: 'nope', kind: 'fit', data
   ok(r.status === 'ok' && Math.abs(r.params.r - 0.25) < 1e-15 && r.units.r === '1/cm' && r.free.join() === 'r' && r.family === 'toyexp', 'new family runs through the same runner');
   const e = D.runMethod('toyexp.ml', { d: [2, -4, 6], plot: 'T' });
   ok(e.status === 'error' && e.error.code === 'support.outside' && e.error.detail.count === 1 && e.error.detail.example === -4 && e.params === null, 'observation outside the support → structured error, no parameters');
-  eq(D.families().map(f => f.id), ['weibull', 'toyexp'], 'family list grows by registration only');
+  eq(D.families().map(f => f.id), [...FAMS0, 'toyexp'], 'family list grows by registration only');
 }
 
 /* 5. parameter and support validation */

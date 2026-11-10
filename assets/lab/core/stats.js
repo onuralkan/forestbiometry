@@ -90,13 +90,21 @@ export function logNormCdf(z) {
 }
 /** ln[1 − Φ(z)]. */
 export const logNormSf = z => logNormCdf(-z);
-/** Standard normal quantile Φ⁻¹(p), bisection on Φ to 1e-14 (0 < p < 1). */
+/**
+ * Standard normal quantile Φ⁻¹(p) (0 < p < 1). Bisection on the lower tail, where Φ keeps its relative accuracy;
+ * for p > ½ the symmetry Φ⁻¹(p) = −Φ⁻¹(1 − p) is used (1 − p is exact in floating point for p ≥ ½, whereas 1 − p for
+ * a tiny p would lose its digits). Stops at a relative width of 2⁻⁵² (absolute 1e-15 near 0).
+ */
 export function normQuantile(p) {
   if (!(p > 0 && p < 1)) return NaN;
   if (p === 0.5) return 0;
-  if (p < 0.5) return -normQuantile(1 - p);
-  let lo = 0, hi = 1; while (normCdf(hi) < p) { lo = hi; hi *= 2; if (hi > 64) return Infinity; }
-  for (let i = 0; i < 200 && hi - lo > 1e-14; i++) { const m = (lo + hi) / 2; if (normCdf(m) < p) lo = m; else hi = m; }
+  if (p > 0.5) return -normQuantile(1 - p);
+  let lo = -1, hi = 0; while (normCdf(lo) > p) { hi = lo; lo *= 2; if (lo < -64) return -Infinity; }
+  for (let i = 0; i < 300; i++) {
+    const m = (lo + hi) / 2;
+    if (m === lo || m === hi || hi - lo <= Math.max(1e-15, 2 * Number.EPSILON * Math.abs(m))) break;
+    if (normCdf(m) > p) hi = m; else lo = m;
+  }
   return (lo + hi) / 2;
 }
 

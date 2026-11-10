@@ -14,25 +14,20 @@
 import { lnGamma } from '../../core/special.js';
 import { bisectMonotone } from '../../core/roots.js';
 import { quantile7 } from '../data.js';
+import { checkBasic, VAR_DIVISOR } from './common.js';
+export { FEW_UNIQUE } from './common.js';
 
 export const C_RANGE = [0.01, 1000];               // search interval for the shape c (tool rule)
 export const C_RTOL = 1e-14;                       // relative width of the final bisection interval
-export const FEW_UNIQUE = 10;                      // screening threshold for "few distinct values" (tool rule, not literature)
 export const DUBEY = { p: 0.24, r: 0.93 };         // Dubey (1967): most efficient pair for scale and shape together (rounded)
 
 /* ---------------- sample checks (same rules as the published tool) ---------------- */
 export function checkSample(d, a = 0) {
-  const n = d.length, uniq = new Set(d).size;
-  let mn = Infinity, mx = -Infinity; for (const v of d) { if (v < mn) mn = v; if (v > mx) mx = v; }
-  const problems = [], notices = [];
-  if (n < 2) problems.push({ code: 'n.few', n });
-  else if (uniq < 2) problems.push({ code: 'constant', value: mn });
+  const s = checkBasic(d), problems = [...s.problems];
   if (!Number.isFinite(a)) problems.push({ code: 'a.bad' });
-  else if (n && !(mn > a)) problems.push({ code: 'a.notbelow', a, min: mn });
+  else if (s.n && !(s.min > a)) problems.push({ code: 'a.notbelow', a, min: s.min });
   if (Number.isFinite(a) && a < 0) problems.push({ code: 'a.negative', a });
-  if (n >= 2 && uniq >= 2 && uniq < FEW_UNIQUE) notices.push({ code: 'few.unique', unique: uniq, n });
-  if (n >= 20 && uniq <= 15 && uniq / n < 0.2) notices.push({ code: 'looks.grouped', unique: uniq, n });
-  return { n, unique: uniq, min: n ? mn : null, max: n ? mx : null, problems, notices };
+  return { ...s, problems };
 }
 function logLik(d, a, b, c) {
   let s = 0;
@@ -128,7 +123,7 @@ export const weibullML = {
 };
 export const weibullMoments = {
   id: 'weibull.mom', family: 'weibull', kind: 'fit', estimator: 'mom', solver: 'bisection', dataTypes: ['raw'], likelihoodMaximised: false,
-  options: [LOC, { key: 'varDivisor', type: 'choice', values: ['n', 'n-1'], default: 'n' }], source: 'weibull.mom',
+  options: [LOC, VAR_DIVISOR], source: 'weibull.mom',
   run: (input, opts = {}) => fitMoments(input.d, opts),
 };
 export const weibullPercentiles = {

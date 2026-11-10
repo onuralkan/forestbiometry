@@ -182,6 +182,8 @@ table.grid { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 .mopts { margin: -2px 0 6px 1.6rem; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
 .mopts p { flex-basis: 100%; margin: 2px 0 0; }
 .mopts input[type="text"] { width: 5em; }
+.mnote { margin: -4px 0 4px 1.6rem; }
+.wftabs { margin: 0 0 12px; }
 .radios label { display: inline-flex; gap: 6px; align-items: baseline; }
 .probs { list-style: none; padding: 0; margin: 0; }
 .lims { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0; }
