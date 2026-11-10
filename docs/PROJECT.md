@@ -47,6 +47,8 @@ assets/lab/weibull/          calc.js (saf), ui.js, i18n.js, ornek/ornek-caplar.c
 assets/lab/core/special.js   lnGamma (tools.js'ten değişmeden taşındı)
 assets/lab/core/stats.js     Düzenlenmiş eksik beta ve gamma, normal ve Student t dağılımı ve yüzdelikleri (Modül 6'da normal eklendi), tohumlu üreteç (mulberry32) ve karıştırma (Modül 5)
 assets/lab/core/nls.js       Levenberg–Marquardt, küçük doğrusal cebir, σ̂²(JᵀJ)⁻¹ kovaryansı, delta yöntemi, OLS (Modül 5)
+assets/lab/core/roots.js     Brent kök bulucu, durum bildirimli (çap dağılımı revizyonu P01)
+assets/lab/dist/             Yeni çap dağılımı motoru: registry.js (aile/yöntem kaydı, sonuç sözleşmesi, hatalar), families/, fit/, gof.js, data.js, ui.js, i18n.js; sayfa cap-dagilimi-2.php (listelenmez)
 assets/lab/sampling/         calc.js (saf), ui.js, i18n.js, ornek/ornek-pilot.csv (tests/ref/make_sampling_reference.py ile üretilen benzetim)
 assets/lab/hd/               calc.js (saf), ui.js, i18n.js, ornek/ornek-boy-cap.csv (tests/ref/make_hd_reference.py ile üretilen benzetim)
 assets/vendor/sheetjs/       SheetJS CE 0.20.3 mini (Apache-2.0), README'de köken ve sağlama
