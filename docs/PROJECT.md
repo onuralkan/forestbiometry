@@ -134,6 +134,8 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 - Eski adreslerden (onuralkan.com.tr) yönlendirme yapılmaz; alan adı kapatılıyor.
 
 ## 9. Uygulama planı
+**Çap dağılımı aracı revizyonu (10 Kasım 2026):** sekiz dağılım ailesi, doğrudan tahmin, özetlerden geri kazanım, kesilmiş/sınıflı veri, karşılaştırma, bootstrap ve meşcere modelleri. Şartname, kararlar ve prompt sırası: `docs/DIST_SPEC.md`. Yeni motor `assets/lab/dist/`; yayındaki Weibull aracı 2.0.0'a kadar değişmez.
+
 | Sıra | Modül | İçerik / bağımlılık |
 |---|---|---|
 | 0 | Çalışma zemini | Bu belge, METHODS.md, PROGRESS.md, `tests/`, paketleme betiği ✔ |
