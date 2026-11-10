@@ -161,7 +161,9 @@ Bu iki tanım standart orman ölçümü bağıntılarıdır; doğrulama `tests/c
 ## 6. Örnek Alan ve Meşcere Hesaplayıcısı (Modül 2, `assets/lab/stand/calc.js`)
 **Kapsam:** Sabit alanlı örnek alanlar; bir örnek alandaki her ağacın örneklenme olasılığı aynıdır (alanın tamamında, ölçüm eşiğinin üstündeki her ağaç ölçülür). Alan büyüklükleri örnek alanlar arasında farklı olabilir. **İç içe alanlar, çapa göre değişen alanlar ve açı sayımı (Bitterlich)** ağaç başına ayrı örnekleme ağırlığı (hektara çevirme katsayısı) gerektirir; bu araç onları kendiliğinden işlemez, kullanıcıdan "sabit alanlı" onayı ister.
 
-**Girdi:** Veri Denetçisi'nde onaylanmış `forest-dataset/1` (PROJECT.md §4b). Birimler: d cm, h m, A m² (yatay).
+**Girdi:** Veri Denetçisi'nde onaylanmış `forest-dataset/1` (PROJECT.md §4b) **ya da doğrudan yüklenen ağaç tablosu** (Excel/CSV, her satır bir ağaç; sürüm 1.1.0, 10 Kasım 2026). Birimler: d cm, h m, A m² (yatay), yaş yıl.
+
+**Doğrudan tablo yükleme** (`tableToDataset`): kullanıcı sütunları eşler (zorunlu: örnek alan, çap ve örnek alan büyüklüğü sütunu ya da bütün alanlar için tek büyüklük; isteğe bağlı: boy, yaş, ağaç no, tür, dönem, tabaka, durum). Birimler: çap cm/mm, boy m/dm/cm, alan m²/ha. Sayı okuma §5 ile aynı (varsayılan ondalık nokta; Excel sayı hücreleri doğrudan sayı). Okunamayan veya sıfırdan büyük olmayan çap, alan, boy, yaş; boş örnek alan; aynı örnek alan için farklı büyüklük veya tabaka; aynı örnek alan ve dönemde tekrar eden ağaç no **satır numarasıyla** listelenir ve tablo kullanılmaz (hiçbir satır sessizce atılmaz). Boş boy ve yaş eksik değerdir. Bu yol Veri Denetçisi'nin ayrıntılı taramalarını (eşikler, kod tutarlılığı, birim şüphesi) yapmaz; ekranda yazılıdır.
 
 ### Örnek alan × ölçüm dönemi birimi
 - Her (örnek alan, dönem) birleşimi bir birimdir. Dönem bilgisi yoksa her örnek alan tek birimdir; kaydı olmayan alan **geçerli boş alandır**.
@@ -181,6 +183,9 @@ Bu iki tanım standart orman ölçümü bağıntılarıdır; doğrulama `tests/c
 | En küçük / en büyük çap | min d, max d |
 | Çap sınıfları | Sınıflar yarı açık [alt, üst): sınırdaki ağaç üst sınıfa girer, sınıflar çakışmaz. Sınırlar kesin artan olmalıdır (eşit/azalan sınır reddedilir). İsteğe bağlı açık üst sınıf [b_k, ∞). Alt sınırın altındaki ve (açık sınıf yoksa) son sınırın üstündeki ağaçlar ayrıca sayılır. Her sınıf için n, N/ha, G/ha |
 | Tür katılımı | Ağaç sayısı payı = n_tür / n; göğüs yüzeyi payı = g_tür / Σg. Paydalar o birimin toplamlarıdır ve ekranda yazılır |
+| Baskın çap D0 ve baskın boy H0 | Hektardaki en büyük **100** ağacın çap ve boy ortalaması (kullanıcı tanımı, 10 Kasım 2026; "en büyük" literatürde bazen en kalın, bazen en uzun anlamında kullanıldığı için ikisi de hesaplanır, seçim kullanıcıda; kaynak künyesi eklenmedi). Örnek alanda k = 100 · A / 10 000 ağaç. **Kesirli k** (kullanıcı kararı: ağırlıklı): ağaçlar sıralama değişkenine göre büyükten küçüğe dizilir; ilk ⌊k⌋ ağaç ağırlık 1, sıradaki ağaç k − ⌊k⌋ ağırlıkla girer; sınırda eşit değerli ağaçlar kalan ağırlığı eşit paylaşır (sonuç satır sırasına bağlı değildir). D0 = Σw·d / Σw, H0 = Σw·h / Σw. Ağaç sayısı k'dan azsa bütün ağaçlar kullanılır ve bildirilir. H0 yalnızca **ölçülmüş** boylarla: seçilen (w > 0) ağaçlardan birinin ölçülmüş boyu yoksa H0 verilmez; boya göre seçim, birimdeki bütün ağaçların ölçülmüş boyu varsa yapılır (aksi hâlde D0 ve H0 boya göre verilmez). Tahmini boylar kullanılmaz |
+| Ortalama boy hm | Ölçülmüş boyların aritmetik ortalaması (aşağıdaki "Boylar" satırı) |
+| Yaş | Yaşı kaydedilmiş ağaçların aritmetik ortalaması; hepsi ölçülmediyse ölçülenlerin (kullanıcı tanımı). Yaşı ölçülen ağaç sayısı ayrıca verilir; hiç yaş yoksa tanımsız |
 | Boylar | Ölçülmüş boylar (n, ortalama, s, min, max); veri paketinde `height_source: 'estimated'` olan boylar **ayrı** özetlenir, birleştirilmez; boyu olmayan kayıt sayısı ayrıca verilir. Bu sürüm boy tahmin etmez |
 
 **Boş fakat geçerli birim:** n = 0, N/ha = 0, G/ha = 0; d̄, Dq, s_d, min ve max **tanımsızdır** (null, ekranda "–"); tür payları tanımsızdır.
@@ -197,7 +202,11 @@ Tahmin birimi örnek alandır: y_i, i. örnek alanın hektar değeridir (N/ha, G
 - Güven aralığı bu sürümde verilmez (Modül 6).
 - Cochran, W.G. 1977. *Sampling Techniques*, 3. baskı. Wiley, New York. **[D]**
 
+**Ağaç verisine eklenmiş dışa aktarma** (Excel, "Veri" + "Bilgi"): kaynak tablo satırları ve değerleri değiştirilmeden yazılır; her satıra kendi örnek alan × dönem biriminin D0, H0 (seçime göre `D0`/`H0` ya da çapa göre `D0_d`/`H0_d` ve boya göre `D0_h`/`H0_h`), hm, dm, N, BA, age, Dq değerleri tam duyarlılıkla eklenir; ad tabloda varsa `_plot` eklenir. Durum süzgeci kullanıldıysa `in_calc` (1/0) sütunu eklenir. Hesaplanamayan değer boş hücredir. Tanımlar, birimler ve k kuralı "Bilgi" sayfasındadır.
+
 ### Doğrulama
+D0/H0, yaş ve diğer parametreler: `tests/ref/make_stand_dominant_reference.py` (numpy; ağırlık yerine hektar başına gövde birikimiyle, ayrı yazılmış kod) 49 durum üretir: k = 12.5, 5.3, 3.15, k < 1, sınırda eşit değerler, en uzun ≠ en kalın, ağaç sayısı k'dan az, baskın kümede/dışında eksik boy, eşit çaplar, 40 rastgele alan. `test_stand.mjs` 10⁻¹² göreli toleransla ve satır sırası ters çevrilmiş olarak karşılaştırır; ayrıca elle hesaplanan örnek: 1250 m², d = 20…39 cm → D0 = 415.5 / 12.5 = 33.24 cm. Kullanıcının 135 alanlı karaçam dosyasında (depoya konmadı) JS ve numpy 1350 değerde en çok 6·10⁻¹⁶ göreli fark verdi.
+
 `tests/ref/make_stand_reference.py` (numpy, ayrı yazılmış kod) sentetik `tests/stand/fixture.json` üzerinde iki senaryo (bütün kayıtlar + boş birleşimler; yalnızca canlı + ölçülmedi) için birim ölçülerini, sınıf frekanslarını, tür paylarını, boy sayılarını, alanlar arası özeti, basit rastgele ve tabakalı tahminleri hesaplar; `tests/stand/test_stand.mjs` 10⁻¹⁰ göreli toleransla karşılaştırır.
 
 ---

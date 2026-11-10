@@ -96,7 +96,7 @@ Veri Denetçisi'nde onaylanan veri, tarayıcının IndexedDB deposunda (`forestb
   warnings: [{code, table, row, plot, field, accepted: gerekçe|null}],
   excluded: [kaynak satır no], changelog: [{seq, time, action, table, row, field, column, old, new, reason, issue}] }
 ```
-Boş örnek alanlar `plots` içinde `n_records: 0` ile yer alır. İsteğe bağlı ağaç alanı `height_source: 'measured'|'estimated'` (yoksa ölçülmüş sayılır); tüketen araçlar tahmini boyları ayrı tutar. Modül 5'in ilk sürümü tahminleri yalnızca dışa aktarmada ayrı sütuna yazar; onaylanmış veri paketine yazma (yeni sürüm numarasıyla) henüz yok. Onay ancak **hata sayısı 0** iken verilir; açık uyarılar `warnings` içinde kalır. Şema değişirse sürüm numarası artar (`forest-dataset/2`) ve okuyucu araçlar eski sürümü reddeder veya çevirir.
+Boş örnek alanlar `plots` içinde `n_records: 0` ile yer alır. İsteğe bağlı ağaç alanı `age` (yıl; Örnek Alan ve Meşcere aracının doğrudan tablo yüklemesi doldurur, Denetçi henüz eşlemiyor). İsteğe bağlı ağaç alanı `height_source: 'measured'|'estimated'` (yoksa ölçülmüş sayılır); tüketen araçlar tahmini boyları ayrı tutar. Modül 5'in ilk sürümü tahminleri yalnızca dışa aktarmada ayrı sütuna yazar; onaylanmış veri paketine yazma (yeni sürüm numarasıyla) henüz yok. Onay ancak **hata sayısı 0** iken verilir; açık uyarılar `warnings` içinde kalır. Şema değişirse sürüm numarası artar (`forest-dataset/2`) ve okuyucu araçlar eski sürümü reddeder veya çevirir.
 
 Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfayı yeniden yükler ve oturum geri gelir.
 
