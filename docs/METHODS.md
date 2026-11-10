@@ -118,8 +118,8 @@ Weibull, gamma, normal ve lognormal için ortalama, standart sapma, çarpıklık
 Denetçi bilimsel bir hesap yapmaz; veriyi **okur, dönüştürür ve tarar**. Aşağıdaki eşikler literatür değeri değil, kullanıcının değiştirebildiği tarama varsayılanlarıdır.
 
 ### Okuma ve dönüştürme
-- **Ondalık ayırıcı** kullanıcı ayarıdır (`.` veya `,`), arayüz dilinden bağımsızdır. Binlik ayırıcı ve sayı içi boşluk kabul edilmez; bu değerler biçim hatası olur, tahmin yapılmaz.
-- **Ondalık kanıtı:** Eşlenen sayısal sütunlardaki metin hücreleri sayılır. `^[+-]?\d{1,3}[.,]\d{3}$` biçimindekiler (ör. "1,234") **belirsiz** sayılır ve tek başına karar vermez. Yalnızca belirsiz değer varsa ya da nokta ve virgül birlikte görülürse ayar boş kalır, kullanıcı seçmeden devam edilemez. Kanıt açıksa (ör. "24,5") seçim önceden işaretlenir ve ekranda gerekçesiyle yazılır.
+- **Ondalık ayırıcı** kullanıcı ayarıdır (`.` veya `,`), arayüz dilinden bağımsızdır. Ekranda, grafiklerde ve CSV'de sayılar her iki dilde ondalık noktayla, binlik ayırıcısız gösterilir (`core/i18n.js` `fmtNum`, tek ortak biçimleyici); okuma (`core/num.js`) ile gösterim ayrıdır. Binlik ayırıcı ve sayı içi boşluk kabul edilmez; bu değerler biçim hatası olur, tahmin yapılmaz.
+- **Ondalık kanıtı:** Eşlenen sayısal sütunlardaki metin hücreleri sayılır. `^[+-]?\d{1,3}[.,]\d{3}$` biçimindekiler (ör. "1,234") **belirsiz** sayılır ve tek başına karar vermez. Varsayılan ondalık ayırıcı bütün araçlarda ve iki dilde **nokta**dır (10 Kasım 2026, kullanıcı kararı). Dosya açıkça virgül kullanıyorsa (ör. "24,5") virgül önceden işaretlenir; kanıt yoksa, yalnızca belirsiz değer varsa ya da nokta ve virgül birlikte görülürse nokta işaretlenir ve ekranda "belirsiz/çelişkili, varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin" diye yazılır. Belirsiz bir değer hiçbir zaman sessizce binlik sayıya çevrilmez: seçilen ayırıcıyla okunamayan değer biçim hatası olarak raporlanır. Virgüllü içe aktarma desteği sürer.
 - **XLSX:** Sayı hücreleri sayı olarak alınır (ondalık ayarı gerekmez). Formüller okunmaz, yalnızca dosyada kayıtlı son değer kullanılır; makrolar yüklenmez. Tarih biçimli hücreler ISO tarihe çevrilir. Kimlik ve kod alanlarında hücrenin **görünen metni** kullanılır ("000" biçimli 2 → "002").
 - **Birimler** kullanıcı seçimidir: çap cm/mm/m → cm (×1; ×0,1; ×100), boy m/dm/cm → m (×1; ×0,1; ×0,01), alan m²/ha → m² (×1; ×10 000). Başlık soneki (`cap_cm`, `alan_m2`) yalnızca öneri verir; değerlerin büyüklüğüne bakılarak birim değiştirilmez.
 - **Kimlikler** metindir; "001" ≠ "1", "7 " ≠ "7".
@@ -203,7 +203,7 @@ Tahmin birimi örnek alandır: y_i, i. örnek alanın hektar değeridir (N/ha, G
 ---
 
 ## 7. Model Başarısı Değerlendiricisi (Modül 3, `assets/lab/eval/calc.js`)
-**Girdi:** Herhangi bir tablo (CSV/TSV/yapıştırma/XLSX) veya onaylanmış veri paketi. Kullanıcı bir gözlenen sütunu, bir veya daha fazla tahmin sütunu ve isteğe bağlı örnek alan, tür, çap (sınıflara ayrılır) ve doğrulama katı sütunlarını seçer. Sayı okuma kuralları Veri Denetçisi'yle aynıdır (§5): ondalık ayırıcı kullanıcı seçimi; belirsiz/çelişkili kanıtta tahmin yapılmaz; XLSX sayı hücreleri doğrudan sayıdır.
+**Girdi:** Herhangi bir tablo (CSV/TSV/yapıştırma/XLSX) veya onaylanmış veri paketi. Kullanıcı bir gözlenen sütunu, bir veya daha fazla tahmin sütunu ve isteğe bağlı örnek alan, tür, çap (sınıflara ayrılır) ve doğrulama katı sütunlarını seçer. Sayı okuma kuralları Veri Denetçisi'yle aynıdır (§5): ondalık ayırıcı kullanıcı seçimi (varsayılan nokta, dosya açıkça virgül kullanıyorsa virgül); XLSX sayı hücreleri doğrudan sayıdır.
 
 **İşaret kuralı (bütün çıktılarda):** e_i = ŷ_i − y_i (tahmin − gözlenen). Pozitif yanlılık ortalamada fazla tahmin demektir.
 

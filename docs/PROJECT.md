@@ -34,8 +34,9 @@ assets/lab/lab.css           Tezgâh düzeni stilleri, renk ve önem düzeyi pal
 assets/lab/core/num.js       Sayı okuma (ondalık ayarı), ondalık kanıtı, birim dönüştürme
 assets/lab/core/table.js     CSV/TSV/yapıştırma ayrıştırıcı, ayırıcı algılama, kodlama, XLSX → ham tablo
 assets/lab/core/store.js     IndexedDB anahtar–değer deposu (oturum + veri aktarımı)
-assets/lab/core/export.js    CSV (dile göre ayırıcı), XLSX yazma, JSON indirme, SheetJS tembel yükleme
-assets/lab/core/i18n.js      Dil, sayı biçimi, HTML kaçışı
+assets/lab/core/export.js    CSV (`,` ve `.`, dilden bağımsız), XLSX yazma, JSON indirme, SheetJS tembel yükleme
+assets/lab/core/i18n.js      Dil, tek ortak sayı biçimleyici (`fmtNum`, dilden bağımsız), HTML kaçışı
+assets/lab/core/unitnav.js   Örnek alan gezgini (liste, arama, sıralama, sorunlu süzgeci, önceki/sonraki, ← →); Çap Dağılımı ve Meşcere araçlarında ortak
 assets/lab/core/chart.js     SVG çubuk, saçılım, sürekli eksenli (histogram + eğri/basamak) ve radar grafikleri (kütüphanesiz), tema renkleriyle SVG indirme
 assets/lab/core/importer.js  Tek tablo içe aktarma paneli (dosya/yapıştırma/ayırıcı/kodlama/sayfa/önizleme); Modül 3'ten itibaren. `rawRows` seçeneği başlık satırını aracın seçmesine bırakır (Modül 7)
 assets/lab/checker/          calc.js (saf), ui.js, i18n.js, ornek/ (uydurma örnek CSV'ler)
@@ -116,13 +117,13 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 - **Kaynak gösterme (10 Kasım 2026):** her sayfada üst şeritte "Atıf" düğmesi bir pencere açar (`core/cite-ui.js`, metinler `core/citation.js`): araç sayfasında varsayılan o araç ve sürümü, ana sayfada platformun tamamı; atıf dili TR/EN; erişim tarihi seçilebilir; APA 7, MLA 9, Chicago (yazar-tarih), Harvard, IEEE, Vancouver, BibTeX (`@misc`, .bib iner), RIS (`TY - COMP`, .ris iner). Kopyalama italikli HTML ve düz metin yazar. Kurallı adres `SITE_BASE` = https://forestbiometry.online/, yıl `SITE_YEAR` = 2026, yazar `SITE_AUTHOR` (`inc/site.php`). Araç sürümü `site_tools()`'taki `v`, aracın `calc.js`'indeki `TOOL.version` ile aynı olmalıdır (`tests/site/test_cite.mjs` denetler): bir araç değiştiğinde ikisi birlikte artırılır. DOI yok (ekranda yazılı). Hakkında sayfasında platformun APA atfı.
 - **Simgeler:** `site_icon()` içinde siteye özgü 24 × 24 çizgi simgeler (veri denetimi = pano ve onay, örnek alan = kesikli daire ve gövdeler, model başarısı = 1:1 doğrusu ve noktalar, dağılım = histogram ve eğri, boy–çap = ağaç ve ölçü çubuğu, örnekleme = ızgara ve seçili noktalar, sıralama = radar). Vurgu çizgisi kabuk kahvesi (`--bark`).
 - **Renk:** `assets/lab/lab.css` değişkenleri: zemin serin liken grisi `--bg` #eef1ec (koyu #121814), kenar çubuğu `--side`, vurgu ladin yeşili `--acc` #1d5b45 (koyu temada #6cc4a1), ikinci renk kabuk kahvesi `--bark` #8a5a2b (koyu #d39a5c); önem düzeyleri Okabe–Ito paletinden türetildi (yazı kontrastı için koyulaştırıldı): hata `--err` (kırmızı-turuncu, ◆), uyarı `--warn` (koyu sarı, ▲), bilgi `--info` (mavi, ●), tamam `--ok` (mavimsi yeşil). Her düzey renkle birlikte **şekil ve sözcükle** gösterilir; yalnız renge dayanılmaz.
-- **Sayı biçimi:** Ekranda dile göre (TR: 1.234,5; EN: 1,234.5). CSV: TR'de `;` ayırıcı ve `,` ondalık, EN'de `,` ve `.`. XLSX hücreleri sayısal kalır.
+- **Sayı biçimi (küresel standart, 10 Kasım 2026, kullanıcı kararı):** Ekranda, kutucuklarda, tablolarda, grafiklerde ve metinlerde her iki dilde ondalık **nokta**, binlik ayırıcı yok (ör. 1234.5); dil seçimi değeri, basamak sayısını ve ayırıcıyı değiştirmez. Tek ortak biçimleyici `core/i18n.js` `fmtNum` (yuvarlama ve en çok basamak eskisiyle aynı). İçe aktarmada varsayılan ondalık nokta (`core/num.js` `defaultDecimal`); dosya açıkça virgül kullanıyorsa virgül önerilir, virgüllü okuma desteklenir. Okuma ile gösterim ayrıdır; CSV sütun ayırıcısı ile ondalık ayırıcı ayrı kavramlardır. CSV her iki dilde `,` sütun ayırıcı ve `.` ondalık (yalnızca başlıklar dile göre). XLSX hücreleri sayısal kalır.
 - **Erişilebilirlik:** Klavyeyle kullanılabilir, görünür odak, hareketi azalt tercihine uyum, telefonda yatay kaydırma yok.
 
 ## 7. Ortak çekirdek (Modül 1 ile kurulacak)
 1. ✔ İçe aktarma: CSV/TSV/yapıştırma kendi RFC 4180 ayrıştırıcımızla; XLSX için **SheetJS CE 0.20.3 mini** (Apache-2.0), npm `@e965/xlsx` yeniden yayımından alındı, `assets/vendor/sheetjs/` altında, yalnızca gerektiğinde yüklenir. Okuma ayarları formül, VBA ve HTML'yi kapatır; yalnızca kayıtlı hücre değerleri okunur. npm `xlsx` 0.18.5 (CVE-2023-30533, CVE-2024-22363) kullanılmadı. Risk: üçüncü taraf yeniden yayımı; sağlama toplamı README'de. Resmî SheetJS dağıtımına erişilebildiğinde aynı sürümle karşılaştırılmalı. Eski `.xls` desteklenmez.
 2. ✔ Sütun eşleme ve birim dönüştürme ekranı (Veri Denetçisi içinde; öneriler yalnızca birebir başlık eşleşmesinden). Eşleme oturumla birlikte hatırlanır. Diğer araçlar onaylanmış veriyi kullanacağı için eşlemeyi tekrar istemez.
-3. ✔ Dışa aktarma: CSV (TR `;`/`,`; EN `,`/`.`), çok sayfalı XLSX raporu (araç, sürüm, tarih, dil, ayarlar özet sayfasında), JSON veri paketi. Yazdırılabilir rapor henüz yok.
+3. ✔ Dışa aktarma: CSV (iki dilde `,`/`.`), çok sayfalı XLSX raporu (araç, sürüm, tarih, dil, ayarlar özet sayfasında), JSON veri paketi. Yazdırılabilir rapor henüz yok.
 4. ✔ Doğrusal olmayan en küçük kareler (Levenberg–Marquardt), standart hatalarla (`core/nls.js`, Modül 5; SciPy ile doğrulandı).
 5. `legacy/tools.js` içindeki test edilmiş matematik ES modüllerine **taşınır** (yeniden yazılmaz; testleri korunur). lnGamma taşındı (`core/special.js`).
 
