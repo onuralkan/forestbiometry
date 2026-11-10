@@ -40,3 +40,12 @@ export function describe(d) {
   const mean = s / n; let ss = 0; for (const v of d) ss += (v - mean) ** 2;
   return { n, unique: new Set(d).size, min: mn, max: mx, mean, m2: s2 / n, dq: Math.sqrt(s2 / n), varN: ss / n, varN1: n > 1 ? ss / (n - 1) : null };
 }
+/**
+ * Sample quantile, Hyndman and Fan (1996) type 7 (R's default, numpy 'linear'): h = (n − 1)p,
+ * Q = x(⌊h⌋+1) + (h − ⌊h⌋)(x(⌊h⌋+2) − x(⌊h⌋+1)) on the sorted sample. s must be sorted ascending.
+ */
+export function quantile7(s, p) {
+  const n = s.length; if (!n || !(p >= 0 && p <= 1)) return NaN;
+  const h = (n - 1) * p, lo = Math.floor(h);
+  return lo + 1 >= n ? s[n - 1] : s[lo] + (h - lo) * (s[lo + 1] - s[lo]);
+}

@@ -32,7 +32,8 @@ export function registerFamily(f) {
 }
 /**
  * method = { id, family, kind, estimator, solver, dataTypes: ['raw'|'classes'|'summary'], likelihoodMaximised: bool,
- *            options?: [{ key, … }], source, run(input, opts) → partial result (see makeResult) }
+ *            options?: [{ key, type: 'fixed-param'|'choice'|'prob', default?, values? }], checkOptions?(opts) → [problem],
+ *            source, run(input, opts) → partial result (see makeResult) }
  * Only registered methods are offered anywhere: nothing unimplemented can appear in a menu.
  */
 export function registerMethod(m) {
@@ -75,6 +76,8 @@ export function checkSupport(fam, p, d) {
  *   data        { plot, period, type: 'raw'|'classes'|'summary', n, unit: 'cm' }
  *   params      { key: value }       units { key: 'cm' | null }
  *   fixed       { key: { value, origin: 'zero'|'user'|'data' } }       free [keys]
+ *   settings    method options actually used (e.g. { varDivisor: 'n' }, { p, r, quantile: 'type7' }); {} if none
+ *   targets     sample summaries the method matched, with their definition (moments, percentiles); null for ML
  *   objective   { name: 'logLik' | …, value }     logLik (original diameter scale) when it can be evaluated
  *   convergence { status, iter, solver, tol }
  *   warnings    [{ code, … }]   problems [{ code, … }]   source: reference id (METHODS.md)
@@ -87,7 +90,7 @@ export function makeResult(o) {
     status: o.status,
     data: { plot: null, period: null, type: 'raw', n: null, unit: 'cm', ...(o.data || {}) },
     params: o.params || null, units: Object.fromEntries(fam.params.map(s => [s.key, s.unit])),
-    fixed: o.fixed || {}, free: o.free || fam.params.map(s => s.key).filter(k => !(o.fixed && k in o.fixed)),
+    fixed: o.fixed || {}, settings: o.settings || {}, targets: o.targets || null, free: o.free || fam.params.map(s => s.key).filter(k => !(o.fixed && k in o.fixed)),
     objective: o.objective || null, logLik: o.logLik ?? null, likelihoodMaximised: !!m.likelihoodMaximised,
     convergence: { status: o.status, iter: null, solver: m.solver || null, tol: null, ...(o.convergence || {}) },
     warnings: o.warnings || [], problems: o.problems || [], error: o.error || null, source: m.source || null,
@@ -99,7 +102,8 @@ export function runMethod(id, input, opts = {}) {
   if (!m.dataTypes.includes(input.type || 'raw')) throw new DistError('method.datatype', { method: id, type: input.type || 'raw' });
   const data = { plot: input.plot ?? null, period: input.period ?? null, type: input.type || 'raw', n: input.d ? input.d.length : input.n ?? null };
   try {
-    const r = m.run(input, opts);
+    const bad = m.checkOptions ? m.checkOptions(opts) : [];
+    const r = bad.length ? { status: 'invalid', problems: bad } : m.run(input, opts);
     return makeResult({ ...r, method: id, family: m.family, data: { ...data, ...(r.data || {}) } });
   } catch (e) {
     if (!(e instanceof DistError)) throw e;

@@ -30,3 +30,25 @@ export function brent(f, a, b, { xtol = 1e-14, maxIter = 200 } = {}) {
   }
   return { root: b, status: 'maxiter', iter: maxIter, fa, fb };
 }
+
+/**
+ * Geometric bisection for a function that is monotone on [lo, hi] with lo > 0 (e.g. a Weibull shape spanning several
+ * decades). Same algorithm and stopping rule as the published Weibull tool (assets/lab/weibull/calc.js solveMonotone),
+ * so results are reproduced exactly. Returns { root, status: 'ok' | 'below' (root < lo) | 'above' (root > hi) |
+ * 'nonfinite' | 'maxiter', iter }. Stops when hi/lo − 1 < rtol.
+ */
+export function bisectMonotone(f, lo, hi, { maxIter = 300, rtol = 1e-14 } = {}) {
+  const flo = f(lo), fhi = f(hi);
+  if (!Number.isFinite(flo) || !Number.isFinite(fhi)) return { root: null, status: 'nonfinite', iter: 0 };
+  const inc = fhi > flo;
+  if (inc ? flo > 0 : flo < 0) return { root: lo, status: 'below', iter: 0 };
+  if (inc ? fhi < 0 : fhi > 0) return { root: hi, status: 'above', iter: 0 };
+  for (let i = 1; i <= maxIter; i++) {
+    const mid = Math.sqrt(lo * hi), fm = f(mid);
+    if (!Number.isFinite(fm)) return { root: null, status: 'nonfinite', iter: i };
+    if (fm === 0) return { root: mid, status: 'ok', iter: i };
+    if ((fm > 0) === inc) hi = mid; else lo = mid;
+    if (hi / lo - 1 < rtol) return { root: Math.sqrt(lo * hi), status: 'ok', iter: i };
+  }
+  return { root: Math.sqrt(lo * hi), status: 'maxiter', iter: maxIter };
+}

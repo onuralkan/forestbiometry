@@ -179,6 +179,9 @@ table.grid { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 .unit > span:first-child { font-weight: 600; min-width: 110px; }
 .radios { display: flex; gap: 18px; flex-wrap: wrap; margin: 8px 0; }
 .radios.col { flex-direction: column; gap: 8px; }
+.mopts { margin: -2px 0 6px 1.6rem; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+.mopts p { flex-basis: 100%; margin: 2px 0 0; }
+.mopts input[type="text"] { width: 5em; }
 .radios label { display: inline-flex; gap: 6px; align-items: baseline; }
 .probs { list-style: none; padding: 0; margin: 0; }
 .lims { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0; }

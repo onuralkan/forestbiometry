@@ -57,7 +57,7 @@ ok(brent(x => x - 0.3, 0, 1).status === 'ok' && brent(x => x, 0, 1).root === 0, 
 
 /* 4. registry: only implemented things exist */
 eq(D.families().map(f => f.id), ['weibull'], 'one family registered');
-eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).map(m => m.id), ['weibull.ml', 'weibull.mom'], 'Weibull raw-data methods');
+eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).map(m => m.id), ['weibull.ml', 'weibull.mom', 'weibull.pct'], 'Weibull raw-data methods (percentiles added in P05)');
 eq([D.methodsFor({ kind: 'recover' }).length, D.methodsFor({ kind: 'stand' }).length, D.methodsFor({ dataType: 'classes' }).length], [0, 0, 0], 'nothing unimplemented is offered');
 const thrown = f => { try { f(); return null; } catch (e) { return e instanceof D.DistError ? e.code : 'other:' + e.message; } };
 eq(thrown(() => D.family('gamma')), 'family.unknown', 'unknown family');
@@ -91,9 +91,9 @@ eq(thrown(() => fam.variance({ a: 0, b: 1e200, c: 1e-3 })), 'moment.undefined', 
 
 /* 6. the adapter keeps the published Weibull results, and they agree with SciPy */
 for (const [key, f] of Object.entries(R.fits)) {
-  const d = FX[f.sample], opt = { a: f.a };
+  const d = FX[f.sample];
   for (const [id, old, ref, tol] of [['weibull.ml', W.fitML(d, f.a, f.a ? 'fixed' : 'zero'), f.ml, 2e-6], ['weibull.mom', W.fitMoments(d, f.a, f.a ? 'fixed' : 'zero'), f.mom, 1e-9]]) {
-    const r = D.runMethod(id, { d, plot: f.sample }, opt);
+    const r = D.runMethod(id, { d, plot: f.sample }, { a: f.a, ...(id === 'weibull.mom' ? { varDivisor: 'n-1' } : {}) });   // P05: n − 1 is now an option (published tool)
     ok(r.status === 'ok' && r.contract === 'dist-result/1' && r.data.n === f.n && r.data.plot === f.sample, `${key} ${id}: contract`);
     ok(r.params.a === old.a && r.params.b === old.b && r.params.c === old.c && r.logLik === old.logLik, `${key} ${id}: identical to the published tool`);
     near(r.params.b, ref.b, `${key} ${id} b = SciPy`, tol); near(r.params.c, ref.c, `${key} ${id} c = SciPy`, tol);
@@ -114,7 +114,7 @@ for (const [key, f] of Object.entries(R.fits)) {
   ok(r.status === 'invalid' && r.params === null && r.problems[0].code === 'n.few' && r.logLik === null, 'one tree: invalid, no parameters');
   r = D.runMethod('weibull.ml', { d: [20, 20, 20] }); ok(r.status === 'invalid' && r.problems[0].code === 'constant', 'equal diameters: invalid');
   r = D.runMethod('weibull.ml', { d: [10, 12, 15] }, { a: 10 }); ok(r.status === 'invalid' && r.problems[0].code === 'a.notbelow' && r.fixed.a.value === 10, 'location not below the minimum: invalid');
-  r = D.runMethod('weibull.mom', { d: [10, 12, 15, 30, 31] }); ok(r.status === 'ok' && r.warnings.some(w => w.code === 'var.n1') && r.objective === null && !r.likelihoodMaximised, 'moments: variance divisor stated, no objective claimed');
+  r = D.runMethod('weibull.mom', { d: [10, 12, 15, 30, 31] }, { varDivisor: 'n-1' }); ok(r.status === 'ok' && r.warnings.some(w => w.code === 'var.n1') && r.objective === null && !r.likelihoodMaximised, 'moments: variance divisor stated, no objective claimed');
 }
 
 /* 7. data contract: plot × period units, pooled mode, unreadable values listed */
