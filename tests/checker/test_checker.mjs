@@ -134,8 +134,10 @@ const plotsTxt = readFileSync(path.join(root, 'assets/lab/checker/ornek/ornek-al
   delete globalThis.document;
   eq(a, b, 'parsed values identical under TR/EN');
   const rows = [['001', 24.5, 'Pb']];
-  const tr = parseDelimited(csvText(rows, 'tr'), ';')[0], en = parseDelimited(csvText(rows, 'en'), ',')[0];
-  eq([tr[0], parseNumber(tr[1], ',').value], ['001', 24.5], 'TR CSV round-trip');
+  // CSV is language-independent: "," between columns and a decimal point in both languages
+  eq(csvText(rows, 'tr'), csvText(rows, 'en'), 'CSV identical under TR/EN');
+  const tr = parseDelimited(csvText(rows, 'tr'), ',')[0], en = parseDelimited(csvText(rows, 'en'), ',')[0];
+  eq([tr[0], parseNumber(tr[1], '.').value], ['001', 24.5], 'TR CSV round-trip (point)');
   eq([en[0], parseNumber(en[1], '.').value], ['001', 24.5], 'EN CSV round-trip');
 }
 

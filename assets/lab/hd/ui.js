@@ -4,7 +4,7 @@ import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
-import { detectDecimal } from '../core/num.js';
+import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
@@ -91,7 +91,7 @@ function renderStep2() {
   const opts = (sel, none = true) => (none ? `<option value="">${T('none')}</option>` : '') + Hd.map((h, i) => `<option value="${i}"${sel === i ? ' selected' : ''}>${esc(h)}</option>`).join('');
   const textOf = c => c == null ? [] : S.src.rows.map(r => r[c]).filter(x => x && x.t === 's').map(x => x.v);
   const dv = detectDecimal([...textOf(S.dcol), ...textOf(S.hcol)]);
-  if (!S.decimalChosen) S.decimal = dv.verdict === 'dot' ? '.' : dv.verdict === 'comma' ? ',' : null;
+  if (!S.decimalChosen) S.decimal = defaultDecimal(dv.verdict);
   const vals = c => [...new Set(S.src.rows.map(r => cellText(r[c]).trim()))].sort(H.natural);
   let h = `<div class="card"><h2>${T('col.h')}</h2><div class="lims">
     <label>${T('col.d')} <select id="dcol">${opts(S.dcol)}</select></label>
@@ -214,7 +214,7 @@ function tabModels(p) {
       ${[0, 1, 2].map(cell).join('')}<td class="num">${ok && fi.asym != null ? f(R.prep.bh + fi.asym, 3) : '–'}</td><td class="num">${fi.iter ?? '–'}</td></tr>`;
   }
   h += '</tbody></table></div>';
-  if (R.inference) h += `<p class="muted small">${T('p.ci')}: ${T('p.est')} ± t(0,975; n − p) × ${T('p.se')}.</p>`;
+  if (R.inference) h += `<p class="muted small">${T('p.ci')}: ${T('p.est')} ± t(0.975; n − p) × ${T('p.se')}.</p>`;
   p.innerHTML = h + `<p class="muted small">${T('src.note')}</p>`;
 }
 function tabCompare(p) {

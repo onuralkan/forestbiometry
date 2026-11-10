@@ -50,11 +50,11 @@ ok(v[3] === '1' && Math.abs(+v[4] - 7 / 3) < 1e-15 && Math.abs(+v[5] - Math.sqrt
 await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('#tab-summary');
 await page.click('#tab-summary');
 s = await summary();
-ok(s[0][3] === '2,3333' && s[0][5] === '0,915', 'TR: same values, Turkish format');
+ok(s[0][3] === '2.3333' && s[0][5] === '0.915', 'TR: same values, decimal point as in English');
 await page.click('#tab-export');
 const [d2] = await Promise.all([page.waitForEvent('download'), page.click('#x-m')]);
 const csvTr = (await readFile(await d2.path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
-ok(csvTr[0].startsWith('Kaynak;Model;n;Yanlılık') && csvTr[1].split(';')[5] === v[5].replace('.', ','), 'TR CSV: Turkish headers, same numbers');
+ok(csvTr[0].startsWith('Kaynak,Model,n,Yanlılık') && csvTr[1].split(',').slice(2).join() === v.slice(2).join(), 'TR CSV: Turkish headers, identical number rows');
 
 // 2. perfect prediction
 await pasteRun('obs\tpred\n10\t10\n20\t20\n30\t30\n');

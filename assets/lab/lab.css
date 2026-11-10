@@ -349,9 +349,14 @@ tr.excl td, tr.excl th { color: var(--muted); text-decoration: line-through; }
 .navlab { flex: 1 1 0; min-width: 0; text-align: center; font-size: 15px; }
 .navbar > .navbtn { flex: 0 0 auto; }
 .navhint { width: 100%; text-align: center; margin-top: -4px; }
+.perswitch { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
+.perswitch .btn.on { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); }
+.perswitch .btn.on .ust { color: inherit; }
+.navbar.single .perswitch { width: auto; }
 @media (min-width: 900px) { .navhint { width: auto; margin: 0; } }
 @media (max-width: 899px) {
-  .panel.withnav { grid-template-columns: 1fr; }
+  .panel.withnav { grid-template-columns: minmax(0, 1fr); }
+  .unav { min-width: 0; }
   .unav { position: static; max-height: 230px; }
   .navbar { flex-wrap: wrap; } .navhint { order: 3; }
 }

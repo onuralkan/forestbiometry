@@ -60,3 +60,9 @@ export function toInternal(kind, unit, v) {
   if (f == null) throw new Error(`unknown unit ${kind}/${unit}`);
   return v == null ? null : v * f;
 }
+
+/**
+ * Decimal separator chosen before the user picks one: the point, unless the data clearly use a decimal comma
+ * (detectDecimal verdict 'comma'). The interface language plays no part. The user can always switch.
+ */
+export const defaultDecimal = verdict => verdict === 'comma' ? ',' : '.';

@@ -1,11 +1,12 @@
-// Export helpers shared by all tools. Numbers are written at full precision; only the
-// separators follow the chosen language (TR: ';' and ',', EN: ',' and '.'). XLSX keeps numeric cells.
+// Export helpers shared by all tools. Numbers are written at full precision with a decimal point and ','
+// between fields, whatever the interface language (RFC 4180 CSV). XLSX keeps numeric cells.
 
-export function csvText(rows, lang) {
-  const sep = lang === 'tr' ? ';' : ',', dec = lang === 'tr' ? ',' : '.';
+/** rows → CSV text. The second argument (interface language) is accepted for old callers and ignored. */
+export function csvText(rows, _lang) {
+  const sep = ',';
   const cell = v => {
     if (v == null) return '';
-    if (typeof v === 'number') return Number.isFinite(v) ? String(v).replace('.', dec) : '';
+    if (typeof v === 'number') return Number.isFinite(v) ? String(v) : '';
     const s = String(v);
     return /[";\n\r,\t]/.test(s) || /^\s|\s$/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };

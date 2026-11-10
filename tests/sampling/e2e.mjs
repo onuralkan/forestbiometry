@@ -31,7 +31,7 @@ await page.check('input[name="src"][value="manual"]');
 ok((await page.locator('#c-res li', { hasText: 'CV yok' }).count()) === 1, 'missing CV reported, no number shown');
 await page.fill('#cv', '30');
 ok(await tile('t-n') === '35' && (await page.locator('#nofpc').count()) === 1 && (await page.locator('#calc1').count()) === 0, '35 plots; no finite correction applied');
-ok((await page.locator('#calc0').textContent()).includes('1,96') && (await page.locator('#calc0').textContent()).includes('34,573'), 'calculation shown with numbers');
+ok((await page.locator('#calc0').textContent()).includes('1.96') && (await page.locator('#calc0').textContent()).includes('34.573'), 'calculation shown with numbers (decimal point)');
 // E smaller → n larger; the table and chart
 await page.fill('#e', '5');
 ok(+await tile('t-n') === REF.grid_cv30_95['5'].inf.n && +await tile('t-n') > 35, 'E = 5 % → more plots: ' + await tile('t-n'));
@@ -78,7 +78,7 @@ ok(txt[0].includes('Envanter Örnekleme Planlayıcısı') && txt.some(l => l.sta
 ok(txt.some(l => l.includes('Normal (z) yaklaşımı')) && txt.some(l => l.includes('hipotez testi için güç analizi')), 'summary: assumptions and scope');
 ok(txt.some(l => l.includes(`ek gereken ${n95 - 13}`)), 'summary: additional plots');
 const csv = (await readFile(await (await dl('#x-csv')).path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
-ok(csv[0].startsWith('E (%);n₀ (yuvarlanmamış);Gerekli örnek alan;Ek') && csv.length >= 10, 'error-target table CSV');
+ok(csv[0].startsWith('E (%),n₀ (yuvarlanmamış),Gerekli örnek alan,Ek') && csv.length >= 10, 'error-target table CSV');
 
 // 3. edge-case file: two periods → duplicates; filter one period; negative and unreadable rows
 const [fc] = await Promise.all([page.waitForEvent('filechooser'), page.click('#impbox .filebtn')]);
@@ -94,12 +94,12 @@ ok(+await tile('t-n') === Math.ceil(REF.z['95'] ** 2 * (REF.fixture2023.cv / 10)
 const tree = 'plot,dbh\nP1,20\nP2,31\nP3,25\n';
 const [fc2] = await Promise.all([page.waitForEvent('filechooser'), page.click('#impbox .filebtn')]);
 await fc2.setFiles({ name: 'agaclar.csv', mimeType: 'text/csv', buffer: Buffer.from(tree) });
-await page.waitForSelector('#impbox .fname'); await page.selectOption('#vcol', '1');
+await page.locator('#impbox .fname', { hasText: 'agaclar.csv' }).waitFor(); await page.selectOption('#vcol', '1');
 ok((await page.locator('#pcols .note.err', { hasText: 'ağaç düzeyinde' }).count()) === 1, 'tree-level column name warned');
 const zero = 'plot,V\nP1,0\nP2,0\nP3,0\n';
 const [fc3] = await Promise.all([page.waitForEvent('filechooser'), page.click('#impbox .filebtn')]);
 await fc3.setFiles({ name: 'sifir.csv', mimeType: 'text/csv', buffer: Buffer.from(zero) });
-await page.waitForSelector('#impbox .fname'); await page.selectOption('#vcol', '1');
+await page.locator('#impbox .fname', { hasText: 'sifir.csv' }).waitFor(); await page.selectOption('#vcol', '1');
 ok((await page.locator('#plprob', { hasText: 'tanımsızdır' }).count()) === 1 && (await page.locator('#t-n').count()) === 0, 'zero mean: relative error undefined, no result');
 await shot('sp-3-sifir-ortalama');
 

@@ -89,7 +89,8 @@ await cpg.check('input[name="clang"][value="en"]'); await cpg.fill('#cdate', '20
 const apaEN = await cpg.locator('.cite-row[data-f="apa"] .cite-text').textContent();
 ok(apaEN.includes('Height–Diameter Modelling (Version 1.0.0) [Web application]') && apaEN.includes('Retrieved March 5, 2026'), 'cite: English and chosen access date');
 await cpg.click('.cite-row[data-f="apa"] [data-copy]');
-ok((await cpg.evaluate(() => navigator.clipboard.readText())) === apaEN, 'cite: copy puts the citation on the clipboard');
+await cpg.waitForFunction(() => document.querySelector('.cite-row[data-f="apa"] [data-copy]').textContent !== document.querySelector('.cite-row[data-f="mla"] [data-copy]').textContent, null, { timeout: 5000 }).catch(() => {});   // wait for the async write
+{ const cb = await cpg.evaluate(() => navigator.clipboard.readText()); ok(cb === apaEN, 'cite: copy puts the citation on the clipboard: ' + JSON.stringify(cb).slice(0, 80)); }
 const [bd] = await Promise.all([cpg.waitForEvent('download'), cpg.click('[data-dl="bibtex"]')]);
 const bibt = await readFile(await bd.path(), 'utf8');
 ok(bd.suggestedFilename() === 'boy-cap-en.bib' && bibt.startsWith('@misc{alkan2026boycap,') && bibt.includes('urldate      = {2026-03-05}'), 'cite: .bib download');

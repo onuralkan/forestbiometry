@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 const require = createRequire(import.meta.url);
+const { parseDelimited } = await import('../../assets/lab/core/table.js');
 const { chromium } = require('playwright');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const XLSX = require(path.join(root, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
@@ -23,7 +24,7 @@ page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const dl = async btn => { const [d] = await Promise.all([page.waitForEvent('download'), page.click(btn)]); return d; };
 const csvOf = async btn => (await readFile(await (await dl(btn)).path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
-const trNum = s => parseFloat(String(s).replace(/\./g, '').replace(',', '.'));
+const trNum = s => { const t = String(s).trim(); if (/\d,\d/.test(t)) throw new Error('comma decimal on screen: ' + t); return parseFloat(t); };   // the screen uses a decimal point in both languages
 const cellsOf = async (sel) => page.evaluate(s => [...document.querySelectorAll(s)].map(tr => [...tr.children].map(td => td.textContent.trim())), sel);
 const tab = async t => { await page.click('#tab-' + t); await page.waitForSelector(`#panel[aria-labelledby="tab-${t}"]`); };
 
@@ -69,7 +70,7 @@ ok((await page.locator('#ndtab th', { hasText: 'tahmin aralığı' }).count()) =
 await shot('hd-6-tahmin');
 // export: measured and predicted heights kept apart
 await tab('export');
-const t = await csvOf('#x-t'), head = t[0].split(';'), rows = t.slice(1).map(l => l.split(';'));
+const t = await csvOf('#x-t'), head = parseDelimited(t[0], ',')[0], rows = t.slice(1).filter(Boolean).map(l => parseDelimited(l, ',')[0]);
 ok(head.join() === 'satir,ornek_alan,tur,cap_kaynak,cap_cm,boy_kaynak,boy_olculen_m,durum,boy_tahmin_m,tahmin_modeli,cap_araligi_disinda,model_degeri_m,artik_tahmin_eksi_olculen_m', 'TR tree table headers');
 const iH = head.indexOf('boy_olculen_m'), iP = head.indexOf('boy_tahmin_m'), iS = head.indexOf('boy_kaynak'), iSt = head.indexOf('durum'), iO = head.indexOf('cap_araligi_disinda');
 ok(rows.length === FIX.length, 'every source row exported');

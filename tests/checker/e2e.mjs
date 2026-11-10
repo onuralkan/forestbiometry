@@ -82,7 +82,7 @@ const dataSheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[2]], { header
 ok(dataSheet[1][1] === '001' && typeof dataSheet[1][6] === 'number', 'XLSX: ID stays text "001", dbh numeric');
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#x-data')]);
 const csvTr = (await (await import('node:fs/promises')).readFile(await dl2.path(), 'utf8')).replace(/^﻿/, '');
-ok(csvTr.split('\r\n')[1].startsWith('2;001;1;;2019;Pb;24,5;17,2'), 'TR CSV: ";" and decimal comma');
+ok(csvTr.split('\r\n')[1].startsWith('2,001,1,,2019,Pb,24.5,17.2'), 'TR CSV: "," and decimal point (language-independent)');
 await shot('7-onay');
 
 // 2. language switch keeps state and numbers
@@ -103,7 +103,7 @@ await page.click('#tab-data');
 ok((await page.locator('.cellbtn', { hasText: '27,4' }).count()) === 1, 'EN view shows the source text unchanged (27,4)');
 await shot('8-en-veri');
 
-// 3. ambiguous decimals via paste: no guess, user must choose
+// 3. ambiguous decimals via paste: reported, the default point is pre-selected and can be changed
 await page.goto(URL + '?lang=tr');
 await page.click('#steps [data-go="1"]');
 page.once('dialog', d => d.accept());
@@ -113,8 +113,8 @@ await page.fill('.imp[data-table="trees"] textarea', 'plot\ttree\tspecies\tdbh\t
 await page.click('.imp[data-table="trees"] [data-act="paste"]');
 await page.click('#to2');
 ok((await page.locator('.note.warn', { hasText: 'Belirsiz' }).count()) === 1, 'ambiguous decimals reported');
-ok(await page.isDisabled('#to3'), 'cannot continue without choosing');
-ok(!(await page.isChecked('input[name="dec"][value=","]')) && !(await page.isChecked('input[name="dec"][value="."]')), 'nothing pre-selected');
+ok(!(await page.isDisabled('#to3')), 'can continue with the default');
+ok(await page.isChecked('input[name="dec"][value="."]') && !(await page.isChecked('input[name="dec"][value=","]')), 'point pre-selected by default');
 await page.check('input[name="dec"][value="."]');
 await page.click('#to3'); await page.click('#run');
 ok(await tileVal('Hata') === '2', 'dot chosen → "1,250" reported, not read as 1250');
@@ -149,7 +149,7 @@ const t0 = Date.now();
 await page.click('#to2'); await page.click('#to3'); await page.click('#run');
 await page.waitForSelector('.tiles');
 const dt = Date.now() - t0;
-ok(await tileVal('Ağaç kaydı') === '10.000', '10 000 records loaded');
+ok(await tileVal('Ağaç kaydı') === '10000', '10 000 records loaded (no grouping)');
 ok(dt < 5000, `10 000 rows checked in ${dt} ms`);
 await page.click('#tab-data');
 ok((await page.locator('table.data tbody tr').count()) === 200, 'data view paged (200)');

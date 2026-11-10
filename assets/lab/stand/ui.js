@@ -5,6 +5,7 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { barChart, svgForDownload } from '../core/chart.js';
+import { createUnitNav } from '../core/unitnav.js';
 
 const BASE = './', KEY = 'session:' + C.TOOL.id;
 const $ = id => document.getElementById(id);
@@ -16,7 +17,7 @@ const when = iso => iso ? new Date(iso).toLocaleString(LOC) : '–';
 let S = blank(), R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, tab: 'units', ds: null, dsSrc: null, scopeOk: false, status: null, emptyCombos: null,
-    cls: null, design: { type: 'none', forestArea: '', strata: {} }, sel: 0 };
+    cls: null, design: { type: 'none', forestArea: '', strata: {} }, selPlot: null, selPer: null, nav: null };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -32,7 +33,7 @@ function dsInfo(ds, name) {
 function useDataset(ds, src) {
   const probs = C.validateDataset(ds);
   if (probs.length) { status(T('src.bad', { codes: probs.join(', ') }), 'err'); return; }
-  S.ds = ds; S.dsSrc = src; S.status = null; S.emptyCombos = null; S.cls = defaultClasses(ds); S.sel = 0; R = null;
+  S.ds = ds; S.dsSrc = src; S.status = null; S.emptyCombos = null; S.cls = defaultClasses(ds); S.selPlot = null; S.selPer = null; R = null;
   const strata = [...new Set(ds.plots.map(p => p.stratum).filter(Boolean))];
   S.design = { type: 'none', forestArea: '', strata: Object.fromEntries(strata.map(h => [h, ''])) };
   status(''); save(); render();
@@ -152,22 +153,24 @@ function compute() {
   const cl = currentClasses();
   R = C.computeAll(S.ds, { status: S.status, emptyCombos: S.emptyCombos }, cl.classes, designObj());
   R.classes = cl.classes;
-  if (S.sel >= R.metrics.length) S.sel = 0;
+  fixSel();
 }
 
 /* ---------------- step 3: results ---------------- */
 const TABS = ['units', 'detail', 'between', 'forest', 'export'];
 function renderStep3() {
   if (!R) compute();
-  const el = $('step3');
+  const el = $('step3'), withNav = S.tab === 'detail' && plotIds().length > 1;
+  nav.reset();
   el.innerHTML = `<div class="tabs" role="tablist">${TABS.map(t => `<button type="button" role="tab" id="tab-${t}" aria-selected="${S.tab === t}" aria-controls="panel" data-tab="${t}">${T('tab.' + t)}</button>`).join('')}</div>
-    <div id="panel" class="panel" role="tabpanel" aria-labelledby="tab-${S.tab}"></div><div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
+    <div class="panel${withNav ? ' withnav' : ''}">${withNav ? `<aside class="unav" id="unav" aria-label="${esc(T('nav.list'))}"></aside>` : ''}<div id="panel" role="tabpanel" aria-labelledby="tab-${S.tab}"></div></div><div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { S.tab = b.dataset.tab; save(); renderStep3(); }));
   el.querySelector('.tabs').addEventListener('keydown', e => {
     const i = TABS.indexOf(S.tab), d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
     if (!d) return; S.tab = TABS[(i + d + TABS.length) % TABS.length]; renderStep3(); $('tab-' + S.tab).focus();
   });
   $('back2').addEventListener('click', () => go(2));
+  if (withNav) nav.renderAside($('unav'));
   ({ units: tabUnits, detail: tabDetail, between: tabBetween, forest: tabForest, export: tabExport })[S.tab]($('panel'));
 }
 const UNIT_COLS = [['plot', m => esc(m.plot_id), 'code'], ['per', m => esc(perLabel(m.period))], ['state', m => T('s.' + m.state)], ['c.area', m => f(m.area_m2, 2), 'num'],
@@ -178,20 +181,22 @@ function tabUnits(p) {
   p.innerHTML = `<p class="muted">${T('units.note')}</p><div class="tscroll"><table class="grid units"><thead><tr>${UNIT_COLS.map(c => `<th>${T(c[0])}</th>`).join('')}</tr></thead><tbody>
     ${R.metrics.map((m, i) => `<tr class="st-${m.state}"><td><button type="button" class="linkbtn" data-sel="${i}"><code>${esc(m.plot_id)}</code></button></td>${UNIT_COLS.slice(1).map(c => `<td class="${c[2] || ''}">${C.isValidUnit(m) || c[0] === 'per' || c[0] === 'state' || c[0] === 'c.area' ? c[1](m) : '–'}</td>`).join('')}</tr>`).join('')}
     </tbody></table></div>`;
-  p.querySelectorAll('[data-sel]').forEach(b => b.addEventListener('click', () => { S.sel = +b.dataset.sel; S.tab = 'detail'; save(); renderStep3(); }));
+  p.querySelectorAll('[data-sel]').forEach(b => b.addEventListener('click', () => { const m = R.metrics[+b.dataset.sel]; S.selPlot = m.plot_id; S.selPer = m.period; S.tab = 'detail'; save(); renderStep3(); }));
 }
 function chartBox(id, svg, name) { return `<figure class="chartbox" id="${id}">${svg}<figcaption><button type="button" class="btn ghost small" data-svg="${id}" data-name="${esc(name)}">${T('ch.svg')}</button></figcaption></figure>`; }
 function bindSvg(p) {
   p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
 }
 function tabDetail(p) {
-  const m = R.metrics[S.sel], unitName = `${m.plot_id} / ${perLabel(m.period)}`, valid = C.isValidUnit(m);
-  let h = `<label class="field inline"><span>${T('det.pick')}</span><select id="sel">${R.metrics.map((x, i) => `<option value="${i}"${i === S.sel ? ' selected' : ''}>${esc(x.plot_id)} / ${esc(perLabel(x.period))} (${T('s.' + x.state)})</option>`).join('')}</select></label>`;
+  const m = curMetric();
+  if (!m) { p.innerHTML = `<p class="note">${T('nav.empty')}</p>`; return; }
+  const unitName = `${m.plot_id} / ${perLabel(m.period)}`, valid = C.isValidUnit(m);
+  let h = nav.bar(perSwitch(m));
   const tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
   h += `<h3>${T('det.metrics')}</h3><div class="tiles">${tile(fmtNum(m.n, 0), T('c.n'))}${tile(valid ? f(m.Nha, 1) : '–', T('c.Nha'))}${tile(valid ? f(m.Gha, 3) : '–', T('c.Gha'))}
     ${tile(f(m.d_mean, 2), T('c.dmean'))}${tile(f(m.dq, 2), T('c.dq'))}${tile(f(m.d_sd, 2), T('c.dsd'))}${tile(m.d_min == null ? '–' : `${f(m.d_min, 1)}–${f(m.d_max, 1)}`, T('c.drange'))}${tile(f(m.ef, 4), T('det.ef'))}</div>
     <p class="muted small">${T('c.area')}: ${f(m.area_m2, 2)} · ${T('c.G')}: ${f(m.G_m2, 5)} · ${T('state')}: ${T('s.' + m.state)}</p>`;
-  if (!valid) { p.innerHTML = h + `<p class="note warn">${T('units.note')}</p>`; bindDetail(p); return; }
+  if (!valid) { p.innerHTML = h + `<p class="note warn">${T('units.note')}</p>`; bindDetail(); return; }
   // classes
   const cls = m.classes;
   h += `<h3>${T('det.cls')}</h3><div class="two"><div class="tscroll"><table class="grid"><thead><tr><th>${T('cl.class')}</th><th>${T('cl.mid')}</th><th>${T('cl.n')}</th><th>${T('cl.Nha')}</th><th>${T('cl.Gha')}</th></tr></thead><tbody>
@@ -213,9 +218,62 @@ function tabDetail(p) {
   const hr = (lbl, s) => `<tr><th>${lbl}</th><td class="num">${fmtNum(s.n, 0)}</td><td class="num">${f(s.mean, 2)}</td><td class="num">${f(s.sd, 2)}</td><td class="num">${f(s.min, 1)}</td><td class="num">${f(s.max, 1)}</td></tr>`;
   h += `<h3>${T('det.h')}</h3><div class="tscroll"><table class="grid"><thead><tr><th>${T('h.kind')}</th><th>n</th><th>${T('h.mean')}</th><th>${T('h.sd')}</th><th>${T('h.min')}</th><th>${T('h.max')}</th></tr></thead><tbody>
     ${hr(T('h.meas'), m.h_measured)}${hr(T('h.est'), m.h_estimated)}<tr><th>${T('h.none')}</th><td class="num">${fmtNum(m.h_missing, 0)}</td><td colspan="4"></td></tr></tbody></table></div><p class="muted small">${T('h.note')}</p>`;
-  p.innerHTML = h; bindDetail(p); bindSvg(p);
+  p.innerHTML = h; bindDetail(); bindSvg(p);
 }
-function bindDetail(p) { $('sel').addEventListener('change', e => { S.sel = +e.target.value; save(); tabDetail(p); }); }
+
+/* Plot / period navigation: the shared navigator (core/unitnav.js) lists the plots beside the detail panel; the
+   periods of the chosen plot are a switch in its bar. A change redraws the whole panel, so nothing stale remains. */
+const ST_RANK = { measured: 0, empty: 0, unmeasured: 1, unknown: 2 }, ST_NAV = ['ok', 'warning', 'error'];
+const samePer = (a, b) => (a ?? null) === (b ?? null);
+function plotIds() { return R ? [...new Set(R.metrics.map(m => m.plot_id))] : []; }
+const metricsOf = id => R.metrics.filter(m => String(m.plot_id) === String(id));
+function curMetric() { return R && R.metrics.find(m => m.plot_id === S.selPlot && samePer(m.period, S.selPer)); }
+/** Keeps the selection valid after a (re)computation; converts the index of earlier sessions. */
+function fixSel() {
+  if (S.sel != null) { const m = R.metrics[S.sel]; if (m && S.selPlot == null) { S.selPlot = m.plot_id; S.selPer = m.period; } delete S.sel; }
+  if (curMetric()) return;
+  const own = metricsOf(S.selPlot), m = own.find(x => samePer(x.period, S.selPer)) || own[0] || R.metrics[0];
+  S.selPlot = m ? m.plot_id : null; S.selPer = m ? m.period : null;
+}
+function choosePlot(id) {
+  const own = metricsOf(id); if (!own.length) return;
+  const m = own.find(x => samePer(x.period, S.selPer)) || own[0];        // same period when this plot has it
+  S.selPlot = m.plot_id; S.selPer = m.period; redrawDetail();
+}
+function choosePeriod(i) { const own = metricsOf(S.selPlot), m = own[i]; if (!m) return; S.selPer = m.period; save(); redrawDetail(); $('per-' + i) && $('per-' + i).focus(); }
+function redrawDetail() { if (S.tab === 'detail' && $('panel')) { tabDetail($('panel')); if ($('unav')) nav.renderAside($('unav')); } }
+function perSwitch(m) {
+  const own = metricsOf(m.plot_id);
+  if (own.length < 2) return `<div class="perswitch single small muted">${T('per')}: <b>${esc(perLabel(m.period))}</b> · ${T('s.' + m.state)}</div>`;
+  return `<div class="perswitch" role="group" aria-label="${esc(T('nav.per'))}"><span class="small muted">${T('per')}:</span>${own.map((x, i) => {
+    const on = samePer(x.period, m.period), st = ST_NAV[ST_RANK[x.state]];
+    return `<button type="button" class="btn ghost small${on ? ' on' : ''}" id="per-${i}" data-per="${i}" aria-pressed="${on}" title="${esc(T('s.' + x.state))}">${esc(perLabel(x.period))}${st === 'ok' ? '' : ` <span class="ust st-${st}">${st === 'warning' ? '▲' : '◆'}</span>`}</button>`; }).join('')}</div>`;
+}
+function bindDetail() {
+  nav.bindBar();
+  const ps = document.querySelector('.perswitch[role="group"]'); if (!ps) return;
+  ps.addEventListener('click', e => { const b = e.target.closest('[data-per]'); if (b) choosePeriod(+b.dataset.per); });
+  ps.addEventListener('keydown', e => {                                   // ← → move between the periods of this plot
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return;
+    e.preventDefault(); const own = metricsOf(S.selPlot), i = own.findIndex(x => samePer(x.period, S.selPer));
+    choosePeriod((i + d + own.length) % own.length);
+  });
+}
+const nav = createUnitNav({
+  items: () => plotIds().map(id => {
+    const own = metricsOf(id), st = ST_NAV[Math.max(...own.map(x => ST_RANK[x.state] ?? 2))], n = own.reduce((a, x) => a + (x.n || 0), 0);
+    return { id, label: String(id), search: String(id), state: st, stateTitle: T('nav.st.' + st), n,
+      meta: [own.length > 1 ? T('nav.nper', { k: own.length }) : `n = ${fmtNum(n, 0)}`, own.length > 1 ? `n = ${fmtNum(n, 0)}` : ''],
+      barLabel: `${T('plot')} ${id}` };
+  }),
+  sorts: [
+    { key: 'id', label: T('nav.sort.id'), cmp: () => 0 },
+    { key: 'n', label: T('nav.sort.n'), cmp: (a, b) => b.n - a.n },
+    { key: 'state', label: T('nav.sort.state'), cmp: (a, b) => ST_NAV.indexOf(b.state) - ST_NAV.indexOf(a.state) }],
+  texts: { search: T('nav.search'), sort: T('nav.sort'), bad: T('nav.bad'), count: p => T('nav.count', p), none: T('nav.none'), prev: T('nav.prev'), next: T('nav.next'), keys: T('nav.keys'), outside: T('nav.outside') },
+  prefs: () => S.nav || (S.nav = { q: '', sort: 'id', bad: false }),
+  getSel: () => S.selPlot, setSel: id => choosePlot(plotIds().find(x => String(x) === String(id))), save });
+document.addEventListener('keydown', e => { if (R && S.step === 3 && S.tab === 'detail' && plotIds().length > 1) nav.handleKey(e, '.perswitch'); });
 function tabBetween(p) {
   let h = `<p class="note">${T('bt.note')}</p>`;
   for (const b of R.byPeriod) {

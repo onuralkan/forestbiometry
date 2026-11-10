@@ -4,7 +4,7 @@ import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
-import { detectDecimal } from '../core/num.js';
+import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { radarChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
@@ -41,7 +41,7 @@ function setTable(state) {
   S = { ...blank(), step: S.step, imp: state.imp, src: state.src }; D = Rk = null;
   if (S.src) {
     const dv = detectDecimal(S.src.rows.flatMap(r => r.filter(c => c && c.t === 's').map(c => c.v)));
-    S.decimal = dv.verdict === 'comma' ? ',' : '.';
+    S.decimal = defaultDecimal(dv.verdict);
     S.headerRow = C.guessHeaderRow(S.src.rows, S.decimal);
     S.decimal = null; initCriteria();
   }
@@ -75,7 +75,7 @@ function problems() {
 function renderStep2() {
   const el = $('step2'), H = headerCells(), rows = S.src.rows;
   const dv = detectDecimal(rows.slice(S.headerRow + 1).flatMap(r => critList().map(c => r[c.col]).filter(c => c && c.t === 's').map(c => c.v)));
-  if (!S.decimalChosen) S.decimal = dv.verdict === 'dot' ? '.' : dv.verdict === 'comma' ? ',' : dv.verdict === 'none' ? '.' : null;
+  if (!S.decimalChosen) S.decimal = defaultDecimal(dv.verdict);
   const rowOpts = rows.slice(0, 30).map((r, i) => `<option value="${i}"${i === S.headerRow ? ' selected' : ''}>${S.src.rowNumbers[i]}: ${esc(r.map(c => cellText(c)).filter(Boolean).slice(0, 5).join(' | ').slice(0, 70))}</option>`).join('');
   let h = `<div class="card"><h2>${T('hdr.h')}</h2><div class="lims"><label>${T('hdr.row')} <select id="hrow">${rowOpts}</select></label>
     <label>${T('hdr.model')} <select id="mcol">${H.map((x, j) => `<option value="${j}"${j === S.modelCol ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></label></div><p class="muted small">${T('hdr.guess')}</p></div>`;

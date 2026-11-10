@@ -15,3 +15,11 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
   Header always set X-Content-Type-Options nosniff
   Header always set Referrer-Policy strict-origin-when-cross-origin
 </IfModule>
+
+# Scripts and styles: the browser asks the server each time whether its copy is still current (ETag), so a
+# changed shared module (assets/lab/core/*.js, imported without a version tag) is never served stale.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|mjs|css)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

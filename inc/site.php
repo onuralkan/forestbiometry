@@ -127,7 +127,7 @@ function site_top(array $o = []): void {
 <meta name="theme-color" content="#eef1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121814" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/lab/lab.css?v=11">
+<link rel="stylesheet" href="assets/lab/lab.css?v=12">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231d5b45'/><circle cx='16' cy='16' r='10.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-dasharray='3 2.4'/><circle cx='13' cy='14' r='3' fill='%23fff'/><circle cx='19.5' cy='19' r='2' fill='%23fff'/></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>

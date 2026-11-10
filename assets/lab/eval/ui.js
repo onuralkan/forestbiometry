@@ -4,7 +4,7 @@ import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
-import { detectDecimal } from '../core/num.js';
+import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
@@ -80,7 +80,7 @@ function textValues(cols) {
 }
 function decimalBlock() {
   const d = detectDecimal(textValues([S.obs, ...S.models.map(m => m.col), S.groups.breaks.trim() ? S.groups.dcol : null]));
-  if (!S.decimalChosen) S.decimal = d.verdict === 'dot' ? '.' : d.verdict === 'comma' ? ',' : null;
+  if (!S.decimalChosen) S.decimal = defaultDecimal(d.verdict);
   const msg = d.verdict === 'ambiguous' ? T('dec.v.ambiguous', { ex: d.examples.ambiguous.map(x => `"${x}"`).join(', ') }) : T('dec.v.' + d.verdict);
   return `<div class="card"><h2>${T('dec.h')}</h2><p class="note ${d.verdict === 'ambiguous' || d.verdict === 'conflict' ? 'warn' : ''}">${esc(msg)}</p>
     <div class="radios"><label><input type="radio" name="dec" value="."${S.decimal === '.' ? ' checked' : ''}> ${T('dec.dot')}</label><label><input type="radio" name="dec" value=","${S.decimal === ',' ? ' checked' : ''}> ${T('dec.comma')}</label></div>

@@ -43,11 +43,16 @@ ok(row[7] === '60' && Math.abs(+row[9] - 2.1991148575128552) < 1e-12 && Math.abs
 // language switch keeps state, values identical
 await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('#tab-units');
 await page.click('#tab-units');
-ok(await cell(['K', '–'], 6) === '2,199' && await cell(['K', '–'], 8) === '21,6', 'TR: same values, Turkish number format');
+ok(await cell(['K', '–'], 6) === '2.199' && await cell(['K', '–'], 8) === '21.6', 'TR: same values, decimal point as in English');
+// a single plot and period: no list, a plain bar without previous / next, the period shown as text
+await page.click('#tab-detail');
+ok((await page.locator('#unav').count()) === 0 && (await page.locator('.navbar.single').count()) === 1 && (await page.locator('#uprev, #unext').count()) === 0, 'single plot: no list, no previous / next');
+ok((await page.locator('.perswitch.single').count()) === 1 && (await page.locator('[data-per]').count()) === 0, 'single period: no switch');
+ok(await page.locator('.tiles .tile b').nth(2).textContent() === '2.199', 'TR detail tile: decimal point');
 await page.click('#tab-export');
 const [d2] = await Promise.all([page.waitForEvent('download'), page.click('#x-units')]);
-const rowTr = (await readFile(await d2.path(), 'utf8')).replace(/^﻿/, '').split('\r\n')[1].split(';');
-ok(rowTr[9] === row[9].replace('.', ',') && rowTr[11] === row[11].replace('.', ','), 'TR CSV equals EN CSV apart from the decimal sign');
+const rowTr = (await readFile(await d2.path(), 'utf8')).replace(/^﻿/, '').split('\r\n')[1].split(',');
+ok(rowTr.slice(4).join() === row.slice(4).join(), 'TR CSV number columns identical to EN (comma columns, decimal point)');
 
 // 2. sample package: two periods, empty plot, undecided combinations, classes, species, forest estimate
 await page.click('#steps [data-go="1"]');
@@ -74,10 +79,48 @@ await page.click('#calc');
 ok((await page.locator('tr.st-unknown').count()) === 0, 'decision applied');
 ok(await cell(['004', '2019'], 5) === '0' && await cell(['004', '2019'], 7) === '–', 'empty plot: N = 0, mean d undefined');
 await page.click('#tab-detail');
-await page.selectOption('#sel', { index: 0 });
 ok((await page.locator('#ch-cls svg rect').count()) > 0 && (await page.locator('#ch-sp svg').count()) === 1, 'class and species charts drawn');
 ok((await page.locator('p.small', { hasText: 'Paydalar' }).count()) === 1, 'share denominators stated');
 await shot('st-4-ayrinti');
+
+// plot / period navigation (shared navigator, as in the diameter distribution tool)
+const navState = () => page.evaluate(() => ({
+  bar: document.querySelector('.navlab b')?.textContent, pos: document.querySelector('.navlab .muted')?.textContent.replace(/[^0-9/]/g, ''),
+  per: document.querySelector('[data-per][aria-pressed="true"]')?.textContent.trim(), pers: document.querySelectorAll('[data-per]').length,
+  on: document.querySelector('#ulist .uitem.on .uid')?.textContent, list: [...document.querySelectorAll('#ulist .uid')].map(x => x.textContent),
+  title: document.querySelector('#ch-cls svg title, #ch-cls svg text')?.textContent || '', bars: document.querySelectorAll('.navbar').length }));
+let ns = await navState();
+ok(ns.list.length === 5 && (await page.locator('.panel.withnav #unav').count()) === 1, 'plot list beside the detail (5 plots): ' + ns.list.join(' '));
+ok(ns.pers === 2 && ns.per === '2019' && ns.bar === 'Örnek alan ' + ns.on && ns.pos === `1/5`, 'first plot, first period, 1 / 5: ' + JSON.stringify(ns));
+await page.click('[data-per]:not([aria-pressed="true"])');
+let ns2 = await navState();
+ok(ns2.per === '2024' && ns2.on === ns.on && ns2.title.includes('2024') && !ns2.title.includes('2019') && ns2.bars === 1, 'period switch redraws the panel for 2024 (no stale chart): ' + ns2.title);
+await page.click('#unext');
+let ns3 = await navState();
+ok(ns3.on === ns.list[1] && ns3.per === '2024' && ns3.pos === '2/5' && ns3.title.includes(ns.list[1] + ' / 2024'), 'next plot keeps the period: ' + JSON.stringify([ns3.on, ns3.per, ns3.title]));
+await page.locator('h3').first().click();                                   // focus away from the controls, then ← →
+await page.keyboard.press('ArrowRight');
+ok((await navState()).on === ns.list[2], '→ key: next plot');
+await page.keyboard.press('ArrowLeft'); await page.keyboard.press('ArrowLeft');
+ok((await navState()).on === ns.list[0], '← key: previous plot');
+await page.click('#uprev');
+ok((await navState()).on === ns.list[4] && (await navState()).pos === '5/5', 'previous from the first wraps to the last');
+await page.click('#unext');
+ok((await navState()).on === ns.list[0], 'next from the last wraps to the first');
+await page.locator('[data-per][aria-pressed="true"]').focus(); await page.keyboard.press('ArrowLeft');
+ok((await navState()).per === '2019' && (await navState()).on === ns.list[0], '← inside the period switch changes the period, not the plot');
+await page.click(`#ulist [data-u="${ns.list[3]}"]`);
+ok((await navState()).on === ns.list[3] && (await navState()).pos === '4/5', 'list click selects the plot');
+await page.fill('#uq', '00');
+ok((await navState()).list.every(x => x.includes('00')), 'search filters the list');
+await page.fill('#uq', '');
+// from the units table straight to a plot and period
+await page.click('#tab-units');
+await page.evaluate(() => [...document.querySelectorAll('table.units tbody tr')].find(x => x.querySelector('code').textContent === '004' && x.children[1].textContent === '2019').querySelector('[data-sel]').click());
+let ns4 = await navState();
+ok(ns4.on === '004' && ns4.per === '2019' && ns4.title.includes('004 / 2019'), 'units table opens 004 / 2019 in the detail');
+ok(await page.locator('.tiles .tile b').first().textContent() === '0', 'empty plot detail: N = 0');
+await shot('st-4b-gezinme');
 await page.click('#tab-between');
 ok((await page.locator('.note', { hasText: 'orman tahmini değildir' }).count()) === 1, 'between-plot summary labelled as descriptive');
 await shot('st-5-arasi');

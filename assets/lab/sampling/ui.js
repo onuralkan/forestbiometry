@@ -4,7 +4,7 @@ import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
-import { detectDecimal } from '../core/num.js';
+import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
@@ -107,7 +107,7 @@ function renderPilotCols() {
   const box = $('pcols'); if (!S.tbl) { box.innerHTML = ''; return; }
   const Hd = S.tbl.headers, opts = sel => `<option value="">${T('none')}</option>` + Hd.map((h, i) => `<option value="${i}"${sel === i ? ' selected' : ''}>${esc(h)}</option>`).join('');
   const dv = detectDecimal(S.vcol == null ? [] : S.tbl.rows.map(r => r[S.vcol]).filter(c => c && c.t === 's').map(c => c.v));
-  if (!S.decimalChosen) S.decimal = dv.verdict === 'dot' ? '.' : dv.verdict === 'comma' ? ',' : (dv.verdict === 'none' && S.tbl.rows.every(r => !r[S.vcol] || r[S.vcol].t !== 's' || /^\d*$/.test(r[S.vcol].v.trim())) ? '.' : null);
+  if (!S.decimalChosen) S.decimal = defaultDecimal(dv.verdict);
   const fvals = S.fcol != null ? [...new Set(S.tbl.rows.map(r => cellText(r[S.fcol])))].sort(natural) : [];
   let h = `<div class="lims"><label>${T('col.v')} <select id="vcol">${opts(S.vcol)}</select></label><label>${T('col.unit')} <input type="text" id="unit" value="${esc(S.unit)}" size="8"></label>
     <label>${T('col.p')} <select id="pcol">${opts(S.pcol)}</select></label><label>${T('col.f')} <select id="fcol">${opts(S.fcol)}</select></label>

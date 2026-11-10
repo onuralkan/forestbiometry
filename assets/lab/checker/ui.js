@@ -3,7 +3,7 @@ import * as C from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { tableFromText, tableFromSheet, detectDelimiter, decodeBytes, utf8Suspicious, cellText } from '../core/table.js';
-import { parseNumber, UNITS } from '../core/num.js';
+import { parseNumber, UNITS, defaultDecimal } from '../core/num.js';
 import { put, get, del } from '../core/store.js';
 import { csvText, download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX, XLSX_READ_OPTS } from '../core/export.js';
 
@@ -157,7 +157,7 @@ function unitStats(kind) {
 }
 function decimalEvidence() {
   const d = C.decimalEvidence(S.sources, S.mapping);
-  if (!S.decimalChosen) S.settings.decimal = d.verdict === 'dot' ? '.' : d.verdict === 'comma' ? ',' : null;
+  if (!S.decimalChosen) S.settings.decimal = defaultDecimal(d.verdict);
   return d;
 }
 function decimalBlock(d) {

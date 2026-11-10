@@ -64,8 +64,8 @@ const tr = await csv();
 await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('#tab-export');
 await page.click('#tab-export');
 const en = await csv();
-ok(en[0].startsWith('Rank,Model,Row,R: R²') && tr[0].startsWith('Sıra;Model;Satır;R: R²'), 'CSV headers in each language');
-ok(en.length === 13 && tr[1].split(';').slice(-1)[0] === en[1].split(',').slice(-1)[0], 'same values in TR and EN (m = 12 kept after switch)');
+ok(en[0].startsWith('Rank,Model,Row,R: R²') && tr[0].startsWith('Sıra,Model,Satır,R: R²'), 'CSV headers in each language');
+ok(en.length === 13 && tr[1].split(',').slice(-1)[0] === en[1].split(',').slice(-1)[0], 'same values in TR and EN (m = 12 kept after switch)');
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 ok(XLSX.read(await readFile(await dx.path())).SheetNames.join(',') === 'Info,Relative ranks,Criterion values,Criteria', 'XLSX sheets');
 

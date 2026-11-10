@@ -4,10 +4,11 @@ import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
-import { detectDecimal, UNITS } from '../core/num.js';
+import { detectDecimal, UNITS, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
+import { createUnitNav, DOT } from '../core/unitnav.js';
 import { readNum } from '../eval/calc.js';
 import { classesFromBreaks, breaksFromWidth } from '../stand/calc.js';
 
@@ -106,7 +107,7 @@ function renderStep2() {
   const el = $('step2'), H = S.src.headers;
   const opts = (sel, none = true) => (none ? `<option value="">${T('none')}</option>` : '') + H.map((h, i) => `<option value="${i}"${sel === i ? ' selected' : ''}>${esc(h)}</option>`).join('');
   const dv = detectDecimal(S.dcol == null ? [] : S.src.rows.map(r => r[S.dcol]).filter(c => c && c.t === 's').map(c => c.v));
-  if (!S.decimalChosen) S.decimal = dv.verdict === 'dot' ? '.' : dv.verdict === 'comma' ? ',' : null;
+  if (!S.decimalChosen) S.decimal = defaultDecimal(dv.verdict);
   defaultClasses();
   const fvals = S.fcol != null ? [...new Set(S.src.rows.map(r => cellText(r[S.fcol])))].sort(natural) : [];
   let h = `<div class="card"><h2>${T('col.h')}</h2><div class="lims">
@@ -192,67 +193,24 @@ const tabFn = () => ({ params: tabParams, charts: tabCharts, classes: tabClasses
 const NAVTABS = ['params', 'charts', 'classes'];
 const multi = () => R && R.units.length > 1;
 const natural2 = (a, b) => natural(String(a), String(b));
-/** Plots in the order the navigator shows them (search, "problems only" filter, sort). */
-function navOrder() {
-  const nv = S.nav || (S.nav = { q: '', sort: 'id', bad: false });
-  const q = nv.q.trim().toLocaleLowerCase(lang);
-  let list = R.units.filter(u => (!q || String(u.id).toLocaleLowerCase(lang).includes(q)) && (!nv.bad || u.state !== 'ok'));
-  const cmp = { id: (a, b) => natural2(a.id, b.id), n: (a, b) => b.d.length - a.d.length || natural2(a.id, b.id),
-    ks: (a, b) => (b.ks ?? Infinity) - (a.ks ?? Infinity) || natural2(a.id, b.id),
-    state: (a, b) => ({ error: 0, warning: 1, ok: 2 }[a.state] - { error: 0, warning: 1, ok: 2 }[b.state]) || natural2(a.id, b.id) }[nv.sort];
-  return list.sort(cmp);
-}
-function selectUnit(id, focusList = false) {
-  if (id == null || id === S.sel) return;
-  S.sel = id; save();
-  tabFn()($('panel'));
-  const box = $('unav'); if (!box) return;
-  box.querySelectorAll('[data-u]').forEach(b => { const on = b.dataset.u === String(id); b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'true' : 'false'); if (on) { b.scrollIntoView({ block: 'nearest' }); if (focusList) b.focus(); } });
-}
-function step(d) {
-  const list = navOrder(); if (!list.length) return;
-  const i = list.findIndex(u => u.id === S.sel);
-  selectUnit(list[i < 0 ? 0 : (i + d + list.length) % list.length].id);
-}
-const DOT = { ok: '●', warning: '▲', error: '◆' };
-function renderAside() {
-  const nv = S.nav || (S.nav = { q: '', sort: 'id', bad: false }), list = navOrder(), box = $('unav');
-  const items = list.map(u => `<button type="button" class="uitem${u.id === S.sel ? ' on' : ''}" data-u="${esc(u.id)}" aria-current="${u.id === S.sel}">
-    <span class="ust st-${u.state}" title="${esc(T('nav.st.' + u.state))}" aria-label="${esc(T('nav.st.' + u.state))}">${DOT[u.state]}</span><span class="uid">${esc(u.id)}</span><span class="un">n ${u.d.length}</span>
-    <span class="uks">${u.ks != null ? 'D ' + fmtNum(u.ks, 3) : '–'}</span></button>`).join('');
-  const html = `<div class="unav-in"><input type="search" id="uq" placeholder="${esc(T('nav.search'))}" value="${esc(nv.q)}" aria-label="${esc(T('nav.search'))}">
-    <div class="unav-opts"><label>${T('nav.sort')} <select id="usort">${['id', 'n', 'ks', 'state'].map(k => `<option value="${k}"${nv.sort === k ? ' selected' : ''}>${T('nav.sort.' + k)}</option>`).join('')}</select></label>
-    <label class="chk"><input type="checkbox" id="ubad"${nv.bad ? ' checked' : ''}> ${T('nav.bad')}</label></div>
-    <p class="muted small">${T('nav.count', { k: list.length, n: R.units.length })}</p></div><div class="ulist" id="ulist">${items || `<p class="muted small">${T('nav.none')}</p>`}</div>`;
-  if (!box.firstChild) {
-    box.innerHTML = html;
-    $('uq').addEventListener('input', e => { nv.q = e.target.value; save(); refreshList(); });
-    $('usort').addEventListener('change', e => { nv.sort = e.target.value; save(); refreshList(); });
-    $('ubad').addEventListener('change', e => { nv.bad = e.target.checked; save(); refreshList(); });
-    $('ulist').addEventListener('keydown', e => {                                 // ↑/↓ move through the list
-      const d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0; if (!d) return;
-      e.preventDefault(); const l = navOrder(), i = l.findIndex(u => u.id === S.sel); const nx = l[Math.min(l.length - 1, Math.max(0, i + d))]; if (nx) selectUnit(nx.id, true);
-    });
-  } else { $('ulist').innerHTML = items || `<p class="muted small">${T('nav.none')}</p>`; box.querySelector('.unav-in p').textContent = T('nav.count', { k: list.length, n: R.units.length }); }
-  $('ulist').querySelectorAll('[data-u]').forEach(b => b.addEventListener('click', () => selectUnit(b.dataset.u)));
-  const on = $('ulist').querySelector('.on'); if (on) on.scrollIntoView({ block: 'nearest' });
-}
-function refreshList() { renderAside(); }
-/** ← / → anywhere on the results (not while typing or on the tab bar), PageUp/PageDown as well. */
-document.addEventListener('keydown', e => {
-  if (!R || S.step !== 3 || !multi() || !NAVTABS.includes(S.tab) || e.altKey || e.ctrlKey || e.metaKey) return;
-  const t = e.target; if (t.closest && (t.closest('input, select, textarea, .tabs, #explore, #ulist'))) return;
-  const d = e.key === 'ArrowRight' || e.key === 'PageDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'PageUp' ? -1 : 0;
-  if (d) { e.preventDefault(); step(d); }
+/** Plot navigator (shared component, core/unitnav.js): list beside the results, previous / next bar, ← → keys. */
+const nav = createUnitNav({
+  items: () => R.units.map(u => ({ id: u.id, label: u.id, barLabel: u.label, search: u.id, state: u.state, stateTitle: T('nav.st.' + u.state),
+    meta: [`n ${u.d.length}`, u.ks != null ? 'D ' + fmtNum(u.ks, 3) : '–'], barMeta: `n = ${u.d.length}` })),
+  sorts: [
+    { key: 'id', label: T('nav.sort.id'), cmp: (a, b) => natural2(a.id, b.id) },
+    { key: 'n', label: T('nav.sort.n'), cmp: (a, b) => unitById(b.id).d.length - unitById(a.id).d.length },
+    { key: 'ks', label: T('nav.sort.ks'), cmp: (a, b) => (unitById(b.id).ks ?? Infinity) - (unitById(a.id).ks ?? Infinity) },
+    { key: 'state', label: T('nav.sort.state'), cmp: (a, b) => ({ error: 0, warning: 1, ok: 2 }[a.state] - { error: 0, warning: 1, ok: 2 }[b.state]) }],
+  texts: { search: T('nav.search'), sort: T('nav.sort'), bad: T('nav.bad'), count: p => T('nav.count', p), none: T('nav.none'), prev: T('nav.prev'), next: T('nav.next'), keys: T('nav.keys'), outside: T('nav.outside') },
+  prefs: () => S.nav || (S.nav = { q: '', sort: 'id', bad: false }),
+  getSel: () => S.sel, setSel: id => { S.sel = id; tabFn()($('panel')); }, save,
 });
-function unitPicker() {
-  if (!multi()) return `<p class="small"><b>${esc(R.units[0].label)}</b></p>`;
-  const list = navOrder(), u = unit(), i = list.findIndex(x => x.id === u.id);
-  return `<div class="navbar"><button type="button" class="btn ghost navbtn" id="uprev" aria-label="${esc(T('nav.prev'))}" title="${esc(T('nav.prev'))} (←)">◀</button>
-    <div class="navlab"><b>${esc(u.label)}</b> <span class="ust st-${u.state}" title="${esc(T('nav.st.' + u.state))}">${DOT[u.state]}</span> · n = ${u.d.length}<span class="muted small"> · ${i < 0 ? T('nav.outside') : `${i + 1} / ${list.length}`}</span></div>
-    <button type="button" class="btn ghost navbtn" id="unext" aria-label="${esc(T('nav.next'))}" title="${esc(T('nav.next'))} (→)">▶</button><span class="muted small navhint">${T('nav.keys')}</span></div>`;
-}
-function bindPicker() { $('uprev') && $('uprev').addEventListener('click', () => step(-1)); $('unext') && $('unext').addEventListener('click', () => step(1)); }
+const unitById = id => R.units.find(u => String(u.id) === String(id));
+function renderAside() { nav.renderAside($('unav')); }
+document.addEventListener('keydown', e => { if (R && S.step === 3 && multi() && NAVTABS.includes(S.tab)) nav.handleKey(e, '#explore'); });
+function unitPicker() { return nav.bar(); }
+function bindPicker() { nav.bindBar(); }
 function statusText(fi) {
   if (fi.status === 'ok') return T('s.ok');
   if (fi.status === 'boundary') return `${T('s.boundary')}: ${T(fi.side === 'above' ? 'b.above' : 'b.below', { lo: W.C_RANGE[0], hi: W.C_RANGE[1] })}`;
