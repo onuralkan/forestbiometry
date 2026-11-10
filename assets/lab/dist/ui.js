@@ -19,6 +19,7 @@ const num = v => { const x = parseFloat(String(v).trim().replace(',', '.')); ret
 const has = k => T(k) !== k;
 /** Probability: small values in exponent form (decimal point), never rounded to a misleading 0. */
 const fP = x => x == null || !Number.isFinite(x) ? '–' : x === 0 ? '0' : x < 1e-4 ? x.toExponential(2) : fmtNum(x, 4);
+const parLabel = (fam, k) => { const q = D.family(fam).params.find(x => x.key === k); return q ? q.label ?? q.key : k; };
 const parHead = q => `${q.label ?? q.key}${q.unit ? ` (${q.unit})` : q.scale === 'log' ? ` (${T('unit.log')})` : ''}`;
 const perLabel = p => p == null ? T('per.none') : p;
 const samePer = (a, b) => (a ?? null) === (b ?? null);
@@ -27,7 +28,7 @@ let S = blank(), R = null;
 function blank() {
   return { v: 1, step: 1, tab: 'params', imp: null, src: null, dcol: null, unit: 'cm', pcol: null, percol: null, fcol: null, fval: null, decimal: null, decimalChosen: false,
     wf: 'raw', sum: { mean: '', which: 'var', v: '', div: 'n', n: '', dq: '', methods: {}, done: false },
-    mode: 'each', methods: null, mopt: {}, bText: { L: '', U: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
+    mode: 'each', methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -71,14 +72,20 @@ function aFixed() { const t = String(S.aText).trim(); if (!t) return { a: null }
 // method options other than the fixed location (e.g. variance divisor, percentile pair), kept as text as typed
 const extraOpts = m => (m.options || []).filter(o => o.type !== 'fixed-param');
 // fixed support bounds entered by the user (beta); never taken from the data
-const BOUND_KEYS = ['L', 'U'];
-const needsBounds = () => chosenMethods().some(m => (m.options || []).some(o => o.type === 'fixed-param' && BOUND_KEYS.includes(o.key)));
+const isUserBound = o => o.type === 'fixed-param' && (o.policies || []).join() === 'user';
+/** Families of the chosen methods that need user-fixed support parameters (beta: L, U; Johnson SB: ξ, λ), with their keys. */
+function boundFams() {
+  const out = new Map();
+  for (const m of chosenMethods()) { const ks = (m.options || []).filter(isUserBound).map(o => o.key); if (ks.length && !out.has(m.family)) out.set(m.family, { keys: ks, check: m.checkOptions || (() => []) }); }
+  return out;
+}
+const needsBounds = () => boundFams().size > 0;
 const boundVal = k => { const t = String((S.bText || {})[k] ?? '').trim(); return t === '' ? NaN : num(t); };
 function optText(m, o) { const t = (S.mopt[m.id] || {})[o.key]; return t != null ? t : o.default != null ? String(o.default) : ''; }
 /** Parsed options of a method: { opts } or { bad: [problem] } (never a guessed value). */
 function methodOpts(m) {
   const opts = {}, bad = [];
-  for (const o of m.options || []) if (o.type === 'fixed-param' && BOUND_KEYS.includes(o.key)) opts[o.key] = boundVal(o.key);
+  for (const o of m.options || []) if (isUserBound(o)) opts[o.key] = boundVal(o.key);
   for (const o of extraOpts(m)) {
     const t = optText(m, o);
     if (o.type === 'choice') opts[o.key] = o.values.includes(t) ? t : o.default;
@@ -87,7 +94,7 @@ function methodOpts(m) {
   if (!bad.length && m.checkOptions) bad.push(...m.checkOptions(opts));
   return bad.length ? { bad: bad.slice(0, 1) } : { opts };
 }
-const setLabel = r => Object.entries(r.settings || {}).filter(([k]) => k !== 'quantile' && k !== 'boundPolicy').map(([k, v]) => T('set.' + k, { v: typeof v === 'number' ? fmtNum(v, 4) : v })).join(', ');
+const setLabel = r => Object.entries(r.settings || {}).filter(([k]) => !['quantile', 'boundPolicy', 'pair'].includes(k)).map(([k, v]) => T('set.' + k, { v: typeof v === 'number' ? fmtNum(v, 4) : v })).join(', ');
 const methodName = r => { const sl = setLabel(r); return T('m.' + r.method) + (sl ? ` · ${sl}` : ''); };
 const needsLocation = () => chosenMethods().some(m => (m.options || []).some(o => o.key === 'a'));
 function settingsProblems() {
@@ -131,10 +138,14 @@ function renderStep2() {
     ${aFixed().bad ? `<p class="note err">${T('loc.bad')}</p>` : ''}</div>`;
   if (needsBounds()) {
     const all = S.dcol == null ? [] : D.extractUnits(S.src, { dcol: S.dcol, unit: S.unit, decimal: S.decimal, pcol: null, fcol: S.fcol, fval: S.fval, mode: 'pool' }).units.flatMap(u => u.d);
-    const lo = all.length ? Math.min(...all) : null, hi = all.length ? Math.max(...all) : null, bc = BOUND_KEYS.map(k => `<label class="field inline"><span>${T('bnd.' + k)}</span><input type="text" inputmode="decimal" id="b-${k}" value="${esc((S.bText || {})[k] ?? '')}" size="8"></label>`).join(' ');
-    const bp = (D.methodsFor({ family: 'beta' })[0] || { checkOptions: () => [] }).checkOptions({ L: boundVal('L'), U: boundVal('U') });
-    h += `<div class="card" id="bndcard"><h2>${T('bnd.h')}</h2><p class="muted">${T('bnd.sub')}</p><div class="lims">${bc}</div>
-      ${lo != null ? `<p class="small">${T('bnd.obs', { lo: fmtNum(lo, 3), hi: fmtNum(hi, 3) })}</p>` : ''}${bp.length ? `<p class="note err small">${esc(T('pr.' + bp[0].code, bp[0]))}</p>` : ''}</div>`;
+    const lo = all.length ? Math.min(...all) : null, hi = all.length ? Math.max(...all) : null;
+    for (const [fam, b] of boundFams()) {
+      const vals = Object.fromEntries(b.keys.map(k => [k, boundVal(k)])), bp = b.check(vals);
+      const bc = b.keys.map(k => `<label class="field inline"><span>${T('bnd.' + k)}</span><input type="text" inputmode="decimal" id="b-${k}" value="${esc((S.bText || {})[k] ?? '')}" size="8"></label>`).join(' ');
+      const upper = fam === 'johnsonsb' && !bp.length ? `<p class="small">${T('bnd.sbU', { u: fmtNum(vals.xi + vals.lambda, 6) })}</p>` : '';
+      h += `<div class="card bndcard" id="bnd-${fam}"><h2>${T('bnd.h.' + fam)}</h2><p class="muted">${T('bnd.sub.' + fam)}</p><div class="lims">${bc}</div>${upper}
+        ${lo != null ? `<p class="small">${T('bnd.obs', { lo: fmtNum(lo, 3), hi: fmtNum(hi, 3) })}</p>` : ''}${bp.length ? `<p class="note err small">${esc(T('pr.' + bp[0].code, bp[0]))}</p>` : ''}</div>`;
+    }
   }
   const pr = settingsProblems();
   h += `<div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div>`;
@@ -147,7 +158,7 @@ function renderStep2() {
   el.querySelectorAll('input[name="mode"]').forEach(x => x.addEventListener('change', () => { S.mode = x.value; re(); }));
   el.querySelectorAll('[data-m]').forEach(x => x.addEventListener('change', () => { S.methods[x.dataset.m] = x.checked; re(); }));
   $('atext') && $('atext').addEventListener('change', e => { S.aText = e.target.value; re(); });
-  for (const k of BOUND_KEYS) $('b-' + k) && $('b-' + k).addEventListener('change', e => { S.bText = { ...(S.bText || {}), [k]: e.target.value }; re(); });
+  el.querySelectorAll('[id^="b-"]').forEach(x => x.addEventListener('change', e => { S.bText = { ...(S.bText || {}), [x.id.slice(2)]: e.target.value }; re(); }));
   el.querySelectorAll('[data-o]').forEach(x => x.addEventListener('change', () => { const [id, k] = x.dataset.o.split('|'); (S.mopt[id] || (S.mopt[id] = {}))[k] = x.value; re(); }));
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); S.tab = 'params'; go(3); });
@@ -186,7 +197,7 @@ function fixSel() {
   S.selPlot = u ? u.plot : null; S.selPer = u ? u.period : null;
 }
 const unitLabel = u => `${u.plot === D.POOL ? T('unit.pool') : T('unit.plot', { p: u.plot })}${u.period != null ? ` / ${u.period}` : ''}`;
-const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${k} = ${f(v.value, 4)}`).join(', '); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
+const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', '); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
 
 /* ---------------- step 3: results ---------------- */
 const TABS = ['params', 'charts'];
@@ -258,17 +269,17 @@ function tabParams(p) {
     const rs = u.results.filter(r => r.family === fa.id); if (!rs.length) continue;
     h += `<h3>${esc(T('fam.' + fa.id))}</h3><div class="tscroll"><table class="grid ptab" data-fam="${fa.id}"><thead><tr><th>${T('t.method')}</th><th>${T('t.fixed')}</th>
       ${fa.params.map(q => `<th title="${esc(T('role.' + q.role) + (q.scale === 'log' ? ', ' + T('unit.logscale') : ''))}">${esc(parHead(q))}</th>`).join('')}<th>${T('t.n')}</th><th>${T('t.ll')}</th><th>${T('t.aic')}</th><th>${T('t.bic')}</th><th>${T('t.ks')}</th><th>${T('t.ad')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
-      ${rs.map(r => { const okr = r.status === 'ok', g = r.gof || {}, fx = Object.entries(r.fixed).map(([k, v]) => T('fixed.' + (v.origin === 'zero' ? 'zero' : 'user'), { k, v: f(v.value, 4) })).join(', ') || T('fixed.none');
+      ${rs.map(r => { const okr = r.status === 'ok', g = r.gof || {}, fx = Object.entries(r.fixed).map(([k, v]) => T('fixed.' + (v.origin === 'zero' ? 'zero' : 'user'), { k: parLabel(r.family, k), v: f(v.value, 4) })).join(', ') || T('fixed.none');
         return `<tr class="${okr ? '' : 'st-bad'}" data-method="${r.method}" data-status="${r.status}"><th>${esc(methodName(r))}</th><td>${esc(fx)}</td>${fa.params.map(q => `<td class="num">${okr ? f(r.params[q.key], 4) : '–'}</td>`).join('')}
           <td class="num">${fmtNum(r.data.n, 0)}</td><td class="num">${okr ? f(r.logLik, 3) : '–'}</td><td class="num">${g.aic != null ? f(g.aic, 2) : '–'}</td><td class="num">${g.bic != null ? f(g.bic, 2) : '–'}</td>
           <td class="num">${okr ? f(g.ks, 4) : '–'}</td><td class="num">${okr ? f(g.ad, 3) : '–'}</td><td>${T('st.' + r.status)}</td><td class="small">${esc(T('sol.' + r.convergence.solver))}${r.convergence.iter != null ? ` · ${r.convergence.iter}` : ''}</td></tr>`; }).join('')}</tbody></table></div>`;
-    const notes = rs.flatMap(r => notesOf(r).map(x => `${methodName(r)}${Object.values(r.fixed).some(v => v.origin !== 'zero') ? ` (${Object.entries(r.fixed).map(([k, v]) => `${k} = ${f(v.value, 4)}`).join(', ')})` : ''}: ${x}`));
+    const notes = rs.flatMap(r => notesOf(r).map(x => `${methodName(r)}${Object.values(r.fixed).some(v => v.origin !== 'zero') ? ` (${Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ')})` : ''}: ${x}`));
     if (notes.length) h += `<ul class="small notes">${[...new Set(notes)].map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
   }
   h += `<p class="muted small">${T('p.note')}</p><div class="exports"><button type="button" class="btn ghost" id="x-json">${T('p.json')}</button></div>`;
   p.innerHTML = h; bindBar();
   $('x-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-sonuc-${new Date().toISOString().slice(0, 10)}.json`,
-    { tool: D.TOOL, created: new Date().toISOString(), source: S.imp ? S.imp.name : null, settings: { unit: S.unit, decimal: S.decimal, mode: S.mode, fixedLocation: aFixed().a, betaBounds: needsBounds() ? { L: boundVal('L'), U: boundVal('U'), origin: 'user' } : null, methods: Object.fromEntries(chosenMethods().map(m => [m.id, methodOpts(m).opts || null])) }, results: R.units.flatMap(x => x.results.map(({ gof, ...r }) => ({ ...r, fit: gof || null }))) }));
+    { tool: D.TOOL, created: new Date().toISOString(), source: S.imp ? S.imp.name : null, settings: { unit: S.unit, decimal: S.decimal, mode: S.mode, fixedLocation: aFixed().a, fixedBounds: needsBounds() ? Object.fromEntries([...boundFams()].map(([fam, b]) => [fam, { ...Object.fromEntries(b.keys.map(k => [k, boundVal(k)])), origin: 'user' }])) : null, methods: Object.fromEntries(chosenMethods().map(m => [m.id, methodOpts(m).opts || null])) }, results: R.units.flatMap(x => x.results.map(({ gof, ...r }) => ({ ...r, fit: gof || null }))) }));
 }
 function niceWidth(range) { const raw = range / 12, p = 10 ** Math.floor(Math.log10(raw)), m = raw / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
 function tabCharts(p) {

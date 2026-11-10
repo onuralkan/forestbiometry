@@ -20,7 +20,7 @@ const FAMILY_FNS = ['support', 'pdf', 'logpdf', 'cdf', 'logcdf', 'sf', 'logsf', 
 const KINDS = ['fit', 'recover', 'stand'];
 
 /**
- * family = { id, params: [{ key, label?, role: 'location'|'scale'|'shape'|'lower'|'upper', unit: 'cm'|'ln cm'|null, scale?: 'log', min?, max?, minOpen?, maxOpen? }],
+ * family = { id, params: [{ key, label?, role: 'location'|'scale'|'shape'|'lower'|'upper'|'range', unit: 'cm'|'ln cm'|null, scale?: 'log', min?, max?, minOpen?, maxOpen? }],
  *            support(p) → [lo, hi] (cm), pdf, logpdf, cdf, logcdf, sf, logsf (d, p), quantile(q, p),
  *            mean?(p), variance?(p) (throw DistError('moment.undefined') where they do not exist), diagnostics?(p), check?(p) (cross-parameter rules; throws DistError), source }
  */
