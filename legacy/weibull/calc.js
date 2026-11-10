@@ -2,8 +2,8 @@
 // Parameters everywhere: a = location, b > 0 = scale, c > 0 = shape.
 //   F(d) = 1 − exp(−((d − a)/b)^c) for d > a;  F(d) = 0 for d ≤ a.
 // The location a is NEVER estimated here: it is 0 (two-parameter form) or a value the user fixes.
-import { lnGamma } from '../core/special.js';
-import { classIndex } from '../stand/calc.js';
+import { lnGamma } from '../../assets/lab/core/special.js';
+import { classIndex } from '../../assets/lab/stand/calc.js';
 
 export const TOOL = { id: 'cap-dagilimi', version: '1.0.0' };
 export const C_RANGE = [0.01, 1000];               // search interval for the shape c

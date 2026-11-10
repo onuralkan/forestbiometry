@@ -1,20 +1,23 @@
 <?php
+// Diameter Distribution Lab on the new engine (assets/lab/dist/, docs/DIST_SPEC.md). Published at stage P08 by the
+// user's decision (10 November 2026); the Weibull-only 1.0.0 tool is kept in legacy/weibull/ (not uploaded).
 require __DIR__ . '/inc/site.php';
 $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
-    'kicker' => $tr ? 'Araç 4 · Çap dağılımları · Weibull sürümü' : 'Tool 4 · Diameter distributions · Weibull version',
-    'lede'   => $tr ? 'Tek ağaç çaplarına iki parametreli Weibull\'u en çok olabilirlik ve momentlerle, üç parametreli biçimi sizin sabitlediğiniz konumla uydurun; histogram, birikimli dağılım ve sınıf frekanslarını kuyruklarıyla birlikte görün. Eğri gezgini, veriden ayrı bir gösterimdir.'
-                    : 'Fit the two-parameter Weibull to individual tree diameters by maximum likelihood and moments, and the three-parameter form with a location you fix; see the histogram, cumulative distribution and class frequencies with their tails. The curve explorer is a separate illustration.',
-    'desc'   => $tr ? 'Weibull çap dağılımı: en çok olabilirlik ve moment tahmini, sabit konum, sınıf frekansları, örnek alan bazında uydurma.' : 'Weibull diameter distribution: maximum likelihood and moments, fixed location, class frequencies, per-plot fitting.',
+    'kicker' => $tr ? 'Araç 4 · Çap dağılımları' : 'Tool 4 · Diameter distributions',
+    'lede'   => $tr ? 'Tek ağaç çaplarına Weibull, normal, lognormal, gamma, sabit sınırlı beta ve Johnson SB dağılımlarını uydurun; her örnek alan ve dönem ayrı. Ortalama ile varyans ya da Dq\'dan parametre geri kazanımı ayrı bir iş akışıdır. Araç aşamalı olarak genişletiliyor.'
+                    : 'Fit the Weibull, normal, lognormal, gamma, fixed-bound beta and Johnson SB distributions to individual tree diameters, each plot and period separately. Parameter recovery from the mean and the variance or Dq is a separate workflow. The tool is being extended in stages.',
+    'desc'   => $tr ? 'Çap dağılımları: Weibull, normal, lognormal, gamma, beta, Johnson SB; en çok olabilirlik, momentler, yüzdelikler; özetlerden geri kazanım.' : 'Diameter distributions: Weibull, normal, lognormal, gamma, beta, Johnson SB; maximum likelihood, moments, percentiles; recovery from summaries.',
 ]);
 ?>
   <p class="privacy" id="privacy"></p>
   <noscript><p class="card"><?= $tr ? 'Bu araç JavaScript gerektirir.' : 'This tool needs JavaScript.' ?></p></noscript>
+  <div id="wf"></div>
   <nav class="steps" id="steps" aria-label="<?= $tr ? 'Adımlar' : 'Steps' ?>"></nav>
   <div id="status" class="status" role="status" aria-live="polite"></div>
   <section id="step1" class="step"></section>
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
-  <section id="explore" class="explore" aria-label="<?= $tr ? 'Eğri gezgini' : 'Curve explorer' ?>"></section>
-<?php site_bottom('<script type="module" src="assets/lab/weibull/ui.js?v=2"></script>');
+  <section id="recover" class="step" hidden></section>
+<?php site_bottom('<script type="module" src="assets/lab/dist/ui.js?v=7"></script>');

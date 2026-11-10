@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import * as W from '../../assets/lab/weibull/calc.js';
+import * as W from '../../legacy/weibull/calc.js';
 import { lnGamma } from '../../assets/lab/core/special.js';
 import { classesFromBreaks } from '../../assets/lab/stand/calc.js';
 

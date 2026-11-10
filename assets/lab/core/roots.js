@@ -33,7 +33,7 @@ export function brent(f, a, b, { xtol = 1e-14, maxIter = 200 } = {}) {
 
 /**
  * Geometric bisection for a function that is monotone on [lo, hi] with lo > 0 (e.g. a Weibull shape spanning several
- * decades). Same algorithm and stopping rule as the published Weibull tool (assets/lab/weibull/calc.js solveMonotone),
+ * decades). Same algorithm and stopping rule as the published Weibull tool (legacy/weibull/calc.js solveMonotone),
  * so results are reproduced exactly. Returns { root, status: 'ok' | 'below' (root < lo) | 'above' (root > hi) |
  * 'nonfinite' | 'maxiter', iter }. Stops when hi/lo − 1 < rtol.
  */

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as D from '../../assets/lab/dist/index.js';
 import * as F from '../../assets/lab/dist/fit/weibull.js';
-import * as W from '../../assets/lab/weibull/calc.js';
+import * as W from '../../legacy/weibull/calc.js';
 import { quantile7 } from '../../assets/lab/dist/data.js';
 import { bisectMonotone } from '../../assets/lab/core/roots.js';
 import { lnGamma } from '../../assets/lab/core/special.js';

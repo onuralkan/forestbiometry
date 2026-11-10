@@ -38,8 +38,9 @@ const php = await readFile(path.join(root, 'inc/site.php'), 'utf8');
 const rows = [...php.matchAll(/'file' => '([^']+)', 'v' => '([^']+)', 'lab' => '([^']+)'/g)];
 ok(rows.length === 7, '7 tools with versions in inc/site.php');
 for (const [, file, v, lab] of rows) {
-  const js = await readFile(path.join(root, 'assets/lab', lab, 'calc.js'), 'utf8'), m = js.match(/export const TOOL = \{ id: '[^']+', version: '([^']+)' \}/);
-  ok(m && m[1] === v, `${file}: site shows v${v}, ${lab}/calc.js has v${m && m[1]}`);
+  const f = lab === 'dist' ? 'registry.js' : 'calc.js';     // the distribution engine keeps TOOL in its registry
+  const js = await readFile(path.join(root, 'assets/lab', lab, f), 'utf8'), m = js.match(/export const TOOL = \{ id: '[^']+', version: '([^']+)' \}/);
+  ok(m && m[1] === v, `${file}: site shows v${v}, ${lab}/${f} has v${m && m[1]}`);
 }
 console.log(`cite: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

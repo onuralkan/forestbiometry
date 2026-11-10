@@ -1,3 +1,5 @@
+// RETIRED (10 Kasım 2026): the published 1.0.0 interface was replaced by the engine version (assets/lab/dist/,
+// cap-dagilimi.php 2.0.0-beta.1). Kept for reference only; it is not run and cannot run against the current site.
 // Browser test for the Diameter Distribution Lab, Weibull version (Playwright, Chromium).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/weibull/e2e.mjs http://127.0.0.1:8092 [screenshot-dir]
 import { createRequire } from 'node:module';

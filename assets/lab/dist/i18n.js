@@ -3,7 +3,7 @@
 import { makeT } from '../core/i18n.js';
 
 const tr = {
-  'dev': 'Geliştirme sürümü: bu sayfa yeni dağılım motorunun aşamalı kurulumudur; şimdilik Weibull, normal, lognormal, gamma, beta ve Johnson SB içerir. Yayındaki araç: Çap Dağılımı Laboratuvarı.',
+  'dev': 'Sürüm 2.0.0-beta.1: araç yeni dağılım motoruna taşındı ve aşamalı olarak genişletiliyor. Henüz olmayanlar: çap sınıfı tabloları, ölçüm eşiği (kesilmiş veri), CSV/Excel çıktısı (şimdilik JSON), Weibull için özetlerden geri kazanım, bootstrap ve uyum testlerinin p değerleri. Önceki Weibull sürümünden farklı olarak momentlerde varsayılan varyans n bölenlidir (n − 1 seçenek).',
   'step.1': 'Veri', 'step.2': 'Ayarlar', 'step.3': 'Sonuçlar',
   'privacy': 'Dosyanız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Oturum yalnızca bu tarayıcıda (IndexedDB) saklanır.',
   'imp.h': 'Çap verisi', 'imp.sub': 'Her satır bir ağaç: çap sütunu zorunlu; örnek alan ve dönem (ölçüm yılı) sütunları isteğe bağlı.',
@@ -112,7 +112,7 @@ const tr = {
   'ch.ecdf': 'Ampirik', 'ch.bins': p => `Histogram sınıf genişliği ${p.w} cm (yalnızca gösterim; uydurmayı etkilemez).`, 'ch.svg': 'Grafiği indir (SVG)',
 };
 const en = {
-  'dev': 'Development version: this page is the staged build of the new distribution engine; so far it holds the Weibull, the normal, the lognormal, the gamma, the beta and the Johnson SB. Published tool: Diameter Distribution Lab.',
+  'dev': 'Version 2.0.0-beta.1: the tool has moved to the new distribution engine and is being extended in stages. Not available yet: diameter class tables, measurement thresholds (truncated data), CSV/Excel output (JSON for now), recovery from summaries for the Weibull, bootstrap and p-values of fit tests. Unlike the previous Weibull version, the moment variance uses divisor n by default (n − 1 is an option).',
   'step.1': 'Data', 'step.2': 'Settings', 'step.3': 'Results',
   'privacy': 'Your file is read and processed in this browser and is not sent to the server. The session is kept only in this browser (IndexedDB).',
   'imp.h': 'Diameter data', 'imp.sub': 'One tree per row: the diameter column is required; plot and period (measurement year) columns are optional.',

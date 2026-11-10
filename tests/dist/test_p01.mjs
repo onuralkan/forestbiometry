@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as D from '../../assets/lab/dist/index.js';
-import * as W from '../../assets/lab/weibull/calc.js';
+import * as W from '../../legacy/weibull/calc.js';
 import { normCdf, normSf, logNormCdf, logNormSf, gammaQ, gammaP, normQuantile } from '../../assets/lab/core/stats.js';
 import { brent } from '../../assets/lab/core/roots.js';
 

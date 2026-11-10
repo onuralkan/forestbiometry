@@ -9,7 +9,7 @@
 //                 published 1.0.0 tool exactly
 //   weibull.pct   two sample percentiles p < r, location fixed  closed form (DIST_SPEC §3.6 C_{p,r}(a) and b)
 //
-// The ML and moment equations and their solver are those of the published tool (assets/lab/weibull/calc.js), ported
+// The ML and moment equations and their solver are those of the published tool (legacy/weibull/calc.js), ported
 // here so that the engine does not depend on it (that file moves to legacy/ at 2.0.0).
 import { lnGamma } from '../../core/special.js';
 import { bisectMonotone } from '../../core/roots.js';
