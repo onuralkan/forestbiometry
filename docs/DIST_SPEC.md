@@ -11,7 +11,7 @@ Bu belge bir literatür değerlendirmesi ve geliştirme şartnamesidir. Özgün 
 
 1. **Dmin adı.** Poudel ve Cao'nun "D0"ı meşcerenin en küçük çapıdır. Platformda D0, Örnek Alan ve Meşcere aracında baskın çap anlamında kullanıldığı için bu araçta ve belgede en küçük çap **Dmin** olarak adlandırılır; kaynak gösterimi yalnızca açıklamada anılır.
 2. **Varyans böleni.** Kullanıcı "Poudel'deki gibi" dedi; makale böleni belirtmiyor (yalnızca "diameter variance, Dvar"). Karar: varsayılan **n bölen** (v = Σ(d−m)²/n). Gerekçe: makalenin moment denklemleri (m = a + bG1, v = b²(G2 − G1²), Dq² = a² + 2abG1 + b²G2) kuramsal momentlerdir ve Dq² = m² + v özdeşliği yalnızca n bölenle sağlanır; M2 ile M3 ancak böyle aynı sonucu verir. n−1 bölenli s² seçenek olarak kalır. Sonuç: yayındaki 1.0.0 Weibull moment yöntemi n−1 kullanıyor; 2.0.0'da varsayılan sonuç (n−1)/n etkeni kadar değişir, sürüm notuna yazılır.
-3. **Göğüs yüzeyi ağırlıklı ve hektar ağırlıklı dağılım: kapsam dışı.** Yüklenen iki kaynakta bunlar için yöntem yok: Poudel ve Cao her örnek alan–yaş birleşimini ayrı uydurur; Parresol göğüs yüzeyini yalnızca Dq² = B/(K·N) bağıntısıyla ikinci moment olarak kullanır. Kaynaklarda yalnızca atıf olarak geçen Kangas ve Maltamo (2000) ile Gove ve Patil (1998) okunmadı. Kaynaksız yöntem yazılmaz; bu kaynaklar yüklenirse ayrı prompt hazırlanır.
+3. **Göğüs yüzeyi çap dağılımı: yalnızca betimsel, isteğe bağlı P23.** Poudel ve Cao ile Parresol'da yöntem yok. Kullanıcının sonradan yüklediği Kangas ve Maltamo (2000) [R23] okundu: göğüs yüzeyi çap dağılımını (ağaçların göğüs yüzeyiyle ağırlıklandığı dağılım; açı sayımı örneklemesinin doğal çıktısı) tanımlar, 12 göğüs yüzeyi yüzdeliğindeki çapları SUR ile kestirir, yüzdelikler arasında Späth rasyonel spline ile ara değer bulur ve sınıf göğüs yüzeyini sınıf ortalama ağacının göğüs yüzeyine bölerek ağaç sayısına çevirir (Denklem 1). Makale **parametrik bir dağılımın göğüs yüzeyi ağırlıklı veriye uydurulmasını içermez**; boyut yanlı olabilirlik için atıf yapılan Gove ve Patil (1998) okunmadı. Bu yüzden: (i) ampirik göğüs yüzeyi dağılımı, yüzdelikleri ve sınıf dönüşümü P23 olarak eklendi; (ii) parametrik ailelerin göğüs yüzeyi ağırlıklı uydurulması ve farklı büyüklükteki örnek alanların hektar ağırlıklı birleştirilmesi kapsam dışı kalır; (iii) makaledeki Finlandiya katsayıları araca gömülmez.
 4. **Mevcut araçta olmayanlar.** Serbest üç parametreli Weibull ve yüzdelik tahmincisi yayındaki araçta yoktur (P05 buna göre düzeltildi). Ölçüm eşiği beyan edilirse araç şu an uydurmayı engeller; P11 bunu koşullu olabilirlikle değiştirir. Önceki "yalnızca Weibull" kararı (5 Kasım 2026) bu belgeyle kaldırılmıştır.
 5. **Sıra.** P05, P01'in hemen ardından çalıştırılır (bkz. "Nasıl kullanılmalı?" madde 6).
 6. **Yeniden yazım kararı.** Araç yeni bir motor üzerinde yeniden yazılır (`assets/lab/dist/`): mevcut arayüz tek dağılıma ve tek iş akışına göre kurulmuş, uyarlamak yeniden yazmaktan pahalı. Yeniden kullanılacaklar: `core/` (içe aktarma, sayı okuma, gezgin, grafik, dışa aktarma, istatistik işlevleri) ve mevcut Weibull hesap çekirdeğinin formülleri. Yayındaki araç (`assets/lab/weibull/`, `cap-dagilimi.php`) 2.0.0 yayımlanana kadar **değişmeden** kalır; testleri (368 birim, 28 tarayıcı) yeni motorun Weibull sonuçları için regresyon referansıdır. Yeni araç menüde listelenmeyen ayrı bir sayfada geliştirilir; P15 kabulünden sonra `cap-dagilimi.php` yerine geçer ve eski kod `legacy/`'ye taşınır.
@@ -24,7 +24,7 @@ Bu belge bir literatür değerlendirmesi ve geliştirme şartnamesidir. Özgün 
 2. Önce “Ortak geliştirme talimatı”nı ve P00'ı gönder.
 3. Sonraki mesajlarda yalnızca sıradaki promptu çalıştır. Bir prompt tamamlanıp ilgili kontroller geçmeden bir sonrakine geçme.
 4. Yapay zekâ tüm belgeyi bağlamda tutamıyorsa, yalnızca ilgili teknik şartname bölümünü ve o aşamanın promptunu birlikte ver.
-5. P00–P15 ilk kullanılabilir çok dağılımlı sürümü; P16–P17 meşcere düzeyinde model geliştirmeyi tamamlar. P18–P22 ayrı, isteğe bağlı genişletmelerdir.
+5. P00–P15 ilk kullanılabilir çok dağılımlı sürümü; P16–P17 meşcere düzeyinde model geliştirmeyi tamamlar. P18–P23 ayrı, isteğe bağlı genişletmelerdir.
 6. **Çalıştırma sırası (Bölüm 0, karar 5):** P00 → P01 → P05 → P02 → P03 → P04 → P08 → P10 → P06 → P07 → P09 → P11 → P12 → P13 → P14 → P15 → P16 → P17.
 
 Buradaki öncelik sırası bir ürün geliştirme önerisidir; dağılımların evrensel başarı sıralaması değildir.
@@ -81,7 +81,7 @@ Rayleigh gibi özel durumlar yeni ve bağımsız bir yöntem gibi çoğaltılmam
 
 ### 2.1. Veri ve birimler
 
-- Yanıt, ağaç sayısına göre çap dağılımıdır. Göğüs yüzeyi ağırlıklı dağılım ve örnek alanların hektar ağırlıklı birleştirilmesi **kapsam dışıdır** (Bölüm 0, karar 3).
+- Yanıt, ağaç sayısına göre çap dağılımıdır. Göğüs yüzeyi çap dağılımı yalnızca betimsel olarak P23'te ele alınır; parametrik ağırlıklı uydurma ve hektar ağırlıklı birleştirme **kapsam dışıdır** (Bölüm 0, karar 3).
 - d: çap, cm. n: gerçekten gözlenmiş ağaç sayısı. N: hektardaki ağaç sayısı. G: göğüs yüzeyi, m²/ha. Örnek alan alanı: m².
 - Ortalama m=Σd/n; ikinci ham moment m2=Σd²/n; Dq=√m2; moment varyansı v=Σ(d−m)²/n. Dolayısıyla m2=m²+v.
 - n−1 bölenli örnek varyansı s² kullanılmışsa v=(n−1)s²/n dönüşümü kaydedilsin. **Karar (Bölüm 0, karar 2):** moment yöntemlerinde ve geri kazanımda varsayılan v, n bölenlidir; n−1 bölenli s² açık bir seçenektir ve sonuçta hangisinin kullanıldığı yazılır.
@@ -761,6 +761,26 @@ Kabul: İki tepeli sentetik örnekte bileşenler kararlı bulunmalı; tek tepeli
 
 Karışım uyumunun ormancılık yazılımı bağlamındaki uygulama referansı: ForestFit fitmixture dokümantasyonu. [R22]
 
+### P23 — Ampirik göğüs yüzeyi çap dağılımı (betimsel)
+
+Kaynak: Kangas ve Maltamo (2000) [R23], Bölüm 2.2–2.3. Göğüs yüzeyi çap dağılımı, her ağacın g=πd²/40000 ile ağırlıklandığı dağılımdır. Sabit alanlı örnek alanda ampirik işlev:
+
+$$F_G(x)=\frac{\sum_{d_i\le x} g_i}{\sum_i g_i}.$$
+
+Sınıf k'nin göğüs yüzeyi b_k (m²/ha) ise ağaç sayısı f_k=b_k/ḡ_k; ḡ_k sınıfın ortalama ağacının göğüs yüzeyidir (kaynak Denklem 1). Ham çaplar varken ḡ_k gözlenen ağaçlardan hesaplanır; yalnızca sınıf sınırları biliniyorsa sınıf orta çapının göğüs yüzeyi bir yaklaşımdır ve böyle etiketlenir.
+
+~~~text
+Tek dağılımlı sürüm tamamlandıktan sonra, ayrı ve betimsel bir görünüm olarak ampirik göğüs yüzeyi çap dağılımını ekle.
+
+Seçili örnek alan için ağaç sayısına göre ve göğüs yüzeyine göre ampirik kümülatif dağılımları birlikte göster. Göğüs yüzeyinin %0, 10, 20, …, 90, 95 ve 100 yüzdeliklerindeki çapları ve göğüs yüzeyi orta çapını (dgM, %50) ver; kullanılan yüzdelik tanımını kaydet. Çap sınıfı tablosuna sınıf göğüs yüzeyini (m²/ha) ve payını ekle.
+
+Sınıf göğüs yüzeyinden ağaç sayısına dönüşümü f_k=b_k/ḡ_k ile uygula; ḡ_k'nin gözlenen ortalamadan mı sınıf orta çapından mı geldiğini belirt. Dönüşümün ham veriyle birebir tutarlı olduğunu doğrula.
+
+Parametrik bir aileyi göğüs yüzeyi ağırlıklı veriye uydurma, boyut yanlı (size-biased) olabilirlik, açı sayımı verisi ve yüzdelik kestirim modelleri bu aşamanın kapsamında değildir; kaynaktaki tür katsayılarını gömme. Rasyonel spline ara değerlemesi ancak yüzdeliklerden dağılım kurma akışı eklenirse ve monotonluk denetimiyle birlikte uygulanır.
+
+Kabul: Elle hesaplanan küçük örnekte F_G, yüzdelik çapları ve sınıf payları sağlanmalı; Σb_k toplam G'ye, Σf_k toplam N'ye eşit olmalı; ağaç sayısı dağılımı sonuçları değişmemeli.
+~~~
+
 ## 8. Bağımsız sayısal referanslar
 
 Bu değerler 10 Kasım 2026'da Python, NumPy 2.3.5 ve SciPy 1.17.0 kullanılarak hesaplandı. Sekiz modelde yoğunluk integrali ve F(Q.50)=0.5 kontrol edildi. Weibull geri kazanım denklemleri kök taramasıyla, Parresol örneği normal ağırlıklı sayısal integral ve bağımsız least-squares çözümüyle doğrulandı.
@@ -872,6 +892,7 @@ Beklenen parametreler: ξ=5, λ=40, γ=0.6, δ=1.3. Bağımsız çözümde λ=39
 - **[R19] NIST — Extreme Value Type I / Gumbel.** [Teknik el kitabı](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm).
 - **[R20] SciPy — burr12.** [Resmî belge](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.burr12.html).
 - **[R21] SciPy — burr.** [Resmî belge](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.burr.html). Burr III / Dagum.
+- **[R23] Kangas, A. & Maltamo, M. (2000).** Percentile based basal area diameter distribution models for Scots pine, Norway spruce and birch species. Silva Fennica, 34(4), 371–380. Yüklenen PDF okundu. Göğüs yüzeyi çap dağılımının tanımı, yüzdelik yöntemi ve sınıf göğüs yüzeyinden ağaç sayısına dönüşüm (P23) için kaynak.
 - **[R22] ForestFit — fitmixture.** [Resmî paket belgesi](https://search.r-project.org/CRAN/refmans/ForestFit/html/fitmixture.html). Karışım dağılımları için EM uygulamaları.
 
 Kaynaklar 10 Kasım 2026 araştırmasında erişilen sürümlerdir. Resmî paket sayfaları yöntem ve parametreleştirme referansıdır; mevcut projede o paketin veya aynı programlama dilinin zorunlu olarak kullanılmasını gerektirmez.

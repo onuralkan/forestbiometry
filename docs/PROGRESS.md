@@ -1,6 +1,6 @@
 # PROGRESS.md: Durum, kontroller, eksikler, sıradaki adım
 
-Son güncelleme: 10 Kasım 2026, çap dağılımı revizyonu şartnamesi (docs/DIST_SPEC.md); kod değişikliği yok
+Son güncelleme: 10 Kasım 2026, çap dağılımı revizyonu P00 (inceleme raporu docs/DIST_P00.md); kod değişikliği yok
 
 ## Tamamlananlar
 | Bölüm | Durum | Kontroller |
@@ -53,7 +53,7 @@ Son güncelleme: 10 Kasım 2026, çap dağılımı revizyonu şartnamesi (docs/D
 - Eski onuralkan.com.tr kullanıcılarının tarayıcılarındaki araç oturumları yeni alan adına geçmez (IndexedDB alan adına bağlı).
 
 ## Sıradaki adım
-0. **Çap dağılımı aracı revizyonu** (`docs/DIST_SPEC.md`): kullanıcı "Ortak geliştirme talimatı + P00" gönderecek. Sıra: P00 → P01 → P05 → P02 → P03 → P04 → P08 → P10 → P06 → P07 → P09 → P11 → P12 → P13 → P14 → P15 (2.0.0) → P16 → P17 (2.1.0). Henüz hiçbir prompt çalıştırılmadı. Kararlar: Dmin adı; varyans n bölen (Poudel böleni belirtmiyor); göğüs yüzeyi/hektar ağırlıklı dağılım kapsam dışı (kaynak yok); yeni motorla yeniden yazım, yayındaki Weibull aracı 2.0.0'a kadar dokunulmaz. Okunan kaynaklar: Poudel ve Cao (2013), Parresol (2003).
+0. **Çap dağılımı aracı revizyonu** (`docs/DIST_SPEC.md`): kullanıcı "Ortak geliştirme talimatı + P00" gönderecek. Sıra: P00 → P01 → P05 → P02 → P03 → P04 → P08 → P10 → P06 → P07 → P09 → P11 → P12 → P13 → P14 → P15 (2.0.0) → P16 → P17 (2.1.0). **P00 tamamlandı** (10 Kasım 2026, yalnızca inceleme, kod değişmedi): rapor `docs/DIST_P00.md` (dosyalar, mevcut davranış, 9 uyuşmazlık, eksik sayısal işlevler, dosya düzeni, bağımlılıklar). Sıradaki: **P01**. Kangas ve Maltamo (2000) okundu; isteğe bağlı P23 (ampirik göğüs yüzeyi çap dağılımı) şartnameye eklendi. Kararlar: Dmin adı; varyans n bölen (Poudel böleni belirtmiyor); göğüs yüzeyi dağılımı yalnızca betimsel (P23), parametrik ağırlıklı uydurma ve hektar ağırlıklı birleştirme kapsam dışı; yeni motorla yeniden yazım, yayındaki Weibull aracı 2.0.0'a kadar dokunulmaz. Okunan kaynaklar: Poudel ve Cao (2013), Parresol (2003), Kangas ve Maltamo (2000).
 1. Planlananlar (PROJECT.md §9): "R kodunu da ver" düğmesi (ilk olarak boy–çapın karma etkili aşamasıyla), Zenodo ile DOI.
 2. Kullanıcının sıradaki promptu: Modül 5'in karma etkili aşaması, Modül 6'nın ileri tasarımları ya da plandaki sonraki araçlar (seksiyon hacmi, gövde profili, biyokütle…).
 3. Çıplak alan adının DNS'i: kullanıcı 9 Kasım 2026'da DNS Yönetimi panelinde @ A kaydını 164.132.247.15 yapacaktı; yayılınca `https://forestbiometry.online` denetlenir.
