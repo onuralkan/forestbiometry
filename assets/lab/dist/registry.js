@@ -20,9 +20,9 @@ const FAMILY_FNS = ['support', 'pdf', 'logpdf', 'cdf', 'logcdf', 'sf', 'logsf', 
 const KINDS = ['fit', 'recover', 'stand'];
 
 /**
- * family = { id, params: [{ key, label?, role: 'location'|'scale'|'shape', unit: 'cm'|'ln cm'|null, scale?: 'log', min?, max?, minOpen?, maxOpen? }],
+ * family = { id, params: [{ key, label?, role: 'location'|'scale'|'shape'|'lower'|'upper', unit: 'cm'|'ln cm'|null, scale?: 'log', min?, max?, minOpen?, maxOpen? }],
  *            support(p) → [lo, hi] (cm), pdf, logpdf, cdf, logcdf, sf, logsf (d, p), quantile(q, p),
- *            mean?(p), variance?(p) (throw DistError('moment.undefined') where they do not exist), diagnostics?(p), source }
+ *            mean?(p), variance?(p) (throw DistError('moment.undefined') where they do not exist), diagnostics?(p), check?(p) (cross-parameter rules; throws DistError), source }
  */
 export function registerFamily(f) {
   if (!f || !f.id || FAMILIES.has(f.id)) throw new Error('family id missing or duplicate: ' + (f && f.id));
@@ -58,6 +58,7 @@ export function checkParams(fam, p) {
     if (s.min != null && (s.minOpen ? !(v > s.min) : !(v >= s.min))) throw new DistError('param.invalid', { family: fam.id, key: s.key, value: v, rule: (s.minOpen ? '> ' : '≥ ') + s.min });
     if (s.max != null && (s.maxOpen ? !(v < s.max) : !(v <= s.max))) throw new DistError('param.invalid', { family: fam.id, key: s.key, value: v, rule: (s.maxOpen ? '< ' : '≤ ') + s.max });
   }
+  if (fam.check) fam.check(p);                                     // cross-parameter rules (e.g. beta L < U)
   return true;
 }
 /** Every observation must lie inside the open support. Throws DistError('support.outside') with a count and an example. */

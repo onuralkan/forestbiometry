@@ -6,8 +6,8 @@ $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Çap Dağılımı Laboratuvarı (geliştirme sürümü)' : 'Diameter Distribution Lab (development version)',
     'kicker' => $tr ? 'Çap dağılımları · yeni motor · geliştirme' : 'Diameter distributions · new engine · development',
-    'lede'   => $tr ? 'Yeni dağılım motorunun aşamalı kurulumu. Şimdilik Weibull (en çok olabilirlik, momentler, iki yüzdelik; konum sabit), normal, lognormal ve gamma (en çok olabilirlik, momentler; özetlerden geri kazanım). Diğer dağılımlar bağımsız referanslarla sınandıkça eklenecek.'
-                    : 'Staged build of the new distribution engine. For now the Weibull (maximum likelihood, moments, two percentiles; fixed location), the normal, the lognormal and the gamma (maximum likelihood, moments; recovery from summaries). Other distributions are added as they pass independent reference checks.',
+    'lede'   => $tr ? 'Yeni dağılım motorunun aşamalı kurulumu. Şimdilik Weibull (en çok olabilirlik, momentler, iki yüzdelik; konum sabit), normal, lognormal ve gamma (en çok olabilirlik, momentler; özetlerden geri kazanım), sabit sınırlı beta (en çok olabilirlik, momentler). Diğer dağılımlar bağımsız referanslarla sınandıkça eklenecek.'
+                    : 'Staged build of the new distribution engine. For now the Weibull (maximum likelihood, moments, two percentiles; fixed location), the normal, the lognormal and the gamma (maximum likelihood, moments; recovery from summaries), the beta with fixed bounds (maximum likelihood, moments). Other distributions are added as they pass independent reference checks.',
     'desc'   => $tr ? 'Çap dağılımı aracı, geliştirme sürümü.' : 'Diameter distribution tool, development version.',
     'robots' => 'noindex, nofollow',
 ]);
@@ -21,4 +21,4 @@ site_top([
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
   <section id="recover" class="step" hidden></section>
-<?php site_bottom('<script type="module" src="assets/lab/dist/ui.js?v=4"></script>');
+<?php site_bottom('<script type="module" src="assets/lab/dist/ui.js?v=5"></script>');

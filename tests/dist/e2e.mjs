@@ -36,11 +36,11 @@ await page.locator('#impbox details summary').click(); await page.fill('#impbox 
 await page.waitForSelector('#impbox .fname'); await page.click('#to2');
 ok(await page.inputValue('#dcol') === '2' && await page.inputValue('#pcol') === '0' && await page.inputValue('#percol') === '1', 'diameter, plot and period columns recognised');
 ok(await page.isChecked('input[name="dec"][value="."]'), 'decimal point by default (Turkish interface)');
-const offered = await page.evaluate(() => ({ fams: [...document.querySelectorAll('fieldset.fam')].map(x => x.dataset.fam), ms: [...document.querySelectorAll('[data-m]')].map(x => x.dataset.m) }));
-ok(offered.fams.join() === 'weibull,normal,lognormal,gamma' && offered.ms.join() === 'weibull.ml,weibull.mom,weibull.pct,normal.ml,lognormal.ml,lognormal.mom,gamma.ml,gamma.mom' && (await page.locator('[data-m*=".rec"]').count()) === 0, 'selector shows only registered families and methods: ' + JSON.stringify(offered));
+const offered = await page.evaluate(() => ({ fams: [...document.querySelectorAll('fieldset.fam')].map(x => x.dataset.fam), ms: [...document.querySelectorAll('[data-m]')].map(x => x.dataset.m), on: [...document.querySelectorAll('[data-m]:checked')].map(x => x.dataset.m) }));
+ok(offered.fams.join() === 'weibull,normal,lognormal,gamma,beta' && offered.ms.join() === 'weibull.ml,weibull.mom,weibull.pct,normal.ml,lognormal.ml,lognormal.mom,gamma.ml,gamma.mom,beta.ml,beta.mom' && !offered.on.includes('beta.ml') && !offered.on.includes('beta.mom') && (await page.locator('#bndcard').count()) === 0 && (await page.locator('[data-m*=".rec"]').count()) === 0, 'selector shows only registered families and methods: ' + JSON.stringify(offered));
 for (const m of offered.ms) await page.uncheck(`[data-m="${m}"]`);
 ok(await page.isDisabled('#calc') && (await page.locator('#atext').count()) === 0, 'no method chosen: cannot calculate, no location card');
-for (const m of offered.ms) await page.check(`[data-m="${m}"]`);
+for (const m of offered.ms) if (!m.startsWith('beta.')) await page.check(`[data-m="${m}"]`);
 ok((await page.locator('#famcard .note', { hasText: 'kesilmemiş veri varsayar' }).count()) === 1 && (await page.locator('#famcard .mnote', { hasText: 'aynı denklemlerdir' }).count()) === 1, 'truncation not supported: stated; normal ML = moments explained');
 ok(await page.isChecked('input[name="o-weibull.mom-varDivisor"][value="n"]') && await page.inputValue('#o-weibull-pct-p') === '0.24' && await page.inputValue('#o-weibull-pct-r') === '0.93', 'defaults: divisor n, percentiles 0.24 and 0.93 (Dubey)');
 await page.fill('#o-weibull-pct-p', '0.95'); await page.locator('#o-weibull-pct-p').dispatchEvent('change');
@@ -148,6 +148,23 @@ await page.waitForTimeout(600); await page.reload(); await page.waitForSelector(
 ok(await page.inputValue('#s-n') === '30' && await page.isVisible('#recover'), 'summary workflow restored after reload');
 await page.click('#wf-raw'); await page.waitForSelector('table.ptab');
 ok(await page.isVisible('#steps') && await page.isHidden('#recover'), 'back to the raw-data workflow, results kept');
+
+// 2c. beta: bounds entered by the user, never taken from the data; observations outside or on a bound refused
+await page.click('#steps [data-go="2"]'); await page.check('[data-m="beta.ml"]'); await page.check('[data-m="beta.mom"]');
+ok(await page.isDisabled('#calc') && (await page.locator('#bndcard .note.err', { hasText: 'beta için L ve U girin' }).count()) === 1 && (await page.inputValue('#b-L')) === '' && (await page.inputValue('#b-U')) === '', 'beta chosen: bounds empty (no automatic suggestion), cannot calculate');
+ok((await page.locator('#bndcard', { hasText: 'en küçük çap 9.4 cm, en büyük 45 cm (sınır değildir)' }).count()) === 1, 'observed min/max shown as information only');
+const setB = async (L, U) => { for (const [k, v] of [['L', L], ['U', U]]) { await page.fill('#b-' + k, v); await page.locator('#b-' + k).dispatchEvent('change'); } };
+await setB('50', '10'); ok(await page.isDisabled('#calc') && (await page.locator('#bndcard', { hasText: "U, L'den büyük olmalı" }).count()) === 1, 'U ≤ L refused');
+await setB('10', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]');
+let br = await rowsOf('beta');
+ok(br.length === 2 && br.every(r => r.s === 'invalid' && r.c[4] === '–') && (await page.locator('ul.notes li', { hasText: 'sınırların dışında (ör. 9.4 cm; L = 10, U = 50)' }).count()) >= 1, 'an observation below L: no beta estimate, reason given');
+await page.click('#steps [data-go="2"]'); await setB('9.4', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]');
+ok((await page.locator('ul.notes li', { hasText: 'tam sınırın üzerinde' }).count()) >= 1 && (await rowsOf('beta')).every(r => r.s === 'invalid'), 'an observation on L: refused, not moved');
+await page.click('#steps [data-go="2"]'); await setB('5', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]');
+{ const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], bm = E.runMethod('beta.ml', { d: pool }, { L: 5, U: 50 }), bo = E.runMethod('beta.mom', { d: pool }, { L: 5, U: 50 });
+  br = await rowsOf('beta'); const bh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="beta"] thead th')].map(x => x.textContent));
+  ok(br.every(r => r.s === 'ok') && br[0].c[1] === 'L = 5 (kullanıcı), U = 50 (kullanıcı)' && Math.abs(parseFloat(br[0].c[4]) - bm.params.alpha) < 6e-5 && Math.abs(parseFloat(br[1].c[5]) - bo.params.beta) < 6e-5 && br[0].c[8] !== '–' && br[1].c[8] === '–', 'beta with L = 5, U = 50: ML and moments equal the engine, bounds shown as user-fixed: ' + JSON.stringify(br.map(r => r.c.slice(0, 9))));
+  ok(bh.includes('L (cm)') && bh.includes('U (cm)') && bh.includes('α') && bh.includes('β') && br[0].c[13].startsWith('Newton'), 'beta header and solver'); }
 
 // 3. sample data, phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });

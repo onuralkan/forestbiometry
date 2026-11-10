@@ -26,3 +26,14 @@ export function lnMinusDigamma(x) {
 }
 /** Digamma ψ(x) for x > 0. */
 export const digamma = x => Math.log(x) - lnMinusDigamma(x);
+/**
+ * Trigamma ψ′(x) for x > 0: recurrence ψ′(x) = ψ′(x + 1) + 1/x² up to x ≥ 20, then the asymptotic series
+ * 1/x + 1/(2x²) + 1/(6x³) − 1/(30x⁵) + 1/(42x⁷) − 1/(30x⁹) + 5/(66x¹¹).
+ */
+export function trigamma(x) {
+  if (!(x > 0)) return NaN;
+  let add = 0, y = x;
+  while (y < 20) { add += 1 / (y * y); y += 1; }
+  const r = 1 / (y * y);
+  return add + 1 / y + r / 2 + (1 / y) * r * (1 / 6 - r * (1 / 30 - r * (1 / 42 - r * (1 / 30 - r * 5 / 66))));
+}

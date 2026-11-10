@@ -8,6 +8,8 @@ import { lognormal } from './families/lognormal.js';
 import { normalML, lognormalML, lognormalMoments } from './fit/normal.js';
 import { gamma } from './families/gamma.js';
 import { gammaML, gammaMoments } from './fit/gamma.js';
+import { beta } from './families/beta.js';
+import { betaML, betaMoments } from './fit/beta.js';
 import { normalRecover, lognormalRecover, gammaRecover } from './recover/moments.js';
 
 registerFamily(weibull);
@@ -22,6 +24,9 @@ registerMethod(lognormalMoments);
 registerFamily(gamma);
 registerMethod(gammaML);
 registerMethod(gammaMoments);
+registerFamily(beta);
+registerMethod(betaML);
+registerMethod(betaMoments);
 registerMethod(normalRecover);
 registerMethod(lognormalRecover);
 registerMethod(gammaRecover);

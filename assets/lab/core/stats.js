@@ -26,6 +26,30 @@ export function betaInc(a, b, x) {
   const lbt = lnGamma(a + b) - lnGamma(a) - lnGamma(b) + a * Math.log(x) + b * Math.log1p(-x);
   return x < (a + 1) / (a + b + 2) ? Math.exp(lbt) * betacf(a, b, x) / a : 1 - Math.exp(lbt) * betacf(b, a, 1 - x) / b;
 }
+/**
+ * ln I_x(a, b) with x1 = 1 − x supplied by the caller when it is known more accurately than 1 − x (e.g. (U − d)/S).
+ * Finite far into the lower tail; I_x(a, b) = 1 − I_{1−x}(b, a) is used on the far side, through log1p.
+ */
+export function lnBetaInc(a, b, x, x1 = 1 - x) {
+  if (x <= 0) return -Infinity; if (x1 <= 0) return 0;
+  const lbt = lnGamma(a + b) - lnGamma(a) - lnGamma(b) + a * Math.log(x) + b * Math.log(x1);
+  if (x < (a + 1) / (a + b + 2)) return lbt + Math.log(betacf(a, b, x)) - Math.log(a);
+  return Math.log1p(-Math.exp(lbt) * betacf(b, a, x1) / b);
+}
+/**
+ * y in (0, 1) with I_y(a, b) = p, for 0 < p ≤ ½ (callers use the symmetry I_y(a, b) = 1 − I_{1−y}(b, a) above ½ so
+ * that the small side is always the one solved). Brent on t = ln y with ln I, so small y keep their relative accuracy;
+ * a quantile below the smallest double returns 0.
+ */
+export function betaIncInvLower(a, b, p) {
+  if (!(a > 0 && b > 0) || !(p > 0 && p <= 0.5)) return p === 0 ? 0 : NaN;
+  const lp = Math.log(p), f = t => lnBetaInc(a, b, Math.exp(t), -Math.expm1(t)) - lp;   // increasing in t
+  let hi = 0, lo = Math.log(0.5), flo = f(lo);
+  for (let i = 0; i < 400 && flo > 0; i++) { hi = lo; lo -= Math.max(1, Math.abs(lo)); if (Math.exp(lo) === 0) return 0; flo = f(lo); }
+  if (!(flo <= 0)) return NaN;
+  const r = brent(f, lo, hi, { xtol: 1e-15 });
+  return r.status === 'ok' ? Math.exp(r.root) : NaN;
+}
 /** Student t cumulative distribution P(T ≤ t), ν > 0 degrees of freedom. */
 export function tCdf(t, nu) {
   const x = nu / (nu + t * t), tail = 0.5 * betaInc(nu / 2, 0.5, x);
