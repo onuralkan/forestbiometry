@@ -242,7 +242,7 @@ D0/H0, yaş ve diğer parametreler: `tests/ref/make_stand_dominant_reference.py`
 
 ---
 
-## 8. Çap Dağılımı Laboratuvarı, Weibull sürümü (Modül 4, `assets/lab/weibull/calc.js`)
+## 8. Çap Dağılımı Laboratuvarı, Weibull sürümü (Modül 4; 10 Kasım 2026 emekli, kod `legacy/weibull/calc.js`, yerini §12 aldı)
 **Parametreler (her yerde aynı):** a = konum, b > 0 = ölçek, c > 0 = şekil.
 F(d) = 1 − exp(−((d − a)/b)^c), d > a; d ≤ a için F(d) = 0. f(d) = (c/b)((d − a)/b)^(c−1) exp(−((d − a)/b)^c), d > a.
 Ortalama a + bΓ(1 + 1/c); varyans b²[Γ(1 + 2/c) − Γ²(1 + 1/c)]; ortanca a + b(ln 2)^(1/c); tepe değer a + b((c − 1)/c)^(1/c) (c > 1), aksi hâlde a. Yüzdelik a + b(−ln(1 − q))^(1/c). Sayısal kayıp olmasın diye F = −expm1(−t^c) ve 1 − F = exp(−t^c) ile hesaplanır.
@@ -413,7 +413,7 @@ Yanlılık ē, MAE, RMSE = √(SSE/n) (§7 ile aynı tanım), artık standart ha
 ---
 
 ## 12. Çap dağılımı motoru (revizyon, `assets/lab/dist/`; şartname `docs/DIST_SPEC.md`)
-Yayındaki Weibull aracının (§8) yerine geçecek çok dağılımlı aracın hesap çekirdeği. Aşamalar tamamlandıkça bu bölüm genişler; yayındaki araç 2.0.0'a kadar §8'deki gibidir.
+Çok dağılımlı aracın hesap çekirdeği. 10 Kasım 2026'dan beri yayında (`cap-dagilimi.php`, 2.0.0-beta.1; kullanıcı kararı); §8'deki 1.0.0 Weibull aracı `legacy/weibull/`'ye taşındı ve formülleri bu motorda aynen sürer (P05). Aşamalar tamamlandıkça bu bölüm genişler.
 
 ### P01: kayıt sistemi, sonuç sözleşmesi, veri sözleşmesi (10 Kasım 2026)
 - **Kavramlar ayrı tutulur:** dağılım ailesi; yöntem (tür: veriden doğrudan tahmin `fit`, özetlerden geri kazanım `recover`, meşcere değişkenlerinden kestirim `stand`; tahmin ilkesi: en çok olabilirlik, momentler…); sayısal çözücü (sonuçta yazılır, seçenek değildir). Yalnızca kayıtlı (uygulanmış ve sınanmış) aile ve yöntemler arayüzde görünür.

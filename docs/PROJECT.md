@@ -43,13 +43,13 @@ assets/lab/checker/          calc.js (saf), ui.js, i18n.js, ornek/ (uydurma örn
 assets/lab/stand/            calc.js (saf), ui.js, i18n.js, ornek/ornek-veri.json (scripts/make-stand-sample.mjs ile üretilir)
 assets/lab/eval/             calc.js (saf), ui.js, i18n.js, ornek/ornek-tahminler.csv (uydurma)
 assets/lab/rank/             calc.js (saf), ui.js, i18n.js, ornek/ornek-olcutler.xlsx (uydurma)
-assets/lab/weibull/          calc.js (saf), ui.js, i18n.js, ornek/ornek-caplar.csv (sabit tohumlu benzetim)
+legacy/weibull/              Eski Çap Dağılımı 1.0.0 (Weibull): calc.js (saf; tests/weibull regresyon referansı), ui.js, i18n.js, e2e.mjs (emekli); 10 Kasım 2026 yeni motorla değiştirildi
 assets/lab/core/special.js   lnGamma (tools.js'ten değişmeden taşındı)
 assets/lab/core/stats.js     Düzenlenmiş eksik beta ve gamma, normal ve Student t dağılımı ve yüzdelikleri (Modül 6'da normal eklendi), tohumlu üreteç (mulberry32) ve karıştırma (Modül 5)
 assets/lab/core/nls.js       Levenberg–Marquardt, küçük doğrusal cebir, σ̂²(JᵀJ)⁻¹ kovaryansı, delta yöntemi, OLS (Modül 5)
 assets/lab/core/roots.js     Brent kök bulucu ve geometrik ikiye bölme, durum bildirimli (çap dağılımı revizyonu P01, P05)
 assets/lab/core/quad.js      Gauss–Legendre düğümleri, standart normal altında beklenen değer (çap dağılımı revizyonu P08)
-assets/lab/dist/             Yeni çap dağılımı motoru: registry.js (aile/yöntem kaydı, sonuç sözleşmesi, hatalar), families/ (weibull, normal, lognormal, gamma, beta, johnsonsb), fit/ (doğrudan tahmin), recover/ (özetlerden geri kazanım), gof.js, data.js, ui.js, i18n.js; sayfa cap-dagilimi-2.php (listelenmez)
+assets/lab/dist/             Yeni çap dağılımı motoru: registry.js (aile/yöntem kaydı, sonuç sözleşmesi, hatalar), families/ (weibull, normal, lognormal, gamma, beta, johnsonsb), fit/ (doğrudan tahmin), recover/ (özetlerden geri kazanım), gof.js, data.js, ui.js, i18n.js; sayfa cap-dagilimi.php (2.0.0-beta.1; cap-dagilimi-2.php yalnızca yönlendirme); eski Weibull aracı legacy/weibull/
 assets/lab/sampling/         calc.js (saf), ui.js, i18n.js, ornek/ornek-pilot.csv (tests/ref/make_sampling_reference.py ile üretilen benzetim)
 assets/lab/hd/               calc.js (saf), ui.js, i18n.js, ornek/ornek-boy-cap.csv (tests/ref/make_hd_reference.py ile üretilen benzetim)
 assets/vendor/sheetjs/       SheetJS CE 0.20.3 mini (Apache-2.0), README'de köken ve sağlama
@@ -137,7 +137,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 - Eski adreslerden (onuralkan.com.tr) yönlendirme yapılmaz; alan adı kapatılıyor.
 
 ## 9. Uygulama planı
-**Çap dağılımı aracı revizyonu (10 Kasım 2026):** sekiz dağılım ailesi, doğrudan tahmin, özetlerden geri kazanım, kesilmiş/sınıflı veri, karşılaştırma, bootstrap ve meşcere modelleri. Şartname, kararlar ve prompt sırası: `docs/DIST_SPEC.md`. Yeni motor `assets/lab/dist/`; yayındaki Weibull aracı 2.0.0'a kadar değişmez.
+**Çap dağılımı aracı revizyonu (10 Kasım 2026):** sekiz dağılım ailesi, doğrudan tahmin, özetlerden geri kazanım, kesilmiş/sınıflı veri, karşılaştırma, bootstrap ve meşcere modelleri. Şartname, kararlar ve prompt sırası: `docs/DIST_SPEC.md`. Yeni motor `assets/lab/dist/`; 10 Kasım 2026'dan beri yayında (2.0.0-beta.1), eski Weibull aracı `legacy/weibull/`.
 
 | Sıra | Modül | İçerik / bağımlılık |
 |---|---|---|
