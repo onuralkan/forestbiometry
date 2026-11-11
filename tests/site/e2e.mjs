@@ -103,6 +103,18 @@ await cpg.goto(BASE + '/hakkinda.php?lang=en');
 ok((await cpg.locator('#cite-inline').textContent()).startsWith('Alkan, O. (2026). Forest Biometrics Tools [Web application].'), 'About: platform citation shown');
 await cp.close();
 
+// user guide: both languages, every section, linked from the menu and from each tool's header
+for (const l of ['tr', 'en']) {
+  await page.goto(BASE + '/kilavuz.php?lang=' + l);
+  const ids = await page.evaluate(() => [...document.querySelectorAll('.guide-sec h2[id]')].map(h => h.id)), toc = await page.locator('.guide-toc a').count();
+  ok(ids.join() === 'genel,is-akisi,veri-denetcisi,ornek-alan,model-degerlendirme,cap-dagilimi,boy-cap,ornekleme,nispi-siralama' && toc === ids.length, `guide (${l}): nine sections and a table of contents: ` + ids);
+  ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `guide (${l}): no horizontal scroll`);
+}
+ok((await page.locator('.b-nav a[href="kilavuz.php"]').count()) === 1 && (await page.locator('.b-side-foot a[href="kilavuz.php"]').count()) === 1, 'guide in the top menu and the sidebar');
+await page.goto(BASE + '/boy-cap.php?lang=tr'); await page.click('.b-head .b-guide'); await page.waitForURL(/kilavuz\.php#boy-cap$/);
+ok(Math.abs(await page.evaluate(() => document.getElementById('boy-cap').getBoundingClientRect().top)) < 120, 'tool header link opens the tool\'s section of the guide');
+await page.goto(BASE + '/kilavuz.php?lang=tr'); await page.click('.guide-sec a.guide-open[href="ornekleme.php"]'); ok(page.url().includes('/ornekleme.php'), 'the guide links back to each tool');
+
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();
 console.log(`site e2e: ${pass} passed, ${fail} failed`);

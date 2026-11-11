@@ -445,3 +445,17 @@ body:has(#steps li:not(:first-child) [aria-current="step"]) .b-head { margin-bot
 .tscroll.tall { max-height: 460px; overflow: auto; }
 .tscroll.tall thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); }
 details.assumebox > summary { font: 600 16px var(--head); color: var(--ink); margin: 14px 0 4px; }
+/* user guide (kilavuz.php) */
+.guide { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 1100px) { .guide { grid-template-columns: 230px minmax(0, 1fr); } .guide-toc { position: sticky; top: 64px; } }
+.guide-toc { padding: 12px 14px; }
+.guide-toc ol { margin: 6px 0 0; padding-left: 1.3em; }
+.guide-toc li { margin: 4px 0; font-size: 14px; }
+.guide-sec { max-width: 900px; }
+.guide-sec h2 { scroll-margin-top: 70px; }
+.guide-sec h2 .b-ver { font: 500 13px var(--ui); color: var(--muted); margin-left: 6px; }
+.guide-sec h3 { margin: 16px 0 6px; font-size: 16px; }
+.guide-sec p, .guide-sec li { line-height: 1.55; }
+.guide-sec li { margin: 3px 0; }
+.b-guide { font-weight: 500; }
+.guide-sec > .b-h2:first-child { margin-top: 4px; }

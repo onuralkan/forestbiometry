@@ -95,6 +95,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'sampling' => '<circle cx="6" cy="6" r="1" class="f"/><circle cx="12" cy="6" r="1" class="f"/><circle cx="18" cy="6" r="1" class="f"/><circle cx="6" cy="12" r="1" class="f"/><circle cx="18" cy="12" r="1" class="f"/><circle cx="6" cy="18" r="1" class="f"/><circle cx="12" cy="18" r="1" class="f"/><circle cx="12" cy="12" r="3.2" class="acc"/><circle cx="18" cy="18" r="3.2" class="acc"/>',
         'rank'     => '<path d="m12 3 7.8 4.5v9L12 21l-7.8-4.5v-9Z"/><path d="m12 7.2 4.6 2.6-.9 5.1-4.3 1.6-3.6-3.9Z" class="acc"/><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke-width=".8" opacity=".45"/>',
         'cite'     => '<path d="M5 11.5h4.5V17H5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5M14.5 11.5H19V17h-4.5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5"/>',
+        'guide'    => '<path d="M4 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0v-14Z"/><path d="M12 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0"/>',
         'about'    => '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".9" class="f"/>',
         'home'     => '<circle cx="12" cy="12" r="8.6" stroke-dasharray="2.2 1.8"/><circle cx="10" cy="10.5" r="2" class="f"/><circle cx="14.5" cy="14" r="1.4" class="f"/>',
         'menu'     => '<path d="M4 7h16M4 12h16M4 17h16"/>',
@@ -129,7 +130,7 @@ function site_top(array $o = []): void {
 <meta name="theme-color" content="#eef1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121814" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/lab/lab.css?v=22">
+<link rel="stylesheet" href="assets/lab/lab.css?v=23">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231d5b45'/><circle cx='16' cy='16' r='10.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-dasharray='3 2.4'/><circle cx='13' cy='14' r='3' fill='%23fff'/><circle cx='19.5' cy='19' r='2' fill='%23fff'/></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
@@ -140,6 +141,7 @@ function site_top(array $o = []): void {
   <a class="b-brand" href="./"><span class="b-mark" aria-hidden="true"><?= site_icon('home') ?></span><span><?= h($c['site']) ?></span></a>
   <nav class="b-nav" aria-label="<?= $tr ? 'Site' : 'Site' ?>">
     <a href="./"<?= $here === 'index.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Araçlar' : 'Tools' ?></a>
+    <a href="kilavuz.php"<?= $here === 'kilavuz.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Kılavuz' : 'Guide' ?></a>
     <a href="hakkinda.php"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Hakkında' : 'About' ?></a>
   </nav>
   <span class="b-tools">
@@ -169,6 +171,7 @@ function site_top(array $o = []): void {
     <?php endforeach; ?>
   </nav>
   <div class="b-side-foot">
+    <a href="kilavuz.php" title="<?= $tr ? 'Kullanım kılavuzu' : 'User guide' ?>"<?= $here === 'kilavuz.php' ? ' aria-current="page"' : '' ?>><?= site_icon('guide') ?><span><?= $tr ? 'Kılavuz' : 'Guide' ?></span></a>
     <a href="hakkinda.php" title="<?= $tr ? 'Hakkında' : 'About' ?>"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= site_icon('about') ?><span><?= $tr ? 'Hakkında' : 'About' ?></span></a>
     <p><?= $tr ? 'Hesaplar tarayıcınızda yapılır; veriniz sunucuya gitmez.' : 'Calculations run in your browser; your data stay with you.' ?></p>
   </div>
@@ -179,7 +182,7 @@ function site_top(array $o = []): void {
   <header class="b-head<?= $cur ? ' has-ico' : '' ?>">
     <?php if ($cur): ?><span class="b-headico" aria-hidden="true"><?= site_icon($cur['icon']) ?></span><?php endif; ?>
     <div>
-    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= $c['tr'] ? 'sürüm' : 'version' ?> <?= h($cur['v']) ?></span><?php endif; ?></p><?php endif; ?>
+    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= $c['tr'] ? 'sürüm' : 'version' ?> <?= h($cur['v']) ?></span> · <a class="b-guide" href="kilavuz.php#<?= h(basename($cur['file'], '.php')) ?>"><?= $c['tr'] ? 'Kılavuz' : 'Guide' ?></a><?php endif; ?></p><?php endif; ?>
     <h1><?= h($o['title'] ?? $c['site']) ?></h1>
     <?php if (!empty($o['lede'])): ?><p class="b-lede"><?= h($o['lede']) ?></p><?php endif; ?>
     </div>
@@ -194,7 +197,7 @@ function site_bottom(string $script = ''): void {
 </div>
 <footer class="b-foot">
   <span>forestbiometry.online · © <?= date('Y') ?> · <?= $tr ? 'Yazar ve sorumlu' : 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
-  <span><a href="./"><?= $tr ? 'Araçlar dizini' : 'Tools index' ?></a> · <a href="hakkinda.php"><?= $tr ? 'Hakkında' : 'About' ?></a></span>
+  <span><a href="./"><?= $tr ? 'Araçlar dizini' : 'Tools index' ?></a> · <a href="kilavuz.php"><?= $tr ? 'Kılavuz' : 'Guide' ?></a> · <a href="hakkinda.php"><?= $tr ? 'Hakkında' : 'About' ?></a></span>
 </footer>
 <script>
 (function () {
