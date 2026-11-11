@@ -54,7 +54,7 @@ await page.fill('#o-weibull-pct-p', '1,5'); await page.locator('#o-weibull-pct-p
 ok(await page.isDisabled('#calc'), 'p outside (0, 1): cannot calculate');
 await page.fill('#o-weibull-pct-p', '0.24'); await page.locator('#o-weibull-pct-p').dispatchEvent('change');
 await page.fill('#atext', '5'); await page.locator('#atext').dispatchEvent('change');
-await page.click('#calc'); await page.waitForSelector('table.ptab');
+await page.click('#calc'); await page.waitForSelector('table.ptab', { state: 'attached' });
 ok((await page.locator('#acc .note.warn').textContent()).includes('1 değer okunamadı') && (await page.locator('#acc').textContent()).includes('satırları: 36, 37'), 'unreadable and negative values reported with rows');
 let ns = await navState();
 ok(ns.list.join() === 'A,B,C' && ns.on === 'A' && ns.pers === 2 && ns.per === '2019', 'plots listed; A has two periods: ' + JSON.stringify(ns));
@@ -84,10 +84,10 @@ await shot('dist-1-parametreler');
   ok(await page.evaluate(() => [...document.querySelectorAll('.tile span')].some(x => x.textContent.includes('n − 1'))), 'both variances shown (n and n − 1)');
 }
 // divisor n − 1 reproduces the published tool; then back to n
-await page.click('#steps [data-go="2"]'); await page.check('input[name="o-weibull.mom-varDivisor"][value="n-1"]'); await page.click('#calc'); await page.waitForSelector('table.ptab');
+await page.click('#steps [data-go="2"]'); await page.check('input[name="o-weibull.mom-varDivisor"][value="n-1"]'); await page.click('#calc'); await page.waitForSelector('table.ptab', { state: 'attached' });
 rows = await rowsOf();
 ok(Math.abs(cell(2, 4) - W.fitMoments(d1, 0).c) < 6e-5 && Math.abs(cell(3, 3) - W.fitMoments(d1, 5, 'fixed').b) < 6e-5 && rows[2].c[0].includes('n − 1') && (await page.locator('ul.notes li', { hasText: 'n − 1' }).count()) === 2, 'divisor n − 1: published moment results, divisor stated');
-await page.click('#steps [data-go="2"]'); await page.check('input[name="o-weibull.mom-varDivisor"][value="n"]'); await page.click('#calc'); await page.waitForSelector('table.ptab');
+await page.click('#steps [data-go="2"]'); await page.check('input[name="o-weibull.mom-varDivisor"][value="n"]'); await page.click('#calc'); await page.waitForSelector('table.ptab', { state: 'attached' });
 // period switch and plot change keep the selection consistent; no stale table
 await page.click('[data-per]:not([aria-pressed="true"])');
 const ml24 = W.fitML(d3, 0); rows = await rowsOf();
@@ -134,19 +134,19 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
 
 // 2. English keeps the values; comma setting; pooled mode
 await page.click('#ulist [data-u="A"]');
-await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('table.ptab');
+await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('table.ptab', { state: 'attached' });
 rows = await rowsOf();
 ok(rows[1].c[1] === 'a = 5 (user)' && Math.abs(cell(0, 3) - ml0.b) < 6e-5 && rows[0].c[12].startsWith('bisection'), 'English: same values, translated labels');
 await page.click('#steps [data-go="2"]'); await page.check('input[name="mode"][value="pool"]');
 ok((await page.locator('.note.warn', { hasText: 'not a per-hectare weighted' }).count()) === 1, 'pooling warning');
-await page.click('#calc'); await page.waitForSelector('table.ptab');
+await page.click('#calc'); await page.waitForSelector('table.ptab', { state: 'attached' });
 ns = await navState();
 ok(ns.list.length === 0 && ns.pers === 2 && (await page.locator('.navbar.single').count()) === 1, 'pooled: one unit per period, no plot list');
 rows = await rowsOf();
 ok(Math.abs(cell(0, 3) - W.fitML([...d1, ...d2, 20, 20, 20], 0).b) < 6e-5 && rows[0].c[5] === '25', 'pooled 2019 fit over 25 trees');
 
 // 2b. separate workflow: recovery from summaries
-await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('table.ptab');
+await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('table.ptab', { state: 'attached' });
 await page.click('#wf-summary');
 ok(await page.isHidden('#steps') && await page.isHidden('#step3') && await page.isVisible('#recover'), 'summary workflow replaces the steps');
 const fillS = async (id, v) => { await page.fill(id, v); await page.locator(id).dispatchEvent('change'); };
@@ -173,7 +173,7 @@ rr = await page.evaluate(() => [...document.querySelectorAll('table.rtab tbody t
 ok(rr.every(r => r[4] === '38.6667' && r[2] === '20') && (await page.locator('p', { hasText: 'n − 1 bölen, n ile çevrildi' }).count()) === 1, 'n − 1 variance converted with n: v = 40·29/30');
 await page.waitForTimeout(600); await page.reload(); await page.waitForSelector('table.rtab');   // session writes are debounced (250 ms)
 ok(await page.inputValue('#s-n') === '30' && await page.isVisible('#recover'), 'summary workflow restored after reload');
-await page.click('#wf-raw'); await page.waitForSelector('table.ptab');
+await page.click('#wf-raw'); await page.waitForSelector('table.ptab', { state: 'attached' });
 ok(await page.isVisible('#steps') && await page.isHidden('#recover'), 'back to the raw-data workflow, results kept');
 
 // 2c. beta: bounds entered by the user, never taken from the data; observations outside or on a bound refused
@@ -182,12 +182,12 @@ ok(await page.isDisabled('#calc') && (await page.locator('#bnd-beta .note.err', 
 ok((await page.locator('#bnd-beta', { hasText: 'en küçük çap 9.4 cm, en büyük 45 cm (sınır değildir)' }).count()) === 1, 'observed min/max shown as information only');
 const setB = async (L, U) => { for (const [k, v] of [['L', L], ['U', U]]) { await page.fill('#b-' + k, v); await page.locator('#b-' + k).dispatchEvent('change'); } };
 await setB('50', '10'); ok(await page.isDisabled('#calc') && (await page.locator('#bnd-beta', { hasText: "U, L'den büyük olmalı" }).count()) === 1, 'U ≤ L refused');
-await setB('10', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]');
+await setB('10', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]', { state: 'attached' });
 let br = await rowsOf('beta');
 ok(br.length === 2 && br.every(r => r.s === 'invalid' && r.c[4] === '–') && (await page.locator('ul.notes li', { hasText: 'sınırların dışında (ör. 9.4 cm; L = 10, U = 50)' }).count()) >= 1, 'an observation below L: no beta estimate, reason given');
-await page.click('#steps [data-go="2"]'); await setB('9.4', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]');
+await page.click('#steps [data-go="2"]'); await setB('9.4', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]', { state: 'attached' });
 ok((await page.locator('ul.notes li', { hasText: 'tam sınırın üzerinde' }).count()) >= 1 && (await rowsOf('beta')).every(r => r.s === 'invalid'), 'an observation on L: refused, not moved');
-await page.click('#steps [data-go="2"]'); await setB('5', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]');
+await page.click('#steps [data-go="2"]'); await setB('5', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], bm = E.runMethod('beta.ml', { d: pool }, { L: 5, U: 50 }), bo = E.runMethod('beta.mom', { d: pool }, { L: 5, U: 50 });
   br = await rowsOf('beta'); const bh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="beta"] thead th')].map(x => x.textContent));
   ok(br.every(r => r.s === 'ok') && br[0].c[1] === 'L = 5 (kullanıcı), U = 50 (kullanıcı)' && Math.abs(parseFloat(br[0].c[4]) - bm.params.alpha) < 6e-5 && Math.abs(parseFloat(br[1].c[5]) - bo.params.beta) < 6e-5 && br[0].c[8] !== '–' && br[1].c[8] === '–', 'beta with L = 5, U = 50: ML and moments equal the engine, bounds shown as user-fixed: ' + JSON.stringify(br.map(r => r.c.slice(0, 9))));
@@ -201,13 +201,13 @@ ok((await page.locator('#famcard [data-mnote]', { hasText: 'dört parametrenin b
 for (const [k, v] of [['xi', '5'], ['lambda', '45']]) { await page.fill('#b-' + k, v); await page.locator('#b-' + k).dispatchEvent('change'); }
 ok((await page.locator('#bnd-johnsonsb', { hasText: 'Üst sınır ξ + λ = 50 cm' }).count()) === 1 && await page.isEnabled('#calc'), 'upper bound ξ + λ shown');
 await page.fill('#o-johnsonsb-pct-p', '0.1'); await page.locator('#o-johnsonsb-pct-p').dispatchEvent('change'); await page.fill('#o-johnsonsb-pct-r', '0.9'); await page.locator('#o-johnsonsb-pct-r').dispatchEvent('change');
-await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="johnsonsb"]');
+await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="johnsonsb"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], o = { xi: 5, lambda: 45 };
   const exp = [E.runMethod('johnsonsb.cml', { d: pool }, o), E.runMethod('johnsonsb.mom', { d: pool }, o), E.runMethod('johnsonsb.kb', { d: pool }, o), E.runMethod('johnsonsb.pct', { d: pool }, { ...o, p: 0.1, r: 0.9 })];
   const sr = await rowsOf('johnsonsb'), sh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="johnsonsb"] thead th')].map(x => x.textContent));
   ok(sr.length === 4 && sr.every(r => r.s === 'ok') && sr.every((r, i) => Math.abs(parseFloat(r.c[4]) - exp[i].params.gamma) < 6e-5 && Math.abs(parseFloat(r.c[5]) - exp[i].params.delta) < 6e-5), 'SB: four methods equal the engine: ' + JSON.stringify(sr.map(r => r.c.slice(0, 6))));
   ok(sh.includes('ξ (cm)') && sh.includes('λ (cm)') && sh.includes('γ') && sh.includes('δ') && sr[0].c[1] === 'ξ = 5 (kullanıcı), λ = 45 (kullanıcı)' && sr[0].c[8] !== '–' && sr[1].c[8] === '–' && sr[3].c[0].includes('p = 0.1, r = 0.9'), 'SB header, user-fixed bounds, AIC only for CML, user pair named: ' + JSON.stringify([sh, sr.map(r => r.c.slice(0, 9))])); }
-await page.click('#steps [data-go="2"]'); await page.fill('#b-xi', '9.4'); await page.locator('#b-xi').dispatchEvent('change'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="johnsonsb"]');
+await page.click('#steps [data-go="2"]'); await page.fill('#b-xi', '9.4'); await page.locator('#b-xi').dispatchEvent('change'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="johnsonsb"]', { state: 'attached' });
 ok((await rowsOf('johnsonsb')).every(r => r.s === 'invalid') && (await page.locator('ul.notes li', { hasText: 'tam sınırın üzerinde' }).count()) >= 1, 'SB: observation on ξ refused');
 
 // 2e. exponential (same fixed location a as the Weibull) and log-logistic (ML, two percentiles, log-moments)
@@ -216,7 +216,7 @@ for (const m of ['johnsonsb.cml', 'johnsonsb.mom', 'johnsonsb.kb', 'johnsonsb.pc
 for (const m of ['exponential.ml', 'loglogistic.ml', 'loglogistic.pct', 'loglogistic.logmom']) await page.check(`[data-m="${m}"]`);
 ok((await page.locator('#bnd-johnsonsb').count()) === 0 && (await page.locator('h2', { hasText: 'Sabit konum a (Weibull, üstel)' }).count()) === 1 && await page.isEnabled('#calc'), 'P10 families need no bounds; one location card for Weibull and exponential');
 ok(await page.inputValue('#o-loglogistic-pct-p') === '0.25' && await page.inputValue('#o-loglogistic-pct-r') === '0.75' && (await page.locator('#famcard [data-mnote]', { hasText: 'sıradan momentler yöntemi değildir' }).count()) === 1 && (await page.locator('#famcard', { hasText: 'Ters J' }).count()) === 1, 'defaults 0.25/0.75; log-moments named apart from ordinary moments; exponential as a reverse-J reference');
-await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="loglogistic"]');
+await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="loglogistic"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20];
   const e0 = E.runMethod('exponential.ml', { d: pool }, { a: 0 }), e5 = E.runMethod('exponential.ml', { d: pool }, { a: 5 });
   const lx = [E.runMethod('loglogistic.ml', { d: pool }), E.runMethod('loglogistic.pct', { d: pool }), E.runMethod('loglogistic.logmom', { d: pool })];
@@ -307,7 +307,7 @@ await page.fill('#tr-L', '9'); await page.locator('#tr-L').dispatchEvent('change
   ok(st.off.includes('weibull.ml') && st.off.includes('normal.ml') && st.off.includes('gamma.mom') && !st.off.some(m => m.endsWith('.tml')), 'closed-form methods disabled with a threshold: ' + st.off.length);
   ok(st.tml.length === 8 && st.tml.filter(([m, c]) => c).map(([m]) => m).sort().join() === ['exponential.tml', 'gamma.tml', 'loglogistic.tml', 'lognormal.tml', 'normal.tml', 'weibull.tml'].sort().join(), 'truncated ML listed for every family; those needing bounds not preselected: ' + JSON.stringify(st.tml)); }
 ok((await page.locator('#famcard .mnote', { hasText: 'kesilmiş veride geçerli değil' }).count()) > 5, 'reason shown under the disabled methods');
-await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]');
+await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], ex = E.runMethod('weibull.tml', { d: pool }, { a: 0, trunc: { lower: 9, upper: null } });
   const G = E.trunc.truncated(E.family('weibull'), ex.params, ex.truncation), ks = E.gof.ks(G, ex.params, pool);
   const wt = await rowsOf('weibull');
@@ -317,7 +317,7 @@ await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weib
   const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), fits = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Uydurmalar, { header: 1 }), H = fits[0], w = fits.find(r => r[5] === 'weibull.tml');
   ok(w && w[H.indexOf('Alt eşik (cm)')] === 9 && w[H.indexOf('Üst eşik (cm)')] == null && Math.abs(w[H.indexOf('P(eşik içinde)')] - ex.truncation.mass) < 1e-7 && w[H.indexOf('N (seçilen kapsam)')] === 25, 'Excel: thresholds, mass and N (observed) columns: ' + JSON.stringify(w && [H.indexOf('Alt eşik (cm)'), w[H.indexOf('Alt eşik (cm)')], w[H.indexOf('Üst eşik (cm)')], w[H.indexOf('P(eşik içinde)')], ex.truncation.mass, w[H.indexOf('N (seçilen kapsam)')]])); }
 await page.click('#steps [data-go="2"]'); await page.check('input[name="trn"][value="population"]'); await page.fill('#tr-L', '10'); await page.locator('#tr-L').dispatchEvent('change');
-await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]');
+await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
 ok((await rowsOf('weibull'))[0].s === 'invalid' && (await page.locator('ul.notes li', { hasText: 'bildirilen eşiğin dışında (ör. 9.4 cm)' }).count()) >= 1, 'a diameter below the declared threshold: refused, reason given');
 await page.click('#wf-summary');
 ok((await page.locator('#wbcard', { hasText: 'ham veriden doldurma kapalı' }).count()) === 1 && (await page.locator('#w-fill').count()) === 0, 'recovery: filling from thresholded raw data disabled');
@@ -325,7 +325,7 @@ await page.click('#wf-raw'); await page.click('#steps [data-go="2"]'); await pag
 ok((await page.locator('[data-m="weibull.ml"]:disabled').count()) === 0 && (await page.locator('[data-m$=".tml"]').count()) === 0, 'threshold removed: untruncated methods back');
 
 // 2j. class tables for raw data (P12): same edges for observed, probability, expected, N/ha and tails
-await page.click('#calc').catch(() => {}); await page.waitForSelector('table.ptab');
+await page.click('#calc').catch(() => {}); await page.waitForSelector('table.ptab', { state: 'attached' });
 await page.click('#tab-classes'); await page.waitForSelector('table.ctab');
 { const E = await import('../../assets/lab/dist/index.js');
   await page.check('input[name="clmode"][value="width"]'); for (const [k, v] of [['start', '8'], ['width', '8']]) { await page.fill('#cl-' + k, v); await page.locator('#cl-' + k).dispatchEvent('change'); }
@@ -341,7 +341,7 @@ await page.click('#tab-classes'); await page.waitForSelector('table.ctab');
   ok(cs.length > 20 && cs[0][4] === 'Sınıf (cm)' && cs.some(r => r[4] === '[8, 16)' && typeof r[8] === 'number' && r[10] != null), 'Excel class sheet: classes, probabilities, N/ha'); }
 
 // 2j'. comparison and diagnostics (P13)
-await page.click('#tab-compare'); await page.waitForSelector('table.cmptab');
+await page.click('#tab-params'); await page.waitForSelector('table.cmptab');
 { const E = await import('../../assets/lab/dist/index.js');
   const t = await page.evaluate(() => [...document.querySelectorAll('.cmpgroup')].map(g => ({ h: g.querySelector('h3').textContent, ml: [...g.querySelectorAll('table[data-kind="ml"] tbody tr')].map(tr => [tr.dataset.method, ...[...tr.children].map(x => x.textContent.trim())]),
     desc: [...g.querySelectorAll('table[data-kind="desc"] tbody tr')].map(tr => [tr.dataset.method, ...[...tr.children].map(x => x.textContent.trim())]), mlHead: [...g.querySelectorAll('table[data-kind="ml"] th')].map(x => x.textContent), descHead: [...g.querySelectorAll('table[data-kind="desc"] th')].map(x => x.textContent) })));
@@ -416,22 +416,22 @@ await page.waitForSelector('#panel .srcs');
   await g.waitForSelector('#impbox .fname'); await g.click('#to2');
   ok(await g.isChecked('input[name="dtype"][value="classes"]') && await g.inputValue('#lcol') === '1' && await g.inputValue('#ucol') === '2' && await g.inputValue('#ncol') === '3', 'class table recognised: lower, upper, frequency columns');
   ok((await g.locator('[data-m$=".gml"]').count()) === 8 && (await g.locator('[data-m="weibull.ml"]').count()) === 0 && (await g.locator('#trcard').count()) === 0, 'only grouped ML offered; no threshold card');
-  await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]');
+  await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const gr = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
   ok(gr[0].s === 'ok' && Math.abs(parseFloat(gr[0].c[3]) - cw.params.b) < 6e-5 && Math.abs(parseFloat(gr[0].c[4]) - cw.params.c) < 6e-5 && gr[0].c[5] === String(cw.n.reduce((a, b) => a + b, 0)) && gr[0].c[7] !== '–' && gr[0].c[9] === '–', 'grouped Weibull ML = SciPy; n = Σ n_j; AIC given; no KS on classes: ' + gr[0].c.slice(2, 10));
   await g.click('#tab-charts'); ok((await g.locator('#ch-h svg rect.ch-bar').count()) === 7, 'histogram bars are the closed classes (open last not drawn)');
   await g.click('#tab-classes'); await g.waitForSelector('table.ctab');
   const ct = await g.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
   ok(ct.length === 10 && ct[1][1] === String(cw.n[0]) && ct.find(r => r[0] === 'Toplam')[2] === '1', 'class table from the data classes; total probability 1');
-  await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="perha"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]');
+  await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="perha"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const gp = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
   ok(Math.abs(parseFloat(gp[0][3]) - cw.params.b) < 6e-5 && gp[0][6] === '–' && gp[0][7] === '–' && (await g.locator('ul.notes li', { hasText: 'ağaç sayısı bilinmediği için' }).count()) >= 1, 'per-hectare frequencies: same parameters, no ln L or AIC, reason stated');
-  await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="count"]'); await g.check('input[name="outside"][value="unrecorded"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]');
+  await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="count"]'); await g.check('input[name="outside"][value="unrecorded"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const cu = RG.cases.find(x => x.family === 'weibull' && x.outside === 'unrecorded'), gu = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
   ok(Math.abs(parseFloat(gu[0][4]) - cu.params.c) < 6e-5, 'outside "not recorded": conditional grouped ML = SciPy');
   await g.click('#tab-boot'); await g.waitForSelector('#bt-gof'); await g.selectOption('#bt-B', '99'); await g.click('#bt-gof'); await g.waitForSelector('#bt-gof-out table.bttab', { timeout: 120000 });
   ok((await g.locator('#bt-gof-out tr[data-stat="x2"]').count()) === 1 && (await g.locator('input[name="bt-scheme"][value="nonparametric"]').isDisabled()), 'grouped data: Pearson X² bootstrap; non-parametric scheme disabled');
-  await g.click('#steps [data-go="2"]'); await g.check('input[name="outside"][value="zero"]'); await g.click('#calc'); await g.waitForSelector('table.ptab'); await g.click('#tab-boot');
+  await g.click('#steps [data-go="2"]'); await g.check('input[name="outside"][value="zero"]'); await g.click('#calc'); await g.waitForSelector('table.ptab', { state: 'attached' }); await g.click('#tab-boot');
   ok((await g.locator('#panel', { hasText: 'desteklenmiyor' }).count()) === 1 && (await g.locator('#bt-gof').count()) === 0, 'unsupported combination stated, no button');
   await ctx2.close(); }
 
@@ -442,7 +442,7 @@ await page.waitForSelector('#panel .srcs');
   for (const m of await q.evaluate(() => [...document.querySelectorAll('[data-m]')].map(x => x.dataset.m))) await q.check(`[data-m="${m}"]`);
   for (const [k, v] of [['L', '0'], ['U', '60'], ['xi', '0'], ['lambda', '60']]) { await q.fill('#b-' + k, v); await q.locator('#b-' + k).dispatchEvent('change'); }
   ok(!(await q.isDisabled('#calc')), 'sample: every method of the eight families can be calculated (bounds given)');
-  await q.click('#calc'); await q.waitForSelector('table.ptab');
+  await q.click('#calc'); await q.waitForSelector('table.ptab', { state: 'attached' });
   const ids = await q.evaluate(() => [...document.querySelectorAll('#ulist .uid')].map(x => x.textContent));
   const per = [];
   for (const id of ids) { await q.locator('#ulist .uitem', { hasText: id }).first().click(); await q.waitForFunction(id => document.querySelector('.navlab b')?.textContent.includes(id), id);
@@ -455,7 +455,7 @@ await page.waitForSelector('#panel .srcs');
   // one unit across all tabs
   await q.locator('#ulist .uitem', { hasText: ids[1] }).first().click();
   const bars = [];
-  for (const t of ['params', 'charts', 'classes', 'compare', 'boot']) { await q.click('#tab-' + t); await q.waitForTimeout(150); bars.push(await q.evaluate(() => document.querySelector('.navlab b')?.textContent + '|' + document.querySelector('#ulist .uitem.on .uid')?.textContent)); }
+  for (const t of ['params', 'charts', 'classes', 'boot']) { await q.click('#tab-' + t); await q.waitForTimeout(150); bars.push(await q.evaluate(() => document.querySelector('.navlab b')?.textContent + '|' + document.querySelector('#ulist .uitem.on .uid')?.textContent)); }
   ok(new Set(bars).size === 1 && bars[0].includes(ids[1]), 'the chosen plot stays the same in every tab: ' + bars.join(' / '));
   await q.click('#tab-params'); await c3.close(); }
 { const c4 = await browser.newContext(), q = await c4.newPage(); q.on('pageerror', e => errors.push(e.message));
@@ -476,7 +476,7 @@ const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, col
 phone.on('pageerror', e => errors.push(e.message));
 await phone.goto(URL + '?lang=tr'); await phone.click('#sample'); await phone.waitForSelector('#impbox .fname'); await phone.click('#to2');
 ok(await phone.isChecked('input[name="dec"][value=","]'), 'sample with decimal commas: comma proposed');
-await phone.click('#calc'); await phone.waitForSelector('table.ptab');
+await phone.click('#calc'); await phone.waitForSelector('table.ptab', { state: 'attached' });
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
 ok((await phone.locator('#ulist .uitem').count()) > 1, 'sample: plot list');
 await shot('dist-3-telefon', phone);

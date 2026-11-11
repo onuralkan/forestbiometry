@@ -424,3 +424,13 @@ details.more ul { padding-left: 1.2em; margin: 6px 0 0; }
 details.more li { margin: 4px 0; overflow-wrap: anywhere; }
 .nav.sticky { position: sticky; bottom: 0; z-index: 3; background: var(--bg); padding: 10px 0; margin-bottom: 0; border-top: 1px solid var(--line2); }
 #atext, #tr-L, #tr-U, .bndcard input { max-width: 10em; }
+/* interface revision, stage 2: results and comparison in one tab */
+.cmpbar { display: flex; gap: 8px 20px; flex-wrap: wrap; align-items: center; margin: 4px 0 6px; }
+.cmpwrap:not(.allcols) .opt { display: none; }
+details.ptabs { margin: 14px 0; }
+details.ptabs > summary { font-size: 14px; font-weight: 600; color: var(--ink); }
+#panel .tiles { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; }
+#panel .tile { padding: 7px 10px; }
+#panel .tile b { font-size: 20px; }
+#panel .tile span { font-size: 12px; font-weight: 500; color: var(--muted); }
+.cmptab td.small:nth-child(2) { min-width: 9em; }

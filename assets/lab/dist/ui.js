@@ -254,9 +254,10 @@ const unitLabel = u => `${u.plot === D.POOL ? T('unit.pool') : T('unit.plot', { 
 const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', '); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
 
 /* ---------------- step 3: results ---------------- */
-const TABS = ['params', 'charts', 'classes', 'compare', 'boot'];
+const TABS = ['params', 'charts', 'classes', 'boot'];
 function renderStep3() {
   if (!R) compute();
+  if (!TABS.includes(S.tab)) S.tab = 'params';            // sessions saved before the comparison tab was merged
   const el = $('step3'), withNav = plotIds().length > 1, a = R.acc;
   nav.reset();
   if (!R.units.length) {                                   // nothing readable: say so instead of an empty page
@@ -277,7 +278,7 @@ function renderStep3() {
   if (withNav) nav.renderAside($('unav'));
   drawPanel();
 }
-function drawPanel() { const p = $('panel'); if (!p) return; (S.tab === 'charts' ? tabCharts : S.tab === 'classes' ? tabClasses : S.tab === 'compare' ? tabCompare : S.tab === 'boot' ? tabBoot : tabParams)(p); }
+function drawPanel() { const p = $('panel'); if (!p) return; (S.tab === 'charts' ? tabCharts : S.tab === 'classes' ? tabClasses : S.tab === 'boot' ? tabBoot : tabParams)(p); }
 
 /* plot navigator (shared component) + period switch, as in Plot & Stand Metrics */
 const ST = ['ok', 'warning', 'error'];
@@ -394,21 +395,26 @@ function tabParams(p) {
   const s = u.desc, tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
   let h = nav.bar(perSwitch(u)) + (R.grouped ? `<div class="tiles">${tile(fmtNum(s.n, R.countType === 'perha' ? 2 : 0), T(R.countType === 'perha' ? 'd.n.ha' : 'd.n'))}${tile(fmtNum(s.classes, 0), T('d.cls'))}${tile(fmtNum(s.occupied, 0), T('d.occ'))}${tile(`${f(s.min, 1)}–${s.max === Infinity ? '∞' : f(s.max, 1)}`, T('d.crange'))}</div>` : '')
     + (R.grouped ? '' : `<div class="tiles">${tile(fmtNum(s.n, 0), T(truncActive() ? 'd.n.tr' : 'd.n'))}${tile(f(s.mean, 2), T('d.mean'))}${tile(f(s.dq, 2), T('d.dq'))}${tile(`${f(s.min, 1)}–${f(s.max, 1)}`, T('d.range'))}${tile(f(s.varN, 2), T('d.var'))}${tile(f(s.varN1, 2), T('d.var1'))}</div>`);
+  let fam = ''; const allNotes = [];
   for (const fa of D.families()) {
     const rs = u.results.filter(r => r.family === fa.id); if (!rs.length) continue;
-    h += `<h3>${esc(T('fam.' + fa.id))}</h3><div class="tscroll"><table class="grid ptab" data-fam="${fa.id}"><thead><tr><th>${T('t.method')}</th><th>${T('t.fixed')}</th>
+    fam += `<h3>${esc(T('fam.' + fa.id))}</h3><div class="tscroll"><table class="grid ptab" data-fam="${fa.id}"><thead><tr><th>${T('t.method')}</th><th>${T('t.fixed')}</th>
       ${fa.params.map(q => `<th title="${esc(T('role.' + q.role) + (q.scale === 'log' ? ', ' + T('unit.logscale') : ''))}">${esc(parHead(q))}</th>`).join('')}<th>${T('t.n')}</th><th>${T('t.ll')}</th><th>${T('t.aic')}</th><th>${T('t.bic')}</th><th>${T('t.ks')}</th><th>${T('t.ad')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
       ${rs.map(r => { const okr = r.status === 'ok', g = r.gof || {}, fx = Object.entries(r.fixed).map(([k, v]) => T('fixed.' + (v.origin === 'zero' ? 'zero' : 'user'), { k: parLabel(r.family, k), v: f(v.value, 4) })).join(', ') || T('fixed.none');
         return `<tr class="${okr ? '' : 'st-bad'}" data-method="${r.method}" data-status="${r.status}"><th>${esc(methodName(r))}</th><td>${esc(fx)}</td>${fa.params.map(q => `<td class="num">${okr ? f(r.params[q.key], 4) : '–'}</td>`).join('')}
           <td class="num">${fmtNum(r.data.n, 0)}</td><td class="num">${okr ? f(r.logLik, 3) : '–'}</td><td class="num">${g.aic != null ? f(g.aic, 2) : '–'}</td><td class="num">${g.bic != null ? f(g.bic, 2) : '–'}</td>
           <td class="num">${okr ? f(g.ks, 4) : '–'}</td><td class="num">${okr ? f(g.ad, 3) : '–'}</td><td>${T('st.' + r.status)}</td><td class="small">${esc(T('sol.' + r.convergence.solver))}${r.convergence.iter != null ? ` · ${r.convergence.iter}` : ''}</td></tr>`; }).join('')}</tbody></table></div>`;
     const notes = rs.flatMap(r => notesOf(r).map(x => `${methodName(r)}${Object.values(r.fixed).some(v => v.origin !== 'zero') ? ` (${Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ')})` : ''}: ${x}`));
-    if (notes.length) h += `<ul class="small notes">${[...new Set(notes)].map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+    allNotes.push(...notes.map(x => `${T('fam.' + fa.id)} · ${x}`));
   }
+  h += compareHtml(u);
+  if (allNotes.length) h += `<h3>${T('p.notes')}</h3><ul class="small notes">${[...new Set(allNotes)].map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  h += `<details class="more ptabs"${S.ptabsOpen ? ' open' : ''}><summary>${T('p.all')}</summary>${fam}<p class="muted small">${T('p.note')}</p></details>`;
   const nOk = u.results.filter(r => r.status === 'ok').length, nW = u.results.filter(r => r.status === 'ok' && r.warnings.some(w => w.code !== 'var.n1')).length;
   h = h.replace('<div class="tiles">', `<p class="small pstates" data-ok="${nOk}" data-bad="${u.results.length - nOk}">${T('p.states', { ok: nOk, w: nW, bad: u.results.length - nOk })}</p><div class="tiles">`);
-  h += `<p class="muted small">${T('p.note')}</p>` + srcBlock(u.results) + `<h3>${T('ex.h')}</h3>` + exportButtons('x', [['xlsx', 'ex.xlsx', true], ['fits', 'ex.fits'], ['params', 'ex.params'], ['json', 'p.json']]);
-  p.innerHTML = h; bindBar();
+  h += srcBlock(u.results) + `<h3>${T('ex.h')}</h3>` + exportButtons('x', [['xlsx', 'ex.xlsx', true], ['fits', 'ex.fits'], ['params', 'ex.params'], ['json', 'p.json']]);
+  p.innerHTML = h; bindBar(); bindCompare(p);
+  p.querySelector('details.ptabs').addEventListener('toggle', e => { S.ptabsOpen = e.target.open; save(); });
   for (const k of ['xlsx', 'fits', 'params']) $('x-' + k).addEventListener('click', () => exportRaw(k));
   $('x-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-sonuc-${new Date().toISOString().slice(0, 10)}.json`,
     { tool: D.TOOL, created: new Date().toISOString(), source: S.imp ? S.imp.name : null, settings: jsonSettings(), results: R.units.flatMap(x => x.results.map(({ gof, ...r }) => ({ ...r, fit: gof || null }))),
@@ -552,8 +558,8 @@ function classErr(u, r) {
   return { l1: ph ? null : x.t.absDiff, ei: ph ? x.t.absDiff : x.t.perHa != null ? x.t.absDiff * x.t.perHa : null };
 }
 const CMP_ML = ['aic', 'bic', 'aicc', 'logLik', 'ks', 'ad', 'cvm', 'l1', 'ei'], CMP_DESC = ['ks', 'ad', 'cvm', 'l1', 'ei'];
-function tabCompare(p) {
-  const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
+const CMP_OPT = new Set(['fixed', 'k', 'bic', 'dBIC', 'aicc', 'cvm', 'l1', 'ei', 'conv']);   // shown with "all columns" (or when sorted by)
+function compareHtml(u) {
   const groups = D.compare.compareUnit(u.results, r => classErr(u, r)), crit = S.cmpSort;
   const parTxt = r => D.family(r.family).params.filter(q => !(r.fixed || {})[q.key]).map(q => `${q.label ?? q.key} = ${f(r.params[q.key], 4)}`).join('; ');
   const fixTxt = r => Object.entries(r.fixed || {}).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ') || '–';
@@ -563,19 +569,25 @@ function tabCompare(p) {
       case 'n': return x.n == null ? '–' : fmtNum(x.n, 2); case 'k': return x.k ?? '–'; case 'conv': return esc(T('sol.' + r.convergence.solver)) + (r.convergence.iter != null ? ' · ' + r.convergence.iter : '');
       default: return x[c] == null ? '–' : f(x[c], ['ks', 'ad', 'cvm'].includes(c) ? 4 : 2); } };
   const table = (rows, ml) => { const cs = cols(ml), sc = (ml ? CMP_ML : CMP_DESC).includes(crit) ? crit : 'ks';
-    return `<p class="small sortnote">${T('cmp.sorted', { c: T('cmp.c.' + sc), d: T(D.compare.CRITERIA[sc] > 0 ? 'cmp.asc' : 'cmp.desc') })}</p><div class="tscroll"><table class="grid cmptab" data-kind="${ml ? 'ml' : 'desc'}"><thead><tr>${cs.map(([k, l]) => `<th${k === sc ? ' class="sorted"' : ''}>${esc(l || T('cmp.h.' + k))}</th>`).join('')}</tr></thead><tbody>
-      ${D.compare.sortRows(rows, sc).map(x => `<tr data-method="${x.r.method}">${cs.map(([k]) => `<td class="${['dist', 'method', 'params', 'fixed', 'conv'].includes(k) ? 'small' : 'num'}">${cell(x, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; };
-  let h = nav.bar(perSwitch(u)) + `<label>${T('cmp.sort')} <select id="cmp-sort">${CMP_ML.map(c => `<option value="${c}"${c === crit ? ' selected' : ''}>${esc(T('cmp.c.' + c))}</option>`).join('')}</select></label><p class="muted small">${T('cmp.note')}</p>`;
+    const oc = k => CMP_OPT.has(k) && k !== sc ? ' opt' : '';
+    return `<p class="small sortnote">${T('cmp.sorted', { c: T('cmp.c.' + sc), d: T(D.compare.CRITERIA[sc] > 0 ? 'cmp.asc' : 'cmp.desc') })}</p><div class="tscroll"><table class="grid cmptab" data-kind="${ml ? 'ml' : 'desc'}"><thead><tr>${cs.map(([k, l]) => `<th class="${k === sc ? 'sorted' : ''}${oc(k)}">${esc(l || T('cmp.h.' + k))}</th>`).join('')}</tr></thead><tbody>
+      ${D.compare.sortRows(rows, sc).map(x => `<tr data-method="${x.r.method}">${cs.map(([k]) => `<td class="${['dist', 'method', 'params', 'fixed', 'conv'].includes(k) ? 'small' : 'num'}${oc(k)}">${cell(x, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; };
+  let h = `<div class="cmpbar"><label>${T('cmp.sort')} <select id="cmp-sort">${CMP_ML.map(c => `<option value="${c}"${c === crit ? ' selected' : ''}>${esc(T('cmp.c.' + c))}</option>`).join('')}</select></label>
+    <label class="chk"><input type="checkbox" id="cmp-all"${S.cmpAll ? ' checked' : ''}> ${T('cmp.all')}</label></div>
+    <details class="more"><summary>${T('cmp.how')}</summary><p class="muted small">${T('cmp.note')}</p></details>`;
   for (const g of groups) {
     const pr = g.process, lab = pr.type === 'classes' ? T('cmp.proc.cls', { o: T('dt.out.' + pr.outside), t: T('dt.ct.' + pr.countType) }) : pr.lower != null || pr.upper != null ? T('cmp.proc.trunc', { L: pr.lower ?? '–', U: pr.upper ?? '∞' }) : T('cmp.proc.raw');
     h += `<div class="card cmpgroup"><h3>${esc(lab)}</h3>`;
-    if (g.ml.length) h += `<h4>${T('cmp.ml.h')}</h4>${table(g.ml, true)}<p class="muted small">${T('cmp.ml.note')}</p>`;
-    if (g.desc.length) h += `<h4>${T('cmp.desc.h')}</h4>${table(g.desc, false)}<p class="muted small">${T('cmp.desc.note')}</p>`;
+    if (g.ml.length) h += `<h4>${T('cmp.ml.h')}</h4>${table(g.ml, true)}<details class="more"><summary>${T('cmp.read')}</summary><p class="muted small">${T('cmp.ml.note')}</p></details>`;
+    if (g.desc.length) h += `<h4>${T('cmp.desc.h')}</h4>${table(g.desc, false)}<details class="more"><summary>${T('cmp.read')}</summary><p class="muted small">${T('cmp.desc.note')}</p></details>`;
     if (g.failed.length) h += `<h4>${T('cmp.fail.h')}</h4><ul class="small">${g.failed.map(x => `<li>${esc(resName(x.r))}: ${esc(T('st.' + x.status))}${notesOf(x.r).length ? ' — ' + esc(notesOf(x.r).join('; ')) : ''}</li>`).join('')}</ul>`;
     h += `</div>`;
   }
-  p.innerHTML = h; bindBar();
-  $('cmp-sort').addEventListener('change', e => { S.cmpSort = e.target.value; save(); tabCompare(p); });
+  return `<div class="cmpwrap${S.cmpAll ? ' allcols' : ''}">${h}</div>`;
+}
+function bindCompare(p) {
+  $('cmp-sort').addEventListener('change', e => { S.cmpSort = e.target.value; save(); tabParams(p); });
+  $('cmp-all').addEventListener('change', e => { S.cmpAll = e.target.checked; save(); p.querySelector('.cmpwrap').classList.toggle('allcols', S.cmpAll); });
 }
 
 /* ---------------- class tables (P12): observed, probability, expected, per hectare, tails — from the same edges ---------------- */
