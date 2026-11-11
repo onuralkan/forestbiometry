@@ -71,3 +71,4 @@ export * from './data.js';
 export * as trunc from './truncate.js';
 export * as classes from './classes.js';
 export { groupedLogLik, checkGrouped } from './fit/grouped.js';
+export * as compare from './compare.js';

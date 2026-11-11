@@ -3,6 +3,7 @@
 // through the T function the caller passes. Machine-readable codes (method id, status code) sit next to the labels so
 // that TR and EN files carry the same values.
 import * as D from './index.js';
+import { compareUnit } from './compare.js';
 
 const MAXP = 4;                                            // largest number of parameters of any registered family
 const num = x => typeof x === 'number' && Number.isFinite(x) ? x : null;
@@ -16,7 +17,7 @@ export function fitRows(units, h) {
   const { T } = h;
   const head = [T('x.plot'), T('x.period'), 'n', T('x.family'), T('x.method'), 'method_id', T('x.estimator'), T('x.status'), 'status', T('x.reason'),
     ...Array.from({ length: MAXP }, (_, i) => [T('x.par', { i: i + 1 }), T('x.val', { i: i + 1 })]).flat(),
-    T('x.fixed'), 'ln L', 'k', 'AIC', 'BIC', 'KS D', 'AD A²', T('x.pneg'), T('x.solver'), T('x.iter'), T('x.trlo'), T('x.trhi'), T('x.mass'), T('x.nscope'), T('x.settings')];
+    T('x.fixed'), 'ln L', 'k', 'AIC', 'BIC', 'KS D', 'AD A²', 'CvM W²', T('x.pneg'), T('x.solver'), T('x.iter'), T('x.trlo'), T('x.trhi'), T('x.mass'), T('x.nscope'), T('x.settings')];
   const out = [head];
   for (const u of units) for (const r of u.results) {
     const fam = D.family(r.family), ok = r.status === 'ok', g = r.gof || {};
@@ -24,7 +25,7 @@ export function fitRows(units, h) {
     while (pars.length < 2 * MAXP) pars.push(null);
     const fixed = Object.entries(r.fixed || {}).map(([k, v]) => `${(fam.params.find(q => q.key === k) || {}).label ?? k} = ${v.value} (${T('x.origin.' + v.origin)})`).join('; ');
     out.push([unitPlot(u) ?? h.poolLabel, u.period, r.data.n, T('fam.' + r.family), h.methodName(r), r.method, T('est.' + r.estimator), T('st.' + r.status), r.status, h.notes(r).join(' | ') || null,
-      ...pars, fixed || null, ok ? num(r.logLik) : null, ok && r.likelihoodMaximised ? r.free.length : null, num(g.aic), num(g.bic), ok ? num(g.ks) : null, ok ? num(g.ad) : null,
+      ...pars, fixed || null, ok ? num(r.logLik) : null, ok && r.likelihoodMaximised ? r.free.length : null, num(g.aic), num(g.bic), ok ? num(g.ks) : null, ok ? num(g.ad) : null, ok ? num(g.cvm) : null,
       ok && r.diagnostics ? num(r.diagnostics.pBelowZero) : null, T('sol.' + r.convergence.solver), r.convergence.iter ?? null,
       r.truncation ? num(r.truncation.lower) : null, r.truncation ? num(r.truncation.upper) : null, ok && r.truncation ? num(r.truncation.mass) : null,
       ok && r.truncation ? (r.settings.nScope === 'population' ? num(r.truncation.nPopulation) : r.data.n) : null, settingsText(r.settings)]);
@@ -94,6 +95,16 @@ export function classRows(units, h, tableFor) {
     if (t.gaps.prob > 0 || t.gaps.obs) out.push([...base, T('cl.gaps'), null, null, t.gaps.obs, t.gaps.prob, t.gaps.exp, ha(t.gaps.obsHa), ha(t.gaps.expHa)]);
     const lastHi = x.cl[x.cl.length - 1].hi;
     if (lastHi !== Infinity) out.push([...base, T('cl.above', { b: lastHi }), lastHi, null, t.upper.obs, t.upper.prob, t.upper.exp, ha(t.upper.obsHa), ha(t.upper.expHa)]);
+  }
+  return out;
+}
+/** Comparison table (stage P13): per unit and observation process, likelihood fits and descriptive fits apart. */
+export function compareRows(units, h, classErr) {
+  const { T } = h;
+  const out = [[T('x.plot'), T('x.period'), T('cmp.x.group'), T('cmp.x.table'), T('x.family'), T('x.method'), 'method_id', 'n', 'k', 'ln L', 'AIC', 'ΔAIC', 'BIC', 'ΔBIC', 'AICc', 'KS D', 'AD A²', 'CvM W²', T('cmp.l1'), T('cmp.ei')]];
+  for (const u of units) for (const g of compareUnit(u.results, r => classErr(u, r))) {
+    for (const [rows, kind] of [[g.ml, 'ml'], [g.desc, 'desc']]) for (const x of rows)
+      out.push([unitPlot(u) ?? h.poolLabel, u.period, g.key, T('cmp.x.' + kind), T('fam.' + x.r.family), h.methodName(x.r), x.r.method, x.n, kind === 'ml' ? x.k : null, num(x.logLik), num(x.aic), num(x.dAIC), num(x.bic), num(x.dBIC), num(x.aicc), num(x.ks), num(x.ad), num(x.cvm), num(x.l1), num(x.ei)]);
   }
   return out;
 }

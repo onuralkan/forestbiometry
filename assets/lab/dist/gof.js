@@ -16,3 +16,11 @@ export function ad(fam, p, d) {
 }
 /** AIC = 2k − 2ℓ, BIC = k ln n − 2ℓ; n = number of observed trees, k = number of freely estimated parameters. */
 export const aicBic = (ll, k, n) => ({ k, aic: 2 * k - 2 * ll, bic: k * Math.log(n) - 2 * ll });
+/** Cramér–von Mises W² = 1/(12n) + Σ [F(d(i)) − (2i − 1)/(2n)]² (no p-value: parameters estimated from the same data). */
+export function cvm(fam, p, d) {
+  const s = [...d].sort((u, v) => u - v), n = s.length; let S = 1 / (12 * n);
+  for (let i = 1; i <= n; i++) S += (fam.cdf(s[i - 1], p) - (2 * i - 1) / (2 * n)) ** 2;
+  return S;
+}
+/** AICc = AIC + 2k(k + 1)/(n − k − 1); null when n ≤ k + 1 (not defined). Small-sample correction derived for regular models. */
+export const aicc = (ll, k, n) => n > k + 1 ? 2 * k - 2 * ll + 2 * k * (k + 1) / (n - k - 1) : null;

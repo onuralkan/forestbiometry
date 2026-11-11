@@ -6,7 +6,7 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { download, downloadJSON, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import * as REP from './report.js';
-import { plotChart, svgForDownload } from '../core/chart.js';
+import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
@@ -32,7 +32,7 @@ function blank() {
     prs: { xi: '', mean: '', median: '', qmode: 'ng', nha: '', g: '', dq: '', origin: 'measured', from: null, unit: 0, done: false },
     wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
     mode: 'each', dtype: 'raw', lcol: null, ucol: null, ncol: null, countType: 'count', outside: 'zero',
-    cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '' }, clsFit: null,
+    cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '' }, clsFit: null, histScale: 'density', diagFit: null, cmpSort: 'aic',
     trunc: { mode: 'none', L: '', U: '', nScope: 'observed' }, methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
 let saveT = null;
@@ -221,7 +221,7 @@ function compute() {
         if (r.status === 'ok' && g) { r.gof = r.logLik != null ? D.gof.aicBic(r.logLik, r.free.length, r.data.n) : {}; }   // grouped: no KS/AD on raw values; AIC only with tree counts
         else if (r.status === 'ok') {
           const G = obsDist(r);                                            // the conditional distribution for thresholded data
-          r.gof = { ks: D.gof.ks(G, r.params, u.d), ad: D.gof.ad(G, r.params, u.d) };
+          r.gof = { ks: D.gof.ks(G, r.params, u.d), ad: D.gof.ad(G, r.params, u.d), cvm: D.gof.cvm(G, r.params, u.d) };
           if (r.likelihoodMaximised && r.logLik != null) Object.assign(r.gof, D.gof.aicBic(r.logLik, r.free.length, u.d.length));   // AIC only where the likelihood was maximised
         }
         u.results.push(r);
@@ -245,7 +245,7 @@ const unitLabel = u => `${u.plot === D.POOL ? T('unit.pool') : T('unit.plot', { 
 const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', '); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
 
 /* ---------------- step 3: results ---------------- */
-const TABS = ['params', 'charts', 'classes'];
+const TABS = ['params', 'charts', 'classes', 'compare'];
 function renderStep3() {
   if (!R) compute();
   const el = $('step3'), withNav = plotIds().length > 1, a = R.acc;
@@ -263,7 +263,7 @@ function renderStep3() {
   if (withNav) nav.renderAside($('unav'));
   drawPanel();
 }
-function drawPanel() { const p = $('panel'); if (!p) return; (S.tab === 'charts' ? tabCharts : S.tab === 'classes' ? tabClasses : tabParams)(p); }
+function drawPanel() { const p = $('panel'); if (!p) return; (S.tab === 'charts' ? tabCharts : S.tab === 'classes' ? tabClasses : S.tab === 'compare' ? tabCompare : tabParams)(p); }
 
 /* plot navigator (shared component) + period switch, as in Plot & Stand Metrics */
 const ST = ['ok', 'warning', 'error'];
@@ -333,7 +333,7 @@ function exportRaw(kind) {
   return loadXLSX(BASE).then(XLSX => download(fname('cap-dagilimi', 'diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
     { name: T('sheet.info'), rows: REP.infoRows(settingsInfo(), T), widths: [34, 110] }, { name: T('sheet.fits'), rows: REP.fitRows(R.units, h) },
     { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) },
-    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }])), () => status(T('ex.fail'), 'err'));
+    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) }])), () => status(T('ex.fail'), 'err'));
 }
 function exportRec(kind, results, info, base) {
   const h = repH(), rows = REP.recoverRows(results, h);
@@ -372,20 +372,34 @@ function tabCharts(p) {
   const shown = okR.filter(x => !S.hidden.includes(key(x)));
   h += `<p class="small">${T('ch.fit')}: ${okR.map(x => `<label class="chk"><input type="checkbox" data-fit="${esc(key(x))}"${S.hidden.includes(key(x)) ? '' : ' checked'}> ${esc(resName(x[0]))}</label>`).join(' ')}</p>`;
   if (R.grouped) return chartsGrouped(p, u, h, shown, okR);
-  const s = u.desc, w = niceWidth(Math.max(s.max - s.min, 1e-9)), b0 = Math.floor(s.min / w) * w, nb = Math.max(1, Math.ceil((s.max - b0) / w + 1e-9)), n = u.d.length;
-  const bars = Array.from({ length: nb }, (_, i) => ({ lo: b0 + i * w, hi: b0 + (i + 1) * w, v: 0 }));
-  for (const v of u.d) bars[Math.min(nb - 1, Math.floor((v - b0) / w))].v += 1 / (n * w);
-  const hi = b0 + nb * w, xmin = Math.max(0, b0 - (hi - b0) * 0.03), xmax = hi + (hi - b0) * 0.03, xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * i / 400);
+  // histogram on the same class edges as the Classes tab (closed classes); density (1/cm) or counts (trees) — never mixed
+  const n = u.d.length, cc = classesFor(u), aw = niceWidth(Math.max(u.desc.max - u.desc.min, 1e-9));
+  const cl = (cc.problems.length ? D.classes.makeClasses({ start: Math.floor(u.desc.min / aw) * aw, width: aw, max: u.desc.max }) : cc.cl).filter(c => c.hi !== Infinity);
+  const cnt = D.classes.countRaw(cl, u.d), dens = S.histScale !== 'count';
+  const bars = cl.map((c, j) => ({ lo: c.lo, hi: c.hi, v: dens ? cnt.counts[j] / (n * (c.hi - c.lo)) : cnt.counts[j] }));
+  const b0 = Math.min(cl[0].lo, u.desc.min), hi = Math.max(cl[cl.length - 1].hi, u.desc.max), xmin = Math.max(0, b0 - (hi - b0) * 0.03), xmax = hi + (hi - b0) * 0.03, xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * i / 400);
   const line = (fn) => shown.map(([r, i]) => { const fam = obsDist(r); return { name: resName(r), k: i, dash: r.estimator !== 'ml', pts: xs.map(x => [x, fam[fn](x, r.params)]) }; });
+  const expLines = () => shown.map(([r, i]) => { const G = obsDist(r); return { name: resName(r), k: i, dot: true, pts: cl.map(c => [(c.lo + c.hi) / 2, n * (G.cdf(c.hi, r.params) - G.cdf(c.lo, r.params))]) }; });
   const srt = [...u.d].sort((a, b) => a - b), step = [[xmin, 0], ...srt.map((x, j) => [x, (j + 1) / n]), [xmax, 1]];
   const fm = v => fmtNum(v, 3), nm = String(u.plot === D.POOL ? 'havuz' : u.plot).replace(/[^\p{L}\p{N}_-]+/gu, '_') + (u.period != null ? '-' + u.period : '');
-  h += `<div class="charts2"><figure class="chartbox" id="ch-h">${plotChart({ title: T('ch.hist', { u: unitLabel(u) }), xmin, xmax, bars, lines: line('pdf'), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: fm })}
-      <figcaption><span class="muted small">${T('ch.bins', { w: f(w, 3) })}</span> <button type="button" class="btn ghost small" data-svg="ch-h" data-name="histogram-${nm}">${T('ch.svg')}</button></figcaption></figure>
+  h += `<div class="radios small">${['density', 'count'].map(v => `<label><input type="radio" name="hscale" value="${v}"${(dens ? 'density' : 'count') === v ? ' checked' : ''}> ${T('ch.scale.' + v)}</label>`).join('')}</div>`;
+  h += `<div class="charts2"><figure class="chartbox" id="ch-h">${plotChart({ title: T(dens ? 'ch.hist' : 'ch.histn', { u: unitLabel(u) }), xmin, xmax, bars, lines: dens ? line('pdf') : expLines(), xLabel: T('ch.d'), yLabel: T(dens ? 'ch.dens' : 'ch.count'), fmt: fm })}
+      <figcaption><span class="muted small">${T(dens ? 'ch.bins2' : 'ch.binsn')}</span> <button type="button" class="btn ghost small" data-svg="ch-h" data-name="histogram-${nm}">${T('ch.svg')}</button></figcaption></figure>
     <figure class="chartbox" id="ch-c">${plotChart({ title: T('ch.cdf', { u: unitLabel(u) }), xmin, xmax, ymin: 0, ymax: 1, lines: [{ name: T('ch.ecdf'), step: true, k: 5, pts: step }, ...line('cdf')], xLabel: T('ch.d'), yLabel: T('ch.F'), fmt: fm })}
       <figcaption><button type="button" class="btn ghost small" data-svg="ch-c" data-name="birikimli-${nm}">${T('ch.svg')}</button></figcaption></figure></div>`;
+  // Q–Q and P–P for one fit at a time
+  if (!okR.some(x => key(x) === S.diagFit)) S.diagFit = key(okR[0]);
+  const dr = okR.find(x => key(x) === S.diagFit)[0], G = obsDist(dr);
+  h += `<h3>${T('ch.diag')}</h3><label>${T('cl.fit')} <select id="dg-fit">${okR.map(x => `<option value="${esc(key(x))}"${key(x) === S.diagFit ? ' selected' : ''}>${esc(resName(x[0]))}</option>`).join('')}</select></label>
+    <div class="charts2"><figure class="chartbox" id="ch-q">${scatterChart({ title: T('ch.qq'), points: D.compare.qqPoints(G, dr.params, u.d), xLabel: T('ch.qq.x'), yLabel: T('ch.qq.y'), line11: true, equal: true, fmt: fm })}
+      <figcaption><b class="small">${T('ch.qq', {})} · ${esc(resName(dr))}</b> <button type="button" class="btn ghost small" data-svg="ch-q" data-name="qq-${nm}">${T('ch.svg')}</button></figcaption></figure>
+    <figure class="chartbox" id="ch-p">${scatterChart({ title: T('ch.pp'), points: D.compare.ppPoints(G, dr.params, u.d), xLabel: T('ch.pp.x'), yLabel: T('ch.pp.y'), line11: true, equal: true, fmt: fm })}
+      <figcaption><b class="small">${T('ch.pp', {})} · ${esc(resName(dr))}</b> <button type="button" class="btn ghost small" data-svg="ch-p" data-name="pp-${nm}">${T('ch.svg')}</button></figcaption></figure></div><p class="muted small">${T('ch.diag.note')}</p>`;
   p.innerHTML = h; bindBar();
   p.querySelectorAll('[data-fit]').forEach(x => x.addEventListener('change', () => { const k = x.dataset.fit; S.hidden = x.checked ? S.hidden.filter(j => j !== k) : [...S.hidden, k]; save(); tabCharts(p); }));
   p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
+  p.querySelectorAll('input[name="hscale"]').forEach(x => x.addEventListener('change', () => { S.histScale = x.value; save(); tabCharts(p); }));
+  $('dg-fit') && $('dg-fit').addEventListener('change', e => { S.diagFit = e.target.value; save(); tabCharts(p); });
 }
 
 /** Grouped data: histogram from the classes themselves (density n_j/(n·w_j); an open class is not drawn), cumulative
@@ -405,6 +419,39 @@ function chartsGrouped(p, u, h, shown, okR) {
   p.innerHTML = h; bindBar();
   p.querySelectorAll('[data-fit]').forEach(x => x.addEventListener('change', () => { const k = x.dataset.fit; S.hidden = x.checked ? S.hidden.filter(j => j !== k) : [...S.hidden, k]; save(); tabCharts(p); }));
   p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
+}
+
+/* ---------------- comparison (P13): grouped by observation process; likelihood fits vs descriptive; chosen criterion ---------------- */
+function classErr(u, r) {
+  const x = tableFor(u, r); if (!x || !x.t) return null;
+  const ph = R.grouped && R.countType === 'perha';
+  return { l1: ph ? null : x.t.absDiff, ei: ph ? x.t.absDiff : x.t.perHa != null ? x.t.absDiff * x.t.perHa : null };
+}
+const CMP_ML = ['aic', 'bic', 'aicc', 'logLik', 'ks', 'ad', 'cvm', 'l1', 'ei'], CMP_DESC = ['ks', 'ad', 'cvm', 'l1', 'ei'];
+function tabCompare(p) {
+  const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
+  const groups = D.compare.compareUnit(u.results, r => classErr(u, r)), crit = S.cmpSort;
+  const parTxt = r => D.family(r.family).params.filter(q => !(r.fixed || {})[q.key]).map(q => `${q.label ?? q.key} = ${f(r.params[q.key], 4)}`).join('; ');
+  const fixTxt = r => Object.entries(r.fixed || {}).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ') || '–';
+  const cols = ml => [['dist', ''], ['method', ''], ['params', ''], ['fixed', ''], ['n', ''], ...(ml ? [['k', ''], ['logLik', 'ln L'], ['aic', 'AIC'], ['dAIC', 'ΔAIC'], ['bic', 'BIC'], ['dBIC', 'ΔBIC'], ['aicc', 'AICc']] : [['logLik', T('cmp.logscore')]]), ['ks', 'KS D'], ['ad', 'AD A²'], ['cvm', 'CvM W²'], ['l1', T('cmp.l1')], ['ei', T('cmp.ei')], ['conv', T('t.solver')]];
+  const cell = (x, c) => { const r = x.r;
+    switch (c) { case 'dist': return esc(T('fam.' + r.family)); case 'method': return esc(methodName(r)); case 'params': return esc(parTxt(r)); case 'fixed': return esc(fixTxt(r));
+      case 'n': return x.n == null ? '–' : fmtNum(x.n, 2); case 'k': return x.k ?? '–'; case 'conv': return esc(T('sol.' + r.convergence.solver)) + (r.convergence.iter != null ? ' · ' + r.convergence.iter : '');
+      default: return x[c] == null ? '–' : f(x[c], ['ks', 'ad', 'cvm'].includes(c) ? 4 : 2); } };
+  const table = (rows, ml) => { const cs = cols(ml), sc = (ml ? CMP_ML : CMP_DESC).includes(crit) ? crit : 'ks';
+    return `<p class="small sortnote">${T('cmp.sorted', { c: T('cmp.c.' + sc), d: T(D.compare.CRITERIA[sc] > 0 ? 'cmp.asc' : 'cmp.desc') })}</p><div class="tscroll"><table class="grid cmptab" data-kind="${ml ? 'ml' : 'desc'}"><thead><tr>${cs.map(([k, l]) => `<th${k === sc ? ' class="sorted"' : ''}>${esc(l || T('cmp.h.' + k))}</th>`).join('')}</tr></thead><tbody>
+      ${D.compare.sortRows(rows, sc).map(x => `<tr data-method="${x.r.method}">${cs.map(([k]) => `<td class="${['dist', 'method', 'params', 'fixed', 'conv'].includes(k) ? 'small' : 'num'}">${cell(x, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; };
+  let h = nav.bar(perSwitch(u)) + `<label>${T('cmp.sort')} <select id="cmp-sort">${CMP_ML.map(c => `<option value="${c}"${c === crit ? ' selected' : ''}>${esc(T('cmp.c.' + c))}</option>`).join('')}</select></label><p class="muted small">${T('cmp.note')}</p>`;
+  for (const g of groups) {
+    const pr = g.process, lab = pr.type === 'classes' ? T('cmp.proc.cls', { o: T('dt.out.' + pr.outside), t: T('dt.ct.' + pr.countType) }) : pr.lower != null || pr.upper != null ? T('cmp.proc.trunc', { L: pr.lower ?? '–', U: pr.upper ?? '∞' }) : T('cmp.proc.raw');
+    h += `<div class="card cmpgroup"><h3>${esc(lab)}</h3>`;
+    if (g.ml.length) h += `<h4>${T('cmp.ml.h')}</h4>${table(g.ml, true)}<p class="muted small">${T('cmp.ml.note')}</p>`;
+    if (g.desc.length) h += `<h4>${T('cmp.desc.h')}</h4>${table(g.desc, false)}<p class="muted small">${T('cmp.desc.note')}</p>`;
+    if (g.failed.length) h += `<h4>${T('cmp.fail.h')}</h4><ul class="small">${g.failed.map(x => `<li>${esc(resName(x.r))}: ${esc(T('st.' + x.status))}${notesOf(x.r).length ? ' — ' + esc(notesOf(x.r).join('; ')) : ''}</li>`).join('')}</ul>`;
+    h += `</div>`;
+  }
+  p.innerHTML = h; bindBar();
+  $('cmp-sort').addEventListener('change', e => { S.cmpSort = e.target.value; save(); tabCompare(p); });
 }
 
 /* ---------------- class tables (P12): observed, probability, expected, per hectare, tails — from the same edges ---------------- */
