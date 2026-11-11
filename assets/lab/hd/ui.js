@@ -296,7 +296,7 @@ function tabPredict(p) {
   if (!pm.length) h += `<p class="muted">${T('pr.nomissing')}</p>`;
   else {
     h += `<p class="small">${T('pr.sum', { n: pm.length, out: pm.filter(x => x.outside).length, dmin: f(prep.dmin, 1), dmax: f(prep.dmax, 1) })}</p><p class="muted small">${T('pr.sep')}</p>
-      <div class="tscroll"><table class="grid" id="mtab"><thead><tr><th>${T('pr.row')}</th><th>${T('pr.plot')}</th><th>${T('pr.sp')}</th><th>${T('pr.d')}</th><th>${T('pr.hhat')}</th><th>${T('pr.flag')}</th></tr></thead><tbody>
+      <div class="tscroll tall"><table class="grid" id="mtab"><thead><tr><th>${T('pr.row')}</th><th>${T('pr.plot')}</th><th>${T('pr.sp')}</th><th>${T('pr.d')}</th><th>${T('pr.hhat')}</th><th>${T('pr.flag')}</th></tr></thead><tbody>
       ${pm.slice(0, SHOW).map(x => `<tr${x.outside ? ' class="tail"' : ''}><td class="rn">${x.row.rowNo}</td><td>${esc(x.row.plot)}</td><td>${esc(x.row.species)}</td><td class="num">${f(x.row.d, 2)}</td><td class="num">${f(x.h, 2)}</td><td>${x.outside ? `<span class="sev sev-warning"><i></i>${T('pr.outside')}</span>` : T('pr.inside')}</td></tr>`).join('')}</tbody></table></div>
       ${pm.length > SHOW ? `<p class="muted small">${T('pr.more', { k: SHOW })}</p>` : ''}`;
   }

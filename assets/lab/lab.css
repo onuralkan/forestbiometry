@@ -437,3 +437,11 @@ details.ptabs > summary { font-size: 14px; font-weight: 600; color: var(--ink); 
 /* interface revision, stage 3: summary workflow — guide and one method group at a time */
 .recguide table td { vertical-align: top; }
 .rectabs { margin: 6px 0 12px; }
+/* interface principles across the tools (11 November 2026) */
+body:has(#steps li:not(:first-child) [aria-current="step"]) .b-lede { display: none; }
+body:has(#steps li:not(:first-child) [aria-current="step"]) .b-head h1 { font-size: clamp(22px, 3vw, 30px); }
+body:has(#steps li:not(:first-child) [aria-current="step"]) .b-head { margin-bottom: 10px; }
+.statement { border-left-color: var(--line); background: var(--sunk); color: var(--muted); }
+.tscroll.tall { max-height: 460px; overflow: auto; }
+.tscroll.tall thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+details.assumebox > summary { font: 600 16px var(--head); color: var(--ink); margin: 14px 0 4px; }

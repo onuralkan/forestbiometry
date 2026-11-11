@@ -161,9 +161,9 @@ function renderStep2() {
       <div class="radios col">${['empty', 'unmeasured'].map(v => `<label><input type="radio" name="ec" value="${v}"${S.emptyCombos === v ? ' checked' : ''}> ${T('ec.' + v)}</label>`).join('')}</div>
       ${S.emptyCombos ? '' : `<p class="note warn">${T('ec.undecided')}</p>`}</div>`;
   }
-  h += `<div class="card"><h2>${T('dom.title')}</h2><p class="muted">${T('dom.sub', { n: C.DOM_PER_HA })}</p><p class="small"><b>${T('dom.pick')}</b></p><div class="radios col">
+  h += `<div class="card"><h2>${T('dom.title')}</h2><details class="more"><summary>${T('more')}</summary><p class="muted small">${T('dom.sub', { n: C.DOM_PER_HA })}</p></details><p class="small"><b>${T('dom.pick')}</b></p><div class="radios col">
     ${['both', 'd', 'h'].map(v => `<label><input type="radio" name="domby" value="${v}"${S.domBy === v ? ' checked' : ''}> ${T('dom.' + v)}</label>`).join('')}</div>
-    <p class="muted small">${T('dom.hnote')} ${T('dom.agenote')}</p></div>`;
+    <details class="more"><summary>${T('dom.hnote.h')}</summary><p class="muted small">${T('dom.hnote')} ${T('dom.agenote')}</p></details></div>`;
   h += `<div class="card"><h2>${T('cls.h')}</h2><p class="muted">${T('cls.sub')}</p>
     <div class="radios"><label><input type="radio" name="cm" value="width"${c.mode === 'width' ? ' checked' : ''}> ${T('cls.width')}</label><label><input type="radio" name="cm" value="list"${c.mode === 'list' ? ' checked' : ''}> ${T('cls.list')}</label></div>`;
   if (c.mode === 'width') h += `<div class="lims"><label>${T('cls.start')} <input type="text" inputmode="decimal" data-c="start" value="${esc(c.start)}" size="6"></label>

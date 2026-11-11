@@ -13,4 +13,4 @@ site_top([
   <noscript><p class="card"><?= $tr ? 'Bu araç JavaScript gerektirir.' : 'This tool needs JavaScript.' ?></p></noscript>
   <div id="status" class="status" role="status" aria-live="polite"></div>
   <div id="app" class="planner"></div>
-<?php site_bottom('<script type="module" src="assets/lab/sampling/ui.js?v=2"></script>');
+<?php site_bottom('<script type="module" src="assets/lab/sampling/ui.js?v=3"></script>');

@@ -175,7 +175,7 @@ function renderResult() {
       points: g.map(x => [x.e, x.n]), xLabel: T('ch.x'), yLabel: T('ch.y'), fmt: v => fmtNum(v, 1), height: 330 })}
       <figcaption><button type="button" class="btn ghost small" id="svg">${T('ch.svg')}</button></figcaption></figure></div>
     <p class="muted small">${T('grid.note', { cv: f(p.cv, 2), level: lvl })}</p>`;
-  h += `<h3>${T('as.h')}</h3><ul class="assume">${T('as.list').map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="note">${T('as.not')}</p>`;
+  h += `<details class="more assumebox"><summary>${T('as.h')}</summary><ul class="assume">${T('as.list').map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="note">${T('as.not')}</p></details>`;
   h += `<h3>${T('x.h')}</h3><div class="exports"><button type="button" class="btn" id="x-txt">${T('x.txt')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-xlsx">${T('x.xlsx')}</button></div><p class="muted small">${T('x.note')}</p>`;
   el.innerHTML = h;
   $('svg').addEventListener('click', () => download(fname('ornek-sayisi', 'sample-size') + '.svg', svgForDownload($('ch-n').querySelector('svg')), 'image/svg+xml'));
