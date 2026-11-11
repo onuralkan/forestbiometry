@@ -31,7 +31,7 @@ function blank() {
     wf: 'raw', sum: { mean: '', which: 'var', v: '', div: 'n', n: '', dq: '', methods: {}, done: false },
     prs: { xi: '', mean: '', median: '', qmode: 'ng', nha: '', g: '', dq: '', origin: 'measured', from: null, unit: 0, done: false },
     wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
-    mode: 'each', methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
+    mode: 'each', trunc: { mode: 'none', L: '', U: '', nScope: 'observed' }, methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -66,10 +66,20 @@ function renderStep1() {
 
 /* ---------------- step 2: settings (families and methods come from the registry) ---------------- */
 const fitMethods = fam => D.methodsFor({ family: fam, kind: 'fit', dataType: 'raw' });
+/* measurement threshold (P11): with a threshold only the conditional (truncated) ML methods are valid */
+const truncActive = () => !!(S.trunc && S.trunc.mode !== 'none');
+function truncSpec() {
+  if (!truncActive()) return null;
+  const v = t => { const x = String(t ?? '').trim(); return x === '' ? null : num(x); };     // empty → not given (reported as missing)
+  const lower = v(S.trunc.L), upper = S.trunc.mode === 'both' ? v(S.trunc.U) : null;
+  return { lower, upper: S.trunc.mode === 'both' && upper == null && lower != null ? NaN : upper };   // "both" chosen but U empty → invalid upper
+}
+/** A method can run under the current threshold setting: truncated ML only with a threshold, the others only without. */
+const available = m => truncActive() ? !!m.truncation : !m.truncation;
 function chosenMethods() {
   if (!S.methods) S.methods = {};
   for (const fa of D.families()) for (const m of fitMethods(fa.id)) if (!(m.id in S.methods)) S.methods[m.id] = !m.needsInput;   // new methods start checked, except those that need the user's input (beta bounds)
-  return D.families().flatMap(fa => fitMethods(fa.id)).filter(m => S.methods[m.id]);
+  return D.families().flatMap(fa => fitMethods(fa.id)).filter(m => S.methods[m.id] && available(m));
 }
 function aFixed() { const t = String(S.aText).trim(); if (!t) return { a: null }; const a = num(t); return Number.isFinite(a) && a >= 0 ? { a } : { bad: true }; }
 // method options other than the fixed location (e.g. variance divisor, percentile pair), kept as text as typed
@@ -94,10 +104,11 @@ function methodOpts(m) {
     if (o.type === 'choice') opts[o.key] = o.values.includes(t) ? t : o.default;
     else if (o.type === 'prob') { const v = num(t); opts[o.key] = v; if (!(v > 0 && v < 1)) bad.push({ code: 'pr.range' }); }
   }
+  if (m.truncation) { opts.trunc = truncSpec() || {}; opts.nScope = S.trunc.nScope; }
   if (!bad.length && m.checkOptions) bad.push(...m.checkOptions(opts));
   return bad.length ? { bad: bad.slice(0, 1) } : { opts };
 }
-const setLabel = r => Object.entries(r.settings || {}).filter(([k]) => !['quantile', 'boundPolicy', 'pair'].includes(k)).map(([k, v]) => T('set.' + k, { v: typeof v === 'number' ? fmtNum(v, 4) : v })).join(', ');
+const setLabel = r => Object.entries(r.settings || {}).filter(([k]) => !['quantile', 'boundPolicy', 'pair', 'truncLower', 'truncUpper', 'nScope'].includes(k)).map(([k, v]) => T('set.' + k, { v: typeof v === 'number' ? fmtNum(v, 4) : v })).join(', ');
 const methodName = r => { const sl = setLabel(r); return T('m.' + r.method) + (sl ? ` · ${sl}` : ''); };
 const needsLocation = () => chosenMethods().some(m => (m.options || []).some(o => o.key === 'a'));
 function settingsProblems() {
@@ -134,9 +145,17 @@ function renderStep2() {
     <label><input type="radio" name="dec" value="."${S.decimal === '.' ? ' checked' : ''}> ${T('dec.dot')}</label><label><input type="radio" name="dec" value=","${S.decimal === ',' ? ' checked' : ''}> ${T('dec.comma')}</label></div></div>`;
   if (S.pcol != null) h += `<div class="card"><h2>${T('mode.h')}</h2><div class="radios col"><label><input type="radio" name="mode" value="each"${S.mode === 'each' ? ' checked' : ''}> ${T('mode.each')}</label>
     <label><input type="radio" name="mode" value="pool"${S.mode === 'pool' ? ' checked' : ''}> ${T('mode.pool')}</label></div>${S.mode === 'pool' ? `<p class="note warn">${T('mode.poolnote')}</p>` : ''}</div>`;
-  h += `<div class="card" id="famcard"><h2>${T('fam.h')}</h2><p class="muted">${T('fam.sub')}</p>${D.families().map(fa => { const ms = fitMethods(fa.id); return !ms.length ? '' : `<fieldset class="fam" data-fam="${fa.id}"><legend>${esc(T('fam.' + fa.id))}</legend>
-      <div class="radios col">${ms.map(m => `<label><input type="checkbox" data-m="${m.id}"${S.methods[m.id] ? ' checked' : ''}> ${esc(T('m.' + m.id))}</label>${has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}${S.methods[m.id] ? optControls(m) : ''}`).join('')}</div>${has('fnote.' + fa.id) ? `<p class="muted small">${T('fnote.' + fa.id)}</p>` : ''}</fieldset>`; }).join('')}
-    <p class="note small">${T('fam.trunc')}</p></div>`;
+  { const tr = S.trunc, tp = truncActive() ? D.trunc.checkTrunc(truncSpec()) : [];
+    h += `<div class="card" id="trcard"><h2>${T('tr.h')}</h2><p class="muted">${T('tr.sub')}</p>
+      <div class="radios col">${['none', 'lower', 'both'].map(v => `<label><input type="radio" name="trmode" value="${v}"${tr.mode === v ? ' checked' : ''}> ${T('tr.mode.' + v)}</label>`).join('')}</div>
+      ${truncActive() ? `<div class="lims"><label class="field inline"><span>${T('tr.L')}</span><input type="text" inputmode="decimal" id="tr-L" value="${esc(tr.L)}" size="8"></label>
+        ${tr.mode === 'both' ? `<label class="field inline"><span>${T('tr.U')}</span><input type="text" inputmode="decimal" id="tr-U" value="${esc(tr.U)}" size="8"></label>` : ''}</div>
+        ${tp.length ? `<p class="note err small">${esc(T('pr.' + tp[0].code, tp[0]))}</p>` : ''}
+        <h3>${T('tr.n.h')}</h3><div class="radios col">${['observed', 'population'].map(v => `<label><input type="radio" name="trn" value="${v}"${tr.nScope === v ? ' checked' : ''}> ${T('tr.n.' + v)}</label>`).join('')}</div>
+        <p class="note small">${T('tr.on')}</p>` : `<p class="muted small">${T('tr.off')}</p>`}</div>`; }
+  h += `<div class="card" id="famcard"><h2>${T('fam.h')}</h2><p class="muted">${T('fam.sub')}</p>${D.families().map(fa => { const ms = fitMethods(fa.id).filter(m => truncActive() || !m.truncation); return !ms.length ? '' : `<fieldset class="fam" data-fam="${fa.id}"><legend>${esc(T('fam.' + fa.id))}</legend>
+      <div class="radios col">${ms.map(m => { const av = available(m); return `<label${av ? '' : ' class="off"'}><input type="checkbox" data-m="${m.id}"${S.methods[m.id] && av ? ' checked' : ''}${av ? '' : ' disabled'}> ${esc(T('m.' + m.id))}</label>${av ? '' : `<p class="muted small mnote">${T('tr.disabled')}</p>`}${av && has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}${S.methods[m.id] && av ? optControls(m) : ''}`; }).join('')}</div>${has('fnote.' + fa.id) ? `<p class="muted small">${T('fnote.' + fa.id)}</p>` : ''}</fieldset>`; }).join('')}
+    ${truncActive() ? '' : `<p class="note small">${T('fam.trunc')}</p>`}</div>`;
   if (needsLocation()) h += `<div class="card"><h2>${T('loc.h')}</h2><p class="muted">${T('loc.sub')}</p><label class="field inline"><span>${T('loc.label')}</span><input type="text" inputmode="decimal" id="atext" value="${esc(S.aText)}" size="8"></label>
     ${aFixed().bad ? `<p class="note err">${T('loc.bad')}</p>` : ''}</div>`;
   if (needsBounds()) {
@@ -161,6 +180,9 @@ function renderStep2() {
   el.querySelectorAll('input[name="mode"]').forEach(x => x.addEventListener('change', () => { S.mode = x.value; re(); }));
   el.querySelectorAll('[data-m]').forEach(x => x.addEventListener('change', () => { S.methods[x.dataset.m] = x.checked; re(); }));
   $('atext') && $('atext').addEventListener('change', e => { S.aText = e.target.value; re(); });
+  el.querySelectorAll('input[name="trmode"]').forEach(x => x.addEventListener('change', () => { S.trunc.mode = x.value; re(); }));
+  el.querySelectorAll('input[name="trn"]').forEach(x => x.addEventListener('change', () => { S.trunc.nScope = x.value; re(); }));
+  for (const k of ['L', 'U']) $('tr-' + k) && $('tr-' + k).addEventListener('change', e => { S.trunc[k] = e.target.value; re(); });
   el.querySelectorAll('[id^="b-"]').forEach(x => x.addEventListener('change', e => { S.bText = { ...(S.bText || {}), [x.id.slice(2)]: e.target.value }; re(); }));
   el.querySelectorAll('[data-o]').forEach(x => x.addEventListener('change', () => { const [id, k] = x.dataset.o.split('|'); (S.mopt[id] || (S.mopt[id] = {}))[k] = x.value; re(); }));
   $('back1').addEventListener('click', () => go(1));
@@ -168,6 +190,8 @@ function renderStep2() {
 }
 
 /* ---------------- computation: every chosen method on every unit, through the registry ---------------- */
+/** The distribution the observations follow: the fitted one, or its conditional form inside the threshold(s). */
+const obsDist = r => r.truncation && r.truncation.logMass != null ? D.trunc.truncated(D.family(r.family), r.params, r.truncation) : D.family(r.family);
 function compute() {
   const X = D.extractUnits(S.src, { dcol: S.dcol, unit: S.unit, decimal: S.decimal, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval, mode: S.mode });
   const a = aFixed().a, ms = chosenMethods();
@@ -179,7 +203,8 @@ function compute() {
       for (const o of variants) {
         const r = D.runMethod(m.id, { d: u.d, plot: u.plot === D.POOL ? null : u.plot, period: u.period }, { ...o, ...mo }), fam = D.family(r.family);
         if (r.status === 'ok') {
-          r.gof = { ks: D.gof.ks(fam, r.params, u.d), ad: D.gof.ad(fam, r.params, u.d) };
+          const G = obsDist(r);                                            // the conditional distribution for thresholded data
+          r.gof = { ks: D.gof.ks(G, r.params, u.d), ad: D.gof.ad(G, r.params, u.d) };
           if (r.likelihoodMaximised) Object.assign(r.gof, D.gof.aicBic(r.logLik, r.free.length, u.d.length));   // AIC only where the likelihood was maximised
         }
         u.results.push(r);
@@ -261,6 +286,8 @@ function notesOf(r) {
   for (const q of r.problems) out.push(T('pr.' + q.code, q));
   for (const w of r.warnings) out.push(T('w.' + w.code, w));
   if (r.error) out.push(T('e.' + r.error.code, r.error.detail));
+  if (r.status === 'ok' && r.truncation && r.truncation.mass != null) { const t = r.truncation;
+    out.push(T('dg.trunc', { L: t.lower ?? '–', U: t.upper ?? '∞', m: fP(t.mass), n: fmtNum(t.nObserved, 0), N: f(t.nPopulation, 1), s: T('tr.n.' + (r.settings.nScope || 'observed')) })); }
   if (r.status === 'ok' && r.diagnostics && r.diagnostics.pBelowZero != null) out.push(T('dg.pBelowZero', { p: fP(r.diagnostics.pBelowZero) }));
   if (r.status === 'ok' && r.diagnostics && r.diagnostics.scale != null) out.push(T('dg.scale', { s: f(r.diagnostics.scale, 4) }));
   const mo = r.status === 'ok' && r.diagnostics && r.diagnostics.moments;                                    // log-logistic: moments that do not exist
@@ -278,7 +305,7 @@ function settingsInfo() {
   const bnd = needsBounds() ? [...boundFams()].map(([fam, b]) => `${T('fam.' + fam)}: ${b.keys.map(k => `${parLabel(fam, k)} = ${boundVal(k)}`).join(', ')}`).join('; ') : null;
   return [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], [T('x.src'), S.imp ? S.imp.name : null],
     [T('x.dcol'), `${col(S.dcol)} (${S.unit})`], [T('x.pcol'), col(S.pcol)], [T('x.percol'), col(S.percol)], [T('x.filter'), S.fcol != null ? `${col(S.fcol)} = ${S.fval ?? ''}` : null],
-    [T('x.mode'), S.pcol == null ? T('unit.pool') : T('mode.' + S.mode)], [T('x.dec'), S.decimal], [T('x.loc'), needsLocation() ? `0${aFixed().a != null && aFixed().a !== 0 ? '; ' + aFixed().a : ''}` : null], [T('x.bounds'), bnd],
+    [T('x.mode'), S.pcol == null ? T('unit.pool') : T('mode.' + S.mode)], [T('x.trunc'), truncActive() ? `${truncSpec().lower ?? '–'} ≤ d ≤ ${truncSpec().upper ?? '∞'} cm; N: ${T('tr.n.' + S.trunc.nScope)}` : T('tr.mode.none')], [T('x.dec'), S.decimal], [T('x.loc'), needsLocation() ? `0${aFixed().a != null && aFixed().a !== 0 ? '; ' + aFixed().a : ''}` : null], [T('x.bounds'), bnd],
     [T('x.methods'), ms.join('\n')], [T('x.acc'), `${R.acc.read} / ${R.acc.bad} / ${R.acc.nonpos}`], [T('x.badrows'), R.acc.badRows.length ? R.acc.badRows.join(', ') + (R.acc.bad + R.acc.nonpos > R.acc.badRows.length ? ', …' : '') : null],
     ['', T('x.n.ll')], ['', T('x.n.aic')], ['', T('x.n.p')], ['', T('x.n.var')], ['', T('x.n.trunc')], ['', T('x.n.num')]];
 }
@@ -299,7 +326,7 @@ const exportButtons = (pre, kinds) => `<div class="exports">${kinds.map(([k, lab
 function tabParams(p) {
   const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
   const s = u.desc, tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
-  let h = nav.bar(perSwitch(u)) + `<div class="tiles">${tile(fmtNum(s.n, 0), T('d.n'))}${tile(f(s.mean, 2), T('d.mean'))}${tile(f(s.dq, 2), T('d.dq'))}${tile(`${f(s.min, 1)}–${f(s.max, 1)}`, T('d.range'))}${tile(f(s.varN, 2), T('d.var'))}${tile(f(s.varN1, 2), T('d.var1'))}</div>`;
+  let h = nav.bar(perSwitch(u)) + `<div class="tiles">${tile(fmtNum(s.n, 0), T(truncActive() ? 'd.n.tr' : 'd.n'))}${tile(f(s.mean, 2), T('d.mean'))}${tile(f(s.dq, 2), T('d.dq'))}${tile(`${f(s.min, 1)}–${f(s.max, 1)}`, T('d.range'))}${tile(f(s.varN, 2), T('d.var'))}${tile(f(s.varN1, 2), T('d.var1'))}</div>`;
   for (const fa of D.families()) {
     const rs = u.results.filter(r => r.family === fa.id); if (!rs.length) continue;
     h += `<h3>${esc(T('fam.' + fa.id))}</h3><div class="tscroll"><table class="grid ptab" data-fam="${fa.id}"><thead><tr><th>${T('t.method')}</th><th>${T('t.fixed')}</th>
@@ -329,7 +356,7 @@ function tabCharts(p) {
   const bars = Array.from({ length: nb }, (_, i) => ({ lo: b0 + i * w, hi: b0 + (i + 1) * w, v: 0 }));
   for (const v of u.d) bars[Math.min(nb - 1, Math.floor((v - b0) / w))].v += 1 / (n * w);
   const hi = b0 + nb * w, xmin = Math.max(0, b0 - (hi - b0) * 0.03), xmax = hi + (hi - b0) * 0.03, xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * i / 400);
-  const line = (fn) => shown.map(([r, i]) => { const fam = D.family(r.family); return { name: resName(r), k: i, dash: r.estimator !== 'ml', pts: xs.map(x => [x, fam[fn](x, r.params)]) }; });
+  const line = (fn) => shown.map(([r, i]) => { const fam = obsDist(r); return { name: resName(r), k: i, dash: r.estimator !== 'ml', pts: xs.map(x => [x, fam[fn](x, r.params)]) }; });
   const srt = [...u.d].sort((a, b) => a - b), step = [[xmin, 0], ...srt.map((x, j) => [x, (j + 1) / n]), [xmax, 1]];
   const fm = v => fmtNum(v, 3), nm = String(u.plot === D.POOL ? 'havuz' : u.plot).replace(/[^\p{L}\p{N}_-]+/gu, '_') + (u.period != null ? '-' + u.period : '');
   h += `<div class="charts2"><figure class="chartbox" id="ch-h">${plotChart({ title: T('ch.hist', { u: unitLabel(u) }), xmin, xmax, bars, lines: line('pdf'), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: fm })}
@@ -407,7 +434,7 @@ const WB_FIELDS = ['mean', 'dq', 'variance', 'q25', 'q31', 'q63', 'q50', 'q95'];
 const wbKey = k => k === 'variance' ? 'v' : k;
 /** Raw-data units available for "compute from data" (same column settings as the direct-fit workflow). */
 function wbUnits() {
-  if (!S.src || S.dcol == null) return [];
+  if (!S.src || S.dcol == null || truncActive()) return [];                 // thresholded samples are not summaries of the whole distribution
   try { return D.extractUnits(S.src, { dcol: S.dcol, unit: S.unit, decimal: S.decimal, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval, mode: S.mode }).units.filter(u => u.d.length >= 2); } catch (e) { return []; }
 }
 function wbSummary() {
@@ -449,7 +476,7 @@ function drawWbCard(el) {
     ${q.from ? `<p class="note small" id="w-from">${esc(T('wb.from', { u: q.from.label, n: fmtNum(q.from.n, 0) }))}</p>` : ''}
     <details class="wbfill"><summary>${T('wb.fill.h')}</summary><p class="muted small">${T('wb.fill.sub')}</p>
       ${us.length ? `<div class="lims"><label>${T('wb.fill.unit')} <select id="w-unit">${us.map((u, i) => `<option value="${i}"${+q.unit === i ? ' selected' : ''}>${esc(unitLabel(u))} (n = ${u.d.length})</option>`).join('')}</select></label>
-        <button type="button" class="btn ghost small" id="w-fill">${T('wb.fill.btn')}</button></div>` : `<p class="small">${T('wb.fill.none')}</p>`}</details>
+        <button type="button" class="btn ghost small" id="w-fill">${T('wb.fill.btn')}</button></div>` : `<p class="small">${T(truncActive() ? 'tr.nofill' : 'wb.fill.none')}</p>`}</details>
     <div class="nav"><button type="button" class="btn" id="w-calc"${wbChosen().length ? '' : ' disabled'}>${T('calc')}</button>${wbChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="w-out"></div></div>`;
   el.innerHTML = h;
   const re = (keepFrom = true) => { if (!keepFrom) q.from = null; q.done = false; RW = null; save(); renderWb(); };
@@ -526,7 +553,7 @@ function drawPrsCard(el) {
     ${q.from ? `<p class="note small" id="p-from">${esc(T('prs.from', { u: q.from.label, n: fmtNum(q.from.n, 0) }))}</p>` : ''}
     <details class="wbfill"><summary>${T('prs.fill.h')}</summary><p class="muted small">${T('prs.fill.sub')}</p>
       ${us.length ? `<div class="lims"><label>${T('wb.fill.unit')} <select id="p-unit">${us.map((u, i) => `<option value="${i}"${+q.unit === i ? ' selected' : ''}>${esc(unitLabel(u))} (n = ${u.d.length})</option>`).join('')}</select></label>
-        <button type="button" class="btn ghost small" id="p-fill">${T('wb.fill.btn')}</button></div>` : `<p class="small">${T('wb.fill.none')}</p>`}</details>
+        <button type="button" class="btn ghost small" id="p-fill">${T('wb.fill.btn')}</button></div>` : `<p class="small">${T(truncActive() ? 'tr.nofill' : 'wb.fill.none')}</p>`}</details>
     <div class="nav"><button type="button" class="btn" id="p-calc">${T('calc')}</button></div><div id="p-out"></div></div>`;
   const re = (keepFrom = true) => { if (!keepFrom) q.from = null; q.done = false; RP = null; save(); renderPrs(); };
   for (const k of ['mean', 'median', 'nha', 'g', 'dq']) $('p-' + k) && $('p-' + k).addEventListener('change', e => { q[k] = e.target.value; re(false); });

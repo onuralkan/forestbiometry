@@ -21,7 +21,7 @@ const rec = (id, summary) => D.runMethod(id, { type: 'summary', summary });
 
 /* 1. registry */
 eq(D.families().map(f => f.id).slice(0, 3), ['weibull', 'normal', 'lognormal'], 'families (later stages append)');
-eq(D.methodsFor({ kind: 'fit', dataType: 'raw' }).filter(m => ['weibull', 'normal', 'lognormal'].includes(m.family)).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised]),
+eq(D.methodsFor({ kind: 'fit', dataType: 'raw' }).filter(m => !m.truncation && ['weibull', 'normal', 'lognormal'].includes(m.family)).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised]),
   [['weibull.ml', 'ml', 'bisection', true], ['weibull.mom', 'mom', 'bisection', false], ['weibull.pct', 'quantile', 'closed form', false],
    ['normal.ml', 'ml', 'closed form', true], ['lognormal.ml', 'ml', 'closed form', true], ['lognormal.mom', 'mom', 'closed form', false]], 'direct methods');
 ok(!D.methodsFor({ family: 'normal', kind: 'fit' }).some(m => m.estimator === 'mom'), 'normal: one method (ML = moments), no duplicate row');

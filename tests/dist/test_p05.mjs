@@ -25,7 +25,7 @@ const fam = D.family('weibull');
 const run = (id, d, o) => D.runMethod(id, { d }, o);
 
 /* 1. registry: three Weibull methods, separate estimator and solver, options declared */
-eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised]),
+eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).filter(m => !m.truncation).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised]),
   [['weibull.ml', 'ml', 'bisection', true], ['weibull.mom', 'mom', 'bisection', false], ['weibull.pct', 'quantile', 'closed form', false]], 'methods, estimators, solvers');
 eq(D.method('weibull.mom').options.map(o => [o.key, o.default ?? null]), [['a', null], ['varDivisor', 'n']], 'moments: location and divisor options, n by default');
 eq(D.method('weibull.pct').options.map(o => [o.key, o.default ?? null]), [['a', null], ['p', 0.24], ['r', 0.93]], 'percentiles: Dubey (1967) pair by default');

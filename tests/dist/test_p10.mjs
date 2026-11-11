@@ -26,8 +26,8 @@ const FNS = ['pdf', 'logpdf', 'cdf', 'logcdf', 'sf', 'logsf'];
 /* 1. registry */
 eq(EX.params.map(p => [p.key, p.role, p.unit]), [['a', 'location', 'cm'], ['r', 'rate', '1/cm']], 'exponential: location a (cm), RATE r (1/cm)');
 eq(FK.params.map(p => [p.key, p.role, p.unit]), [['b', 'scale', 'cm'], ['c', 'shape', null]], 'log-logistic: scale b (cm), shape c; no location');
-eq(D.methodsFor({ family: 'exponential' }).map(m => [m.id, m.kind, m.estimator, m.solver, m.likelihoodMaximised]), [['exponential.ml', 'fit', 'ml', 'closed form', true]], 'exponential: one method (ML = moments)');
-eq(D.methodsFor({ family: 'loglogistic' }).map(m => [m.id, m.kind, m.estimator, m.solver, m.likelihoodMaximised]),
+eq(D.methodsFor({ family: 'exponential' }).filter(m => !m.truncation).map(m => [m.id, m.kind, m.estimator, m.solver, m.likelihoodMaximised]), [['exponential.ml', 'fit', 'ml', 'closed form', true]], 'exponential: one method (ML = moments)');
+eq(D.methodsFor({ family: 'loglogistic' }).filter(m => !m.truncation).map(m => [m.id, m.kind, m.estimator, m.solver, m.likelihoodMaximised]),
   [['loglogistic.ml', 'fit', 'ml', 'newton', true], ['loglogistic.pct', 'fit', 'quantile', 'closed form', false], ['loglogistic.logmom', 'fit', 'logmom', 'closed form', false]], 'log-logistic methods');
 ok(!D.methodsFor({ family: 'loglogistic' }).some(m => m.estimator === 'mom'), 'log-logistic: the ordinary method of moments is not offered (log-moments are named separately)');
 eq(D.method('exponential.ml').options.map(o => [o.key, o.type, o.policies.join()]), [['a', 'fixed-param', 'zero,user']], 'exponential: location 0 or user-fixed, never estimated');

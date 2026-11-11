@@ -16,7 +16,7 @@ export function fitRows(units, h) {
   const { T } = h;
   const head = [T('x.plot'), T('x.period'), 'n', T('x.family'), T('x.method'), 'method_id', T('x.estimator'), T('x.status'), 'status', T('x.reason'),
     ...Array.from({ length: MAXP }, (_, i) => [T('x.par', { i: i + 1 }), T('x.val', { i: i + 1 })]).flat(),
-    T('x.fixed'), 'ln L', 'k', 'AIC', 'BIC', 'KS D', 'AD A²', T('x.pneg'), T('x.solver'), T('x.iter'), T('x.settings')];
+    T('x.fixed'), 'ln L', 'k', 'AIC', 'BIC', 'KS D', 'AD A²', T('x.pneg'), T('x.solver'), T('x.iter'), T('x.trlo'), T('x.trhi'), T('x.mass'), T('x.nscope'), T('x.settings')];
   const out = [head];
   for (const u of units) for (const r of u.results) {
     const fam = D.family(r.family), ok = r.status === 'ok', g = r.gof || {};
@@ -25,7 +25,9 @@ export function fitRows(units, h) {
     const fixed = Object.entries(r.fixed || {}).map(([k, v]) => `${(fam.params.find(q => q.key === k) || {}).label ?? k} = ${v.value} (${T('x.origin.' + v.origin)})`).join('; ');
     out.push([unitPlot(u) ?? h.poolLabel, u.period, r.data.n, T('fam.' + r.family), h.methodName(r), r.method, T('est.' + r.estimator), T('st.' + r.status), r.status, h.notes(r).join(' | ') || null,
       ...pars, fixed || null, ok ? num(r.logLik) : null, ok && r.likelihoodMaximised ? r.free.length : null, num(g.aic), num(g.bic), ok ? num(g.ks) : null, ok ? num(g.ad) : null,
-      ok && r.diagnostics ? num(r.diagnostics.pBelowZero) : null, T('sol.' + r.convergence.solver), r.convergence.iter ?? null, settingsText(r.settings)]);
+      ok && r.diagnostics ? num(r.diagnostics.pBelowZero) : null, T('sol.' + r.convergence.solver), r.convergence.iter ?? null,
+      r.truncation ? num(r.truncation.lower) : null, r.truncation ? num(r.truncation.upper) : null, ok && r.truncation ? num(r.truncation.mass) : null,
+      ok && r.truncation ? (r.settings.nScope === 'population' ? num(r.truncation.nPopulation) : r.data.n) : null, settingsText(r.settings)]);
   }
   return out;
 }

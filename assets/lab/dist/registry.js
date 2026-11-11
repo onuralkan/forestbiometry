@@ -7,7 +7,7 @@
 //              kind 'recover' parameters from summaries (mean, Dq, percentiles)
 //              kind 'stand'   prediction from stand variables
 //   solver     the numerical algorithm a method uses (bisection, Brent, …); reported, never a choice of "method"
-export const TOOL = { id: 'cap-dagilimi', version: '2.0.0-beta.6' };
+export const TOOL = { id: 'cap-dagilimi', version: '2.0.0-beta.7' };
 export const CONTRACT = 'dist-result/1';
 
 /** Structured error: code + detail (never a number that looks like a result). */
@@ -79,6 +79,7 @@ export function checkSupport(fam, p, d) {
  *   fixed       { key: { value, origin: 'zero'|'user'|'data' } }       free [keys]
  *   settings    method options actually used (e.g. { varDivisor: 'n' }, { p, r, quantile: 'type7' }); {} if none
  *   targets     sample summaries the method matched, with their definition (moments, percentiles); null for ML
+ *   truncation  { lower, upper, logMass, mass, nObserved, nPopulation } for conditional fits to thresholded data (P11)
  *   diagnostics family/method extras, e.g. { pBelowZero } for the normal, back-calculated moments for recovery
  *   objective   { name: 'logLik' | …, value }     logLik (original diameter scale) when it can be evaluated
  *   convergence { status, iter, solver, tol }
@@ -92,7 +93,7 @@ export function makeResult(o) {
     status: o.status,
     data: { plot: null, period: null, type: 'raw', n: null, unit: 'cm', ...(o.data || {}) },
     params: o.params || null, units: Object.fromEntries(fam.params.map(s => [s.key, s.unit])),
-    fixed: o.fixed || {}, settings: o.settings || {}, targets: o.targets || null, diagnostics: o.diagnostics || null, free: o.free || fam.params.map(s => s.key).filter(k => !(o.fixed && k in o.fixed)),
+    fixed: o.fixed || {}, settings: o.settings || {}, targets: o.targets || null, diagnostics: o.diagnostics || null, truncation: o.truncation || null, free: o.free || fam.params.map(s => s.key).filter(k => !(o.fixed && k in o.fixed)),
     objective: o.objective || null, logLik: o.logLik ?? null, likelihoodMaximised: !!m.likelihoodMaximised,
     convergence: { status: o.status, iter: null, solver: m.solver || null, tol: null, ...(o.convergence || {}) },
     warnings: o.warnings || [], problems: o.problems || [], error: o.error || null, source: m.source || null,

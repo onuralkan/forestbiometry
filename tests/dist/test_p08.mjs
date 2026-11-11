@@ -24,7 +24,7 @@ const run = (id, d, o) => D.runMethod(id, { d }, o);
 
 /* 1. registry: fixed bounds, shapes estimated; no joint four-parameter method; KB and the general pair are separate */
 eq(SB.params.map(p => [p.key, p.role, p.unit]), [['xi', 'lower', 'cm'], ['lambda', 'range', 'cm'], ['gamma', 'shape', null], ['delta', 'shape', null]], 'Johnson SB parameters');
-eq(D.methodsFor({ family: 'johnsonsb', kind: 'fit' }).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised, m.needsInput]),
+eq(D.methodsFor({ family: 'johnsonsb', kind: 'fit' }).filter(m => !m.truncation).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised, m.needsInput]),
   [['johnsonsb.cml', 'ml', 'closed form', true, true], ['johnsonsb.mom', 'mom', 'brent', false, true], ['johnsonsb.kb', 'quantile', 'closed form', false, true], ['johnsonsb.pct', 'quantile', 'closed form', false, true]], 'SB methods');
 ok(D.methodsFor({ family: 'johnsonsb', kind: 'fit' }).every(m => ['xi', 'lambda'].every(k => m.options.some(o => o.key === k && o.type === 'fixed-param' && o.policies.join() === 'user'))), 'ξ and λ are user-fixed in every method');
 ok(!D.methodsFor({ family: 'johnsonsb' }).some(m => /joint|4p|full/.test(m.id)), 'no joint four-parameter method');

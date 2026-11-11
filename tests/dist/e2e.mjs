@@ -31,7 +31,7 @@ await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=tr');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.6') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && (await page.locator('#devnote').textContent()).includes('ölçüm eşiği'), 'stage notice: version and what is missing (exports no longer listed)');
+ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.7') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && !(await page.locator('#devnote').textContent()).includes('ölçüm eşiği') && (await page.locator('#devnote').textContent()).includes('sınıfı tabloları'), 'stage notice: version and what is missing (exports and thresholds no longer listed)');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting
@@ -110,7 +110,7 @@ await page.click('#tab-params');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dl.path(), 'utf8'));
 const r0 = js.results[0];
-ok(js.tool.version === '2.0.0-beta.6' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
+ok(js.tool.version === '2.0.0-beta.7' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
 ok(r0.params.b === ml0.b && r0.params.c === ml0.c && r0.fixed.a.origin === 'zero' && r0.free.join() === 'b,c' && r0.estimator === 'ml' && r0.convergence.solver === 'bisection' && r0.objective.name === 'logLik' && r0.fit.aic > 0 && js.settings.methods['weibull.mom'].varDivisor === 'n' && js.results[4].settings.p === 0.24 && js.results[4].targets.quantile === 'type7' && js.results[2].targets.varDivisor === 'n', 'JSON: full-precision parameters, fixed/free, estimator, solver, objective');
 ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid' && r.params === null && r.problems[0].code === 'constant'), 'JSON: failed fits carry a status and a reason, no parameters');
 // Excel report and CSV files (all units)
@@ -125,7 +125,7 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
   ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('eşit')), 'Excel: plot C rows carry no parameters, the reason in words');
   const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parametreler, { header: 1 });
   ok(pars.some(r => r[0] === 'A' && r[4] === 'gamma.ml' && r[6] === 'theta' && r[7] === E0.runMethod('gamma.ml', { d: d1 }).params.theta), 'Excel parameters: gamma θ exact');
-  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.6') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
+  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.7') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
   const units = XLSX.utils.sheet_to_json(wb.Sheets['Ornek alanlar'], { header: 1 });
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
@@ -246,7 +246,7 @@ await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (kullanıcı)'), 'user a = 5: the same parameters, labelled as the user\'s');
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
-  ok(j.tool.version === '2.0.0-beta.6' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
+  ok(j.tool.version === '2.0.0-beta.7' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
   ok(rows.length === 5 && rows.slice(1).every(r => r[4] === 'ok' && r[7] === 5 && Math.abs(r[11] - 2.5) < 1e-9) && rows.slice(1).every(r => /origin = predicted/.test(r[r.length - 1])), 'Weibull recovery Excel: a = 5, c = 2.5, origin of the targets'); }
 for (const m of ['weibull.m2', 'weibull.m3']) await page.uncheck(`[data-wm="${m}"]`);
@@ -296,6 +296,33 @@ ok(wr[4].s === 'invalid' && wr[4].c[5].includes('negatif bir a') && wr[2].s === 
   pr = await page.evaluate(() => [...document.querySelectorAll('table.prtab tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
   ok(pr[0].s === 'noconverge' && pr[0].c[2] === '–' && pr[0].c[6].includes('başlangıçtan hiçbiri'), 'no SB with these moments: "did not converge", no parameters'); }
 await page.click('#wf-raw');
+
+// 2i. measurement threshold (P11): conditional ML only, untruncated methods disabled, GOF on the conditional distribution
+await page.click('#steps [data-go="2"]');
+ok((await page.locator('#trcard').count()) === 1 && await page.isChecked('input[name="trmode"][value="none"]') && (await page.locator('[data-m$=".tml"]').count()) === 0, 'threshold card; no threshold by default; no truncated-ML rows without a threshold');
+await page.check('input[name="trmode"][value="lower"]');
+ok(await page.isDisabled('#calc') && (await page.locator('#trcard .note.err', { hasText: 'eşik değeri girin' }).count()) === 1, 'lower threshold chosen, value missing: cannot calculate');
+await page.fill('#tr-L', '9'); await page.locator('#tr-L').dispatchEvent('change');
+{ const st = await page.evaluate(() => ({ off: [...document.querySelectorAll('[data-m]:disabled')].map(x => x.dataset.m), tml: [...document.querySelectorAll('[data-m$=".tml"]')].map(x => [x.dataset.m, x.checked]) }));
+  ok(st.off.includes('weibull.ml') && st.off.includes('normal.ml') && st.off.includes('gamma.mom') && !st.off.some(m => m.endsWith('.tml')), 'closed-form methods disabled with a threshold: ' + st.off.length);
+  ok(st.tml.length === 8 && st.tml.filter(([m, c]) => c).map(([m]) => m).sort().join() === ['exponential.tml', 'gamma.tml', 'loglogistic.tml', 'lognormal.tml', 'normal.tml', 'weibull.tml'].sort().join(), 'truncated ML listed for every family; those needing bounds not preselected: ' + JSON.stringify(st.tml)); }
+ok((await page.locator('#famcard .mnote', { hasText: 'kesilmiş veride geçerli değil' }).count()) > 5, 'reason shown under the disabled methods');
+await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]');
+{ const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], ex = E.runMethod('weibull.tml', { d: pool }, { a: 0, trunc: { lower: 9, upper: null } });
+  const G = E.trunc.truncated(E.family('weibull'), ex.params, ex.truncation), ks = E.gof.ks(G, ex.params, pool);
+  const wt = await rowsOf('weibull');
+  ok(wt.length >= 1 && wt[0].m === 'weibull.tml' && wt[0].s === 'ok' && Math.abs(parseFloat(wt[0].c[3]) - ex.params.b) < 6e-5 && Math.abs(parseFloat(wt[0].c[4]) - ex.params.c) < 6e-5, 'Weibull conditional ML equals the engine: ' + JSON.stringify(wt[0].c.slice(0, 6)));
+  ok(Math.abs(parseFloat(wt[0].c[9]) - ks) < 6e-5 && wt[0].c[12].startsWith('Nelder–Mead'), 'KS against the conditional distribution; solver named');
+  ok((await page.locator('ul.notes li', { hasText: 'eşik 9 ≤ d ≤ ∞ cm' }).count()) >= 1 && (await page.locator('.tile span', { hasText: 'eşik içinde' }).count()) === 1, 'threshold, mass and implied total stated; n labelled as measured inside the threshold');
+  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), fits = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Uydurmalar, { header: 1 }), H = fits[0], w = fits.find(r => r[5] === 'weibull.tml');
+  ok(w && w[H.indexOf('Alt eşik (cm)')] === 9 && w[H.indexOf('Üst eşik (cm)')] == null && Math.abs(w[H.indexOf('P(eşik içinde)')] - ex.truncation.mass) < 1e-7 && w[H.indexOf('N (seçilen kapsam)')] === 25, 'Excel: thresholds, mass and N (observed) columns: ' + JSON.stringify(w && [H.indexOf('Alt eşik (cm)'), w[H.indexOf('Alt eşik (cm)')], w[H.indexOf('Üst eşik (cm)')], w[H.indexOf('P(eşik içinde)')], ex.truncation.mass, w[H.indexOf('N (seçilen kapsam)')]])); }
+await page.click('#steps [data-go="2"]'); await page.check('input[name="trn"][value="population"]'); await page.fill('#tr-L', '10'); await page.locator('#tr-L').dispatchEvent('change');
+await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]');
+ok((await rowsOf('weibull'))[0].s === 'invalid' && (await page.locator('ul.notes li', { hasText: 'bildirilen eşiğin dışında (ör. 9.4 cm)' }).count()) >= 1, 'a diameter below the declared threshold: refused, reason given');
+await page.click('#wf-summary');
+ok((await page.locator('#wbcard', { hasText: 'ham veriden doldurma kapalı' }).count()) === 1 && (await page.locator('#w-fill').count()) === 0, 'recovery: filling from thresholded raw data disabled');
+await page.click('#wf-raw'); await page.click('#steps [data-go="2"]'); await page.check('input[name="trmode"][value="none"]');
+ok((await page.locator('[data-m="weibull.ml"]:disabled').count()) === 0 && (await page.locator('[data-m$=".tml"]').count()) === 0, 'threshold removed: untruncated methods back');
 
 // 3. sample data, phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
