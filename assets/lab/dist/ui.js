@@ -31,7 +31,9 @@ function blank() {
     wf: 'raw', sum: { mean: '', which: 'var', v: '', div: 'n', n: '', dq: '', methods: {}, done: false },
     prs: { xi: '', mean: '', median: '', qmode: 'ng', nha: '', g: '', dq: '', origin: 'measured', from: null, unit: 0, done: false },
     wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
-    mode: 'each', trunc: { mode: 'none', L: '', U: '', nScope: 'observed' }, methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
+    mode: 'each', dtype: 'raw', lcol: null, ucol: null, ncol: null, countType: 'count', outside: 'zero',
+    cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '' }, clsFit: null,
+    trunc: { mode: 'none', L: '', U: '', nScope: 'observed' }, methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -46,6 +48,9 @@ function setTable(st) {
     const H = S.src.headers.map(h => String(h).trim().toLocaleLowerCase('tr')), find = names => { const i = H.findIndex(h => names.includes(h)); return i < 0 ? null : i; };
     S.dcol = find(['dbh', 'dbh_cm', 'cap', 'çap', 'cap_cm', 'çap_cm', 'd', 'd13']); S.pcol = find(['plot', 'plot_id', 'plotno', 'alan', 'alan_no', 'ornek_alan', 'örnek_alan']);
     S.percol = find(['period', 'year', 'yil', 'yıl', 'donem', 'dönem']);
+    S.lcol = find(['lo', 'lower', 'lower_cm', 'alt', 'alt_sinir', 'alt_sınır', 'd_lo', 'from']); S.ucol = find(['hi', 'upper', 'upper_cm', 'ust', 'üst', 'ust_sinir', 'üst_sınır', 'd_hi', 'to']);
+    S.ncol = find(['n', 'count', 'freq', 'frequency', 'sayi', 'sayı', 'frekans', 'adet', 'n_ha', 'nha']);
+    if (S.dcol == null && S.lcol != null && S.ucol != null && S.ncol != null) S.dtype = 'classes';      // a class table
   }
   status(''); save(); render();
 }
@@ -65,9 +70,9 @@ function renderStep1() {
 }
 
 /* ---------------- step 2: settings (families and methods come from the registry) ---------------- */
-const fitMethods = fam => D.methodsFor({ family: fam, kind: 'fit', dataType: 'raw' });
+const fitMethods = fam => D.methodsFor({ family: fam, kind: 'fit' }).filter(m => m.dataTypes.includes('raw') || m.dataTypes.includes('classes'));
 /* measurement threshold (P11): with a threshold only the conditional (truncated) ML methods are valid */
-const truncActive = () => !!(S.trunc && S.trunc.mode !== 'none');
+const truncActive = () => S.dtype !== 'classes' && !!(S.trunc && S.trunc.mode !== 'none');
 function truncSpec() {
   if (!truncActive()) return null;
   const v = t => { const x = String(t ?? '').trim(); return x === '' ? null : num(x); };     // empty → not given (reported as missing)
@@ -75,7 +80,8 @@ function truncSpec() {
   return { lower, upper: S.trunc.mode === 'both' && upper == null && lower != null ? NaN : upper };   // "both" chosen but U empty → invalid upper
 }
 /** A method can run under the current threshold setting: truncated ML only with a threshold, the others only without. */
-const available = m => truncActive() ? !!m.truncation : !m.truncation;
+const grouped = () => S.dtype === 'classes';
+const available = m => grouped() ? !!m.grouped : !m.grouped && (truncActive() ? !!m.truncation : !m.truncation);
 function chosenMethods() {
   if (!S.methods) S.methods = {};
   for (const fa of D.families()) for (const m of fitMethods(fa.id)) if (!(m.id in S.methods)) S.methods[m.id] = !m.needsInput;   // new methods start checked, except those that need the user's input (beta bounds)
@@ -113,7 +119,7 @@ const methodName = r => { const sl = setLabel(r); return T('m.' + r.method) + (s
 const needsLocation = () => chosenMethods().some(m => (m.options || []).some(o => o.key === 'a'));
 function settingsProblems() {
   const p = [];
-  if (S.dcol == null) p.push(T('col.need'));
+  if (grouped() ? S.lcol == null || S.ucol == null || S.ncol == null : S.dcol == null) p.push(T(grouped() ? 'col.need.cls' : 'col.need'));
   if (!chosenMethods().length) p.push(T('fam.need'));
   if (needsLocation() && aFixed().bad) p.push(T('loc.bad'));
   for (const m of chosenMethods()) { const o = methodOpts(m); if (o.bad) p.push(`${T('m.' + m.id)}: ${T('pr.' + o.bad[0].code, o.bad[0])}.`); }
@@ -130,11 +136,16 @@ function optControls(m) {
 function renderStep2() {
   const el = $('step2'), Hd = S.src.headers;
   const opts = sel => `<option value="">${T('none')}</option>` + Hd.map((h, i) => `<option value="${i}"${sel === i ? ' selected' : ''}>${esc(h)}</option>`).join('');
-  const dv = detectDecimal(S.dcol == null ? [] : S.src.rows.map(r => r[S.dcol]).filter(x => x && x.t === 's').map(x => x.v));
+  const dcolForDec = grouped() ? S.lcol : S.dcol;
+  const dv = detectDecimal(dcolForDec == null ? [] : S.src.rows.map(r => r[dcolForDec]).filter(x => x && x.t === 's').map(x => x.v));
   if (!S.decimalChosen) S.decimal = defaultDecimal(dv.verdict);
   const vals = c => [...new Set(S.src.rows.map(r => cellText(r[c]).trim()))].sort(D.natural);
   chosenMethods();
-  let h = `<div class="card"><h2>${T('col.h')}</h2><div class="lims"><label>${T('col.d')} <select id="dcol">${opts(S.dcol)}</select></label>
+  let h = `<div class="card" id="dtcard"><h2>${T('dt.h')}</h2><div class="radios col">${['raw', 'classes'].map(v => `<label><input type="radio" name="dtype" value="${v}"${S.dtype === v ? ' checked' : ''}> ${T('dt.' + v)}</label>`).join('')}</div>
+    ${grouped() ? `<h3>${T('dt.ct.h')}</h3><div class="radios col">${['count', 'perha'].map(v => `<label><input type="radio" name="ctype" value="${v}"${S.countType === v ? ' checked' : ''}> ${T('dt.ct.' + v)}</label>`).join('')}</div>
+      <h3>${T('dt.out.h')}</h3><div class="radios col">${['zero', 'unrecorded'].map(v => `<label><input type="radio" name="outside" value="${v}"${S.outside === v ? ' checked' : ''}> ${T('dt.out.' + v)}</label>`).join('')}</div>
+      <p class="muted small">${T('dt.note')}</p>` : ''}</div>`;
+  h += `<div class="card"><h2>${T('col.h')}</h2><div class="lims">${grouped() ? `<label>${T('col.lo')} <select id="lcol">${opts(S.lcol)}</select></label><label>${T('col.hi')} <select id="ucol">${opts(S.ucol)}</select></label><label>${T('col.n')} <select id="ncol">${opts(S.ncol)}</select></label>` : `<label>${T('col.d')} <select id="dcol">${opts(S.dcol)}</select></label>`}
     <label>${T('col.unit')} <select id="dunit">${['cm', 'mm'].map(u => `<option${S.unit === u ? ' selected' : ''}>${u}</option>`).join('')}</select></label>
     <label>${T('col.plot')} <select id="pcol">${opts(S.pcol)}</select></label><label>${T('col.per')} <select id="percol">${opts(S.percol)}</select></label>
     <label>${T('col.filter')} <select id="fcol">${opts(S.fcol)}</select></label>
@@ -145,7 +156,7 @@ function renderStep2() {
     <label><input type="radio" name="dec" value="."${S.decimal === '.' ? ' checked' : ''}> ${T('dec.dot')}</label><label><input type="radio" name="dec" value=","${S.decimal === ',' ? ' checked' : ''}> ${T('dec.comma')}</label></div></div>`;
   if (S.pcol != null) h += `<div class="card"><h2>${T('mode.h')}</h2><div class="radios col"><label><input type="radio" name="mode" value="each"${S.mode === 'each' ? ' checked' : ''}> ${T('mode.each')}</label>
     <label><input type="radio" name="mode" value="pool"${S.mode === 'pool' ? ' checked' : ''}> ${T('mode.pool')}</label></div>${S.mode === 'pool' ? `<p class="note warn">${T('mode.poolnote')}</p>` : ''}</div>`;
-  { const tr = S.trunc, tp = truncActive() ? D.trunc.checkTrunc(truncSpec()) : [];
+  if (!grouped()) { const tr = S.trunc, tp = truncActive() ? D.trunc.checkTrunc(truncSpec()) : [];
     h += `<div class="card" id="trcard"><h2>${T('tr.h')}</h2><p class="muted">${T('tr.sub')}</p>
       <div class="radios col">${['none', 'lower', 'both'].map(v => `<label><input type="radio" name="trmode" value="${v}"${tr.mode === v ? ' checked' : ''}> ${T('tr.mode.' + v)}</label>`).join('')}</div>
       ${truncActive() ? `<div class="lims"><label class="field inline"><span>${T('tr.L')}</span><input type="text" inputmode="decimal" id="tr-L" value="${esc(tr.L)}" size="8"></label>
@@ -153,9 +164,9 @@ function renderStep2() {
         ${tp.length ? `<p class="note err small">${esc(T('pr.' + tp[0].code, tp[0]))}</p>` : ''}
         <h3>${T('tr.n.h')}</h3><div class="radios col">${['observed', 'population'].map(v => `<label><input type="radio" name="trn" value="${v}"${tr.nScope === v ? ' checked' : ''}> ${T('tr.n.' + v)}</label>`).join('')}</div>
         <p class="note small">${T('tr.on')}</p>` : `<p class="muted small">${T('tr.off')}</p>`}</div>`; }
-  h += `<div class="card" id="famcard"><h2>${T('fam.h')}</h2><p class="muted">${T('fam.sub')}</p>${D.families().map(fa => { const ms = fitMethods(fa.id).filter(m => truncActive() || !m.truncation); return !ms.length ? '' : `<fieldset class="fam" data-fam="${fa.id}"><legend>${esc(T('fam.' + fa.id))}</legend>
+  h += `<div class="card" id="famcard"><h2>${T('fam.h')}</h2><p class="muted">${T('fam.sub')}</p>${D.families().map(fa => { const ms = fitMethods(fa.id).filter(m => grouped() ? m.grouped : !m.grouped && (truncActive() || !m.truncation)); return !ms.length ? '' : `<fieldset class="fam" data-fam="${fa.id}"><legend>${esc(T('fam.' + fa.id))}</legend>
       <div class="radios col">${ms.map(m => { const av = available(m); return `<label${av ? '' : ' class="off"'}><input type="checkbox" data-m="${m.id}"${S.methods[m.id] && av ? ' checked' : ''}${av ? '' : ' disabled'}> ${esc(T('m.' + m.id))}</label>${av ? '' : `<p class="muted small mnote">${T('tr.disabled')}</p>`}${av && has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}${S.methods[m.id] && av ? optControls(m) : ''}`; }).join('')}</div>${has('fnote.' + fa.id) ? `<p class="muted small">${T('fnote.' + fa.id)}</p>` : ''}</fieldset>`; }).join('')}
-    ${truncActive() ? '' : `<p class="note small">${T('fam.trunc')}</p>`}</div>`;
+    ${truncActive() || grouped() ? '' : `<p class="note small">${T('fam.trunc')}</p>`}</div>`;
   if (needsLocation()) h += `<div class="card"><h2>${T('loc.h')}</h2><p class="muted">${T('loc.sub')}</p><label class="field inline"><span>${T('loc.label')}</span><input type="text" inputmode="decimal" id="atext" value="${esc(S.aText)}" size="8"></label>
     ${aFixed().bad ? `<p class="note err">${T('loc.bad')}</p>` : ''}</div>`;
   if (needsBounds()) {
@@ -173,13 +184,16 @@ function renderStep2() {
   h += `<div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div>`;
   el.innerHTML = h;
   const re = () => { R = null; save(); renderStep2(); renderSteps(); };
-  for (const [id, k] of [['dcol', 'dcol'], ['pcol', 'pcol'], ['percol', 'percol'], ['fcol', 'fcol']]) $(id).addEventListener('change', e => { S[k] = e.target.value === '' ? null : +e.target.value; if (k === 'fcol') S.fval = null; if (k === 'dcol') S.decimalChosen = false; re(); });
+  for (const [id, k] of [['dcol', 'dcol'], ['lcol', 'lcol'], ['ucol', 'ucol'], ['ncol', 'ncol'], ['pcol', 'pcol'], ['percol', 'percol'], ['fcol', 'fcol']]) $(id) && $(id).addEventListener('change', e => { S[k] = e.target.value === '' ? null : +e.target.value; if (k === 'fcol') S.fval = null; if (k === 'dcol') S.decimalChosen = false; re(); });
   $('dunit').addEventListener('change', e => { S.unit = e.target.value; re(); });
   $('fval') && $('fval').addEventListener('change', e => { S.fval = e.target.value || null; re(); });
   el.querySelectorAll('input[name="dec"]').forEach(x => x.addEventListener('change', () => { S.decimal = x.value; S.decimalChosen = true; re(); }));
   el.querySelectorAll('input[name="mode"]').forEach(x => x.addEventListener('change', () => { S.mode = x.value; re(); }));
   el.querySelectorAll('[data-m]').forEach(x => x.addEventListener('change', () => { S.methods[x.dataset.m] = x.checked; re(); }));
   $('atext') && $('atext').addEventListener('change', e => { S.aText = e.target.value; re(); });
+  el.querySelectorAll('input[name="dtype"]').forEach(x => x.addEventListener('change', () => { S.dtype = x.value; S.decimalChosen = false; re(); }));
+  el.querySelectorAll('input[name="ctype"]').forEach(x => x.addEventListener('change', () => { S.countType = x.value; re(); }));
+  el.querySelectorAll('input[name="outside"]').forEach(x => x.addEventListener('change', () => { S.outside = x.value; re(); }));
   el.querySelectorAll('input[name="trmode"]').forEach(x => x.addEventListener('change', () => { S.trunc.mode = x.value; re(); }));
   el.querySelectorAll('input[name="trn"]').forEach(x => x.addEventListener('change', () => { S.trunc.nScope = x.value; re(); }));
   for (const k of ['L', 'U']) $('tr-' + k) && $('tr-' + k).addEventListener('change', e => { S.trunc[k] = e.target.value; re(); });
@@ -193,19 +207,22 @@ function renderStep2() {
 /** The distribution the observations follow: the fitted one, or its conditional form inside the threshold(s). */
 const obsDist = r => r.truncation && r.truncation.logMass != null ? D.trunc.truncated(D.family(r.family), r.params, r.truncation) : D.family(r.family);
 function compute() {
-  const X = D.extractUnits(S.src, { dcol: S.dcol, unit: S.unit, decimal: S.decimal, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval, mode: S.mode });
+  const g = grouped(), spec = { dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, unit: S.unit, decimal: S.decimal, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval, mode: S.mode };
+  const X = g ? D.extractClassUnits(S.src, spec) : D.extractUnits(S.src, spec);
   const a = aFixed().a, ms = chosenMethods();
   for (const u of X.units) {
-    u.desc = D.describe(u.d); u.results = [];
+    u.desc = g ? D.describeClasses(u.classes) : D.describe(u.d); u.results = [];
     for (const m of ms) {
       const variants = (m.options || []).some(o => o.key === 'a') ? [{ a: 0 }, ...(a != null && a !== 0 ? [{ a }] : [])] : [{}];
       const mo = methodOpts(m).opts;
       for (const o of variants) {
-        const r = D.runMethod(m.id, { d: u.d, plot: u.plot === D.POOL ? null : u.plot, period: u.period }, { ...o, ...mo }), fam = D.family(r.family);
-        if (r.status === 'ok') {
+        const inp = g ? { type: 'classes', classes: u.classes, countType: S.countType, outside: S.outside } : { d: u.d };
+        const r = D.runMethod(m.id, { ...inp, plot: u.plot === D.POOL ? null : u.plot, period: u.period }, { ...o, ...mo }), fam = D.family(r.family);
+        if (r.status === 'ok' && g) { r.gof = r.logLik != null ? D.gof.aicBic(r.logLik, r.free.length, r.data.n) : {}; }   // grouped: no KS/AD on raw values; AIC only with tree counts
+        else if (r.status === 'ok') {
           const G = obsDist(r);                                            // the conditional distribution for thresholded data
           r.gof = { ks: D.gof.ks(G, r.params, u.d), ad: D.gof.ad(G, r.params, u.d) };
-          if (r.likelihoodMaximised) Object.assign(r.gof, D.gof.aicBic(r.logLik, r.free.length, u.d.length));   // AIC only where the likelihood was maximised
+          if (r.likelihoodMaximised && r.logLik != null) Object.assign(r.gof, D.gof.aicBic(r.logLik, r.free.length, u.d.length));   // AIC only where the likelihood was maximised
         }
         u.results.push(r);
       }
@@ -213,7 +230,7 @@ function compute() {
     const okN = u.results.filter(r => r.status === 'ok').length, warn = u.results.some(r => r.status !== 'ok' || r.warnings.some(w => w.code !== 'var.n1'));
     u.state = !okN ? 'error' : warn ? 'warning' : 'ok';
   }
-  R = { ...X };
+  R = { ...X, grouped: g, countType: S.countType };
   fixSel();
 }
 const plotIds = () => R ? R.plots : [];
@@ -228,7 +245,7 @@ const unitLabel = u => `${u.plot === D.POOL ? T('unit.pool') : T('unit.plot', { 
 const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', '); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
 
 /* ---------------- step 3: results ---------------- */
-const TABS = ['params', 'charts'];
+const TABS = ['params', 'charts', 'classes'];
 function renderStep3() {
   if (!R) compute();
   const el = $('step3'), withNav = plotIds().length > 1, a = R.acc;
@@ -246,7 +263,7 @@ function renderStep3() {
   if (withNav) nav.renderAside($('unav'));
   drawPanel();
 }
-function drawPanel() { const p = $('panel'); if (!p) return; (S.tab === 'charts' ? tabCharts : tabParams)(p); }
+function drawPanel() { const p = $('panel'); if (!p) return; (S.tab === 'charts' ? tabCharts : S.tab === 'classes' ? tabClasses : tabParams)(p); }
 
 /* plot navigator (shared component) + period switch, as in Plot & Stand Metrics */
 const ST = ['ok', 'warning', 'error'];
@@ -270,7 +287,7 @@ function bindBar() {
 }
 const nav = createUnitNav({
   items: () => plotIds().map(id => {
-    const own = unitsOf(id), st = ST[Math.max(...own.map(x => ST.indexOf(x.state)))], n = own.reduce((s, x) => s + x.d.length, 0);
+    const own = unitsOf(id), st = ST[Math.max(...own.map(x => ST.indexOf(x.state)))], n = own.reduce((s, x) => s + (x.desc ? x.desc.n : x.d.length), 0);
     return { id, label: id === D.POOL ? T('unit.pool') : String(id), search: String(id), state: st, stateTitle: T('nav.st.' + st), n,
       meta: [own.length > 1 ? T('nav.nper', { k: own.length }) : `n = ${fmtNum(n, 0)}`, own.length > 1 ? `n = ${fmtNum(n, 0)}` : ''], barLabel: id === D.POOL ? T('unit.pool') : T('unit.plot', { p: id }) };
   }),
@@ -315,7 +332,8 @@ function exportRaw(kind) {
   if (kind === 'params') return downloadCSV(fname('cap-dagilimi-parametreler', 'diameter-distribution-parameters', 'csv'), REP.paramRows(R.units, h));
   return loadXLSX(BASE).then(XLSX => download(fname('cap-dagilimi', 'diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
     { name: T('sheet.info'), rows: REP.infoRows(settingsInfo(), T), widths: [34, 110] }, { name: T('sheet.fits'), rows: REP.fitRows(R.units, h) },
-    { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) }])), () => status(T('ex.fail'), 'err'));
+    { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) },
+    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }])), () => status(T('ex.fail'), 'err'));
 }
 function exportRec(kind, results, info, base) {
   const h = repH(), rows = REP.recoverRows(results, h);
@@ -326,7 +344,8 @@ const exportButtons = (pre, kinds) => `<div class="exports">${kinds.map(([k, lab
 function tabParams(p) {
   const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
   const s = u.desc, tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
-  let h = nav.bar(perSwitch(u)) + `<div class="tiles">${tile(fmtNum(s.n, 0), T(truncActive() ? 'd.n.tr' : 'd.n'))}${tile(f(s.mean, 2), T('d.mean'))}${tile(f(s.dq, 2), T('d.dq'))}${tile(`${f(s.min, 1)}–${f(s.max, 1)}`, T('d.range'))}${tile(f(s.varN, 2), T('d.var'))}${tile(f(s.varN1, 2), T('d.var1'))}</div>`;
+  let h = nav.bar(perSwitch(u)) + (R.grouped ? `<div class="tiles">${tile(fmtNum(s.n, R.countType === 'perha' ? 2 : 0), T(R.countType === 'perha' ? 'd.n.ha' : 'd.n'))}${tile(fmtNum(s.classes, 0), T('d.cls'))}${tile(fmtNum(s.occupied, 0), T('d.occ'))}${tile(`${f(s.min, 1)}–${s.max === Infinity ? '∞' : f(s.max, 1)}`, T('d.crange'))}</div>` : '')
+    + (R.grouped ? '' : `<div class="tiles">${tile(fmtNum(s.n, 0), T(truncActive() ? 'd.n.tr' : 'd.n'))}${tile(f(s.mean, 2), T('d.mean'))}${tile(f(s.dq, 2), T('d.dq'))}${tile(`${f(s.min, 1)}–${f(s.max, 1)}`, T('d.range'))}${tile(f(s.varN, 2), T('d.var'))}${tile(f(s.varN1, 2), T('d.var1'))}</div>`);
   for (const fa of D.families()) {
     const rs = u.results.filter(r => r.family === fa.id); if (!rs.length) continue;
     h += `<h3>${esc(T('fam.' + fa.id))}</h3><div class="tscroll"><table class="grid ptab" data-fam="${fa.id}"><thead><tr><th>${T('t.method')}</th><th>${T('t.fixed')}</th>
@@ -352,6 +371,7 @@ function tabCharts(p) {
   if (!okR.length) { p.innerHTML = h + `<p class="note warn">${T('p.nofit')}</p>`; bindBar(); return; }
   const shown = okR.filter(x => !S.hidden.includes(key(x)));
   h += `<p class="small">${T('ch.fit')}: ${okR.map(x => `<label class="chk"><input type="checkbox" data-fit="${esc(key(x))}"${S.hidden.includes(key(x)) ? '' : ' checked'}> ${esc(resName(x[0]))}</label>`).join(' ')}</p>`;
+  if (R.grouped) return chartsGrouped(p, u, h, shown, okR);
   const s = u.desc, w = niceWidth(Math.max(s.max - s.min, 1e-9)), b0 = Math.floor(s.min / w) * w, nb = Math.max(1, Math.ceil((s.max - b0) / w + 1e-9)), n = u.d.length;
   const bars = Array.from({ length: nb }, (_, i) => ({ lo: b0 + i * w, hi: b0 + (i + 1) * w, v: 0 }));
   for (const v of u.d) bars[Math.min(nb - 1, Math.floor((v - b0) / w))].v += 1 / (n * w);
@@ -366,6 +386,79 @@ function tabCharts(p) {
   p.innerHTML = h; bindBar();
   p.querySelectorAll('[data-fit]').forEach(x => x.addEventListener('change', () => { const k = x.dataset.fit; S.hidden = x.checked ? S.hidden.filter(j => j !== k) : [...S.hidden, k]; save(); tabCharts(p); }));
   p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
+}
+
+/** Grouped data: histogram from the classes themselves (density n_j/(n·w_j); an open class is not drawn), cumulative
+ *  proportions at the class edges; curves of the fitted distributions (conditional on the listed classes if unrecorded). */
+function chartsGrouped(p, u, h, shown, okR) {
+  const cl = u.classes, n = cl.reduce((a, c) => a + c.n, 0), closed = cl.filter(c => c.hi !== Infinity);
+  const bars = closed.map(c => ({ lo: c.lo, hi: c.hi, v: c.n / (n * (c.hi - c.lo)) }));
+  const lastHi = closed.length ? closed[closed.length - 1].hi : cl[0].lo + 1, xmin = Math.max(0, cl[0].lo - (lastHi - cl[0].lo) * 0.03), xmax = lastHi + (lastHi - cl[0].lo) * (cl[cl.length - 1].hi === Infinity ? 0.25 : 0.03);
+  const xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * i / 400), key = ([r]) => r.method + '|' + JSON.stringify(r.fixed);
+  const line = fn => shown.map(([r, i]) => { const fam = D.family(r.family); return { name: resName(r), k: i, pts: xs.map(x => [x, fam[fn](x, r.params)]) }; });
+  let cum = 0; const step = [[cl[0].lo, 0], ...closed.map(c => { cum += c.n; return [c.hi, cum / n]; })];
+  const fm = v => fmtNum(v, 3);
+  h += `<div class="charts2"><figure class="chartbox" id="ch-h">${plotChart({ title: T('ch.histc', { u: unitLabel(u) }), xmin, xmax, bars, lines: line('pdf'), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: fm })}
+      <figcaption><span class="muted small">${T('ch.binsc')}</span> <button type="button" class="btn ghost small" data-svg="ch-h" data-name="histogram">${T('ch.svg')}</button></figcaption></figure>
+    <figure class="chartbox" id="ch-c">${plotChart({ title: T('ch.cdf', { u: unitLabel(u) }), xmin, xmax, ymin: 0, ymax: 1, lines: [{ name: T('ch.ecdfc'), k: 5, pts: step, dot: true }, ...line('cdf')], xLabel: T('ch.d'), yLabel: T('ch.F'), fmt: fm })}
+      <figcaption><button type="button" class="btn ghost small" data-svg="ch-c" data-name="birikimli">${T('ch.svg')}</button></figcaption></figure></div>`;
+  p.innerHTML = h; bindBar();
+  p.querySelectorAll('[data-fit]').forEach(x => x.addEventListener('change', () => { const k = x.dataset.fit; S.hidden = x.checked ? S.hidden.filter(j => j !== k) : [...S.hidden, k]; save(); tabCharts(p); }));
+  p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
+}
+
+/* ---------------- class tables (P12): observed, probability, expected, per hectare, tails — from the same edges ---------------- */
+/** Classes for a unit: grouped data → its own classes; raw data → the user's definition (automatic: as the histogram). */
+function classesFor(u) {
+  if (R.grouped) return { cl: u.classes, problems: D.classes.checkClasses(u.classes) };
+  const c = S.cls, v = t => { const x = String(t ?? '').trim(); return x === '' ? NaN : num(x); };
+  let cl;
+  if (c.mode === 'edges') { const e = String(c.edges).split(/[;\s]+/).filter(Boolean).map(x => x === '∞' || /^inf/i.test(x) ? Infinity : num(x)); if (e.length < 2 || e.some(x => Number.isNaN(x))) return { cl: [], problems: [{ code: 'cls.edges' }] }; cl = D.classes.makeClasses({ edges: e }); }
+  else {
+    const s0 = u.desc, w = c.mode === 'width' ? v(c.width) : niceWidth(Math.max(s0.max - s0.min, 1e-9)), st = c.mode === 'width' ? v(c.start) : Math.floor(s0.min / w) * w;
+    if (!(w > 0) || !Number.isFinite(st)) return { cl: [], problems: [{ code: 'cls.width' }] };
+    cl = D.classes.makeClasses({ start: st, width: w, max: s0.max, openLast: !!c.openLast });
+  }
+  return { cl, problems: D.classes.checkClasses(cl) };
+}
+const perHaOf = () => { if (R.grouped && R.countType === 'perha') return 1; const a = num(String(S.cls.area ?? '').trim()); return a > 0 ? 10000 / a : null; };
+function tableFor(u, r) {
+  const { cl, problems } = classesFor(u); if (problems.length) return { problems };
+  const obs = R.grouped ? { counts: cl.map(c => c.n), below: 0, above: 0, gap: 0 } : D.classes.countRaw(cl, u.d);
+  const n = R.grouped ? u.desc.n : u.d.length, G = R.grouped && S.outside === 'unrecorded' && r ? D.trunc.truncated(D.family(r.family), r.params, { lower: cl[0].lo, upper: cl[cl.length - 1].hi === Infinity ? null : cl[cl.length - 1].hi }) : r ? obsDist(r) : null;
+  const perHa = R.grouped && R.countType === 'perha' ? null : perHaOf();
+  return { cl, t: r ? D.classes.classTable(G, r.params, cl, obs.counts, { n, perHa, below: obs.below, above: obs.above, gap: obs.gap }) : null, obs, n, perHa };
+}
+function tabClasses(p) {
+  const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
+  const okR = u.results.filter(r => r.status === 'ok'), c = S.cls, kOf = r => r.method + '|' + JSON.stringify(r.fixed);
+  let h = nav.bar(perSwitch(u));
+  if (!R.grouped) h += `<div class="card"><h3>${T('cl.h')}</h3><div class="radios">${['auto', 'width', 'edges'].map(v => `<label><input type="radio" name="clmode" value="${v}"${c.mode === v ? ' checked' : ''}> ${T('cl.mode.' + v)}</label>`).join('')}</div>
+    <div class="lims">${c.mode === 'width' ? `<label>${T('cl.start')} <input type="text" inputmode="decimal" size="6" id="cl-start" value="${esc(c.start)}"></label><label>${T('cl.width')} <input type="text" inputmode="decimal" size="6" id="cl-width" value="${esc(c.width)}"></label>` : ''}
+      ${c.mode === 'edges' ? `<label>${T('cl.edges')} <input type="text" size="34" id="cl-edges" value="${esc(c.edges)}" placeholder="4 8 12 16 20 26 32 40 ∞"></label>` : ''}
+      ${c.mode !== 'edges' ? `<label class="small"><input type="checkbox" id="cl-open"${c.openLast ? ' checked' : ''}> ${T('cl.open')}</label>` : ''}</div>
+    <p class="muted small">${T('cl.note')}</p></div>`;
+  if (!(R.grouped && R.countType === 'perha')) h += `<div class="lims"><label>${T('cl.area')} <input type="text" inputmode="decimal" size="8" id="cl-area" value="${esc(c.area)}"></label><span class="muted small">${T('cl.area.note')}</span></div>`;
+  if (!okR.length) { p.innerHTML = h + `<p class="note warn">${T('p.nofit')}</p>`; bindClsCtl(p); bindBar(); return; }
+  if (!okR.some(r => kOf(r) === S.clsFit)) S.clsFit = kOf(okR[0]);
+  const r = okR.find(x => kOf(x) === S.clsFit), T0 = tableFor(u, r);
+  h += `<label>${T('cl.fit')} <select id="cl-fit">${okR.map(x => `<option value="${esc(kOf(x))}"${kOf(x) === S.clsFit ? ' selected' : ''}>${esc(resName(x))}</option>`).join('')}</select></label>`;
+  if (T0.problems) { p.innerHTML = h + `<p class="note err">${esc(T('pr.' + T0.problems[0].code, T0.problems[0]))}</p>`; bindClsCtl(p); bindBar(); return; }
+  const t = T0.t, ha = t.perHa != null, ph = R.grouped && R.countType === 'perha', fN = x => fmtNum(x, ph ? 2 : 0), lab = (lo, hi) => `[${f(lo, 2)}, ${hi === Infinity ? '∞' : f(hi, 2)})`;
+  const row = (l, o, cls = '') => `<tr class="${cls}"><th>${l}</th><td class="num">${fN(o.obs)}</td><td class="num">${fP(o.prob)}</td><td class="num">${f(o.exp, 3)}</td>${ha ? `<td class="num">${f(o.obsHa, 1)}</td><td class="num">${f(o.expHa, 1)}</td>` : ''}</tr>`;
+  h += `<div class="tscroll"><table class="grid ctab"><thead><tr><th>${T('cl.t.class')}</th><th>${T(ph ? 'cl.t.obsha' : 'cl.t.obs')}</th><th>${T('cl.t.p')}</th><th>${T(ph ? 'cl.t.expha' : 'cl.t.exp')}</th>${ha ? `<th>${T('cl.t.obsN')}</th><th>${T('cl.t.expN')}</th>` : ''}</tr></thead><tbody>
+    ${row(T('cl.below', { b: f(T0.cl[0].lo, 2) }), t.lower, 'tail')}${t.rows.map(x => row(lab(x.lo, x.hi), x)).join('')}${t.gaps.prob > 0 || t.gaps.obs ? row(T('cl.gaps'), t.gaps, 'tail') : ''}
+    ${T0.cl[T0.cl.length - 1].hi === Infinity ? '' : row(T('cl.above', { b: f(T0.cl[T0.cl.length - 1].hi, 2) }), t.upper, 'tail')}
+    <tr class="tot"><th>${T('cl.total')}</th><td class="num">${fN(t.rows.reduce((a, x) => a + x.obs, 0) + t.lower.obs + t.upper.obs + t.gaps.obs)}</td><td class="num">${f(t.totalProb, 6)}</td><td class="num">${f(t.n * t.totalProb, 3)}</td>${ha ? `<td class="num">${f(t.n * t.perHa, 1)}</td><td class="num">${f(t.n * t.totalProb * t.perHa, 1)}</td>` : ''}</tr></tbody></table></div>
+    <p class="small">${T('cl.sum', { d: f(t.absDiff, 3), ei: ha ? f(t.absDiff * t.perHa, 2) : '–', pv: f(t.visibleProb, 6) })}</p><p class="muted small">${T(R.grouped ? (S.outside === 'unrecorded' ? 'cl.note.unrec' : 'cl.note.zero') : r.truncation && r.truncation.logMass != null ? 'cl.note.trunc' : 'cl.note.raw')}</p>`;
+  p.innerHTML = h; bindClsCtl(p); bindBar();
+  $('cl-fit').addEventListener('change', e => { S.clsFit = e.target.value; save(); tabClasses(p); });
+}
+function bindClsCtl(p) {
+  const re = () => { save(); tabClasses(p); };
+  p.querySelectorAll('input[name="clmode"]').forEach(x => x.addEventListener('change', () => { S.cls.mode = x.value; re(); }));
+  for (const k of ['start', 'width', 'edges', 'area']) $('cl-' + k) && $('cl-' + k).addEventListener('change', e => { S.cls[k] = e.target.value; re(); });
+  $('cl-open') && $('cl-open').addEventListener('change', e => { S.cls.openLast = e.target.checked; re(); });
 }
 
 /* ---------------- separate workflow: parameters recovered from summary values (no raw diameters) ---------------- */

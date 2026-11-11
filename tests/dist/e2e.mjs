@@ -31,7 +31,7 @@ await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=tr');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.7') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && !(await page.locator('#devnote').textContent()).includes('ölçüm eşiği') && (await page.locator('#devnote').textContent()).includes('sınıfı tabloları'), 'stage notice: version and what is missing (exports and thresholds no longer listed)');
+ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.8') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && !(await page.locator('#devnote').textContent()).includes('ölçüm eşiği') && !(await page.locator('#devnote').textContent()).includes('sınıfı tabloları') && (await page.locator('#devnote').textContent()).includes('bootstrap'), 'stage notice: version and what is missing (exports, thresholds, classes no longer listed)');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting
@@ -110,14 +110,14 @@ await page.click('#tab-params');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dl.path(), 'utf8'));
 const r0 = js.results[0];
-ok(js.tool.version === '2.0.0-beta.7' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
+ok(js.tool.version === '2.0.0-beta.8' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
 ok(r0.params.b === ml0.b && r0.params.c === ml0.c && r0.fixed.a.origin === 'zero' && r0.free.join() === 'b,c' && r0.estimator === 'ml' && r0.convergence.solver === 'bisection' && r0.objective.name === 'logLik' && r0.fit.aic > 0 && js.settings.methods['weibull.mom'].varDivisor === 'n' && js.results[4].settings.p === 0.24 && js.results[4].targets.quantile === 'type7' && js.results[2].targets.varDivisor === 'n', 'JSON: full-precision parameters, fixed/free, estimator, solver, objective');
 ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid' && r.params === null && r.problems[0].code === 'constant'), 'JSON: failed fits carry a status and a reason, no parameters');
 // Excel report and CSV files (all units)
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
   ok(/^cap-dagilimi-\d{4}-\d{2}-\d{2}\.xlsx$/.test(dx.suggestedFilename()), 'Excel file name: ' + dx.suggestedFilename());
   const wb = XLSX.read(await readFile(await dx.path()));
-  ok(wb.SheetNames.join() === 'Bilgi,Uydurmalar,Parametreler,Ornek alanlar', 'Excel sheets: ' + wb.SheetNames.join());
+  ok(wb.SheetNames.join() === 'Bilgi,Uydurmalar,Parametreler,Ornek alanlar,Siniflar', 'Excel sheets: ' + wb.SheetNames.join());
   const fits = XLSX.utils.sheet_to_json(wb.Sheets.Uydurmalar, { header: 1 }), H = fits[0], info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 });
   ok(fits.length === 45 && H[5] === 'method_id' && H[8] === 'status', 'Excel fits: 44 results + header');
   const f0 = fits.find(r => r[0] === 'A' && String(r[1]) === '2019' && r[5] === 'weibull.ml');
@@ -125,7 +125,7 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
   ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('eşit')), 'Excel: plot C rows carry no parameters, the reason in words');
   const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parametreler, { header: 1 });
   ok(pars.some(r => r[0] === 'A' && r[4] === 'gamma.ml' && r[6] === 'theta' && r[7] === E0.runMethod('gamma.ml', { d: d1 }).params.theta), 'Excel parameters: gamma θ exact');
-  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.7') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
+  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.8') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
   const units = XLSX.utils.sheet_to_json(wb.Sheets['Ornek alanlar'], { header: 1 });
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
@@ -246,7 +246,7 @@ await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (kullanıcı)'), 'user a = 5: the same parameters, labelled as the user\'s');
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
-  ok(j.tool.version === '2.0.0-beta.7' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
+  ok(j.tool.version === '2.0.0-beta.8' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
   ok(rows.length === 5 && rows.slice(1).every(r => r[4] === 'ok' && r[7] === 5 && Math.abs(r[11] - 2.5) < 1e-9) && rows.slice(1).every(r => /origin = predicted/.test(r[r.length - 1])), 'Weibull recovery Excel: a = 5, c = 2.5, origin of the targets'); }
 for (const m of ['weibull.m2', 'weibull.m3']) await page.uncheck(`[data-wm="${m}"]`);
@@ -323,6 +323,47 @@ await page.click('#wf-summary');
 ok((await page.locator('#wbcard', { hasText: 'ham veriden doldurma kapalı' }).count()) === 1 && (await page.locator('#w-fill').count()) === 0, 'recovery: filling from thresholded raw data disabled');
 await page.click('#wf-raw'); await page.click('#steps [data-go="2"]'); await page.check('input[name="trmode"][value="none"]');
 ok((await page.locator('[data-m="weibull.ml"]:disabled').count()) === 0 && (await page.locator('[data-m$=".tml"]').count()) === 0, 'threshold removed: untruncated methods back');
+
+// 2j. class tables for raw data (P12): same edges for observed, probability, expected, N/ha and tails
+await page.click('#calc').catch(() => {}); await page.waitForSelector('table.ptab');
+await page.click('#tab-classes'); await page.waitForSelector('table.ctab');
+{ const E = await import('../../assets/lab/dist/index.js');
+  await page.check('input[name="clmode"][value="width"]'); for (const [k, v] of [['start', '8'], ['width', '8']]) { await page.fill('#cl-' + k, v); await page.locator('#cl-' + k).dispatchEvent('change'); }
+  await page.fill('#cl-area', '400'); await page.locator('#cl-area').dispatchEvent('change'); await page.waitForSelector('table.ctab');
+  await page.selectOption('#cl-fit', { index: 0 });
+  const rows = await page.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
+  const tot = rows.find(r => r[0] === 'Toplam'), cl = E.classes.makeClasses({ start: 8, width: 8, max: 45 }), pool = [...d1, ...d2, 20, 20, 20], cnt = E.classes.countRaw(cl, pool);
+  ok(rows[0][0] === '8 cm altı' && rows.length === cl.length + 3 && rows.slice(1, cl.length + 1).map(r => +r[1]).join() === cnt.counts.join(), 'observed counts per class from the same edges: ' + rows.map(r => r[0] + ':' + r[1]).join(' '));
+  ok(tot && tot[2] === '1' && Math.abs(parseFloat(tot[3]) - 25) < 1e-3 && tot[1] === '25' && tot[4] === '625' && Math.abs(parseFloat(tot[5]) - 625) < 0.05, 'totals: probability 1, expected = n, N/ha = 25 × 10000/400: ' + tot);
+  ok((await page.locator('#panel', { hasText: 'Σ|gözlenen − beklenen|' }).count()) === 1, 'sum of absolute differences and EI per hectare');
+  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#tab-params').then(() => page.click('#x-xlsx'))]);
+  const cs = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Siniflar, { header: 1 });
+  ok(cs.length > 20 && cs[0][4] === 'Sınıf (cm)' && cs.some(r => r[4] === '[8, 16)' && typeof r[8] === 'number' && r[10] != null), 'Excel class sheet: classes, probabilities, N/ha'); }
+
+// 2k. grouped data (class frequencies): grouped ML, counts vs per-hectare frequencies
+{ const ctx2 = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } }), g = await ctx2.newPage();
+  g.on('pageerror', e => errors.push(e.message));
+  const E = await import('../../assets/lab/dist/index.js'), RG = JSON.parse(await readFile(path.join(root, 'tests/ref/dist_p12.json'), 'utf8'));
+  const cw = RG.cases.find(x => x.family === 'weibull' && x.outside === 'zero' && !x.perha), ed = RG.edges;
+  const lines = ['plot\tlo\thi\tn', ...cw.n.map((n, j) => `P1\t${ed[j]}\t${ed[j + 1] ?? ''}\t${n}`)];
+  await g.goto(URL + '?lang=tr'); await g.locator('#impbox details summary').click(); await g.fill('#impbox textarea', lines.join('\n')); await g.click('#impbox [data-act="paste"]');
+  await g.waitForSelector('#impbox .fname'); await g.click('#to2');
+  ok(await g.isChecked('input[name="dtype"][value="classes"]') && await g.inputValue('#lcol') === '1' && await g.inputValue('#ucol') === '2' && await g.inputValue('#ncol') === '3', 'class table recognised: lower, upper, frequency columns');
+  ok((await g.locator('[data-m$=".gml"]').count()) === 8 && (await g.locator('[data-m="weibull.ml"]').count()) === 0 && (await g.locator('#trcard').count()) === 0, 'only grouped ML offered; no threshold card');
+  await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]');
+  const gr = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
+  ok(gr[0].s === 'ok' && Math.abs(parseFloat(gr[0].c[3]) - cw.params.b) < 6e-5 && Math.abs(parseFloat(gr[0].c[4]) - cw.params.c) < 6e-5 && gr[0].c[5] === String(cw.n.reduce((a, b) => a + b, 0)) && gr[0].c[7] !== '–' && gr[0].c[9] === '–', 'grouped Weibull ML = SciPy; n = Σ n_j; AIC given; no KS on classes: ' + gr[0].c.slice(2, 10));
+  await g.click('#tab-charts'); ok((await g.locator('#ch-h svg rect.ch-bar').count()) === 7, 'histogram bars are the closed classes (open last not drawn)');
+  await g.click('#tab-classes'); await g.waitForSelector('table.ctab');
+  const ct = await g.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
+  ok(ct.length === 10 && ct[1][1] === String(cw.n[0]) && ct.find(r => r[0] === 'Toplam')[2] === '1', 'class table from the data classes; total probability 1');
+  await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="perha"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]');
+  const gp = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
+  ok(Math.abs(parseFloat(gp[0][3]) - cw.params.b) < 6e-5 && gp[0][6] === '–' && gp[0][7] === '–' && (await g.locator('ul.notes li', { hasText: 'ağaç sayısı bilinmediği için' }).count()) >= 1, 'per-hectare frequencies: same parameters, no ln L or AIC, reason stated');
+  await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="count"]'); await g.check('input[name="outside"][value="unrecorded"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]');
+  const cu = RG.cases.find(x => x.family === 'weibull' && x.outside === 'unrecorded'), gu = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
+  ok(Math.abs(parseFloat(gu[0][4]) - cu.params.c) < 6e-5, 'outside "not recorded": conditional grouped ML = SciPy');
+  await ctx2.close(); }
 
 // 3. sample data, phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });

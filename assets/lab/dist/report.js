@@ -50,7 +50,7 @@ export function paramRows(units, h) {
 export function unitRows(units, h) {
   const { T } = h;
   const out = [[T('x.plot'), T('x.period'), 'n', T('x.unique'), 'min (cm)', 'max (cm)', T('x.mean'), 'Dq (cm)', T('x.varN'), T('x.varN1'), T('x.state')]];
-  for (const u of units) { const s = u.desc; out.push([unitPlot(u) ?? h.poolLabel, u.period, s.n, s.unique, s.min, s.max, s.mean, s.dq, s.varN, s.varN1, T('nav.st.' + u.state)]); }
+  for (const u of units) { const s = u.desc; out.push(u.classes ? [unitPlot(u) ?? h.poolLabel, u.period, s.n, s.classes, s.min, s.max === Infinity ? null : s.max, null, null, null, null, T('nav.st.' + u.state)] : [unitPlot(u) ?? h.poolLabel, u.period, s.n, s.unique, s.min, s.max, s.mean, s.dq, s.varN, s.varN1, T('nav.st.' + u.state)]); }
   return out;
 }
 /**
@@ -78,3 +78,22 @@ const textTargets = t => Object.fromEntries(Object.entries(t || {}).filter(([, v
 function settingsText(s) { const e = Object.entries(s || {}).filter(([, v]) => v != null && typeof v !== 'object'); return e.length ? e.map(([k, v]) => `${k} = ${v}`).join('; ') : null; }
 /** Key–value rows of the Info sheet: [[label, value], …]. */
 export const infoRows = (pairs, T) => [[T('x.k'), T('x.v')], ...pairs.filter(p => p).map(([k, v]) => [k, v == null ? '–' : v])];
+/**
+ * Class tables of every unit × successful fit (stage P12): class, observed, probability, expected and, when a plot area
+ * is given, per hectare; the tails and gaps as separate rows. tableFor(u, r) → { t, cl } or { problems }.
+ */
+export function classRows(units, h, tableFor) {
+  const { T } = h;
+  const out = [[T('x.plot'), T('x.period'), T('x.method'), 'method_id', T('cl.t.class'), 'lower_cm', 'upper_cm', T('cl.t.obs'), T('cl.t.p'), T('cl.t.exp'), T('cl.t.obsN'), T('cl.t.expN')]];
+  for (const u of units) for (const r of u.results) {
+    if (r.status !== 'ok') continue;
+    const x = tableFor(u, r); if (!x || !x.t) continue;
+    const t = x.t, pl = unitPlot(u) ?? h.poolLabel, base = [pl, u.period, h.methodName(r), r.method], ha = v => t.perHa != null ? v : null;
+    out.push([...base, T('cl.below', { b: x.cl[0].lo }), null, x.cl[0].lo, t.lower.obs, t.lower.prob, t.lower.exp, ha(t.lower.obsHa), ha(t.lower.expHa)]);
+    for (const c of t.rows) out.push([...base, `[${c.lo}, ${c.hi === Infinity ? '∞' : c.hi})`, c.lo, c.hi === Infinity ? null : c.hi, c.obs, c.prob, c.exp, ha(c.obsHa), ha(c.expHa)]);
+    if (t.gaps.prob > 0 || t.gaps.obs) out.push([...base, T('cl.gaps'), null, null, t.gaps.obs, t.gaps.prob, t.gaps.exp, ha(t.gaps.obsHa), ha(t.gaps.expHa)]);
+    const lastHi = x.cl[x.cl.length - 1].hi;
+    if (lastHi !== Infinity) out.push([...base, T('cl.above', { b: lastHi }), lastHi, null, t.upper.obs, t.upper.prob, t.upper.exp, ha(t.upper.obsHa), ha(t.upper.expHa)]);
+  }
+  return out;
+}

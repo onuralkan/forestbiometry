@@ -19,6 +19,7 @@ import { llML, llPCT, llLOGMOM } from './fit/loglogistic.js';
 import { weibullM2, weibullM3, weibullM4, weibullM5, weibullM6, weibullM7, weibullM8, weibullM9, weibullM10 } from './recover/weibull.js';
 import { parresolRecover } from './recover/parresol.js';
 import { makeTML } from './fit/truncated.js';
+import { makeGML } from './fit/grouped.js';
 import { normalRecover, lognormalRecover, gammaRecover } from './recover/moments.js';
 
 registerFamily(weibull);
@@ -48,7 +49,7 @@ registerMethod(llML);
 registerMethod(llPCT);
 registerMethod(llLOGMOM);
 // conditional ML for thresholded data (P11): one per family, built on the family's untruncated ML
-for (const [f, b] of [['weibull', 'weibull.ml'], ['normal', 'normal.ml'], ['lognormal', 'lognormal.ml'], ['gamma', 'gamma.ml'], ['beta', 'beta.ml'], ['johnsonsb', 'johnsonsb.cml'], ['exponential', 'exponential.ml'], ['loglogistic', 'loglogistic.ml']]) registerMethod(makeTML(f, b));
+for (const [f, b] of [['weibull', 'weibull.ml'], ['normal', 'normal.ml'], ['lognormal', 'lognormal.ml'], ['gamma', 'gamma.ml'], ['beta', 'beta.ml'], ['johnsonsb', 'johnsonsb.cml'], ['exponential', 'exponential.ml'], ['loglogistic', 'loglogistic.ml']]) { registerMethod(makeTML(f, b)); registerMethod(makeGML(f, b)); }
 registerMethod(normalRecover);
 registerMethod(lognormalRecover);
 registerMethod(gammaRecover);
@@ -68,3 +69,5 @@ export { weibullSummary } from './recover/weibull.js';
 export * as gof from './gof.js';
 export * from './data.js';
 export * as trunc from './truncate.js';
+export * as classes from './classes.js';
+export { groupedLogLik, checkGrouped } from './fit/grouped.js';

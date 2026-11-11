@@ -23,7 +23,7 @@ const run = (id, d, o) => D.runMethod(id, { d }, o);
 
 /* 1. registry */
 eq(GA.params.map(p => [p.key, p.role, p.unit]), [['k', 'shape', null], ['theta', 'scale', 'cm']], 'gamma: shape k (no unit), SCALE θ (cm); no location');
-eq(D.methodsFor({ family: 'gamma' }).filter(m => !m.truncation).map(m => [m.id, m.kind, m.estimator, m.solver, m.likelihoodMaximised]),
+eq(D.methodsFor({ family: 'gamma' }).filter(m => !m.truncation && !m.grouped).map(m => [m.id, m.kind, m.estimator, m.solver, m.likelihoodMaximised]),
   [['gamma.ml', 'fit', 'ml', 'brent', true], ['gamma.mom', 'fit', 'mom', 'closed form', false], ['gamma.rec', 'recover', 'moments', 'closed form', false]], 'gamma methods');
 ok(!D.methodsFor({ family: 'gamma' }).some(m => (m.options || []).some(o => o.key === 'a' || o.key === 'loc')), 'no free-location gamma');
 

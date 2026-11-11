@@ -49,3 +49,32 @@ export function quantile7(s, p) {
   const h = (n - 1) * p, lo = Math.floor(h);
   return lo + 1 >= n ? s[n - 1] : s[lo] + (h - lo) * (s[lo + 1] - s[lo]);
 }
+/**
+ * Grouped data (stage P12): one row per class, columns for the lower bound, the upper bound (empty = open-ended, last
+ * class only) and the frequency. spec: { lcol, ucol, ncol, unit: 'cm'|'mm', decimal, pcol?, percol?, fcol?, fval?,
+ * mode: 'each'|'pool' }. In the pool, rows of identical classes are added; different class sets must not overlap.
+ * Returns { units: [{ id, plot, period, classes: [{ lo, hi, n }], rows }], plots, periods, acc: { read, bad, badRows } }.
+ */
+export function extractClassUnits(tbl, spec) {
+  const acc = { read: 0, bad: 0, nonpos: 0, filtered: 0, badRows: [] }, map = new Map(), plots = new Set(), periods = new Set();
+  const pool = spec.mode === 'pool' || spec.pcol == null, f = UNITS.dbh[spec.unit || 'cm'];
+  const val = c => c == null ? { status: 'empty' } : c.t === 'n' ? parseNumber(c.v, spec.decimal) : parseNumber(cellText(c), spec.decimal);
+  tbl.rows.forEach((r, i) => {
+    if (spec.fcol != null && spec.fval != null && cellText(r[spec.fcol]) !== spec.fval) { acc.filtered++; return; }
+    const lo = val(r[spec.lcol]), hiC = r[spec.ucol], hi = hiC == null || cellText(hiC).trim() === '' ? { status: 'ok', value: Infinity } : val(hiC), n = val(r[spec.ncol]);
+    if (lo.status !== 'ok' || hi.status !== 'ok' || n.status !== 'ok') { acc.bad++; if (acc.badRows.length < 20) acc.badRows.push(tbl.rowNumbers[i]); return; }
+    const plot = pool ? POOL : cellText(r[spec.pcol]).trim(), period = spec.percol != null ? (cellText(r[spec.percol]).trim() || null) : null, key = plot + '\u0001' + (period ?? '\u0002');
+    if (!map.has(key)) map.set(key, { id: key, plot, period, cls: new Map(), rows: [] });
+    const u = map.get(key), ck = `${lo.value * f}|${hi.value * f}`;
+    u.cls.set(ck, { lo: lo.value * f, hi: hi.value === Infinity ? Infinity : hi.value * f, n: (u.cls.get(ck)?.n ?? 0) + n.value });
+    u.rows.push(tbl.rowNumbers[i]); acc.read++; plots.add(plot); periods.add(period);
+  });
+  const units = [...map.values()].map(u => ({ id: u.id, plot: u.plot, period: u.period, rows: u.rows, classes: [...u.cls.values()].sort((a, b) => a.lo - b.lo || a.hi - b.hi), d: [] }))
+    .sort((a, b) => (a.plot === b.plot ? 0 : a.plot === POOL ? -1 : b.plot === POOL ? 1 : natural(a.plot, b.plot)) || perSort(a.period, b.period));
+  return { units, plots: [...plots].sort((a, b) => a === POOL ? -1 : b === POOL ? 1 : natural(a, b)), periods: [...periods].sort(perSort), acc, pooled: pool, grouped: true };
+}
+/** Descriptive summary of grouped data: total frequency, number of classes, occupied classes, range of the classes. */
+export function describeClasses(cl) {
+  const n = cl.reduce((s, c) => s + c.n, 0);
+  return { n, classes: cl.length, occupied: cl.filter(c => c.n > 0).length, min: cl.length ? cl[0].lo : null, max: cl.length ? cl[cl.length - 1].hi : null };
+}
