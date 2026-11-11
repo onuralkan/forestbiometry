@@ -34,7 +34,7 @@ const Q = { q25: 0.25, q31: 0.31, q50: 0.5, q63: 0.63, q95: 0.95 };
  * policy is a = 0.5·Dmin). PRM Parresol: mean, median, Dq (ξ fixed by the user).
  */
 export function responseSet(id, opts = {}) {
-  if (id === 'ppm.weibull') return { id, approach: 'ppm', family: 'weibull', keys: ['b', 'c'] };
+  if (id === 'ppm.weibull') return { id, approach: 'ppm', family: 'weibull', keys: opts.ppmLoc === 'half-dmin' ? ['b', 'c', 'dmin'] : ['b', 'c'] };
   if (id === 'prm.parresol') return { id, approach: 'prm', family: 'johnsonsb', method: 'johnsonsb.parresol', keys: ['mean', 'median', 'dq'] };
   const m = /^prm\.weibull\.(m[2-9])$/.exec(id);
   if (m) { const meth = D.method('weibull.' + m[1]), keys = meth.needs.slice();
@@ -46,9 +46,9 @@ export const SETS = ['ppm.weibull', 'prm.weibull.m2', 'prm.weibull.m3', 'prm.wei
 
 /** Training targets of one unit (diameters d, cm). Moment variance with divisor n; percentiles type 7. null = not computable. */
 export function targets(d, set, opts = {}) {
-  if (set.approach === 'ppm') {
-    const r = D.runMethod('weibull.ml', { d }, { a: opts.a ?? 0 });
-    return r.status === 'ok' ? { b: r.params.b, c: r.params.c } : null;
+  if (set.approach === 'ppm') {                     // M1: b, c by ML with a fixed: 0, or 0.5 × the unit's smallest diameter
+    const half = opts.ppmLoc === 'half-dmin', dmin = Math.min(...d), r = D.runMethod('weibull.ml', { d }, { a: half ? 0.5 * dmin : opts.a ?? 0 });
+    return r.status === 'ok' ? { b: r.params.b, c: r.params.c, ...(half ? { dmin } : {}) } : null;
   }
   const s = D.describe(d), srt = [...d].sort((x, y) => x - y), out = {};
   for (const k of set.keys) out[k] = k === 'mean' ? s.mean : k === 'variance' ? s.varN : k === 'dq' ? s.dq : k === 'dmin' ? s.min : k === 'median' ? D.quantile7(srt, 0.5) : D.quantile7(srt, Q[k]);
@@ -158,6 +158,7 @@ export function fitSUR(xs, Y, terms, opts = {}) {
  * Returns the model (coefficients per response, training scope) and the unit list with their targets.
  */
 export function train(units, cfg) {
+  if (cfg.fit === 'cdfr' || cfg.fit === 'mcdfr') return trainCDF(units, cfg);
   const set = responseSet(cfg.set, cfg), terms = cfg.terms.slice(), nv = needs(terms);
   const rows = [], skipped = [];
   for (const u of units) {
@@ -167,7 +168,7 @@ export function train(units, cfg) {
   }
   const plots = new Set(rows.map(r => r.u.plot)), p = 1 + terms.length;
   const base = { schema: SCHEMA, tool: D.TOOL.id + ' ' + D.TOOL.version, set: set.id, approach: set.approach, family: set.family, method: set.method ?? null, keys: set.keys, terms, fit: cfg.fit,
-    options: { a: set.approach === 'ppm' ? (cfg.a ?? 0) : null, loc: set.family === 'weibull' && set.approach === 'prm' ? (cfg.loc ?? 'half-dmin') : null, aUser: cfg.loc === 'user' ? (cfg.a ?? 0) : null, xi: set.family === 'johnsonsb' ? cfg.xi ?? null : null, back: cfg.fit === 'logols' ? (cfg.back ?? 'median') : null },
+    options: { a: set.approach === 'ppm' ? (cfg.ppmLoc === 'half-dmin' ? null : cfg.a ?? 0) : null, ppmLoc: set.approach === 'ppm' ? (cfg.ppmLoc ?? 'zero') : null, loc: set.family === 'weibull' && set.approach === 'prm' ? (cfg.loc ?? 'half-dmin') : null, aUser: cfg.loc === 'user' ? (cfg.a ?? 0) : null, xi: set.family === 'johnsonsb' ? cfg.xi ?? null : null, back: cfg.fit === 'logols' ? (cfg.back ?? 'median') : null },
     units: { d: 'cm', N: 'trees/ha', H: 'm', A: 'years' }, hColumn: cfg.hColumn ?? null,
     scope: { units: rows.length, plots: plots.size, ranges: Object.fromEntries(nv.map(k => [k, [Math.min(...rows.map(r => r.u.x[k])), Math.max(...rows.map(r => r.u.x[k]))]])), targets: Object.fromEntries(set.keys.map(k => [k, [Math.min(...rows.map(r => r.t[k])), Math.max(...rows.map(r => r.t[k]))]])) },
     skipped };
@@ -210,7 +211,7 @@ export function predict(model, x) {
   let result = null;
   if (!problems.length) {
     if (model.approach === 'ppm') {
-      const params = { a: model.options.a, b: responses.b, c: responses.c };
+      const params = { a: model.options.ppmLoc === 'half-dmin' ? 0.5 * responses.dmin : model.options.a, b: responses.b, c: responses.c };
       result = { status: 'ok', params };
     } else if (model.family === 'weibull') {
       const s = { ...responses, origin: 'predicted' }; if ('variance' in s) s.varDivisor = 'n';
@@ -269,4 +270,100 @@ export function importModel(obj) {
     if (obj.status !== 'ok') p.push({ code: 'stand.import.status' });
   }
   return p.length ? { problems: p } : { model: obj };
+}
+
+/* ---------------- CDFR and modified CDFR (stage P17, DIST_SPEC §4.2) ---------------- */
+// The coefficients β shared by all plots are fitted by minimising a distance between observed and predicted cumulative
+// distributions over all training units; θᵢ(β) are the parameters the model predicts for unit i (PPM directly, PRM by
+// recovering them from the predicted targets with the verified recovery methods).
+//   CDFR (source):          Σᵢ (1/nᵢ) Σⱼ [ (j − 0.5)/nᵢ − F(dᵢ₍ⱼ₎; θᵢ) ]²      (diameters sorted; equal diameters take
+//                            consecutive j: tool rule)
+//   modified CDFR (source): Σᵢ 1/(mᵢ − 1) Σ_{j=1}^{mᵢ−1} [ Cᵢⱼ − F(uᵢⱼ; θᵢ) ]²   (classes of width w from ⌊min/w⌋·w; uᵢⱼ the
+//                            true upper bound, Cᵢⱼ the observed cumulative proportion; the last class is left out of this
+//                            objective only, it stays in the class table and in the tree count; mᵢ > 1 required)
+// The Dmin equation (location policy a = 0.5·Dmin) is fitted by NLS beforehand and held fixed. A recovery that fails or
+// has several solutions at some β makes that β infeasible (never resolved by a rule): such steps are rejected and counted.
+/** Classes of width w for one unit: [lo, hi) with counts (the last class included; counts add up to n). */
+export function unitClasses(d, w) {
+  const lo0 = Math.floor(Math.min(...d) / w) * w, m = Math.floor((Math.max(...d) - lo0) / w) + 1, cl = Array.from({ length: m }, (_, j) => ({ lo: lo0 + j * w, hi: lo0 + (j + 1) * w, n: 0 }));
+  for (const v of d) cl[Math.min(m - 1, Math.floor((v - lo0) / w))].n++;
+  return cl;
+}
+/** Observation rows of the objective for each unit: { i, x (diameter or class upper bound), y (target), w (weight) }. */
+function cdfRows(units, fit, width) {
+  const rows = [], excluded = [];
+  units.forEach((u, i) => {
+    if (fit === 'cdfr') { const s = [...u.d].sort((a, b) => a - b), n = s.length; s.forEach((v, j) => rows.push({ i, x: v, y: (j + 0.5) / n, w: 1 / n })); return; }
+    const cl = unitClasses(u.d, width), m = cl.length, n = u.d.length;
+    if (m < 2) { excluded.push({ plot: u.plot, period: u.period, code: 'stand.cdf.oneclass' }); return; }
+    let cum = 0; for (let j = 0; j < m - 1; j++) { cum += cl[j].n; rows.push({ i, x: cl[j].hi, y: cum / n, w: 1 / (m - 1) }); }
+  });
+  return { rows, excluded };
+}
+/** Objective value for given parameters per unit (params[i] or null when not available). Exported for the hand checks. */
+export function cdfObjective(units, params, fit, width = 2) {
+  const fam = D.family('weibull'), { rows } = cdfRows(units, fit, width); let v = 0;
+  for (const r of rows) { const p = params[r.i]; if (!p) return { value: Infinity, failed: true }; v += r.w * (r.y - fam.cdf(r.x, p)) ** 2; }
+  return { value: v, failed: false };
+}
+function trainCDF(units, cfg) {
+  const fit = cfg.fit, width = cfg.width ?? 2, start = train(units, { ...cfg, fit: 'nls' });
+  if (start.status !== 'ok') return { ...start, fit, problems: [...(start.problems || []), { code: 'stand.cdf.start' }] };
+  if (start.family !== 'weibull') return { ...start, fit, status: 'invalid', problems: [{ code: 'stand.cdf.family' }] };
+  const keys = start.keys, free = keys.filter(k => k !== 'dmin'), p = 1 + start.terms.length;
+  const used = units.filter(u => start.trainingUnits.some(t => t.plot === u.plot && t.period === u.period));
+  const { rows, excluded } = cdfRows(used, fit, width);
+  const inc = [...new Set(rows.map(r => r.i))], fam = D.family('weibull');
+  const asModel = th => ({ ...start, equations: start.equations.map(e => free.includes(e.key) ? { ...e, beta: th.slice(free.indexOf(e.key) * p, (free.indexOf(e.key) + 1) * p) } : e) });
+  // θᵢ(β) for every unit, cached per β (LM evaluates many observations at one β); failures counted by state
+  let cacheKey = null, cache = null;
+  const thetas = th => { const k = th.join(','); if (k === cacheKey) return cache; const m = asModel(th), fails = {};
+    const ps = used.map(u => { const pr = predict(m, u.x); if (pr.status !== 'ok') { const st = pr.problems.length ? 'invalid' : pr.status; fails[st] = (fails[st] || 0) + 1; return null; } return pr.params; });
+    cacheKey = k; cache = { ps, fails }; return cache; };
+  const sw = rows.map(r => Math.sqrt(r.w));
+  const resid = th => { const { ps, fails } = thetas(th); if (Object.keys(fails).length) return null; return rows.map((r, o) => sw[o] * (r.y - fam.cdf(r.x, ps[r.i]))); };
+  const th0 = free.flatMap(k => start.equations.find(e => e.key === k).beta);
+  const s0 = thetas(th0), base = { ...start, fit, cdf: { width: fit === 'mcdfr' ? width : null, weights: fit === 'cdfr' ? '1/n_i' : '1/(m_i - 1)', position: fit === 'cdfr' ? '(j - 0.5)/n_i, equal diameters consecutive' : 'class upper bound, last class excluded from the objective only',
+    dmin: keys.includes('dmin') ? 'NLS, held fixed' : null, rootPolicy: 'a unique recovery solution is required; failures and several solutions make β infeasible', excludedUnits: excluded, start: null, objective: null, iter: null, failuresAtStart: s0.fails, rejected: 0 } };
+  if (Object.keys(s0.fails).length) return { ...base, status: 'invalid', problems: [{ code: 'stand.cdf.startfail', fails: s0.fails }] };
+  base.cdf.start = cdfObjective(used, s0.ps, fit, width).value;
+  const r = lmVector(resid, th0, base.cdf);
+  if (r.status !== 'ok') return { ...base, status: r.status, problems: [{ code: 'stand.fit' }] };
+  const m = asModel(r.theta), fin = thetas(r.theta);
+  base.cdf.objective = cdfObjective(used, fin.ps, fit, width).value; base.cdf.iter = r.iter; base.cdf.units = inc.length;
+  for (const e of m.equations) { const j = keys.indexOf(e.key), pr = used.map(u => predictKey(m, e, u.x)), res = start.trainingUnits.map((t, i) => t.targets[e.key] - pr[i]);
+    e.rmse = Math.sqrt(res.reduce((s2, v) => s2 + v * v, 0) / res.length); e.bias = -res.reduce((s2, v) => s2 + v, 0) / res.length; if (free.includes(e.key)) { e.se = null; e.fittedBy = fit; } else e.fittedBy = 'nls'; void j; }
+  return { ...base, status: 'ok', equations: m.equations };
+}
+
+/**
+ * Levenberg–Marquardt on a residual vector R(θ) with a forward-difference Jacobian built column by column (one R per
+ * column: the parameters of every unit are computed once per β). R(θ) = null marks an infeasible β (a recovery failed or
+ * had several solutions): the step is rejected and counted in rec.rejected. Convergence: relative step ≤ 1e-10, relative
+ * decrease ≤ 1e-14 with a small step, or scaled gradient ≤ 1e-8 (as in core/nls.js).
+ */
+function lmVector(R, th0, rec) {
+  let th = th0.slice(), r = R(th); if (!r) return { status: 'invalid' };
+  const p = th.length, ss = v => v.reduce((a, x) => a + x * x, 0);
+  const jac = (th, r) => { const J = Array.from({ length: r.length }, () => Array(p)); for (let j = 0; j < p; j++) { let h = 1e-7 * Math.max(1, Math.abs(th[j])), t = th.slice(); t[j] += h; let rj = R(t);
+      if (!rj) { h = -h; t[j] = th[j] + h; rj = R(t); } if (!rj) return null; for (let o = 0; o < r.length; o++) J[o][j] = (rj[o] - r[o]) / h; } return J; };
+  let S = ss(r), J = jac(th, r); if (!J) return { status: 'invalid' };
+  const normal = (J, r) => { const A = Array.from({ length: p }, () => Array(p).fill(0)), g = Array(p).fill(0);
+    for (let o = 0; o < r.length; o++) { const Jo = J[o]; for (let a = 0; a < p; a++) { g[a] -= Jo[a] * r[o]; for (let b = 0; b <= a; b++) A[a][b] += Jo[a] * Jo[b]; } }
+    for (let a = 0; a < p; a++) for (let b = 0; b < a; b++) A[b][a] = A[a][b]; return { A, g }; };
+  let { A, g } = normal(J, r), lambda = 1e-3 * Math.max(...A.map((q, k) => q[k])), nu = 2, iter = 0;
+  const gradOk = () => g.every((gj, j) => Math.abs(gj) <= 1e-8 * Math.sqrt(Math.max(A[j][j], 1e-300) * Math.max(S, 1e-300)));
+  while (iter < 300) {
+    iter++; if (gradOk()) return { status: 'ok', theta: th, iter };
+    const M = A.map((q, a) => q.map((v, b) => a === b ? v + lambda * Math.max(v, 1e-12) : v)), d = solve(M, g);
+    if (!d) { lambda *= nu; nu *= 2; continue; }
+    const cand = th.map((t, j) => t + d[j]), rc = R(cand), Sc = rc ? ss(rc) : Infinity; if (!rc) rec.rejected++;
+    const stepRel = Math.max(...d.map(Math.abs)) / (Math.max(...th.map(Math.abs)) + 1e-10);
+    if (Sc < S) {
+      const old = S; th = cand; r = rc; S = Sc; J = jac(th, r); if (!J) return { status: 'noconverge', theta: th, iter };
+      ({ A, g } = normal(J, r)); lambda = Math.max(lambda / 3, 1e-12); nu = 2;
+      if (stepRel <= 1e-10 || ((old - S) <= 1e-14 * old && stepRel <= 1e-6)) return { status: 'ok', theta: th, iter };
+    } else { lambda *= nu; nu *= 2; if (lambda > 1e20) return gradOk() || stepRel <= 1e-8 ? { status: 'ok', theta: th, iter } : { status: 'noconverge', theta: th, iter }; }
+  }
+  return { status: 'noconverge', theta: th, iter };
 }

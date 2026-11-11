@@ -165,7 +165,7 @@
 <ul>
 <li><b>Approach and responses</b>: PPM (Weibull b and c directly) or PRM (targets of Weibull M2–M9 or Johnson SB Parresol; a prediction recovers the parameters from these targets).</li>
 <li><b>Terms</b>: RS, ln N, ln H, 1/A (Poudel and Cao's form).</li>
-<li><b>Regression method</b>: NLS (each response separately), SUR (responses together, with the covariance between equations) or log-OLS (on ln y; a different objective, with a chosen back-transformation).</li>
+<li><b>Regression method</b>: NLS (each response separately), SUR (responses together, with the covariance between equations), log-OLS (on ln y; a different objective, with a chosen back-transformation), CDFR or modified CDFR (Weibull routes: the coefficients minimise, over all plots, the distance between observed and predicted cumulative distributions; modified CDFR works with diameter classes of the width set in <b>Class width (cm)</b>). In the CDF fits, steps where a recovery cannot be solved or has several solutions are rejected and counted; for PPM the location is a = 0 or a = 0.5 × predicted Dmin.</li>
 <li><b>Validation</b> is at plot level: all periods of a plot are in the same fold. For every unit the −ln L and KS of the predicted distribution on the observed trees are given; units that cannot be predicted are counted.</li>
 </ul>
 <p><b>Download the model (JSON)</b> records the coefficients, the training scope, units, version and validation results. On the <b>Predict with a model</b> tab you choose the model trained in this session or a model file and enter N, H and age. If the predicted percentiles are out of order or Dq is not above the mean diameter, no parameters are given (values are not clipped); inputs outside the training range are flagged as an extrapolation.</p>

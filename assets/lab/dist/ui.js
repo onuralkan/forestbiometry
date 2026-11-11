@@ -34,7 +34,7 @@ function blank() {
     wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
     mode: 'each', dtype: 'raw', lcol: null, ucol: null, ncol: null, countType: 'count', outside: 'zero',
     cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '' }, clsFit: null, histScale: 'density', diagFit: null, cmpSort: 'aic', boot: { fit: null, B: '199', seed: '20261111', round: 'auto', step: '', scheme: 'parametric', level: '0.95' },
-    st: { tab: 'train', ncol: null, hcol: null, acol: null, set: 'ppm.weibull', terms: { RS: true, lnN: true, lnH: true, invA: true }, fit: 'nls', back: 'median', loc: 'half-dmin', a: '0', xi: '', K: '5', done: false, model: null, cv: null, src: 'trained', imported: null, x: { N: '', H: '', A: '' }, pdone: false },
+    st: { tab: 'train', ncol: null, hcol: null, acol: null, set: 'ppm.weibull', terms: { RS: true, lnN: true, lnH: true, invA: true }, fit: 'nls', width: '2', ppmLoc: 'zero', back: 'median', loc: 'half-dmin', a: '0', xi: '', K: '5', done: false, model: null, cv: null, src: 'trained', imported: null, x: { N: '', H: '', A: '' }, pdone: false },
     trunc: { mode: 'none', L: '', U: '', nScope: 'observed' }, methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
 let saveT = null;
@@ -898,7 +898,7 @@ function standDecimal() {
 }
 function standCfg() {
   const q = S.st, n = t => num(t);
-  return { set: q.set, terms: stTerms(), fit: q.fit, back: q.back, loc: q.loc, a: n(q.a), xi: q.xi === '' ? NaN : n(q.xi), hColumn: q.hcol != null ? String(S.src.headers[q.hcol]) : null };
+  return { set: q.set, terms: stTerms(), fit: q.fit, back: q.back, loc: q.loc, a: n(q.a), ppmLoc: q.set === 'ppm.weibull' ? q.ppmLoc : undefined, width: n(q.width), xi: q.xi === '' ? NaN : n(q.xi), hColumn: q.hcol != null ? String(S.src.headers[q.hcol]) : null };
 }
 function standUnits() {
   const q = S.st;
@@ -912,9 +912,11 @@ function standProblems() {
   for (const k of need) if (q[{ N: 'ncol', H: 'hcol', A: 'acol' }[k]] == null) out.push(T('st.need.col', { k: T('st.var.' + k) }));
   if (q.set === 'prm.parresol' && !(num(q.xi) >= 0)) out.push(T('st.need.xi'));
   if (q.set.startsWith('prm.weibull') && q.loc === 'user' && !(num(q.a) >= 0)) out.push(T('st.need.a'));
+  if (q.fit === 'mcdfr' && !(num(q.width) > 0)) out.push(T('st.need.width'));
+  if ((q.fit === 'cdfr' || q.fit === 'mcdfr') && q.set === 'prm.parresol') out.push(T('st.need.cdfwb'));
   return out;
 }
-let ST_UNITS = null;
+let standJob = null;
 function renderStand() {
   const el = $('standwf'), q = S.st; guessStandCols();
   const tabs = `<div class="tabs rectabs" role="tablist" aria-label="${esc(T('st.tabs'))}">${['train', 'predict'].map(t => `<button type="button" role="tab" id="stt-${t}" data-stt="${t}" aria-selected="${q.tab === t}" aria-controls="st-${t}">${T('st.tab.' + t)}</button>`).join('')}</div>`;
@@ -936,13 +938,16 @@ function standTrain(el) {
   h += `<div class="card"><h3>${T('st.model.h')}</h3>
     <label>${T('st.set')} <select id="st-set">${D.stand.SETS.map(id => `<option value="${id}"${q.set === id ? ' selected' : ''}>${esc(T('st.set.' + id))}</option>`).join('')}</select></label>
     ${q.set.startsWith('prm.weibull') ? `<div class="radios">${['half-dmin', 'user'].map(v => `<label><input type="radio" name="st-loc" value="${v}"${q.loc === v ? ' checked' : ''}> ${T('st.loc.' + v)}</label>`).join('')}</div>${q.loc === 'user' ? `<label>a (cm) <input type="text" inputmode="decimal" size="6" id="st-a" value="${esc(q.a)}"></label>` : ''}` : ''}
+    ${q.set === 'ppm.weibull' ? `<div class="radios">${['zero', 'half-dmin'].map(v => `<label><input type="radio" name="st-ppmloc" value="${v}"${q.ppmLoc === v ? ' checked' : ''}> ${T('st.ppmloc.' + v)}</label>`).join('')}</div>` : ''}
     ${q.set === 'prm.parresol' ? `<label>${T('prs.f.xi')} <input type="text" inputmode="decimal" size="6" id="st-xi" value="${esc(q.xi)}"></label>` : ''}
     <p class="small"><b>${T('st.terms')}</b> ${D.stand.TERMS.map(t => `<label class="chk"><input type="checkbox" data-term="${t}"${q.terms[t] ? ' checked' : ''}> ${T('st.term.' + t)}</label>`).join(' ')}</p>
-    <p class="small"><b>${T('st.fit')}</b></p><div class="radios col">${['nls', 'sur', 'logols'].map(v => `<label><input type="radio" name="st-fit" value="${v}"${q.fit === v ? ' checked' : ''}> ${T('st.fit.' + v)}</label>`).join('')}</div>
+    <p class="small"><b>${T('st.fit')}</b></p><div class="radios col">${['nls', 'sur', 'logols', 'cdfr', 'mcdfr'].map(v => `<label><input type="radio" name="st-fit" value="${v}"${q.fit === v ? ' checked' : ''}> ${T('st.fit.' + v)}</label>`).join('')}</div>
+    ${q.fit === 'mcdfr' ? `<label>${T('st.width')} <input type="text" inputmode="decimal" size="5" id="st-width" value="${esc(q.width)}"></label>` : ''}
     ${q.fit === 'logols' ? `<div class="radios">${['median', 'mean'].map(v => `<label><input type="radio" name="st-back" value="${v}"${q.back === v ? ' checked' : ''}> ${T('st.back.' + v)}</label>`).join('')}</div>` : ''}
     <label>${T('st.K')} <select id="st-K">${['3', '5', '10'].map(v => `<option${q.K === v ? ' selected' : ''}>${v}</option>`).join('')}</select></label></div>`;
   const pr = standProblems();
-  h += `<div class="nav"><button type="button" class="btn" id="st-train-btn"${pr.length ? ' disabled' : ''}>${T('st.train')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div><div id="st-out"></div>`;
+  h += `<div class="nav"><button type="button" class="btn" id="st-train-btn"${pr.length ? ' disabled' : ''}>${T('st.train')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}
+    <span id="st-busy" hidden><span class="small">${T('st.busy')}</span> <button type="button" class="btn ghost small" id="st-cancel">${T('bt.cancel')}</button></span></div><div id="st-out"></div>`;
   el.innerHTML = h;
   const re = () => { q.done = false; save(); standTrain(el); };
   for (const [id, k] of [['st-dcol', 'dcol'], ['st-pcol', 'pcol'], ['st-percol', 'percol']]) $(id) && $(id).addEventListener('change', e => { S[k] = e.target.value === '' ? null : +e.target.value; R = null; re(); });
@@ -951,6 +956,8 @@ function standTrain(el) {
   $('st-set').addEventListener('change', e => { q.set = e.target.value; re(); });
   el.querySelectorAll('input[name="st-loc"]').forEach(x => x.addEventListener('change', () => { q.loc = x.value; re(); }));
   el.querySelectorAll('input[name="st-fit"]').forEach(x => x.addEventListener('change', () => { q.fit = x.value; re(); }));
+  el.querySelectorAll('input[name="st-ppmloc"]').forEach(x => x.addEventListener('change', () => { q.ppmLoc = x.value; re(); }));
+  $('st-width') && $('st-width').addEventListener('change', e => { q.width = e.target.value; re(); });
   el.querySelectorAll('input[name="st-back"]').forEach(x => x.addEventListener('change', () => { q.back = x.value; re(); }));
   el.querySelectorAll('[data-term]').forEach(x => x.addEventListener('change', () => { q.terms[x.dataset.term] = x.checked; re(); }));
   for (const k of ['a', 'xi']) $('st-' + k) && $('st-' + k).addEventListener('change', e => { q[k] = e.target.value; re(); });
@@ -960,9 +967,18 @@ function standTrain(el) {
     const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-mescere.csv (benzetim)' : 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     const keep = S.st; setTable({ imp, src: await readImport(imp, BASE) }); S.wf = 'stand'; S.st = { ...keep, ncol: null, hcol: null, acol: null, done: false, model: null, cv: null }; guessStandCols(); save(); render();
   });
-  $('st-train-btn').addEventListener('click', () => { const X = standUnits(), cfg = standCfg(), m = D.stand.train(X.units, cfg);
-    q.model = m.status === 'ok' ? D.stand.exportModel(m, null) : m; q.cv = m.status === 'ok' ? D.stand.crossValidate(X.units, cfg, +q.K) : null; if (q.cv && q.model) q.model = D.stand.exportModel(m, q.cv);
-    q.refused = X.refused; q.done = true; q.src = 'trained'; save(); drawStandTrain(); });
+  $('st-train-btn').addEventListener('click', () => {
+    const X = standUnits(), cfg = standCfg(), units = X.units.map(u => ({ id: u.id, plot: u.plot, period: u.period, d: u.d, x: u.x }));
+    if (standJob) standJob.terminate();
+    const w = new Worker(new URL('./stand-worker.js', import.meta.url), { type: 'module' }); standJob = w;
+    $('st-train-btn').disabled = true; $('st-busy').hidden = false; $('st-out').innerHTML = ''; q.done = false;
+    const end = () => { standJob = null; w.terminate(); if ($('st-busy')) { $('st-busy').hidden = true; $('st-train-btn').disabled = false; } };
+    w.onmessage = e => { end(); const r = e.data; if (r.type === 'error') { status(T('bt.err', { m: r.message }), 'err'); return; }
+      q.model = r.model; q.cv = r.cv; q.refused = X.refused; q.done = true; q.src = 'trained'; save(); drawStandTrain(); };
+    w.onerror = e => { end(); status(T('bt.err', { m: e.message || 'worker' }), 'err'); };
+    w.postMessage({ units, cfg, K: +q.K });
+  });
+  $('st-cancel').addEventListener('click', () => { if (standJob) { standJob.terminate(); standJob = null; } $('st-busy').hidden = true; $('st-train-btn').disabled = false; status(T('st.cancelled')); });
   if (q.done && q.model) drawStandTrain();
 }
 const stKey = k => T('st.k.' + k);
@@ -975,6 +991,7 @@ function drawStandTrain() {
   if ((q.refused || []).length || m.skipped.length) h += `<p class="note warn small">${T('st.res.left', { n: (q.refused || []).length + m.skipped.length })}</p><details class="more"><summary>${T('st.res.leftlist')}</summary><ul class="small">${[...(q.refused || []).map(r => `${esc(r.plot)} / ${esc(perLabel(r.period))}: ${r.problems.map(p => esc(T('st.pr.' + p.code, { ...p, key: T('st.var.' + p.key) }))).join('; ')}`), ...m.skipped.map(r => `${esc(r.plot)} / ${esc(perLabel(r.period))}: ${esc(T('st.pr.' + r.code))}`)].map(x => `<li>${x}</li>`).join('')}</ul></details>`;
   h += `<div class="tscroll"><table class="grid sttab"><thead><tr><th>${T('st.resp')}</th>${betaHead(m.terms).map(x => `<th>${esc(x)}</th>`).join('')}<th>RMSE</th><th>${T('st.bias')}</th></tr></thead><tbody>
     ${m.equations.map(e => `<tr data-key="${e.key}"><th>${esc(stKey(e.key))}</th>${e.beta.map((b, i) => `<td class="num">${f(b, 6)}${e.se ? `<br><span class="muted small">± ${f(e.se[i], 4)}</span>` : ''}</td>`).join('')}<td class="num">${f(e.rmse, 4)}</td><td class="num">${f(e.bias, 4)}</td></tr>`).join('')}</tbody></table></div>
+    ${m.cdf ? `<p class="small" id="st-cdf">${T('st.res.cdf', { s: f(m.cdf.start, 6), o: f(m.cdf.objective, 6), i: m.cdf.iter, r: m.cdf.rejected, w: m.cdf.width == null ? '' : T('st.res.width', { w: m.cdf.width }) })}${m.cdf.excludedUnits.length ? ' ' + T('st.res.oneclass', { n: m.cdf.excludedUnits.length }) : ''}${m.cdf.dmin ? ' ' + T('st.res.dminfixed') : ''}</p>` : ''}
     <p class="muted small">${T('st.res.note.' + m.fit)}${m.sur ? ' ' + T('st.res.sur', { r: m.sur.rounds, c: m.sur.corr.map((r, a) => r.slice(a + 1).map((v, b) => `${stKey(m.keys[a])}–${stKey(m.keys[a + b + 1])}: ${f(v, 3)}`)).flat().join(', ') }) : ''}${m.hColumn ? ' ' + T('st.res.hcol', { c: esc(m.hColumn) }) : ''}</p></div>`;
   if (cv && cv.status === 'ok') {
     const s = cv.summary;

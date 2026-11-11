@@ -165,7 +165,7 @@
 <ul>
 <li><b>Yaklaşım ve yanıtlar</b>: PPM (Weibull b ve c doğrudan) ya da PRM (Weibull M2–M9 ya da Johnson SB Parresol hedefleri; tahminde parametreler bu hedeflerden geri kazanılır).</li>
 <li><b>Terimler</b>: RS, ln N, ln H, 1/A (Poudel ve Cao'nun biçimi).</li>
-<li><b>Regresyon yöntemi</b>: NLS (her yanıt ayrı), SUR (yanıtlar birlikte, denklemler arası kovaryansla) ya da log-OLS (ln y üzerinde; farklı bir amaç fonksiyonu, geri dönüş seçilir).</li>
+<li><b>Regresyon yöntemi</b>: NLS (her yanıt ayrı), SUR (yanıtlar birlikte, denklemler arası kovaryansla), log-OLS (ln y üzerinde; farklı bir amaç fonksiyonu, geri dönüş seçilir), CDFR ya da modified CDFR (Weibull yolları: katsayılar bütün alanlarda gözlenen ve tahmin edilen birikimli dağılımlar arasındaki uzaklığı en küçükler; modified CDFR, <b>Sınıf genişliği (cm)</b> alanında seçtiğiniz genişlikte çap sınıflarıyla çalışır). CDFR'de geri kazanımı çözülemeyen ya da birden çok çözümü olan adımlar reddedilir ve sayılır; PPM'de konum a = 0 ya da a = 0.5 × tahmin edilen Dmin seçilir.</li>
 <li><b>Doğrulama</b> örnek alan düzeyindedir: bir alanın bütün dönemleri aynı kattadır. Her birim için tahmin edilen dağılımın gözlenen ağaçlardaki −ln L ve KS değeri verilir; tahmin edilemeyen birimler sayılır.</li>
 </ul>
 <p><b>Modeli indir (JSON)</b> katsayıları, eğitim kapsamını, birimleri, sürümü ve doğrulama sonuçlarını kaydeder. <b>Modelle tahmin</b> sekmesinde bu oturumda eğitilen modeli ya da bir model dosyasını seçip N, H ve yaşı girersiniz. Tahmin edilen yüzdelikler sıralı değilse ya da Dq ortalama çaptan büyük değilse parametre verilmez (değerler kırpılmaz); eğitim aralığı dışındaki girdiler dışa değerleme olarak işaretlenir.</p>
