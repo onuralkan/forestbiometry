@@ -55,7 +55,7 @@ export function renderImport(el, state, { base, title, sub = '', onChange, onErr
   const imp = state.imp, src = state.src, dn = DN();
   let h = `<div class="card imp"><h2>${title}</h2>${sub ? `<p class="muted">${sub}</p>` : ''}<div class="imp-in">
     <label class="filebtn"><input type="file" accept=".csv,.txt,.tsv,.xlsx,.xlsm" data-act="file"><span>${T('file')}</span></label>
-    <details${imp && imp.kind === 'paste' ? ' open' : ''}><summary>${T('paste')}</summary><textarea rows="5" spellcheck="false" data-act="pastebox">${imp && imp.kind === 'paste' ? esc(imp.text) : ''}</textarea>
+    <details${imp && imp.kind === 'paste' ? ' open' : ''}><summary>${T('paste')}</summary><textarea rows="5" spellcheck="false" data-act="pastebox" aria-label="${esc(T('paste'))}">${imp && imp.kind === 'paste' ? esc(imp.text) : ''}</textarea>
     <button type="button" class="btn small" data-act="paste">${T('take')}</button></details></div>`;
   if (imp && src) {
     h += `<div class="imp-opts"><strong class="fname">${esc(imp.name)}</strong>`;

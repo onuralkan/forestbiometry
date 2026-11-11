@@ -31,7 +31,7 @@ await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=tr');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').textContent()).includes('2.0.0-beta.10') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && !(await page.locator('#devnote').textContent()).includes('ölçüm eşiği') && !(await page.locator('#devnote').textContent()).includes('Henüz olmayanlar'), 'stage notice: version; nothing listed as missing any more');
+ok((await page.locator('#devnote').textContent()).includes('2.0.0') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && !(await page.locator('#devnote').textContent()).includes('ölçüm eşiği') && !(await page.locator('#devnote').textContent()).includes('Henüz olmayanlar'), 'stage notice: version; nothing listed as missing any more');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting
@@ -110,14 +110,14 @@ await page.click('#tab-params');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dl.path(), 'utf8'));
 const r0 = js.results[0];
-ok(js.tool.version === '2.0.0-beta.10' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
+ok(js.tool.version === '2.0.0' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
 ok(r0.params.b === ml0.b && r0.params.c === ml0.c && r0.fixed.a.origin === 'zero' && r0.free.join() === 'b,c' && r0.estimator === 'ml' && r0.convergence.solver === 'bisection' && r0.objective.name === 'logLik' && r0.fit.aic > 0 && js.settings.methods['weibull.mom'].varDivisor === 'n' && js.results[4].settings.p === 0.24 && js.results[4].targets.quantile === 'type7' && js.results[2].targets.varDivisor === 'n', 'JSON: full-precision parameters, fixed/free, estimator, solver, objective');
 ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid' && r.params === null && r.problems[0].code === 'constant'), 'JSON: failed fits carry a status and a reason, no parameters');
 // Excel report and CSV files (all units)
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
   ok(/^cap-dagilimi-\d{4}-\d{2}-\d{2}\.xlsx$/.test(dx.suggestedFilename()), 'Excel file name: ' + dx.suggestedFilename());
   const wb = XLSX.read(await readFile(await dx.path()));
-  ok(wb.SheetNames.join() === 'Bilgi,Uydurmalar,Parametreler,Ornek alanlar,Siniflar,Karsilastirma', 'Excel sheets: ' + wb.SheetNames.join());
+  ok(wb.SheetNames.join() === 'Bilgi,Uydurmalar,Parametreler,Ornek alanlar,Siniflar,Karsilastirma,Bootstrap,Kaynaklar', 'Excel sheets: ' + wb.SheetNames.join());
   const fits = XLSX.utils.sheet_to_json(wb.Sheets.Uydurmalar, { header: 1 }), H = fits[0], info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 });
   ok(fits.length === 45 && H[5] === 'method_id' && H[8] === 'status', 'Excel fits: 44 results + header');
   const f0 = fits.find(r => r[0] === 'A' && String(r[1]) === '2019' && r[5] === 'weibull.ml');
@@ -125,7 +125,7 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
   ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('eşit')), 'Excel: plot C rows carry no parameters, the reason in words');
   const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parametreler, { header: 1 });
   ok(pars.some(r => r[0] === 'A' && r[4] === 'gamma.ml' && r[6] === 'theta' && r[7] === E0.runMethod('gamma.ml', { d: d1 }).params.theta), 'Excel parameters: gamma θ exact');
-  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0-beta.10') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
+  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.0.0') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
   const units = XLSX.utils.sheet_to_json(wb.Sheets['Ornek alanlar'], { header: 1 });
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
@@ -161,7 +161,7 @@ const js2 = JSON.parse(await readFile(await dl2.path(), 'utf8'));
 ok(js2.results.length === 3 && js2.results[1].kind === 'recover' && js2.results[1].data.type === 'summary' && js2.results[1].targets.source === 'dq' && js2.results[1].logLik === null && js2.summary.dq === 21, 'recovery JSON: kind, data type, inputs, no likelihood');
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#s-xlsx')]), wb = XLSX.read(await readFile(await dx.path())), rows = XLSX.utils.sheet_to_json(wb.Sheets['Geri kazanim'], { header: 1 });
   const ln = rows.find(r => r[2] === 'lognormal.rec'), H = rows[0];
-  ok(wb.SheetNames.join() === 'Bilgi,Geri kazanim' && rows.length === 4 && ln[7] === lr2.params.mu && ln[H.indexOf('Geri hesap: backDq')] === lr2.diagnostics.backDq, 'recovery Excel: exact μ and back-calculated Dq');
+  ok(wb.SheetNames.join() === 'Bilgi,Geri kazanim,Kaynaklar' && rows.length === 4 && ln[7] === lr2.params.mu && ln[H.indexOf('Geri hesap: backDq')] === lr2.diagnostics.backDq, 'recovery Excel: exact μ and back-calculated Dq');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#s-csv')]); ok((await readFile(await dc.path(), 'utf8')).includes(String(lr2.params.mu)), 'recovery CSV: full-precision μ'); }
 await fillS('#s-dq', '19'); await page.click('#s-calc'); await page.waitForSelector('table.rtab');
 ok((await page.locator('table.rtab tr[data-status="invalid"]').count()) === 3 && (await page.locator('table.rtab', { hasText: 'Dq ortalama çaptan büyük olmalı' }).count()) === 1, 'Dq ≤ mean: no parameters, reason given');
@@ -246,7 +246,7 @@ await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (kullanıcı)'), 'user a = 5: the same parameters, labelled as the user\'s');
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
-  ok(j.tool.version === '2.0.0-beta.10' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
+  ok(j.tool.version === '2.0.0' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
   ok(rows.length === 5 && rows.slice(1).every(r => r[4] === 'ok' && r[7] === 5 && Math.abs(r[11] - 2.5) < 1e-9) && rows.slice(1).every(r => /origin = predicted/.test(r[r.length - 1])), 'Weibull recovery Excel: a = 5, c = 2.5, origin of the targets'); }
 for (const m of ['weibull.m2', 'weibull.m3']) await page.uncheck(`[data-wm="${m}"]`);
@@ -387,6 +387,25 @@ await page.click('#tab-boot'); await page.waitForSelector('#bt-gof');
   ok(ci.length === 6 && ci.every(([k, est, lo, hi]) => Math.abs(lo - rci.intervals[k].lo) < 6e-5 && Math.abs(hi - rci.intervals[k].hi) < 6e-5 && lo <= est && est <= hi), 'intervals for b, c and Q25–Q95 = engine; estimate inside: ' + JSON.stringify(ci.map(x => x.slice(0, 4)))); }
 await page.click('#tab-params');
 
+// 2l. P15: sources of every result, state summary, exports keep version, settings, parameters and the bootstrap seed
+await page.waitForSelector('#panel .srcs');
+{ const src = await page.evaluate(() => ({ m: [...document.querySelectorAll('#panel .srcs li[data-src]')].map(x => x.dataset.src), r: [...document.querySelectorAll('#panel .srcs li[data-ref]')].map(x => x.dataset.ref), t: document.querySelector('#panel .srcs').textContent }));
+  const ms = await page.evaluate(() => [...new Set([...document.querySelectorAll('#panel table.ptab tbody tr')].map(tr => tr.dataset.method))]);
+  ok(src.m.join() === ms.join() && src.r.includes('R6') && src.r.includes('DUBEY') && src.r.includes('R10') && src.t.includes('METHODS.md §12 P05') && src.t.includes('d > a') && src.t.includes('okundu'), 'sources: every method with section, support and references; reading status: ' + src.r.join());
+  ok((await page.locator('.pstates').count()) === 1 && (await page.locator('.pstates').textContent()).includes('sonuç hesaplandı'), 'computed and failed results counted apart');
+  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), wb = XLSX.read(await readFile(await dx.path()));
+  const bs = XLSX.utils.sheet_to_json(wb.Sheets.Bootstrap, { header: 1 }), ks = XLSX.utils.sheet_to_json(wb.Sheets.Kaynaklar, { header: 1 });
+  ok(bs.length > 4 && bs.slice(1).every(r => r[7] === 20261111 && r[3] === 'weibull.ml') && bs.some(r => r[6] === 'gof' && typeof r[17] === 'number') && bs.some(r => r[6] === 'ci' && typeof r[20] === 'number'), 'Excel: bootstrap sheet with seed, numbers as numbers');
+  ok(ks.some(r => r[0] === 'weibull.ml' && r[5] === 'METHODS.md §12 P05') && ks.some(r => r[0] === 'bootstrap') && ks.some(r => r[0] === 'R9' && String(r[1]).includes('goodness_of_fit')), 'Excel: sources sheet (methods, sections, references)');
+  const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]), jj = JSON.parse(await readFile(await dj.path(), 'utf8'));
+  ok(jj.tool.version === '2.0.0' && jj.bootstrap.length === 2 && jj.bootstrap.every(b => b.result.seed === 20261111 && b.method === 'weibull.ml') && jj.sources.methods['weibull.ml'].section === 'P05' && jj.settings.dataType === 'raw' && jj.settings.threshold === null, 'JSON: version, settings, bootstrap runs with seed, sources');
+  await page.click('#tab-charts'); await page.waitForSelector('#ch-q svg');
+  const [dsv] = await Promise.all([page.waitForEvent('download'), page.click('#ch-q [data-svg]')]), svg = await readFile(await dsv.path(), 'utf8');
+  const mt = svg.match(/<metadata>([^<]*)<\/metadata>/), meta = mt && JSON.parse(mt[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
+  const fq = meta && meta.fits[0], jr = fq && jj.results.find(r => r.method === fq.method && JSON.stringify(r.fixed) === JSON.stringify(fq.fixed));
+  ok(meta && meta.tool.version === '2.0.0' && meta.settings.methods['weibull.mom'].varDivisor === 'n' && meta.fits.length === 1 && jr && JSON.stringify(fq.params) === JSON.stringify(jr.params), 'SVG: version, settings and full-precision parameters in the file');
+  await page.click('#tab-params'); }
+
 // 2k. grouped data (class frequencies): grouped ML, counts vs per-hectare frequencies
 { const ctx2 = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } }), g = await ctx2.newPage();
   g.on('pageerror', e => errors.push(e.message));
@@ -415,6 +434,42 @@ await page.click('#tab-params');
   await g.click('#steps [data-go="2"]'); await g.check('input[name="outside"][value="zero"]'); await g.click('#calc'); await g.waitForSelector('table.ptab'); await g.click('#tab-boot');
   ok((await g.locator('#panel', { hasText: 'desteklenmiyor' }).count()) === 1 && (await g.locator('#bt-gof').count()) === 0, 'unsupported combination stated, no button');
   await ctx2.close(); }
+
+// 2m. P15: sample data with all eight families, failed fits told apart, one unit across all tabs; empty data; load failure
+{ const c3 = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } }), q = await c3.newPage();
+  q.on('pageerror', e => errors.push(e.message));
+  await q.goto(URL + '?lang=tr'); await q.click('#sample'); await q.waitForSelector('#impbox .fname'); await q.click('#to2');
+  for (const m of await q.evaluate(() => [...document.querySelectorAll('[data-m]')].map(x => x.dataset.m))) await q.check(`[data-m="${m}"]`);
+  for (const [k, v] of [['L', '0'], ['U', '60'], ['xi', '0'], ['lambda', '60']]) { await q.fill('#b-' + k, v); await q.locator('#b-' + k).dispatchEvent('change'); }
+  ok(!(await q.isDisabled('#calc')), 'sample: every method of the eight families can be calculated (bounds given)');
+  await q.click('#calc'); await q.waitForSelector('table.ptab');
+  const ids = await q.evaluate(() => [...document.querySelectorAll('#ulist .uid')].map(x => x.textContent));
+  const per = [];
+  for (const id of ids) { await q.locator('#ulist .uitem', { hasText: id }).first().click(); await q.waitForFunction(id => document.querySelector('.navlab b')?.textContent.includes(id), id);
+    per.push(await q.evaluate(() => ({ fams: [...document.querySelectorAll('table.ptab')].map(t => t.dataset.fam), rows: [...document.querySelectorAll('table.ptab tbody tr')].map(tr => ({ s: tr.dataset.status, p: tr.querySelector('td.num')?.textContent.trim() })),
+      ok: +document.querySelector('.pstates').dataset.ok, bad: +document.querySelector('.pstates').dataset.bad, notes: document.querySelectorAll('ul.notes li').length }))); }
+  const big = per.filter(x => x.ok > 0), small = per.filter(x => x.bad > 0);
+  ok(per.every(x => x.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb,exponential,loglogistic'), 'all eight families in every unit');
+  ok(big.length >= 2 && big.some(x => x.rows.every(r => r.s === 'ok')), 'large plots: every method of every family ok');
+  ok(small.length >= 1 && small.every(x => x.rows.filter(r => r.s !== 'ok').every(r => r.p === '–') && x.notes > 0 && x.ok + x.bad === x.rows.length), 'small plots: failed results without parameters, reasons in notes, counted apart');
+  // one unit across all tabs
+  await q.locator('#ulist .uitem', { hasText: ids[1] }).first().click();
+  const bars = [];
+  for (const t of ['params', 'charts', 'classes', 'compare', 'boot']) { await q.click('#tab-' + t); await q.waitForTimeout(150); bars.push(await q.evaluate(() => document.querySelector('.navlab b')?.textContent + '|' + document.querySelector('#ulist .uitem.on .uid')?.textContent)); }
+  ok(new Set(bars).size === 1 && bars[0].includes(ids[1]), 'the chosen plot stays the same in every tab: ' + bars.join(' / '));
+  await q.click('#tab-params'); await c3.close(); }
+{ const c4 = await browser.newContext(), q = await c4.newPage(); q.on('pageerror', e => errors.push(e.message));
+  await q.goto(URL + '?lang=tr'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', 'plot;dbh\nA;\nA;x'); await q.click('#impbox [data-act="paste"]');
+  await q.waitForSelector('#impbox .fname'); await q.click('#to2'); await q.click('#calc'); await q.waitForSelector('#nodata');
+  ok((await q.locator('#nodata').textContent()).includes('Analize girecek çap yok') && (await q.locator('#acc').textContent()).includes('2 değer okunamadı') && (await q.locator('table.ptab').count()) === 0, 'empty/missing data: stated, no tables');
+  await c4.close(); }
+{ const c5 = await browser.newContext(), q = await c5.newPage();
+  await q.route('**/assets/lab/dist/ui.js*', r => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>One moment, please...</title>' }));
+  await q.goto(URL + '?lang=en'); await q.waitForSelector('#loadfail:not([hidden])', { timeout: 20000 });
+  ok((await q.locator('#loadfail').textContent()).includes('could not be loaded') && (await q.locator('#loadfail button').count()) === 1, 'load failure (HTML instead of JavaScript): warning with a reload button');
+  await c5.close(); }
+{ await page.goto(URL + '?lang=tr'); await page.waitForTimeout(16000);
+  ok(await page.isHidden('#loadfail'), 'normal load: no warning after the watchdog time'); }
 
 // 3. sample data, phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });

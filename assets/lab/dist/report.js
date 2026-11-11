@@ -4,6 +4,7 @@
 // that TR and EN files carry the same values.
 import * as D from './index.js';
 import { compareUnit } from './compare.js';
+import * as SRC from './sources.js';
 
 const MAXP = 4;                                            // largest number of parameters of any registered family
 const num = x => typeof x === 'number' && Number.isFinite(x) ? x : null;
@@ -106,5 +107,37 @@ export function compareRows(units, h, classErr) {
     for (const [rows, kind] of [[g.ml, 'ml'], [g.desc, 'desc']]) for (const x of rows)
       out.push([unitPlot(u) ?? h.poolLabel, u.period, g.key, T('cmp.x.' + kind), T('fam.' + x.r.family), h.methodName(x.r), x.r.method, x.n, kind === 'ml' ? x.k : null, num(x.logLik), num(x.aic), num(x.dAIC), num(x.bic), num(x.dBIC), num(x.aicc), num(x.ks), num(x.ad), num(x.cvm), num(x.l1), num(x.ei)]);
   }
+  return out;
+}
+/**
+ * Bootstrap runs (stage P14, exported from P15): one row per unit × fit × operation × statistic or quantity, with the
+ * seed, requested and completed replicates, failures by state, failure rate and rounding step on every row.
+ * recs = [{ unit: { plot, period }, r (result), kind: 'gof'|'ci', result }]
+ */
+export function bootRows(recs, h) {
+  const { T } = h;
+  const out = [[T('x.plot'), T('x.period'), T('x.method'), 'method_id', T('x.fixed'), T('bx.kind'), 'kind', T('bt.seed'), 'B', T('bx.done'), T('bx.failed'), T('bx.rate'), T('bx.step'), T('bx.scheme'),
+    T('bx.q'), 'T0', T('bt.ge'), 'p', T('bt.mcse'), T('bt.est'), T('bt.lo'), T('bt.hi'), T('bt.se'), T('x.reason')]];
+  for (const x of recs) {
+    const res = x.result, fam = D.family(x.r.family), base = [x.unit.plot ?? h.poolLabel, x.unit.period, h.methodName(x.r), x.r.method,
+      Object.entries(x.r.fixed || {}).map(([k, v]) => `${(fam.params.find(q => q.key === k) || {}).label ?? k} = ${v.value}`).join('; ') || null, T('bx.' + x.kind), x.kind];
+    if (res.unsupported) { out.push([...base, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, T('bt.' + res.unsupported)]); continue; }
+    const meta = [res.seed, res.B, res.completed, Object.entries(res.failed).map(([k, v]) => `${k}: ${v}`).join('; ') || null, num(res.failRate), res.step == null ? null : res.step, x.kind === 'ci' ? res.scheme : null];
+    const warn = res.warn ? T('bt.warn', { r: (res.failRate * 100).toFixed(1) }) : null;
+    if (x.kind === 'gof') for (const [k, v] of Object.entries(res.stats)) out.push([...base, ...meta, k, num(v.t0), v.ge, num(v.p), num(v.mcse), null, null, null, null, v.p == null ? T('bt.few', { m: res.minOk }) : warn]);
+    else if (!res.intervals) out.push([...base, ...meta, null, null, null, null, null, null, null, null, null, T('bt.few', { m: 20 })]);
+    else for (const [k, v] of Object.entries(res.intervals)) out.push([...base, ...meta, k.startsWith('Q') ? k : (fam.params.find(q => q.key === k) || {}).label ?? k, null, null, null, null, num(v.est), num(v.lo), num(v.hi), num(v.se), warn]);
+  }
+  return out;
+}
+/** Methods and references (stage P15): every method used, its documentation section and references; then the reference list. */
+export function sourceRows(ids, h, extra = []) {
+  const { T } = h, uniq = [...new Set(ids)];
+  const out = [['method_id', T('x.method'), T('x.family'), T('x.estimator'), T('x.solver'), T('x.section'), T('x.refs')]];
+  for (const id of uniq) { const m = D.method(id), s = SRC.methodSources(id);
+    out.push([id, T('m.' + id), T('fam.' + m.family), T('est.' + m.estimator), T('sol.' + m.solver), 'METHODS.md §12 ' + s.section, s.refs.join(', ')]); }
+  if (extra.includes('R9')) out.push(['bootstrap', T('tab.boot'), null, null, null, 'METHODS.md §12 P14', 'R9']);
+  out.push([], [T('x.refs'), T('x.cite'), T('x.rstatus'), T('x.url')]);
+  for (const k of SRC.refsOf(uniq, extra)) { const x = SRC.REFS[k]; out.push([k, x.cite, T('src.st.' + x.status), x.url || null]); }
   return out;
 }

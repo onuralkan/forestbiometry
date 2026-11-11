@@ -6,6 +6,7 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { download, downloadJSON, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import * as REP from './report.js';
+import * as SRC from './sources.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
@@ -231,6 +232,7 @@ function compute() {
     u.state = !okN ? 'error' : warn ? 'warning' : 'ok';
   }
   R = { ...X, grouped: g, countType: S.countType };
+  BOOT.clear(); if (bootJob) { bootJob.terminate(); bootJob = null; }   // results of the previous calculation do not belong to the new one
   fixSel();
 }
 const plotIds = () => R ? R.plots : [];
@@ -250,6 +252,11 @@ function renderStep3() {
   if (!R) compute();
   const el = $('step3'), withNav = plotIds().length > 1, a = R.acc;
   nav.reset();
+  if (!R.units.length) {                                   // nothing readable: say so instead of an empty page
+    el.innerHTML = `<p class="small" id="acc">${T('acc', { read: fmtNum(a.read, 0) })}${a.bad || a.nonpos ? ` <span class="note warn">${T('acc.bad', { n: a.bad, np: a.nonpos, rows: a.badRows.join(', '), more: a.bad + a.nonpos > a.badRows.length })}</span>` : ''}</p>
+      <p class="note err" id="nodata" role="alert">${T(R.grouped ? 'nodata.cls' : 'nodata')}</p><div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
+    $('back2').addEventListener('click', () => go(2)); return;
+  }
   el.innerHTML = `<p class="small" id="acc">${T('acc', { read: fmtNum(a.read, 0) })}${a.bad || a.nonpos ? ` <span class="note warn">${T('acc.bad', { n: a.bad, np: a.nonpos, rows: a.badRows.join(', '), more: a.bad + a.nonpos > a.badRows.length })}</span>` : ''}${a.filtered ? ` ${T('acc.f', { n: a.filtered })}` : ''}</p>
     <div class="tabs" role="tablist">${TABS.map(t => `<button type="button" role="tab" id="tab-${t}" aria-selected="${S.tab === t}" aria-controls="panel" data-tab="${t}">${T('tab.' + t)}</button>`).join('')}</div>
     <div class="panel${withNav ? ' withnav' : ''}">${withNav ? `<aside class="unav" id="unav" aria-label="${esc(T('nav.list'))}"></aside>` : ''}<div id="panel" role="tabpanel" aria-labelledby="tab-${S.tab}"></div></div>
@@ -326,6 +333,25 @@ function settingsInfo() {
     [T('x.methods'), ms.join('\n')], [T('x.acc'), `${R.acc.read} / ${R.acc.bad} / ${R.acc.nonpos}`], [T('x.badrows'), R.acc.badRows.length ? R.acc.badRows.join(', ') + (R.acc.bad + R.acc.nonpos > R.acc.badRows.length ? ', …' : '') : null],
     ['', T('x.n.ll')], ['', T('x.n.aic')], ['', T('x.n.p')], ['', T('x.n.var')], ['', T('x.n.trunc')], ['', T('x.n.num')]];
 }
+/** Settings of the raw-data workflow as data (JSON exports, SVG metadata). */
+function jsonSettings() {
+  return { unit: S.unit, decimal: S.decimal, mode: S.mode, dataType: grouped() ? 'classes' : 'raw', countType: grouped() ? S.countType : null, outside: grouped() ? S.outside : null,
+    threshold: truncActive() ? { ...truncSpec(), nScope: S.trunc.nScope } : null, fixedLocation: aFixed().a,
+    fixedBounds: needsBounds() ? Object.fromEntries([...boundFams()].map(([fam, b]) => [fam, { ...Object.fromEntries(b.keys.map(k => [k, boundVal(k)])), origin: 'user' }])) : null,
+    methods: Object.fromEntries(chosenMethods().map(m => [m.id, methodOpts(m).opts || null])) };
+}
+/** Bootstrap runs of this calculation, one record per unit × fit × operation (with the seed). */
+function bootRecords() {
+  const out = [];
+  for (const u of R.units) for (const r of u.results) for (const kind of ['gof', 'ci']) {
+    const res = BOOT.get(`${u.id}|${r.method}|${JSON.stringify(r.fixed)}|${kind}`);
+    if (res) out.push({ unit: { plot: u.plot === D.POOL ? null : u.plot, period: u.period }, u, r, method: r.method, fixed: r.fixed, kind, result: res });
+  }
+  return out;
+}
+const srcJSON = ids => ({ methods: Object.fromEntries([...new Set(ids)].map(id => [id, SRC.methodSources(id)])), references: Object.fromEntries(SRC.refsOf(ids).map(k => [k, SRC.REFS[k]])) });
+const chartMeta = (u, rs) => ({ tool: D.TOOL, created: new Date().toISOString(), unit: u ? { plot: u.plot === D.POOL ? null : u.plot, period: u.period } : null, settings: jsonSettings(),
+  fits: rs.map(r => ({ method: r.method, family: r.family, fixed: r.fixed, params: r.params, settings: r.settings, truncation: r.truncation })) });
 function exportRaw(kind) {
   const h = repH();
   if (kind === 'fits') return downloadCSV(fname('cap-dagilimi-uydurmalar', 'diameter-distribution-fits', 'csv'), REP.fitRows(R.units, h));
@@ -333,12 +359,27 @@ function exportRaw(kind) {
   return loadXLSX(BASE).then(XLSX => download(fname('cap-dagilimi', 'diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
     { name: T('sheet.info'), rows: REP.infoRows(settingsInfo(), T), widths: [34, 110] }, { name: T('sheet.fits'), rows: REP.fitRows(R.units, h) },
     { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) },
-    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) }])), () => status(T('ex.fail'), 'err'));
+    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) },
+    { name: T('sheet.boot'), rows: REP.bootRows(bootRecords(), h) }, { name: T('sheet.src'), rows: REP.sourceRows(R.units.flatMap(x => x.results.map(r => r.method)), h, bootRecords().length ? ['R9'] : []), widths: [22, 34, 16, 14, 14, 12, 26] }])), () => status(T('ex.fail'), 'err'));
 }
 function exportRec(kind, results, info, base) {
   const h = repH(), rows = REP.recoverRows(results, h);
   if (kind === 'csv') return downloadCSV(fname(base[0], base[1], 'csv'), rows);
-  return loadXLSX(BASE).then(XLSX => download(fname(base[0], base[1], 'xlsx'), xlsxBlob(XLSX, [{ name: T('sheet.info'), rows: REP.infoRows(info, T), widths: [34, 110] }, { name: T('sheet.rec'), rows }])), () => status(T('ex.fail'), 'err'));
+  return loadXLSX(BASE).then(XLSX => download(fname(base[0], base[1], 'xlsx'), xlsxBlob(XLSX, [{ name: T('sheet.info'), rows: REP.infoRows(info, T), widths: [34, 110] }, { name: T('sheet.rec'), rows },
+    { name: T('sheet.src'), rows: REP.sourceRows(results.map(r => r.method), h), widths: [22, 34, 16, 14, 14, 12, 26] }])), () => status(T('ex.fail'), 'err'));
+}
+/** Methods, units, support and observation policy and sources of the given results (stage P15). */
+function srcBlock(rs, boot = false) {
+  const seen = new Map(); for (const r of rs) if (!seen.has(r.method)) seen.set(r.method, r);
+  const ids = [...seen.keys()], refs = SRC.refsOf(ids, boot ? ['R9'] : []), num = k => refs.indexOf(k) + 1;
+  const obs = r => r.truncation ? T('src.thr.trunc', { L: r.truncation.lower ?? '–', U: r.truncation.upper ?? '∞' }) : r.data.type === 'classes' ? T('src.thr.cls') : r.data.type === 'summary' ? T('src.thr.sum') : T('src.thr.none');
+  const li = [...seen.values()].map(r => { const m = D.method(r.method), fam = D.family(r.family), s = SRC.methodSources(r.method);
+    return `<li data-src="${r.method}"><b>${esc(methodName(r))}</b> · ${esc(T('fam.' + r.family))}: ${T('src.est')}: ${esc(T('est.' + m.estimator))}; ${T('src.solver')}: ${esc(T('sol.' + m.solver))}; ${T('src.units')}: ${esc(fam.params.map(parHead).join(', '))};
+      ${T('src.support')}: ${esc(T('sup.' + r.family))}; ${T('src.obs')}: ${esc(obs(r))}. ${T('src.doc')}: METHODS.md §12 ${s.section}. ${T('src.refs')}: ${s.refs.map(k => `[${num(k)}]`).join(', ')}.</li>`; });
+  if (boot) li.push(`<li data-src="bootstrap"><b>${T('tab.boot')}</b>: ${T('src.boot')} ${T('src.doc')}: METHODS.md §12 P14. ${T('src.refs')}: [${num('R9')}].</li>`);
+  return `<details class="srcs card"><summary>${T('src.h')}</summary><ul class="small">${li.join('')}</ul>
+    <ol class="small refs">${refs.map(k => { const x = SRC.REFS[k]; return `<li data-ref="${k}">${esc(x.cite)}${x.url ? ` <a href="${esc(x.url)}" rel="noopener" target="_blank">${T('src.link')}</a>` : ''} <span class="muted">(${T('src.st.' + x.status)})</span></li>`; }).join('')}</ol>
+    <p class="muted small">${T('src.note')}</p></details>`;
 }
 const exportButtons = (pre, kinds) => `<div class="exports">${kinds.map(([k, lab, main]) => `<button type="button" class="btn${main ? '' : ' ghost'}" id="${pre}-${k}">${T(lab)}</button>`).join('')}</div><p class="muted small">${T('ex.note')}</p>`;
 function tabParams(p) {
@@ -357,11 +398,14 @@ function tabParams(p) {
     const notes = rs.flatMap(r => notesOf(r).map(x => `${methodName(r)}${Object.values(r.fixed).some(v => v.origin !== 'zero') ? ` (${Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ')})` : ''}: ${x}`));
     if (notes.length) h += `<ul class="small notes">${[...new Set(notes)].map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
   }
-  h += `<p class="muted small">${T('p.note')}</p><h3>${T('ex.h')}</h3>` + exportButtons('x', [['xlsx', 'ex.xlsx', true], ['fits', 'ex.fits'], ['params', 'ex.params'], ['json', 'p.json']]);
+  const nOk = u.results.filter(r => r.status === 'ok').length, nW = u.results.filter(r => r.status === 'ok' && r.warnings.some(w => w.code !== 'var.n1')).length;
+  h = h.replace('<div class="tiles">', `<p class="small pstates" data-ok="${nOk}" data-bad="${u.results.length - nOk}">${T('p.states', { ok: nOk, w: nW, bad: u.results.length - nOk })}</p><div class="tiles">`);
+  h += `<p class="muted small">${T('p.note')}</p>` + srcBlock(u.results) + `<h3>${T('ex.h')}</h3>` + exportButtons('x', [['xlsx', 'ex.xlsx', true], ['fits', 'ex.fits'], ['params', 'ex.params'], ['json', 'p.json']]);
   p.innerHTML = h; bindBar();
   for (const k of ['xlsx', 'fits', 'params']) $('x-' + k).addEventListener('click', () => exportRaw(k));
   $('x-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-sonuc-${new Date().toISOString().slice(0, 10)}.json`,
-    { tool: D.TOOL, created: new Date().toISOString(), source: S.imp ? S.imp.name : null, settings: { unit: S.unit, decimal: S.decimal, mode: S.mode, fixedLocation: aFixed().a, fixedBounds: needsBounds() ? Object.fromEntries([...boundFams()].map(([fam, b]) => [fam, { ...Object.fromEntries(b.keys.map(k => [k, boundVal(k)])), origin: 'user' }])) : null, methods: Object.fromEntries(chosenMethods().map(m => [m.id, methodOpts(m).opts || null])) }, results: R.units.flatMap(x => x.results.map(({ gof, ...r }) => ({ ...r, fit: gof || null }))) }));
+    { tool: D.TOOL, created: new Date().toISOString(), source: S.imp ? S.imp.name : null, settings: jsonSettings(), results: R.units.flatMap(x => x.results.map(({ gof, ...r }) => ({ ...r, fit: gof || null }))),
+      bootstrap: bootRecords().map(({ u, r, ...b }) => b), sources: srcJSON([...R.units.flatMap(x => x.results.map(r => r.method))]) }));
 }
 function niceWidth(range) { const raw = range / 12, p = 10 ** Math.floor(Math.log10(raw)), m = raw / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
 function tabCharts(p) {
@@ -397,7 +441,7 @@ function tabCharts(p) {
       <figcaption><b class="small">${T('ch.pp', {})} · ${esc(resName(dr))}</b> <button type="button" class="btn ghost small" data-svg="ch-p" data-name="pp-${nm}">${T('ch.svg')}</button></figcaption></figure></div><p class="muted small">${T('ch.diag.note')}</p>`;
   p.innerHTML = h; bindBar();
   p.querySelectorAll('[data-fit]').forEach(x => x.addEventListener('change', () => { const k = x.dataset.fit; S.hidden = x.checked ? S.hidden.filter(j => j !== k) : [...S.hidden, k]; save(); tabCharts(p); }));
-  p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
+  p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg'), chartMeta(u, /^ch-[qp]$/.test(b.dataset.svg) ? [dr] : shown.map(x => x[0]))), 'image/svg+xml')));
   p.querySelectorAll('input[name="hscale"]').forEach(x => x.addEventListener('change', () => { S.histScale = x.value; save(); tabCharts(p); }));
   $('dg-fit') && $('dg-fit').addEventListener('change', e => { S.diagFit = e.target.value; save(); tabCharts(p); });
 }
@@ -418,7 +462,7 @@ function chartsGrouped(p, u, h, shown, okR) {
       <figcaption><button type="button" class="btn ghost small" data-svg="ch-c" data-name="birikimli">${T('ch.svg')}</button></figcaption></figure></div>`;
   p.innerHTML = h; bindBar();
   p.querySelectorAll('[data-fit]').forEach(x => x.addEventListener('change', () => { const k = x.dataset.fit; S.hidden = x.checked ? S.hidden.filter(j => j !== k) : [...S.hidden, k]; save(); tabCharts(p); }));
-  p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
+  p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg'), chartMeta(u, shown.map(x => x[0]))), 'image/svg+xml')));
 }
 
 /* ---------------- bootstrap (P14): Web Worker, progress, cancel; p-values and intervals as separate operations ---------------- */
@@ -443,7 +487,7 @@ function tabBoot(p) {
   h += `<div class="card"><h3>${T('bt.gof.h')}</h3><p class="muted small">${T('bt.gof.sub')}</p><button type="button" class="btn" id="bt-gof">${T('bt.run')}</button><div id="bt-gof-out">${bootOut(u, r, 'gof')}</div></div>
     <div class="card"><h3>${T('bt.ci.h')}</h3><p class="muted small">${T('bt.ci.sub')}</p>
       <div class="radios">${['parametric', 'nonparametric'].map(v => `<label><input type="radio" name="bt-scheme" value="${v}"${b.scheme === v ? ' checked' : ''}${v === 'nonparametric' && R.grouped ? ' disabled' : ''}> ${T('bt.scheme.' + v)}</label>`).join('')}</div>
-      <button type="button" class="btn" id="bt-ci">${T('bt.run')}</button><div id="bt-ci-out">${bootOut(u, r, 'ci')}</div></div>
+      <button type="button" class="btn" id="bt-ci">${T('bt.run')}</button><div id="bt-ci-out">${bootOut(u, r, 'ci')}</div></div>${srcBlock([r], true)}
     <div id="bt-prog" hidden><progress id="bt-bar" max="1" value="0"></progress> <span id="bt-txt" class="small"></span> <button type="button" class="btn ghost small" id="bt-cancel">${T('bt.cancel')}</button></div>`;
   p.innerHTML = h; bindBoot(p, u); bindBar();
   const go = kind => {
@@ -631,12 +675,12 @@ function drawRecover() {
     h += `<figure class="chartbox" id="ch-r">${plotChart({ title: T('rec.chart'), xmin, xmax, lines: okR.map((r, i) => ({ name: T('fam.' + r.family), k: i, pts: xs.map(x => [x, D.family(r.family).pdf(x, r.params)]) })), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-r-svg">${T('ch.svg')}</button></figcaption></figure>`;
   }
-  h += exportButtons('s', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  h += srcBlock(RS) + exportButtons('s', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
   out.innerHTML = h;
   const sInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(summaryInput()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('rec.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('s-' + k).addEventListener('click', () => exportRec(k, RS, sInfo(), ['cap-dagilimi-geri-kazanim', 'diameter-distribution-recovery']));
-  $('ch-r-svg') && $('ch-r-svg').addEventListener('click', () => download('geri-kazanim.svg', svgForDownload($('ch-r').querySelector('svg')), 'image/svg+xml'));
-  $('s-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), results: RS }));
+  $('ch-r-svg') && $('ch-r-svg').addEventListener('click', () => download('geri-kazanim.svg', svgForDownload($('ch-r').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), fits: okR.map(r => ({ method: r.method, params: r.params, targets: r.targets })) }), 'image/svg+xml'));
+  $('s-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), results: RS, sources: srcJSON(RS.map(r => r.method)) }));
 }
 
 /* ---------------- Weibull recovery, Poudel and Cao (2013) M2–M10: targets typed, predicted, or computed from loaded data ---------------- */
@@ -730,13 +774,13 @@ function drawWb() {
     h += `<figure class="chartbox" id="ch-w">${plotChart({ title: T('wb.chart'), xmin, xmax, lines: okR.map((r, i) => ({ name: T('m.' + r.method), k: i, pts: xs.map(x => [x, D.family('weibull').pdf(x, r.params)]) })), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-w-svg">${T('ch.svg')}</button></figcaption></figure>`;
   }
-  h += exportButtons('w', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  h += srcBlock(RW) + exportButtons('w', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
   out.innerHTML = h;
   const wInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(wbSummary()).filter(([k]) => k !== 'unit').map(([k, v]) => [T('x.in', { k }), v]),
     ...Object.entries(wbOpts()).map(([k, v]) => [T('x.in', { k }), v]), S.wb.from ? [T('x.in', { k: 'unit' }), S.wb.from.label] : null, ['', T('wb.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('w-' + k).addEventListener('click', () => exportRec(k, RW, wInfo(), ['cap-dagilimi-weibull-geri-kazanim', 'diameter-distribution-weibull-recovery']));
-  $('ch-w-svg') && $('ch-w-svg').addEventListener('click', () => download('weibull-geri-kazanim.svg', svgForDownload($('ch-w').querySelector('svg')), 'image/svg+xml'));
-  $('w-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-weibull-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), results: RW }));
+  $('ch-w-svg') && $('ch-w-svg').addEventListener('click', () => download('weibull-geri-kazanim.svg', svgForDownload($('ch-w').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), fits: okR.map(r => ({ method: r.method, params: r.params, fixed: r.fixed, targets: r.targets })) }), 'image/svg+xml'));
+  $('w-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-weibull-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), results: RW, sources: srcJSON(RW.map(r => r.method)) }));
 }
 /* ---------------- Johnson SB recovery, Parresol (2003): ξ fixed, λ, γ, δ recovered ---------------- */
 function prsSummary() {
@@ -798,12 +842,12 @@ function drawPrs() {
     h += `<figure class="chartbox" id="ch-p">${plotChart({ title: T('prs.chart'), xmin, xmax, lines: [{ name: T('fam.johnsonsb'), k: 0, pts: xs.map(x => [x, fam.pdf(x, r.params)]) }], xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-p-svg">${T('ch.svg')}</button></figcaption></figure>`;
   }
-  h += exportButtons('p', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  h += srcBlock(RP) + exportButtons('p', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
   out.innerHTML = h;
-  $('ch-p-svg') && $('ch-p-svg').addEventListener('click', () => download('johnson-sb-parresol.svg', svgForDownload($('ch-p').querySelector('svg')), 'image/svg+xml'));
+  $('ch-p-svg') && $('ch-p-svg').addEventListener('click', () => download('johnson-sb-parresol.svg', svgForDownload($('ch-p').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), fits: [{ method: r.method, params: r.params, targets: r.targets }] }), 'image/svg+xml'));
   const pInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(prsSummary()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('prs.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('p-' + k).addEventListener('click', () => exportRec(k, RP, pInfo(), ['cap-dagilimi-johnson-sb-parresol', 'diameter-distribution-johnson-sb-parresol']));
-  $('p-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-johnson-sb-parresol-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), results: RP }));
+  $('p-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-johnson-sb-parresol-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), results: RP, sources: srcJSON(RP.map(r => r.method)) }));
 }
 function renderWf() {
   $('wf').innerHTML = `<div class="tabs wftabs" role="tablist" aria-label="${esc(T('wf.label'))}">${['raw', 'summary'].map(w => `<button type="button" role="tab" id="wf-${w}" aria-selected="${S.wf === w}" data-wf="${w}">${T('wf.' + w)}</button>`).join('')}</div>`;
@@ -831,4 +875,5 @@ function render() {
   $('privacy').textContent = T('privacy');
   try { const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, sum: { ...blank().sum, ...(saved.sum || {}) }, wb: { ...blank().wb, ...(saved.wb || {}) }, prs: { ...blank().prs, ...(saved.prs || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); } } catch (e) { S = blank(); }
   render();
+  window.__distReady = true;                                // the load watchdog in cap-dagilimi.php stays quiet
 })();

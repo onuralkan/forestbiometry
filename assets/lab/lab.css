@@ -403,3 +403,10 @@ fieldset.fam legend { font-weight: 600; padding: 0 6px; }
 table.ptab tr.st-bad td, table.ptab tr.st-bad th { color: var(--muted); }
 ul.notes { margin: 6px 0 0; padding-left: 18px; }
 table.ptab tbody th { min-width: 150px; }
+/* diameter distribution 2.0.0: sources panel, load watchdog */
+#loadfail[hidden] { display: none; }
+#loadfail .btn { margin-left: 6px; }
+.srcs > summary { cursor: pointer; font-weight: 600; }
+.srcs ul, .srcs ol { padding-left: 1.3em; margin: 8px 0; }
+.srcs li { margin: 3px 0; overflow-wrap: anywhere; }
+.pstates { margin: 4px 0 8px; }

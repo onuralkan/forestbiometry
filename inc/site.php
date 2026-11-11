@@ -53,7 +53,7 @@ function site_tools(?bool $tr = null): array {
         ['n' => 3, 'cat' => 'model', 'icon' => 'eval', 'short' => $tr ? 'Model Başarısı' : 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.0.0', 'lab' => 'eval', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
          'desc' => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE ve tahmin R²; gözlenen–tahmin ve artık grafikleri, gruplara göre başarı tabloları.'
                        : 'Bias, MAE, RMSE and prediction R² from observed and predicted values; observed–predicted and residual plots, performance tables by group.'],
-        ['n' => 4, 'cat' => 'dist', 'icon' => 'dist', 'short' => $tr ? 'Çap Dağılımı' : 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'v' => '2.0.0-beta.10', 'lab' => 'dist', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
+        ['n' => 4, 'cat' => 'dist', 'icon' => 'dist', 'short' => $tr ? 'Çap Dağılımı' : 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'v' => '2.0.0', 'lab' => 'dist', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
          'desc' => $tr ? 'Weibull, normal, lognormal, gamma, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik: en çok olabilirlik, momentler ve yüzdeliklerle doğrudan uydurma, örnek alan ve dönem bazında; ortalama ile varyans ya da Dq\'dan geri kazanım; Weibull için Poudel ve Cao M2–M10, Johnson SB için Parresol; Excel ve CSV çıktısı. Ölçüm eşiğinde koşullu en çok olabilirlik; sınıf tabloları ve sınıflandırılmış sıklıklardan uydurma; model karşılaştırma, Q–Q ve P–P grafikleri; bootstrap p değerleri ve aralıklar.'
                        : 'Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic: direct fitting by maximum likelihood, moments and percentiles, per plot and period; recovery from the mean and the variance or Dq; Poudel and Cao M2–M10 for the Weibull, Parresol for the Johnson SB; Excel and CSV output. Conditional maximum likelihood for measurement thresholds; class tables and fitting from class frequencies; model comparison, Q–Q and P–P plots; bootstrap p-values and intervals.'],
         ['n' => 5, 'cat' => 'model', 'icon' => 'hd', 'short' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter', 'file' => 'boy-cap.php', 'v' => '1.0.0', 'lab' => 'hd', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
@@ -128,7 +128,7 @@ function site_top(array $o = []): void {
 <meta name="theme-color" content="#eef1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121814" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/lab/lab.css?v=16">
+<link rel="stylesheet" href="assets/lab/lab.css?v=17">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231d5b45'/><circle cx='16' cy='16' r='10.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-dasharray='3 2.4'/><circle cx='13' cy='14' r='3' fill='%23fff'/><circle cx='19.5' cy='19' r='2' fill='%23fff'/></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>

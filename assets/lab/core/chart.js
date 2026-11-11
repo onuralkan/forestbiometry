@@ -43,12 +43,13 @@ export function barChart(o) {
 }
 
 /** Standalone SVG with the current theme colours written in (for download). */
-export function svgForDownload(svgEl) {
+export function svgForDownload(svgEl, meta = null) {
   const cs = getComputedStyle(svgEl), v = n => cs.getPropertyValue(n).trim();
   const css = `.ch-grid{stroke:${v('--line2')};stroke-width:1}.ch-axis{stroke:${v('--ink')};stroke-width:1}.ch-frame{fill:none;stroke:${v('--line')}}.ch-ref{stroke:${v('--ink')};stroke-width:1.2;stroke-dasharray:6 4}.ch-pts{fill-opacity:.6}.ch-ptsg{fill:${v('--muted')}}.ch-bar{fill:${v('--line')}}.ch-line{fill:none;stroke-width:2}.ch-dash{stroke-dasharray:6 4}.ch-dot{stroke-dasharray:1.5 3.5}.ch-radar{stroke-width:2;fill-opacity:.06}` + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-f${i}{fill:${v('--c' + k)}}`).join('') + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-l${i}{stroke:${v('--c' + k)}}`).join('') + `.ch-tick{fill:${v('--muted')};font:12px system-ui,sans-serif}`
     + `.ch-lab{fill:${v('--ink')};font:600 12.5px system-ui,sans-serif}` + [1, 2, 3, 4, 5, 6].map((k, i) => `.ch-s${i}{fill:${v('--c' + k)}}`).join('');
   const clone = svgEl.cloneNode(true);
   clone.insertAdjacentHTML('afterbegin', `<style>${css}</style><rect width="100%" height="100%" fill="${v('--surface')}"/>`);
+  if (meta) clone.insertAdjacentHTML('afterbegin', `<metadata>${esc(JSON.stringify(meta))}</metadata>`);   // optional provenance (tool version, settings, parameters)
   return '<?xml version="1.0" encoding="UTF-8"?>\n' + clone.outerHTML;
 }
 
