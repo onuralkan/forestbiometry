@@ -49,6 +49,7 @@ jobs:
           node tests/dist/test_p11.mjs
           node tests/dist/test_p12.mjs
           node tests/dist/test_p13.mjs
+          node tests/dist/test_p14.mjs
   deploy:
     needs: test
     runs-on: ubuntu-latest

@@ -32,7 +32,7 @@ function blank() {
     prs: { xi: '', mean: '', median: '', qmode: 'ng', nha: '', g: '', dq: '', origin: 'measured', from: null, unit: 0, done: false },
     wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
     mode: 'each', dtype: 'raw', lcol: null, ucol: null, ncol: null, countType: 'count', outside: 'zero',
-    cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '' }, clsFit: null, histScale: 'density', diagFit: null, cmpSort: 'aic',
+    cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '' }, clsFit: null, histScale: 'density', diagFit: null, cmpSort: 'aic', boot: { fit: null, B: '199', seed: '20261111', round: 'auto', step: '', scheme: 'parametric', level: '0.95' },
     trunc: { mode: 'none', L: '', U: '', nScope: 'observed' }, methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
 let saveT = null;
@@ -245,7 +245,7 @@ const unitLabel = u => `${u.plot === D.POOL ? T('unit.pool') : T('unit.plot', { 
 const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', '); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
 
 /* ---------------- step 3: results ---------------- */
-const TABS = ['params', 'charts', 'classes', 'compare'];
+const TABS = ['params', 'charts', 'classes', 'compare', 'boot'];
 function renderStep3() {
   if (!R) compute();
   const el = $('step3'), withNav = plotIds().length > 1, a = R.acc;
@@ -263,7 +263,7 @@ function renderStep3() {
   if (withNav) nav.renderAside($('unav'));
   drawPanel();
 }
-function drawPanel() { const p = $('panel'); if (!p) return; (S.tab === 'charts' ? tabCharts : S.tab === 'classes' ? tabClasses : S.tab === 'compare' ? tabCompare : tabParams)(p); }
+function drawPanel() { const p = $('panel'); if (!p) return; (S.tab === 'charts' ? tabCharts : S.tab === 'classes' ? tabClasses : S.tab === 'compare' ? tabCompare : S.tab === 'boot' ? tabBoot : tabParams)(p); }
 
 /* plot navigator (shared component) + period switch, as in Plot & Stand Metrics */
 const ST = ['ok', 'warning', 'error'];
@@ -420,6 +420,79 @@ function chartsGrouped(p, u, h, shown, okR) {
   p.querySelectorAll('[data-fit]').forEach(x => x.addEventListener('change', () => { const k = x.dataset.fit; S.hidden = x.checked ? S.hidden.filter(j => j !== k) : [...S.hidden, k]; save(); tabCharts(p); }));
   p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
 }
+
+/* ---------------- bootstrap (P14): Web Worker, progress, cancel; p-values and intervals as separate operations ---------------- */
+const BOOT = new Map();                                    // unit id | fit key | kind → result (kept for this page view)
+let bootJob = null;
+function bootInput(u) { return R.grouped ? { type: 'classes', classes: u.classes, countType: S.countType, outside: S.outside } : { d: u.d }; }
+function bootOpts(r) { const m = D.method(r.method), o = { ...(methodOpts(m).opts || {}) }; for (const [k, v] of Object.entries(r.fixed || {})) if (k === 'a') o.a = v.value; return o; }
+function tabBoot(p) {
+  const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
+  const okR = u.results.filter(r => r.status === 'ok'), kOf = r => r.method + '|' + JSON.stringify(r.fixed), b = S.boot;
+  let h = nav.bar(perSwitch(u)) + `<p class="muted small">${T('bt.sub')}</p>`;
+  if (!okR.length) { p.innerHTML = h + `<p class="note warn">${T('p.nofit')}</p>`; bindBar(); return; }
+  if (!okR.some(r => kOf(r) === b.fit)) b.fit = kOf(okR[0]);
+  const r = okR.find(x => kOf(x) === b.fit), inp = bootInput(u), sup = D.boot.support(r, inp), det = R.grouped ? null : D.boot.resolution(u.d);
+  h += `<div class="card"><div class="lims"><label>${T('cl.fit')} <select id="bt-fit">${okR.map(x => `<option value="${esc(kOf(x))}"${kOf(x) === b.fit ? ' selected' : ''}>${esc(resName(x))}</option>`).join('')}</select></label></div>
+    <div class="lims"><label>${T('bt.B')} <select id="bt-B">${['99', '199', '499', '999'].map(v => `<option${b.B === v ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+      <label>${T('bt.seed')} <input type="text" inputmode="numeric" size="10" id="bt-seed" value="${esc(b.seed)}"></label>
+      ${R.grouped ? '' : `<label>${T('bt.round')} <select id="bt-round">${['auto', 'none', 'value'].map(v => `<option value="${v}"${b.round === v ? ' selected' : ''}>${esc(T('bt.round.' + v, { s: det == null ? '–' : fmtNum(det, 3) }))}</option>`).join('')}</select></label>
+      ${b.round === 'value' ? `<label>${T('bt.step')} <input type="text" inputmode="decimal" size="6" id="bt-step" value="${esc(b.step)}"></label>` : ''}`}</div>
+    <p class="muted small">${T('bt.note')}</p></div>`;
+  if (sup.unsupported) { p.innerHTML = h + `<p class="note warn">${T('bt.unsup')}: ${esc(T('bt.' + sup.unsupported))}</p>`; bindBoot(p, u); bindBar(); return; }
+  h += `<div class="card"><h3>${T('bt.gof.h')}</h3><p class="muted small">${T('bt.gof.sub')}</p><button type="button" class="btn" id="bt-gof">${T('bt.run')}</button><div id="bt-gof-out">${bootOut(u, r, 'gof')}</div></div>
+    <div class="card"><h3>${T('bt.ci.h')}</h3><p class="muted small">${T('bt.ci.sub')}</p>
+      <div class="radios">${['parametric', 'nonparametric'].map(v => `<label><input type="radio" name="bt-scheme" value="${v}"${b.scheme === v ? ' checked' : ''}${v === 'nonparametric' && R.grouped ? ' disabled' : ''}> ${T('bt.scheme.' + v)}</label>`).join('')}</div>
+      <button type="button" class="btn" id="bt-ci">${T('bt.run')}</button><div id="bt-ci-out">${bootOut(u, r, 'ci')}</div></div>
+    <div id="bt-prog" hidden><progress id="bt-bar" max="1" value="0"></progress> <span id="bt-txt" class="small"></span> <button type="button" class="btn ghost small" id="bt-cancel">${T('bt.cancel')}</button></div>`;
+  p.innerHTML = h; bindBoot(p, u); bindBar();
+  const go = kind => {
+    const B = +b.B, seed = Math.floor(num(b.seed)), step = R.grouped ? null : b.round === 'auto' ? 'auto' : b.round === 'none' ? null : num(b.step);
+    if (!Number.isInteger(seed) || seed < 0) { status(T('bt.badseed'), 'err'); return; }
+    if (b.round === 'value' && !(step > 0)) { status(T('bt.badstep'), 'err'); return; }
+    if (bootJob) bootJob.terminate();
+    const w = new Worker(new URL('./boot-worker.js', import.meta.url), { type: 'module' }); bootJob = w;
+    $('bt-prog').hidden = false; $('bt-gof').disabled = $('bt-ci').disabled = true;
+    const end = () => { bootJob = null; w.terminate(); };
+    w.onmessage = e => { const m = e.data;
+      if (m.type === 'progress') { $('bt-bar') && ($('bt-bar').value = m.k / m.B); $('bt-txt') && ($('bt-txt').textContent = T('bt.prog', { k: m.k, B: m.B })); return; }
+      end();
+      if (m.type === 'error') { status(T('bt.err', { m: m.message }), 'err'); }
+      else BOOT.set(`${u.id}|${b.fit}|${kind}`, m.res);
+      if (S.tab === 'boot') tabBoot($('panel'));
+    };
+    w.onerror = e => { end(); status(T('bt.err', { m: e.message || 'worker' }), 'err'); if (S.tab === 'boot') tabBoot($('panel')); };
+    const { gof, ...plain } = r;
+    w.postMessage({ kind, args: { result: plain, input: inp, opts: bootOpts(r), B, seed, step, scheme: b.scheme, level: 0.95 } });
+  };
+  $('bt-gof').addEventListener('click', () => go('gof')); $('bt-ci').addEventListener('click', () => go('ci'));
+  $('bt-cancel').addEventListener('click', () => { if (bootJob) { bootJob.terminate(); bootJob = null; } status(T('bt.cancelled')); tabBoot(p); });
+}
+function bindBoot(p, u) {
+  const b = S.boot, re = () => { save(); tabBoot(p); };
+  $('bt-fit') && $('bt-fit').addEventListener('change', e => { b.fit = e.target.value; re(); });
+  for (const k of ['B', 'round']) $('bt-' + k) && $('bt-' + k).addEventListener('change', e => { b[k] = e.target.value; re(); });
+  for (const k of ['seed', 'step']) $('bt-' + k) && $('bt-' + k).addEventListener('change', e => { b[k] = e.target.value; save(); });
+  p.querySelectorAll('input[name="bt-scheme"]').forEach(x => x.addEventListener('change', () => { b.scheme = x.value; re(); }));
+}
+function bootOut(u, r, kind) {
+  const res = BOOT.get(`${u.id}|${r.method}|${JSON.stringify(r.fixed)}|${kind}`); if (!res) return '';
+  if (res.unsupported) return `<p class="note warn">${T('bt.' + res.unsupported)}</p>`;
+  const fails = Object.entries(res.failed).map(([k, v]) => `${T('st.' + k)}: ${v}`).join(', ');
+  let h = `<p class="small bt-meta">${T('bt.meta', { seed: res.seed, B: res.B, ok: res.completed, f: fails || '0', r: fmtNum(res.failRate * 100, 1), st: res.step == null ? T('bt.nostep') : fmtNum(res.step, 3) + ' cm' })}</p>`;
+  if (res.warn) h += `<p class="note warn small">${T('bt.warn', { r: fmtNum(res.failRate * 100, 1) })}</p>`;
+  if (kind === 'gof') {
+    const rows = Object.entries(res.stats);
+    h += `<div class="tscroll"><table class="grid bttab"><thead><tr><th>${T('bt.stat')}</th><th>T₀</th><th>${T('bt.ge')}</th><th>${T('bt.p')}</th><th>${T('bt.mcse')}</th></tr></thead><tbody>${rows.map(([k, v]) => `<tr data-stat="${k}"><th>${esc(T('bt.s.' + k))}</th><td class="num">${f(v.t0, 4)}</td><td class="num">${v.ge}</td><td class="num">${v.p == null ? '–' : f(v.p, 4)}</td><td class="num">${v.mcse == null ? '–' : f(v.mcse, 4)}</td></tr>`).join('')}</tbody></table></div>`;
+    if (rows.some(([, v]) => v.p == null)) h += `<p class="note warn small">${T('bt.few', { m: res.minOk })}</p>`;
+  } else {
+    if (!res.intervals) return h + `<p class="note warn small">${T('bt.few', { m: 20 })}</p>`;
+    h += `<div class="tscroll"><table class="grid bttab"><thead><tr><th>${T('bt.q')}</th><th>${T('bt.est')}</th><th>${T('bt.lo')}</th><th>${T('bt.hi')}</th><th>${T('bt.se')}</th></tr></thead><tbody>${Object.entries(res.intervals).map(([k, v]) => `<tr data-q="${esc(k)}"><th>${esc(k.startsWith('Q') ? T('bt.pct', { q: fmtNum(+k.slice(1) * 100, 0) }) : parLabel(r.family, k))}</th><td class="num">${f(v.est, 4)}</td><td class="num">${f(v.lo, 4)}</td><td class="num">${f(v.hi, 4)}</td><td class="num">${f(v.se, 4)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="muted small">${T('bt.ci.note', { s: T('bt.scheme.' + res.scheme) })}</p>`;
+  }
+  return h + `<button type="button" class="btn ghost small" data-btjson="${kind}">${T('p.json')}</button>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-btjson]'); if (!b) return; const u = curUnit(), kind = b.dataset.btjson, key = `${u.id}|${S.boot.fit}|${kind}`, res = BOOT.get(key); if (res) downloadJSON(`cap-dagilimi-bootstrap-${kind}-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), unit: { plot: u.plot === D.POOL ? null : u.plot, period: u.period }, fit: S.boot.fit, result: res }); });
 
 /* ---------------- comparison (P13): grouped by observation process; likelihood fits vs descriptive; chosen criterion ---------------- */
 function classErr(u, r) {

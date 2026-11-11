@@ -184,6 +184,8 @@ table.grid { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 .mopts input[type="text"] { width: 5em; }
 .mnote { margin: -4px 0 4px 1.6rem; }
 .fam label.off { opacity: .55; }
+#bt-fit, #cl-fit, #dg-fit, #cmp-sort { max-width: 100%; }
+.panel label:has(> #bt-fit), .panel label:has(> #cl-fit), .panel label:has(> #dg-fit) { display: inline-flex; flex-wrap: wrap; gap: 4px; max-width: 100%; }
 .wftabs { margin: 0 0 12px; }
 .radios label { display: inline-flex; gap: 6px; align-items: baseline; }
 .probs { list-style: none; padding: 0; margin: 0; }
