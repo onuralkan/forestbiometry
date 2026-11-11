@@ -135,7 +135,7 @@ Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfay
 - Gazete, ders notları, yayınlar, yönetim paneli, 2FA ve Bulmaca Köşesi kapatıldı; geri gelmeyecek. Kodları `8a002d2` commit'inde.
 - Eski **Meşcere Hesaplayıcı**'nın Modül 2'de karşılığı olmayan kısımları **sonraki modüllerde yeniden yazılmak üzere planda**: üst boy, Näslund boy tahmini (Modül 5 ile), kullanıcı katsayılı hacim. Eski sayfa yayından kalktı; yeniden yazım bağımsız referans testleriyle yapılır.
 - Eski Çap Dağılımı ekinin gamma, normal, lognormal ve Johnson SB uydurmaları Modül 4'ün sonraki sürümlerine taşınacak; kod ve SciPy testleri `legacy/` içinde.
-- Eski adreslerden (onuralkan.com.tr) yönlendirme yapılmaz; alan adı kapatılıyor.
+- Eski adreslerden (onuralkan.com.tr) yönlendirme yapılmaz. 11 Kasım 2026 (kullanıcı): eski kişisel site ayrı bir barındırmaya taşındı ve bu projeden tamamen bağımsızdır.
 
 ## 9. Uygulama planı
 **Çap dağılımı aracı revizyonu (10 Kasım 2026):** sekiz dağılım ailesi, doğrudan tahmin, özetlerden geri kazanım, kesilmiş/sınıflı veri, karşılaştırma, bootstrap ve meşcere modelleri. Şartname, kararlar ve prompt sırası: `docs/DIST_SPEC.md`. Yeni motor `assets/lab/dist/`; 10 Kasım 2026'dan beri yayında (2.0.0-beta.1), eski Weibull aracı `legacy/weibull/`.
