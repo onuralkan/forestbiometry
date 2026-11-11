@@ -15,7 +15,7 @@ authors:
 version: "2026.11.0"
 date-released: "2026-11-11"
 url: "https://forestbiometry.online"
-repository-code: "https://github.com/onuralkan/onuralkan-site"
+repository-code: "https://github.com/onuralkan/forestbiometry"
 license:
   - Apache-2.0
   - CC-BY-4.0
