@@ -18,6 +18,7 @@ Bu belge bir literatür değerlendirmesi ve geliştirme şartnamesidir. Özgün 
 7. **Kaynak durumu.** [R1] ve [R2] okundu ([B]). Tablo 2 dipnotunun b/c adlarını ters yazdığı ([R1]) ve Parresol'un ξ'yi geri kazanmadığı, üçüncü denklem denemesinin başarısız olduğu ([R2]) kaynakta doğrulandı. Diğer kaynaklar okunana kadar METHODS.md'de [İ] ya da [D] olarak işaretlenir.
 8. **Yayın kuralı.** Her push canlıya çıktığı için bir dağılım ya da yöntem, kendi bağımsız referans testleri geçmeden hiçbir menüde görünmez.
 9. **Erken yayın (10 Kasım 2026, kullanıcı kararı; karar 6'yı değiştirir).** Yeni araç P15'i beklemeden, P00, P01, P05, P02, P03, P04 ve P08 tamamlandıktan sonra `cap-dagilimi.php` adresinde **2.0.0-beta.1** olarak yayına alındı; eski Weibull aracı `legacy/weibull/`'ye taşındı. Yayında henüz olmayanlar araç içinde yazılıdır (sınıf tabloları, ölçüm eşiği, CSV/Excel, Weibull geri kazanımı, bootstrap/p değerleri). 2.0.0 sürüm adı P15 kabulüne kalır.
+10. **P15 ve 2.0.0 (11 Kasım 2026, kullanıcı kararı).** P15 uygulandı; araç **2.0.0** adını aldı (karar 9'daki ad koşulu). Kullanıcının isteğiyle P15'e bir "araç yüklenemedi" uyarısı eklendi (barındırma hizmetinin bot koruması program dosyaları yerine HTML döndürebiliyor). Kapsam ve kalan aşamalar: `docs/DIST_P15.md`.
 
 ## Nasıl kullanılmalı?
 

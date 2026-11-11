@@ -654,3 +654,28 @@ Kaynak: Parresol (2003) Denklem 9–16 **[B]** (şartname §3.8). `dist/recover/
 - **Çalışma:** Web Worker'da (modül worker); ilerleme her 5 tekrarda bildirilir; "İptal" worker'ı sonlandırır ve kısmi sonuç gösterilmez.
 - **Bulgu:** üstel (a = 0) gibi sıfıra yakın yoğunluğu yüksek dağılımlarda 0.1 cm yuvarlama bazı benzetim çaplarını 0.0 yapar; bu tekrarlar geçerli veri değildir (çap > a), "hesaplanmadı" sayılır ve oran uyarıyla gösterilir (fixture "w2" örneğinde 99 tekrarın 31'i).
 - **Doğrulama:** `tests/ref/make_dist_p14.py` algoritmayı tanımından SciPy ile yeniden kurar ve **aynı rastgele akışı** (mulberry32 ve aynı ters CDF çekilişleri) kullanır; yeniden uydurma (`norm.fit`, `weibull_min.fit(floc=0)`, üstel r = 1/ortalama), istatistikler (`kstest`, `cramervonmises`, AD) ve aralıklar (`numpy.quantile` linear) bağımsızdır. `tests/dist/test_p14.mjs` 98/98: normal, üstel ve Weibull için T ≥ T₀ sayıları SciPy ile birebir aynı, p ve Monte Carlo SH, parametrik ve parametrik olmayan aralıklar 10⁻¹⁰; aynı seed → aynı sonuç, başka seed → başka sonuç; her tekrarda yeniden tahmin (farklı tahminler, yöntem tekrar başına bir kez çalışır); eşikli uydurmada tekrarların koşullu modelden ve yuvarlanmış gelmesi; sınıflı veride aynı sınıflar ve toplam; sabit sınıra yuvarlanan tekrarların sayılması ve uyarı; desteklenmeyen birleşimler; 20'den az tekrarla p yok. `tests/dist/e2e.mjs` 154/154 (worker sonucu = motor, aynı seed aynı tablo, iptal, sınıflı veride X², desteklenmeyen birleşimin açıklaması).
+
+### P15: arayüz, çıktı ve ilk sürüm doğrulaması (11 Kasım 2026; 2.0.0)
+Şartname P15. Kapsam ve kalanlar için kısa rapor: `docs/DIST_P15.md`.
+
+- **Kaynak gösterimi** (`dist/sources.js`, DOM'suz): kayıtlı her yöntem için kaynaklar ve bu belgedeki bölüm (§12 P05 … P14); künyeler, bağlantılar ve okunma durumu yalnızca DIST_SPEC.md kaynak listesinden ve bu belgeden kopyalanır ([B] okundu: Poudel ve Cao 2013, Parresol 2003, Dubey 1967; ötekiler [D]). Arayüzde her sonuç kümesinin altında "Yöntemler, birimler ve kaynaklar": yöntem, aile, tahmin ilkesi, çözücü, parametre birimleri, destek politikası (a sabit; beta L/U ve SB ξ/λ kullanıcıdan; normalde negatif çap olasılığı), gözlem (eşiksiz ham çaplar, ölçüm eşiği ve koşullu dağılım, sınıf sıklıkları, özetler) ve kaynak numaraları. Bootstrap sekmesinde [R9].
+- **Dışa aktarma:** Excel'e "Bootstrap" (her birim × uydurma × işlem × istatistik/nicelik için bir satır; seed, istenen B, tamamlanan, başarısızlar durumlarına göre, başarısızlık oranı, yuvarlama adımı ve şema her satırda; sayılar sayı hücresi) ve "Kaynaklar" sayfaları; geri kazanım Excel'lerine "Kaynaklar". JSON kayıtlarına ayarların tamamı (veri türü, sıklık türü, sınıf dışı, eşik), bootstrap çalıştırmaları ve kaynaklar. SVG grafiklerin içine `<metadata>` olarak araç sürümü, ayarlar ve çizilen uydurmaların tam duyarlıklı parametreleri. CSV'de ondalık nokta (değişmedi).
+- **Durum ayrımı:** her birimde hesaplanan ve hesaplanamayan/desteklenmeyen sonuç sayısı; parametre yalnızca "tamam" durumunda gösterilir.
+- **Düzeltmeler:** yeniden hesaplamada önceki hesabın bootstrap sonuçları silinir (eskiden aynı yöntem anahtarıyla yeni hesaba ait gibi gösterilebiliyordu); okunabilir çap ya da sınıf yoksa boş sonuç sayfası yerine açıklama; yapıştırma kutusuna erişilebilir ad (`core/importer.js`, bütün araçlar).
+- **Yükleme uyarısı:** sayfa 15 saniye içinde hazır olmazsa ya da program dosyası JavaScript yerine başka bir şey (ör. barındırma hizmetinin güvenlik sayfası) dönerse "araç yüklenemedi" uyarısı ve yenileme düğmesi.
+- **Doğrulama:** `tests/dist/test_p15.mjs` 144/144. Bu test şunları denetler:
+  - her yöntemin kaynağı ve belge bölümü var;
+  - her künye, bağlantı ve [B]/[D] durumu proje belgelerinde bulunur (uydurma yok);
+  - dışa aktarma satırlarında seed, sayılar ve aralıklar motorla birebir aynı;
+  - sürüm doğru.
+
+  `tests/dist/e2e.mjs` 168/168. Tarayıcı testi şunları kapsar:
+  - örnek veride sekiz ailenin bütün yöntemleri; küçük alanlarda başarısız sonuçların ayrımı;
+  - seçili alanın beş sekmede de aynı kalması;
+  - boş veya eksik veri;
+  - Excel'de bootstrap ve kaynak sayfaları;
+  - JSON;
+  - SVG meta verisinin JSON'daki parametrelerle aynı olması;
+  - yükleme hatası (JavaScript yerine HTML) ve normal yüklemede uyarı olmaması.
+
+  Etiketsiz kontrol taraması iki dilde bütün adım ve sekmelerde temiz.
