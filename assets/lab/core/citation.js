@@ -1,6 +1,7 @@
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
 // Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD' }.
+//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
@@ -29,6 +30,17 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
 /** Formatted citation (HTML; plain(...) for text). */
 export function cite(fmt, c) {
+  const body = core(fmt, c);
+  if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
+  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  switch (fmt) {
+    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
+    case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
+    default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
+  }
+}
+function core(fmt, c) {
   const p = parts(c), tr = p.tr, v = p.v;
   switch (fmt) {
     case 'apa':
@@ -62,12 +74,12 @@ export function cite(fmt, c) {
       const tt = p.title.replace(/–/g, '--');
       const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }

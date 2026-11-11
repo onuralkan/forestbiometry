@@ -33,6 +33,19 @@ ok(plain(cite('ieee', { ...en, accessed: '2026-09-21' })).endsWith('(accessed Se
 ok(cite('apa', { ...en, tool: { ...tool, en: 'A <b> & C' } }).includes('A &lt;b&gt; &amp; C'), 'HTML escaped');
 for (const l of [en, tr, pl]) for (const f of FORMATS) ok(plain(cite(f, l)).length > 40, `${f} ${l.lang} ${l.tool ? 'tool' : 'platform'} non-empty`);
 
+// DOI (Zenodo concept DOI of the platform archive): last element of each style; BibTeX doi, RIS DO; absent → unchanged
+const DOI = '10.5281/zenodo.24135603', dn = { ...en, doi: DOI }, dt = { ...tr, doi: DOI };
+eq(plain(cite('apa', dn)), plain(cite('apa', en)) + '. https://doi.org/' + DOI, 'APA EN with DOI');
+eq(plain(cite('apa', dt)), plain(cite('apa', tr)) + ' https://doi.org/' + DOI, 'APA TR with DOI');
+eq(plain(cite('ieee', dn)), plain(cite('ieee', en)) + ' doi: ' + DOI + '.', 'IEEE with DOI');
+eq(plain(cite('vancouver', dn)), plain(cite('vancouver', en)) + '. doi:' + DOI, 'Vancouver with DOI');
+for (const f of ['mla', 'chicago', 'harvard']) eq(plain(cite(f, dn)), plain(cite(f, en)) + ' https://doi.org/' + DOI + '.', f + ' with DOI');
+ok(plain(cite('bibtex', dn)).includes(`doi          = {${DOI}}`) && !plain(cite('bibtex', en)).includes('doi'), 'BibTeX doi field only with a DOI');
+ok(plain(cite('ris', dt)).split('\r\n').includes('DO  - ' + DOI) && !plain(cite('ris', tr)).includes('DO  -'), 'RIS DO field only with a DOI');
+{ const site = await readFile(path.join(root, 'inc/site.php'), 'utf8'), cff = await readFile(path.join(root, 'CITATION.cff'), 'utf8'), readme = await readFile(path.join(root, 'README.md'), 'utf8');
+  const sd = (site.match(/const SITE_DOI = '([^']*)'/) || [])[1];
+  ok(sd === DOI && cff.includes(`doi: "${DOI}"`) && readme.includes(`https://doi.org/${DOI}`), 'the same concept DOI in inc/site.php, CITATION.cff and README.md'); }
+
 // versions shown on the site equal TOOL.version of each tool's calc.js
 const php = await readFile(path.join(root, 'inc/site.php'), 'utf8');
 const rows = [...php.matchAll(/'file' => '([^']+)', 'v' => '([^']+)', 'lab' => '([^']+)'/g)];

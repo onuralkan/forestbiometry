@@ -6,16 +6,16 @@ const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
 const T = {
   tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
     copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun henüz kalıcı bir DOI\'si yoktur.' },
+    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
-    note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The platform has no permanent DOI yet.' },
+    note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
 }[ui];
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const st = { scope: data.tool ? 'tool' : 'platform', lang: ui, accessed: today() };
 const dlg = document.getElementById('citedlg');
 
-function input() { return { lang: st.lang, author: data.author, year: data.year, base: data.base, site: data.site, tool: st.scope === 'tool' ? data.tool : null, accessed: st.accessed }; }
+function input() { return { lang: st.lang, author: data.author, year: data.year, base: data.base, site: data.site, tool: st.scope === 'tool' ? data.tool : null, accessed: st.accessed, doi: data.doi || null }; }
 function render() {
   const c = input();
   const blocks = FORMATS.map(f => {
@@ -56,4 +56,4 @@ document.querySelectorAll('[data-cite-open]').forEach(b => b.addEventListener('c
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 // inline platform citation (About page)
 const inl = document.getElementById('cite-inline');
-if (inl) inl.innerHTML = cite('apa', { lang: ui, author: data.author, year: data.year, base: data.base, site: data.site, tool: null, accessed: today() });
+if (inl) inl.innerHTML = cite('apa', { lang: ui, author: data.author, year: data.year, base: data.base, site: data.site, tool: null, accessed: today(), doi: data.doi || null });

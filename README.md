@@ -1,5 +1,7 @@
 # Forest Biometrics Tools · Ormancılık Biyometrisi Araçları
 
+[![DOI](https://zenodo.org/badge/1446202569.svg)](https://doi.org/10.5281/zenodo.24135603)
+
 Browser-based tools for forest inventory and biometrics data, published at **<https://forestbiometry.online>**.
 Author and responsible person: **Onur Alkan** ([ORCID 0000-0001-5798-3421](https://orcid.org/0000-0001-5798-3421)).
 
@@ -32,7 +34,9 @@ site produces.
 
 Use the **Cite** button on any page of the site. It gives APA, MLA, Chicago, Harvard, IEEE, Vancouver, BibTeX and RIS,
 for the platform or for one tool and its version. Machine-readable metadata are in [`CITATION.cff`](CITATION.cff).
-Releases of this repository are archived on Zenodo with a DOI. Please also cite the original sources of the methods
+Releases of this repository are archived on Zenodo. The concept DOI
+[10.5281/zenodo.24135603](https://doi.org/10.5281/zenodo.24135603) covers all versions; the first release v2026.11.0 has
+the version DOI [10.5281/zenodo.24135604](https://doi.org/10.5281/zenodo.24135604). The site's citations carry the concept DOI. Please also cite the original sources of the methods
 you use; each tool lists them.
 
 ## Running it locally / Yerelde çalıştırma

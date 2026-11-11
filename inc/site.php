@@ -10,6 +10,7 @@ date_default_timezone_set('Europe/Istanbul');
 /** For citations: canonical address and the year the platform was first published. */
 const SITE_BASE = 'https://forestbiometry.online/';
 const SITE_YEAR = 2026;
+const SITE_DOI = '10.5281/zenodo.24135603';   // Zenodo concept DOI of the repository archive (all versions); '' = none
 
 const SITE_AUTHOR = [
     'name'  => 'Onur Alkan',
@@ -223,11 +224,11 @@ function site_bottom(string $script = ''): void {
     $cur = site_current_tool(); $en = site_tools(false); $trT = site_tools(true); $ct = null;
     if ($cur) foreach ($trT as $i => $t) if ($t['file'] === $cur['file']) $ct = ['file' => $t['file'], 'v' => $t['v'], 'tr' => $t['title'], 'en' => $en[$i]['title']];
     $cd = ['author' => ['family' => SITE_AUTHOR['family'], 'given' => SITE_AUTHOR['given']], 'year' => SITE_YEAR, 'base' => SITE_BASE,
-           'site' => ['tr' => 'Ormancılık Biyometrisi Araçları', 'en' => 'Forest Biometrics Tools'], 'tool' => $ct];
+           'site' => ['tr' => 'Ormancılık Biyometrisi Araçları', 'en' => 'Forest Biometrics Tools'], 'tool' => $ct, 'doi' => SITE_DOI];
 ?>
 <dialog id="citedlg" class="dlg citedlg" aria-label="<?= $tr ? 'Kaynak gösterme' : 'How to cite' ?>"></dialog>
 <script type="application/json" id="cite-data"><?= json_encode($cd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
-<script type="module" src="assets/lab/core/cite-ui.js?v=1"></script>
+<script type="module" src="assets/lab/core/cite-ui.js?v=2"></script>
 <?= $script ?>
 </body>
 </html>

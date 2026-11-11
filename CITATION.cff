@@ -12,6 +12,14 @@ authors:
   - family-names: Alkan
     given-names: Onur
     orcid: "https://orcid.org/0000-0001-5798-3421"
+doi: "10.5281/zenodo.24135603"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.24135603"
+    description: "Concept DOI: all versions of the archive (resolves to the latest)"
+  - type: doi
+    value: "10.5281/zenodo.24135604"
+    description: "Version DOI of v2026.11.0"
 version: "2026.11.0"
 date-released: "2026-11-11"
 url: "https://forestbiometry.online"
