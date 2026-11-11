@@ -27,6 +27,8 @@ Author and responsible person: **Onur Alkan** ([ORCID 0000-0001-5798-3421](https
 | 6 | [Inventory Sampling Planner](https://forestbiometry.online/ornekleme.php?lang=en) | Envanter Örnekleme Planlayıcısı | 1.0.0 | Approximate number of plots to estimate a mean with a target relative error under simple random sampling. |
 | 7 | [Relative Ranking](https://forestbiometry.online/nispi-siralama.php?lang=en) | Nispi Sıralama | 1.0.0 | Relative ranks per criterion and overall from a table of goodness-of-fit statistics; radar chart of the best and worst models. |
 
+A bilingual **user guide** is at <https://forestbiometry.online/kilavuz.php> (one section per tool; every tool's header links to its section).
+
 Each tool has its own version. It is shown on the tool page and in its exports, and it is part of the citation the
 site produces.
 

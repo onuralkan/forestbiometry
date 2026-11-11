@@ -37,4 +37,5 @@ committed, so the tests run without Python.
 - `python3 tests/ref/make_sampling_reference.py`: regenerates the sample pilot file, `tests/sampling/fixture.csv` and `tests/ref/sampling.json`.
 - `node tests/sampling/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Inventory Sampling Planner.
 - `node tests/site/test_cite.mjs`: citation strings of the Cite dialog and tool versions shown by the site (= `TOOL.version`).
+- `node tests/site/test_guide.mjs`: the user guide (`kilavuz.php`, `inc/guide/`): same sections in TR and EN, a section per tool, labels it names present in the tools' interface strings, defaults equal to the code.
 - `node tests/site/test_format.mjs`: shared number display and decimal-separator defaults (independent of the interface language).
