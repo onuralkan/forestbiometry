@@ -20,7 +20,7 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.24135604"
     description: "Version DOI of v2026.11.0"
-version: "2026.11.1"
+version: "2026.11.0"
 date-released: "2026-11-11"
 url: "https://forestbiometry.online"
 repository-code: "https://github.com/onuralkan/forestbiometry"
