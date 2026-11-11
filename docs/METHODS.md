@@ -694,3 +694,29 @@ Kaynak: Parresol (2003) Denklem 9–16 **[B]** (şartname §3.8). `dist/recover/
 - **Model dosyası:** şema, araç sürümü, yanıt kümesi, yaklaşım, terimler, yöntem ve seçenekler, katsayılar (ve NLS standart hataları, SUR Σ, korelasyonlar, tur sayısı), birimler, H sütunu, eğitim kapsamı (birim, alan sayısı, açıklayıcı ve hedef aralıkları), eğitime girmeyen birimler, doğrulama (K, özet, kat ataması), eğitim birimleri.
 - **Bulgu:** örnek veride PRM Weibull M2 ile a = 0.5 × tahmin edilen Dmin kullanıldığında 54 birimin 10'unda tahmin edilen konum birimin en küçük ağaçlarından büyük çıkar; bu birimlerin olabilirliği sıfırdır ve doğrulamada ayrı sayılır (PPM'de a = 0 olduğu için olmaz).
 - **Doğrulama (test):** `tests/ref/make_dist_p16.py` sabit seed'li benzetim eğitim verisini üretir (aracın örnek dosyası `assets/lab/dist/ornek/ornek-mescere.csv`: 36 alan, 54 birim, 1926 ağaç) ve NumPy/SciPy ile bağımsız olarak hesaplar: birim hedefleri (Weibull ML profil denklemi brentq ile, `weibull_min.fit`'ten kötü olmadığı denetlenerek; momentler; `numpy.quantile` linear), NLS (`least_squares`), log-OLS (`lstsq`), yinelemeli SUR, örnek alan katlı doğrulama (`weibull_min.logpdf`, `kstest`), M2 geri kazanımı (brentq). `tests/dist/test_p16.mjs` 91/91: β'lar referansla (2·10⁻⁵ göreli; log-OLS 10⁻¹¹), SSE referans optimumundan büyük değil, Σ, SUR'un GLS amacının NLS katsayılarındakinden küçük olması, birim başına doğrulama −ln L ve KS (10⁻⁵), destek dışı birimler, dönemlerin aynı katta kalması, belirlenimcilik, tahmin denetimleri ve kırpmama, dışa değerleme, geri kazanımın doğrulanmış yöntemlerle aynı olması, log-OLS geri dönüşü, tek alanla eğitim reddi, modelsiz tahmin reddi, model dosyası alanları ve içe aktarma reddi (şema, katsayı). `tests/dist/e2e.mjs` 179/179 (örnek veri, NLS ve SUR eğitimi, doğrulama özeti, model dosyası indirme ve geri yükleme, tahmin = motor, dışa değerleme uyarısı, telefon).
+
+### P17: CDFR ve modified CDFR (11 Kasım 2026; 2.1.0)
+Şartname §4.2 ve P17. Kaynak: Poudel ve Cao (2013) ([R1]) **[B]**. `dist/stand.js` (`trainCDF`, `cdfObjective`, `unitClasses`), eğitim Web Worker'da (`dist/stand-worker.js`).
+
+- **Optimize edilenler:** bütün alanlar için ortak regresyon katsayıları β (P16'nın model biçimi). θᵢ(β) birimin tahmin edilen parametreleridir: PPM'de b, c doğrudan; PRM'de (Weibull M2–M9) tahmin edilen hedeflerden doğrulanmış geri kazanım yöntemleriyle (P06/P07) her değerlendirmede yeniden.
+- **CDFR (kaynak):** Σᵢ (1/nᵢ) Σⱼ [(j − 0.5)/nᵢ − F(dᵢ₍ⱼ₎; θᵢ)]². Çaplar sıralanır; eşit çaplar ardışık j alır (kaynakta belirtilmemiş; araç kuralı, modele yazılır).
+- **Modified CDFR (kaynak):** Σᵢ 1/(mᵢ − 1) Σ_{j=1}^{mᵢ−1} [Cᵢⱼ − F(uᵢⱼ; θᵢ)]². Sınıflar genişlik w ile ⌊min/w⌋·w'den başlar (w kullanıcıdan; kaynağın 2 cm'si varsayılan); uᵢⱼ gerçek sınıf üst sınırı (kaynaktaki "orta nokta + 1" yerine), Cᵢⱼ gözlenen birikimli oran. Son sınıf **yalnızca bu amaç fonksiyonundan** çıkarılır; sınıf tablosunda ve toplam ağaç sayısında kalır (`unitClasses` sayıları n'ye eşittir). mᵢ = 1 olan birim bu amaç fonksiyonuna giremez, nedeniyle kaydedilir.
+- **M1 konum politikası:** PPM'de a = 0 ya da a = 0.5 × tahmin edilen Dmin. İkincisinde birim hedefleri b, c en çok olabilirlikle a = 0.5 × birimin en küçük çapı sabitken hesaplanır ve Dmin bir yanıt olur. CDFR'de Dmin denklemi (PRM'de de) NLS ile önceden kestirilir ve sabit tutulur; yalnızca öteki denklemler CDFR ile optimize edilir. Politika modele yazılır.
+- **İç içe çözücüler:** bir β'da herhangi bir birimin geri kazanımı başarısız olursa ya da birden çok çözüm verirse o β uygulanamaz sayılır; adım reddedilir ve sayılır (`rejected`). Birden çok çözüm bir kuralla seçilmez (`rootPolicy`). NLS başlangıcında başarısız birim varsa model eğitilmez ve başarısızlıklar duruma göre sayılır (ör. M8: 54 birimin 54'ünde birden çok çözüm).
+- **Çözücü:** artık vektörü üzerinde Levenberg–Marquardt; Jacobian ileri farklarla sütun sütun (her β'da birim parametreleri bir kez hesaplanır); yakınsama ölçütleri `core/nls.js` ile aynı. Başlangıç NLS katsayıları; başlangıç ve son amaç değeri, yineleme sayısı kaydedilir. Standart hata verilmez.
+- **Kaynak yeniden üretimi ve genişletmeler:** uygulanan iki amaç fonksiyonu kaynaktakilerdir (ağırlıklar ve konumlar değiştirilmeden; yalnızca üst sınır genel tanımla). Kesilmiş CDF ya da başka ağırlıklandırma uygulanmadı; eklenirse "genişletilmiş CDFR" adıyla ayrı tanımlanacak.
+- **Doğrulama:** P16'nın örnek alan düzeyindeki çapraz doğrulaması aynen kullanılır (her katta CDFR yeniden eğitilir).
+- **Doğrulama (test):** `tests/dist/test_p17.mjs` 58/58. Elle hesaplanan iki amaç değeri: iki birim, CDFR (eşit çaplarla) ve modified CDFR (2 cm ve 4 cm sınıflarla). `tests/ref/make_dist_p17.py` NumPy/SciPy ile aynı amaç fonksiyonlarını ve en iyilemeyi (`least_squares`, sayısal Jacobian; M2 geri kazanımı brentq) bağımsız yazar. Testte şunlar karşılaştırılır:
+  - amaç değeri referansın başlangıç ve optimum katsayılarında (10⁻¹⁰);
+  - bizim optimumumuz (referansla 10⁻⁶ içinde, ondan kötü değil) ve katsayılar (2·10⁻³).
+
+  Örnekler: PPM CDFR, modified CDFR (w = 2 ve 4), PPM a = 0.5·Dmin, PRM M2 CDFR ve modified CDFR (w = 3).
+
+  Test ayrıca şunları denetler:
+  - Dmin denkleminin NLS'den gelip sabit kalması;
+  - M8'in birden çok çözüm nedeniyle reddi ve sayımı;
+  - tek sınıflı birimin dışlanması;
+  - modified CDFR ile çapraz doğrulama;
+  - model dosyası.
+
+  `tests/dist/e2e.mjs` 180/180: Web Worker'da modified CDFR, amaç değeri motorla aynı.
