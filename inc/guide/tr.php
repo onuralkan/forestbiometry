@@ -132,11 +132,12 @@
 <section class="card guide-sec">
 <?= $sec('cap-dagilimi', 'Çap Dağılımı Laboratuvarı') ?>
 <p>Tek ağaç çaplarına ya da çap sınıflarına sekiz olasılık dağılımı uydurur: Weibull, normal, lognormal, gamma, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik. Her örnek alan ve dönem ayrı hesaplanır. Ayrı bir iş akışı, ham veri olmadan özet değerlerden parametre geri kazanır.</p>
-<p><b>Yapmadıkları:</b> konum ve sınır parametrelerini tahmin etmez (Weibull ve üstelde a, beta'da L ve U, Johnson SB'de ξ ve λ sizin verdiğiniz sabit değerlerdir, veriden alınmaz); meşcere değişkenlerinden dağılım tahmini (meşcere modeli) henüz yoktur; göğüs yüzeyiyle ağırlıklı uydurma yapmaz.</p>
-<h3>İki iş akışı</h3>
+<p><b>Yapmadıkları:</b> konum ve sınır parametrelerini tahmin etmez (Weibull ve üstelde a, beta'da L ve U, Johnson SB'de ξ ve λ sizin verdiğiniz sabit değerlerdir, veriden alınmaz); göğüs yüzeyiyle ağırlıklı uydurma yapmaz; makalelerden kopyalanmış katsayılarla tahmin yapmaz (meşcere modeli yalnızca sizin verinizle eğitilir).</p>
+<h3>Üç iş akışı</h3>
 <ul>
 <li><b>Ölçülmüş çaplardan uydurma</b>: Veri, Ayarlar, Sonuçlar adımları.</li>
 <li><b>Özetlerden geri kazanım</b>: ortalama çap, varyans ya da Dq, yüzdelikler ve benzeri özetlerden parametreler.</li>
+<li><b>Meşcere modeli</b>: çok sayıda örnek alandan bir model eğitip ağaç sayısı, meşcere boyu ve yaştan dağılım tahmin etme.</li>
 </ul>
 <h3>1. Veri</h3>
 <p>Her satır bir ağaç (çap sütunu zorunlu; örnek alan ve dönem isteğe bağlı) ya da her satır bir çap sınıfı (alt sınır, üst sınır, sıklık). Başlıkta alt/üst/sıklık sütunları bulunursa tablo sınıf tablosu olarak tanınır.</p>
@@ -159,6 +160,15 @@
 <p>Bir sonuç yalnızca "tamam" durumunda parametre gösterir. Öteki durumlarda (arama aralığının sınırında, yakınsamadı, birden çok çözüm, hesaplanmadı, hata) parametre verilmez ve nedeni yazılır.</p>
 <h3>Özetlerden geri kazanım</h3>
 <p>Üstteki tablo hangi özetlerle hangi yöntemin kullanılabileceğini gösterir. Üç grup ayrı sekmelerdedir: normal, lognormal ve gamma (ortalama ve varyans ya da Dq); Weibull, Poudel ve Cao (2013) M2–M10 (ortalama, Dq, varyans, yüzdelikler; konum için Dmin ya da sabit a); Johnson SB, Parresol (2003) (ξ, ortalama, medyan ve Dq ya da N/ha ile G). Bir sekmede girilen ortalama, varyans, Dq ve n öteki sekmelere de yazılır. Ham veri yüklüyse Weibull ve Parresol hedefleri o veriden hesaplanabilir.</p>
+<h3>Meşcere modeli</h3>
+<p><b>Model eğit</b> sekmesinde eğitim verisi, her satırı bir ağaç olan ve meşcere değişkenlerini (N ağaç/ha, H m, yaş) her ağaç satırında o alanın değeriyle tekrarlayan bir tablodur; Örnek Alan ve Meşcere Hesaplayıcısı'nın "Ağaç verisi + meşcere parametreleri (Excel)" çıktısı bu biçimdedir. Örnek alan sütunu zorunludur. H olarak hangi sütunu kullandığınızı siz seçersiniz (Poudel ve Cao'nun H'si baskın ve ortak baskın ağaçların ortalama boyudur; Örnek Alan aracının H0'ı aynı tanım değildir) ve seçim modele kaydedilir.</p>
+<ul>
+<li><b>Yaklaşım ve yanıtlar</b>: PPM (Weibull b ve c doğrudan) ya da PRM (Weibull M2–M9 ya da Johnson SB Parresol hedefleri; tahminde parametreler bu hedeflerden geri kazanılır).</li>
+<li><b>Terimler</b>: RS, ln N, ln H, 1/A (Poudel ve Cao'nun biçimi).</li>
+<li><b>Regresyon yöntemi</b>: NLS (her yanıt ayrı), SUR (yanıtlar birlikte, denklemler arası kovaryansla) ya da log-OLS (ln y üzerinde; farklı bir amaç fonksiyonu, geri dönüş seçilir).</li>
+<li><b>Doğrulama</b> örnek alan düzeyindedir: bir alanın bütün dönemleri aynı kattadır. Her birim için tahmin edilen dağılımın gözlenen ağaçlardaki −ln L ve KS değeri verilir; tahmin edilemeyen birimler sayılır.</li>
+</ul>
+<p><b>Modeli indir (JSON)</b> katsayıları, eğitim kapsamını, birimleri, sürümü ve doğrulama sonuçlarını kaydeder. <b>Modelle tahmin</b> sekmesinde bu oturumda eğitilen modeli ya da bir model dosyasını seçip N, H ve yaşı girersiniz. Tahmin edilen yüzdelikler sıralı değilse ya da Dq ortalama çaptan büyük değilse parametre verilmez (değerler kırpılmaz); eğitim aralığı dışındaki girdiler dışa değerleme olarak işaretlenir.</p>
 <h3>İndirme</h3>
 <p>Excel raporu (Bilgi, Uydurmalar, Parametreler, Örnek alanlar, Sınıflar, Karşılaştırma, Bootstrap, Kaynaklar), uydurmalar ve parametreler CSV olarak, sonuç kayıtları JSON olarak; grafikler SVG olarak (dosyanın içinde sürüm, ayarlar ve parametreler).</p>
 <h3>Sık karşılaşılanlar</h3>

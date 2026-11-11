@@ -73,3 +73,4 @@ export * as classes from './classes.js';
 export { groupedLogLik, checkGrouped } from './fit/grouped.js';
 export * as compare from './compare.js';
 export * as boot from './bootstrap.js';
+export * as stand from './stand.js';

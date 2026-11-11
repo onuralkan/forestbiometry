@@ -25,8 +25,9 @@ site_top([
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
   <section id="recover" class="step" hidden></section>
+  <section id="standwf" class="step" hidden></section>
 <?php
 // Load watchdog: the interface is an ES module tree; if any file of it fails (offline, or the host's bot check serving an
 // HTML page instead of JavaScript) the page would otherwise stay empty without a word. ui.js sets window.__distReady.
 site_bottom('<script>function __distFail(){if(!window.__distReady){var e=document.getElementById("loadfail");if(e)e.hidden=false;}}setTimeout(__distFail,15000);</script>'
-  . '<script type="module" src="assets/lab/dist/ui.js?v=22" onerror="__distFail()"></script>');
+  . '<script type="module" src="assets/lab/dist/ui.js?v=23" onerror="__distFail()"></script>');
