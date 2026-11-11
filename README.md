@@ -1,32 +1,87 @@
-# forestbiometry.online
+# Forest Biometrics Tools · Ormancılık Biyometrisi Araçları
 
-**Ormancılık Biyometrisi Araçları / Forest Biometrics Tools**: browser-based tools for forest inventory and biometrics data.
-Author and responsible person: Onur Alkan. Plain PHP 7.4 or newer (8.x recommended), no database, no server-side user data.
+Browser-based tools for forest inventory and biometrics data, published at **<https://forestbiometry.online>**.
+Author and responsible person: **Onur Alkan** ([ORCID 0000-0001-5798-3421](https://orcid.org/0000-0001-5798-3421)).
 
-## How it gets online
-Every push to `main` runs the numerical tests in GitHub Actions and, if they pass, uploads the changed files to the
-forestbiometry.online document root through the cPanel API over HTTPS (`.github/workflows/deploy.yml`,
-`.github/deploy-cpanel.sh`). One-time setup:
-1. cPanel → **Security → Manage API Tokens** → create a token (e.g. `github_deploy`).
-2. GitHub → repository → **Settings → Secrets and variables → Actions** → secret `CPANEL_TOKEN` = that token.
-3. Fill in `CP_HOST`, `CP_USER` and `DIR` at the top of `.github/workflows/deploy.yml`. While any is empty, uploads are skipped.
+*Orman envanteri ve biyometri verisi için tarayıcıda çalışan araçlar. Arayüz Türkçe ve İngilizcedir; proje belgeleri
+(`docs/`) Türkçedir.*
 
-The upload refuses to write into a folder that is neither this site (`inc/site.php`) nor an empty cPanel document root,
-never deletes anything on the server, and keeps the server's cPanel PHP-version block in `.htaccess`.
+- **Your data stay in your browser.** Files are read and computed on your own computer; nothing is uploaded, and the
+  server keeps no user data. There is no database. / *Veriler tarayıcıdan çıkmaz; sunucuda kullanıcı verisi yoktur.*
+- **Every scientific calculation is tested against an independent reference** (SciPy, NumPy, mpmath, scikit-learn or
+  hand-computed cases). The tests and the scripts that generate the reference values are in this repository.
+- **Sources are cited, not invented.** Formulas, sources and their reading status are documented in
+  [`docs/METHODS.md`](docs/METHODS.md).
 
-Fallback: `sh scripts/build-zip.sh` → `../forestbiometry.zip` → cPanel **File Manager** → `public_html` → Upload → Extract
-(show hidden files; `.htaccess` and `inc/.htaccess` must come along).
+## Tools / Araçlar
 
-## HTTPS
-cPanel → **SSL/TLS Status** (AutoSSL) or **Let's Encrypt SSL** must cover `forestbiometry.online` and `www.forestbiometry.online`;
-`.htaccess` then sends every http:// visit to https://.
+| # | Tool | Araç | Version | What it does |
+|---|---|---|---|---|
+| 1 | [Forest Data Checker](https://forestbiometry.online/veri-denetcisi.php?lang=en) | Ormancılık Verisi Denetçisi | 1.0.0 | Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data. |
+| 2 | [Plot & Stand Metrics](https://forestbiometry.online/ornek-alan.php?lang=en) | Örnek Alan ve Meşcere Hesaplayıcısı | 1.1.0 | Stems and basal area per hectare, mean diameters, diameter classes and species composition per plot and period; between-plot summary and design-based estimates. |
+| 3 | [Model Evaluation](https://forestbiometry.online/model-degerlendirme.php?lang=en) | Model Başarısı Değerlendiricisi | 1.0.0 | Bias, MAE, RMSE and prediction R² from observed and predicted values; observed–predicted and residual plots, tables by group. |
+| 4 | [Diameter Distribution Lab](https://forestbiometry.online/cap-dagilimi.php?lang=en) | Çap Dağılımı Laboratuvarı | 2.0.0 | Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic. Fitting by maximum likelihood, moments and percentiles. Measurement thresholds and grouped data. Parameter recovery from summaries: Poudel and Cao (2013) M2–M10, Parresol (2003). Model comparison and bootstrap uncertainty. |
+| 5 | [Height–Diameter Modelling](https://forestbiometry.online/boy-cap.php?lang=en) | Boy–Çap Modelleme | 1.0.0 | Fixed-effects fits of Näslund, Michailoff, Curtis, power, Chapman–Richards and Weibull equations by nonlinear least squares; cross-validation and prediction. |
+| 6 | [Inventory Sampling Planner](https://forestbiometry.online/ornekleme.php?lang=en) | Envanter Örnekleme Planlayıcısı | 1.0.0 | Approximate number of plots to estimate a mean with a target relative error under simple random sampling. |
+| 7 | [Relative Ranking](https://forestbiometry.online/nispi-siralama.php?lang=en) | Nispi Sıralama | 1.0.0 | Relative ranks per criterion and overall from a table of goodness-of-fit statistics; radar chart of the best and worst models. |
 
-## Author details
-`SITE_AUTHOR` in `inc/site.php` (name, email, ORCID). Empty fields are not shown.
+Each tool has its own version. It is shown on the tool page and in its exports, and it is part of the citation the
+site produces.
 
-## Development
-See `CLAUDE.md`, `docs/PROJECT.md`, `docs/METHODS.md`, `docs/PROGRESS.md` and `tests/README.md`.
+## How to cite / Atıf
 
-## License
+Use the **Cite** button on any page of the site. It gives APA, MLA, Chicago, Harvard, IEEE, Vancouver, BibTeX and RIS,
+for the platform or for one tool and its version. Machine-readable metadata are in [`CITATION.cff`](CITATION.cff).
+Releases of this repository are archived on Zenodo with a DOI. Please also cite the original sources of the methods
+you use; each tool lists them.
+
+## Running it locally / Yerelde çalıştırma
+
+Plain PHP 7.4 or newer (8.x recommended). No database and no build step.
+
+```bash
+php -S 127.0.0.1:8092
+```
+
+Then open <http://127.0.0.1:8092/>.
+
+## Tests / Testler
+
+Numerical tests run with Node.js (CI uses version 22) and need no installation:
+
+```bash
+node tests/dist/test_p15.mjs
+```
+
+Browser tests need Playwright with Chromium and a running `php -S`. The full list, and the Python scripts that
+regenerate the reference values, are in [`tests/README.md`](tests/README.md). GitHub Actions runs the numerical tests
+on every push to `main`.
+
+## Repository layout
+
+| Path | Contents |
+|---|---|
+| `*.php`, `inc/` | Pages and the shared site shell (language, navigation, citation) |
+| `assets/lab/<tool>/` | Each tool: calculations (`calc.js` or `dist/` engine) separate from the interface (`ui.js`) |
+| `assets/lab/core/` | Shared browser code: import, number parsing, charts, export, statistics, root finding |
+| `assets/vendor/sheetjs/` | SheetJS Community Edition (Excel import/export) |
+| `tests/` | Unit and browser tests; `tests/ref/` holds the independent reference values and their generators |
+| `docs/` | Architecture and rules (`PROJECT.md`), methods and sources (`METHODS.md`), progress (`PROGRESS.md`), specifications |
+| `legacy/` | Retired code kept as a regression reference (not published) |
+
+## Deployment
+
+Every push to `main` runs the numerical tests in GitHub Actions. If they pass, the workflow uploads the changed files
+through the cPanel API over HTTPS (`.github/workflows/deploy.yml`, `.github/deploy-cpanel.sh`). The only credential is
+the repository secret `CPANEL_TOKEN`. The upload:
+
+- never deletes anything on the server;
+- refuses to write into a folder that is neither this site nor an empty document root.
+
+Fallback: `sh scripts/build-zip.sh`, then upload the archive in cPanel.
+
+## License / Lisans
+
 Source code: [Apache License 2.0](LICENSE). Documentation (`docs/`, this README): [CC BY 4.0](LICENSE-docs).
-Copyright and third-party notices: [NOTICE](NOTICE) (SheetJS in `assets/vendor/sheetjs/` keeps its own Apache-2.0 license).
+Copyright and third-party notices: [NOTICE](NOTICE) (SheetJS in `assets/vendor/sheetjs/` keeps its own Apache-2.0
+license).

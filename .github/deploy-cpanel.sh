@@ -34,7 +34,7 @@ else
 fi
 
 # 2. what to send
-filter() { grep -Ev '^(\.github/|data/|files/|docs/|tests/|scripts/|legacy/|\.gitignore$|README\.md$|CLAUDE\.md$)' || true; }
+filter() { grep -Ev '^(\.github/|data/|files/|docs/|tests/|scripts/|legacy/|\.gitignore$|README\.md$|CLAUDE\.md$|CITATION\.cff$|\.zenodo\.json$)' || true; }
 last=$(uapi -G "$API/execute/Fileman/get_file_content" --data-urlencode "dir=$DIR" --data-urlencode "file=deploy-commit.txt" | jq -r 'if .status == 1 then .data.content else "" end' | tr -d '[:space:]')
 if [ -n "$last" ] && git cat-file -e "$last^{commit}" 2>/dev/null; then
   git diff --name-only --diff-filter=ACMRT "$last" HEAD | filter > "$RUNNER_TEMP/list.txt"

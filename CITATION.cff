@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use these tools, please cite them as below, and cite the original sources of the methods you use (each tool lists them)."
+type: software
+title: "Forest Biometrics Tools (Ormancılık Biyometrisi Araçları)"
+abstract: >-
+  Browser-based tools for forest inventory and biometrics data: forest data checking, plot and stand metrics,
+  model evaluation, diameter distributions (eight families, direct fitting, measurement thresholds, grouped data,
+  parameter recovery, model comparison and bootstrap uncertainty), height–diameter modelling, inventory sampling
+  planning and relative ranking. Data stay in the user's browser. Every scientific calculation is tested against an
+  independent reference.
+authors:
+  - family-names: Alkan
+    given-names: Onur
+    orcid: "https://orcid.org/0000-0001-5798-3421"
+version: "2026.11.0"
+date-released: "2026-11-11"
+url: "https://forestbiometry.online"
+repository-code: "https://github.com/onuralkan/onuralkan-site"
+license:
+  - Apache-2.0
+  - CC-BY-4.0
+keywords:
+  - forest biometrics
+  - forest inventory
+  - diameter distribution
+  - Weibull distribution
+  - Johnson SB distribution
+  - parameter recovery
+  - height–diameter model
+  - model evaluation
+  - sampling design
+  - bootstrap

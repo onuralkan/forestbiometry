@@ -1,0 +1,34 @@
+{
+  "title": "Forest Biometrics Tools (Ormancılık Biyometrisi Araçları)",
+  "upload_type": "software",
+  "description": "<p>Browser-based tools for forest inventory and biometrics data, published at <a href=\"https://forestbiometry.online\">forestbiometry.online</a>: Forest Data Checker, Plot &amp; Stand Metrics, Model Evaluation, Diameter Distribution Lab (Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic; direct fitting, measurement thresholds, grouped data, parameter recovery after Poudel and Cao (2013) and Parresol (2003), model comparison and bootstrap uncertainty), Height–Diameter Modelling, Inventory Sampling Planner and Relative Ranking.</p><p>Data stay in the user's browser; the server keeps no user data. Every scientific calculation is tested against an independent reference (SciPy, NumPy, mpmath, scikit-learn or hand-computed cases); tests and reference generators are included. Interface in Turkish and English; project documentation in Turkish.</p><p>Each tool carries its own version; the release notes list the version of every tool in this release.</p>",
+  "creators": [
+    {
+      "name": "Alkan, Onur",
+      "orcid": "0000-0001-5798-3421"
+    }
+  ],
+  "license": "apache-2.0",
+  "access_right": "open",
+  "keywords": [
+    "forest biometrics",
+    "forest inventory",
+    "diameter distribution",
+    "Weibull distribution",
+    "Johnson SB distribution",
+    "parameter recovery",
+    "height–diameter model",
+    "model evaluation",
+    "sampling design",
+    "bootstrap"
+  ],
+  "language": "eng",
+  "related_identifiers": [
+    {
+      "identifier": "https://forestbiometry.online",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Source code: Apache License 2.0. Documentation (docs/, README.md): CC BY 4.0. Third-party: SheetJS Community Edition (Apache-2.0)."
+}
