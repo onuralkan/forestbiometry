@@ -656,24 +656,39 @@ function summaryInput() {
   return out;
 }
 let RS = null;
+/** A summary typed in one group is the same number in the others (mean, variance, Dq, n, divisor): copied, so it is typed once. */
+const SHARE = { mean: [['sum', 'mean'], ['wb', 'mean'], ['prs', 'mean']], v: [['sum', 'v'], ['wb', 'v']], dq: [['sum', 'dq'], ['wb', 'dq'], ['prs', 'dq']], n: [['sum', 'n'], ['wb', 'n']], div: [['sum', 'div'], ['wb', 'div']] };
+function share(field, value, from) {
+  for (const [g, k] of SHARE[field] || []) { if (g === from) continue; const q = S[g]; if (q[k] === value) continue; q[k] = value; q.done = false; if ('from' in q) q.from = null; }
+  if (field === 'dq' && S.prs.qmode === 'ng' && from !== 'prs' && String(value).trim() !== '') S.prs.qmode = 'dq';
+  if (from !== 'sum' && (field === 'v' || field === 'dq')) S.sum.which = field === 'dq' ? 'dq' : 'var';
+}
+const REC_TABS = ['mom', 'wb', 'prs'];
 function computeRecover() { const sm = summaryInput(); RS = recChosen().map(m => D.runMethod(m.id, { type: 'summary', summary: sm })); }
 function renderRecover() {
   const el = $('recover'), q = S.sum, inp = (id, v, lab) => `<label>${lab} <input type="text" inputmode="decimal" size="8" id="${id}" value="${esc(v)}"></label>`;
-  let h = `<div class="card"><h2>${T('rec.h')}</h2><p class="muted">${T('rec.sub')}</p>
+  if (!REC_TABS.includes(S.recTab)) S.recTab = 'mom';
+  const guide = `<div class="card recguide"><h2>${T('rg.h')}</h2><div class="tscroll"><table class="grid"><thead><tr><th>${T('rg.have')}</th><th>${T('rg.get')}</th></tr></thead><tbody>
+    ${['mom', 'wb4', 'wbh', 'prs'].map(k => `<tr><td>${T('rg.in.' + k)}</td><td>${T('rg.out.' + k)}</td></tr>`).join('')}</tbody></table></div><p class="muted small">${T('rg.shared')}</p></div>
+    <div class="tabs rectabs" role="tablist" aria-label="${esc(T('rg.tabs'))}">${REC_TABS.map(t => `<button type="button" role="tab" id="rt-${t}" data-rt="${t}" aria-selected="${S.recTab === t}" aria-controls="rec-${t}">${T('rg.tab.' + t)}</button>`).join('')}</div>`;
+  let h = guide + `<div id="rec-mom" role="tabpanel" aria-labelledby="rt-mom"${S.recTab === 'mom' ? '' : ' hidden'}><div class="card"><h2>${T('rec.h')}</h2><p class="muted">${T('rec.sub')}</p>
     <div class="lims">${inp('s-mean', q.mean, T('rec.mean'))}</div>
     <div class="radios"><label><input type="radio" name="s-which" value="var"${q.which === 'var' ? ' checked' : ''}> ${T('rec.byvar')}</label><label><input type="radio" name="s-which" value="dq"${q.which === 'dq' ? ' checked' : ''}> ${T('rec.bydq')}</label></div>
     <div class="lims">${q.which === 'dq' ? inp('s-dq', q.dq, T('rec.dq')) : inp('s-v', q.v, T('rec.var')) + ` <span class="small">${T('opt.varDivisor')}:</span> ${['n', 'n-1'].map(v => `<label class="small"><input type="radio" name="s-div" value="${v}"${q.div === v ? ' checked' : ''}> ${T('rec.div.' + v)}</label>`).join(' ')}`}
       ${inp('s-n', q.n, q.which === 'var' && q.div === 'n-1' ? T('rec.nreq') : T('rec.nopt'))}</div>
     <p class="muted small">${T('rec.note')}</p></div>
-    <div class="card"><h2>${T('rec.fam')}</h2><div class="radios col">${recMethods().map(m => `<label><input type="checkbox" data-rm="${m.id}"${S.sum.methods[m.id] !== false ? ' checked' : ''}> ${esc(T('fam.' + m.family))}: ${esc(T('m.' + m.id))}</label>${has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}`).join('')}</div></div>
-    <div class="nav"><button type="button" class="btn" id="s-calc"${recChosen().length ? '' : ' disabled'}>${T('calc')}</button>${recChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="s-out"></div>
-    <div id="wb"></div><div id="prs"></div>`;
+    <div class="card"><h2>${T('rec.fam')}</h2><div class="radios col">${recMethods().map(m => `<label><input type="checkbox" data-rm="${m.id}"${S.sum.methods[m.id] !== false ? ' checked' : ''}> ${esc(T('fam.' + m.family))}: ${esc(T('m.' + m.id))}</label>`).join('')}</div>
+      <details class="more"><summary>${T('more')}</summary><ul class="small muted">${recMethods().filter(m => has('mnote.' + m.id)).map(m => `<li data-mnote="${m.id}"><b>${esc(T('fam.' + m.family))}</b>: ${T('mnote.' + m.id)}</li>`).join('')}</ul></details></div>
+    <div class="nav"><button type="button" class="btn" id="s-calc"${recChosen().length ? '' : ' disabled'}>${T('calc')}</button>${recChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="s-out"></div></div>
+    <div id="wb" role="tabpanel" aria-labelledby="rt-wb"${S.recTab === 'wb' ? '' : ' hidden'}></div><div id="prs" role="tabpanel" aria-labelledby="rt-prs"${S.recTab === 'prs' ? '' : ' hidden'}></div>`;
   el.innerHTML = h;
   renderWb(); renderPrs();
   const re = () => { S.sum.done = false; RS = null; save(); renderRecover(); };
-  for (const [id, k] of [['s-mean', 'mean'], ['s-v', 'v'], ['s-dq', 'dq'], ['s-n', 'n']]) $(id) && $(id).addEventListener('change', e => { S.sum[k] = e.target.value; re(); });
+  for (const [id, k] of [['s-mean', 'mean'], ['s-v', 'v'], ['s-dq', 'dq'], ['s-n', 'n']]) $(id) && $(id).addEventListener('change', e => { S.sum[k] = e.target.value; share(k, e.target.value, 'sum'); re(); });
+  el.querySelectorAll('[data-rt]').forEach(b => b.addEventListener('click', () => { S.recTab = b.dataset.rt; save(); renderRecover(); $('rt-' + S.recTab).focus(); }));
+  el.querySelector('.rectabs').addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault(); S.recTab = REC_TABS[(REC_TABS.indexOf(S.recTab) + d + 3) % 3]; save(); renderRecover(); $('rt-' + S.recTab).focus(); });
   el.querySelectorAll('input[name="s-which"]').forEach(x => x.addEventListener('change', () => { S.sum.which = x.value; re(); }));
-  el.querySelectorAll('input[name="s-div"]').forEach(x => x.addEventListener('change', () => { S.sum.div = x.value; re(); }));
+  el.querySelectorAll('input[name="s-div"]').forEach(x => x.addEventListener('change', () => { S.sum.div = x.value; share('div', x.value, 'sum'); re(); }));
   el.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('change', () => { S.sum.methods[x.dataset.rm] = x.checked; re(); }));
   $('s-calc').addEventListener('click', () => { S.sum.done = true; save(); computeRecover(); drawRecover(); });
   if (q.done) { computeRecover(); drawRecover(); }
@@ -743,7 +758,8 @@ function drawWbCard(el) {
   const varCtl = need.has('variance') ? `<div class="lims"><span class="small">${T('opt.varDivisor')}:</span> ${['n', 'n-1'].map(v => `<label class="small"><input type="radio" name="w-div" value="${v}"${q.div === v ? ' checked' : ''}> ${T('rec.div.' + v)}</label>`).join(' ')}
     ${inp('w-n', q.n, q.div === 'n-1' ? T('rec.nreq') : T('rec.nopt'))}</div>` : '';
   let h = `<div class="card" id="wbcard"><h2>${T('wb.h')}</h2><p class="muted">${T('wb.sub')}</p>
-    <div class="radios col">${wbMethods().map(m => `<label><input type="checkbox" data-wm="${m.id}"${wbOn(m) ? ' checked' : ''}> ${esc(T('m.' + m.id))}</label><p class="muted small mnote">${T('mnote.' + m.id)}</p>`).join('')}</div>
+    <div class="radios col wbms">${wbMethods().map(m => `<label><input type="checkbox" data-wm="${m.id}"${wbOn(m) ? ' checked' : ''}> ${esc(T('m.' + m.id))}</label>`).join('')}</div>
+    <details class="more"><summary>${T('more')}</summary><ul class="small muted">${wbMethods().map(m => `<li data-mnote="${m.id}"><b>${esc(T('m.' + m.id))}</b>: ${T('mnote.' + m.id)}</li>`).join('')}</ul></details>
     <h3>${T('wb.loc.h')}</h3><div class="radios col">${['half-dmin', 'user'].map(v => `<label><input type="radio" name="w-loc" value="${v}"${q.loc === v ? ' checked' : ''}> ${T('wb.loc.' + v)}</label>`).join('')}</div>
     <div class="lims">${q.loc === 'half-dmin' ? inp('w-dmin', q.dmin, T('wb.dmin')) : inp('w-a', q.a, T('wb.a'))}</div>
     ${q.loc === 'half-dmin' ? `<p class="muted small">${T('wb.dmin.note')}</p>` : `<p class="muted small">${T('wb.a.note')}</p>`}
@@ -756,9 +772,9 @@ function drawWbCard(el) {
     <div class="nav"><button type="button" class="btn" id="w-calc"${wbChosen().length ? '' : ' disabled'}>${T('calc')}</button>${wbChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="w-out"></div></div>`;
   el.innerHTML = h;
   const re = (keepFrom = true) => { if (!keepFrom) q.from = null; q.done = false; RW = null; save(); renderWb(); };
-  for (const k of [...WB_FIELDS.map(wbKey), 'n', 'dmin']) $('w-' + k) && $('w-' + k).addEventListener('change', e => { q[k] = e.target.value; re(false); });   // a changed target is typed, no longer computed from data
+  for (const k of [...WB_FIELDS.map(wbKey), 'n', 'dmin']) $('w-' + k) && $('w-' + k).addEventListener('change', e => { q[k] = e.target.value; share(k, e.target.value, 'wb'); re(false); });   // a changed target is typed, no longer computed from data
   $('w-a') && $('w-a').addEventListener('change', e => { q.a = e.target.value; re(); });
-  el.querySelectorAll('input[name="w-div"]').forEach(x => x.addEventListener('change', () => { q.div = x.value; re(false); }));
+  el.querySelectorAll('input[name="w-div"]').forEach(x => x.addEventListener('change', () => { q.div = x.value; share('div', x.value, 'wb'); re(false); }));
   el.querySelectorAll('input[name="w-loc"]').forEach(x => x.addEventListener('change', () => { q.loc = x.value; re(); }));
   el.querySelectorAll('input[name="w-origin"]').forEach(x => x.addEventListener('change', () => { q.origin = x.value; if (x.value === 'predicted') q.from = null; re(); }));
   el.querySelectorAll('[data-wm]').forEach(x => x.addEventListener('change', () => { q.methods[x.dataset.wm] = x.checked; re(); }));
@@ -832,7 +848,7 @@ function drawPrsCard(el) {
         <button type="button" class="btn ghost small" id="p-fill">${T('wb.fill.btn')}</button></div>` : `<p class="small">${T(truncActive() ? 'tr.nofill' : 'wb.fill.none')}</p>`}</details>
     <div class="nav"><button type="button" class="btn" id="p-calc">${T('calc')}</button></div><div id="p-out"></div></div>`;
   const re = (keepFrom = true) => { if (!keepFrom) q.from = null; q.done = false; RP = null; save(); renderPrs(); };
-  for (const k of ['mean', 'median', 'nha', 'g', 'dq']) $('p-' + k) && $('p-' + k).addEventListener('change', e => { q[k] = e.target.value; re(false); });
+  for (const k of ['mean', 'median', 'nha', 'g', 'dq']) $('p-' + k) && $('p-' + k).addEventListener('change', e => { q[k] = e.target.value; share(k, e.target.value, 'prs'); re(false); });
   $('p-xi').addEventListener('change', e => { q.xi = e.target.value; re(); });
   el.querySelectorAll('input[name="p-qmode"]').forEach(x => x.addEventListener('change', () => { q.qmode = x.value; re(); }));
   el.querySelectorAll('input[name="p-origin"]').forEach(x => x.addEventListener('change', () => { q.origin = x.value; if (x.value === 'predicted') q.from = null; re(); }));

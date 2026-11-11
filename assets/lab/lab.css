@@ -434,3 +434,6 @@ details.ptabs > summary { font-size: 14px; font-weight: 600; color: var(--ink); 
 #panel .tile b { font-size: 20px; }
 #panel .tile span { font-size: 12px; font-weight: 500; color: var(--muted); }
 .cmptab td.small:nth-child(2) { min-width: 9em; }
+/* interface revision, stage 3: summary workflow — guide and one method group at a time */
+.recguide table td { vertical-align: top; }
+.rectabs { margin: 6px 0 12px; }
