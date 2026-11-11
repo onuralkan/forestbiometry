@@ -6,8 +6,8 @@ $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
     'kicker' => $tr ? 'Araç 4 · Çap dağılımları' : 'Tool 4 · Diameter distributions',
-    'lede'   => $tr ? 'Tek ağaç çaplarına Weibull, normal, lognormal, gamma, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik dağılımlarını uydurun; her örnek alan ve dönem ayrı. Ortalama ile varyans ya da Dq\'dan parametre geri kazanımı Weibull için Poudel ve Cao (2013) M2–M10 ve Johnson SB için Parresol (2003) yöntemleri ayrı bir iş akışıdır. Sonuçlar ölçüm eşiğine, çap sınıflarına, model karşılaştırmasına ve bootstrap belirsizliğine kadar uzanır; Excel, CSV ve JSON olarak indirilir.'
-                    : 'Fit the Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic distributions to individual tree diameters, each plot and period separately. Parameter recovery from the mean and the variance or Dq, the Poudel and Cao (2013) M2–M10 methods for the Weibull and the Parresol (2003) method for the Johnson SB are a separate workflow. Results extend to measurement thresholds, diameter classes, model comparison and bootstrap uncertainty, and can be downloaded as Excel, CSV and JSON.',
+    'lede'   => $tr ? 'Tek ağaç çaplarına ya da çap sınıflarına sekiz olasılık dağılımı uydurun ya da özet değerlerden parametreleri geri kazanın; her örnek alan ve dönem ayrı hesaplanır.'
+                    : 'Fit eight probability distributions to individual tree diameters or diameter classes, or recover their parameters from summary values; each plot and period is computed separately.',
     'desc'   => $tr ? 'Çap dağılımları: Weibull, normal, lognormal, gamma, beta, Johnson SB, üstel, log-lojistik; en çok olabilirlik, momentler, yüzdelikler; özetlerden geri kazanım.' : 'Diameter distributions: Weibull, normal, lognormal, gamma, beta, Johnson SB, exponential, log-logistic; maximum likelihood, moments, percentiles; recovery from summaries.',
 ]);
 ?>
@@ -29,4 +29,4 @@ site_top([
 // Load watchdog: the interface is an ES module tree; if any file of it fails (offline, or the host's bot check serving an
 // HTML page instead of JavaScript) the page would otherwise stay empty without a word. ui.js sets window.__distReady.
 site_bottom('<script>function __distFail(){if(!window.__distReady){var e=document.getElementById("loadfail");if(e)e.hidden=false;}}setTimeout(__distFail,15000);</script>'
-  . '<script type="module" src="assets/lab/dist/ui.js?v=19" onerror="__distFail()"></script>');
+  . '<script type="module" src="assets/lab/dist/ui.js?v=20" onerror="__distFail()"></script>');

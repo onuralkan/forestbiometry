@@ -410,3 +410,17 @@ table.ptab tbody th { min-width: 150px; }
 .srcs ul, .srcs ol { padding-left: 1.3em; margin: 8px 0; }
 .srcs li { margin: 3px 0; overflow-wrap: anywhere; }
 .pstates { margin: 4px 0 8px; }
+/* interface revision, stage 1 (2.0.1): compact header after the first step, version in the kicker,
+   method grid with formulas behind a disclosure, sticky action bar */
+.b-ver { font-weight: 500; opacity: .8; }
+body.compact-head .b-lede { display: none; }
+body.compact-head .b-head h1 { font-size: clamp(22px, 3vw, 30px); }
+body.compact-head .b-head { margin-bottom: 10px; }
+.famgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 12px; align-items: start; }
+.famgrid fieldset.fam { margin: 0; min-width: 0; }
+details.more { margin-top: 6px; }
+details.more > summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+details.more ul { padding-left: 1.2em; margin: 6px 0 0; }
+details.more li { margin: 4px 0; overflow-wrap: anywhere; }
+.nav.sticky { position: sticky; bottom: 0; z-index: 3; background: var(--bg); padding: 10px 0; margin-bottom: 0; border-top: 1px solid var(--line2); }
+#atext, #tr-L, #tr-U, .bndcard input { max-width: 10em; }

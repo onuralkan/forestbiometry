@@ -31,7 +31,7 @@ await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=tr');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').textContent()).includes('2.0.0') && !(await page.locator('#devnote').textContent()).includes('CSV/Excel') && !(await page.locator('#devnote').textContent()).includes('ölçüm eşiği') && !(await page.locator('#devnote').textContent()).includes('Henüz olmayanlar'), 'stage notice: version; nothing listed as missing any more');
+ok((await page.locator('#devnote').count()) === 0 && (await page.locator('.b-kicker .b-ver').textContent()).trim() === 'sürüm ' + E0.TOOL.version, 'version in the page header, no release-notes banner');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting
@@ -46,7 +46,7 @@ ok(offered.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb,expone
 for (const m of offered.ms) await page.uncheck(`[data-m="${m}"]`);
 ok(await page.isDisabled('#calc') && (await page.locator('#atext').count()) === 0, 'no method chosen: cannot calculate, no location card');
 for (const m of offered.ms) if (!/^(beta|johnsonsb|exponential|loglogistic)\./.test(m)) await page.check(`[data-m="${m}"]`);   // P10 families are checked in 2e
-ok((await page.locator('#famcard .note', { hasText: 'kesilmemiş veri varsayar' }).count()) === 1 && (await page.locator('#famcard .mnote', { hasText: 'aynı denklemlerdir' }).count()) === 1, 'truncation not supported: stated; normal ML = moments explained');
+ok((await page.locator('#famcard .note', { hasText: 'kesilmemiş veri varsayar' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'aynı denklemlerdir' }).count()) === 1, 'truncation not supported: stated; normal ML = moments explained');
 ok(await page.isChecked('input[name="o-weibull.mom-varDivisor"][value="n"]') && await page.inputValue('#o-weibull-pct-p') === '0.24' && await page.inputValue('#o-weibull-pct-r') === '0.93', 'defaults: divisor n, percentiles 0.24 and 0.93 (Dubey)');
 await page.fill('#o-weibull-pct-p', '0.95'); await page.locator('#o-weibull-pct-p').dispatchEvent('change');
 ok(await page.isDisabled('#calc') && (await page.locator('[data-mopts="weibull.pct"] .note.err').textContent()).includes("r'den küçük"), 'p ≥ r: cannot calculate, reason shown');
@@ -197,7 +197,7 @@ await page.click('#steps [data-go="2"]'); await setB('5', '50'); await page.clic
 await page.click('#steps [data-go="2"]'); await page.uncheck('[data-m="beta.ml"]'); await page.uncheck('[data-m="beta.mom"]');
 for (const m of ['johnsonsb.cml', 'johnsonsb.mom', 'johnsonsb.kb', 'johnsonsb.pct']) await page.check(`[data-m="${m}"]`);
 ok(await page.isDisabled('#calc') && (await page.locator('#bnd-johnsonsb .note.err', { hasText: 'ξ ve λ girin' }).count()) === 1 && (await page.locator('#bnd-beta').count()) === 0, 'SB chosen: ξ and λ required, no automatic values');
-ok((await page.locator('#famcard .mnote', { hasText: 'dört parametrenin birlikte tahmini değildir' }).count()) === 1 && (await page.locator('#famcard .mnote', { hasText: 'Knoebel ve Burkhart (1991)' }).count()) === 1, 'CML stated as conditional; KB source named');
+ok((await page.locator('#famcard [data-mnote]', { hasText: 'dört parametrenin birlikte tahmini değildir' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'Knoebel ve Burkhart (1991)' }).count()) === 1, 'CML stated as conditional; KB source named');
 for (const [k, v] of [['xi', '5'], ['lambda', '45']]) { await page.fill('#b-' + k, v); await page.locator('#b-' + k).dispatchEvent('change'); }
 ok((await page.locator('#bnd-johnsonsb', { hasText: 'Üst sınır ξ + λ = 50 cm' }).count()) === 1 && await page.isEnabled('#calc'), 'upper bound ξ + λ shown');
 await page.fill('#o-johnsonsb-pct-p', '0.1'); await page.locator('#o-johnsonsb-pct-p').dispatchEvent('change'); await page.fill('#o-johnsonsb-pct-r', '0.9'); await page.locator('#o-johnsonsb-pct-r').dispatchEvent('change');
@@ -215,7 +215,7 @@ await page.click('#steps [data-go="2"]');
 for (const m of ['johnsonsb.cml', 'johnsonsb.mom', 'johnsonsb.kb', 'johnsonsb.pct']) await page.uncheck(`[data-m="${m}"]`);
 for (const m of ['exponential.ml', 'loglogistic.ml', 'loglogistic.pct', 'loglogistic.logmom']) await page.check(`[data-m="${m}"]`);
 ok((await page.locator('#bnd-johnsonsb').count()) === 0 && (await page.locator('h2', { hasText: 'Sabit konum a (Weibull, üstel)' }).count()) === 1 && await page.isEnabled('#calc'), 'P10 families need no bounds; one location card for Weibull and exponential');
-ok(await page.inputValue('#o-loglogistic-pct-p') === '0.25' && await page.inputValue('#o-loglogistic-pct-r') === '0.75' && (await page.locator('#famcard .mnote', { hasText: 'sıradan momentler yöntemi değildir' }).count()) === 1 && (await page.locator('#famcard', { hasText: 'Ters J' }).count()) === 1, 'defaults 0.25/0.75; log-moments named apart from ordinary moments; exponential as a reverse-J reference');
+ok(await page.inputValue('#o-loglogistic-pct-p') === '0.25' && await page.inputValue('#o-loglogistic-pct-r') === '0.75' && (await page.locator('#famcard [data-mnote]', { hasText: 'sıradan momentler yöntemi değildir' }).count()) === 1 && (await page.locator('#famcard', { hasText: 'Ters J' }).count()) === 1, 'defaults 0.25/0.75; log-moments named apart from ordinary moments; exponential as a reverse-J reference');
 await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="loglogistic"]');
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20];
   const e0 = E.runMethod('exponential.ml', { d: pool }, { a: 0 }), e5 = E.runMethod('exponential.ml', { d: pool }, { a: 5 });

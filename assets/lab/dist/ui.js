@@ -57,7 +57,7 @@ function setTable(st) {
 }
 function renderStep1() {
   const el = $('step1');
-  el.innerHTML = `<p class="note warn" id="devnote">${T('dev')}</p><div id="impbox"></div>
+  el.innerHTML = `<div id="impbox"></div>
     <div class="card sample"><button type="button" class="btn ghost" id="sample">${T('sample')}</button><span class="muted small">${T('sample.note')}</span></div>
     <div class="nav"><button type="button" class="btn ghost" id="reset">${T('reset')}</button><button type="button" class="btn" id="to2"${S.src ? '' : ' disabled'}>${T('next')}</button>${S.src ? '' : `<span class="muted small">${T('need.data')}</span>`}</div>`;
   renderImport($('impbox'), { imp: S.imp, src: S.src }, { base: BASE, title: T('imp.h'), sub: T('imp.sub'), onChange: setTable, onError: m => status(m, 'err') });
@@ -132,7 +132,14 @@ function optControls(m) {
   return `<div class="mopts" data-mopts="${m.id}">${xs.map(o => o.type === 'choice'
     ? `<span class="small">${T('opt.' + o.key)}:</span> ${o.values.map(v => `<label class="small"><input type="radio" name="o-${m.id}-${o.key}" data-o="${m.id}|${o.key}" value="${v}"${optText(m, o) === v ? ' checked' : ''}> ${T('opt.' + o.key + '.' + v)}</label>`).join(' ')}`
     : `<label class="small">${T('opt.' + o.key)} <input type="text" inputmode="decimal" size="5" id="o-${m.id.replace('.', '-')}-${o.key}" data-o="${m.id}|${o.key}" value="${esc(optText(m, o))}"></label>`).join(' ')}
-    <p class="muted small">${T('opt.note.' + m.id)}</p>${mo.bad ? `<p class="note err small">${esc(T('pr.' + mo.bad[0].code, mo.bad[0]))}</p>` : ''}</div>`;
+    ${mo.bad ? `<p class="note err small">${esc(T('pr.' + mo.bad[0].code, mo.bad[0]))}</p>` : ''}</div>`;
+}
+/** Formulas and notes of a family's methods, behind one disclosure (the choice itself stays visible). */
+function famMore(fa, ms) {
+  const items = ms.filter(available).flatMap(m => [has('mnote.' + m.id) ? `<li data-mnote="${m.id}"><b>${esc(T('m.' + m.id))}</b>: ${T('mnote.' + m.id)}</li>` : '',
+    S.methods[m.id] && extraOpts(m).length && has('opt.note.' + m.id) ? `<li><b>${esc(T('m.' + m.id))}</b>: ${T('opt.note.' + m.id)}</li>` : '']).filter(Boolean);
+  if (has('fnote.' + fa.id)) items.push(`<li>${T('fnote.' + fa.id)}</li>`);
+  return items.length ? `<details class="more"><summary>${T('more')}</summary><ul class="small muted">${items.join('')}</ul></details>` : '';
 }
 function renderStep2() {
   const el = $('step2'), Hd = S.src.headers;
@@ -142,7 +149,7 @@ function renderStep2() {
   if (!S.decimalChosen) S.decimal = defaultDecimal(dv.verdict);
   const vals = c => [...new Set(S.src.rows.map(r => cellText(r[c]).trim()))].sort(D.natural);
   chosenMethods();
-  let h = `<div class="card" id="dtcard"><h2>${T('dt.h')}</h2><div class="radios col">${['raw', 'classes'].map(v => `<label><input type="radio" name="dtype" value="${v}"${S.dtype === v ? ' checked' : ''}> ${T('dt.' + v)}</label>`).join('')}</div>
+  let h = `<div class="card" id="dtcard"><h2>${T('dt.h')}</h2><div class="radios">${['raw', 'classes'].map(v => `<label><input type="radio" name="dtype" value="${v}"${S.dtype === v ? ' checked' : ''}> ${T('dt.' + v)}</label>`).join('')}</div>
     ${grouped() ? `<h3>${T('dt.ct.h')}</h3><div class="radios col">${['count', 'perha'].map(v => `<label><input type="radio" name="ctype" value="${v}"${S.countType === v ? ' checked' : ''}> ${T('dt.ct.' + v)}</label>`).join('')}</div>
       <h3>${T('dt.out.h')}</h3><div class="radios col">${['zero', 'unrecorded'].map(v => `<label><input type="radio" name="outside" value="${v}"${S.outside === v ? ' checked' : ''}> ${T('dt.out.' + v)}</label>`).join('')}</div>
       <p class="muted small">${T('dt.note')}</p>` : ''}</div>`;
@@ -155,7 +162,7 @@ function renderStep2() {
   const dmsg = dv.verdict === 'ambiguous' ? T('dec.v.ambiguous', { ex: dv.examples.ambiguous.map(x => `"${x}"`).join(', ') }) : T('dec.v.' + dv.verdict);
   h += `<div class="card"><h2>${T('dec.h')}</h2><p class="note ${dv.verdict === 'ambiguous' || dv.verdict === 'conflict' ? 'warn' : ''}">${esc(dmsg)}</p><div class="radios">
     <label><input type="radio" name="dec" value="."${S.decimal === '.' ? ' checked' : ''}> ${T('dec.dot')}</label><label><input type="radio" name="dec" value=","${S.decimal === ',' ? ' checked' : ''}> ${T('dec.comma')}</label></div></div>`;
-  if (S.pcol != null) h += `<div class="card"><h2>${T('mode.h')}</h2><div class="radios col"><label><input type="radio" name="mode" value="each"${S.mode === 'each' ? ' checked' : ''}> ${T('mode.each')}</label>
+  if (S.pcol != null) h += `<div class="card"><h2>${T('mode.h')}</h2><div class="radios"><label><input type="radio" name="mode" value="each"${S.mode === 'each' ? ' checked' : ''}> ${T('mode.each')}</label>
     <label><input type="radio" name="mode" value="pool"${S.mode === 'pool' ? ' checked' : ''}> ${T('mode.pool')}</label></div>${S.mode === 'pool' ? `<p class="note warn">${T('mode.poolnote')}</p>` : ''}</div>`;
   if (!grouped()) { const tr = S.trunc, tp = truncActive() ? D.trunc.checkTrunc(truncSpec()) : [];
     h += `<div class="card" id="trcard"><h2>${T('tr.h')}</h2><p class="muted">${T('tr.sub')}</p>
@@ -165,8 +172,8 @@ function renderStep2() {
         ${tp.length ? `<p class="note err small">${esc(T('pr.' + tp[0].code, tp[0]))}</p>` : ''}
         <h3>${T('tr.n.h')}</h3><div class="radios col">${['observed', 'population'].map(v => `<label><input type="radio" name="trn" value="${v}"${tr.nScope === v ? ' checked' : ''}> ${T('tr.n.' + v)}</label>`).join('')}</div>
         <p class="note small">${T('tr.on')}</p>` : `<p class="muted small">${T('tr.off')}</p>`}</div>`; }
-  h += `<div class="card" id="famcard"><h2>${T('fam.h')}</h2><p class="muted">${T('fam.sub')}</p>${D.families().map(fa => { const ms = fitMethods(fa.id).filter(m => grouped() ? m.grouped : !m.grouped && (truncActive() || !m.truncation)); return !ms.length ? '' : `<fieldset class="fam" data-fam="${fa.id}"><legend>${esc(T('fam.' + fa.id))}</legend>
-      <div class="radios col">${ms.map(m => { const av = available(m); return `<label${av ? '' : ' class="off"'}><input type="checkbox" data-m="${m.id}"${S.methods[m.id] && av ? ' checked' : ''}${av ? '' : ' disabled'}> ${esc(T('m.' + m.id))}</label>${av ? '' : `<p class="muted small mnote">${T('tr.disabled')}</p>`}${av && has('mnote.' + m.id) ? `<p class="muted small mnote">${T('mnote.' + m.id)}</p>` : ''}${S.methods[m.id] && av ? optControls(m) : ''}`; }).join('')}</div>${has('fnote.' + fa.id) ? `<p class="muted small">${T('fnote.' + fa.id)}</p>` : ''}</fieldset>`; }).join('')}
+  h += `<div class="card" id="famcard"><h2>${T('fam.h')}</h2><p class="muted">${T('fam.sub')}</p><div class="famgrid">${D.families().map(fa => { const ms = fitMethods(fa.id).filter(m => grouped() ? m.grouped : !m.grouped && (truncActive() || !m.truncation)); return !ms.length ? '' : `<fieldset class="fam" data-fam="${fa.id}"><legend>${esc(T('fam.' + fa.id))}</legend>
+      <div class="radios col">${ms.map(m => { const av = available(m); return `<label${av ? '' : ' class="off"'}><input type="checkbox" data-m="${m.id}"${S.methods[m.id] && av ? ' checked' : ''}${av ? '' : ' disabled'}> ${esc(T('m.' + m.id))}</label>${av ? '' : `<p class="muted small mnote">${T('tr.disabled')}</p>`}${S.methods[m.id] && av ? optControls(m) : ''}`; }).join('')}</div>${famMore(fa, ms)}</fieldset>`; }).join('')}</div>
     ${truncActive() || grouped() ? '' : `<p class="note small">${T('fam.trunc')}</p>`}</div>`;
   if (needsLocation()) h += `<div class="card"><h2>${T('loc.h')}</h2><p class="muted">${T('loc.sub')}</p><label class="field inline"><span>${T('loc.label')}</span><input type="text" inputmode="decimal" id="atext" value="${esc(S.aText)}" size="8"></label>
     ${aFixed().bad ? `<p class="note err">${T('loc.bad')}</p>` : ''}</div>`;
@@ -182,7 +189,7 @@ function renderStep2() {
     }
   }
   const pr = settingsProblems();
-  h += `<div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div>`;
+  h += `<div class="nav sticky"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : `<span class="muted small">${T('calc.ready', { k: chosenMethods().length })}</span>`}</div>`;
   el.innerHTML = h;
   const re = () => { R = null; save(); renderStep2(); renderSteps(); };
   for (const [id, k] of [['dcol', 'dcol'], ['lcol', 'lcol'], ['ucol', 'ucol'], ['ncol', 'ncol'], ['pcol', 'pcol'], ['percol', 'percol'], ['fcol', 'fcol']]) $(id) && $(id).addEventListener('change', e => { S[k] = e.target.value === '' ? null : +e.target.value; if (k === 'fcol') S.fval = null; if (k === 'dcol') S.decimalChosen = false; re(); });
@@ -640,7 +647,7 @@ let RS = null;
 function computeRecover() { const sm = summaryInput(); RS = recChosen().map(m => D.runMethod(m.id, { type: 'summary', summary: sm })); }
 function renderRecover() {
   const el = $('recover'), q = S.sum, inp = (id, v, lab) => `<label>${lab} <input type="text" inputmode="decimal" size="8" id="${id}" value="${esc(v)}"></label>`;
-  let h = `<p class="note warn">${T('dev')}</p><div class="card"><h2>${T('rec.h')}</h2><p class="muted">${T('rec.sub')}</p>
+  let h = `<div class="card"><h2>${T('rec.h')}</h2><p class="muted">${T('rec.sub')}</p>
     <div class="lims">${inp('s-mean', q.mean, T('rec.mean'))}</div>
     <div class="radios"><label><input type="radio" name="s-which" value="var"${q.which === 'var' ? ' checked' : ''}> ${T('rec.byvar')}</label><label><input type="radio" name="s-which" value="dq"${q.which === 'dq' ? ' checked' : ''}> ${T('rec.bydq')}</label></div>
     <div class="lims">${q.which === 'dq' ? inp('s-dq', q.dq, T('rec.dq')) : inp('s-v', q.v, T('rec.var')) + ` <span class="small">${T('opt.varDivisor')}:</span> ${['n', 'n-1'].map(v => `<label class="small"><input type="radio" name="s-div" value="${v}"${q.div === v ? ' checked' : ''}> ${T('rec.div.' + v)}</label>`).join(' ')}`}
@@ -864,6 +871,7 @@ function renderSteps() {
 function render() {
   renderWf();
   const sum = S.wf === 'summary';
+  document.body.classList.toggle('compact-head', sum || S.step > 1);
   $('recover').hidden = !sum; $('steps').hidden = sum;
   if (sum) { for (const n of [1, 2, 3]) $('step' + n).hidden = true; renderRecover(); return; }
   if (!canGo(S.step)) S.step = [3, 2, 1].find(canGo);
