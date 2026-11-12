@@ -66,6 +66,9 @@ function site_tools(?bool $tr = null): array {
         ['n' => 7, 'cat' => 'model', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.0.0', 'lab' => 'rank', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
          'desc' => $tr ? 'Başarı ölçütleri tablosundan (R², FI, RMSE, MAE, Bias, AIC, BIC…) ölçüt bazında ve genel nispi sıralar; en iyi ve en kötü modellerin radar grafiği.'
                        : 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.'],
+        ['n' => 8, 'cat' => 'tree', 'icon' => 'secvol', 'short' => $tr ? 'Seksiyon Hacmi' : 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.1', 'lab' => 'secvol', 'title' => $tr ? 'Seksiyon Hacmi Hesaplayıcısı' : 'Stem Section Volume',
+         'desc' => $tr ? 'Ölçülmüş seksiyon çaplarından tek ağaç gövde hacmi: Huber, Smalian, Newton ve Hohenadl; dip kütük ve uç seksiyon ayrı, kabuklu ve kabuksuz hacim, biçim sayısı, kullanılabilir hacim ve örnek alan büyüklüğüyle hektara toplam.'
+                       : 'Single-tree stem volume from measured section diameters: Huber, Smalian, Newton and Hohenadl; stump and top piece apart, over- and under-bark volume, form factor, merchantable volume and per-hectare totals from plot sizes.'],
     ];
 }
 
@@ -79,6 +82,8 @@ function site_cats(): array {
          'desc' => $tr ? 'Örnek alan ve meşcere değerleri; kaç örnek alan gerektiği.' : 'Plot and stand values; how many plots are needed.'],
         ['id' => 'dist', 'title' => $tr ? 'Dağılımlar' : 'Distributions',
          'desc' => $tr ? 'Tek ağaç çaplarına dağılım uydurma ve sınıf frekansları.' : 'Fitting distributions to tree diameters, class frequencies.'],
+        ['id' => 'tree', 'title' => $tr ? 'Ağaç ve gövde' : 'Tree and stem',
+         'desc' => $tr ? 'Tek ağaç gövde ölçümlerinden hacim.' : 'Volume from single-tree stem measurements.'],
         ['id' => 'model', 'title' => $tr ? 'Modelleme ve değerlendirme' : 'Modelling and evaluation',
          'desc' => $tr ? 'Model kurma, tahmin başarısını ölçme ve modelleri sıralama.' : 'Fitting models, measuring prediction performance, ranking models.'],
     ];
@@ -93,6 +98,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'dist'     => '<path d="M3.5 20.5h17"/><path d="M5 20.5v-5h3v5M8 20.5v-10h3v10M11 20.5V8h3v12.5M14 20.5v-7h3v7"/><path d="M3 19.5C6.5 19 7.5 5.5 12.5 5.5S18 16.5 21 18.5" class="acc"/>',
         'hd'       => '<circle cx="9.5" cy="8" r="5"/><path d="M9.5 13v8M6.5 21h6"/><path d="M18.5 3v18M16.8 3h3.4M16.8 21h3.4M17.5 12h2" class="acc"/>',
         'sampling' => '<circle cx="6" cy="6" r="1" class="f"/><circle cx="12" cy="6" r="1" class="f"/><circle cx="18" cy="6" r="1" class="f"/><circle cx="6" cy="12" r="1" class="f"/><circle cx="18" cy="12" r="1" class="f"/><circle cx="6" cy="18" r="1" class="f"/><circle cx="12" cy="18" r="1" class="f"/><circle cx="12" cy="12" r="3.2" class="acc"/><circle cx="18" cy="18" r="3.2" class="acc"/>',
+        'secvol'   => '<path d="M9.2 21.5 10.6 3h2.8l1.4 18.5Z"/><path d="M9.6 16h4.8M10 11.5h4M10.4 7h3.2" class="acc"/><path d="M3.5 21.5h17"/>',
         'rank'     => '<path d="m12 3 7.8 4.5v9L12 21l-7.8-4.5v-9Z"/><path d="m12 7.2 4.6 2.6-.9 5.1-4.3 1.6-3.6-3.9Z" class="acc"/><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke-width=".8" opacity=".45"/>',
         'cite'     => '<path d="M5 11.5h4.5V17H5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5M14.5 11.5H19V17h-4.5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5"/>',
         'guide'    => '<path d="M4 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0v-14Z"/><path d="M12 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0"/>',

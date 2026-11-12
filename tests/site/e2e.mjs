@@ -15,6 +15,7 @@ page.on('pageerror', e => errors.push(e.message));
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 // tool and category counts come from inc/site.php (site_tools(), site_cats()), so adding a tool does not break this test
 const SITE = await readFile(new URL('../../inc/site.php', import.meta.url), 'utf8');
+const TOOL_IDS = [...SITE.matchAll(/'file' => '([a-z0-9-]+)\.php', 'v' =>/g)].map(m => m[1]);
 const N_TOOLS = (SITE.match(/'file' => '[a-z0-9-]+\.php', 'v' =>/g) || []).length, N_CATS = (SITE.slice(SITE.indexOf('function site_cats'), SITE.indexOf('function site_icon')).match(/\['id' => '/g) || []).length;
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 
@@ -60,7 +61,7 @@ await shot('site-3-telefon-koyu', phone);
 // 6. sidebar: categories, current tool, narrow mode remembered, drawer on phones; stem map labelled as illustration
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('#side .b-cat').count()) === N_CATS && (await page.locator('#side .b-side-nav a').count()) === N_TOOLS, `sidebar: ${N_CATS} categories, ${N_TOOLS} tools`);
-ok((await page.locator('.dir-group').count()) === 4, 'home directory grouped in 4 categories');
+ok((await page.locator('.dir-group').count()) === N_CATS, `home directory grouped in ${N_CATS} categories`);
 ok((await page.locator('svg.stemmap title', { hasText: 'çizim, gerçek ölçüm değil' }).count()) === 1 && (await page.locator('.stemmap .sm-t').count()) > 20, 'stem map drawn and labelled as an illustration');
 await page.click('#side a[href="boy-cap.php"]'); await page.waitForURL(/boy-cap/);
 ok((await page.locator('#side a[aria-current="page"]').getAttribute('href')) === 'boy-cap.php' && (await page.locator('.b-headico svg').count()) === 1, 'current tool marked in the sidebar, icon in the page head');
@@ -110,7 +111,7 @@ await cp.close();
 for (const l of ['tr', 'en']) {
   await page.goto(BASE + '/kilavuz.php?lang=' + l);
   const ids = await page.evaluate(() => [...document.querySelectorAll('.guide-sec h2[id]')].map(h => h.id)), toc = await page.locator('.guide-toc a').count();
-  ok(ids.join() === 'genel,is-akisi,veri-denetcisi,ornek-alan,model-degerlendirme,cap-dagilimi,boy-cap,ornekleme,nispi-siralama' && toc === ids.length, `guide (${l}): nine sections and a table of contents: ` + ids);
+  ok(ids.join() === ['genel', 'is-akisi', ...TOOL_IDS].join() && toc === ids.length, `guide (${l}): general, workflow and one section per tool in site_tools() order, with a table of contents: ` + ids);
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `guide (${l}): no horizontal scroll`);
 }
 ok((await page.locator('.b-nav a[href="kilavuz.php"]').count()) === 1 && (await page.locator('.b-side-foot a[href="kilavuz.php"]').count()) === 1, 'guide in the top menu and the sidebar');

@@ -12,6 +12,8 @@
 // Stump (ground → cut height): cylinder with the diameter at the cut surface; shown separately, added to the total only
 // if includeStump. Top (last boundary → total height): cone gL/3 (default, a tool rule), paraboloid gL/2 or neiloid gL/4.
 // Without a total height there is no top section and the volume is labelled "to the last boundary".
+import { parseNumber } from '../core/num.js';
+import { cellText } from '../core/table.js';
 export const TOOL = { id: 'seksiyon-hacmi', version: '1.0.0-beta.1' };
 export const METHODS = ['huber', 'smalian', 'newton', 'hohenadl'];
 export const LAYOUTS = { huber: ['mids', 'triples'], smalian: ['ends', 'triples'], newton: ['triples'], hohenadl: ['hohenadl'] };
@@ -164,3 +166,47 @@ function merch(secs, top, stump, s, pts) {
 
 /** Every tree of a readStems result; trees with errors are returned with status 'invalid' and code 'tree.error'. */
 export function allTrees(st, settings = {}) { return st.trees.map(T => treeVolume(T, settings)); }
+
+/**
+ * Per plot × period totals (SV02): Σ V of the computed trees × 10000/A (m³/ha), separately over and under bark, for one
+ * method's results. areaOf(plot_id, period) → plot area in m² or null. unmeasuredOf(plot_id, period) → number of trees of
+ * the plot in the tree list without stem measurements, or null when no tree list was given. Trees that could not be
+ * computed are counted, never filled in: a plot with failed or unmeasured trees has status 'partial' (the total covers
+ * the computed trees only). A bark state is summed only if every computed tree has it; otherwise it is null.
+ */
+export function plotTotals(results, areaOf, unmeasuredOf = null) {
+  const by = new Map();
+  for (const r of results) {
+    const k = `${r.tree.plot_id ?? ''}\u0001${r.tree.period ?? ''}`;
+    if (!by.has(k)) by.set(k, { plot_id: r.tree.plot_id ?? null, period: r.tree.period ?? null, list: [] });
+    by.get(k).list.push(r);
+  }
+  return [...by.values()].map(({ plot_id, period, list }) => {
+    const ok = list.filter(r => r.status === 'ok'), area = areaOf ? areaOf(plot_id, period) : null, ef = area > 0 ? 10000 / area : null;
+    const sum = side => ok.length && ok.every(r => r[side] && r[side].status === 'ok') ? ok.reduce((a, r) => a + r[side].total, 0) : null;
+    const labels = [...new Set(ok.map(r => (r.ob || r.ib).label))];
+    const unmeasured = unmeasuredOf ? unmeasuredOf(plot_id, period) : null;
+    const vOb = sum('ob'), vIb = sum('ib');
+    return { plot_id, period, area, ef, nTrees: list.length, nComputed: ok.length, nFailed: list.length - ok.length, unmeasured,
+      status: list.length - ok.length > 0 || unmeasured > 0 ? 'partial' : 'ok', labels,
+      ob: vOb, ib: vIb, obHa: vOb != null && ef ? vOb * ef : null, ibHa: vIb != null && ef ? vIb * ef : null };
+  });
+}
+
+/**
+ * Plot sizes (m²) from a column of the stem table: one value per plot (+ period); unreadable, non-positive and
+ * conflicting values are reported with their rows and the plot gets no size (never the first or an average value).
+ */
+export function plotAreas(tbl, plotCol, areaCol, decimal, periodCol = null) {
+  const sizes = new Map(), bad = new Set(), problems = [];
+  tbl.rows.forEach((r, i) => {
+    const row = tbl.rowNumbers[i], plot = plotCol != null ? cellText(r[plotCol]).trim() || null : null, per = periodCol != null ? cellText(r[periodCol]).trim() || null : null;
+    const c = r[areaCol], x = c == null ? { status: 'empty' } : c.t === 'n' ? parseNumber(c.v, decimal) : parseNumber(cellText(c), decimal), k = `${plot ?? ''}\u0001${per ?? ''}`;
+    if (x.status === 'empty') return;
+    if (x.status !== 'ok' || !(x.value > 0)) { problems.push({ code: 'area.bad', severity: 'error', row, plot, text: cellText(c) }); bad.add(k); return; }
+    if (sizes.has(k) && Math.abs(sizes.get(k) - x.value) > 1e-9 * x.value) { problems.push({ code: 'area.conflict', severity: 'error', row, plot, a: sizes.get(k), b: x.value }); bad.add(k); return; }
+    sizes.set(k, x.value);
+  });
+  for (const k of bad) sizes.delete(k);
+  return { areaOf: (plot, per) => sizes.get(`${plot ?? ''}\u0001${per ?? ''}`) ?? null, problems };
+}

@@ -32,6 +32,7 @@ const L = {
   'assets/lab/dist/i18n.js': [['Ölçülmüş çaplardan uydurma', null], ['Özetlerden geri kazanım', 'Recovery from summaries'], ['Ölçüm eşiği', 'Measurement threshold'], ['Belirsizlik', 'Uncertainty'], ['Bütün ölçütler', 'All criteria'], ['Yöntemler, birimler ve kaynaklar', 'Methods, units and sources'], ['Sınıflar', 'Classes'], ['Analiz birimi', 'Unit of analysis'], ['Sabit konum a', 'Fixed location a'], ['Meşcere modeli', 'Stand model'], ['Modeli indir (JSON)', 'Download the model (JSON)'], ['Modelle tahmin', 'Predict with a model'], ['Yaklaşım ve yanıtlar', 'Approach and responses'], ['Regresyon yöntemi', 'Regression method'], ['Sınıf genişliği (cm)', 'Class width (cm)']],
   'assets/lab/hd/i18n.js': [['Göğüs yüksekliği', 'Breast height'], ['Çapraz doğrulama', 'Cross-validation'], ['Sütunlar ve birimler', 'Columns and units']],
   'assets/lab/sampling/i18n.js': [['Örnekleme çerçevesi', 'Sampling frame'], ['Mevcut örnek alanlar', 'Existing plots'], ['Varsayım özeti (TXT)', 'Assumption summary (TXT)']],
+  'assets/lab/secvol/i18n.js': [['Onaylanmış veriyi bağla', 'Link the approved data'], ['Ağaç hacimleri', 'Tree volumes'], ['Ağaç ayrıntısı', 'Tree details'], ['Excel raporu', 'Excel report'], ['Kontrol eşikleri', 'Check thresholds']],
   'assets/lab/rank/i18n.js': [['Radar grafiği', 'Radar chart'], ['Sıralamaya kat', 'Use in ranking'], ['İyi olan', 'Better is']],
 };
 for (const [file, pairs] of Object.entries(L)) {
