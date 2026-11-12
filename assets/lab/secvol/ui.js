@@ -23,7 +23,7 @@ function blank() {
   return { v: 1, step: 1, imp: null, src: null, map: Object.fromEntries(MAPKEYS.map(k => [k, null])), dmode: 'one', combine: 'arith', barkDef: 'ob',
     u: { h: 'm', d: 'cm', bark_t: 'mm', dbh: 'cm', height: 'm' }, decimal: null, decimalChosen: false,
     layout: 'ends', methods: { huber: true, smalian: true, newton: true, hohenadl: true }, top: 'cone', includeStump: false, dTop: '',
-    areaMode: 'none', areaConst: '', useDs: false, adv: { buttressH: '1.3', dbhTol: '10', midTol: '0.01', hohTol: '0.05' }, selTree: null, bark: 'ob' };
+    areaMode: 'none', areaConst: '', useDs: false, adv: { buttressH: '1.3', dbhTol: '10', midTol: '0.01', hohTol: '0.05', topShare: '10' }, selTree: null, bark: 'ob' };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -69,7 +69,7 @@ function renderStep1() {
 /* ---------------- step 2: settings ---------------- */
 const chosen = () => forLayout(S.layout).filter(m => S.methods[m]);
 const dTopVal = () => { const v = num(S.dTop); return v == null ? null : v > 0 ? v : NaN; };
-const advVal = () => { const o = {}; for (const k of Object.keys(S.adv)) o[k] = num(S.adv[k]); o.dbhTol = o.dbhTol == null ? null : o.dbhTol / 100; return o; };
+const advVal = () => { const o = {}; for (const k of Object.keys(S.adv)) o[k] = num(S.adv[k]); for (const k of ['dbhTol', 'topShare']) o[k] = o[k] == null ? null : o[k] / 100; return o; };
 function mapForStems() {
   const m = { ...S.map }; if (S.dmode === 'two') m.d = null; else { m.d1 = null; m.d2 = null; }
   delete m.area; return m;
@@ -112,7 +112,7 @@ function renderStep2() {
     ${Number.isNaN(dTopVal()) ? `<p class="note err">${T('dtop.bad')}</p>` : ''}</div>`;
   h += `<div class="card"><h2>${T('area.h')}</h2><div class="radios col">${['none', 'col', 'const', ...(S.useDs ? ['ds'] : [])].map(v => `<label><input type="radio" name="area" value="${v}"${S.areaMode === v ? ' checked' : ''}> ${T('area.' + v)}${v === 'const' ? ` <input type="text" inputmode="decimal" size="7" id="aconst" value="${esc(S.areaConst)}" aria-label="m²"> m²` : ''}</label>`).join('')}</div>
     <p class="muted small">${T('p.partial')}</p></div>`;
-  h += `<details class="card more"><summary>${T('adv.h')}</summary><div class="lims">${[['buttressH', 'adv.buttress'], ['dbhTol', 'adv.dbhtol'], ['midTol', 'adv.midtol'], ['hohTol', 'adv.hohtol']].map(([k, l]) => `<label>${T(l)} <input type="text" inputmode="decimal" size="6" id="adv-${k}" value="${esc(S.adv[k])}"></label>`).join('')}</div></details>`;
+  h += `<details class="card more"><summary>${T('adv.h')}</summary><div class="lims">${[['buttressH', 'adv.buttress'], ['dbhTol', 'adv.dbhtol'], ['topShare', 'adv.topshare'], ['midTol', 'adv.midtol'], ['hohTol', 'adv.hohtol']].map(([k, l]) => `<label>${T(l)} <input type="text" inputmode="decimal" size="6" id="adv-${k}" value="${esc(S.adv[k])}"></label>`).join('')}</div></details>`;
   const pr = settingsProblems();
   h += `<div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div>`;
   el.innerHTML = h;
@@ -153,7 +153,8 @@ function compute() {
   }
   const plots = areaOf ? Object.fromEntries(methods.map(m => [m, V.plotTotals(res[m], areaOf, unmeasuredOf)])) : null;
   const ref = methods.includes('newton') ? 'newton' : methods[0];
-  R = { st, res, methods, ref, plots, areaProblems, settings, created: new Date().toISOString() };
+  const quality = V.qualityReport(st, res[ref], { topShareMax: a.topShare }), comp = methods.length > 1 ? V.methodComparison(res, ref) : null;
+  R = { st, res, methods, ref, plots, areaProblems, settings, quality, comp, created: new Date().toISOString() };
   if (!R.st.trees.some(t => keyOf(t.plot_id, t.tree_id, t.period) === S.selTree)) { const firstOk = res[ref].find(r => r.status === 'ok'); S.selTree = firstOk ? keyOf(firstOk.tree.plot_id, firstOk.tree.tree_id, firstOk.tree.period) : null; }
   save();
 }
@@ -204,6 +205,7 @@ function renderStep3() {
   let h = `<p class="small" id="sum">${T('r.sum', { n: r0.length, ok: nOk, bad: r0.length - nOk })}${R.methods.length > 1 ? ' ' + T('r.ref', { m: mName(R.ref) }) : ''}</p>
     <div class="card"><h2>${T('r.trees')}</h2>${tableHTML(tt, 'ttab', 4)}</div>`;
   if (pt) h += `<div class="card"><h2>${T('r.plots')}</h2>${tableHTML(pt, 'ptab', 3)}<p class="muted small">${T('p.partial')}</p></div>`;
+  h += qualityCard();
   h += `<details class="card more" id="tdetail"${S.detailOpen ? ' open' : ''}><summary>${T('d.h')}</summary><div id="tdbody"></div></details>`;
   h += `<details class="card more" id="probs"><summary>${T('pr.h', { e: nE, w: nW })}</summary>${probs.length ? `<div class="tscroll"><table class="grid" id="prtab"><thead><tr><th>${T('pr.row')}</th><th>${T('pr.tree')}</th><th>${T('pr.sev')}</th><th>${T('pr.msg')}</th></tr></thead><tbody>
     ${probs.slice(0, 300).map(p => `<tr data-code="${esc(p.code)}"><td class="rn">${p.row ?? '–'}</td><td>${esc([p.plot, p.tree].filter(x => x != null).join(' / ') || '–')}</td><td>${T('sev.' + p.severity)}</td><td>${esc(T('c.' + p.code, p))}</td></tr>`).join('')}</tbody></table></div>${probs.length > 300 ? `<p class="small">${T('pr.more', { n: probs.length - 300 })}</p>` : ''}` : ''}</details>`;
@@ -214,7 +216,7 @@ function renderStep3() {
   $('ttab').querySelectorAll('tr[data-key]').forEach(tr => tr.addEventListener('click', () => { S.selTree = tr.dataset.key; S.detailOpen = true; $('tdetail').open = true; drawDetail(); save(); }));
   $('back2').addEventListener('click', () => go(2));
   $('x-csv').addEventListener('click', () => downloadCSV(fname('seksiyon-hacmi-agaclar', 'stem-volume-trees') + '.csv', [tt.head, ...tt.rows.map(r => r.cells)], lang));
-  $('x-json').addEventListener('click', () => downloadJSON(fname('seksiyon-hacmi', 'stem-volume') + '.json', { tool: V.TOOL, created: R.created, source: S.imp ? S.imp.name : null, settings: settingsRecord(), problems: R.st.problems, results: R.res, plots: R.plots }));
+  $('x-json').addEventListener('click', () => downloadJSON(fname('seksiyon-hacmi', 'stem-volume') + '.json', { tool: V.TOOL, created: R.created, source: S.imp ? S.imp.name : null, settings: settingsRecord(), problems: R.st.problems, results: R.res, plots: R.plots, quality: R.quality, comparison: R.comp }));
   $('x-xlsx').addEventListener('click', exportXLSX);
   drawDetail();
 }
@@ -241,6 +243,28 @@ function drawDetail() {
   $('ch-svg').addEventListener('click', () => download(fname('gövde-profili', 'stem-profile') + '.svg', svgForDownload($('ch-prof').querySelector('svg')), 'image/svg+xml'));
 }
 
+/* ---------------- quality and method comparison (SV03) ---------------- */
+const pct = x => x == null ? '–' : fmtNum(100 * x, 1);
+function qualityRows() {
+  const q = R.quality, head = [T('t.plot'), T('t.tree'), T('t.period'), T('q.np'), T('q.inc'), T('q.lmin'), T('q.lmean'), T('q.lmax'), T('q.top'), T('q.dbh'), T('q.flags')];
+  return { head, rows: q.trees.map(t => ({ ok: !t.flags.includes('tree.error'), cells: [t.plot_id, t.tree_id, t.period, t.nPoints, t.nIncrease, t.sections.min, t.sections.mean, t.sections.max,
+    t.topShare == null ? null : 100 * t.topShare, t.dbhRel == null ? null : 100 * t.dbhRel, t.flags.map(f => T('q.f.' + f)).join(', ') || '–'] })) };
+}
+function compRows() {
+  const c = R.comp; if (!c) return null;
+  const head = [T('t.method'), T('c.total'), T('c.tdiff'), T('c.dmin'), T('c.dmean'), T('c.dmax')];
+  return { head, rows: c.methods.map(m => ({ cells: [mName(m) + (m === c.ref ? ` (${T('c.ref')})` : ''), c.total[m], m === c.ref ? null : c.totalDiff[m], m === c.ref ? null : c.treeDiff[m].min, m === c.ref ? null : c.treeDiff[m].mean, m === c.ref ? null : c.treeDiff[m].max] })) };
+}
+function qualityCard() {
+  const q = R.quality, s = q.summary, th = q.thresholds, qt = qualityRows(), ct = compRows();
+  let h = `<div class="card" id="qcard"><h2>${T('q.h')}</h2><p class="small" id="qsum">${T('q.sum', { inc: s.increase, top: s.topShare, dbh: s.dbh, err: s.error, n: s.n })}</p>
+    <p class="muted small">${T('q.thr', { b: fmtNum(th.buttressH, 2), d: pct(th.dbhTol), t: pct(th.topShareMax) })}</p>
+    <details class="more"><summary>${T('q.table')}</summary>${tableHTML(qt, 'qtab', 2)}<p class="muted small">${T('q.topnote')}</p></details>`;
+  if (ct) h += `<h3>${T('c.h')}</h3><p class="small" id="csum">${T('c.sum', { n: R.comp.nCommon, all: R.comp.nTrees, ref: mName(R.comp.ref), bark: R.comp.bark.map(b => T('d.' + b)).join(', ') || '–' })}</p>${tableHTML(ct, 'ctab', 3)}
+    <details class="more"><summary>${T('c.why')}</summary><p class="small">${T('c.behav')}</p></details>`;
+  return h + '</div>';
+}
+
 /* ---------------- exports ---------------- */
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function settingsRecord() {
@@ -253,7 +277,8 @@ async function exportXLSX() {
   const info = [[T('x.k'), T('x.v')], [T('x.tool'), `${V.TOOL.id} ${V.TOOL.version}`], [T('x.date'), R.created], [T('x.src'), S.imp ? S.imp.name : ''], [T('x.layout'), T('lay.' + s.layout)],
     [T('x.methods'), s.methods.map(mName).join(', ')], [T('x.top'), s.top ? T('top.' + s.top) : '–'], [T('x.stump'), yn(s.includeStump)], [T('x.combine'), s.combine ? T('col.combine.' + s.combine) : '–'],
     [T('x.dtop'), s.dTop ?? '–'], [T('x.area'), T('area.' + s.areaMode) + (s.areaConst ? ` ${s.areaConst} m²` : '')], [T('x.units'), T('x.unitsv')],
-    [T('x.thr'), `${T('adv.buttress')} ${s.thresholds.buttressH}; ${T('adv.dbhtol')} ${s.thresholds.dbhTol * 100}; ${T('adv.midtol')} ${s.thresholds.midTol}; ${T('adv.hohtol')} ${s.thresholds.hohTol}`],
+    [T('x.thr'), `${T('adv.buttress')} ${s.thresholds.buttressH}; ${T('adv.dbhtol')} ${s.thresholds.dbhTol * 100}; ${T('adv.topshare')} ${s.thresholds.topShare * 100}; ${T('adv.midtol')} ${s.thresholds.midTol}; ${T('adv.hohtol')} ${s.thresholds.hohTol}`],
+    ['', T('c.behav')],
     ['', T('m.note')], ['', T('top.note')], ['', T('p.partial')], ['', T('x.merch.rule')]];
   const secs = [[T('t.plot'), T('t.tree'), T('t.period'), T('x.methods'), T('d.bark'), T('d.kind'), T('d.lo'), T('d.hi'), T('d.L'), T('d.dlo'), T('d.dmid'), T('d.dhi'), T('d.v')]];
   for (const m of R.methods) for (const r of R.res[m]) for (const side of ['ob', 'ib']) if (r[side] && r[side].status === 'ok')
@@ -261,6 +286,9 @@ async function exportXLSX() {
   const probs = [[T('pr.row'), T('t.plot'), T('pr.tree'), T('pr.sev'), T('pr.msg')], ...allProblems().map(p => [p.row, p.plot ?? null, p.tree ?? null, T('sev.' + p.severity), T('c.' + p.code, p)])];
   const sheets = [{ name: T('sheet.info'), rows: info, widths: [26, 100] }, { name: T('sheet.trees'), rows: [tt.head, ...tt.rows.map(r => r.cells)], textCols: [0, 1, 2] }];
   if (pt) sheets.push({ name: T('sheet.plots'), rows: [pt.head, ...pt.rows.map(r => r.cells)], textCols: [0, 1] });
+  const qt = qualityRows(), ct = compRows();
+  sheets.push({ name: T('sheet.quality'), rows: [qt.head, ...qt.rows.map(r => r.cells)], textCols: [0, 1, 2] });
+  if (ct) sheets.push({ name: T('sheet.comp'), rows: [ct.head, ...ct.rows.map(r => r.cells)] });
   sheets.push({ name: T('sheet.secs'), rows: secs, textCols: [0, 1, 2] }, { name: T('sheet.probs'), rows: probs, textCols: [1, 2] });
   download(fname('seksiyon-hacmi', 'stem-volume') + '.xlsx', xlsxBlob(XLSX, sheets));
 }

@@ -62,6 +62,14 @@ near(num(pr[1][6]), E[2].ob.total * 10000 / 400, 6e-3, 'P2 m³/ha over the compu
 await page.locator('#probs summary').click();
 const probs = await rows('prtab');
 ok(probs.some(r => r[0] === '18' && r[3].includes('aynı yükseklik')), 'repeated height reported with its row (18): ' + JSON.stringify(probs));
+// data quality (SV03): summary with the thresholds; one tree not computed; the dbh in the table equals d(1.3) so no dbh flags
+ok((await page.locator('#qsum').textContent()).includes("4 ağaçtan: 0 ağaçta") && (await page.locator('#qsum').textContent()).includes('1 ağaç veri hatası') && (await page.locator('#qcard', { hasText: "uç seksiyon payı en çok %10" }).count()) === 1, 'quality summary and thresholds shown');
+await page.locator('#qcard details summary').first().click();
+{ const q = await rows('qtab'), a = q.find(r => r[1] === 'A'); near(num(a[8]), 100 * E[0].ob.top / E[0].ob.total, 0.06, 'A: top-piece share (%) = engine'); ok(q.find(r => r[1] === 'D')[10] === 'hesaplanmadı', 'tree D flagged not computed'); }
+await page.click('#steps [data-go="2"]'); await page.locator('#step2 details summary').click(); await page.fill('#adv-topShare', '1'); await page.locator('#adv-topShare').dispatchEvent('change');
+await page.click('#calc'); await page.waitForSelector('#qsum');
+ok((await page.locator('#qsum').textContent()).includes('3 ağaçta uç seksiyon payı eşiğin üstünde') && (await page.locator('#qcard', { hasText: 'uç seksiyon payı en çok %1.' }).count()) === 1, 'top-share threshold 1 %: all three flagged, threshold written');
+await page.click('#steps [data-go="2"]'); await page.evaluate(() => { document.querySelector('#step2 details').open = true; }); await page.fill('#adv-topShare', '10'); await page.locator('#adv-topShare').dispatchEvent('change'); await page.click('#calc'); await page.waitForSelector('#ttab');
 
 // 3. tree details: section breakdown and profile chart
 await page.locator('#ttab tr[data-key]').nth(2).click();
@@ -104,6 +112,9 @@ ok(th3.includes('Huber, kabuklu (m³)') && th3.includes('Newton, kabuklu (m³)')
   const eh = V.treeVolume(tt, { method: 'huber', layout: 'triples' }).ob.total, en_ = V.treeVolume(tt, { method: 'newton', layout: 'triples' }).ob.total;
   near(num(r3[7]), 100 * (eh - en_) / en_, 6e-4, 'Huber difference % = engine'); }
 ok((await page.locator('#ptab').count()) === 0, 'no per-hectare table without plot sizes');
+{ const c = await rows('ctab'); ok(c.length === 3 && c[2][0] === 'Newton (referans)' && c[2][2] === '–', 'comparison table: Newton is only the reference (no difference shown)');
+  ok(num(c[0][2]) < 0 && num(c[1][2]) > 0 && (await page.locator('#csum').textContent()).includes('1 ağaç'), 'cone: Huber total below, Smalian above; one tree in common');
+  ok((await page.locator('#qcard details', { hasText: 'Huber eksik, Smalian fazla' }).count()) === 1, 'known behaviour explained behind a disclosure, no method declared correct'); }
 
 // 7. sample data (decimal commas), English, phone + dark
 await page.click('#steps [data-go="1"]'); await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');

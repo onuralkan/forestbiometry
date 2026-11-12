@@ -265,9 +265,11 @@
 <ul>
 <li><b>Ağaç hacimleri</b>: yöntem başına kabuklu hacim, kabuksuz hacim, birden çok yöntemde yüzde fark, biçim sayısı, kapsam ("kesimden tepeye", "son ölçüm noktasına kadar") ve durum.</li>
 <li><b>Örnek alanlar</b>: hesaplanan ve hesaplanamayan ağaç sayıları ile m³/ha. Eksik ağaç varsa durum "eksik ağaç var" olur.</li>
+<li><b>Veri kalitesi</b>: kök şişkinliği bölgesi dışında yükseklikle artan çaplar, seksiyon uzunlukları, uç seksiyonun hacimdeki payı (eşiğin üstündeyse sonuç seçilen uç cismine duyarlıdır) ve 1.30 m çapı ile dbh farkı; eşikler Kontrol eşikleri altında değiştirilir ve sonuçta yazılır.</li>
+<li><b>Yöntemler arası fark</b> (birden çok yöntem seçildiyse): toplam hacim ve ağaç başına fark, referans yönteme göre yüzde. Referans yalnızca paydadır; hiçbir yöntem doğru ilan edilmez, bilinen davranış ayrıntılarda açıklanır.</li>
 <li><b>Ağaç ayrıntısı</b>: seksiyon dökümü (kütük, seksiyonlar, uç) ve gövde profili grafiği; bir satıra tıklamak o ağacı açar.</li>
 <li><b>Veri sorunları</b>: satır numaralı hatalar ve uyarılar. Hatalı ağaçlar hesaplanmaz; bir noktası okunamayan ağacın tamamı dışarıda kalır, çünkü eksik nokta hacmi sessizce küçültürdü.</li>
 </ul>
 <h3>İndirme</h3>
-<p><b>Excel raporu</b> (Bilgi, Ağaçlar, Örnek alanlar, Seksiyonlar, Sorunlar), ağaç hacimleri CSV ve sonuç kayıtları JSON.</p>
+<p><b>Excel raporu</b> (Bilgi, Ağaçlar, Örnek alanlar, Kalite, Yöntem farkı, Seksiyonlar, Sorunlar), ağaç hacimleri CSV ve sonuç kayıtları JSON.</p>
 </section>

@@ -210,3 +210,54 @@ export function plotAreas(tbl, plotCol, areaCol, decimal, periodCol = null) {
   for (const k of bad) sizes.delete(k);
   return { areaOf: (plot, per) => sizes.get(`${plot ?? ''}\u0001${per ?? ''}`) ?? null, problems };
 }
+
+/* ---------------- SV03: data quality and method comparison ---------------- */
+/** Tool rule (not a literature value): a top piece above this share of the volume makes the result sensitive to the chosen solid. */
+export const TOP_SHARE_MAX = 0.10;
+const sstats = v => v.length ? { n: v.length, min: Math.min(...v), max: Math.max(...v), mean: v.reduce((a, b) => a + b, 0) / v.length } : { n: 0, min: null, max: null, mean: null };
+/**
+ * Per tree: points, diameters increasing with height outside the buttress zone (the stem table's d.increase warnings),
+ * section lengths, share of the top piece in the volume (over bark if computed, else under bark) with a warning above
+ * topShareMax, and the relative difference between the diameter measured at 1.3 m and dbh (flag above dbhTol).
+ * st: readStems result; results: treeVolume results of ONE method (same tree order as st.trees).
+ * Returns { thresholds: { topShareMax, dbhTol, buttressH }, trees: [...], summary }.
+ */
+export function qualityReport(st, results, { topShareMax = TOP_SHARE_MAX } = {}) {
+  const dbhTol = st.settings.dbhTol, buttressH = st.settings.buttressH;
+  const inc = new Map(); for (const p of st.problems) if (p.code === 'd.increase') { const k = `${p.plot ?? ''}\u0001${p.tree}\u0001${p.period ?? ''}`; inc.set(k, (inc.get(k) || 0) + 1); }
+  const trees = st.trees.map((T, i) => {
+    const r = results[i], part = r && (r.ob && r.ob.status === 'ok' ? r.ob : r.ib && r.ib.status === 'ok' ? r.ib : null);
+    const secs = part ? part.sections.filter(q => q.kind === 'section').map(q => q.L) : [];
+    const topShare = part && part.top != null && part.total > 0 ? part.top / part.total : null;
+    const at = T.points.find(p => Math.abs(p.h - 1.3) < 1e-9 && p.d != null);
+    const dbhRel = at && T.dbh > 0 ? (at.d - T.dbh) / T.dbh : null;
+    const flags = [];
+    if (inc.get(T.key)) flags.push('d.increase');
+    if (topShare != null && topShare > topShareMax) flags.push('top.share');
+    if (dbhRel != null && Math.abs(dbhRel) > dbhTol) flags.push('dbh.mismatch');
+    if (T.state === 'error') flags.push('tree.error');
+    return { plot_id: T.plot_id, tree_id: T.tree_id, period: T.period, nPoints: T.points.length, nIncrease: inc.get(T.key) || 0, sections: sstats(secs), topShare, bark: part ? (part === r.ob ? 'ob' : 'ib') : null, dbhRel, flags };
+  });
+  const count = f => trees.filter(t => t.flags.includes(f)).length;
+  return { thresholds: { topShareMax, dbhTol, buttressH }, trees,
+    summary: { n: trees.length, increase: count('d.increase'), topShare: count('top.share'), dbh: count('dbh.mismatch'), error: count('tree.error'), sections: sstats(trees.flatMap(t => t.sections.n ? [t.sections.mean] : [])) } };
+}
+/**
+ * Differences between methods, relative to a reference method, over bark (under bark if no over-bark volume):
+ * per tree 100·(V_m − V_ref)/V_ref, and for the total over the trees computed by EVERY method. No method is called
+ * correct; the reference is only the denominator. res: { method: results }, all in the same tree order.
+ */
+export function methodComparison(res, ref) {
+  const methods = Object.keys(res), n = res[ref].length, side = r => r.ob && r.ob.status === 'ok' ? 'ob' : r.ib && r.ib.status === 'ok' ? 'ib' : null;
+  const trees = [], common = [];
+  for (let i = 0; i < n; i++) {
+    const s = side(res[ref][i]), all = s && methods.every(m => res[m][i].status === 'ok' && res[m][i][s] && res[m][i][s].status === 'ok');
+    const v = all ? Object.fromEntries(methods.map(m => [m, res[m][i][s].total])) : null;
+    if (all) common.push(i);
+    trees.push({ tree: res[ref][i].tree, bark: all ? s : null, v, diff: all ? Object.fromEntries(methods.map(m => [m, 100 * (v[m] - v[ref]) / v[ref]])) : null });
+  }
+  const tot = Object.fromEntries(methods.map(m => [m, common.reduce((a, i) => a + trees[i].v[m], 0)]));
+  const diffs = Object.fromEntries(methods.map(m => [m, sstats(common.map(i => trees[i].diff[m]))]));
+  return { ref, methods, nCommon: common.length, nTrees: n, trees, total: tot, totalDiff: Object.fromEntries(methods.map(m => [m, common.length ? 100 * (tot[m] - tot[ref]) / tot[ref] : null])), treeDiff: diffs,
+    bark: [...new Set(common.map(i => trees[i].bark))] };
+}

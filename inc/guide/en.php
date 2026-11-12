@@ -265,9 +265,11 @@
 <ul>
 <li><b>Tree volumes</b>: over-bark volume per method, under-bark volume, per cent difference with several methods, form factor, extent ("cut to tip", "to the last measured point") and state.</li>
 <li><b>Plots</b>: numbers of computed and not computed trees and m³/ha. With missing trees the state is "trees missing".</li>
+<li><b>Data quality</b>: diameters increasing with height outside the buttress zone, section lengths, the share of the top piece in the volume (above the threshold the result depends on the chosen top solid) and the difference between the 1.30 m diameter and dbh; the thresholds are changed under Check thresholds and written into the result.</li>
+<li><b>Differences between methods</b> (if several methods are chosen): total volume and per-tree differences, in per cent of the reference method. The reference is only the denominator; no method is declared correct, the known behaviour is explained in the details.</li>
 <li><b>Tree details</b>: section breakdown (stump, sections, top) and stem profile chart; clicking a row opens that tree.</li>
 <li><b>Data problems</b>: errors and warnings with row numbers. Trees with errors are not computed; a tree with one unreadable point is left out entirely, because a missing point would silently reduce its volume.</li>
 </ul>
 <h3>Downloads</h3>
-<p><b>Excel report</b> (Info, Trees, Plots, Sections, Problems), tree volumes as CSV and result records as JSON.</p>
+<p><b>Excel report</b> (Info, Trees, Plots, Quality, Method differences, Sections, Problems), tree volumes as CSV and result records as JSON.</p>
 </section>
