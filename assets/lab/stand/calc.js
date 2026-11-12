@@ -179,7 +179,7 @@ export function dominant(trees, k, rank = 'dbh') {
 /* ---------------- direct table import (without the Data Checker) ---------------- */
 /**
  * Builds a forest-dataset/1 object from a raw table. map: column indices { plot, dbh (required), area (or
- * spec.areaConst), tree, species, height, age, period, stratum, status }. spec: { decimal, dbhUnit, hUnit, areaUnit,
+ * spec.areaConst), tree, species, height, age, period, stratum, status, x, y (coordinates, m; optional) }. spec: { decimal, dbhUnit, hUnit, areaUnit,
  * areaConst }. Cells are { t:'n'|'s', v } (core/table.js). Nothing is guessed: problems are listed with the source
  * row number and block the import; empty heights and ages are allowed (missing).
  */
@@ -219,6 +219,11 @@ export function tableToDataset(tbl, map, spec, parseNumber, toInternal) {
     };
     const h = opt(map.height, 'height', spec.hUnit, 'row.height'), age = opt(map.age, null, null, 'row.age');
     if (!h.ok || !age.ok) return;
+    // optional coordinates (m; any sign, zero allowed): both or neither
+    const coord = col => { if (col == null) return { v: null, ok: true }; const x = num(r[col]); if (x.status === 'empty') return { v: null, ok: true }; if (x.status !== 'ok') { add('row.xy', row, { v: txt(r[col]) }); return { ok: false }; } return { v: x.value, ok: true }; };
+    const X = coord(map.x), Y = coord(map.y);
+    if (!X.ok || !Y.ok) return;
+    if ((X.v == null) !== (Y.v == null)) { add('row.xyhalf', row); return; }
     const period = map.period != null ? (txt(r[map.period]) || null) : null;
     const tree_id = map.tree != null ? txt(r[map.tree]) || null : String(row);
     if (map.tree != null) {
@@ -227,7 +232,8 @@ export function tableToDataset(tbl, map, spec, parseNumber, toInternal) {
       seen.add(key);
     }
     trees.push({ row, plot_id: plot, tree_id, stem_id: null, period, species: map.species != null ? txt(r[map.species]) || null : null,
-      dbh: toInternal('dbh', spec.dbhUnit, d.value), height: h.v, age: age.v, status: map.status != null ? txt(r[map.status]) || null : null, extra: {} });
+      dbh: toInternal('dbh', spec.dbhUnit, d.value), height: h.v, age: age.v, status: map.status != null ? txt(r[map.status]) || null : null,
+      ...(map.x != null || map.y != null ? { x: X.v, y: Y.v } : {}), extra: {} });
   });
   if (!trees.length && !problems.length) problems.push({ code: 'map.norows' });
   if (problems.length) return { ds: null, problems };

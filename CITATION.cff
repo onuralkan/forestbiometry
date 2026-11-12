@@ -6,7 +6,7 @@ abstract: >-
   Browser-based tools for forest inventory and biometrics data: forest data checking, plot and stand metrics,
   model evaluation, diameter distributions (eight families and two optional ones, direct fitting, measurement
   thresholds, grouped data, parameter recovery, stand models, model comparison and bootstrap uncertainty),
-  height–diameter modelling, inventory sampling planning, relative ranking, stem section volume and site index.
+  height–diameter modelling, inventory sampling planning, relative ranking, stem section volume, site index and stand structure and competition.
   Data stay in the user's browser. Every scientific calculation is tested against an
   independent reference.
 authors:

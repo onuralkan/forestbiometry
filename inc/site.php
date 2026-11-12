@@ -73,6 +73,9 @@ function site_tools(?bool $tr = null): array {
         ['n' => 9, 'cat' => 'SQ', 'icon' => 'siteindex', 'short' => $tr ? 'Bonitet' : 'Site Index', 'file' => 'bonitet.php', 'v' => '1.0.0-beta.3', 'lab' => 'siteindex', 'title' => $tr ? 'Bonitet Hesaplayıcısı' : 'Site Index',
          'desc' => $tr ? 'Üst boy ve yaştan dayanak yaştaki bonitet endeksi: Chapman–Richards ve Schumacher fark denklemleri kendi katsayı setinizle (kaynağı zorunlu), ya da kendi gövde analizi ve tekrarlı ölçümlerinizden uydurulan katsayılarla; yaş türü, kullanıcı tanımlı bonitet sınıfları, eğri demeti, bootstrap ya da delta yöntemiyle güven aralığı; onaylanmış veriden H0.'
                        : 'Site index at a base age from top height and age: Chapman–Richards and Schumacher difference equations with your own coefficient set (source required), or with coefficients fitted to your own stem analyses and repeated measurements; age type, user-defined site classes, curve family, confidence intervals by bootstrap or the delta method; H0 from approved data.'],
+        ['n' => 10, 'cat' => 'SS', 'icon' => 'structure', 'short' => $tr ? 'Meşcere Yapısı' : 'Stand Structure', 'file' => 'mescere-yapisi.php', 'v' => '1.0.0-beta.1', 'lab' => 'structure', 'title' => $tr ? 'Meşcere Yapısı ve Rekabet' : 'Stand Structure & Competition',
+         'desc' => $tr ? 'Örnek alan ve dönem başına çap yapısı, Gini ve Lorenz eğrisi, Shannon ve Simpson, SDI, Curtis RD ve göreli aralık; ağaç düzeyinde BAL; koordinatlar varsa Clark–Evans, W, M, T, U ve Hegyi rekabet endeksi, kenar etkisi düzeltmesiyle.'
+                       : 'Per plot and period: diameter structure, Gini and the Lorenz curve, Shannon and Simpson, SDI, Curtis RD and relative spacing; tree-level BAL; with coordinates, Clark–Evans, W, M, T, U and the Hegyi competition index, with edge correction.'],
     ];
 }
 
@@ -92,6 +95,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'siteindex' => '<path d="M3.5 20.5h17"/><path d="M4 19c3-1 5-4 7-9s4-6 8-6.5" class="acc"/><path d="M4 19.5c3.5-.5 6-2.5 8-6s4-4.5 8-5" stroke-dasharray="1.6 1.6"/>',
         'rank'     => '<path d="m12 3 7.8 4.5v9L12 21l-7.8-4.5v-9Z"/><path d="m12 7.2 4.6 2.6-.9 5.1-4.3 1.6-3.6-3.9Z" class="acc"/><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke-width=".8" opacity=".45"/>',
         'dot'      => '<circle cx="12" cy="12" r="2.2" class="f"/>',
+        'structure' => '<circle cx="7" cy="8" r="2.6"/><circle cx="16.5" cy="6.5" r="1.6"/><circle cx="13" cy="14" r="3.4" class="acc"/><circle cx="6" cy="17" r="1.4"/><circle cx="19" cy="17.5" r="1.8"/><path d="M9.4 9.3 10.6 11.3M15.6 8.2 14.4 10.8" stroke-dasharray="1.2 1.2"/>',
         'chev'     => '<path d="m7 10 5 5 5-5"/>',
         'cite'     => '<path d="M5 11.5h4.5V17H5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5M14.5 11.5H19V17h-4.5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5"/>',
         'guide'    => '<path d="M4 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0v-14Z"/><path d="M12 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0"/>',
