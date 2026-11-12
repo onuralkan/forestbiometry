@@ -727,6 +727,8 @@ Her aileyi ancak kendi PDF/CDF/quantile, kısıt ve bağımsız sayısal kontrol
 
 ### P21 — Burr XII ve Dagum
 
+> **Kapsam dışı bırakıldı (12 Kasım 2026, kullanıcı kararı).** Uygulanmadı; aşağıdaki metin yalnızca kayıt için durur.
+
 Kullanılacak iki ayrı CDF:
 
 $$
@@ -748,6 +750,8 @@ Kabul: Bağımsız SciPy/R referanslarıyla PDF/CDF/quantile ve MLE karşılaşt
 ~~~
 
 ### P22 — İki bileşenli karışım dağılımları
+
+> **Kapsam dışı bırakıldı (12 Kasım 2026, kullanıcı kararı).** Uygulanmadı; aşağıdaki metin yalnızca kayıt için durur.
 
 ~~~text
 Tek dağılımlı sürüm kararlı hale geldikten sonra, ayrı bir gelişmiş analiz olarak iki bileşenli karışım ekle. Önce iki lognormal veya iki gamma bileşeni seç; tüm aile kombinasyonlarını tek aşamada uygulama.
