@@ -14,3 +14,5 @@ Third-party components
 - SheetJS Community Edition (assets/vendor/sheetjs/),
   Copyright (C) 2012-present SheetJS LLC, Apache License 2.0,
   see assets/vendor/sheetjs/LICENSE.
+- Material Design Icons (Pictogrammers, @mdi/js 7.4.47; icon paths embedded in inc/site.php),
+  Apache License 2.0 (Pictogrammers Free License), https://pictogrammers.com/library/mdi/.

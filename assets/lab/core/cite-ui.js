@@ -24,7 +24,7 @@ function render() {
       ${code ? `<pre class="cite-code">${html}</pre>` : `<p class="cite-text">${html}</p>`}
       <div class="cite-acts"><button type="button" class="btn ghost small" data-copy="${f}">${T.copy}</button>${code ? `<button type="button" class="btn ghost small" data-dl="${f}">${T.dl} .${f === 'bibtex' ? 'bib' : 'ris'}</button>` : ''}</div></div>`;
   }).join('');
-  dlg.innerHTML = `<div class="dlg-f cite"><div class="cite-head"><h2>${T.h}</h2><button type="button" class="b-iconbtn" id="citeclose" aria-label="${T.close}"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+  dlg.innerHTML = `<div class="dlg-f cite"><div class="cite-head"><h2>${T.h}</h2><button type="button" class="b-iconbtn" id="citeclose" aria-label="${T.close}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg></button></div>
     <div class="cite-opts">${data.tool ? `<fieldset><legend>${T.scope}</legend><label><input type="radio" name="cscope" value="tool"${st.scope === 'tool' ? ' checked' : ''}> ${T.tool(data.tool[ui])} (v${data.tool.v})</label>
       <label><input type="radio" name="cscope" value="platform"${st.scope === 'platform' ? ' checked' : ''}> ${T.platform}</label></fieldset>` : ''}
       <fieldset><legend>${T.lang}</legend><label><input type="radio" name="clang" value="tr"${st.lang === 'tr' ? ' checked' : ''}> Türkçe</label><label><input type="radio" name="clang" value="en"${st.lang === 'en' ? ' checked' : ''}> English</label></fieldset>
