@@ -31,6 +31,7 @@ function blank() {
   return { v: 1, step: 1, tab: 'params', imp: null, src: null, dcol: null, unit: 'cm', pcol: null, percol: null, fcol: null, fval: null, decimal: null, decimalChosen: false,
     wf: 'raw', sum: { mean: '', which: 'var', v: '', div: 'n', n: '', dq: '', methods: {}, done: false },
     prs: { xi: '', mean: '', median: '', qmode: 'ng', nha: '', g: '', dq: '', origin: 'measured', from: null, unit: 0, done: false },
+    fns: { mean: '', median: '', dq: '', dg: '', origin: 'measured', from: null, unit: 0, done: false },
     wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
     mode: 'each', dtype: 'raw', lcol: null, ucol: null, ncol: null, countType: 'count', outside: 'zero',
     cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '' }, clsFit: null, histScale: 'density', diagFit: null, cmpSort: 'aic', boot: { fit: null, B: '199', seed: '20261111', round: 'auto', step: '', scheme: 'parametric', level: '0.95' },
@@ -660,19 +661,19 @@ function summaryInput() {
 }
 let RS = null;
 /** A summary typed in one group is the same number in the others (mean, variance, Dq, n, divisor): copied, so it is typed once. */
-const SHARE = { mean: [['sum', 'mean'], ['wb', 'mean'], ['prs', 'mean']], v: [['sum', 'v'], ['wb', 'v']], dq: [['sum', 'dq'], ['wb', 'dq'], ['prs', 'dq']], n: [['sum', 'n'], ['wb', 'n']], div: [['sum', 'div'], ['wb', 'div']] };
+const SHARE = { mean: [['sum', 'mean'], ['wb', 'mean'], ['prs', 'mean'], ['fns', 'mean']], v: [['sum', 'v'], ['wb', 'v']], dq: [['sum', 'dq'], ['wb', 'dq'], ['prs', 'dq'], ['fns', 'dq']], median: [['prs', 'median'], ['fns', 'median']], n: [['sum', 'n'], ['wb', 'n']], div: [['sum', 'div'], ['wb', 'div']] };
 function share(field, value, from) {
-  for (const [g, k] of SHARE[field] || []) { if (g === from) continue; const q = S[g]; if (q[k] === value) continue; q[k] = value; q.done = false; if ('from' in q) q.from = null; }
+  for (const [g, k] of SHARE[field] || []) { if (g === from) continue; const q = S[g]; if (!q || q[k] === value) continue; q[k] = value; q.done = false; if ('from' in q) q.from = null; }
   if (field === 'dq' && S.prs.qmode === 'ng' && from !== 'prs' && String(value).trim() !== '') S.prs.qmode = 'dq';
   if (from !== 'sum' && (field === 'v' || field === 'dq')) S.sum.which = field === 'dq' ? 'dq' : 'var';
 }
-const REC_TABS = ['mom', 'wb', 'prs'];
+const REC_TABS = ['mom', 'wb', 'prs', 'fns'];
 function computeRecover() { const sm = summaryInput(); RS = recChosen().map(m => D.runMethod(m.id, { type: 'summary', summary: sm })); }
 function renderRecover() {
   const el = $('recover'), q = S.sum, inp = (id, v, lab) => `<label>${lab} <input type="text" inputmode="decimal" size="8" id="${id}" value="${esc(v)}"></label>`;
   if (!REC_TABS.includes(S.recTab)) S.recTab = 'mom';
   const guide = `<div class="card recguide"><h2>${T('rg.h')}</h2><div class="tscroll"><table class="grid"><thead><tr><th>${T('rg.have')}</th><th>${T('rg.get')}</th></tr></thead><tbody>
-    ${['mom', 'wb4', 'wbh', 'prs'].map(k => `<tr><td>${T('rg.in.' + k)}</td><td>${T('rg.out.' + k)}</td></tr>`).join('')}</tbody></table></div><p class="muted small">${T('rg.shared')}</p></div>
+    ${['mom', 'wb4', 'wbh', 'prs', 'fns'].map(k => `<tr><td>${T('rg.in.' + k)}</td><td>${T('rg.out.' + k)}</td></tr>`).join('')}</tbody></table></div><p class="muted small">${T('rg.shared')}</p></div>
     <div class="tabs rectabs" role="tablist" aria-label="${esc(T('rg.tabs'))}">${REC_TABS.map(t => `<button type="button" role="tab" id="rt-${t}" data-rt="${t}" aria-selected="${S.recTab === t}" aria-controls="rec-${t}">${T('rg.tab.' + t)}</button>`).join('')}</div>`;
   let h = guide + `<div id="rec-mom" role="tabpanel" aria-labelledby="rt-mom"${S.recTab === 'mom' ? '' : ' hidden'}><div class="card"><h2>${T('rec.h')}</h2><p class="muted">${T('rec.sub')}</p>
     <div class="lims">${inp('s-mean', q.mean, T('rec.mean'))}</div>
@@ -683,13 +684,13 @@ function renderRecover() {
     <div class="card"><h2>${T('rec.fam')}</h2><div class="radios col">${recMethods().map(m => `<label><input type="checkbox" data-rm="${m.id}"${S.sum.methods[m.id] !== false ? ' checked' : ''}> ${esc(T('fam.' + m.family))}: ${esc(T('m.' + m.id))}</label>`).join('')}</div>
       <details class="more"><summary>${T('more')}</summary><ul class="small muted">${recMethods().filter(m => has('mnote.' + m.id)).map(m => `<li data-mnote="${m.id}"><b>${esc(T('fam.' + m.family))}</b>: ${T('mnote.' + m.id)}</li>`).join('')}</ul></details></div>
     <div class="nav"><button type="button" class="btn" id="s-calc"${recChosen().length ? '' : ' disabled'}>${T('calc')}</button>${recChosen().length ? '' : `<span class="muted small">${T('fam.need')}</span>`}</div><div id="s-out"></div></div>
-    <div id="wb" role="tabpanel" aria-labelledby="rt-wb"${S.recTab === 'wb' ? '' : ' hidden'}></div><div id="prs" role="tabpanel" aria-labelledby="rt-prs"${S.recTab === 'prs' ? '' : ' hidden'}></div>`;
+    <div id="wb" role="tabpanel" aria-labelledby="rt-wb"${S.recTab === 'wb' ? '' : ' hidden'}></div><div id="prs" role="tabpanel" aria-labelledby="rt-prs"${S.recTab === 'prs' ? '' : ' hidden'}></div><div id="fns" role="tabpanel" aria-labelledby="rt-fns"${S.recTab === 'fns' ? '' : ' hidden'}></div>`;
   el.innerHTML = h;
-  renderWb(); renderPrs();
+  renderWb(); renderPrs(); renderFns();
   const re = () => { S.sum.done = false; RS = null; save(); renderRecover(); };
   for (const [id, k] of [['s-mean', 'mean'], ['s-v', 'v'], ['s-dq', 'dq'], ['s-n', 'n']]) $(id) && $(id).addEventListener('change', e => { S.sum[k] = e.target.value; share(k, e.target.value, 'sum'); re(); });
   el.querySelectorAll('[data-rt]').forEach(b => b.addEventListener('click', () => { S.recTab = b.dataset.rt; save(); renderRecover(); $('rt-' + S.recTab).focus(); }));
-  el.querySelector('.rectabs').addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault(); S.recTab = REC_TABS[(REC_TABS.indexOf(S.recTab) + d + 3) % 3]; save(); renderRecover(); $('rt-' + S.recTab).focus(); });
+  el.querySelector('.rectabs').addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault(); S.recTab = REC_TABS[(REC_TABS.indexOf(S.recTab) + d + REC_TABS.length) % REC_TABS.length]; save(); renderRecover(); $('rt-' + S.recTab).focus(); });
   el.querySelectorAll('input[name="s-which"]').forEach(x => x.addEventListener('change', () => { S.sum.which = x.value; re(); }));
   el.querySelectorAll('input[name="s-div"]').forEach(x => x.addEventListener('change', () => { S.sum.div = x.value; share('div', x.value, 'sum'); re(); }));
   el.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('change', () => { S.sum.methods[x.dataset.rm] = x.checked; re(); }));
@@ -1044,6 +1045,62 @@ function drawStandPred() {
   }
   out.innerHTML = h;
   $('ch-st-svg') && $('ch-st-svg').addEventListener('click', () => download('mescere-modeli-tahmin.svg', svgForDownload($('ch-st').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), model: { set: m.set, fit: m.fit, terms: m.terms, equations: m.equations.map(e => ({ key: e.key, beta: e.beta })) }, x, responses: p.responses, params: p.params }), 'image/svg+xml'));
+}
+/* ---------------- Johnson SB all-parameter recovery, Fonseca, Marques and Parresol (2009) (P19) ---------------- */
+function fnsSummary() {
+  const q = S.fns, val = t => { const x = String(t ?? '').trim(); return x === '' ? null : num(x); }, out = { origin: q.origin };
+  for (const k of ['mean', 'median', 'dq', 'dg']) { const v = val(q[k]); if (v != null) out[k] = v; }
+  if (q.from) out.from = 'raw';
+  return out;
+}
+let RF = null, fnsBusy = false;
+function renderFns() {
+  const el = $('fns'); if (!el || fnsBusy) return;
+  fnsBusy = true; try { if (el.contains(document.activeElement)) document.activeElement.blur(); drawFnsCard(el); } finally { fnsBusy = false; }
+  if (S.fns.done) { RF = [D.runMethod('johnsonsb.fonseca', { type: 'summary', summary: fnsSummary() })]; drawFns(); }
+}
+function drawFnsCard(el) {
+  const q = S.fns, us = wbUnits(), inp = (id, v, lab) => `<label>${lab} <input type="text" inputmode="decimal" size="9" id="${id}" value="${esc(v)}"></label>`;
+  el.innerHTML = `<div class="card" id="fnscard"><h2>${T('fns.h')}</h2><p class="muted">${T('fns.sub')}</p>
+    <div class="lims">${inp('f-mean', q.mean, T('wb.f.mean'))} ${inp('f-median', q.median, T('prs.f.median'))} ${inp('f-dq', q.dq, T('wb.f.dq'))} ${inp('f-dg', q.dg, T('fns.f.dg'))}</div>
+    <details class="more"><summary>${T('more')}</summary><ul class="small muted"><li>${T('fns.n.eq')}</li><li>${T('fns.n.dg')}</li><li>${T('fns.n.solve')}</li><li>${T('fns.n.sym')}</li></ul></details>
+    <h3>${T('wb.t.h')}</h3><div class="radios">${['measured', 'predicted'].map(v => `<label><input type="radio" name="f-origin" value="${v}"${q.origin === v ? ' checked' : ''}> ${T('wb.origin.' + v)}</label>`).join('')}</div>
+    ${q.from ? `<p class="note small" id="f-from">${esc(T('prs.from', { u: q.from.label, n: fmtNum(q.from.n, 0) }))}</p>` : ''}
+    <details class="wbfill"><summary>${T('fns.fill.h')}</summary>
+      ${us.length ? `<div class="lims"><label>${T('wb.fill.unit')} <select id="f-unit">${us.map((u, i) => `<option value="${i}"${+q.unit === i ? ' selected' : ''}>${esc(unitLabel(u))} (n = ${u.d.length})</option>`).join('')}</select></label>
+        <button type="button" class="btn ghost small" id="f-fill">${T('wb.fill.btn')}</button></div>` : `<p class="small">${T(truncActive() ? 'tr.nofill' : 'wb.fill.none')}</p>`}</details>
+    <div class="nav"><button type="button" class="btn" id="f-calc">${T('calc')}</button></div><div id="f-out"></div></div>`;
+  const re = (keepFrom = true) => { if (!keepFrom) q.from = null; q.done = false; RF = null; save(); renderFns(); };
+  for (const k of ['mean', 'median', 'dq', 'dg']) $('f-' + k).addEventListener('change', e => { q[k] = e.target.value; share(k, e.target.value, 'fns'); re(false); });
+  el.querySelectorAll('input[name="f-origin"]').forEach(x => x.addEventListener('change', () => { q.origin = x.value; if (x.value === 'predicted') q.from = null; re(); }));
+  $('f-unit') && $('f-unit').addEventListener('change', e => { q.unit = +e.target.value; save(); });
+  $('f-fill') && $('f-fill').addEventListener('click', () => { const u = us[+q.unit] || us[0], t = D.fonsecaFromRaw(u.d, D.quantile7);
+    Object.assign(q, { mean: String(t.mean), median: String(t.median), dq: String(t.dq), dg: String(t.dg), origin: 'measured', from: { label: unitLabel(u), n: u.d.length } }); re(); });
+  $('f-calc').addEventListener('click', () => { q.done = true; save(); renderFns(); });
+}
+function drawFns() {
+  const out = $('f-out'); if (!out || !RF) return;
+  const r = RF[0], okr = r.status === 'ok', g = r.diagnostics || {}, tg = r.targets || {}, fam = D.family('johnsonsb');
+  const why = [...(r.problems || []).map(p => T('pr.' + p.code, { ...p, key: p.key ? T('fns.k.' + p.key) : p.key })), ...(r.warnings || []).map(w => T('w.' + w.code, w))].join('; ');
+  const cands = (r.status === 'multiple' || (r.problems || []).some(p => p.code === 'fns.weak')) && g.candidates ? g.candidates.map(c => fam.params.map(qq => `${qq.label} = ${f(c[qq.key], 4)}`).join(', ')).join(' | ') : '';
+  const back = okr ? [['mean', 'backMean'], ['median', 'backMedian'], ['dq', 'backDq'], ['dg', 'backDg']].map(([k, b]) => `<span style="white-space:nowrap">${T('fns.k.' + k)}: ${f(tg[k], 4)} → ${f(g[b], 4)}</span>`).join('<br>') : '–';
+  let h = `<div class="tscroll"><table class="grid ptab fnstab"><thead><tr><th>${T('t.method')}</th>${fam.params.map(qq => `<th>${esc(parHead(qq))}</th>`).join('')}<th>${T('wb.t.targets')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
+    <tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('m.' + r.method))}</th>${fam.params.map(qq => `<td class="num">${okr ? f(r.params[qq.key], 6) : '–'}</td>`).join('')}
+      <td class="num small">${back}</td><td>${T('st.' + r.status)}${why ? `: ${esc(why)}` : ''}${cands ? `<br><span class="small">${esc(cands)}</span>` : ''}</td>
+      <td class="small">${esc(T('sol.newton'))}${r.convergence && r.convergence.starts ? ` · ${T('prs.starts', { k: r.convergence.starts, s: r.convergence.solutions })}` : ''}${r.convergence && r.convergence.cond ? ` · ${T('fns.cond', { c: r.convergence.cond.toExponential(1) })}` : ''}</td></tr></tbody></table></div>`;
+  if (tg.m3) h += `<p class="small">${T('fns.used', { m3: f(tg.m3, 2), dg: f(tg.dg, 4), dq: f(tg.dq, 4) })}</p>`;
+  h += `<p class="muted small">${T('fns.p.note')}</p>`;
+  if (okr) {
+    const xmin = r.params.xi, xmax = r.params.xi + r.params.lambda, xs = Array.from({ length: 401 }, (_, i) => xmin + (xmax - xmin) * (i + 0.5) / 401);
+    h += `<figure class="chartbox" id="ch-f">${plotChart({ title: T('fns.chart'), xmin, xmax, lines: [{ name: T('fam.johnsonsb'), k: 0, pts: xs.map(x => [x, fam.pdf(x, r.params)]) }], xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
+      <figcaption><button type="button" class="btn ghost small" id="ch-f-svg">${T('ch.svg')}</button></figcaption></figure>`;
+  }
+  h += srcBlock(RF) + exportButtons('fx', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  out.innerHTML = h;
+  $('ch-f-svg') && $('ch-f-svg').addEventListener('click', () => download('johnson-sb-fonseca.svg', svgForDownload($('ch-f').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: fnsSummary(), fits: [{ method: r.method, params: r.params, targets: r.targets }] }), 'image/svg+xml'));
+  const fInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(fnsSummary()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('fns.p.note')], ['', T('x.n.num')]];
+  for (const k of ['xlsx', 'csv']) $('fx-' + k).addEventListener('click', () => exportRec(k, RF, fInfo(), ['cap-dagilimi-johnson-sb-fonseca', 'diameter-distribution-johnson-sb-fonseca']));
+  $('fx-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-johnson-sb-fonseca-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: fnsSummary(), results: RF, sources: srcJSON(RF.map(x => x.method)) }));
 }
 function renderWf() {
   $('wf').innerHTML = `<div class="tabs wftabs" role="tablist" aria-label="${esc(T('wf.label'))}">${['raw', 'summary', 'stand'].map(w => `<button type="button" role="tab" id="wf-${w}" aria-selected="${S.wf === w}" data-wf="${w}">${T('wf.' + w)}</button>`).join('')}</div>`;

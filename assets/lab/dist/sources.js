@@ -18,6 +18,7 @@ export const REFS = {
   R14: { cite: 'NIST/SEMATECH e-Handbook of Statistical Methods, Beta distribution.', status: 'D', url: 'https://www.itl.nist.gov/div898/handbook/eda/section3/eda366h.htm' },
   R15: { cite: 'NIST/SEMATECH e-Handbook of Statistical Methods, Exponential distribution.', status: 'D', url: 'https://www.itl.nist.gov/div898/handbook/eda/section3/eda3667.htm' },
   R16: { cite: 'SciPy, scipy.stats.fisk (documentation).', status: 'D', url: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html' },
+  R17: { cite: 'Fonseca, T.F., Marques, C.P., Parresol, B.R. 2009. Describing maritime pine diameter distributions with Johnson\'s SB distribution using a new all-parameter recovery approach. Forest Science 55(4): 367–373.', status: 'B', url: 'https://capsis.cirad.fr/capsis/_media/help/describing_maritime_pine_with_sb_distribution.pdf' },
   DUBEY: { cite: 'Dubey, S.D. 1967. Some percentile estimators for Weibull parameters. Technometrics 9(1): 119–129.', status: 'B' },
   KB91: { cite: 'Knoebel, B.R., Burkhart, H.E. 1991. A bivariate distribution approach to modeling forest diameter distributions at two points in time. Biometrics 47: 241–253.', status: 'D' },
   HF96: { cite: 'Hyndman, R.J., Fan, Y. 1996. Sample quantiles in statistical packages. The American Statistician 50(4): 361–365.', status: 'D' },
@@ -30,6 +31,7 @@ const QUANTILE_REFS = { 'weibull.pct': ['DUBEY', 'HF96'], 'johnsonsb.kb': ['KB91
 export function methodSources(id) {
   const m = D.method(id), fam = m.family;
   if (m.source === 'parresol2003') return { refs: ['R2'], section: 'P09' };
+  if (m.source === 'fonseca2009') return { refs: ['R17'], section: 'P19' };
   if (String(m.source).startsWith('poudel2013.')) return { refs: ['R1'], section: m.hybrid ? 'P07' : 'P06' };
   if (m.truncation) return { refs: FAMILY_REFS[fam], section: 'P11' };
   if (['lmom', 'qme', 'mge'].includes(m.estimator)) return { refs: [...FAMILY_REFS[fam], ...(m.estimator === 'lmom' ? [] : ['R8'])], section: 'P18' };

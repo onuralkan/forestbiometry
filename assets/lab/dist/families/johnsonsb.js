@@ -19,9 +19,10 @@ export function sbMomentsY(gamma, delta) {
   const br = [0.25, 0.5, 1, 2, 4, 8, 16].flatMap(k => [gamma - k * delta, gamma + k * delta]).concat([gamma]);
   // centred at c = logistic(−γ/δ) (the median of Y) so that a small variance is not the difference of two large numbers;
   const c = logistic(-gamma / delta);
-  const [e1, e2] = normalExpect(z => { const t = logistic((z - gamma) / delta) - c; return [t, t * t]; }, 2, { breaks: br });
+  const [e1, e2, e3] = normalExpect(z => { const t = logistic((z - gamma) / delta) - c; return [t, t * t, t * t * t]; }, 3, { breaks: br });
   const m1 = c + e1;
-  return { m1, m2: e2 + 2 * c * e1 + c * c, v: Math.max(0, e2 - e1 * e1) };
+  // m3 (stage P19, Fonseca et al. 2009): E[Y³] = c³ + 3c²e1 + 3c·e2 + e3 on the same centred quadrature
+  return { m1, m2: e2 + 2 * c * e1 + c * c, m3: c * c * c + 3 * c * c * e1 + 3 * c * e2 + e3, v: Math.max(0, e2 - e1 * e1) };
 }
 export const johnsonsb = {
   id: 'johnsonsb',
