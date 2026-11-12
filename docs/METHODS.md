@@ -877,3 +877,40 @@ Sayfa `bonitet.php` (Araç 9, kategori "Meşcere ve yetişme ortamı", sürüm 1
   - yöntemlerin AIC tablosunun dışında kalması.
 
   `tests/dist/e2e.mjs` 184/184: varsayılan seçili değil; olasılık, ağırlık ve ölçüt arayüzden verilince sonuç motorla aynı; † işareti.
+
+### P19: Johnson SB dört parametre geri kazanımı, Fonseca, Marques ve Parresol (2009) (12 Kasım 2026; 2.2.0-beta.2)
+Kaynak: Fonseca, T.F., Marques, C.P., Parresol, B.R. 2009. Describing maritime pine diameter distributions with Johnson's SB distribution using a new all-parameter recovery approach. *Forest Science* 55(4): 367–373 ([R17]) **[B]** (kullanıcının yüklediği PDF, 12 Kasım 2026; Denklem 1–11, Ek A1–A16 okundu). Kaynağın atıf yaptığı Parresol ve ark. (2009, SAS programları ve kısıt tasarımı) **[D]**, okunmadı. `dist/recover/fonseca.js`, yöntem `johnsonsb.fonseca` (tür `recover`, veri türü `summary`), arayüzde özetlerden geri kazanımın dördüncü sekmesi. Parresol (2003) yöntemi (`johnsonsb.parresol`, ξ kullanıcıdan) değişmeden kalır.
+
+- **Girdiler:** medyan d₀.₅₀, ortalama d̄ (m₁), Dq (m₂ = Dq²) ve göğüs yüzeyi ağırlıklı ortalama çap d̄_G = Σgᵢdᵢ/Σgᵢ (kaynak; m₃ = d̄_G·Dq², Gove ve Patil 1998'e atıfla kaynakta). m₃ ortalama ve varyanstan **türetilmez**; d̄_G yoksa hesap yapılmaz. Ham veriden: ortalama, tip 7 medyan, Dq ve d̄_G = Σd³/Σd² (g ∝ d²).
+- **Denklemler (kaynak):** γ = δ ln(1/y₅₀ − 1), y₅₀ = (d₀.₅₀ − ξ)/λ (Denklem 6, γ'yı eler); ξ + λμ′₁ = d̄ (7); ξ² + 2ξλμ′₁ + λ²μ′₂ = Dq² (9, G = kN·Dq²); ξ³ + 3ξ²λμ′₁ + 3ξλ²μ′₂ + λ³μ′₃ = d̄_G·Dq² (11). μ′ᵣ = E[Yʳ] (Denklem 10), `sbMomentsY` karelemesiyle; bu aşamada m₃ eklendi: E[Y³] = c³ + 3c²e₁ + 3c·e₂ + e₃ (aynı merkezlenmiş kareleme, c = Y'nin medyanı).
+- **Bölge ve çözücü (araç kuralları; kaynağın kısıtları başka yayında):**
+  - Bölge: 0 ≤ ξ < d₀.₅₀ (çaplar pozitif), λ > d₀.₅₀ − ξ, δ > 0. Bölge yapı gereği sağlanır: ξ = d₀.₅₀·σ(a), λ = (d₀.₅₀ − ξ)(1 + eᵇ), δ = eᶜ.
+  - Çözücü: ölçeklenmiş artıklar (moment/hedef − 1) üzerinde adım yarılamalı Newton, sayısal Jacobian. Kaynak üç boyutlu Levenberg–Marquardt kullanır; aynı denklemlerin farklı bir çözücüsüdür.
+  - 48 sabit başlangıç kullanılır. Yakınsama: artık normu ≤ 10⁻¹². Farklı çözümler 10⁻⁶ göreli farkla ayrılır.
+- **Denetimler:**
+  - Moment uygunluğu: Dq > d̄ ve d̄_G > Dq²/d̄ (pozitif değişkende m₃m₁ > m₂²).
+  - Simetrik girdi: |d₀.₅₀ − d̄| ≤ 10⁻⁹·Dq ise reddedilir. Kaynak: simetrik dağılımda yöntem üç denkleme iner.
+  - Çözüm sayısı: bir çözüm → tamam; birden çok → "birden çok çözüm" (adaylar listelenir, parametre yok); hiç → yakınsamadı.
+  - Koşulluluk: çözümde Jacobian koşul sayısı (JᵀJ'nin özdeğerlerinden, Jacobi dönüşleri) 10⁸'i aşarsa zayıf belirlenmiş sayılır ve tek sonuç verilmez.
+  - Geri hesap: medyan, ortalama, Dq ve d̄_G 10⁻⁹ içinde sağlanmalıdır.
+- **Bulgu:** simetriye yaklaşırken koşul sayısı yaklaşık 1/γ ile büyür. Referansta ölçeklenmiş özgün parametrelerde γ = 0.1, 0.01, 0.001 için 6·10⁴, 6·10⁵, 6·10⁶. Neredeyse simetrik girdiler (γ ≤ 10⁻⁴ civarı) ya zayıf belirlenmiş sayılır ya da hiçbir başlangıçtan yakınsamaz; iki durumda da tek sonuç verilmez. 0.01 cm'ye yuvarlanmış özetlerle (ξ = 4, λ = 40, γ = 0.8, δ = 1.4'ten) çözüm ξ = 4.09, λ = 39.63, γ = 0.785, δ = 1.386 olur: yuvarlamanın ξ'ye etkisi belirgindir.
+- **Doğrulama:** `tests/ref/make_dist_p19.py` Denklem 10 integrallerini mpmath ile 30 basamakta hesaplar ve bağımsız çözüm yapar (SciPy `least_squares`, 18 başlangıç). Kapsadığı durumlar:
+  - bilinen üç asimetrik parametre kümesinden özetler;
+  - 0.01 cm'ye yuvarlanmış özetler;
+  - benzetim ham verisi (400 ağaç; d̄_G = Σg·d/Σg);
+  - γ → 0 koşul sayıları.
+
+  `tests/dist/test_p19.mjs` 32/32. Karşılaştırılanlar:
+  - d̄_G = m₃/m₂: 10⁻¹²;
+  - gerçek parametrelerin geri kazanımı: 10⁻⁹; referans çözümle: 10⁻⁷;
+  - tek çözüm, geri hesap ve kaydedilen m₂, m₃;
+  - yuvarlanmış ve ham veri durumları: referans çözümle 10⁻⁶;
+  - ham veriden hedefler: 10⁻¹².
+
+  Test ayrıca şunları denetler:
+  - simetrik reddi ve koşul sayısının iki uygulamada da büyümesi;
+  - neredeyse simetrik girdilerde tek sonuç verilmemesi;
+  - d̄_G olmadan hesap yapılmaması, uygun olmayan momentlerin ve Dq ≤ ortalamanın reddi;
+  - çözümün bölge içinde olması.
+
+  `tests/dist/e2e.mjs` 188/188: arayüzde dört parametre, m₃ satırı, [R17], koşul sayısı, medyanın Parresol sekmesiyle paylaşılması, simetrik girdinin reddi.
