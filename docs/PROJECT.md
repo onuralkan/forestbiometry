@@ -28,6 +28,7 @@ cap-dagilimi.php             Araç 4: Çap Dağılımı Laboratuvarı (Weibull s
 boy-cap.php                  Araç 5: Boy–Çap Modelleme (sabit etkili sürüm)
 ornekleme.php                Araç 6: Envanter Örnekleme Planlayıcısı (basit rastgele örnekleme, ilk sürüm; tek sayfa, adım yok)
 nispi-siralama.php           Araç 7: Nispi Sıralama / Relative Ranking (5 ve 6'dan önce yapıldı)
+bonitet.php                  Araç 9: Bonitet Hesaplayıcısı / Site Index (TOOLS_SPEC SI; kategori "Meşcere ve yetişme ortamı")
 seksiyon-hacmi.php           Araç 8: Seksiyon Hacmi Hesaplayıcısı / Stem Section Volume (TOOLS_SPEC SV; kategori "Ağaç ve gövde")
 inc/site.php                 Ortak kabuk: site_top(), site_bottom(), site_tools(), SITE_AUTHOR (web erişimine kapalı)
 legacy/                      Yayınlanmaz. Eski sitenin test edilmiş hesap kodu (tools.js: gamma, normal, lognormal, SB, Weibull yüzdelik) ve testi; sonraki modüllere taşınacak
@@ -53,7 +54,7 @@ assets/lab/core/roots.js     Brent kök bulucu, geometrik ikiye bölme, çoklu k
 assets/lab/core/coef.js      Katsayı kaydı model-coef/1: biçim kaydı, doğrulama, düzeltme etkeni, geçerlilik aralığı, JSON kütüphane, tarayıcıda saklama (TOOLS_SPEC T01; yerleşik katsayı yok)
 assets/lab/core/coef-ui.js   Ortak katsayı seti düzenleyicisi (TR/EN); test sayfası tests/core/coef-ui.html (yayınlanmaz)
 assets/lab/secvol/           Seksiyon hacmi: calc.js (saf), ui.js, i18n.js, ornek/ornek-seksiyon.csv (tests/ref/make_secvol_sample.py ile üretilen benzetim)
-assets/lab/siteindex/        Bonitet: calc.js (SI01, saf; sayfa SI02'de)
+assets/lab/siteindex/        Bonitet: calc.js (saf), ui.js, i18n.js; H0 için stand/calc.js işlevlerini içe aktarır
 assets/lab/core/stems.js     Gövde ölçüm tablosu stem-sections/1: okuma, birimler, kabuk, satır numaralı kontroller (TOOLS_SPEC T01)
 assets/lab/core/quad.js      Gauss–Legendre düğümleri, standart normal altında beklenen değer (çap dağılımı revizyonu P08)
 assets/lab/dist/             Yeni çap dağılımı motoru: registry.js (aile/yöntem kaydı, sonuç sözleşmesi, hatalar), families/ (weibull, normal, lognormal, gamma, beta, johnsonsb, exponential, loglogistic), fit/ (doğrudan tahmin), recover/ (moments.js: normal, lognormal, gamma; weibull.js: Poudel ve Cao M2–M5) (özetlerden geri kazanım), gof.js, data.js, ui.js, i18n.js; sayfa cap-dagilimi.php (2.0.0-beta.1; cap-dagilimi-2.php yalnızca yönlendirme); eski Weibull aracı legacy/weibull/
