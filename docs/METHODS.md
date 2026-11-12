@@ -792,3 +792,25 @@ Sayfa `seksiyon-hacmi.php` (Araç 8, kategori "Ağaç ve gövde", sürüm 1.0.0-
 - **Yöntem karşılaştırması** (`methodComparison`, uç–orta–uç düzeninde birden çok yöntem seçildiyse): ağaç başına 100·(V_m − V_ref)/V_ref ve **her yöntemle hesaplanan ağaçlar** üzerinden toplamların farkı; ağaç başına farkların en küçüğü, ortalaması, en büyüğü. Referans Newton (seçilmediyse ilk seçilen yöntem) yalnızca paydadır; hiçbir yöntem "doğru" ilan edilmez. Kabuklu hacim, yoksa kabuksuz; hangisinin kullanıldığı yazılır. Bilinen davranış (§14 SV01: paraboloitte eşitlik, Newton'un üçüncü dereceye kadar tamlığı, koni ve neiloitte Huber eksik / Smalian fazla) "Ayrıntılar" altında açıklanır.
 - **Sürüm** 1.0.0-beta.1 olarak kaldı: hesaplanan hacimler ve yöntem kümesi değişmedi, yalnızca rapor eklendi (K4).
 - **Doğrulama:** `tests/secvol/test_sv03.mjs` 43/43: üç cisimde Huber ve Smalian'ın Newton'a göre farkı (Newton tam olduğundan (V − V_tam)/V_tam) SciPy referansıyla ve TOOLS_SPEC §8.1 değerleriyle aynı, gövde tablosundan uçtan uca koni için de; ortak ağaçlar, toplamlar, referans değişimi, kabuksuz durum; kalite bayrakları (artan çap, büyük uç payı, dbh farkı, hesaplanamayan ağaç) ve üç eşiğin her birinin sonucu değiştirip kayda yazılması. `tests/secvol/e2e.mjs` 65/65 (kalite özeti ve eşik değişimi, karşılaştırma tablosu, açıklama).
+
+## 15. Bonitet / Site Index (`assets/lab/siteindex/calc.js`; TOOLS_SPEC §3)
+
+### SI01: dinamik denklem çekirdeği (12 Kasım 2026)
+**Kaynak:** Hernández-Cuevas, M., Santiago-García, W., De los Santos-Posadas, H.M., Martínez-Antúnez, P., Ruiz-Aquino, F. 2018. Modelos de crecimiento en altura dominante e índices de sitio para *Pinus ayacahuite* Ehren. *Agrociencia* 52: 437–453 **[B]** (açık erişim PDF'i okundu; Cuadro 2 temel modeller, Cuadro 3 ADA biçimleri). Oradan aktarılan özgün kaynaklar **[D]** (okunmadı): Bailey, R.L., Clutter, J.L. 1974. Base-age invariant polymorphic site curves. *Forest Science* 20: 155–159; Richards, F.J. 1959 (Chapman–Richards); Schumacher, F.X. 1939. A new growth curve and its application to timber-yield studies. *Journal of Forestry* 37: 819–820. Cieszewski ve Bailey (2000) GADA biçimleri bu aşamada **yok** (kaynak okunmadı).
+
+Dinamik (cebirsel fark, ADA) denklemler: temel modelin bir parametresi yere özgüdür ve gözlenen (A₁, H₁)'den yok edilir; denklem bu noktadan geçer ve dayanak yaştan bağımsızdır. Bonitet endeksi SI = f(A₀, A, H), dayanak yaştaki üst boy. Yaş yıl, boy m.
+
+| Kimlik | Temel model | Fark denklemi | Yere özgü | Tür |
+|---|---|---|---|---|
+| `cr.ada.b0` | H = b₀(1 − e^(−b₁A))^b₂ | H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂ | b₀ | anamorfik |
+| `cr.ada.b2` | aynı | H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))] | b₂ | polimorfik |
+| `schu.ada` | ln H = b₀ + b₁/A | ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁) | b₀ | anamorfik |
+
+- Kaynaktaki polimorfik b₂ yazımı H₂ = b₀[1 − e^(−b₁A₂)]^(ln(H₁/b₀)/ln(1 − e^(−b₁A₁))) bu tablodakiyle cebirsel olarak aynıdır (b₀·g₂^(ln(H₁/b₀)/ln g₁) = b₀·(H₁/b₀)^(ln g₂/ln g₁)).
+- **Schumacher işaret uyarısı:** kaynak H = b₀·exp(−b₁/E) yazımını kullanır (b₁ tahmini pozitif). Burada ln H = b₀ + b₁/A biçimi kullanıldığı için büyüyen bir eğri **b₁ < 0** ister; b₁ ≥ 0 girilirse sonuç verilmez ve neden yazılır (`par.b1neg`): exp(−b₁/A) biçimindeki kaynak katsayısı −b₁ olarak girilmelidir.
+- **Tanım bölgesi:** b₁ > 0 ve b₂ > 0 (Chapman–Richards; b₁ ≤ 0'da 1 − e^(−b₁A) ≤ 0), b₀ > 0 (polimorfik), A > 0, H > 0; polimorfik biçimde bütün eğrilerin asimptotu b₀ olduğundan H ≥ b₀ olan bir noktadan eğri geçmez (`h.aboveasym`). Sonucu pozitif sonlu sayı olmayan bir projeksiyon (`result.bad`) da verilmez. Geçersiz yaşlarda eğri noktası null'dur.
+- ln(1 − e^(−x)), x < ln 2'de log(−expm1(−x)), üstünde log1p(−e^(−x)) ile hesaplanır (küçük ve büyük x'te sadeleşme kaybı yok).
+- **Yaş türü** (toplam / göğüs yüksekliği) ve **dayanak yaş** her sonucun `settings` alanına yazılır; araç yaş türlerini birbirine çevirmez (K8).
+- Biçimler ortak katsayı kaydına (`model-coef/1`, §13) `si.cr.ada.b0`, `si.cr.ada.b2`, `si.schu.ada` kimlikleriyle, yalnızca global parametreleriyle kayıtlıdır; yere özgü parametre girilmez.
+
+**Doğrulama:** `tests/ref/make_siteindex_si01.py` (SciPy 1.18.1): fark denklemi kullanılmadan, temel model gözlemden yere özgü parametre için `brentq` ile çözülüp yükseklik, SI ve eğri temel modelden hesaplanır (her biçimde 300 durum, gerçekçi parametre aralıkları; gerçek veri değildir). `tests/siteindex/test_si01.mjs` 3686/3686: projeksiyon, SI, yere özgü parametre ve eğriler referansla 10⁻¹¹ (göreli); her biçimde 1000 rastgele durumda tutarlılık, yol bağımsızlığı, dayanak yaştan bağımsızlık (SI₁₀₀ = f(100, 50, SI₅₀)) ve bir eğrinin her noktasının aynı SI'yı vermesi 10⁻¹² içinde (TOOLS_SPEC §8.2); anamorfik eğrilerin katlı, polimorfiklerin katlı olmaması; bütün tanımsız durumların sayı yerine durum kodu vermesi.
