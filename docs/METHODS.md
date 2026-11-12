@@ -843,3 +843,37 @@ Sayfa `bonitet.php` (Araç 9, kategori "Meşcere ve yetişme ortamı", sürüm 1
 - **Sürüm** 1.0.0-beta.3 (yöntem kümesine bootstrap ve delta yöntemi eklendi, K4).
 - **Arayüz düzeltmeleri:** kaydedilen set seçildiğinde önceki sonuç geçersiz kılınır ve adım çubuğu kütüphane yenilendikten sonra yeniden çizilir (önceden yeni set seçiliyken 2. ve 3. adım kapalı kalabiliyordu ve sonuç adımı eski hesabı gösterebiliyordu).
 - **Doğrulama:** `tests/ref/make_siteindex_si04.py`: aynı tohum ve aynı yeniden örnekleme sırası (mulberry32'nin Python karşılığı, `make_hd_reference.py` ile aynı), çiftler ayrı kodla, her tekrar `least_squares` ile, yüzdelikler `numpy.quantile(method='linear')`. `tests/siteindex/test_si04.mjs` 91/91: üç biçimde (üç ayrı eşleştirmeyle) yeniden örneklenen diziler birebir aynı, her tekrarın katsayıları 10⁻⁶ içinde, yüzdelik aralıkları ve SI aralıkları 10⁻⁶, aynı tohumla özdeş tekrarlar, başka tohumla farklı; başarısızlıkların sayılması; delta yönteminde gradyan merkezî farklarla 10⁻⁶, se = √(gᵀΣg), aralık ± 1.95996·se; kovaryans denetimleri. `tests/siteindex/e2e.mjs` 62/62 (ekrandaki bootstrap aralıkları Python ile 10⁻⁷, kaydedilen setin tekrarları, sonuçlarda bootstrap ve delta aralıkları, kovaryanssız sette "belirsizlik bilgisi yok").
+
+### P18: L-momentler, genel yüzdelik eşleştirme (QME), en küçük uzaklık (MGE) (12 Kasım 2026; 2.2.0-beta.1)
+Şartname P18 ve §1.1 yöntem matrisi (L-moment Weibull ve gamma için; genel QME/MGE gamma, normal ve sabit sınırlı beta için). Kaynak: genel çerçeve fitdistrplus belgesi ([R8]) **[D]**, okunmadı; şartnamedeki lmomco ([R13]) **[D]** okunmadı ve kullanılmadı (aşağıya bakın). `dist/fit/general.js`.
+
+- **Varsayılan:** bu sekiz yöntemin hiçbiri seçili gelmez (`optional`). Olabilirliği en büyüklemedikleri için AIC/BIC karşılaştırmasına girmezler; karşılaştırma tablosunda betimsel uydurmalar arasındadırlar. Başarısız bir uydurma başka bir yönteme geçmez (durum ve neden, parametre yok).
+- **Örnek L-momentleri:** olasılık ağırlıklı momentlerden yansız: b0 = ortalama, b1 = (1/n) Σ (j − 1)/(n − 1) x₍ⱼ₎; ℓ1 = b0, ℓ2 = 2b1 − b0.
+- **weibull.lmom** (a sabit, y = d − a): λ2/λ1 = 1 − 2^(−1/c) olduğundan c = −ln 2 / ln(1 − ℓ2/ℓ1), b = ℓ1/Γ(1 + 1/c) (şartnamedeki formül). y ≤ 0 olan çap varsa sonuç verilmez.
+- **gamma.lmom:** λ2/λ1 = Γ(k + ½)/(√π Γ(k + 1)), k'da azalan; denklem k için kesin çözülür (Brent, ln k üzerinde, k ∈ [10⁻⁴, 10⁸]), θ = ℓ1/k. lmomco'nun kullandığı rasyonel yaklaşımın katsayıları kaynaktan okunmadığı için kullanılmadı; kesin denklem kullanıldı (iki çözümün farkı yaklaşım hatası kadardır). Formül sayısal integralle doğrulandı.
+- **QME:** Σ wᵢ [Q(pᵢ; θ) − q̂ᵢ]² en küçüklenir; q̂ tip 7 örnek yüzdeliği; olasılıklar (varsayılan 0.1, 0.25, 0.5, 0.75, 0.9) kesin artan, (0, 1) içinde ve en az serbest parametre sayısı kadar; ağırlıklar pozitif ve olasılık sayısı kadar (varsayılan eşit). Seçilen yüzdelikler 2 parametreyi belirlemiyorsa (eşit örnek yüzdelikleri) sonuç verilmez. Olasılıklar, ağırlıklar ve yüzdelik tanımı sonuca yazılır.
+- **MGE:** seçilen uzaklık en küçüklenir: KS D, Cramér–von Mises W² ya da Anderson–Darling A² (`gof.js` tanımları; varsayılan CvM). Ölçüt sonuca ve yöntem adına yazılır. Karşılaştırma tablosu bir MGE satırını, uydurulduğu ölçütün sütununda † ile işaretler ("aynı ölçütle uydurulup aynı ölçütle değerlendirildi").
+- **QME ve MGE çözücüsü:** Nelder–Mead (`core/optim.js`), pozitif parametrelerin logaritması üzerinde, başlangıç moment tahmini (beta: sabit L, U ile momentler). Durma: F yayılımı ≤ 10⁻¹³ (göreli) ve x yayılımı ≤ 10⁻⁹. Daha sıkı x toleransı, amaç fonksiyonunun düz dibinde kayan nokta eşitlikleri yüzünden sağlanamıyordu (beta QME'de 20 000 yinelemede optimumda takılma; bulgu).
+- **Doğrulama:** `tests/ref/make_dist_p18.py` NumPy/SciPy ile bağımsız olarak şunları hesaplar:
+  - örnek L-momentleri, kombinatoryal tanımdan;
+  - kuramsal λ2, `quad` ile ∫ x(2F − 1)f dx olarak;
+  - L-moment uydurmaları (brentq);
+  - QME (`least_squares`, `ppf`);
+  - MGE (`kstest`, `cramervonmises`, logcdf/logsf'den A²; Nelder–Mead ve Powell, beş başlangıç, en iyisi).
+
+  Referans iki benzetim örneği kullanır (gamma, 60 ağaç; kaydırılmış Weibull, 45 ağaç).
+
+  `tests/dist/test_p18.mjs` 71/71. Karşılaştırılanlar:
+  - ℓ1, ℓ2: 10⁻¹²;
+  - λ2 formülleri: 10⁻⁹;
+  - L-moment parametreleri: 10⁻¹⁰;
+  - QME parametreleri: 2·10⁻⁶; amaç değeri referans optimumundan büyük değil;
+  - MGE minimumları: referansla aynı (10⁻⁴), ondan büyük değil.
+
+  Test ayrıca şunları denetler:
+  - kayıtlı ayarlar;
+  - üç tanımın (L-moment, moment, ML) farklı sonuç vermesi;
+  - başarısızlıklarda başka yönteme geçilmemesi (konum, olasılık sırası ve sayısı, ağırlık, belirlenemezlik, sınırlar, destek);
+  - yöntemlerin AIC tablosunun dışında kalması.
+
+  `tests/dist/e2e.mjs` 184/184: varsayılan seçili değil; olasılık, ağırlık ve ölçüt arayüzden verilince sonuç motorla aynı; † işareti.
