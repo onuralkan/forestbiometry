@@ -43,8 +43,11 @@ export function knn(xs, ys, k, torus = null) {
   const kk = Math.min(k, n - 1);
   let x0 = Math.min(...xs), y0 = Math.min(...ys), W = Math.max(...xs) - x0, H = Math.max(...ys) - y0;
   if (torus) { x0 = torus.x0; y0 = torus.y0; W = torus.w; H = torus.h; }
-  const cell = Math.max(Math.sqrt(Math.max(W * H, 1e-12) / n) * 1.5, 1e-9), nx = Math.max(1, Math.ceil(W / cell) || 1), ny = Math.max(1, Math.ceil(H / cell) || 1);
-  const grid = new Map(), key = (i, j) => i * 1000003 + j, cx = x => Math.min(nx - 1, Math.max(0, Math.floor((x - x0) / cell))), cy = y => Math.min(ny - 1, Math.max(0, Math.floor((y - y0) / cell)));
+  // on a torus every cell is at least `cell` wide (the side is split into whole cells), so the ring bound below holds
+  // across the wrap too
+  const cell = Math.max(Math.sqrt(Math.max(W * H, 1e-12) / n) * 1.5, 1e-9), nx = Math.max(1, torus ? Math.floor(W / cell) : Math.ceil(W / cell) || 1), ny = Math.max(1, torus ? Math.floor(H / cell) : Math.ceil(H / cell) || 1);
+  const sx = torus ? W / nx : cell, sy = torus ? H / ny : cell;
+  const grid = new Map(), key = (i, j) => i * 1000003 + j, cx = x => Math.min(nx - 1, Math.max(0, Math.floor((x - x0) / sx))), cy = y => Math.min(ny - 1, Math.max(0, Math.floor((y - y0) / sy)));
   for (let p = 0; p < n; p++) { const kq = key(cx(xs[p]), cy(ys[p])); if (!grid.has(kq)) grid.set(kq, []); grid.get(kq).push(p); }
   const d2 = (p, q) => { let dx = Math.abs(xs[p] - xs[q]), dy = Math.abs(ys[p] - ys[q]); if (torus) { dx = Math.min(dx, torus.w - dx); dy = Math.min(dy, torus.h - dy); } return dx * dx + dy * dy; };
   const maxRing = Math.max(nx, ny);
