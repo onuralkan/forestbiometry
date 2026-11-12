@@ -154,7 +154,7 @@
 <ul>
 <li><b>Sonuçlar</b>: birim özeti; bütün uydurmaların sıralanabilir tablosu (AIC, BIC, KS, AD ve öteki ölçütler; olabilirliği en büyükleyen yöntemler ile betimsel yöntemler ayrı); notlar ve uyarılar; "Yöntemler, birimler ve kaynaklar" paneli; aile başına bütün sütunlu tablolar açılır kutuda. "Bütün ölçütler" anahtarı BIC, AICc, CvM, sınıf hataları, EI ve çözücüyü gösterir.</li>
 <li><b>Grafikler</b>: histogram ve yoğunluklar (yoğunluk ya da ağaç sayısı ölçeğinde), birikimli dağılım, Q–Q ve P–P.</li>
-<li><b>Sınıflar</b>: gözlenen ve beklenen sınıf sıklıkları; örnek alan büyüklüğü girilirse hektarda değerler.</li>
+<li><b>Sınıflar</b>: gözlenen ve beklenen sınıf sıklıkları; örnek alan büyüklüğü girilirse hektarda değerler. Aynı sekmedeki <b>Göğüs yüzeyi çap dağılımı (betimsel)</b> kartı, ağaçların göğüs yüzeyiyle ağırlıklandığı birikimli dağılımı ağaç sayısına göre olanın yanında çizer. Göğüs yüzeyinin %0, 10, …, 90, 95 ve 100 yüzdeliklerindeki çapları ve dgM'yi (göğüs yüzeyinin yarısının üstünde kaldığı çap) verir. Sınıf göğüs yüzeyini, payını ve ağaç sayısına dönüşümünü (f = G/ḡ) gösterir. Hiçbir dağılım bu ağırlıklı veriye uydurulmaz; ham çap gerektirir.</li>
 <li><b>Belirsizlik</b>: parametrik bootstrap ile uyum testi p değerleri; parametre ve yüzdelik aralıkları. Aynı seed aynı sonucu verir; hesap iptal edilebilir.</li>
 </ul>
 <p>Bir sonuç yalnızca "tamam" durumunda parametre gösterir. Öteki durumlarda (arama aralığının sınırında, yakınsamadı, birden çok çözüm, hesaplanmadı, hata) parametre verilmez ve nedeni yazılır.</p>
@@ -170,7 +170,7 @@
 </ul>
 <p><b>Modeli indir (JSON)</b> katsayıları, eğitim kapsamını, birimleri, sürümü ve doğrulama sonuçlarını kaydeder. <b>Modelle tahmin</b> sekmesinde bu oturumda eğitilen modeli ya da bir model dosyasını seçip N, H ve yaşı girersiniz. Tahmin edilen yüzdelikler sıralı değilse ya da Dq ortalama çaptan büyük değilse parametre verilmez (değerler kırpılmaz); eğitim aralığı dışındaki girdiler dışa değerleme olarak işaretlenir.</p>
 <h3>İndirme</h3>
-<p>Excel raporu (Bilgi, Uydurmalar, Parametreler, Örnek alanlar, Sınıflar, Karşılaştırma, Bootstrap, Kaynaklar), uydurmalar ve parametreler CSV olarak, sonuç kayıtları JSON olarak; grafikler SVG olarak (dosyanın içinde sürüm, ayarlar ve parametreler).</p>
+<p>Excel raporu (Bilgi, Uydurmalar, Parametreler, Örnek alanlar, Sınıflar, GY dağılımı, Karşılaştırma, Bootstrap, Kaynaklar), uydurmalar ve parametreler CSV olarak, sonuç kayıtları JSON olarak; grafikler SVG olarak (dosyanın içinde sürüm, ayarlar ve parametreler).</p>
 <h3>Sık karşılaşılanlar</h3>
 <ul>
 <li>Çok az ağaçlı ya da bütün çapları eşit bir örnek alanda sonuçlar "hesaplanmadı" olur; neden notlarda yazar.</li>

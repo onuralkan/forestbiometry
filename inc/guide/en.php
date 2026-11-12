@@ -154,7 +154,7 @@
 <ul>
 <li><b>Results</b>: a unit summary; a sortable table of all fits (AIC, BIC, KS, AD and other criteria; methods that maximise the likelihood apart from descriptive methods); notes and warnings; the "Methods, units and sources" panel; the per-family tables with all columns in a disclosure. The "All criteria" switch shows BIC, AICc, CvM, class errors, EI and the solver.</li>
 <li><b>Charts</b>: histogram and densities (density or tree-count scale), cumulative distribution, Q–Q and P–P.</li>
-<li><b>Classes</b>: observed and expected class frequencies; per hectare when a plot size is entered.</li>
+<li><b>Classes</b>: observed and expected class frequencies; per hectare when a plot size is entered. The <b>Basal area diameter distribution (descriptive)</b> card on the same tab draws the cumulative distribution with trees weighted by their basal area next to the one by number of trees. It gives the diameters at the 0, 10, …, 90, 95 and 100 % basal area percentiles and dgM (the diameter above which half of the basal area lies). It shows the class basal area, its share and the conversion to numbers of trees (f = G/ḡ). No distribution is fitted to these weighted data; raw diameters are needed.</li>
 <li><b>Uncertainty</b>: goodness-of-fit p-values by parametric bootstrap; intervals for parameters and percentiles. The same seed gives the same result; a run can be cancelled.</li>
 </ul>
 <p>A result shows parameters only in the "ok" state. In the other states (at the edge of the search interval, did not converge, several solutions, not computed, error) no parameters are given and the reason is written.</p>
@@ -170,7 +170,7 @@
 </ul>
 <p><b>Download the model (JSON)</b> records the coefficients, the training scope, units, version and validation results. On the <b>Predict with a model</b> tab you choose the model trained in this session or a model file and enter N, H and age. If the predicted percentiles are out of order or Dq is not above the mean diameter, no parameters are given (values are not clipped); inputs outside the training range are flagged as an extrapolation.</p>
 <h3>Downloads</h3>
-<p>Excel report (Info, Fits, Parameters, Plots, Classes, Comparison, Bootstrap, Sources), fits and parameters as CSV, result records as JSON; charts as SVG (with the version, settings and parameters inside the file).</p>
+<p>Excel report (Info, Fits, Parameters, Plots, Classes, BA distribution, Comparison, Bootstrap, Sources), fits and parameters as CSV, result records as JSON; charts as SVG (with the version, settings and parameters inside the file).</p>
 <h3>Common situations</h3>
 <ul>
 <li>On a plot with very few trees or with all diameters equal, results are "not computed"; the reason is in the notes.</li>

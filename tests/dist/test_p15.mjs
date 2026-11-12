@@ -59,7 +59,7 @@ const T = (k, p) => k + (p ? JSON.stringify(p) : ''), h = { T, methodName: r => 
 
 /* 4. version */
 const site = readFileSync(path.join(root, 'inc/site.php'), 'utf8');
-ok(D.TOOL.version === '2.2.0-beta.3' && site.includes(`'file' => 'cap-dagilimi.php', 'v' => '2.2.0-beta.3'`), 'version 2.0.1 in the engine and in the site index');
+ok(D.TOOL.version === '2.2.0' && site.includes(`'file' => 'cap-dagilimi.php', 'v' => '2.2.0'`), 'version 2.0.1 in the engine and in the site index');
 
 console.log(`dist P15: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -63,6 +63,7 @@ jobs:
           node tests/dist/test_p18.mjs
           node tests/dist/test_p19.mjs
           node tests/dist/test_p20.mjs
+          node tests/dist/test_p23.mjs
   deploy:
     needs: test
     runs-on: ubuntu-latest

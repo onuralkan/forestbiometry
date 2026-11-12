@@ -5,6 +5,7 @@
 import * as D from './index.js';
 import { compareUnit } from './compare.js';
 import * as SRC from './sources.js';
+import { baPercentiles as basalPercentiles, baClassTable, checkBasal as basalCheck } from './basal.js';
 
 const MAXP = 4;                                            // largest number of parameters of any registered family
 const num = x => typeof x === 'number' && Number.isFinite(x) ? x : null;
@@ -139,5 +140,25 @@ export function sourceRows(ids, h, extra = []) {
   if (extra.includes('R9')) out.push(['bootstrap', T('tab.boot'), null, null, null, 'METHODS.md §12 P14', 'R9']);
   out.push([], [T('x.refs'), T('x.cite'), T('x.rstatus'), T('x.url')]);
   for (const k of SRC.refsOf(uniq, extra)) { const x = SRC.REFS[k]; out.push([k, x.cite, T('src.st.' + x.status), x.url || null]); }
+  return out;
+}
+/**
+ * Empirical basal area diameter distribution (stage P23), descriptive: per unit the basal-area percentiles (with their
+ * definition) and the class basal area with its conversion to numbers of trees. classesFor(u) → { cl, problems };
+ * perHa = 10000/area or null. Units with class frequencies (no raw diameters) are left out.
+ */
+export function basalRows(units, h, classesFor, perHa) {
+  const { T } = h, out = [[T('x.plot'), T('x.period'), T('ba.x.kind'), T('ba.x.what'), 'lower_cm', 'upper_cm', 'p', T('ba.x.d'), 'n', T('ba.x.b'), T('ba.x.share'), T('ba.x.gobs'), T('ba.x.fobs'), T('ba.x.fmid'), T('ba.x.unit')]];
+  for (const u of units) {
+    if (!u.d || basalCheck(u.d).length) continue;
+    const pl = unitPlot(u) ?? h.poolLabel, pc = basalPercentiles(u.d), unit = perHa ? 'm2/ha' : 'm2 (plot)';
+    pc.probs.forEach((p, i) => out.push([pl, u.period, T('ba.x.pct'), pc.def, null, null, p, pc.d[i], null, null, null, null, null, null, null]));
+    const c = classesFor(u); if (c.problems.length) continue;
+    const t = baClassTable(c.cl, u.d, perHa), r = (what, x, lo, hi) => [pl, u.period, T('ba.x.cls'), what, lo, hi, null, null, x.n, x.b, x.share, x.gObs, x.fObs, x.fMid ?? null, unit];
+    out.push(r(T('cl.below', { b: c.cl[0].lo }), t.below, null, c.cl[0].lo));
+    for (const x of t.rows) out.push(r(`[${x.lo}, ${x.hi === Infinity ? '∞' : x.hi})`, x, x.lo, x.hi === Infinity ? null : x.hi));
+    if (t.gaps.n) out.push(r(T('cl.gaps'), t.gaps, null, null));
+    const hi = c.cl[c.cl.length - 1].hi; if (hi !== Infinity) out.push(r(T('cl.above', { b: hi }), t.above, hi, null));
+  }
   return out;
 }

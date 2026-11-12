@@ -371,7 +371,7 @@ function exportRaw(kind) {
   return loadXLSX(BASE).then(XLSX => download(fname('cap-dagilimi', 'diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
     { name: T('sheet.info'), rows: REP.infoRows(settingsInfo(), T), widths: [34, 110] }, { name: T('sheet.fits'), rows: REP.fitRows(R.units, h) },
     { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) },
-    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) },
+    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.ba'), rows: REP.basalRows(R.units, h, u => classesFor(u), perHaOf()) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) },
     { name: T('sheet.boot'), rows: REP.bootRows(bootRecords(), h) }, { name: T('sheet.src'), rows: REP.sourceRows(R.units.flatMap(x => x.results.map(r => r.method)), h, bootRecords().length ? ['R9'] : []), widths: [22, 34, 16, 14, 14, 12, 26] }])), () => status(T('ex.fail'), 'err'));
 }
 function exportRec(kind, results, info, base) {
@@ -626,6 +626,7 @@ function tabClasses(p) {
       ${c.mode !== 'edges' ? `<label class="small"><input type="checkbox" id="cl-open"${c.openLast ? ' checked' : ''}> ${T('cl.open')}</label>` : ''}</div>
     <p class="muted small">${T('cl.note')}</p></div>`;
   if (!(R.grouped && R.countType === 'perha')) h += `<div class="lims"><label>${T('cl.area')} <input type="text" inputmode="decimal" size="8" id="cl-area" value="${esc(c.area)}"></label><span class="muted small">${T('cl.area.note')}</span></div>`;
+  h += basalHtml(u);
   if (!okR.length) { p.innerHTML = h + `<p class="note warn">${T('p.nofit')}</p>`; bindClsCtl(p); bindBar(); return; }
   if (!okR.some(r => kOf(r) === S.clsFit)) S.clsFit = kOf(okR[0]);
   const r = okR.find(x => kOf(x) === S.clsFit), T0 = tableFor(u, r);
@@ -640,6 +641,30 @@ function tabClasses(p) {
     <p class="small">${T('cl.sum', { d: f(t.absDiff, 3), ei: ha ? f(t.absDiff * t.perHa, 2) : '–', pv: f(t.visibleProb, 6) })}</p><p class="muted small">${T(R.grouped ? (S.outside === 'unrecorded' ? 'cl.note.unrec' : 'cl.note.zero') : r.truncation && r.truncation.logMass != null ? 'cl.note.trunc' : 'cl.note.raw')}</p>`;
   p.innerHTML = h; bindClsCtl(p); bindBar();
   $('cl-fit').addEventListener('change', e => { S.clsFit = e.target.value; save(); tabClasses(p); });
+}
+/** Empirical basal area diameter distribution of the unit (stage P23), descriptive: F_N and F_G, percentiles, class basal area. */
+function basalHtml(u) {
+  if (R.grouped) return `<div class="card bacard"><h3>${T('ba.h')}</h3><p class="muted small">${T('ba.grouped')}</p></div>`;
+  const pr = D.basal.checkBasal(u.d); if (pr.length) return `<div class="card bacard"><h3>${T('ba.h')}</h3><p class="note warn small">${esc(T('pr.' + pr[0].code, pr[0]))}</p></div>`;
+  const e = D.basal.baEcdf(u.d), pc = D.basal.baPercentiles(u.d), k = perHaOf(), unit = T(k ? 'ba.u.ha' : 'ba.u.plot');
+  const step = F => { const pts = [[e.x[0], 0]]; e.x.forEach((x, i) => { pts.push([x, i ? F[i - 1] : 0], [x, F[i]]); }); pts.push([e.x[e.x.length - 1] + (e.x[e.x.length - 1] - e.x[0]) * 0.02, 1]); return pts; };
+  const xmin = e.x[0], xmax = e.x[e.x.length - 1] + (e.x[e.x.length - 1] - e.x[0]) * 0.02 || xmin + 1;
+  let h = `<div class="card bacard"><h3>${T('ba.h')}</h3><p class="muted small">${T('ba.sub')}</p>
+    <p id="ba-dgm"><b>dgM = ${f(pc.dgM, 2)} cm</b> · G = ${f(e.G * (k || 1), 4)} ${unit} · N = ${fmtNum(e.N * (k || 1), k ? 1 : 0)}${k ? ' ' + T('ba.u.nha') : ''}</p>
+    <div class="tscroll"><table class="grid batab"><thead><tr><th>${T('ba.t.p')}</th>${pc.probs.map(q => `<th class="num">${fmtNum(q * 100, 0)}</th>`).join('')}</tr></thead>
+      <tbody><tr><th>${T('ba.t.d')}</th>${pc.d.map(v => `<td class="num">${f(v, 2)}</td>`).join('')}</tr></tbody></table></div>
+    <p class="muted small">${T('ba.def')}</p>
+    <figure class="chartbox" id="ch-ba">${plotChart({ title: T('ba.chart'), xmin, xmax, ymax: 1, lines: [{ name: T('ba.fn'), k: 0, pts: step(e.FN) }, { name: T('ba.fg'), k: 1, pts: step(e.FG) }], xLabel: T('ch.d'), yLabel: T('ba.cum'), fmt: v => fmtNum(v, 2) })}</figure>`;
+  const c = classesFor(u);
+  if (!c.problems.length) {
+    const t = D.basal.baClassTable(c.cl, u.d, k), lab = (lo, hi) => `[${f(lo, 2)}, ${hi === Infinity ? '∞' : f(hi, 2)})`;
+    const row = (l, x, cls = '') => `<tr class="${cls}"><th>${l}</th><td class="num">${fmtNum(x.nHa, k ? 1 : 0)}</td><td class="num">${f(x.b, 4)}</td><td class="num">${x.share == null ? '–' : fmtNum(x.share * 100, 1)}</td><td class="num">${x.n ? fmtNum(x.fObs, k ? 1 : 0) : '–'}</td><td class="num">${x.fMid == null ? '–' : f(x.fMid, 1)}</td></tr>`;
+    h += `<details class="more" id="ba-cls"><summary>${T('ba.cls.h')}</summary><div class="tscroll"><table class="grid bactab"><thead><tr><th>${T('cl.t.class')}</th><th>${T(k ? 'cl.t.obsN' : 'cl.t.obs')}</th><th>G (${T(k ? 'ba.u.ha' : 'ba.u.plotshort')})</th><th>${T('ba.t.share')}</th><th>${T('ba.t.fobs')}</th><th>${T('ba.t.fmid')}</th></tr></thead><tbody>
+      ${t.below.n ? row(T('cl.below', { b: f(c.cl[0].lo, 2) }), t.below, 'tail') : ''}${t.rows.map(x => row(lab(x.lo, x.hi), x)).join('')}${t.gaps.n ? row(T('cl.gaps'), t.gaps, 'tail') : ''}${t.above.n ? row(T('cl.above', { b: f(c.cl[c.cl.length - 1].hi, 2) }), t.above, 'tail') : ''}
+      <tr class="tot"><th>${T('cl.total')}</th><td class="num">${fmtNum(t.total.nHa, k ? 1 : 0)}</td><td class="num">${f(t.total.b, 4)}</td><td class="num">100</td><td class="num">${fmtNum(t.total.nHa, k ? 1 : 0)}</td><td class="num">–</td></tr></tbody></table></div>
+      <p class="muted small">${T('ba.cls.note')}</p></details>`;
+  }
+  return h + `</div>`;
 }
 function bindClsCtl(p) {
   const re = () => { save(); tabClasses(p); };
