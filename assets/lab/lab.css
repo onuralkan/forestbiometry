@@ -61,8 +61,16 @@ code { font: 13px var(--mono); background: var(--sunk); border: 1px solid var(--
 .b-side { position: sticky; top: 54px; height: calc(100vh - 54px); overflow-y: auto; background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 12px 10px 14px; }
 .b-side-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px 8px; }
 .b-side-title { font: 700 16px var(--head); }
-.b-group { margin: 6px 0 12px; }
-.b-cat { margin: 0 8px 4px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.b-group { margin: 2px 0 6px; }
+.b-cat { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; margin: 0 0 2px; padding: 6px 8px; border: 0; border-radius: 6px; background: none; font: 700 12.5px var(--ui); color: var(--muted); text-align: left; cursor: pointer; }
+.b-cat:hover { color: var(--ink); background: var(--surface); }
+.b-cat .chev { width: 16px; height: 16px; flex: none; transition: transform .15s ease; }
+.b-group.collapsed .b-cat .chev { transform: rotate(-90deg); }
+.b-group.collapsed ul { display: none; }
+.b-side .b-also .ico, .b-side .b-pl .ico { width: 22px; height: 10px; color: var(--muted); }
+.b-also a { font-size: 13.5px; }
+.b-pl .b-planned { font-size: 13.5px; padding-block: 4px; cursor: default; }
+.b-dev { font-style: normal; font-size: 11px; color: var(--acc); border: 1px solid var(--line); border-radius: 999px; padding: 0 6px; margin-left: 4px; white-space: nowrap; }
 .b-side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .b-side-nav a, .b-planned, .b-side-foot a { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 8px; color: var(--ink); text-decoration: none; font-size: 14px; line-height: 1.25; border: 1px solid transparent; }
 .b-side-nav a:hover, .b-side-foot a:hover { background: var(--surface); border-color: var(--line); }
@@ -79,6 +87,9 @@ code { font: 13px var(--mono); background: var(--sunk); border: 1px solid var(--
 .side-narrow .b-side-head { justify-content: center; padding-inline: 0; }
 .side-narrow .b-side-nav a, .side-narrow .b-side-foot a, .side-narrow .b-planned { justify-content: center; padding: 9px 0; }
 .side-narrow .b-group { margin: 4px 0; padding-bottom: 6px; border-bottom: 1px solid var(--line2); }
+.side-narrow .b-also, .side-narrow .b-pl { display: none; }
+.side-narrow .b-group.collapsed ul { display: grid; }
+.side-narrow .b-group:not(:has(.b-live)) { display: none; }
 .side-narrow .b-narrow .ico { transform: scaleX(-1); }
 .b-scrim { position: fixed; inset: 0; background: rgb(0 0 0 / .4); z-index: 40; }
 @media (max-width: 900px) {
@@ -90,6 +101,10 @@ code { font: 13px var(--mono); background: var(--sunk); border: 1px solid var(--
   .side-open .b-side { transform: none; visibility: visible; transition: transform .2s ease; }
   .side-narrow .b-side-title, .side-narrow .b-cat, .side-narrow .b-side-nav a > span, .side-narrow .b-planned > span, .side-narrow .b-side-foot a > span, .side-narrow .b-side-foot p { display: revert; }
   .side-narrow .b-side-nav a, .side-narrow .b-side-foot a, .side-narrow .b-planned { justify-content: flex-start; padding: 7px 8px; }
+  .side-narrow .b-also, .side-narrow .b-pl { display: revert; }
+  .side-narrow .b-cat { display: flex; }
+  .side-narrow .b-group.collapsed ul { display: none; }
+  .side-narrow .b-group:not(:has(.b-live)) { display: block; }
   .b-brand { font-size: 16px; }
 }
 @media (max-width: 420px) { .b-brand > span:last-child { display: none; } }
@@ -460,3 +475,9 @@ details.assumebox > summary { font: 600 16px var(--head); color: var(--ink); mar
 .guide-sec li { margin: 3px 0; }
 .b-guide { font-weight: 500; }
 .guide-sec > .b-h2:first-child { margin-top: 4px; }
+
+/* tools index: modules of the catalogue */
+.dir-note { font-size: 13.5px; margin: -4px 0 14px; }
+.dir-also { font-size: 13.5px; margin: 8px 0 0; }
+.dir-planned { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.dir-planned li { font-size: 13px; color: var(--muted); background: var(--line2); border-radius: 999px; padding: 3px 10px; }

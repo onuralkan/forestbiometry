@@ -16,7 +16,9 @@ page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 // tool and category counts come from inc/site.php (site_tools(), site_cats()), so adding a tool does not break this test
 const SITE = await readFile(new URL('../../inc/site.php', import.meta.url), 'utf8');
 const TOOL_IDS = [...SITE.matchAll(/'file' => '([a-z0-9-]+)\.php', 'v' =>/g)].map(m => m[1]);
-const N_TOOLS = (SITE.match(/'file' => '[a-z0-9-]+\.php', 'v' =>/g) || []).length, N_CATS = (SITE.slice(SITE.indexOf('function site_cats'), SITE.indexOf('function site_icon')).match(/\['id' => '/g) || []).length;
+const CAT = await readFile(new URL('../../inc/catalog.php', import.meta.url), 'utf8');
+const N_TOOLS = (SITE.match(/'file' => '[a-z0-9-]+\.php', 'v' =>/g) || []).length, N_CATS = (CAT.slice(CAT.indexOf('function site_modules'), CAT.indexOf('function site_catalog')).match(/\['id' => '/g) || []).length;
+const CATALOG = [...CAT.matchAll(/\['([A-Z]{2}-\d\d)', '(live|dev|planned|out)', '[^']*', '[^']*'(?:, '([a-z-]+\.php)')?\]/g)].map(m => ({ id: m[1], status: m[2], page: m[3] || null }));
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 
 // 1. tools index is the home page; every ready tool link opens
@@ -60,8 +62,18 @@ await shot('site-3-telefon-koyu', phone);
 
 // 6. sidebar: categories, current tool, narrow mode remembered, drawer on phones; stem map labelled as illustration
 await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('#side .b-cat').count()) === N_CATS && (await page.locator('#side .b-side-nav a').count()) === N_TOOLS, `sidebar: ${N_CATS} categories, ${N_TOOLS} tools`);
-ok((await page.locator('.dir-group').count()) === N_CATS, `home directory grouped in ${N_CATS} categories`);
+ok((await page.locator('#side .b-cat').count()) === N_CATS && N_CATS === 11 && (await page.locator('#side .b-live a').count()) === N_TOOLS, `sidebar: ${N_CATS} modules, ${N_TOOLS} tool pages`);
+ok((await page.locator('.dir-group').count()) === N_CATS, `home directory grouped in ${N_CATS} modules`);
+{ const pl = CATALOG.filter(c => !c.page && c.status !== 'out'), out = CATALOG.filter(c => c.status === 'out');
+  ok(CATALOG.length === 74 && out.length === 6, `catalogue: 74 tool ids, 6 out of scope (${out.map(c => c.id).join(', ')})`);
+  ok((await page.locator('#side .b-pl').count()) === pl.length && (await page.locator('#side .b-pl a').count()) === 0 && (await page.locator('.dir-planned li').count()) === pl.length, `${pl.length} planned tools greyed in the sidebar and the directory, without links`);
+  const titles = await page.locator('#side .b-pl .b-planned').evaluateAll(a => a.map(x => x.getAttribute('title')));
+  ok(!out.some(c => titles.some(t => t.startsWith(c.id + ' '))), 'out-of-scope tools are not shown');
+  ok(CATALOG.filter(c => c.page).every(c => TOOL_IDS.includes(c.page.replace('.php', ''))), 'every catalogue page exists in site_tools()'); }
+{ const g = page.locator('#side .b-group[data-mod="TM"]'), b = g.locator('.b-cat');
+  const was = await b.getAttribute('aria-expanded'); await b.click();
+  ok((await b.getAttribute('aria-expanded')) !== was && (await g.evaluate(x => x.classList.contains('collapsed'))) === (was === 'true'), 'a module opens and closes from its heading');
+  await page.reload(); ok((await page.locator('#side .b-group[data-mod="TM"] .b-cat').getAttribute('aria-expanded')) !== was, 'the state of the module is remembered in this browser'); }
 ok((await page.locator('svg.stemmap title', { hasText: 'çizim, gerçek ölçüm değil' }).count()) === 1 && (await page.locator('.stemmap .sm-t').count()) > 20, 'stem map drawn and labelled as an illustration');
 await page.click('#side a[href="boy-cap.php"]'); await page.waitForURL(/boy-cap/);
 ok((await page.locator('#side a[aria-current="page"]').getAttribute('href')) === 'boy-cap.php' && (await page.locator('.b-headico svg').count()) === 1, 'current tool marked in the sidebar, icon in the page head');

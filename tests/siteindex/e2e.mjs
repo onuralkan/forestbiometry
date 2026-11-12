@@ -25,7 +25,7 @@ const fillC = async (id, v) => { await page.fill(id, v); await page.locator(id).
 
 // 0. listed under its category
 await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('#side .b-cat', { hasText: 'Meşcere ve yetişme ortamı' }).count()) === 1 && (await page.locator('#side a[href="bonitet.php"]').count()) === 1, 'sidebar: "Meşcere ve yetişme ortamı" with Bonitet');
+ok((await page.locator('#side .b-cat', { hasText: 'Yetişme ortamı verimliliği' }).count()) === 1 && (await page.locator('#side a[href="bonitet.php"]').count()) === 1, 'sidebar: "Yetişme ortamı verimliliği" with Bonitet');
 await page.goto(URL + '?lang=tr'); await page.waitForSelector('.coefcard');
 ok((await page.locator('h1').textContent()).includes('Bonitet') && (await page.locator('#cf-none').count()) === 1 && (await page.locator('#to2').isDisabled()), 'no built-in coefficients; cannot continue without a set (K1)');
 ok((await page.locator('#cf-form option').count()) === 3, 'three forms offered (no GADA)');

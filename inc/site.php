@@ -10,6 +10,7 @@ date_default_timezone_set('Europe/Istanbul');
 /** For citations: canonical address and the year the platform was first published. */
 const SITE_BASE = 'https://forestbiometry.online/';
 const SITE_YEAR = 2026;
+require_once __DIR__ . '/catalog.php';
 const SITE_DOI = '10.5281/zenodo.24135603';   // Zenodo concept DOI of the repository archive (all versions); '' = none
 
 const SITE_AUTHOR = [
@@ -41,58 +42,42 @@ function site_ctx(): array {
     return $c;
 }
 
-/** Tools of the platform. 'file' null = planned (no link, no placeholder page). 'cat' = sidebar group, 'icon' = site_icon() name, 'short' = sidebar label. */
+/** Tool pages of the platform. 'cat' = home module of the catalogue (inc/catalog.php; the page may cover ids of other modules too), 'icon' = site_icon() name, 'short' = sidebar label. */
 function site_tools(?bool $tr = null): array {
     $tr = $tr ?? site_ctx()['tr'];
     return [
-        ['n' => 1, 'cat' => 'data', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.1.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
+        ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.1.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
          'desc' => $tr ? 'Ağaç ve örnek alan tablolarınızı içe aktarın, sütunları eşleyin, biçim hatalarını ve şüpheli ölçümleri bulun; düzeltmeleri gerekçesiyle kaydedip veriyi onaylayın.'
                        : 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
-        ['n' => 2, 'cat' => 'inventory', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.1.0', 'lab' => 'stand', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
+        ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.1.0', 'lab' => 'stand', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
          'desc' => $tr ? 'Onaylanmış veriden her örnek alan ve dönem için hektarda ağaç sayısı ve göğüs yüzeyi, ortalama çaplar, çap sınıfları ve tür katılımı; örnek alanlar arası özet ve tasarıma dayalı orman tahmini.'
                        : 'From approved data, per plot and period: stems and basal area per hectare, mean diameters, diameter classes and species composition; between-plot summary and design-based forest estimate.'],
-        ['n' => 3, 'cat' => 'model', 'icon' => 'eval', 'short' => $tr ? 'Model Başarısı' : 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.0.0', 'lab' => 'eval', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
+        ['n' => 3, 'cat' => 'SM', 'icon' => 'eval', 'short' => $tr ? 'Model Başarısı' : 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.0.0', 'lab' => 'eval', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
          'desc' => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE ve tahmin R²; gözlenen–tahmin ve artık grafikleri, gruplara göre başarı tabloları.'
                        : 'Bias, MAE, RMSE and prediction R² from observed and predicted values; observed–predicted and residual plots, performance tables by group.'],
-        ['n' => 4, 'cat' => 'dist', 'icon' => 'dist', 'short' => $tr ? 'Çap Dağılımı' : 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'v' => '2.2.0', 'lab' => 'dist', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
+        ['n' => 4, 'cat' => 'SS', 'icon' => 'dist', 'short' => $tr ? 'Çap Dağılımı' : 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'v' => '2.2.0', 'lab' => 'dist', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
          'desc' => $tr ? 'Weibull, normal, lognormal, gamma, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik: en çok olabilirlik, momentler ve yüzdeliklerle doğrudan uydurma, örnek alan ve dönem bazında; ortalama ile varyans ya da Dq\'dan geri kazanım; Weibull için Poudel ve Cao M2–M10, Johnson SB için Parresol; Excel ve CSV çıktısı. Ölçüm eşiğinde koşullu en çok olabilirlik; sınıf tabloları ve sınıflandırılmış sıklıklardan uydurma; model karşılaştırma, Q–Q ve P–P grafikleri; bootstrap p değerleri ve aralıklar.'
                        : 'Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic: direct fitting by maximum likelihood, moments and percentiles, per plot and period; recovery from the mean and the variance or Dq; Poudel and Cao M2–M10 for the Weibull, Parresol for the Johnson SB; Excel and CSV output. Conditional maximum likelihood for measurement thresholds; class tables and fitting from class frequencies; model comparison, Q–Q and P–P plots; bootstrap p-values and intervals.'],
-        ['n' => 5, 'cat' => 'model', 'icon' => 'hd', 'short' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter', 'file' => 'boy-cap.php', 'v' => '1.0.0', 'lab' => 'hd', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
+        ['n' => 5, 'cat' => 'SM', 'icon' => 'hd', 'short' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter', 'file' => 'boy-cap.php', 'v' => '1.0.0', 'lab' => 'hd', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
          'desc' => $tr ? 'Sabit etkili sürüm: Näslund, Michailoff, Curtis, kuvvet, Chapman–Richards ve Weibull denklemlerini doğrusal olmayan en küçük karelerle uydurun; aynı ağaçlar üzerinde karşılaştırma, örnek alan bazında çapraz doğrulama, eksik boylar için ayrı tahmin sütunu. Karma etkili modeller sonraki aşamada.'
                        : 'Fixed-effects version: fit the Näslund, Michailoff, Curtis, power, Chapman–Richards and Weibull equations by nonlinear least squares; comparison on the same trees, plot-based cross-validation, a separate prediction column for missing heights. Mixed-effects models in a later stage.'],
-        ['n' => 6, 'cat' => 'inventory', 'icon' => 'sampling', 'short' => $tr ? 'Örnekleme Planlayıcısı' : 'Sampling Planner', 'file' => 'ornekleme.php', 'v' => '1.0.0', 'lab' => 'sampling', 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner',
+        ['n' => 6, 'cat' => 'SI', 'icon' => 'sampling', 'short' => $tr ? 'Örnekleme Planlayıcısı' : 'Sampling Planner', 'file' => 'ornekleme.php', 'v' => '1.0.0', 'lab' => 'sampling', 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner',
          'desc' => $tr ? 'Basit rastgele örneklemede bir ortalamayı hedeflenen bağıl hatayla tahmin etmek için yaklaşık örnek alan sayısı: pilot ölçümlerden veya girilen CV\'den, isteğe bağlı sonlu çerçeve düzeltmesiyle. Tabakalı, sistematik ve kümeli tasarımlar sonraki sürümlerde.'
                        : 'Approximate number of plots to estimate a mean with a target relative error under simple random sampling: from pilot measurements or a CV you enter, with an optional finite-frame correction. Stratified, systematic and cluster designs in later versions.'],
-        ['n' => 7, 'cat' => 'model', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.0.0', 'lab' => 'rank', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
+        ['n' => 7, 'cat' => 'SM', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.0.0', 'lab' => 'rank', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
          'desc' => $tr ? 'Başarı ölçütleri tablosundan (R², FI, RMSE, MAE, Bias, AIC, BIC…) ölçüt bazında ve genel nispi sıralar; en iyi ve en kötü modellerin radar grafiği.'
                        : 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.'],
-        ['n' => 8, 'cat' => 'tree', 'icon' => 'secvol', 'short' => $tr ? 'Seksiyon Hacmi' : 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.2', 'lab' => 'secvol', 'title' => $tr ? 'Seksiyon Hacmi Hesaplayıcısı' : 'Stem Section Volume',
+        ['n' => 8, 'cat' => 'SV', 'icon' => 'secvol', 'short' => $tr ? 'Seksiyon Hacmi' : 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.2', 'lab' => 'secvol', 'title' => $tr ? 'Seksiyon Hacmi Hesaplayıcısı' : 'Stem Section Volume',
          'desc' => $tr ? 'Ölçülmüş seksiyon çaplarından tek ağaç gövde hacmi: Huber, Smalian, Newton ve Hohenadl; dip kütük ve uç seksiyon ayrı, kabuklu ve kabuksuz hacim, biçim sayısı, kullanılabilir hacim ve örnek alan büyüklüğüyle hektara toplam.'
                        : 'Single-tree stem volume from measured section diameters: Huber, Smalian, Newton and Hohenadl; stump and top piece apart, over- and under-bark volume, form factor, merchantable volume and per-hectare totals from plot sizes.'],
-        ['n' => 9, 'cat' => 'site', 'icon' => 'siteindex', 'short' => $tr ? 'Bonitet' : 'Site Index', 'file' => 'bonitet.php', 'v' => '1.0.0-beta.3', 'lab' => 'siteindex', 'title' => $tr ? 'Bonitet Hesaplayıcısı' : 'Site Index',
+        ['n' => 9, 'cat' => 'SQ', 'icon' => 'siteindex', 'short' => $tr ? 'Bonitet' : 'Site Index', 'file' => 'bonitet.php', 'v' => '1.0.0-beta.3', 'lab' => 'siteindex', 'title' => $tr ? 'Bonitet Hesaplayıcısı' : 'Site Index',
          'desc' => $tr ? 'Üst boy ve yaştan dayanak yaştaki bonitet endeksi: Chapman–Richards ve Schumacher fark denklemleri kendi katsayı setinizle (kaynağı zorunlu), ya da kendi gövde analizi ve tekrarlı ölçümlerinizden uydurulan katsayılarla; yaş türü, kullanıcı tanımlı bonitet sınıfları, eğri demeti, bootstrap ya da delta yöntemiyle güven aralığı; onaylanmış veriden H0.'
                        : 'Site index at a base age from top height and age: Chapman–Richards and Schumacher difference equations with your own coefficient set (source required), or with coefficients fitted to your own stem analyses and repeated measurements; age type, user-defined site classes, curve family, confidence intervals by bootstrap or the delta method; H0 from approved data.'],
     ];
 }
 
-/** Sidebar groups, in display order. A tool belongs to one group ('cat'); new groups only need a line here. */
-function site_cats(): array {
-    $tr = site_ctx()['tr'];
-    return [
-        ['id' => 'data', 'title' => $tr ? 'Veri hazırlığı' : 'Data preparation',
-         'desc' => $tr ? 'Ölçüm tablolarını denetleyin, düzeltin ve öteki araçlar için onaylayın.' : 'Check, correct and approve measurement tables for the other tools.'],
-        ['id' => 'inventory', 'title' => $tr ? 'Envanter ve örnekleme' : 'Inventory and sampling',
-         'desc' => $tr ? 'Örnek alan ve meşcere değerleri; kaç örnek alan gerektiği.' : 'Plot and stand values; how many plots are needed.'],
-        ['id' => 'dist', 'title' => $tr ? 'Dağılımlar' : 'Distributions',
-         'desc' => $tr ? 'Tek ağaç çaplarına dağılım uydurma ve sınıf frekansları.' : 'Fitting distributions to tree diameters, class frequencies.'],
-        ['id' => 'tree', 'title' => $tr ? 'Ağaç ve gövde' : 'Tree and stem',
-         'desc' => $tr ? 'Tek ağaç gövde ölçümlerinden hacim.' : 'Volume from single-tree stem measurements.'],
-        ['id' => 'site', 'title' => $tr ? 'Meşcere ve yetişme ortamı' : 'Stand and site',
-         'desc' => $tr ? 'Yetişme ortamı verimliliği ve meşcere yapısı.' : 'Site productivity and stand structure.'],
-        ['id' => 'model', 'title' => $tr ? 'Modelleme ve değerlendirme' : 'Modelling and evaluation',
-         'desc' => $tr ? 'Model kurma, tahmin başarısını ölçme ve modelleri sıralama.' : 'Fitting models, measuring prediction performance, ranking models.'],
-    ];
-}
+/** Sidebar groups = the modules of the tool catalogue (inc/catalog.php), in display order. */
+function site_cats(): array { return site_modules(); }
 
 /** Line icons (24 × 24, stroke = currentColor). Drawn for this site; each shows what the tool works on. */
 function site_icon(string $name, string $cls = 'ico'): string {
@@ -106,6 +91,8 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'secvol'   => '<path d="M9.2 21.5 10.6 3h2.8l1.4 18.5Z"/><path d="M9.6 16h4.8M10 11.5h4M10.4 7h3.2" class="acc"/><path d="M3.5 21.5h17"/>',
         'siteindex' => '<path d="M3.5 20.5h17"/><path d="M4 19c3-1 5-4 7-9s4-6 8-6.5" class="acc"/><path d="M4 19.5c3.5-.5 6-2.5 8-6s4-4.5 8-5" stroke-dasharray="1.6 1.6"/>',
         'rank'     => '<path d="m12 3 7.8 4.5v9L12 21l-7.8-4.5v-9Z"/><path d="m12 7.2 4.6 2.6-.9 5.1-4.3 1.6-3.6-3.9Z" class="acc"/><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke-width=".8" opacity=".45"/>',
+        'dot'      => '<circle cx="12" cy="12" r="2.2" class="f"/>',
+        'chev'     => '<path d="m7 10 5 5 5-5"/>',
         'cite'     => '<path d="M5 11.5h4.5V17H5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5M14.5 11.5H19V17h-4.5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5"/>',
         'guide'    => '<path d="M4 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0v-14Z"/><path d="M12 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0"/>',
         'about'    => '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".9" class="f"/>',
@@ -173,14 +160,18 @@ function site_top(array $o = []): void {
     <button type="button" class="b-iconbtn b-narrow" id="sidenarrow" aria-pressed="false" aria-label="<?= $tr ? 'Kenar çubuğunu daralt / genişlet' : 'Narrow / widen the sidebar' ?>"><?= site_icon('collapse') ?></button>
     <button type="button" class="b-iconbtn b-close" id="navclose" aria-label="<?= $tr ? 'Menüyü kapat' : 'Close the menu' ?>"><?= site_icon('close') ?></button>
   </div>
-  <nav class="b-side-nav" aria-label="<?= $tr ? 'Araçlar, kategorilere göre' : 'Tools by category' ?>">
-    <?php foreach (site_cats() as $cat): $list = array_filter($tools, function ($t) use ($cat) { return $t['cat'] === $cat['id']; }); if (!$list) continue; ?>
-    <div class="b-group">
-      <p class="b-cat" id="cat-<?= $cat['id'] ?>"><?= h($cat['title']) ?></p>
-      <ul aria-labelledby="cat-<?= $cat['id'] ?>">
-        <?php foreach ($list as $t): ?>
-        <li><?php if ($t['file']): ?><a href="<?= h($t['file']) ?>" title="<?= h($t['title']) ?>"<?= $cur && $cur['file'] === $t['file'] ? ' aria-current="page"' : '' ?>><?= site_icon($t['icon']) ?><span><?= h($t['short']) ?></span></a>
-        <?php else: ?><span class="b-planned" title="<?= h($t['title']) ?>"><?= site_icon($t['icon']) ?><span><?= h($t['short']) ?></span></span><?php endif; ?></li>
+  <nav class="b-side-nav" aria-label="<?= $tr ? 'Araçlar, modüllere göre' : 'Tools by module' ?>">
+    <?php $catalog = site_catalog(); foreach (site_modules() as $mod): $it = site_module_items($mod['id'], $tools, $catalog);
+      $open = $it['home'] || ($cur && ($cur['cat'] === $mod['id'] || in_array($cur['file'], array_column($it['also'], 'page'), true))); ?>
+    <div class="b-group<?= $open ? '' : ' collapsed' ?>" data-mod="<?= $mod['id'] ?>">
+      <button type="button" class="b-cat" id="cat-<?= $mod['id'] ?>" aria-expanded="<?= $open ? 'true' : 'false' ?>" aria-controls="grp-<?= $mod['id'] ?>"><span><?= h($mod['title']) ?></span><?= site_icon('chev', 'chev') ?></button>
+      <ul id="grp-<?= $mod['id'] ?>" aria-labelledby="cat-<?= $mod['id'] ?>">
+        <?php foreach ($it['home'] as $t): ?>
+        <li class="b-live"><a href="<?= h($t['file']) ?>" title="<?= h($t['title']) ?>"<?= $cur && $cur['file'] === $t['file'] ? ' aria-current="page"' : '' ?>><?= site_icon($t['icon']) ?><span><?= h($t['short']) ?></span></a></li>
+        <?php endforeach; foreach ($it['also'] as $ce): ?>
+        <li class="b-also"><a href="<?= h($ce['page']) ?>" title="<?= h($ce['id'] . ' · ' . $ce['name']) ?>"><?= site_icon('dot') ?><span><?= h($ce['name']) ?></span></a></li>
+        <?php endforeach; foreach ($it['planned'] as $ce): ?>
+        <li class="b-pl"><span class="b-planned" title="<?= h($ce['id'] . ' · ' . ($ce['status'] === 'dev' ? ($tr ? 'geliştiriliyor' : 'in development') : ($tr ? 'planlı' : 'planned'))) ?>" aria-disabled="true"><?= site_icon('dot') ?><span><?= h($ce['name']) ?><?= $ce['status'] === 'dev' ? ' <em class="b-dev">' . ($tr ? 'yolda' : 'soon') . '</em>' : '' ?></span></span></li>
         <?php endforeach; ?>
       </ul>
     </div>
@@ -198,7 +189,7 @@ function site_top(array $o = []): void {
   <header class="b-head<?= $cur ? ' has-ico' : '' ?>">
     <?php if ($cur): ?><span class="b-headico" aria-hidden="true"><?= site_icon($cur['icon']) ?></span><?php endif; ?>
     <div>
-    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= $c['tr'] ? 'sürüm' : 'version' ?> <?= h($cur['v']) ?></span> · <a class="b-guide" href="kilavuz.php#<?= h(basename($cur['file'], '.php')) ?>"><?= $c['tr'] ? 'Kılavuz' : 'Guide' ?></a><?php endif; ?></p><?php endif; ?>
+    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?php if ($cur): $ids = array_column(array_filter(site_catalog(), function ($c) use ($cur) { return $c['page'] === $cur['file']; }), 'id'); $mt = array_column(site_modules(), 'title', 'id'); if ($ids): ?><span class="b-ids" title="<?= $c['tr'] ? 'Araç kimlikleri (docs/PLATFORM_PLAN.md)' : 'Tool ids (docs/PLATFORM_PLAN.md)' ?>"><?= h(implode(' · ', $ids)) ?></span> · <?php endif; ?><?= h($mt[$cur['cat']] ?? '') ?> · <?php endif; ?><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= $c['tr'] ? 'sürüm' : 'version' ?> <?= h($cur['v']) ?></span> · <a class="b-guide" href="kilavuz.php#<?= h(basename($cur['file'], '.php')) ?>"><?= $c['tr'] ? 'Kılavuz' : 'Guide' ?></a><?php endif; ?></p><?php endif; ?>
     <h1><?= h($o['title'] ?? $c['site']) ?></h1>
     <?php if (!empty($o['lede'])): ?><p class="b-lede"><?= h($o['lede']) ?></p><?php endif; ?>
     </div>
@@ -274,6 +265,13 @@ function site_bottom(string $script = ''): void {
   nb.addEventListener('click', function () {
     var on = root.classList.toggle('side-narrow'); nb.setAttribute('aria-pressed', on);
     try { localStorage.setItem('side', on ? 'narrow' : 'wide'); } catch (e) {}
+  });
+  // modules of the sidebar: open / closed, remembered in this browser
+  var mods = {}; try { mods = JSON.parse(localStorage.getItem('sideMods') || '{}'); } catch (e) {}
+  Array.prototype.forEach.call(document.querySelectorAll('.b-group[data-mod]'), function (g) {
+    var b = g.querySelector('.b-cat'), id = g.getAttribute('data-mod'), set = function (open) { g.classList.toggle('collapsed', !open); b.setAttribute('aria-expanded', open ? 'true' : 'false'); };
+    if (id in mods && !g.querySelector('[aria-current]')) set(!!mods[id]);
+    b.addEventListener('click', function () { var open = g.classList.contains('collapsed'); set(open); mods[id] = open ? 1 : 0; try { localStorage.setItem('sideMods', JSON.stringify(mods)); } catch (e) {} });
   });
   // small screens: the sidebar is a drawer
   var side = $('side'), scrim = $('scrim'), openBtn = $('navopen');

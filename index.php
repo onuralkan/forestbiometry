@@ -63,25 +63,28 @@ $tools = site_tools();
 
   <section class="dir" aria-labelledby="h-tools">
     <h2 id="h-tools" class="b-h2"><?= $tr ? 'Araçlar' : 'Tools' ?></h2>
-    <?php foreach (site_cats() as $cat): $list = array_values(array_filter($tools, function ($t) use ($cat) { return $t['cat'] === $cat['id']; })); if (!$list) continue; ?>
-    <div class="dir-group">
-      <div class="dir-cat"><h3><?= h($cat['title']) ?></h3><p><?= h($cat['desc']) ?></p></div>
+    <p class="muted dir-note"><?= $tr ? 'Araçlar on bir modülde toplanır. Gri olanlar planlıdır; "yolda" işaretliler geliştiriliyor. Planın tamamı ve kimlikleri: proje deposundaki docs/PLATFORM_PLAN.md.' : 'Tools are grouped in eleven modules. Greyed ones are planned; those marked "soon" are being built. The full plan and the tool ids: docs/PLATFORM_PLAN.md in the project repository.' ?></p>
+    <?php $catalog = site_catalog(); foreach (site_modules() as $mod): $it = site_module_items($mod['id'], $tools, $catalog); ?>
+    <div class="dir-group" id="mod-<?= $mod['id'] ?>">
+      <div class="dir-cat"><h3><?= h($mod['title']) ?></h3><p><?= h($mod['desc']) ?></p></div>
+      <div>
+      <?php if ($it['home']): ?>
       <ul class="toollist">
-        <?php foreach ($list as $t): ?>
-        <li class="<?= $t['file'] ? 'ready' : 'planned' ?>">
+        <?php foreach ($it['home'] as $t): ?>
+        <li class="ready">
           <span class="tico" aria-hidden="true"><?= site_icon($t['icon']) ?></span>
-          <div>
-            <?php if ($t['file']): ?>
-            <h3><a href="<?= h($t['file']) ?>"><?= h($t['title']) ?></a></h3>
-            <p><?= h($t['desc']) ?></p>
-            <?php else: ?>
-            <h3><?= h($t['title']) ?></h3>
-            <p class="muted"><?= $tr ? 'Hazırlanıyor; henüz kullanıma açık değil.' : 'In preparation; not available yet.' ?></p>
-            <?php endif; ?>
-          </div>
+          <div><h3><a href="<?= h($t['file']) ?>"><?= h($t['title']) ?></a></h3><p><?= h($t['desc']) ?></p></div>
         </li>
         <?php endforeach; ?>
       </ul>
+      <?php endif; if ($it['also']): ?>
+      <p class="dir-also"><?= $tr ? 'Bu modülde ayrıca' : 'Also in this module' ?>: <?= implode(', ', array_map(function ($c) { return '<a href="' . h($c['page']) . '">' . h($c['name']) . '</a>'; }, $it['also'])) ?></p>
+      <?php endif; if ($it['planned']): ?>
+      <ul class="dir-planned" aria-label="<?= $tr ? 'Planlı araçlar' : 'Planned tools' ?>">
+        <?php foreach ($it['planned'] as $c): ?><li title="<?= h($c['id']) ?>"><?= h($c['name']) ?><?= $c['status'] === 'dev' ? ' <em class="b-dev">' . ($tr ? 'yolda' : 'soon') . '</em>' : '' ?></li><?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
+      </div>
     </div>
     <?php endforeach; ?>
   </section>

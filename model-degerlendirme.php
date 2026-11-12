@@ -3,7 +3,7 @@ require __DIR__ . '/inc/site.php';
 $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
-    'kicker' => $tr ? 'Araç 3 · Model doğrulama' : 'Tool 3 · Model validation',
+    'kicker' => $tr ? 'Model doğrulama' : 'Model validation',
     'lede'   => $tr ? 'Gözlenen değerleri bir veya daha fazla modelin tahminleriyle karşılaştırın: yanlılık, MAE, RMSE ve tahmin R²; gözlenen–tahmin ve artık grafikleri, örnek alan, tür, çap sınıfı ve doğrulama katına göre tablolar. Hata işareti her yerde e = tahmin − gözlenen.'
                     : 'Compare observed values with the predictions of one or more models: bias, MAE, RMSE and prediction R²; observed–predicted and residual plots, tables by plot, species, diameter class and validation fold. The error sign is e = predicted − observed everywhere.',
     'desc'   => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE, R², grafikler ve grup tabloları.' : 'Bias, MAE, RMSE, R², plots and group tables from observed and predicted values.',

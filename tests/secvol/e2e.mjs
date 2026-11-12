@@ -32,7 +32,7 @@ const engine = (s) => TREES.map(([p, t, D0, H, st, hs]) => { const d = cone(D0, 
 
 // 0. the tool is listed under its category
 await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('#side .b-cat', { hasText: 'Ağaç ve gövde' }).count()) === 1 && (await page.locator('#side a[href="seksiyon-hacmi.php"]').count()) === 1, 'sidebar: "Ağaç ve gövde" with Seksiyon Hacmi');
+ok((await page.locator('#side .b-cat', { hasText: 'Gövde hacmi ve profili' }).count()) === 1 && (await page.locator('#side a[href="seksiyon-hacmi.php"]').count()) === 1, 'sidebar: "Gövde hacmi ve profili" with Seksiyon Hacmi');
 await page.goto(URL + '?lang=tr');
 ok((await page.locator('h1').textContent()).includes('Seksiyon Hacmi') && (await page.locator('text=1.0.0-beta.2').count()) >= 1, 'page title and version 1.0.0-beta.2');
 
