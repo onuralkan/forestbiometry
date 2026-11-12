@@ -736,6 +736,33 @@ Kaynak: Parresol (2003) Denklem 9–16 **[B]** (şartname §3.8). `dist/recover/
 
   `tests/dist/e2e.mjs` 180/180: Web Worker'da modified CDFR, amaç değeri motorla aynı.
 
+### P20: Genelleştirilmiş gamma ve Gumbel (maksimum biçimi) (12 Kasım 2026; 2.2.0-beta.3)
+Kaynaklar: SciPy `scipy.stats.gengamma` belgesi ([R18]) **[D]** ve NIST/SEMATECH e-Handbook, Extreme Value Type I (Gumbel) ([R19]) **[D]**; okunmadı. Denklemler şartnamedeki (DIST_SPEC P20) tanımdır ve bağımsız sayısal referansla doğrulandı. Şartnamenin istediği gibi iki ayrı değişiklik: önce genelleştirilmiş gamma, sonra Gumbel. İki ailenin bütün yöntemleri **isteğe bağlıdır** (`optional`, varsayılan seçili gelmez).
+
+**Genelleştirilmiş gamma** (`dist/families/gengamma.js`, `dist/fit/gengamma.js`; aile `gengamma`):
+- f(d) = c/[bΓ(a)]·(d/b)^(ac − 1)·exp[−(d/b)^c], d > 0; a > 0 şekil, b > 0 ölçek (cm), c > 0 şekil. F(d) = P(a, (d/b)^c); Q_p = b·[P⁻¹(a, p)]^(1/c); E[Dʳ] = bʳΓ(a + r/c)/Γ(a). Varyans E[D]²·expm1(L₂ − 2L₁) biçiminde (L_r = ln E[Dʳ]).
+- c = 1 iki parametreli gamma (şekil a, ölçek b), a = 1 iki parametreli Weibull (şekil c, ölçek b). Buradaki a şekildir, Weibull'un konum parametresi değildir; konum yoktur (üç parametreli kaydırılmış gamma değildir). Yalnızca c > 0 kapsanır.
+- **`gengamma.ml`:** D^c iki parametreli gamma (şekil a, ölçek b^c) dağıldığından c sabitken (a, b)'nin en çok olabilirlik tahmini d^c üzerindeki gamma ML'sidir. Olabilirlik c üzerinde profillenir (ỹ = ln d − ȳ):
+  - s(c) = ln ortalama(e^(cỹ)); a(c), ln a − ψ(a) = s(c)'nin köküdür (`gamma.ml` ile aynı Brent ve şekil aralığı [10⁻⁴, 10⁸]); ln b(c) = ȳ + [s(c) − ln a(c)]/c;
+  - ℓp(c) = n[a ln a − a − lnΓ(a) − a·s(c) + ln c] − nȳ; türevi (zarf teoremi) c'deki skor: dℓp/dc = n[1/c − a(c)·w(c)], w(c) = Σỹe^(cỹ)/Σe^(cỹ);
+  - araç kuralı: ln c ızgarası (121 nokta, 0,01 ≤ c ≤ 100), en büyük ızgara noktasının komşuları arasında skorun kökü Brent ile (10⁻¹⁴, ln c);
+  - en büyük değer ızgaranın kenarındaysa `boundary` (c → 0 lognormal sınırına doğru; ln d sağa çarpık örneklerde görülür), parametre verilmez; a(c) aralık dışındaysa da `boundary`; ızgarada birden çok yerel en büyük varsa uyarı (`gg.multimodal`) yazılır, en büyüğü verilir; en az üç farklı çap gerekir.
+- Eşik (`gengamma.tml`) ve sınıflı veri (`gengamma.gml`): P11 ve P12 altyapısı (Nelder–Mead, a, b, c log ölçekte), başlangıç `gengamma.ml`.
+- Karşılaştırma tablosunda serbest parametre sayısı farklı ve 2'den büyük bir model varsa not: fazladan parametre iç içe modellerde ln L'yi küçültmez; daha esnek aile kendiliğinden daha iyi biyolojik model değildir.
+
+**Gumbel, maksimum biçimi** (`dist/families/gumbel.js`, `dist/fit/gumbel.js`; aile `gumbel`):
+- F(d) = exp{−exp[−(d − μ)/β]}, μ konum (cm), β > 0 ölçek (cm); f = (1/β)e^(−z)exp(−e^(−z)), z = (d − μ)/β; Q_p = μ − β ln(−ln p); E[D] = μ + γ_E β (γ_E = 0,5772156649…), Var = π²β²/6. Sağa çarpık. Minimum biçimi (F = 1 − exp{−exp[(d − μ)/β]}, ortalama μ − γ_E β) farklı bir dağılımdır, sunulmaz. ln(1 − F) medyanın altında log1p(−F), üstünde ln(−expm1(−t)), uç kuyrukta −z − t/2 (t = e^(−z)).
+- Destek bütün reel sayılardır: **negatif çap olasılığı F(0) = exp[−exp(μ/β)]** her sonuçta (eşikli ve sınıflı uydurmalar dahil, uydurulan modelin F(0)'ı) raporlanır.
+- **`gumbel.ml`:** β = d̄ − Σd e^(−d/β)/Σe^(−d/β), μ = −β ln[(1/n)Σe^(−d/β)]. h(β) = β − d̄ + ağırlıklı ortalama, türevi 1 + var_w(d)/β² > 0, β → 0'da d_min − d̄ < 0: tek kök; ağırlıklar e^(−(d − d_min)/β) ile taşmasız, moment tahmininden büyütülen aralıkta Brent.
+- **`gumbel.mom`:** β = √(6v)/π, μ = d̄ − γ_E β; v bölen n (varsayılan) ya da n − 1.
+- Eşik (`gumbel.tml`): koşullu olabilirlik Σ ln f − n ln[F(U) − F(L)] (P11); sınıflı veri (`gumbel.gml`, P12). Kesilmemiş denklemler eşikli veride kullanılmaz.
+
+**Doğrulama:** `tests/ref/make_dist_p20.py` → `tests/ref/dist_p20.json`.
+- Genelleştirilmiş gamma: fonksiyonlar mpmath 40 basamak (tanımdan; kuyruklar dahil), SciPy `gengamma` gövdede; momentler mpmath karelemesiyle; c = 1 ve a = 1'de SciPy `gamma` ve `weibull_min` ve motorun kendi gamma ve Weibull aileleri; ML: tam olabilirlikte Nelder–Mead (dört başlangıç) ve ardından üç skor denklemi mpmath `findroot` ile 30 basamakta, `gengamma.fit` çapraz denetim; iç içe gamma ve Weibull ML ln L değerleri; ln d sağa çarpık örnekte sabit c'de profil (iki skor denklemi, mpmath) c azaldıkça artar; eşik (L = 8 cm) ve sınıflı (2 cm) olabilirlikler Nelder–Mead ile.
+- Gumbel: fonksiyonlar mpmath 40 basamak, SciPy `gumbel_r` gövdede; ortalama, varyans, F(0) SciPy'dan; ML skor denklemleri 30 basamakta, `gumbel_r.fit` çapraz denetim; momentler `gumbel_r.stats` üzerinde `fsolve` (kapalı biçim değil); eşik (8 ≤ d ≤ 40) ve sınıflı olabilirlikler Nelder–Mead ile.
+- `tests/dist/test_p20.mjs` 848/848: fonksiyonlar 10⁻¹¹ (gengamma) ve 10⁻¹³ (Gumbel); ML parametreleri skor köküyle 10⁻⁷ (gengamma) ve 10⁻¹² (Gumbel), ln L 10⁻¹²; c = 1'de profil = gamma ML ln L; gengamma ln L ≥ gamma ve Weibull ML; çok tepeli profil uyarısı; c alt kenarında `boundary`; eşik ve sınıflı ln L 10⁻⁹ (gengamma) ve 10⁻¹⁰ (Gumbel); pozitif çaplı örnekte Gumbel'in negatif çaplara verdiği olasılığın raporlanması.
+- `tests/dist/e2e.mjs` 194/194: iki aile açık adlarıyla sunulur ama seçili gelmez; arayüzdeki parametreler motorla aynı; AIC tablosunda parametre sayısı notu; Gumbel notlarında F(0). P11/P12 testlerindeki aile başına yöntem sayımları isteğe bağlı aileleri dışarıda bırakır.
+
 ## 13. Yeni araçların ortak altyapısı (TOOLS_SPEC T01, 12 Kasım 2026)
 Seksiyon hacmi, bonitet, meşcere yapısı, biyokütle ve gövde profili araçlarının (`docs/TOOLS_SPEC.md`) ortak parçaları. Bilimsel hesap içermez; veri kuralları elle kurulmuş durumlarla sınanır.
 
