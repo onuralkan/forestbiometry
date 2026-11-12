@@ -19,7 +19,7 @@ const R = JSON.parse(readFileSync(path.join(root, 'tests/ref/dist_p11.json'), 'u
 const FAMS = ['weibull', 'normal', 'lognormal', 'gamma', 'beta', 'johnsonsb', 'exponential', 'loglogistic'];
 
 /* 1. registry: one conditional ML per family; closed forms are not marked for truncated data */
-eq(D.methodsFor({ kind: 'fit' }).filter(m => m.truncation).map(m => m.id).sort(), FAMS.map(f => f + '.tml').sort(), 'one truncated-ML method per family');
+eq(D.methodsFor({ kind: 'fit' }).filter(m => m.truncation && !m.optional).map(m => m.id).sort(), FAMS.map(f => f + '.tml').sort(), 'one truncated-ML method per family');
 ok(D.methodsFor({ kind: 'fit' }).filter(m => !m.truncation).every(m => !m.id.endsWith('.tml')), 'the untruncated methods carry no truncation flag (disabled when a threshold is declared)');
 ok(D.methodsFor({ kind: 'fit' }).filter(m => m.truncation).every(m => m.estimator === 'ml' && m.likelihoodMaximised && m.solver === 'nelder-mead'), 'truncated ML: estimator, solver');
 eq(D.method('beta.tml').options.map(o => o.key), ['L', 'U'], 'beta: bounds stay user-fixed under truncation');

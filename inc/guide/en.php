@@ -131,7 +131,7 @@
 
 <section class="card guide-sec">
 <?= $sec('cap-dagilimi', 'Diameter Distribution Lab') ?>
-<p>Fits eight probability distributions to individual tree diameters or to diameter classes: Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic. Each plot and period is computed separately. A separate workflow recovers parameters from summary values without raw data.</p>
+<p>Fits eight probability distributions to individual tree diameters or to diameter classes: Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic; optionally the <b>Generalized gamma (no location)</b>. Each plot and period is computed separately. A separate workflow recovers parameters from summary values without raw data.</p>
 <p><b>What it does not do:</b> it does not estimate location and bound parameters (a for the Weibull and exponential, L and U for the beta, ξ and λ for the Johnson SB are fixed values you give, never taken from the data); no basal-area-weighted fitting; no prediction with coefficients copied from papers (a stand model is trained on your data only).</p>
 <h3>Three workflows</h3>
 <ul>
@@ -147,7 +147,7 @@
 <li><b>Columns</b>: diameter and its unit (cm, mm), plot, period, an optional filter.</li>
 <li><b>Unit of analysis</b>: each plot separately or all trees together (pooled).</li>
 <li><b>Measurement threshold</b>: if only trees above a diameter (or between two thresholds) were measured, state it here; fitting then uses the conditional likelihood. A threshold is not the same as the support bound of the distribution or the smallest diameter in the data.</li>
-<li><b>Distributions and estimation methods</b>: maximum likelihood, moments, percentiles and log-moments. Each family's formulas and notes are in its "Details" box. The moment variance uses divisor n by default; n − 1 is an option. Additional methods, not selected by default: <b>L-moments</b> (Weibull, gamma), <b>General quantile matching (QME)</b> (with the probabilities and weights you choose) and <b>Minimum distance (MGE)</b> (KS, Cramér–von Mises or Anderson–Darling) (normal, gamma, beta). They do not maximise the likelihood, so they are not in the AIC table; an MGE row is marked † in a table sorted by the criterion it was fitted with.</li>
+<li><b>Distributions and estimation methods</b>: maximum likelihood, moments, percentiles and log-moments. Each family's formulas and notes are in its "Details" box. The moment variance uses divisor n by default; n − 1 is an option. Additional methods, not selected by default: <b>L-moments</b> (Weibull, gamma), <b>General quantile matching (QME)</b> (with the probabilities and weights you choose) and <b>Minimum distance (MGE)</b> (KS, Cramér–von Mises or Anderson–Darling) (normal, gamma, beta). They do not maximise the likelihood, so they are not in the AIC table; an MGE row is marked † in a table sorted by the criterion it was fitted with. The generalized gamma is not selected by default either: the gamma (c = 1) and the Weibull (a = 1) are special cases of it, so its ln L cannot be smaller than theirs; that does not make it a better model.</li>
 <li><b>Fixed location a</b> (Weibull, exponential): a = 0 is always computed; if you type a value it is computed with that location too. <b>Beta L, U</b> and <b>Johnson SB ξ, λ</b> are asked for when these families are chosen.</li>
 </ul>
 <h3>3. Results</h3>

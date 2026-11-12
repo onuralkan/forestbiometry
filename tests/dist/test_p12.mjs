@@ -19,7 +19,7 @@ const W = D.family('weibull'), wp = { a: 0, b: 20, c: 2.5 };
 const edges = R.edges.map(e => e ?? Infinity), CL = C.makeClasses({ edges });
 
 /* 1. registry */
-eq(D.methodsFor({ dataType: 'classes' }).map(m => m.id).sort(), ['beta', 'exponential', 'gamma', 'johnsonsb', 'loglogistic', 'lognormal', 'normal', 'weibull'].map(f => f + '.gml').sort(), 'grouped ML for every family, data type "classes" only');
+eq(D.methodsFor({ dataType: 'classes' }).filter(m => !m.optional).map(m => m.id).sort(), ['beta', 'exponential', 'gamma', 'johnsonsb', 'loglogistic', 'lognormal', 'normal', 'weibull'].map(f => f + '.gml').sort(), 'grouped ML for every family, data type "classes" only');
 ok(D.methodsFor({ dataType: 'classes' }).every(m => m.grouped && m.estimator === 'ml' && !m.dataTypes.includes('raw')), 'grouped methods are not offered for raw data');
 ok(D.methodsFor({ dataType: 'raw' }).every(m => !m.dataTypes.includes('classes')), 'raw-data methods are not offered for classes (no mid-point replication)');
 

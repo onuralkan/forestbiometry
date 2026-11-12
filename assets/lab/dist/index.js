@@ -16,6 +16,8 @@ import { exponential } from './families/exponential.js';
 import { exponentialML } from './fit/exponential.js';
 import { loglogistic } from './families/loglogistic.js';
 import { llML, llPCT, llLOGMOM } from './fit/loglogistic.js';
+import { gengamma } from './families/gengamma.js';
+import { ggML } from './fit/gengamma.js';
 import { weibullM2, weibullM3, weibullM4, weibullM5, weibullM6, weibullM7, weibullM8, weibullM9, weibullM10 } from './recover/weibull.js';
 import { parresolRecover } from './recover/parresol.js';
 import { fonsecaRecover } from './recover/fonseca.js';
@@ -50,9 +52,12 @@ registerFamily(loglogistic);
 registerMethod(llML);
 registerMethod(llPCT);
 registerMethod(llLOGMOM);
+registerFamily(gengamma);                             // P20: optional (not switched on by default), like every method of the family
+registerMethod(ggML);
 for (const m of generalMethods) registerMethod(m);   // P18: L-moments, QME, MGE (optional, not switched on by default)
 // conditional ML for thresholded data (P11): one per family, built on the family's untruncated ML
 for (const [f, b] of [['weibull', 'weibull.ml'], ['normal', 'normal.ml'], ['lognormal', 'lognormal.ml'], ['gamma', 'gamma.ml'], ['beta', 'beta.ml'], ['johnsonsb', 'johnsonsb.cml'], ['exponential', 'exponential.ml'], ['loglogistic', 'loglogistic.ml']]) { registerMethod(makeTML(f, b)); registerMethod(makeGML(f, b)); }
+for (const [f, b] of [['gengamma', 'gengamma.ml']]) { registerMethod({ ...makeTML(f, b), optional: true }); registerMethod({ ...makeGML(f, b), optional: true }); }
 registerMethod(normalRecover);
 registerMethod(lognormalRecover);
 registerMethod(gammaRecover);

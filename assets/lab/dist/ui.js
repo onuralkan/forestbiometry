@@ -582,7 +582,7 @@ function compareHtml(u) {
   for (const g of groups) {
     const pr = g.process, lab = pr.type === 'classes' ? T('cmp.proc.cls', { o: T('dt.out.' + pr.outside), t: T('dt.ct.' + pr.countType) }) : pr.lower != null || pr.upper != null ? T('cmp.proc.trunc', { L: pr.lower ?? '–', U: pr.upper ?? '∞' }) : T('cmp.proc.raw');
     h += `<div class="card cmpgroup"><h3>${esc(lab)}</h3>`;
-    if (g.ml.length) h += `<h4>${T('cmp.ml.h')}</h4>${table(g.ml, true)}<details class="more"><summary>${T('cmp.read')}</summary><p class="muted small">${T('cmp.ml.note')}</p></details>`;
+    if (g.ml.length) h += `<h4>${T('cmp.ml.h')}</h4>${table(g.ml, true)}${new Set(g.ml.map(x => x.k)).size > 1 && g.ml.some(x => x.k > 2) ? `<p class="note small kdiff">${T('cmp.kdiff')}</p>` : ''}<details class="more"><summary>${T('cmp.read')}</summary><p class="muted small">${T('cmp.ml.note')}</p></details>`;
     if (g.desc.length) h += `<h4>${T('cmp.desc.h')}</h4>${table(g.desc, false)}<details class="more"><summary>${T('cmp.read')}</summary><p class="muted small">${T('cmp.desc.note')}</p></details>`;
     if (g.failed.length) h += `<h4>${T('cmp.fail.h')}</h4><ul class="small">${g.failed.map(x => `<li>${esc(resName(x.r))}: ${esc(T('st.' + x.status))}${notesOf(x.r).length ? ' — ' + esc(notesOf(x.r).join('; ')) : ''}</li>`).join('')}</ul>`;
     h += `</div>`;

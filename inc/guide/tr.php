@@ -131,7 +131,7 @@
 
 <section class="card guide-sec">
 <?= $sec('cap-dagilimi', 'Çap Dağılımı Laboratuvarı') ?>
-<p>Tek ağaç çaplarına ya da çap sınıflarına sekiz olasılık dağılımı uydurur: Weibull, normal, lognormal, gamma, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik. Her örnek alan ve dönem ayrı hesaplanır. Ayrı bir iş akışı, ham veri olmadan özet değerlerden parametre geri kazanır.</p>
+<p>Tek ağaç çaplarına ya da çap sınıflarına sekiz olasılık dağılımı uydurur: Weibull, normal, lognormal, gamma, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik; isteğe bağlı olarak <b>Genelleştirilmiş gamma (konumsuz)</b>. Her örnek alan ve dönem ayrı hesaplanır. Ayrı bir iş akışı, ham veri olmadan özet değerlerden parametre geri kazanır.</p>
 <p><b>Yapmadıkları:</b> konum ve sınır parametrelerini tahmin etmez (Weibull ve üstelde a, beta'da L ve U, Johnson SB'de ξ ve λ sizin verdiğiniz sabit değerlerdir, veriden alınmaz); göğüs yüzeyiyle ağırlıklı uydurma yapmaz; makalelerden kopyalanmış katsayılarla tahmin yapmaz (meşcere modeli yalnızca sizin verinizle eğitilir).</p>
 <h3>Üç iş akışı</h3>
 <ul>
@@ -147,7 +147,7 @@
 <li><b>Sütunlar</b>: çap ve birimi (cm, mm), örnek alan, dönem, isteğe bağlı süzgeç.</li>
 <li><b>Analiz birimi</b>: her örnek alan ayrı ya da bütün ağaçlar birlikte (havuz).</li>
 <li><b>Ölçüm eşiği</b>: yalnızca belli bir çapın üstündeki (ya da iki eşik arasındaki) ağaçlar ölçüldüyse burada bildirin; uydurma koşullu olabilirlikle yapılır. Eşik, dağılımın destek sınırıyla ya da verideki en küçük çapla aynı şey değildir.</li>
-<li><b>Dağılımlar ve tahmin yöntemleri</b>: en çok olabilirlik, momentler, yüzdelikler ve log-momentler. Her ailenin formülleri ve notları "Ayrıntılar" kutusundadır. Moment varyansında varsayılan bölen n'dir; n − 1 seçenektir. Varsayılan olarak seçili gelmeyen ek yöntemler: <b>L-momentler</b> (Weibull, gamma), <b>Genel yüzdelik eşleştirme (QME)</b> (seçtiğiniz olasılıklar ve ağırlıklarla) ve <b>En küçük uzaklık (MGE)</b> (KS, Cramér–von Mises ya da Anderson–Darling) (normal, gamma, beta). Bunlar olabilirliği en büyüklemediği için AIC tablosuna girmez; bir MGE satırı, uydurulduğu ölçütle sıralanan tabloda † ile işaretlenir.</li>
+<li><b>Dağılımlar ve tahmin yöntemleri</b>: en çok olabilirlik, momentler, yüzdelikler ve log-momentler. Her ailenin formülleri ve notları "Ayrıntılar" kutusundadır. Moment varyansında varsayılan bölen n'dir; n − 1 seçenektir. Varsayılan olarak seçili gelmeyen ek yöntemler: <b>L-momentler</b> (Weibull, gamma), <b>Genel yüzdelik eşleştirme (QME)</b> (seçtiğiniz olasılıklar ve ağırlıklarla) ve <b>En küçük uzaklık (MGE)</b> (KS, Cramér–von Mises ya da Anderson–Darling) (normal, gamma, beta). Bunlar olabilirliği en büyüklemediği için AIC tablosuna girmez; bir MGE satırı, uydurulduğu ölçütle sıralanan tabloda † ile işaretlenir. Genelleştirilmiş gamma da varsayılan olarak seçili gelmez: gamma (c = 1) ve Weibull (a = 1) onun özel durumlarıdır, bu yüzden ln L değeri onlarınkinden küçük olamaz; bu, daha iyi bir model olduğu anlamına gelmez.</li>
 <li><b>Sabit konum a</b> (Weibull, üstel): a = 0 her zaman hesaplanır; bir değer yazarsanız o konumla da hesaplanır. <b>Beta L, U</b> ve <b>Johnson SB ξ, λ</b> bu aileler seçildiğinde istenir.</li>
 </ul>
 <h3>3. Sonuçlar</h3>
