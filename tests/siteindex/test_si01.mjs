@@ -94,7 +94,7 @@ for (const x of [1e-300, 1e-12, 1e-6, 0.3, Math.LN2, 2, 40, 800]) {
 ok(S.lnOneMinusExp(800) === -0 || S.lnOneMinusExp(800) === 0, 'ln(1 − e^(−800)) = 0 (no cancellation error)');
 eq(formsFor('siteindex').map(f => f.id), ['si.cr.ada.b0', 'si.cr.ada.b2', 'si.schu.ada'], 'forms registered in the coefficient library (model-coef/1) under tool siteindex');
 eq([form('si.cr.ada.b2').params.map(p => p.key), form('si.cr.ada.b2').inputs, form('si.cr.ada.b2').output], [['b0', 'b1'], { A: { unit: 'yr' }, H: { unit: 'm' } }, { name: 'H', unit: 'm' }], 'library form: global parameters, units');
-eq(S.TOOL, { id: 'bonitet', version: '1.0.0-beta.1' }, 'tool id and version (K4)');
+eq(S.TOOL, { id: 'bonitet', version: '1.0.0-beta.2' }, 'tool id and version (K4)');
 
 console.log(`siteindex SI01: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

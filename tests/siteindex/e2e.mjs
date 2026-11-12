@@ -83,7 +83,7 @@ const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-cs
 ok((await readFile(await dc.path(), 'utf8')).split('\n').length >= 5, 'CSV downloads');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dj.path(), 'utf8'));
-ok(js.tool.version === '1.0.0-beta.1' && js.model.baseAge === 100 && js.model.ageType === 'total' && js.set.source.citation === 'Test, not a real equation' && js.results.length === 4, 'JSON: model, set with source, results');
+ok(js.tool.version === '1.0.0-beta.2' && js.model.baseAge === 100 && js.model.ageType === 'total' && js.set.source.citation === 'Test, not a real equation' && js.results.length === 4, 'JSON: model, set with source, results');
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]); ok((await dx.suggestedFilename()).endsWith('.xlsx'), 'Excel report');
 
 // 4. approved data: H0 by the Plot & Stand definition (shared code), mean recorded age
@@ -103,8 +103,30 @@ await page.click('#steps [data-go="2"]'); await page.check('input[name="rank"][v
 ok((await rows())[1][8] === 'hesaplanmadı' && (await rows())[1][7].includes('H0 hesaplanamadı'), 'tallest-tree H0 with an unmeasured height: not computed (Plot & Stand rule)');
 await shot('si-results');
 
-// 5. English and phone + dark
-await page.waitForTimeout(400);
+// 4b. fitting to own series (SI03): the simulated stem analyses of the SciPy reference, same start → same coefficients
+const REF = JSON.parse(await readFile(new globalThis.URL('../ref/siteindex_si03.json', import.meta.url), 'utf8')), rec = REF.forms['cr.ada.b0'];
+const tsv = ['agac\tyas\tboy', ...rec.series.flatMap(s => s.points.map(p => [s.id, p.A, p.H].join('\t')))].join('\n');
+await page.click('#steps [data-go="1"]'); await page.locator('#fitbox > summary').click(); await page.waitForSelector('#fitimp');
+await page.locator('#fitimp details summary').click(); await page.fill('#fitimp textarea', tsv); await page.click('#fitimp [data-act="paste"]'); await page.waitForSelector('#f-run');
+ok(await page.inputValue('#fm-series') === '0' && await page.inputValue('#fm-A') === '1' && await page.inputValue('#fm-H') === '2', 'series, age and height columns recognised');
+await page.check('input[name="fstart"][value="user"]'); await fillC('#fs-b1', String(REF.start['cr.ada.b0'][0])); await fillC('#fs-b2', String(REF.start['cr.ada.b0'][1]));
+for (const mode of ['consecutive', 'all']) {
+  await page.check(`input[name="fpair"][value="${mode}"]`); await page.click('#f-run'); await page.waitForSelector('#fittab');
+  const ref = rec.fits[mode], est = await page.evaluate(() => [...document.querySelectorAll('#fittab tbody tr')].map(tr => parseFloat(tr.children[1].textContent)));
+  near(est[0], ref.theta[0], 1e-7, `${mode}: b1 = SciPy least_squares`); near(est[1], ref.theta[1], 1e-7, `${mode}: b2 = SciPy`);
+  ok((await page.locator('#fitsum').textContent()).startsWith(`${ref.n} çift, 25 dizi`), `${mode}: ${ref.n} pairs`);
+  near(num((await page.locator('#fitgof').textContent()).match(/RMSE ([\d.]+)/)[1]), ref.rmse, 6e-4, `${mode}: RMSE`);
+}
+ok((await page.locator('#fitbox', { hasText: 'Gözlemler bağımsız varsayımıyla' }).count()) === 1 && (await page.locator('#ch-fit svg').count()) === 1 && (await page.locator('#ch-res svg').count()) === 1, 'SE label, curve and residual charts');
+await page.click('#fx-save'); ok((await page.locator('#fx-msg').textContent()).includes('Eksik') && (await page.locator('#fx-msg').textContent()).includes('Kaynak künyesi'), 'saving needs age type, top height definition and a citation');
+await page.selectOption('#fx-age', 'total'); await page.selectOption('#fx-top', 'h0dbh'); await fillC('#fx-cit', 'Simulated stem analyses (test)'); await page.click('#fx-save'); await page.waitForSelector('#fx-ok');
+{ const lib = await page.evaluate(async () => (await (await import('/assets/lab/core/coef.js')).listCoefs('siteindex')));
+  const fitted = lib.find(s => s.origin === 'fitted');
+  ok(fitted && fitted.fit.pairing === 'all' && fitted.fit.n === rec.fits.all.n && fitted.fit.seNote === 'independent-observations' && Math.abs(fitted.params.b1 - rec.fits.all.theta[0]) < 1e-7 * rec.fits.all.theta[0] && fitted.valid.A[0] > 0 && fitted.meta.ageType === 'total', 'fitted set stored with origin, fit summary and the data range as validity range');
+  ok(await page.inputValue('#setsel') === fitted.id, 'the fitted set is chosen for the calculation'); }
+
+// 5. English and phone + dark (back to the results with the fitted set)
+await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab'); await page.waitForTimeout(400);
 const en = await ctx.newPage(); en.on('pageerror', e => errors.push(e.message));
 await en.goto(URL + '?lang=en'); await en.waitForSelector('#rtab');
 ok((await en.locator('#rsrc').textContent()).includes('Produced with user coefficients') && (await en.locator('#rtab thead th', { hasText: 'Site index SI100 (m)' }).count()) === 1, 'English');

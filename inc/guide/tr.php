@@ -277,11 +277,12 @@
 <section class="card guide-sec">
 <?= $sec('bonitet', 'Bonitet Hesaplayıcısı') ?>
 <p>Üst boy ve yaştan, sizin girdiğiniz katsayı setiyle dayanak yaştaki bonitet endeksini (o yaştaki üst boyu) hesaplar; bonitet sınıflarını tanımlarsanız sınıfı verir ve eğri demetini çizer.</p>
-<p><b>Yapmadıkları:</b> hiçbir tür ya da yöre katsayısı ve hasılat tablosu içermez; yaş türlerini (toplam yaş, göğüs yüksekliği yaşı) birbirine çevirmez; bu sürümde kendi verinizden denklem uydurmaz (sonraki aşama).</p>
+<p><b>Yapmadıkları:</b> hiçbir tür ya da yöre katsayısı ve hasılat tablosu içermez; yaş türlerini (toplam yaş, göğüs yüksekliği yaşı) birbirine çevirmez; karma etkili model ve dizi düzeyinde belirsizlik bu sürümde yoktur.</p>
 <h3>Model</h3>
 <ul>
 <li><b>Katsayı setleri</b>: biçim (Chapman–Richards anamorfik ya da polimorfik, Schumacher), katsayılar, <b>yaş türü</b> ve <b>üst boy tanımı</b> (zorunlu), isteğe bağlı geçerlilik aralığı ve kaynak künyesi (zorunlu). Setler yalnızca bu tarayıcıda saklanır, JSON olarak indirilip yüklenebilir.</li>
 <li>Schumacher biçimi ln H = b₀ + b₁/A olarak yazılmıştır; büyüyen bir eğri için b₁ negatiftir. Kaynağınız H = b₀·exp(−b₁/A) yazıyorsa katsayıyı −b₁ olarak girin.</li>
+<li><b>Katsayıları kendi verimden uydur</b>: gövde analizi ya da tekrarlı üst boy ölçümleri (dizi kimliği, yaş, boy). Denklem aynı dizinin gözlem çiftlerine uydurulur; çiftler ardışık, ilk gözlemden ya da bütün çiftler olabilir ve sonucu değiştirir. Başlangıç değerleri otomatik ya da sizin; standart hatalar gözlemler bağımsız varsayımıyla verilir (aynı dizinin gözlemleri bağımsız değildir). Sonuç; yaş türü, üst boy tanımı ve kaynak künyesiyle katsayı kaydına "uydurulan" set olarak yazılır, verinin yaş ve boy aralığı geçerlilik aralığı olur.</li>
 <li><b>Dayanak yaş</b>: varsayılanı yoktur; kullandığınız sınıflandırmanın dayanak yaşını girin. Fark denklemleri dayanak yaştan bağımsızdır, yani dayanak yaş eğrileri değil endeksin okunduğu yaşı değiştirir.</li>
 <li><b>Bonitet sınıfları</b> (isteğe bağlı): eşit aralıklı ya da sınırları sizin yazdığınız sınıflar; I en yüksek ya da en düşük bonitet olabilir. Sınıfların dışında kalan endeks "sınıf dışı" yazılır.</li>
 </ul>

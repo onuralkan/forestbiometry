@@ -5,8 +5,9 @@
 // Equations checked against Hernández-Cuevas et al. (2018, Agrociencia 52: 437–453, Cuadro 3) [B]; METHODS §15.
 // The site ships NO coefficients (TOOLS_SPEC K1): the user enters them with their source, or fits them (SI03).
 import { registerForm } from '../core/coef.js';
+import { levenbergMarquardt, covariance } from '../core/nls.js';
 
-export const TOOL = { id: 'bonitet', version: '1.0.0-beta.1' };
+export const TOOL = { id: 'bonitet', version: '1.0.0-beta.2' };
 export const AGE_TYPES = ['total', 'bh'];                         // total age, breast-height age (K8: never converted)
 
 /** ln(1 − e^(−x)) for x > 0 without cancellation (log(−expm1(−x)) below ln 2, log1p(−e^(−x)) above). */
@@ -146,4 +147,96 @@ export function evaluate(m, rows, { valid = null, classes = [] } = {}) {
 /** Model for the calculator from a stored coefficient set (model-coef/1, tool 'siteindex'; form id 'si.<form>'). */
 export function modelFromSet(set, baseAge) {
   return { form: String(set.form).replace(/^si\./, ''), params: set.params, ageType: set.meta && set.meta.ageType || null, baseAge };
+}
+
+/* ---------------- SI03: fitting a difference equation to the user's own height–age series ---------------- */
+// Series: stem analysis (one tree, many ages) or repeated measurements of a plot's top height. The equation is fitted to
+// PAIRS of observations of the same series, H2 = f(A2, A1, H1); how the pairs are formed is a setting and changes the fit:
+//   'consecutive'  (1→2, 2→3, …)      'first'  (1→2, 1→3, …: from the first observation)      'all'  (every i < j)
+// Pairs are forward in age only. Observations of one series are not independent, so standard errors from the usual
+// σ̂²(JᵀJ)⁻¹ are labelled "assuming independent observations" (SI04 gives a series-level bootstrap).
+
+export const PAIRINGS = ['consecutive', 'first', 'all'];
+/** series: [{ id, points: [{ A, H, row? }] }] (any order); returns pairs [{ id, A1, H1, A2, H2 }] and counts. */
+export function makePairs(series, mode = 'consecutive') {
+  const pairs = [];
+  for (const s of series) {
+    const p = [...s.points].sort((a, b) => a.A - b.A);
+    for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) {
+      if (mode === 'consecutive' && j !== i + 1) continue;
+      if (mode === 'first' && i !== 0) continue;
+      if (!(p[j].A > p[i].A)) continue;                                  // equal ages give no information on growth
+      pairs.push({ id: s.id, A1: p[i].A, H1: p[i].H, A2: p[j].A, H2: p[j].H });
+    }
+  }
+  return pairs;
+}
+const dL = (b1, A) => A / Math.expm1(b1 * A);                            // d/db1 of ln(1 − e^(−b1·A))
+/** Analytic gradients of H2 with respect to the global parameters (in FORMS[id].params order). */
+export const GRAD = {
+  'cr.ada.b0': ([b1, b2], x) => { const L1 = lnOneMinusExp(b1 * x.A1), L2 = lnOneMinusExp(b1 * x.A2), H2 = x.H1 * Math.exp(b2 * (L2 - L1)); return [H2 * b2 * (dL(b1, x.A2) - dL(b1, x.A1)), H2 * (L2 - L1)]; },
+  'cr.ada.b2': ([b0, b1], x) => { const L1 = lnOneMinusExp(b1 * x.A1), L2 = lnOneMinusExp(b1 * x.A2), r = L2 / L1, q = Math.log(x.H1 / b0), e = Math.exp(q * r);
+    return [e * (1 - r), b0 * e * q * (dL(b1, x.A2) * L1 - L2 * dL(b1, x.A1)) / (L1 * L1)]; },
+  'schu.ada': ([b1], x) => { const k = 1 / x.A2 - 1 / x.A1; return [x.H1 * Math.exp(b1 * k) * k]; },
+};
+/** Start values: a small grid over plausible values (a tool rule), the one with the least squared error is used. */
+export function startGrid(id, pairs) {
+  const hmax = Math.max(...pairs.map(p => Math.max(p.H1, p.H2)));
+  const g = { 'cr.ada.b0': [[0.005, 0.01, 0.02, 0.03, 0.05, 0.08], [0.8, 1.0, 1.3, 1.6, 2.0, 2.5]], 'cr.ada.b2': [[1.1, 1.25, 1.5, 2, 3].map(k => k * hmax), [0.005, 0.01, 0.02, 0.03, 0.05, 0.08]], 'schu.ada': [[-5, -10, -20, -30, -45, -60, -90]] }[id];
+  const combos = g.length === 1 ? g[0].map(a => [a]) : g[0].flatMap(a => g[1].map(b => [a, b]));
+  let best = null;
+  for (const th of combos) { const s = sse(id, th, pairs); if (Number.isFinite(s) && (!best || s < best.sse)) best = { theta: th, sse: s }; }
+  return best ? best.theta : null;
+}
+function predictTheta(id, theta, x) { const f = FORMS[id], p = Object.fromEntries(f.params.map((k, i) => [k, theta[i]])); return f.project(p, x.A2, x.A1, x.H1); }
+function sse(id, theta, pairs) { let s = 0; for (const x of pairs) { const v = predictTheta(id, theta, x); if (!fin(v)) return Infinity; s += (x.H2 - v) ** 2; } return s; }
+/**
+ * Fits a form to pairs by Levenberg–Marquardt (core/nls.js). start: [θ] or null (grid). Returns { status, params, se,
+ * seNote, start, startFrom, iter, reason, n, nSeries, rmse, bias, sigma, residuals: [{ id, A1, A2, H2, pred, e }] }.
+ * e = predicted − observed (Model Evaluation definitions: bias = mean e, RMSE = √(Σe²/n)). A converged fit whose
+ * parameters break the form's rules (e.g. b1 ≤ 0) is reported as 'invalid', never as a usable set.
+ */
+export function fitPairs(id, pairs, { start = null, nSeries = null } = {}) {
+  const f = FORMS[id], p = f ? f.params.length : 0, base = { form: id, n: pairs.length, nSeries };
+  if (!f) return { ...base, status: 'invalid', problems: [{ code: 'form.unknown' }] };
+  if (pairs.length <= p) return { ...base, status: 'invalid', problems: [{ code: 'fit.few', n: pairs.length, p }] };
+  const th0 = start || startGrid(id, pairs);
+  if (!th0) return { ...base, status: 'invalid', problems: [{ code: 'fit.nostart' }] };
+  const model = { f: (th, x) => predictTheta(id, th, x), grad: (th, x) => GRAD[id](th, x) };
+  const valid = th => !f.check(Object.fromEntries(f.params.map((k, i) => [k, th[i]]))).length;
+  const r = levenbergMarquardt(model, pairs, pairs.map(x => x.H2), th0, { valid, maxIter: 1000, xtol: 1e-15, ftol: 1e-16, gtol: 1e-12 });
+  const out = { ...base, start: th0, startFrom: start ? 'user' : 'grid', iter: r.iter, reason: r.reason ?? null, stop: { xtol: 1e-15, ftol: 1e-16, gtol: 1e-12, maxIter: 1000 } };
+  if (r.status !== 'ok') return { ...out, status: r.status, problems: [{ code: 'fit.' + r.status }] };
+  const params = Object.fromEntries(f.params.map((k, i) => [k, r.theta[i]]));
+  const bad = f.check(params);
+  if (bad.length) return { ...out, status: 'invalid', params, problems: bad };
+  const residuals = pairs.map(x => { const pred = predictTheta(id, r.theta, x); return { id: x.id, A1: x.A1, H1: x.H1, A2: x.A2, H2: x.H2, pred, e: pred - x.H2 }; });
+  const n = pairs.length, bias = residuals.reduce((a, q) => a + q.e, 0) / n, rmse = Math.sqrt(r.sse / n);
+  const cov = n > p ? covariance(model, r.theta, pairs, r.sse) : null;
+  return { ...out, status: 'ok', params, theta: r.theta, sse: r.sse, rmse, bias, sigma: Math.sqrt(r.sse / (n - p)),
+    se: cov ? Object.fromEntries(f.params.map((k, i) => [k, cov.se[i]])) : null, seNote: 'independent-observations', residuals };
+}
+/**
+ * Height–age series from a raw table (core/table.js). map: { series (required), plot?, A, H }. The series key is
+ * plot + series id (ids are text). Unreadable or non-positive values are reported with their rows and left out;
+ * repeated ages in one series are reported (the pair builder ignores equal ages). Returns { series, problems }.
+ */
+export function seriesFromTable(tbl, map, decimal, parseNumber, cellText) {
+  const by = new Map(), problems = [];
+  tbl.rows.forEach((r, i) => {
+    const row = tbl.rowNumbers[i], txt = c => c == null ? '' : cellText(c).trim();
+    if (r.every(c => txt(c) === '')) return;
+    const sid = txt(r[map.series]), plot = map.plot != null ? txt(r[map.plot]) : '';
+    if (!sid) { problems.push({ code: 'ser.id', row }); return; }
+    const rd = c => c == null ? { status: 'empty' } : c.t === 'n' ? parseNumber(c.v, decimal) : parseNumber(cellText(c), decimal);
+    const A = rd(r[map.A]), H = rd(r[map.H]);
+    if (A.status !== 'ok' || !(A.value > 0)) { problems.push({ code: 'ser.a', row, text: txt(r[map.A]) }); return; }
+    if (H.status !== 'ok' || !(H.value > 0)) { problems.push({ code: 'ser.h', row, text: txt(r[map.H]) }); return; }
+    const key = plot ? `${plot} / ${sid}` : sid;
+    if (!by.has(key)) by.set(key, { id: key, points: [] });
+    const s = by.get(key);
+    if (s.points.some(p => p.A === A.value)) problems.push({ code: 'ser.dup', row, id: key, A: A.value });
+    s.points.push({ A: A.value, H: H.value, row });
+  });
+  return { series: [...by.values()], problems };
 }

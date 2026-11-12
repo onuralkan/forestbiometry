@@ -40,6 +40,7 @@ jobs:
           node tests/secvol/test_sv01.mjs
           node tests/secvol/test_sv03.mjs
           node tests/siteindex/test_si01.mjs
+          node tests/siteindex/test_si03.mjs
           node tests/dist/test_p01.mjs
           node tests/dist/test_p05.mjs
           node tests/dist/test_p06.mjs

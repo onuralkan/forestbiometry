@@ -10,6 +10,8 @@ import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core
 import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport } from '../core/importer.js';
 import { mountCoefEditor } from '../core/coef-ui.js';
+import { saveCoef, blankSet } from '../core/coef.js';
+import { scatterChart } from '../core/chart.js';
 import { buildUnits, unitMetrics } from '../stand/calc.js';
 
 const BASE = './', KEY = 'session:' + S.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
@@ -24,6 +26,7 @@ const EXTRA = [
 let S0 = blank(), sets = [], R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, setId: null, a0: '', cls: { mode: 'none', start: '', width: '', n: '', list: '', order: 'desc' },
+    fit: { imp: null, src: null, map: { series: null, plot: null, A: null, H: null }, decimal: null, decimalChosen: false, form: 'cr.ada.b0', pairing: 'consecutive', startMode: 'grid', start: {}, ageType: '', topDef: '', topNote: '', cit: '', open: false },
     mode: 'single', A: '', H: '', imp: null, src: null, map: { plot: null, period: null, A: null, H: null }, decimal: null, decimalChosen: false, dAge: null, rank: 'dbh' };
 }
 let saveT = null;
@@ -53,7 +56,7 @@ function modelProblems() {
 let editor = null;
 function renderStep1() {
   const el = $('step1');
-  if (!editor) { el.innerHTML = '<div id="coefbox"></div><div id="m-rest"></div>'; editor = mountCoefEditor($('coefbox'), { tool: 'siteindex', extra: EXTRA, onChange: s => { sets = s; if (S0.setId && !curSet()) S0.setId = null; if (!S0.setId && sets.length === 1) S0.setId = sets[0].id; renderRest(); } }); }
+  if (!editor) { el.innerHTML = '<div id="coefbox"></div><details class="card more" id="fitbox"><summary>' + T('fit.h') + '</summary><div id="fitbody"></div></details><div id="m-rest"></div>'; $('fitbox').open = !!S0.fit.open; $('fitbox').addEventListener('toggle', e => { S0.fit.open = e.target.open; save(); if (e.target.open) renderFit(); }); if (S0.fit.open) setTimeout(renderFit, 0); editor = mountCoefEditor($('coefbox'), { tool: 'siteindex', extra: EXTRA, onChange: s => { sets = s; if (S0.setId && !curSet()) S0.setId = null; if (!S0.setId && sets.length === 1) S0.setId = sets[0].id; renderRest(); } }); }
   renderRest();
   function renderRest() {
     const set = curSet(), cd = S.classesOf(classDef());
@@ -78,6 +81,87 @@ function renderStep1() {
     $('reset').addEventListener('click', async () => { const keep = S0.setId; S0 = { ...blank(), setId: keep }; R = null; status(''); save(); render(); });
     $('to2').addEventListener('click', () => go(2));
   }
+}
+
+/* ---------------- SI03: fitting to the user's own height–age series ---------------- */
+let FR = null;                                                   // last fit (not stored; recomputed on demand)
+const FGUESS = { series: ['agac', 'ağaç', 'tree', 'tree_id', 'seri', 'series', 'id'], plot: ['alan', 'plot', 'plot_id', 'ornek_alan'], A: ['yas', 'yaş', 'age', 'a'], H: ['boy', 'h', 'height', 'ust_boy', 'üst_boy', 'h0'] };
+function fitSeries() { const F = S0.fit; return S.seriesFromTable(F.src, F.map, F.decimal, parseNumber, cellText); }
+function renderFit() {
+  const el = $('fitbody'); if (!el) return;
+  const F = S0.fit, fm = S.FORMS[F.form];
+  let h = `<p class="muted small">${T('fit.sub')}</p><div id="fitimp"></div>`;
+  if (F.src) {
+    const opts = sel => `<option value="">${T('none')}</option>` + F.src.headers.map((x, i) => `<option value="${i}"${sel === i ? ' selected' : ''}>${esc(x)}</option>`).join('');
+    const dv = detectDecimal([F.map.A, F.map.H].filter(c => c != null).flatMap(c => F.src.rows.map(r => r[c]).filter(x => x && x.t === 's').map(x => x.v)));
+    if (!F.decimalChosen) F.decimal = defaultDecimal(dv.verdict);
+    h += `<div class="lims">${['series', 'plot', 'A', 'H'].map(k => `<label>${T('fit.col.' + k)} <select id="fm-${k}">${opts(F.map[k])}</select></label>`).join('')}</div>
+      <div class="radios"><span class="small">${T('d.dec')}:</span> <label class="small"><input type="radio" name="fdec" value="."${F.decimal === '.' ? ' checked' : ''}> ${T('d.dec.dot')}</label><label class="small"><input type="radio" name="fdec" value=","${F.decimal === ',' ? ' checked' : ''}> ${T('d.dec.comma')}</label></div>
+      <div class="lims"><label>${T('fit.form')} <select id="f-form">${S.FORM_IDS.map(id => `<option value="${id}"${F.form === id ? ' selected' : ''}>${esc(formName(id))}</option>`).join('')}</select></label></div>
+      <div class="radios col"><span class="small"><b>${T('fit.pair')}</b></span>${S.PAIRINGS.map(m => `<label><input type="radio" name="fpair" value="${m}"${F.pairing === m ? ' checked' : ''}> ${T('fit.pair.' + m)}</label>`).join('')}</div>
+      <div class="radios"><span class="small"><b>${T('fit.start')}</b></span> ${['grid', 'user'].map(m => `<label class="small"><input type="radio" name="fstart" value="${m}"${F.startMode === m ? ' checked' : ''}> ${T('fit.start.' + m)}</label>`).join(' ')}</div>
+      ${F.startMode === 'user' ? `<div class="lims">${fm.params.map(k => `<label>${k} <input type="text" inputmode="decimal" size="8" id="fs-${k}" value="${esc(F.start[k] ?? '')}"></label>`).join('')}</div>` : ''}
+      <div class="nav"><button type="button" class="btn" id="f-run"${F.map.series == null || F.map.A == null || F.map.H == null ? ' disabled' : ''}>${T('fit.run')}</button></div><div id="fitout"></div>`;
+  }
+  el.innerHTML = h;
+  renderImport($('fitimp'), { imp: F.imp, src: F.src }, { base: BASE, title: T('fit.imp'), sub: T('fit.imp.sub'), onChange: st => {
+    F.imp = st.imp; F.src = st.src; F.map = { series: null, plot: null, A: null, H: null }; F.decimalChosen = false; FR = null;
+    if (F.src) { const H = F.src.headers.map(x => x.toLocaleLowerCase('tr').trim()); for (const [k, names] of Object.entries(FGUESS)) { const i = H.findIndex(x => names.includes(x)); if (i >= 0) F.map[k] = i; } }
+    save(); renderFit(); }, onError: m => status(m, 'err') });
+  if (!F.src) return;
+  const re = () => { FR = null; save(); renderFit(); };
+  for (const k of ['series', 'plot', 'A', 'H']) $('fm-' + k).addEventListener('change', e => { F.map[k] = e.target.value === '' ? null : +e.target.value; re(); });
+  el.querySelectorAll('input[name="fdec"]').forEach(x => x.addEventListener('change', () => { F.decimal = x.value; F.decimalChosen = true; re(); }));
+  $('f-form').addEventListener('change', e => { F.form = e.target.value; F.start = {}; re(); });
+  el.querySelectorAll('input[name="fpair"]').forEach(x => x.addEventListener('change', () => { F.pairing = x.value; re(); }));
+  el.querySelectorAll('input[name="fstart"]').forEach(x => x.addEventListener('change', () => { F.startMode = x.value; re(); }));
+  for (const k of fm.params) $('fs-' + k) && $('fs-' + k).addEventListener('change', e => { F.start[k] = e.target.value; re(); });
+  $('f-run').addEventListener('click', () => runFit());
+  if (FR) drawFit();
+}
+function runFit() {
+  const F = S0.fit, fm = S.FORMS[F.form], { series, problems } = fitSeries(), pairs = S.makePairs(series, F.pairing);
+  let start = null;
+  if (F.startMode === 'user') { start = fm.params.map(k => num(F.start[k])); if (start.some(v => !Number.isFinite(v))) { FR = { status: 'invalid', problems: [{ code: 'fit.startbad' }], readProblems: problems }; drawFit(); return; } }
+  FR = { ...S.fitPairs(F.form, pairs, { start, nSeries: series.length }), readProblems: problems, series, pairing: F.pairing, created: new Date().toISOString() };
+  drawFit();
+}
+function drawFit() {
+  const out = $('fitout'); if (!out || !FR) return;
+  const F = S0.fit, fm = S.FORMS[FR.form || F.form];
+  let h = '';
+  if (FR.readProblems && FR.readProblems.length) h += `<p class="note warn small" id="fitread">${esc(T('fit.read', { n: FR.readProblems.length, rows: FR.readProblems.slice(0, 12).map(p => p.row).join(', ') }))}</p>`;
+  if (FR.status !== 'ok') { out.innerHTML = h + `<p class="note err" id="fitstate">${esc(T('fit.fail', { why: (FR.problems || []).map(p => T('c.' + p.code, p)).join('; ') || FR.status }))}</p>`; return; }
+  h += `<p class="small" id="fitsum">${esc(T('fit.sum', { n: FR.n, s: FR.nSeries, pair: T('fit.pair.' + FR.pairing), it: FR.iter, start: FR.start.map(v => fmtNum(v, 6)).join(', '), from: T('fit.start.' + FR.startFrom) }))}</p>
+    <div class="tscroll"><table class="grid" id="fittab"><thead><tr><th>${T('fit.par')}</th><th>${T('fit.est')}</th><th>${T('fit.se')}</th></tr></thead><tbody>
+    ${fm.params.map(k => `<tr><th>${k}</th><td class="num">${fmtNum(FR.params[k], 8)}</td><td class="num">${f(FR.se && FR.se[k], 6)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="muted small">${T('fit.senote')}</p>
+    <p class="small" id="fitgof">${esc(T('fit.gof', { rmse: fmtNum(FR.rmse, 4), bias: fmtNum(FR.bias, 4), sigma: fmtNum(FR.sigma, 4) }))}</p>`;
+  const amax = Math.max(...FR.series.flatMap(s => s.points.map(p => p.A))) * 1.05, ages = Array.from({ length: 81 }, (_, i) => Math.max(0.5, amax * i / 80));
+  const m = { form: FR.form, params: FR.params };
+  const lines = FR.series.slice(0, 30).map((s, i) => { const o = [...s.points].sort((a, b) => b.A - a.A)[0]; return { name: i === 0 ? T('fit.ch.lines') : null, k: i % 6, pts: ages.map(a => [a, (S.project(m, a, o.A, o.H).value ?? null)]).filter(q => q[1] != null) }; });
+  h += `<figure class="chartbox" id="ch-fit">${plotChart({ title: T('fit.ch.curves'), xmin: 0, xmax: amax, ymin: 0, lines, points: FR.series.flatMap(s => s.points.map(p => [p.A, p.H])), xLabel: T('fit.ch.age'), yLabel: T('fit.ch.h'), fmt: v => fmtNum(v, 1) })}
+    <figcaption class="muted small">${T('fit.ch.note')}</figcaption></figure>
+    <figure class="chartbox" id="ch-res">${scatterChart({ title: T('fit.ch.res'), points: FR.residuals.map(r => [r.A2, r.e]), xLabel: T('fit.ch.age2'), yLabel: T('fit.ch.e'), hline: 0, fmt: v => fmtNum(v, 1) })}</figure>`;
+  h += `<h3>${T('fit.save.h')}</h3><p class="muted small">${T('fit.save.sub')}</p>
+    <div class="lims"><label>${T('x.ageType')} <select id="fx-age"><option value="">${T('none')}</option>${S.AGE_TYPES.map(v => `<option value="${v}"${F.ageType === v ? ' selected' : ''}>${T('x.ageType.' + v)}</option>`).join('')}</select></label>
+      <label>${T('x.topDef')} <select id="fx-top"><option value="">${T('none')}</option>${['h0dbh', 'h0height', 'other'].map(v => `<option value="${v}"${F.topDef === v ? ' selected' : ''}>${T('x.topDef.' + v)}</option>`).join('')}</select></label>
+      <label>${T('x.topNote')} <input type="text" size="20" id="fx-note" value="${esc(F.topNote)}"></label></div>
+    <label class="field"><span>${T('fit.cit')}</span><input type="text" id="fx-cit" value="${esc(F.cit)}" placeholder="${esc(T('fit.cit.ph'))}"></label>
+    <div class="nav"><button type="button" class="btn" id="fx-save">${T('fit.save')}</button></div><div id="fx-msg"></div>`;
+  out.innerHTML = h;
+  for (const [id, k] of [['fx-age', 'ageType'], ['fx-top', 'topDef'], ['fx-note', 'topNote'], ['fx-cit', 'cit']]) $(id).addEventListener('change', e => { F[k] = e.target.value; save(); });
+  $('fx-save').addEventListener('click', async () => {
+    const miss = [!F.ageType && T('x.ageType'), !F.topDef && T('x.topDef'), !String(F.cit).trim() && T('fit.cit')].filter(Boolean);
+    if (miss.length) { $('fx-msg').innerHTML = `<p class="note err small">${esc(T('fit.miss', { list: miss.join(', ') }))}</p>`; return; }
+    const allA = FR.series.flatMap(s => s.points.map(p => p.A)), allH = FR.series.flatMap(s => s.points.map(p => p.H));
+    const set = { ...blankSet('si.' + FR.form), params: { ...FR.params }, valid: { A: [Math.min(...allA), Math.max(...allA)], H: [Math.min(...allH), Math.max(...allH)] },
+      meta: { ageType: F.ageType, topDef: F.topDef, ...(F.topNote.trim() ? { topNote: F.topNote.trim() } : {}) }, source: { citation: F.cit.trim() }, origin: 'fitted',
+      fit: { data: F.imp ? F.imp.name : null, n: FR.n, nSeries: FR.nSeries, pairing: FR.pairing, method: 'Levenberg–Marquardt', start: FR.start, startFrom: FR.startFrom, iter: FR.iter, rmse: FR.rmse, bias: FR.bias, sigma: FR.sigma, se: FR.se, seNote: FR.seNote, created: FR.created } };
+    const r = await saveCoef(set);
+    if (!r.ok) { $('fx-msg').innerHTML = `<p class="note err small">${esc(r.problems.map(p => p.code).join(', '))}</p>`; return; }
+    S0.setId = r.set.id; save(); $('fx-msg').innerHTML = `<p class="note ok small" id="fx-ok">${T('fit.saved')}</p>`; editor && editor.refresh();
+  });
 }
 
 /* ---------------- data ---------------- */
