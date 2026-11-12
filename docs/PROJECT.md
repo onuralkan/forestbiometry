@@ -29,6 +29,7 @@ boy-cap.php                  Araç 5: Boy–Çap Modelleme (sabit etkili sürüm
 ornekleme.php                Araç 6: Envanter Örnekleme Planlayıcısı (basit rastgele örnekleme, ilk sürüm; tek sayfa, adım yok)
 nispi-siralama.php           Araç 7: Nispi Sıralama / Relative Ranking (5 ve 6'dan önce yapıldı)
 bonitet.php                  Araç 9: Bonitet Hesaplayıcısı / Site Index (TOOLS_SPEC SI; SQ-01, SQ-02; modül "Yetişme ortamı verimliliği")
+mescere-yapisi.php           Araç 10: Meşcere Yapısı ve Rekabet / Stand Structure & Competition (SS-02, SS-04…SS-07; TOOLS_SPEC SS01–SS04; modül "Meşcere yapısı ve sıklığı")
 seksiyon-hacmi.php           Araç 8: Seksiyon Hacmi Hesaplayıcısı / Stem Section Volume (TOOLS_SPEC SV; SV-01; modül "Gövde hacmi ve profili")
 inc/site.php                 Ortak kabuk: site_top(), site_bottom(), site_tools(), SITE_AUTHOR (web erişimine kapalı)
 legacy/                      Yayınlanmaz. Eski sitenin test edilmiş hesap kodu (tools.js: gamma, normal, lognormal, SB, Weibull yüzdelik) ve testi; sonraki modüllere taşınacak

@@ -90,12 +90,12 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 | Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
 |---|---|---|---|---|
 | SS-01 | Meşcere özeti (N/ha, G/ha, Dq, üst boy) | yayında | `ornek-alan.php` | Örnek Alan ve Meşcere |
-| SS-02 | Meşcere sıklık endeksleri (Reineke SDI, göreli sıklık, CCF, Curtis RD) | yolda | (`mescere-yapisi.php`) | SDI ve RD hazır (Reineke 1933, Curtis 1982 [B]); göreli aralık tanım istisnası; CCF için Krajicek ve ark. (1961): kullanıcıdan PDF |
+| SS-02 | Meşcere sıklık endeksleri (Reineke SDI, göreli sıklık, CCF, Curtis RD) | yayında | `mescere-yapisi.php` | SDI ve RD hazır (Reineke 1933, Curtis 1982 [B]); göreli aralık tanım istisnası; CCF için Krajicek ve ark. (1961): kullanıcıdan PDF |
 | SS-03 | Çap dağılımı (Weibull, gamma, Johnson SB…; geri kazanım) | yayında | `cap-dagilimi.php` | Çap Dağılımı Laboratuvarı 2.2.0 |
-| SS-04 | Çeşitlilik endeksleri (Shannon, Simpson, tür zenginliği) | yolda | (`mescere-yapisi.php`) | İstatistiksel tanım |
-| SS-05 | Yapısal çeşitlilik endeksleri (Gini, karışım, farklılaşma) | yolda | (`mescere-yapisi.php`) | Gini tanım; M, T, U Pommerening (2002): yüklendi, doğrulama bekliyor |
-| SS-06 | Mekânsal desen çözümlemesi (Ripley K/L, çift korelasyon, Clark–Evans) | yolda | (`mescere-yapisi.php`) | Clark–Evans ve Donnelly hazır (yüklendi, doğrulama bekliyor); Ripley K/L ve çift korelasyon işlevi için kaynak: kullanıcıdan PDF |
-| SS-07 | Rekabet endeksleri (Hegyi; uzaklığa bağlı ve bağımsız) | yolda | (`mescere-yapisi.php`) | SS-07/a1 hesabı hazır (`structure/competition.js`); Hegyi (1974) geçici istisna, kullanıcıdan PDF |
+| SS-04 | Çeşitlilik endeksleri (Shannon, Simpson, tür zenginliği) | yayında | `mescere-yapisi.php` | İstatistiksel tanım |
+| SS-05 | Yapısal çeşitlilik endeksleri (Gini, karışım, farklılaşma) | yayında | `mescere-yapisi.php` | Gini tanım; M, T, U Pommerening (2002): yüklendi, doğrulama bekliyor |
+| SS-06 | Mekânsal desen çözümlemesi (Ripley K/L, çift korelasyon, Clark–Evans) | yayında | `mescere-yapisi.php` | Clark–Evans ve Donnelly hazır (yüklendi, doğrulama bekliyor); Ripley K/L ve çift korelasyon işlevi için kaynak: kullanıcıdan PDF |
+| SS-07 | Rekabet endeksleri (Hegyi; uzaklığa bağlı ve bağımsız) | yayında | `mescere-yapisi.php` | SS-07/a1 hesabı hazır (`structure/competition.js`); Hegyi (1974) geçici istisna, kullanıcıdan PDF |
 
 ### SQ — Yetişme ortamı verimliliği
 
