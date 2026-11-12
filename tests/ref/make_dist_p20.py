@@ -1,4 +1,4 @@
-"""Reference for the diameter distribution engine, stage P20, part 1: generalized gamma (docs/DIST_SPEC.md P20).
+"""Reference for the diameter distribution engine, stage P20: generalized gamma and Gumbel (docs/DIST_SPEC.md P20).
 
 SciPy/NumPy/mpmath only; nothing shared with the JavaScript code (which profiles the likelihood over c):
   - functions: mpmath at 40 digits from the definition f = c/(bΓ(a))·(d/b)^(ac−1)·exp[−(d/b)^c], F = P(a, (d/b)^c),
@@ -12,6 +12,12 @@ SciPy/NumPy/mpmath only; nothing shared with the JavaScript code (which profiles
   - grouped ML (2 cm classes, counts, outside = zero): Nelder–Mead on −Σ n_j ln[F(hi) − F(lo)]
   - a sample whose ln d is right-skewed: the profile log-likelihood (score equations in a, b at fixed c, mpmath) rises
     as c → 0
+Gumbel, maximum form (scipy.stats.gumbel_r(loc = μ, scale = β)):
+  - functions: mpmath at 40 digits from F = exp(−e^(−z)) on grids reaching both tails; gumbel_r in the body
+  - mean, variance and F(0) (probability of a negative diameter) from gumbel_r
+  - ML: the two score equations at 30 digits (mpmath.findroot), gumbel_r.fit as a cross-check
+  - moments: fsolve of gumbel_r.stats('mv') = (mean, var_n) (not the closed form)
+  - conditional ML inside L ≤ d ≤ U, grouped ML (2 cm classes): Nelder–Mead on the likelihoods
 Samples: tests/weibull/fixture.json and simulated samples (numpy default_rng(20261120); NOT real measurements).
 
     python3 tests/ref/make_dist_p20.py  →  tests/ref/dist_p20.json
@@ -32,6 +38,9 @@ SIM = {
     "sim_gg_a08_c28": np.round(stats.gengamma(0.8, 2.8, scale=25).rvs(200, random_state=rng), 1),
     "sim_logskew": np.round(np.exp(2.3 + stats.gamma(2.0, scale=0.25).rvs(150, random_state=rng)), 2),   # ln d right-skewed
 }
+SIM["sim_gumbel_m18_b6"] = np.round(stats.gumbel_r(18, 6).rvs(250, random_state=rng), 1)
+g = stats.gumbel_r(9, 5).rvs(400, random_state=rng)
+SIM["sim_gumbel_m9_b5_pos"] = np.round(g[g > 0.5][:200], 1)             # mass below zero under the fitted model
 out = {"scipy": scipy.__version__, "numpy": np.__version__, "mpmath": mp.__version__, "seed": 20261120, "sim": {k: v.tolist() for k, v in SIM.items()}}
 qs = [1e-12, 1e-6, 0.01, 0.25, 0.5, 0.9, 0.999, 1 - 1e-9]
 mp.mp.dps = 40
@@ -162,6 +171,77 @@ for c in [1.0, 0.3, 0.1, 0.03, 0.012]:
     prof.append(dict(c=c, a=float(a), b=float(b), logLik=float(ll)))
 mp.mp.dps = 40
 out["logskew"] = dict(sample="sim_logskew", skewLog=float(stats.skew(np.log(d))), profile=prof, lognormalLogLik=float(stats.lognorm.logpdf(d, np.log(d).std(), scale=np.exp(np.log(d).mean())).sum()))
+
+
+# ---------------- Gumbel (maximum form) ----------------
+def gb_mp(mu, beta, xs):
+    mu, beta = mp.mpf(mu), mp.mpf(beta)
+    rows = dict(pdf=[], logpdf=[], cdf=[], logcdf=[], sf=[], logsf=[])
+    for x in xs:
+        z = (mp.mpf(x) - mu) / beta; t = mp.exp(-z)
+        lf = -mp.log(beta) - z - t; F = mp.exp(-t); S = -mp.expm1(-t)
+        for k, v in [("pdf", mp.exp(lf)), ("logpdf", lf), ("cdf", F), ("logcdf", -t), ("sf", S), ("logsf", mp.log(S))]:
+            rows[k].append(float(v))
+    rows["ppf"] = [float(mu - beta * mp.log(-mp.log(mp.mpf(q)))) for q in qs]
+    return rows
+
+
+out["gumbel"] = []
+for mu, beta in [(20, 5), (6, 5), (30, 0.8), (0, 12)]:
+    D = stats.gumbel_r(mu, beta)
+    xs = sorted({float(x) for x in [D.ppf(1e-14), D.ppf(1e-6), 0.0, D.ppf(0.05), D.median(), D.ppf(0.75), D.isf(1e-6), D.isf(1e-14), mu + 800 * beta]})
+    body = [float(D.ppf(0.05)), float(D.median()), float(D.ppf(0.75))]
+    m, v = D.stats("mv")
+    out["gumbel"].append(dict(mu=mu, beta=beta, x=xs, q=qs, **gb_mp(mu, beta, xs), mean=float(m), var=float(v), p0=float(D.cdf(0)),
+                              scipy=dict(x=body, pdf=D.pdf(body).tolist(), cdf=D.cdf(body).tolist(), logpdf=D.logpdf(body).tolist(), sf=D.sf(body).tolist())))
+
+
+def gb_score(d):
+    mp.mp.dps = 30
+    dm = [mp.mpf(float(x)) for x in d]; n = len(dm)
+    mu0, b0 = stats.gumbel_r.fit(d)
+
+    def eqs(mu, lb):
+        b = mp.exp(lb); t = [mp.exp(-(x - mu) / b) for x in dm]
+        return [mp.fsum(t) - n, mp.fsum((x - mu) / b * (1 - e) for x, e in zip(dm, t)) - n]
+    mu, lb = mp.findroot(eqs, (mp.mpf(mu0), mp.log(b0)))
+    b = mp.exp(lb)
+    ll = mp.fsum(-mp.log(b) - (x - mu) / b - mp.exp(-(x - mu) / b) for x in dm)
+    mp.mp.dps = 40
+    return dict(mu=float(mu), beta=float(b), logLik=float(ll), scipyfit=dict(mu=float(mu0), beta=float(b0)))
+
+
+out["gumbel_fit"] = []
+for name in ["sim_gumbel_m18_b6", "sim_gumbel_m9_b5_pos", "w2", "w3"]:
+    d = np.array(SIM[name] if name in SIM else FX[name], float)
+    ml = gb_score(d)
+    mom = {}
+    for div in ["n", "n-1"]:
+        mean, var = d.mean(), d.var(ddof=0 if div == "n" else 1)
+        r = optimize.fsolve(lambda t: [stats.gumbel_r(t[0], np.exp(t[1])).mean() - mean, stats.gumbel_r(t[0], np.exp(t[1])).var() / var - 1], [mean, np.log(d.std())], xtol=1e-14)
+        mom[div] = dict(mu=float(r[0]), beta=float(np.exp(r[1])))
+    out["gumbel_fit"].append(dict(sample=name, ml=dict(**ml, p0=float(stats.gumbel_r(ml["mu"], ml["beta"]).cdf(0))), mom=mom))
+
+# conditional ML inside 8 ≤ d ≤ 40 (both thresholds) on the first simulated Gumbel sample
+d = np.array(SIM["sim_gumbel_m18_b6"], float); L, U = 8.0, 40.0; dt = d[(d >= L) & (d <= U)]
+tn = lambda t: -(stats.gumbel_r.logpdf(dt, t[0], np.exp(t[1])).sum() - len(dt) * np.log(stats.gumbel_r.cdf(U, t[0], np.exp(t[1])) - stats.gumbel_r.cdf(L, t[0], np.exp(t[1]))))
+r = best_nm(tn, [np.array([18.0, np.log(6.0)]), np.array([25.0, np.log(3.0)]), np.array([10.0, np.log(10.0)])])
+out["gumbel_tml"] = dict(sample="sim_gumbel_m18_b6", lower=L, upper=U, d=dt.tolist(), mu=float(r.x[0]), beta=float(np.exp(r.x[1])), logLik=float(-r.fun))
+# grouped ML: 2 cm classes from 0, counts, last class open, outside = zero
+edges = np.arange(0, 2 * np.ceil(d.max() / 2) + 2, 2.0); cnt = np.histogram(d, edges)[0]
+lo, hi = edges[:-1], np.append(edges[1:-1], np.inf)
+
+
+def gbn(t):
+    p = stats.gumbel_r.cdf(hi, t[0], np.exp(t[1])) - stats.gumbel_r.cdf(lo, t[0], np.exp(t[1]))
+    if np.any((cnt > 0) & (p <= 0)):
+        return np.inf
+    return -(cnt[cnt > 0] * np.log(p[cnt > 0])).sum()
+
+
+r = best_nm(gbn, [np.array([18.0, np.log(6.0)]), np.array([25.0, np.log(3.0)])])
+out["gumbel_gml"] = dict(sample="sim_gumbel_m18_b6", classes=[dict(lo=float(a), hi=(None if b == np.inf else float(b)), n=int(k)) for a, b, k in zip(lo, hi, cnt)],
+                         mu=float(r.x[0]), beta=float(np.exp(r.x[1])), logLik=float(-r.fun))
 
 (here / "dist_p20.json").write_text(json.dumps(out, indent=1))
 print("written", here / "dist_p20.json")

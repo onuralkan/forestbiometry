@@ -324,7 +324,7 @@ function notesOf(r) {
   if (r.error) out.push(T('e.' + r.error.code, r.error.detail));
   if (r.status === 'ok' && r.truncation && r.truncation.mass != null) { const t = r.truncation;
     out.push(T('dg.trunc', { L: t.lower ?? '–', U: t.upper ?? '∞', m: fP(t.mass), n: fmtNum(t.nObserved, 0), N: f(t.nPopulation, 1), s: T('tr.n.' + (r.settings.nScope || 'observed')) })); }
-  if (r.status === 'ok' && r.diagnostics && r.diagnostics.pBelowZero != null) out.push(T('dg.pBelowZero', { p: fP(r.diagnostics.pBelowZero) }));
+  if (r.status === 'ok' && r.diagnostics && r.diagnostics.pBelowZero != null) out.push(T(has('dg.pBelowZero.' + r.family) ? 'dg.pBelowZero.' + r.family : 'dg.pBelowZero', { p: fP(r.diagnostics.pBelowZero) }));
   if (r.status === 'ok' && r.diagnostics && r.diagnostics.scale != null) out.push(T('dg.scale', { s: f(r.diagnostics.scale, 4) }));
   const mo = r.status === 'ok' && r.diagnostics && r.diagnostics.moments;                                    // log-logistic: moments that do not exist
   if (mo && !mo.meanDefined) out.push(T('dg.ll.nomean', { c: f(r.params.c, 4) }));

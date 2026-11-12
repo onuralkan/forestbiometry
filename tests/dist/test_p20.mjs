@@ -1,8 +1,8 @@
 // Diameter distribution engine, stage P20: generalized gamma (positive c, ML by the profile in c) and Gumbel (maximum
-// form; ML, moments; negative-diameter probability; conditional likelihood under thresholds).
+// form; ML, moments; negative-diameter probability; conditional likelihood under thresholds and for classes).
 //   node tests/dist/test_p20.mjs
 // Reference: tests/ref/dist_p20.json (tests/ref/make_dist_p20.py: mpmath at 40 digits, scipy.stats.gengamma / gamma /
-// weibull_min, Nelder–Mead on the full likelihood and mpmath.findroot of the three score equations at 30 digits).
+// weibull_min / gumbel_r, Nelder–Mead on the full likelihood and mpmath.findroot of the score equations at 30 digits).
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -74,6 +74,42 @@ ok(run('gengamma.ml', [12, 0, 15, 20]).problems.some(p => p.code === 'd.nonpos')
 { const g = R.gml, cl = g.classes.map(c => ({ lo: c.lo, hi: c.hi ?? Infinity, n: c.n })), r = D.runMethod('gengamma.gml', { type: 'classes', classes: cl, countType: 'count', outside: 'zero' });
   ok(r.status === 'ok', `gengamma.gml ok (${r.status})`); near(r.logLik, g.logLik, 'gengamma.gml ln L = Nelder–Mead on Σ n ln p', 1e-9);
   for (const k of ['a', 'b', 'c']) near(r.params[k], g[k], `gengamma.gml ${k}`, 2e-3); }
+
+/* ================= Gumbel, maximum form ================= */
+const GB = D.family('gumbel');
+eq(GB.params.map(p => [p.key, p.role, p.unit]), [['mu', 'location', 'cm'], ['beta', 'scale', 'cm']], 'Gumbel: μ location (cm), β scale (cm)');
+eq(D.methodsFor({ family: 'gumbel' }).map(m => [m.id, m.estimator, m.solver, m.likelihoodMaximised, !!m.optional]),
+  [['gumbel.ml', 'ml', 'brent', true, true], ['gumbel.mom', 'mom', 'closed form', false, true], ['gumbel.tml', 'ml', 'nelder-mead', true, true], ['gumbel.gml', 'ml', 'nelder-mead', true, true]], 'Gumbel methods: ML, moments (+ threshold and grouped ML), all optional');
+ok(GB.support({})[0] === -Infinity && D.families().filter(f => f.id.startsWith('gumbel')).length === 1, 'maximum form only (no minimum-form family); support: all real numbers');
+for (const g of R.gumbel) {
+  const p = { mu: g.mu, beta: g.beta }, tag = `gumbel(μ = ${g.mu}, β = ${g.beta})`;
+  g.x.forEach((x, i) => { for (const f of FNS) near(GB[f](x, p), g[f][i], `${tag} ${f}(${x}) = mpmath`, 1e-13); });
+  g.q.forEach((q, i) => near(GB.quantile(q, p), g.ppf[i], `${tag} quantile(${q}) = mpmath`, 1e-13));
+  g.scipy.x.forEach((x, i) => { for (const f of ['pdf', 'cdf', 'logpdf', 'sf']) near(GB[f](x, p), g.scipy[f][i], `${tag} ${f}(${x}) = SciPy gumbel_r`, 1e-13); });
+  near(GB.mean(p), g.mean, `${tag} mean μ + γ_E β = SciPy`, 1e-15); near(GB.variance(p), g.var, `${tag} variance π²β²/6 = SciPy`, 1e-15);
+  near(GB.diagnostics(p).pBelowZero, g.p0, `${tag} F(0) = SciPy`, 1e-13);
+}
+ok(GB.cdf(20 - 5 * Math.log(Math.log(2)), { mu: 20, beta: 5 }) - 0.5 < 1e-15 && GB.cdf(0, { mu: 0, beta: 1 }) === Math.exp(-1), 'median μ − β ln ln 2; F(μ) = 1/e (the maximum form, not the minimum form, where F(μ) = 1 − 1/e)');
+for (const g of R.gumbel_fit) {
+  const d = SAMPLES[g.sample], r = run('gumbel.ml', d), tag = `gumbel ${g.sample}`;
+  ok(r.status === 'ok', `${tag}: ML ok`);
+  near(r.params.mu, g.ml.mu, `${tag} ML μ = score root (30 digits)`, 1e-12); near(r.params.beta, g.ml.beta, `${tag} ML β`, 1e-12); near(r.logLik, g.ml.logLik, `${tag} ML ln L`, 1e-13);
+  near(r.params.mu, g.ml.scipyfit.mu, `${tag} ML = gumbel_r.fit`, 1e-7);
+  near(r.diagnostics.pBelowZero, g.ml.p0, `${tag} ML: F(0) reported`, 1e-11);
+  for (const div of ['n', 'n-1']) { const m = run('gumbel.mom', d, { varDivisor: div });
+    near(m.params.mu, g.mom[div].mu, `${tag} moments (${div}) μ = fsolve on gumbel_r.stats`, 1e-12); near(m.params.beta, g.mom[div].beta, `${tag} moments (${div}) β`, 1e-12);
+    ok(m.diagnostics.pBelowZero > 0 && m.settings.varDivisor === div && m.targets.varDivisor === div, `${tag} moments (${div}): divisor recorded, F(0) reported`); }
+}
+{ const g = R.gumbel_fit.find(x => x.sample === 'sim_gumbel_m9_b5_pos'); ok(SAMPLES[g.sample].every(v => v > 0) && g.ml.p0 > 1e-3, `positive diameters, yet the fitted Gumbel puts ${g.ml.p0.toFixed(4)} below zero: reported, not hidden`); }
+ok(run('gumbel.ml', [12, 12, 12]).problems.some(p => p.code === 'constant') && run('gumbel.mom', [20]).problems.some(p => p.code === 'n.few'), 'equal diameters or one tree: invalid');
+{ const t = R.gumbel_tml, r = run('gumbel.tml', t.d, { trunc: { lower: t.lower, upper: t.upper } });
+  ok(r.status === 'ok' && r.truncation.lower === t.lower && r.truncation.upper === t.upper, 'gumbel.tml ok, both thresholds recorded');
+  near(r.logLik, t.logLik, 'gumbel.tml ln L = Nelder–Mead on Σ ln f − n ln[F(U) − F(L)]', 1e-10); near(r.params.mu, t.mu, 'gumbel.tml μ', 1e-5); near(r.params.beta, t.beta, 'gumbel.tml β', 1e-5);
+  const u = run('gumbel.ml', t.d); ok(Math.abs(r.params.beta - u.params.beta) > 1e-3, 'conditional fit differs from the untruncated equations on the same trees');
+  ok(r.diagnostics.pBelowZero > 0, 'gumbel.tml: F(0) of the fitted model reported'); }
+{ const g = R.gumbel_gml, cl = g.classes.map(c => ({ lo: c.lo, hi: c.hi ?? Infinity, n: c.n })), r = D.runMethod('gumbel.gml', { type: 'classes', classes: cl, countType: 'count', outside: 'zero' });
+  ok(r.status === 'ok' && r.diagnostics.pBelowZero > 0, 'gumbel.gml ok, F(0) reported'); near(r.logLik, g.logLik, 'gumbel.gml ln L = Nelder–Mead on Σ n ln p', 1e-10);
+  near(r.params.mu, g.mu, 'gumbel.gml μ', 1e-5); near(r.params.beta, g.beta, 'gumbel.gml β', 1e-5); }
 
 console.log(`dist P20: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -44,10 +44,10 @@ await page.waitForSelector('#impbox .fname'); await page.click('#to2');
 ok(await page.inputValue('#dcol') === '2' && await page.inputValue('#pcol') === '0' && await page.inputValue('#percol') === '1', 'diameter, plot and period columns recognised');
 ok(await page.isChecked('input[name="dec"][value="."]'), 'decimal point by default (Turkish interface)');
 const offered = await page.evaluate(() => ({ fams: [...document.querySelectorAll('fieldset.fam')].map(x => x.dataset.fam), ms: [...document.querySelectorAll('[data-m]')].map(x => x.dataset.m), on: [...document.querySelectorAll('[data-m]:checked')].map(x => x.dataset.m) }));
-ok(offered.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb,exponential,loglogistic,gengamma' && offered.ms.join() === 'weibull.ml,weibull.mom,weibull.pct,weibull.lmom,normal.ml,normal.qme,normal.mge,lognormal.ml,lognormal.mom,gamma.ml,gamma.mom,gamma.lmom,gamma.qme,gamma.mge,beta.ml,beta.mom,beta.qme,beta.mge,johnsonsb.cml,johnsonsb.mom,johnsonsb.kb,johnsonsb.pct,exponential.ml,loglogistic.ml,loglogistic.pct,loglogistic.logmom,gengamma.ml' && !offered.on.some(m => m.startsWith('beta.') || m.startsWith('johnsonsb.')) && (await page.locator('.bndcard').count()) === 0 && (await page.locator('[data-m*=".rec"]').count()) === 0, 'selector shows only registered families and methods: ' + JSON.stringify(offered));
+ok(offered.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb,exponential,loglogistic,gengamma,gumbel' && offered.ms.join() === 'weibull.ml,weibull.mom,weibull.pct,weibull.lmom,normal.ml,normal.qme,normal.mge,lognormal.ml,lognormal.mom,gamma.ml,gamma.mom,gamma.lmom,gamma.qme,gamma.mge,beta.ml,beta.mom,beta.qme,beta.mge,johnsonsb.cml,johnsonsb.mom,johnsonsb.kb,johnsonsb.pct,exponential.ml,loglogistic.ml,loglogistic.pct,loglogistic.logmom,gengamma.ml,gumbel.ml,gumbel.mom' && !offered.on.some(m => m.startsWith('beta.') || m.startsWith('johnsonsb.')) && (await page.locator('.bndcard').count()) === 0 && (await page.locator('[data-m*=".rec"]').count()) === 0, 'selector shows only registered families and methods: ' + JSON.stringify(offered));
 for (const m of offered.ms) await page.uncheck(`[data-m="${m}"]`);
 ok(await page.isDisabled('#calc') && (await page.locator('#atext').count()) === 0, 'no method chosen: cannot calculate, no location card');
-for (const m of offered.ms) if (!/^(beta|johnsonsb|exponential|loglogistic|gengamma)\./.test(m) && !/\.(lmom|qme|mge)$/.test(m)) await page.check(`[data-m="${m}"]`);   // P18 methods are checked in 2o, P20 families in 2q   // P10 families are checked in 2e
+for (const m of offered.ms) if (!/^(beta|johnsonsb|exponential|loglogistic|gengamma|gumbel)\./.test(m) && !/\.(lmom|qme|mge)$/.test(m)) await page.check(`[data-m="${m}"]`);   // P18 methods are checked in 2o, P20 families in 2q   // P10 families are checked in 2e
 ok((await page.locator('#famcard .note', { hasText: 'kesilmemiş veri varsayar' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'aynı denklemlerdir' }).count()) === 1, 'truncation not supported: stated; normal ML = moments explained');
 ok(await page.isChecked('input[name="o-weibull.mom-varDivisor"][value="n"]') && await page.inputValue('#o-weibull-pct-p') === '0.24' && await page.inputValue('#o-weibull-pct-r') === '0.93', 'defaults: divisor n, percentiles 0.24 and 0.93 (Dubey)');
 await page.fill('#o-weibull-pct-p', '0.95'); await page.locator('#o-weibull-pct-p').dispatchEvent('change');
@@ -313,7 +313,7 @@ ok(await page.isDisabled('#calc') && (await page.locator('#trcard .note.err', { 
 await page.fill('#tr-L', '9'); await page.locator('#tr-L').dispatchEvent('change');
 { const st = await page.evaluate(() => ({ off: [...document.querySelectorAll('[data-m]:disabled')].map(x => x.dataset.m), tml: [...document.querySelectorAll('[data-m$=".tml"]')].map(x => [x.dataset.m, x.checked]) }));
   ok(st.off.includes('weibull.ml') && st.off.includes('normal.ml') && st.off.includes('gamma.mom') && !st.off.some(m => m.endsWith('.tml')), 'closed-form methods disabled with a threshold: ' + st.off.length);
-  ok(st.tml.length === 9 && st.tml.filter(([m, c]) => c).map(([m]) => m).sort().join() === ['exponential.tml', 'gamma.tml', 'loglogistic.tml', 'lognormal.tml', 'normal.tml', 'weibull.tml'].sort().join(), 'truncated ML listed for every family; those needing bounds and the optional families not preselected: ' + JSON.stringify(st.tml)); }
+  ok(st.tml.length === 10 && st.tml.filter(([m, c]) => c).map(([m]) => m).sort().join() === ['exponential.tml', 'gamma.tml', 'loglogistic.tml', 'lognormal.tml', 'normal.tml', 'weibull.tml'].sort().join(), 'truncated ML listed for every family; those needing bounds and the optional families not preselected: ' + JSON.stringify(st.tml)); }
 ok((await page.locator('#famcard .mnote', { hasText: 'kesilmiş veride geçerli değil' }).count()) > 5, 'reason shown under the disabled methods');
 await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], ex = E.runMethod('weibull.tml', { d: pool }, { a: 0, trunc: { lower: 9, upper: null } });
@@ -423,7 +423,7 @@ await page.waitForSelector('#panel .srcs');
   await g.goto(URL + '?lang=tr'); await g.locator('#impbox details summary').click(); await g.fill('#impbox textarea', lines.join('\n')); await g.click('#impbox [data-act="paste"]');
   await g.waitForSelector('#impbox .fname'); await g.click('#to2');
   ok(await g.isChecked('input[name="dtype"][value="classes"]') && await g.inputValue('#lcol') === '1' && await g.inputValue('#ucol') === '2' && await g.inputValue('#ncol') === '3', 'class table recognised: lower, upper, frequency columns');
-  ok((await g.locator('[data-m$=".gml"]').count()) === 9 && (await g.locator('[data-m="weibull.ml"]').count()) === 0 && (await g.locator('#trcard').count()) === 0, 'only grouped ML offered; no threshold card');
+  ok((await g.locator('[data-m$=".gml"]').count()) === 10 && (await g.locator('[data-m="weibull.ml"]').count()) === 0 && (await g.locator('#trcard').count()) === 0, 'only grouped ML offered; no threshold card');
   await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const gr = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
   ok(gr[0].s === 'ok' && Math.abs(parseFloat(gr[0].c[3]) - cw.params.b) < 6e-5 && Math.abs(parseFloat(gr[0].c[4]) - cw.params.c) < 6e-5 && gr[0].c[5] === String(cw.n.reduce((a, b) => a + b, 0)) && gr[0].c[7] !== '–' && gr[0].c[9] === '–', 'grouped Weibull ML = SciPy; n = Σ n_j; AIC given; no KS on classes: ' + gr[0].c.slice(2, 10));
@@ -457,7 +457,7 @@ await page.waitForSelector('#panel .srcs');
     per.push(await q.evaluate(() => ({ fams: [...document.querySelectorAll('table.ptab')].map(t => t.dataset.fam), rows: [...document.querySelectorAll('table.ptab tbody tr')].map(tr => ({ s: tr.dataset.status, p: tr.querySelector('td.num')?.textContent.trim() })),
       ok: +document.querySelector('.pstates').dataset.ok, bad: +document.querySelector('.pstates').dataset.bad, notes: document.querySelectorAll('ul.notes li').length }))); }
   const big = per.filter(x => x.ok > 0), small = per.filter(x => x.bad > 0);
-  ok(per.every(x => x.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb,exponential,loglogistic,gengamma'), 'all families in every unit');
+  ok(per.every(x => x.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb,exponential,loglogistic,gengamma,gumbel'), 'all families in every unit');
   ok(big.length >= 2 && big.some(x => x.rows.every(r => r.s === 'ok')), 'large plots: every method of every family ok');
   ok(small.length >= 1 && small.every(x => x.rows.filter(r => r.s !== 'ok').every(r => r.p === '–') && x.notes > 0 && x.ok + x.bad === x.rows.length), 'small plots: failed results without parameters, reasons in notes, counted apart');
   // one unit across all tabs
@@ -566,6 +566,21 @@ await page.waitForSelector('#panel .srcs');
   ok(['a', 'b', 'c'].every((k, i) => Math.abs(parseFloat(row[2 + i]) - rg.params[k]) < 6e-5 * rg.params[k]), 'generalized gamma a, b, c = engine: ' + row.slice(2, 5));
   ok((await q.locator('table[data-kind="ml"] tbody tr').count()) === 2 && (await q.locator('.cmpgroup .kdiff').count()) === 1, 'gamma and generalized gamma in one AIC table, with the note that more parameters is not a better biological model');
   await c9.close(); }
+
+// 2r. P20: Gumbel (maximum form), optional; negative-diameter probability F(0) shown with the fit
+{ const c10 = await browser.newContext({ viewport: { width: 1280, height: 900 } }), q = await c10.newPage(); q.on('pageerror', e => errors.push(e.message));
+  const E = await import('../../assets/lab/dist/index.js'), dd = [6.5, 9, 12.2, 14, 15.5, 21, 8.4, 11, 17, 13.1, 10.6, 18.3, 12.9, 16.7, 11.5, 24.8, 9.2, 28.6, 7.9, 14.4];
+  await q.goto(URL + '?lang=tr'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
+  await q.waitForSelector('#impbox .fname'); await q.click('#to2');
+  const on = await q.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-m]')].map(x => [x.dataset.m, x.checked])));
+  ok(on['gumbel.ml'] === false && on['gumbel.mom'] === false && (await q.locator('fieldset.fam[data-fam="gumbel"] legend', { hasText: 'Gumbel (maksimum biçimi)' }).count()) === 1, 'Gumbel offered under its explicit name (maximum form), not selected by default');
+  for (const m of Object.keys(on)) if (on[m]) await q.uncheck(`[data-m="${m}"]`);
+  for (const m of ['gumbel.ml', 'gumbel.mom']) await q.check(`[data-m="${m}"]`);
+  await q.click('#calc'); await q.waitForSelector('table.cmptab');
+  const r = E.runMethod('gumbel.ml', { d: dd }), row = await q.evaluate(() => { const tr = document.querySelector('table.ptab[data-fam="gumbel"] tbody tr[data-method="gumbel.ml"]'); return [...tr.children].map(x => x.textContent.trim()); });
+  ok(Math.abs(parseFloat(row[2]) - r.params.mu) < 6e-5 * r.params.mu && Math.abs(parseFloat(row[3]) - r.params.beta) < 6e-5 * r.params.beta, 'Gumbel μ, β = engine: ' + row.slice(2, 4));
+  ok((await q.locator('ul.notes li', { hasText: 'F(0) = exp[−exp(μ/β)]' }).count()) >= 1, 'negative-diameter probability F(0) listed in the notes');
+  await c10.close(); }
 
 // 3. sample data, phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });

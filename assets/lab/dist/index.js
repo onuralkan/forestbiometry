@@ -18,6 +18,8 @@ import { loglogistic } from './families/loglogistic.js';
 import { llML, llPCT, llLOGMOM } from './fit/loglogistic.js';
 import { gengamma } from './families/gengamma.js';
 import { ggML } from './fit/gengamma.js';
+import { gumbel } from './families/gumbel.js';
+import { gumbelML, gumbelMoments } from './fit/gumbel.js';
 import { weibullM2, weibullM3, weibullM4, weibullM5, weibullM6, weibullM7, weibullM8, weibullM9, weibullM10 } from './recover/weibull.js';
 import { parresolRecover } from './recover/parresol.js';
 import { fonsecaRecover } from './recover/fonseca.js';
@@ -54,10 +56,15 @@ registerMethod(llPCT);
 registerMethod(llLOGMOM);
 registerFamily(gengamma);                             // P20: optional (not switched on by default), like every method of the family
 registerMethod(ggML);
+registerFamily(gumbel);                               // P20: maximum form only; optional
+registerMethod(gumbelML);
+registerMethod(gumbelMoments);
 for (const m of generalMethods) registerMethod(m);   // P18: L-moments, QME, MGE (optional, not switched on by default)
 // conditional ML for thresholded data (P11): one per family, built on the family's untruncated ML
 for (const [f, b] of [['weibull', 'weibull.ml'], ['normal', 'normal.ml'], ['lognormal', 'lognormal.ml'], ['gamma', 'gamma.ml'], ['beta', 'beta.ml'], ['johnsonsb', 'johnsonsb.cml'], ['exponential', 'exponential.ml'], ['loglogistic', 'loglogistic.ml']]) { registerMethod(makeTML(f, b)); registerMethod(makeGML(f, b)); }
-for (const [f, b] of [['gengamma', 'gengamma.ml']]) { registerMethod({ ...makeTML(f, b), optional: true }); registerMethod({ ...makeGML(f, b), optional: true }); }
+// Gumbel: the fitted model's probability of a negative diameter is reported under thresholds and classes too
+const withP0 = m => m.family !== 'gumbel' ? m : { ...m, run: (i, o) => { const r = m.run(i, o); return r.status === 'ok' ? { ...r, diagnostics: { ...(r.diagnostics || {}), pBelowZero: gumbel.diagnostics(r.params).pBelowZero } } : r; } };
+for (const [f, b] of [['gengamma', 'gengamma.ml'], ['gumbel', 'gumbel.ml']]) { registerMethod(withP0({ ...makeTML(f, b), optional: true })); registerMethod(withP0({ ...makeGML(f, b), optional: true })); }
 registerMethod(normalRecover);
 registerMethod(lognormalRecover);
 registerMethod(gammaRecover);

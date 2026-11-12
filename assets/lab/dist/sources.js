@@ -20,12 +20,13 @@ export const REFS = {
   R16: { cite: 'SciPy, scipy.stats.fisk (documentation).', status: 'D', url: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html' },
   R17: { cite: 'Fonseca, T.F., Marques, C.P., Parresol, B.R. 2009. Describing maritime pine diameter distributions with Johnson\'s SB distribution using a new all-parameter recovery approach. Forest Science 55(4): 367–373.', status: 'B', url: 'https://capsis.cirad.fr/capsis/_media/help/describing_maritime_pine_with_sb_distribution.pdf' },
   R18: { cite: 'SciPy, scipy.stats.gengamma (documentation).', status: 'D', url: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gengamma.html' },
+  R19: { cite: 'NIST/SEMATECH e-Handbook of Statistical Methods, Extreme Value Type I (Gumbel) distribution.', status: 'D', url: 'https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm' },
   DUBEY: { cite: 'Dubey, S.D. 1967. Some percentile estimators for Weibull parameters. Technometrics 9(1): 119–129.', status: 'B' },
   KB91: { cite: 'Knoebel, B.R., Burkhart, H.E. 1991. A bivariate distribution approach to modeling forest diameter distributions at two points in time. Biometrics 47: 241–253.', status: 'D' },
   HF96: { cite: 'Hyndman, R.J., Fan, Y. 1996. Sample quantiles in statistical packages. The American Statistician 50(4): 361–365.', status: 'D' },
 };
-const FAMILY_REFS = { weibull: ['R6'], normal: ['R10'], lognormal: ['R11'], gamma: ['R12'], beta: ['R14'], johnsonsb: ['R7'], exponential: ['R15'], loglogistic: ['R16'], gengamma: ['R18'] };
-const FAMILY_SECTION = { weibull: 'P05', normal: 'P02', lognormal: 'P02', gamma: 'P03', beta: 'P04', johnsonsb: 'P08', exponential: 'P10', loglogistic: 'P10', gengamma: 'P20' };
+const FAMILY_REFS = { weibull: ['R6'], normal: ['R10'], lognormal: ['R11'], gamma: ['R12'], beta: ['R14'], johnsonsb: ['R7'], exponential: ['R15'], loglogistic: ['R16'], gengamma: ['R18'], gumbel: ['R19'] };
+const FAMILY_SECTION = { weibull: 'P05', normal: 'P02', lognormal: 'P02', gamma: 'P03', beta: 'P04', johnsonsb: 'P08', exponential: 'P10', loglogistic: 'P10', gengamma: 'P20', gumbel: 'P20' };
 const QUANTILE_REFS = { 'weibull.pct': ['DUBEY', 'HF96'], 'johnsonsb.kb': ['KB91', 'HF96'], 'johnsonsb.pct': ['HF96'], 'loglogistic.pct': ['HF96'] };
 
 /** { refs: [id], section: 'P05' …, stage } for a registered method id. */
