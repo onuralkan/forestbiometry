@@ -28,7 +28,7 @@ ok(SRC.methodSources('gamma.tml').section === 'P11' && SRC.methodSources('gamma.
 ok(SRC.BOOT_SOURCES.refs.join() === 'R9' && SRC.BOOT_SOURCES.section === 'P14', 'bootstrap: [R9], P14');
 
 /* 2. nothing invented: each reference is in the project documents, with its link and reading status */
-const token = { R1: '10.5849/forsci.12-001', R2: 'SRS–31', R6: 'fitWeibull', R7: 'fitJSB', R9: 'goodness_of_fit', R10: 'eda3661', R11: 'eda3669', R12: 'eda366b', R14: 'eda366h', R15: 'eda3667', R16: 'scipy.stats.fisk',
+const token = { R8: 'fitdistrplus_vignette', R1: '10.5849/forsci.12-001', R2: 'SRS–31', R6: 'fitWeibull', R7: 'fitJSB', R9: 'goodness_of_fit', R10: 'eda3661', R11: 'eda3669', R12: 'eda366b', R14: 'eda366h', R15: 'eda3667', R16: 'scipy.stats.fisk',
   DUBEY: 'Technometrics* 9(1): 119–129', KB91: 'Biometrics* 47: 241–253', HF96: 'The American Statistician* 50(4): 361–365' };
 for (const [k, x] of Object.entries(SRC.REFS)) {
   ok(token[k] && (SPEC.includes(token[k]) || METH.includes(token[k])), `${k}: found in the project documents (${token[k]})`);
@@ -59,7 +59,7 @@ const T = (k, p) => k + (p ? JSON.stringify(p) : ''), h = { T, methodName: r => 
 
 /* 4. version */
 const site = readFileSync(path.join(root, 'inc/site.php'), 'utf8');
-ok(D.TOOL.version === '2.1.0' && site.includes(`'file' => 'cap-dagilimi.php', 'v' => '2.1.0'`), 'version 2.0.1 in the engine and in the site index');
+ok(D.TOOL.version === '2.2.0-beta.1' && site.includes(`'file' => 'cap-dagilimi.php', 'v' => '2.2.0-beta.1'`), 'version 2.0.1 in the engine and in the site index');
 
 console.log(`dist P15: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -58,11 +58,11 @@ ok(brent(x => x - 0.3, 0, 1).status === 'ok' && brent(x => x, 0, 1).root === 0, 
 /* 4. registry: only implemented things exist */
 eq(D.families()[0].id, 'weibull', 'Weibull registered first (later stages add families after it)');
 const FAMS0 = D.families().map(f => f.id);
-eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).filter(m => !m.truncation && !m.grouped).map(m => m.id), ['weibull.ml', 'weibull.mom', 'weibull.pct'], 'Weibull raw-data methods (percentiles added in P05)');
+eq(D.methodsFor({ family: 'weibull', kind: 'fit', dataType: 'raw' }).filter(m => !m.truncation && !m.grouped && !m.optional).map(m => m.id), ['weibull.ml', 'weibull.mom', 'weibull.pct'], 'Weibull raw-data methods (percentiles added in P05)');
 eq([D.methodsFor({ kind: 'stand' }).length, D.methodsFor({ dataType: 'classes' }).filter(m => !m.grouped).length, D.methodsFor({ kind: 'recover' }).filter(m => !m.dataTypes.every(t => t === 'summary') && m.group !== 'poudel').length], [0, 0, 0], 'nothing unimplemented is offered (no stand models, class data only through grouped ML (P12); recovery from summaries, raw data only where the summary is computed from it: Poudel M2–M5, P06)');
 const thrown = f => { try { f(); return null; } catch (e) { return e instanceof D.DistError ? e.code : 'other:' + e.message; } };
 eq(thrown(() => D.family('nosuchfamily')), 'family.unknown', 'unknown family');
-eq(thrown(() => D.method('weibull.lmom')), 'method.unknown', 'unknown method');
+eq(thrown(() => D.method('weibull.nosuchmethod')), 'method.unknown', 'unknown method');
 eq(thrown(() => D.runMethod('weibull.ml', { type: 'classes' })), 'method.datatype', 'data type the method does not support');
 ok(thrown(() => D.registerFamily({ id: 'x', params: [{ key: 'm' }], pdf() {} })).startsWith('other:family x'), 'incomplete family rejected');
 ok(thrown(() => D.registerMethod({ id: 'q.ml', family: 'nope', kind: 'fit', dataTypes: ['raw'], run() {} })).startsWith('other:method q.ml'), 'method for an unknown family rejected');

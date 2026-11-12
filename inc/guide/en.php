@@ -147,7 +147,7 @@
 <li><b>Columns</b>: diameter and its unit (cm, mm), plot, period, an optional filter.</li>
 <li><b>Unit of analysis</b>: each plot separately or all trees together (pooled).</li>
 <li><b>Measurement threshold</b>: if only trees above a diameter (or between two thresholds) were measured, state it here; fitting then uses the conditional likelihood. A threshold is not the same as the support bound of the distribution or the smallest diameter in the data.</li>
-<li><b>Distributions and estimation methods</b>: maximum likelihood, moments, percentiles and log-moments. Each family's formulas and notes are in its "Details" box. The moment variance uses divisor n by default; n − 1 is an option.</li>
+<li><b>Distributions and estimation methods</b>: maximum likelihood, moments, percentiles and log-moments. Each family's formulas and notes are in its "Details" box. The moment variance uses divisor n by default; n − 1 is an option. Additional methods, not selected by default: <b>L-moments</b> (Weibull, gamma), <b>General quantile matching (QME)</b> (with the probabilities and weights you choose) and <b>Minimum distance (MGE)</b> (KS, Cramér–von Mises or Anderson–Darling) (normal, gamma, beta). They do not maximise the likelihood, so they are not in the AIC table; an MGE row is marked † in a table sorted by the criterion it was fitted with.</li>
 <li><b>Fixed location a</b> (Weibull, exponential): a = 0 is always computed; if you type a value it is computed with that location too. <b>Beta L, U</b> and <b>Johnson SB ξ, λ</b> are asked for when these families are chosen.</li>
 </ul>
 <h3>3. Results</h3>

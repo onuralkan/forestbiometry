@@ -22,7 +22,7 @@ const thrown = f => { try { f(); return null; } catch (e) { return e.code || e.m
 
 /* 1. registry: one beta model, fixed bounds, two methods; no "generalized beta" duplicate, no free bounds */
 eq(BE.params.map(p => [p.key, p.role, p.unit]), [['L', 'lower', 'cm'], ['U', 'upper', 'cm'], ['alpha', 'shape', null], ['beta', 'shape', null]], 'beta parameters');
-eq(D.methodsFor({ family: 'beta' }).filter(m => !m.truncation && !m.grouped).map(m => [m.id, m.kind, m.estimator, m.solver, m.likelihoodMaximised, m.needsInput]),
+eq(D.methodsFor({ family: 'beta' }).filter(m => !m.truncation && !m.grouped && !m.optional).map(m => [m.id, m.kind, m.estimator, m.solver, m.likelihoodMaximised, m.needsInput]),
   [['beta.ml', 'fit', 'ml', 'newton', true, true], ['beta.mom', 'fit', 'mom', 'closed form', false, true]], 'beta methods (bounds required)');
 ok(!D.families().some(f => /gb1|gb2|genbeta|generali/i.test(f.id)), 'no second (generalized) beta model');
 ok(D.methodsFor({ family: 'beta' }).every(m => m.options.filter(o => o.key === 'L' || o.key === 'U').every(o => o.type === 'fixed-param' && o.policies.join() === 'user')), 'bounds are fixed parameters with the user policy only');

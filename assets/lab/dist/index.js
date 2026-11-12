@@ -21,6 +21,7 @@ import { parresolRecover } from './recover/parresol.js';
 import { makeTML } from './fit/truncated.js';
 import { makeGML } from './fit/grouped.js';
 import { normalRecover, lognormalRecover, gammaRecover } from './recover/moments.js';
+import { generalMethods } from './fit/general.js';
 
 registerFamily(weibull);
 registerMethod(weibullML);
@@ -48,6 +49,7 @@ registerFamily(loglogistic);
 registerMethod(llML);
 registerMethod(llPCT);
 registerMethod(llLOGMOM);
+for (const m of generalMethods) registerMethod(m);   // P18: L-moments, QME, MGE (optional, not switched on by default)
 // conditional ML for thresholded data (P11): one per family, built on the family's untruncated ML
 for (const [f, b] of [['weibull', 'weibull.ml'], ['normal', 'normal.ml'], ['lognormal', 'lognormal.ml'], ['gamma', 'gamma.ml'], ['beta', 'beta.ml'], ['johnsonsb', 'johnsonsb.cml'], ['exponential', 'exponential.ml'], ['loglogistic', 'loglogistic.ml']]) { registerMethod(makeTML(f, b)); registerMethod(makeGML(f, b)); }
 registerMethod(normalRecover);

@@ -10,6 +10,7 @@ export const REFS = {
   R2: { cite: 'Parresol, B.R. 2003. Recovering parameters of Johnson\'s SB distribution. USDA Forest Service, Southern Research Station, Research Paper SRS-31.', status: 'B', url: 'https://www.srs.fs.usda.gov/pubs/rp/rp_srs031.pdf' },
   R6: { cite: 'ForestFit, fitWeibull (R package documentation).', status: 'D', url: 'https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html' },
   R7: { cite: 'ForestFit, fitJSB (R package documentation).', status: 'D', url: 'https://search.r-project.org/CRAN/refmans/ForestFit/html/fitJSB.html' },
+  R8: { cite: 'fitdistrplus, Overview of the fitdistrplus package (vignette).', status: 'D', url: 'https://lbbe-software.github.io/fitdistrplus/articles/fitdistrplus_vignette.html' },
   R9: { cite: 'SciPy, scipy.stats.goodness_of_fit (documentation).', status: 'D', url: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html' },
   R10: { cite: 'NIST/SEMATECH e-Handbook of Statistical Methods, Normal distribution.', status: 'D', url: 'https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm' },
   R11: { cite: 'NIST/SEMATECH e-Handbook of Statistical Methods, Lognormal distribution.', status: 'D', url: 'https://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm' },
@@ -31,6 +32,7 @@ export function methodSources(id) {
   if (m.source === 'parresol2003') return { refs: ['R2'], section: 'P09' };
   if (String(m.source).startsWith('poudel2013.')) return { refs: ['R1'], section: m.hybrid ? 'P07' : 'P06' };
   if (m.truncation) return { refs: FAMILY_REFS[fam], section: 'P11' };
+  if (['lmom', 'qme', 'mge'].includes(m.estimator)) return { refs: [...FAMILY_REFS[fam], ...(m.estimator === 'lmom' ? [] : ['R8'])], section: 'P18' };
   if (m.grouped) return { refs: FAMILY_REFS[fam], section: 'P12' };
   if (m.kind === 'recover') return { refs: FAMILY_REFS[fam], section: FAMILY_SECTION[fam] };
   return { refs: [...FAMILY_REFS[fam], ...(QUANTILE_REFS[id] || [])], section: FAMILY_SECTION[fam] };

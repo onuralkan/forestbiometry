@@ -86,7 +86,7 @@ const grouped = () => S.dtype === 'classes';
 const available = m => grouped() ? !!m.grouped : !m.grouped && (truncActive() ? !!m.truncation : !m.truncation);
 function chosenMethods() {
   if (!S.methods) S.methods = {};
-  for (const fa of D.families()) for (const m of fitMethods(fa.id)) if (!(m.id in S.methods)) S.methods[m.id] = !m.needsInput;   // new methods start checked, except those that need the user's input (beta bounds)
+  for (const fa of D.families()) for (const m of fitMethods(fa.id)) if (!(m.id in S.methods)) S.methods[m.id] = !m.needsInput && !m.optional;   // new methods start checked, except those that need the user's input (beta bounds)
   return D.families().flatMap(fa => fitMethods(fa.id)).filter(m => S.methods[m.id] && available(m));
 }
 function aFixed() { const t = String(S.aText).trim(); if (!t) return { a: null }; const a = num(t); return Number.isFinite(a) && a >= 0 ? { a } : { bad: true }; }
@@ -102,7 +102,7 @@ function boundFams() {
 }
 const needsBounds = () => boundFams().size > 0;
 const boundVal = k => { const t = String((S.bText || {})[k] ?? '').trim(); return t === '' ? NaN : num(t); };
-function optText(m, o) { const t = (S.mopt[m.id] || {})[o.key]; return t != null ? t : o.default != null ? String(o.default) : ''; }
+function optText(m, o) { const t = (S.mopt[m.id] || {})[o.key]; return t != null ? t : o.default != null ? (Array.isArray(o.default) ? o.default.join(' ') : String(o.default)) : ''; }
 /** Parsed options of a method: { opts } or { bad: [problem] } (never a guessed value). */
 function methodOpts(m) {
   const opts = {}, bad = [];
@@ -111,6 +111,8 @@ function methodOpts(m) {
     const t = optText(m, o);
     if (o.type === 'choice') opts[o.key] = o.values.includes(t) ? t : o.default;
     else if (o.type === 'prob') { const v = num(t); opts[o.key] = v; if (!(v > 0 && v < 1)) bad.push({ code: 'pr.range' }); }
+    else if (o.type === 'list') { const parts = String(t).split(/[\s;]+/).map(x => x.trim()).filter(Boolean);   // separators: spaces or ";" (a comma may be the decimal mark)
+      if (!parts.length) continue; const v = parts.map(num); if (v.some(x => !Number.isFinite(x))) bad.push({ code: 'list.bad' }); else opts[o.key] = v; }
   }
   if (m.truncation) { opts.trunc = truncSpec() || {}; opts.nScope = S.trunc.nScope; }
   if (!bad.length && m.checkOptions) bad.push(...m.checkOptions(opts));
@@ -132,7 +134,7 @@ function optControls(m) {
   const mo = methodOpts(m);
   return `<div class="mopts" data-mopts="${m.id}">${xs.map(o => o.type === 'choice'
     ? `<span class="small">${T('opt.' + o.key)}:</span> ${o.values.map(v => `<label class="small"><input type="radio" name="o-${m.id}-${o.key}" data-o="${m.id}|${o.key}" value="${v}"${optText(m, o) === v ? ' checked' : ''}> ${T('opt.' + o.key + '.' + v)}</label>`).join(' ')}`
-    : `<label class="small">${T('opt.' + o.key)} <input type="text" inputmode="decimal" size="5" id="o-${m.id.replace('.', '-')}-${o.key}" data-o="${m.id}|${o.key}" value="${esc(optText(m, o))}"></label>`).join(' ')}
+    : `<label class="small">${T('opt.' + o.key)} <input type="text" inputmode="decimal" size="${o.type === 'list' ? 22 : 5}" id="o-${m.id.replace('.', '-')}-${o.key}" data-o="${m.id}|${o.key}" value="${esc(optText(m, o))}"></label>`).join(' ')}
     ${mo.bad ? `<p class="note err small">${esc(T('pr.' + mo.bad[0].code, mo.bad[0]))}</p>` : ''}</div>`;
 }
 /** Formulas and notes of a family's methods, behind one disclosure (the choice itself stays visible). */
@@ -572,7 +574,7 @@ function compareHtml(u) {
   const table = (rows, ml) => { const cs = cols(ml), sc = (ml ? CMP_ML : CMP_DESC).includes(crit) ? crit : 'ks';
     const oc = k => CMP_OPT.has(k) && k !== sc ? ' opt' : '';
     return `<p class="small sortnote">${T('cmp.sorted', { c: T('cmp.c.' + sc), d: T(D.compare.CRITERIA[sc] > 0 ? 'cmp.asc' : 'cmp.desc') })}</p><div class="tscroll"><table class="grid cmptab" data-kind="${ml ? 'ml' : 'desc'}"><thead><tr>${cs.map(([k, l]) => `<th class="${k === sc ? 'sorted' : ''}${oc(k)}">${esc(l || T('cmp.h.' + k))}</th>`).join('')}</tr></thead><tbody>
-      ${D.compare.sortRows(rows, sc).map(x => `<tr data-method="${x.r.method}">${cs.map(([k]) => `<td class="${['dist', 'method', 'params', 'fixed', 'conv'].includes(k) ? 'small' : 'num'}${oc(k)}">${cell(x, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; };
+      ${D.compare.sortRows(rows, sc).map(x => `<tr data-method="${x.r.method}">${cs.map(([k]) => `<td class="${['dist', 'method', 'params', 'fixed', 'conv'].includes(k) ? 'small' : 'num'}${oc(k)}">${cell(x, k)}${x.r.settings && x.r.settings.gof === k ? '<span class="selfcrit" title="' + esc(T('cmp.selfcrit')) + '"> †</span>' : ''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${rows.some(x => x.r.settings && x.r.settings.gof) ? `<p class="muted small">${T('cmp.selfcrit')}</p>` : ''}`; };
   let h = `<div class="cmpbar"><label>${T('cmp.sort')} <select id="cmp-sort">${CMP_ML.map(c => `<option value="${c}"${c === crit ? ' selected' : ''}>${esc(T('cmp.c.' + c))}</option>`).join('')}</select></label>
     <label class="chk"><input type="checkbox" id="cmp-all"${S.cmpAll ? ' checked' : ''}> ${T('cmp.all')}</label></div>
     <details class="more"><summary>${T('cmp.how')}</summary><p class="muted small">${T('cmp.note')}</p></details>`;
