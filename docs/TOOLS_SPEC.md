@@ -504,8 +504,8 @@ Allometrik biçimlerin kendisi için test değerleri, bağımsız referans beti�
 - Donnelly, K.P. 1978. Simulations to determine the variance and edge effect of total nearest-neighbour distance. (Hodder, I. (ed.), *Simulation Studies in Archaeology*, Cambridge University Press.)
 - Pommerening, A. 2002. Approaches to quantifying forest structures. *Forestry* 75: 305–324. (W, M, T, U ve kenar düzeltmeleri.)
 - Hegyi, F. 1974. A simulation model for managing jack-pine stands. (Fries, J. (ed.), *Growth Models for Tree and Stand Simulation*, Royal College of Forestry, Stockholm.)
-- Reineke, L.H. 1933. Perfecting a stand-density index for even-aged forests. *Journal of Agricultural Research* 46: 627–638.
-- Curtis, R.O. 1982. A simple index of stand density for Douglas-fir. *Forest Science* 28: 92–94.
+- Reineke, L.H. 1933. Perfecting a stand-density index for even-aged forests. *Journal of Agricultural Research* 46: 627–638. (Okundu [B], METHODS §16.)
+- Curtis, R.O. 1982. A simple index of stand density for Douglas-fir. *Forest Science* 28: 92–94. (Okundu [B], METHODS §16. Hart–Becking göreli aralık: tanım istisnası, 12 Kasım 2026 kullanıcı kararı.)
 - Max, T.A., Burkhart, H.E. 1976. Segmented polynomial regression applied to taper equations. *Forest Science* 22: 283–289.
 - Kozak, A. 2004. My last words on taper equations. *The Forestry Chronicle* 80: 507–515.
 - Baskerville, G.L. 1972. Use of logarithmic regression in the estimation of plant biomass. *Canadian Journal of Forest Research* 2: 49–53.
