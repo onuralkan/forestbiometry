@@ -19,6 +19,8 @@ committed, so the tests run without Python.
 - `node tests/checker/test_checker.mjs`: Forest Data Checker acceptance tests (pure logic + vendored SheetJS); expected values written by hand.
 - `node tests/stand/test_stand.mjs`: Plot & Stand Metrics tests; references are the acceptance example and `tests/ref/stand.json`.
 - `python3 tests/ref/make_stand_reference.py`: regenerates `tests/ref/stand.json` from `tests/stand/fixture.json` (numpy).
+- `node tests/site/e2e_boot.mjs http://127.0.0.1:8092`: tool pages must not stay blank when IndexedDB stalls (open or
+  transaction never answers) or a module hangs or fails (boot watchdog warning with a reload button).
 - `node tests/stand/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Plot & Stand Metrics.
 - `node tests/eval/test_eval.mjs`: Model Evaluation tests; references are the acceptance example and `tests/ref/eval.json`.
 - `python3 tests/ref/make_eval_reference.py`: regenerates `tests/ref/eval.json` from `tests/eval/fixture.csv` (scikit-learn + numpy).
