@@ -17,6 +17,7 @@ const T = makeT({
     see: p => p.kind === 'log10' ? 'SEE (log10 ölçeğinde)' : 'SEE (ln ölçeğinde)', fac: 'Etken',
     src: 'Kaynak', cit: 'Künye (zorunlu)', doi: 'DOI', page: 'Sayfa', table: 'Tablo', note: 'Not',
     cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verim, yayımlanmamış".',
+    extra: 'Denklemin tanımı', choose: '— seçin —', 'p.extra.missing': p => `${p.what} seçilmedi`, 'p.extra.num': p => `${p.what} pozitif bir sayı olmalı`,
     saved: 'Set kaydedildi.', imported: p => `${p.n} set yüklendi.`, rejected: p => `${p.n} set geçersiz olduğu için yüklenmedi: ${p.why}`,
     th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Değişti', origin_fitted: 'uydurulan',
     'p.schema': 'şema geçersiz', 'p.id': 'kimlik yok', 'p.tool': 'araç yok', 'p.form.unknown': 'biçim tanınmıyor', 'p.form.tool': 'biçim bu araca ait değil',
@@ -36,6 +37,7 @@ const T = makeT({
     see: p => p.kind === 'log10' ? 'SEE (log10 scale)' : 'SEE (ln scale)', fac: 'Factor',
     src: 'Source', cit: 'Citation (required)', doi: 'DOI', page: 'Page', table: 'Table', note: 'Note',
     cith: 'E.g. Author (year), journal, volume: pages; or "Own data, unpublished".',
+    extra: 'Definition of the equation', choose: '— choose —', 'p.extra.missing': p => `${p.what} not chosen`, 'p.extra.num': p => `${p.what} must be a positive number`,
     saved: 'Set saved.', imported: p => `${p.n} set(s) loaded.`, rejected: p => `${p.n} set(s) not loaded because they are invalid: ${p.why}`,
     th_form: 'Form', th_scope: 'Scope', th_src: 'Source', th_mod: 'Changed', origin_fitted: 'fitted',
     'p.schema': 'invalid schema', 'p.id': 'no id', 'p.tool': 'no tool', 'p.form.unknown': 'unknown form', 'p.form.tool': 'the form belongs to another tool',
@@ -53,7 +55,10 @@ export const readNum = t => { const s = String(t ?? '').trim().replace(/−/g, '
 const show = v => v == null ? '' : String(v);              // full precision as stored
 
 /**
- * Mounts the library + editor into el. opts = { tool, onChange?(sets) }. Returns { refresh() }.
+ * Mounts the library + editor into el. opts = { tool, onChange?(sets), extra? }. Returns { refresh() }.
+ * extra: tool-specific fields stored in set.meta, e.g. the age type of a site-index equation:
+ *   [{ key, label: { tr, en }, type: 'choice' | 'number' | 'text', values?: [{ v, tr, en }], required?: bool, note?: { tr, en } }]
+ * A required extra field left empty refuses the save (problem 'extra.missing'); numbers use a decimal point.
  * Every control has a stable id prefixed with 'cf-' so tools and tests can address it.
  */
 export function mountCoefEditor(el, opts) {
@@ -106,10 +111,19 @@ export function mountCoefEditor(el, opts) {
       <h3>${T('valid')}</h3><div class="lims">${Object.keys(f.inputs).map(k => `${inp(`cf-v-${k}-0`, text.valid[k][0], `${esc(k)} ${T('vmin')}`, 7)} ${inp(`cf-v-${k}-1`, text.valid[k][1], T('vmax'), 7)}`).join('')}</div>
       ${tx ? `<h3>${T('tr_h')}</h3><div class="radios">${['none', 'baskerville', 'snowdon', 'user'].map(c => `<label><input type="radio" name="cf-corr" value="${c}"${tx.correction === c ? ' checked' : ''}> ${T('corr.' + c)}</label>`).join('')}</div>
         ${tx.correction !== 'none' ? `<div class="lims">${inp('cf-corrv', text.corrValue, tx.correction === 'baskerville' ? T('see', tx) : T('fac'), 9)}</div>` : ''}` : ''}
+      ${extraHTML()}
       <h3>${T('meta')}</h3><div class="lims">${['species', 'region', 'component'].map(k => `<label>${T(k)} <input type="text" size="14" id="cf-${k}" value="${esc(draft[k] ?? '')}"></label>`).join('')}</div>
       <h3>${T('src')}</h3><label class="field"><span>${T('cit')}</span><input type="text" id="cf-cit" value="${esc(draft.source.citation)}" placeholder="${esc(T('cith'))}"></label>
       <div class="lims">${['doi', 'page', 'table', 'note'].map(k => `<label>${T(k)} <input type="text" size="${k === 'note' ? 30 : 12}" id="cf-${k}" value="${esc(draft.source[k] ?? '')}"></label>`).join('')}</div>
       <div class="nav"><button type="submit" class="btn" id="cf-save">${T('save')}</button> <button type="button" class="btn ghost" id="cf-cancel">${T('cancel')}</button></div></form>`;
+  }
+  function extraHTML() {
+    const xs = opts.extra || []; if (!xs.length) return '';
+    const L = o => o[lang] || o.tr, m = draft.meta || {};
+    return `<h3>${T('extra')}</h3><div class="lims">${xs.map(x => x.type === 'choice'
+      ? `<label>${esc(L(x.label))} <select id="cf-x-${x.key}"><option value="">${T('choose')}</option>${x.values.map(v => `<option value="${esc(v.v)}"${m[x.key] === v.v ? ' selected' : ''}>${esc(L(v))}</option>`).join('')}</select></label>`
+      : `<label>${esc(L(x.label))} <input type="text" ${x.type === 'number' ? 'inputmode="decimal" size="8"' : 'size="28"'} id="cf-x-${x.key}" value="${esc(m[x.key] ?? '')}"></label>`).join('')}</div>
+      ${xs.filter(x => x.note).map(x => `<p class="muted small">${esc(L(x.note))}</p>`).join('')}`;
   }
   function bind() {
     const $ = id => el.querySelector('#' + id);
@@ -139,11 +153,18 @@ export function mountCoefEditor(el, opts) {
       for (const k of ['species', 'region', 'component']) draft[k] = $('cf-' + k).value.trim() || null;
       draft.source = { citation: $('cf-cit').value.trim() };
       for (const k of ['doi', 'page', 'table', 'note']) { const v = $('cf-' + k).value.trim(); if (v) draft.source[k] = v; }
+      if ((opts.extra || []).length) { draft.meta = {}; for (const x of opts.extra) { const v = $('cf-x-' + x.key).value.trim(); if (v !== '') draft.meta[x.key] = x.type === 'number' ? readNum(v) : v; } }
     };
+    const extraProblems = () => (opts.extra || []).flatMap(x => { const v = (draft.meta || {})[x.key];
+      if (v == null) return x.required ? [{ code: 'extra.missing', what: x.label[lang] || x.label.tr }] : [];
+      return x.type === 'number' && !(Number.isFinite(v) && v > 0) ? [{ code: 'extra.num', what: x.label[lang] || x.label.tr }] : []; });
     $('cf-cancel').addEventListener('click', () => { draft = null; msg = null; render(); });
     ed.addEventListener('submit', async e => {
       e.preventDefault(); collectMeta();
-      const bad = collect(), r = bad.length ? { ok: false, problems: bad } : await C.saveCoef(draft);
+      const bad = [...collect(), ...extraProblems()];
+      // report everything at once: the schema check (source, ranges, …) also runs when a typed value is already refused
+      if (bad.length) { const seen = new Set(bad.map(q => q.code)); for (const q of C.validateCoef(draft)) if (!seen.has(q.code) && !q.code.startsWith('param.')) bad.push(q); }
+      const r = bad.length ? { ok: false, problems: bad } : await C.saveCoef(draft);
       if (!r.ok) { msg = { kind: 'err', text: r.problems.map(problemText).join('; ') }; render(); return; }
       draft = null; msg = { kind: 'ok', text: T('saved') }; await refresh();
     });

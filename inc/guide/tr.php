@@ -273,3 +273,23 @@
 <h3>İndirme</h3>
 <p><b>Excel raporu</b> (Bilgi, Ağaçlar, Örnek alanlar, Kalite, Yöntem farkı, Seksiyonlar, Sorunlar), ağaç hacimleri CSV ve sonuç kayıtları JSON.</p>
 </section>
+
+<section class="card guide-sec">
+<?= $sec('bonitet', 'Bonitet Hesaplayıcısı') ?>
+<p>Üst boy ve yaştan, sizin girdiğiniz katsayı setiyle dayanak yaştaki bonitet endeksini (o yaştaki üst boyu) hesaplar; bonitet sınıflarını tanımlarsanız sınıfı verir ve eğri demetini çizer.</p>
+<p><b>Yapmadıkları:</b> hiçbir tür ya da yöre katsayısı ve hasılat tablosu içermez; yaş türlerini (toplam yaş, göğüs yüksekliği yaşı) birbirine çevirmez; bu sürümde kendi verinizden denklem uydurmaz (sonraki aşama).</p>
+<h3>Model</h3>
+<ul>
+<li><b>Katsayı setleri</b>: biçim (Chapman–Richards anamorfik ya da polimorfik, Schumacher), katsayılar, <b>yaş türü</b> ve <b>üst boy tanımı</b> (zorunlu), isteğe bağlı geçerlilik aralığı ve kaynak künyesi (zorunlu). Setler yalnızca bu tarayıcıda saklanır, JSON olarak indirilip yüklenebilir.</li>
+<li>Schumacher biçimi ln H = b₀ + b₁/A olarak yazılmıştır; büyüyen bir eğri için b₁ negatiftir. Kaynağınız H = b₀·exp(−b₁/A) yazıyorsa katsayıyı −b₁ olarak girin.</li>
+<li><b>Dayanak yaş</b>: varsayılanı yoktur; kullandığınız sınıflandırmanın dayanak yaşını girin. Fark denklemleri dayanak yaştan bağımsızdır, yani dayanak yaş eğrileri değil endeksin okunduğu yaşı değiştirir.</li>
+<li><b>Bonitet sınıfları</b> (isteğe bağlı): eşit aralıklı ya da sınırları sizin yazdığınız sınıflar; I en yüksek ya da en düşük bonitet olabilir. Sınıfların dışında kalan endeks "sınıf dışı" yazılır.</li>
+</ul>
+<h3>Veri</h3>
+<ul>
+<li>Tek nokta (yaş ve üst boy), tablo (örnek alan, dönem, yaş, üst boy) ya da onaylanmış ağaç verisi. Onaylanmış veride H0, Örnek Alan ve Meşcere aracıyla aynı tanımla (hektarda en kalın ya da en uzun 100 ağaç) ve yalnızca ölçülmüş boylardan hesaplanır; yaş, yaşı kayıtlı ağaçların ortalamasıdır.</li>
+<li><b>Verideki yaşın türü</b>: siz seçersiniz; denklemin yaş türüyle aynı değilse hesap yapılmaz.</li>
+</ul>
+<h3>Sonuçlar ve indirme</h3>
+<p>Her nokta için bonitet endeksi, sınıf ve notlar (setin geçerlilik aralığı dışındaki noktalar hesaplanır ve işaretlenir); eğri demeti grafiği (sınıf sınırlarındaki endeksler ya da hesaplanan endekslerin en küçüğü, ortancası, en büyüğü). Her sonuç denklemi, dayanak yaşı, yaş türünü, üst boy tanımını ve "kullanıcı katsayılarıyla üretildi" notunu taşır. <b>Excel raporu</b> (Bilgi, Bonitet, Eğriler), CSV ve JSON.</p>
+</section>

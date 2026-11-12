@@ -33,6 +33,8 @@ const L = {
   'assets/lab/hd/i18n.js': [['Göğüs yüksekliği', 'Breast height'], ['Çapraz doğrulama', 'Cross-validation'], ['Sütunlar ve birimler', 'Columns and units']],
   'assets/lab/sampling/i18n.js': [['Örnekleme çerçevesi', 'Sampling frame'], ['Mevcut örnek alanlar', 'Existing plots'], ['Varsayım özeti (TXT)', 'Assumption summary (TXT)']],
   'assets/lab/secvol/i18n.js': [['Onaylanmış veriyi bağla', 'Link the approved data'], ['Ağaç hacimleri', 'Tree volumes'], ['Ağaç ayrıntısı', 'Tree details'], ['Excel raporu', 'Excel report'], ['Kontrol eşikleri', 'Check thresholds'], ['Veri kalitesi', 'Data quality'], ['Yöntemler arası fark', 'Differences between methods']],
+  'assets/lab/siteindex/i18n.js': [['Dayanak yaş', 'Base age'], ['Bonitet sınıfları', 'Site classes'], ['Verideki yaşın türü', 'Age type in the data'], ['Excel raporu', 'Excel report']],
+  'assets/lab/core/coef-ui.js': [['Katsayı setleri', 'Coefficient sets']],
   'assets/lab/rank/i18n.js': [['Radar grafiği', 'Radar chart'], ['Sıralamaya kat', 'Use in ranking'], ['İyi olan', 'Better is']],
 };
 for (const [file, pairs] of Object.entries(L)) {

@@ -190,6 +190,7 @@ table.grid { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 .radios label { display: inline-flex; gap: 6px; align-items: baseline; }
 .probs { list-style: none; padding: 0; margin: 0; }
 .lims { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0; }
+.lims > label, .lims select { max-width: 100%; }          /* long option texts (equation forms) never widen the page */
 .lim { border: 1px solid var(--line2); border-radius: 8px; padding: 8px 12px; display: flex; gap: 12px; flex-wrap: wrap; }
 .lim legend { font-weight: 600; font-size: 13.5px; padding: 0 4px; }
 .lim input { width: 90px; }

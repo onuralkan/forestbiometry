@@ -102,3 +102,48 @@ for (const f of Object.values(FORMS)) {
     registerForm({ id: 'si.' + f.id, tool: 'siteindex', params: f.params.map(key => ({ key })), inputs: { A: { unit: 'yr' }, H: { unit: 'm' } }, output: { name: 'H', unit: 'm' }, formula: f.formula, transform: 'none' });
   } catch (e) { /* already registered (module loaded twice in one page) */ }
 }
+
+/* ---------------- SI02: site classes (user-defined, TOOLS_SPEC §3.4) and evaluation of many points ---------------- */
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
+/**
+ * Classes from the user's definition (the site embeds no yield table): def = { mode: 'none' | 'equal' | 'breaks',
+ * start, width, n (equal), breaks: [b0 < b1 < … ] (breaks), order: 'desc' (I = highest SI, default) | 'asc' }.
+ * Classes are half-open [lo, hi); the last one includes its upper bound. Returns { classes: [{ lo, hi, name }], problems }.
+ */
+export function classesOf(def = {}) {
+  if (!def.mode || def.mode === 'none') return { classes: [], problems: [] };
+  let b;
+  if (def.mode === 'equal') {
+    const { start, width, n } = def;
+    if (!(fin(start) && start >= 0 && fin(width) && width > 0 && Number.isInteger(n) && n >= 1 && n <= ROMAN.length)) return { classes: [], problems: [{ code: 'cls.equal' }] };
+    b = Array.from({ length: n + 1 }, (_, i) => start + i * width);
+  } else if (def.mode === 'breaks') {
+    b = (def.breaks || []).map(Number);
+    if (b.length < 2 || b.length - 1 > ROMAN.length || b.some(x => !fin(x) || x < 0)) return { classes: [], problems: [{ code: 'cls.breaks' }] };
+    for (let i = 1; i < b.length; i++) if (!(b[i] > b[i - 1])) return { classes: [], problems: [{ code: 'cls.order', at: i }] };
+  } else return { classes: [], problems: [{ code: 'cls.mode', mode: def.mode }] };
+  const k = b.length - 1, desc = def.order !== 'asc';
+  return { classes: Array.from({ length: k }, (_, i) => ({ lo: b[i], hi: b[i + 1], name: ROMAN[desc ? k - 1 - i : i] })), problems: [] };
+}
+/** Class name of a site index, or null when it lies outside every class (never forced into the nearest one). */
+export function classify(si, classes) {
+  if (!fin(si) || !classes.length) return null;
+  for (let i = 0; i < classes.length; i++) { const c = classes[i], last = i === classes.length - 1; if (si >= c.lo && (si < c.hi || (last && si === c.hi))) return c.name; }
+  return null;
+}
+/**
+ * Site index of many points. rows: [{ key, plot, period, A, H, Hsource? }]. m: { form, params, baseAge, ageType }.
+ * valid: { A: [min, max], H: [min, max] } of the coefficient set (null = not given). Points outside are computed and
+ * warned ('valid.A', 'valid.H'), as TOOLS_SPEC §1.1 asks.
+ */
+export function evaluate(m, rows, { valid = null, classes = [] } = {}) {
+  return rows.map(r => {
+    const s = siteIndex(m, r.A, r.H), warnings = [];
+    if (valid) for (const k of ['A', 'H']) { const v = r[k], lim = valid[k]; if (lim && fin(v) && ((fin(lim[0]) && v < lim[0]) || (fin(lim[1]) && v > lim[1]))) warnings.push({ code: 'valid.' + k, value: v, min: lim[0], max: lim[1] }); }
+    return { ...r, status: s.status, si: s.status === 'ok' ? s.value : null, cls: s.status === 'ok' ? classify(s.value, classes) : null, problems: s.problems || [], warnings, settings: s.settings };
+  });
+}
+/** Model for the calculator from a stored coefficient set (model-coef/1, tool 'siteindex'; form id 'si.<form>'). */
+export function modelFromSet(set, baseAge) {
+  return { form: String(set.form).replace(/^si\./, ''), params: set.params, ageType: set.meta && set.meta.ageType || null, baseAge };
+}

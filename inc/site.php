@@ -69,6 +69,9 @@ function site_tools(?bool $tr = null): array {
         ['n' => 8, 'cat' => 'tree', 'icon' => 'secvol', 'short' => $tr ? 'Seksiyon Hacmi' : 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.1', 'lab' => 'secvol', 'title' => $tr ? 'Seksiyon Hacmi Hesaplayıcısı' : 'Stem Section Volume',
          'desc' => $tr ? 'Ölçülmüş seksiyon çaplarından tek ağaç gövde hacmi: Huber, Smalian, Newton ve Hohenadl; dip kütük ve uç seksiyon ayrı, kabuklu ve kabuksuz hacim, biçim sayısı, kullanılabilir hacim ve örnek alan büyüklüğüyle hektara toplam.'
                        : 'Single-tree stem volume from measured section diameters: Huber, Smalian, Newton and Hohenadl; stump and top piece apart, over- and under-bark volume, form factor, merchantable volume and per-hectare totals from plot sizes.'],
+        ['n' => 9, 'cat' => 'site', 'icon' => 'siteindex', 'short' => $tr ? 'Bonitet' : 'Site Index', 'file' => 'bonitet.php', 'v' => '1.0.0-beta.1', 'lab' => 'siteindex', 'title' => $tr ? 'Bonitet Hesaplayıcısı' : 'Site Index',
+         'desc' => $tr ? 'Üst boy ve yaştan dayanak yaştaki bonitet endeksi: Chapman–Richards ve Schumacher fark denklemleri kendi katsayı setinizle (kaynağı zorunlu), yaş türü, kullanıcı tanımlı bonitet sınıfları, eğri demeti; onaylanmış veriden H0.'
+                       : 'Site index at a base age from top height and age: Chapman–Richards and Schumacher difference equations with your own coefficient set (source required), age type, user-defined site classes, curve family; H0 from approved data.'],
     ];
 }
 
@@ -84,6 +87,8 @@ function site_cats(): array {
          'desc' => $tr ? 'Tek ağaç çaplarına dağılım uydurma ve sınıf frekansları.' : 'Fitting distributions to tree diameters, class frequencies.'],
         ['id' => 'tree', 'title' => $tr ? 'Ağaç ve gövde' : 'Tree and stem',
          'desc' => $tr ? 'Tek ağaç gövde ölçümlerinden hacim.' : 'Volume from single-tree stem measurements.'],
+        ['id' => 'site', 'title' => $tr ? 'Meşcere ve yetişme ortamı' : 'Stand and site',
+         'desc' => $tr ? 'Yetişme ortamı verimliliği ve meşcere yapısı.' : 'Site productivity and stand structure.'],
         ['id' => 'model', 'title' => $tr ? 'Modelleme ve değerlendirme' : 'Modelling and evaluation',
          'desc' => $tr ? 'Model kurma, tahmin başarısını ölçme ve modelleri sıralama.' : 'Fitting models, measuring prediction performance, ranking models.'],
     ];
@@ -99,6 +104,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'hd'       => '<circle cx="9.5" cy="8" r="5"/><path d="M9.5 13v8M6.5 21h6"/><path d="M18.5 3v18M16.8 3h3.4M16.8 21h3.4M17.5 12h2" class="acc"/>',
         'sampling' => '<circle cx="6" cy="6" r="1" class="f"/><circle cx="12" cy="6" r="1" class="f"/><circle cx="18" cy="6" r="1" class="f"/><circle cx="6" cy="12" r="1" class="f"/><circle cx="18" cy="12" r="1" class="f"/><circle cx="6" cy="18" r="1" class="f"/><circle cx="12" cy="18" r="1" class="f"/><circle cx="12" cy="12" r="3.2" class="acc"/><circle cx="18" cy="18" r="3.2" class="acc"/>',
         'secvol'   => '<path d="M9.2 21.5 10.6 3h2.8l1.4 18.5Z"/><path d="M9.6 16h4.8M10 11.5h4M10.4 7h3.2" class="acc"/><path d="M3.5 21.5h17"/>',
+        'siteindex' => '<path d="M3.5 20.5h17"/><path d="M4 19c3-1 5-4 7-9s4-6 8-6.5" class="acc"/><path d="M4 19.5c3.5-.5 6-2.5 8-6s4-4.5 8-5" stroke-dasharray="1.6 1.6"/>',
         'rank'     => '<path d="m12 3 7.8 4.5v9L12 21l-7.8-4.5v-9Z"/><path d="m12 7.2 4.6 2.6-.9 5.1-4.3 1.6-3.6-3.9Z" class="acc"/><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke-width=".8" opacity=".45"/>',
         'cite'     => '<path d="M5 11.5h4.5V17H5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5M14.5 11.5H19V17h-4.5v-5.5Zm0 0c0-3 1-4.6 3.2-5.5"/>',
         'guide'    => '<path d="M4 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0v-14Z"/><path d="M12 5.5c2.6-1.2 5.3-1.2 8 0v14c-2.7-1.2-5.4-1.2-8 0"/>',
@@ -136,7 +142,7 @@ function site_top(array $o = []): void {
 <meta name="theme-color" content="#eef1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121814" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/lab/lab.css?v=24">
+<link rel="stylesheet" href="assets/lab/lab.css?v=25">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231d5b45'/><circle cx='16' cy='16' r='10.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-dasharray='3 2.4'/><circle cx='13' cy='14' r='3' fill='%23fff'/><circle cx='19.5' cy='19' r='2' fill='%23fff'/></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
