@@ -71,7 +71,7 @@ Son güncelleme: 11 Kasım 2026, çap dağılımı aracı P17 ile 2.1.0 (CDFR, m
 - Eski onuralkan.com.tr kullanıcılarının tarayıcılarındaki araç oturumları yeni alan adına geçmez (IndexedDB alan adına bağlı).
 
 ## Sıradaki adım
-**Yeni araçlar (12 Kasım 2026, kullanıcı isteği):** prompt paketi `docs/TOOLS_SPEC.md` hazırlandı (taslak). Önce kullanıcı Bölüm 0'daki K1–K9 kararlarını onaylar; sonra Bölüm 7'deki ortak talimat + T00 gönderilir. Sıra: T00 → T01 → SV01–SV03 → SI01–SI04 → SS01–SS04 → BC01–BC03 → TP01–TP04 (isteğe bağlı SV04, BC04, TP05).
+**Yeni araçlar (12 Kasım 2026, kullanıcı isteği):** prompt paketi `docs/TOOLS_SPEC.md`; Bölüm 0'daki K1–K9 kararları 12 Kasım 2026'da onaylandı (bağlayıcı). Sıradaki: Bölüm 7'deki ortak talimat + **T00** (inceleme, kod değişmez). Sıra: T00 → T01 → SV01–SV03 → SI01–SI04 → SS01–SS04 → BC01–BC03 → TP01–TP04 (isteğe bağlı SV04, BC04, TP05).
 
 - Release `v2026.11.1`: not `docs/releases/v2026.11.1.md`, `CITATION.cff` sürümü 2026.11.1; kullanıcı GitHub'da açacak. Zenodo'nun sürüm DOI'si gelince `CITATION.cff` `identifiers`'a eklenir.
 - **P16 ve P17 tamamlandı** (11 Kasım 2026): çap dağılımı **2.1.0**. Release `v2026.11.1` açılabilir (not `docs/releases/v2026.11.1.md`; açıldığında `CITATION.cff` sürüm/tarih ve Zenodo sürüm DOI'si güncellenir). Sonraki aşamalar isteğe bağlıdır: P18–P23 (L-moment ve minimum uzaklık, Fonseca SB, genelleştirilmiş gamma ve Gumbel, Burr XII ve Dagum, karışımlar, ampirik göğüs yüzeyi dağılımı).

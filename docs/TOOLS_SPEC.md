@@ -1,7 +1,7 @@
 # Yeni araçlar: teknik şartname ve aşamalı geliştirme promptları
 
 Hazırlanma tarihi: 12 Kasım 2026
-Durum: **taslak**. Bölüm 0'daki kararlar kullanıcı onayı bekler; onaylanınca bağlayıcı olur ve CLAUDE.md'ye kısa bir satırla bağlanır.
+Durum: **onaylandı** (12 Kasım 2026, kullanıcı). Bölüm 0'daki K1–K9 kararları bağlayıcıdır; CLAUDE.md'de bağlantısı vardır.
 Kapsam: kullanıcının istediği sırayla beş yeni araç (12 Kasım 2026):
 
 1. Seksiyon hacmi hesaplayıcısı / Stem Section Volume
@@ -12,9 +12,9 @@ Kapsam: kullanıcının istediği sırayla beş yeni araç (12 Kasım 2026):
 
 Bu belge `docs/DIST_SPEC.md` ile aynı biçimdedir: önce ortak kurallar ve araç başına teknik şartname, sonra her aşama için kodlama yapacak yapay zekâya tek tek verilecek promptlar. Bölüm 8'deki referans sayıları bu belge yazılırken SciPy/NumPy ile hesaplandı. Bu, sitedeki kodun test edildiği anlamına gelmez. Bölüm 9'daki kaynakların **hiçbiri bu belge için okunmadı**: künyeler bilgiden yazıldı, durumları **[D]** (doğrulanacak). Bir kaynağın denklemi uygulanmadan önce okunup METHODS.md'de **[B]** olarak işaretlenmelidir.
 
-## 0. Onay bekleyen kararlar
+## 0. Kararlar (K1–K9, 12 Kasım 2026 kullanıcı onayı; bağlayıcı)
 
-| No | Karar | Öneri | Gerekçe |
+| No | Karar | Karar metni | Gerekçe |
 |---|---|---|---|
 | K1 | Yerleşik katsayı | **Hiçbir araçta yerleşik tür/yöre katsayısı yok.** Bonitet eğrileri, biyokütle denklemleri, karbon oranı, odun yoğunluğu, kabuk modeli ve gövde profili katsayılarını kullanıcı girer ya da kendi verisinden uydurur. Katsayı seti, kaynak alanı zorunlu bir "katsayı kaydı"nda tutulur (T01). | PROJECT.md §5 kural 4; uydurma katsayı riski sıfır. Yerleşik bir set istenirse, kaynağı okunup [B] olarak işaretlendikten sonra **ayrı bir aşama** olarak eklenir. |
 | K2 | Sayfa ve klasör adları | `seksiyon-hacmi.php` → `assets/lab/secvol/`; `bonitet.php` → `assets/lab/siteindex/`; `mescere-yapisi.php` → `assets/lab/structure/`; `biyokutle-karbon.php` → `assets/lab/biomass/`; `govde-profili.php` → `assets/lab/taper/` | Mevcut adlandırmayla aynı (Türkçe sayfa adı, İngilizce kod klasörü). |
