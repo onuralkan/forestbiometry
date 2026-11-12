@@ -494,7 +494,7 @@ Allometrik biçimlerin kendisi için test değerleri, bağımsız referans beti�
 
 ## 9. Kaynaklar (hepsi [D]: okunmadı, künye bilgiden; uygulamadan önce okunacak)
 
-- Avery, T.E., Burkhart, H.E. *Forest Measurements* (5. baskı, 2002). Seksiyon formülleri, biçim sayısı, bonitet kavramları.
+- Avery, T.E., Burkhart, H.E. *Forest Measurements* (5. baskı, 2002). Seksiyon formülleri, biçim sayısı, bonitet kavramları. (Huber, Smalian ve Newton formülleri için ders kitabı tanımı istisnası, 12 Kasım 2026 kullanıcı kararı: METHODS §14. Hohenadl: Heger 1965 okundu [B].)
 - Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. *Forest Mensuration* (5. baskı, 2016). Seksiyon hacmi, gövde profili, meşcere sıklığı.
 - West, P.W. *Tree and Forest Measurement* (2. baskı, 2009). Seksiyon formülleri, biyokütle.
 - Burkhart, H.E., Tomé, M. *Modeling Forest Trees and Stands* (2012). Bonitet (fark denklemleri), gövde profili, rekabet endeksleri.
