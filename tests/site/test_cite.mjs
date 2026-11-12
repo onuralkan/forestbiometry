@@ -49,7 +49,8 @@ ok(plain(cite('ris', dt)).split('\r\n').includes('DO  - ' + DOI) && !plain(cite(
 // versions shown on the site equal TOOL.version of each tool's calc.js
 const php = await readFile(path.join(root, 'inc/site.php'), 'utf8');
 const rows = [...php.matchAll(/'file' => '([^']+)', 'v' => '([^']+)', 'lab' => '([^']+)'/g)];
-ok(rows.length === 7, '7 tools with versions in inc/site.php');
+const nTools = (php.match(/'file' => '[a-z0-9-]+\.php'/g) || []).length;              // counted from site_tools(), not a fixed number
+ok(rows.length === nTools && nTools >= 7, `every tool in inc/site.php has a version (${rows.length}/${nTools})`);
 for (const [, file, v, lab] of rows) {
   const f = lab === 'dist' ? 'registry.js' : 'calc.js';     // the distribution engine keeps TOOL in its registry
   const js = await readFile(path.join(root, 'assets/lab', lab, f), 'utf8'), m = js.match(/export const TOOL = \{ id: '[^']+', version: '([^']+)' \}/);

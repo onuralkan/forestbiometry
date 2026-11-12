@@ -52,3 +52,22 @@ export function bisectMonotone(f, lo, hi, { maxIter = 300, rtol = 1e-14 } = {}) 
   }
   return { root: Math.sqrt(lo * hi), status: 'maxiter', iter: maxIter };
 }
+
+/**
+ * Every root of f on [lo, hi]: sign changes on a grid of k + 1 points ('geometric' needs lo > 0, 'linear' any lo < hi),
+ * each refined with Brent (xtol 1e-15); exact zeros on the grid are kept; roots within 1e-9 (relative to the previous one) merged.
+ * A double root that does not change sign, or two roots inside one grid interval, can be missed (known limitation;
+ * callers report the grid). Returns { roots, iter }. Moved here from dist/recover/weibull.js (behaviour unchanged).
+ */
+export function scanRoots(f, lo, hi, k = 600, { grid = 'geometric' } = {}) {
+  const fin = x => typeof x === 'number' && Number.isFinite(x);
+  const xs = Array.from({ length: k + 1 }, (_, i) => grid === 'linear' ? lo + (hi - lo) * i / k : lo * (hi / lo) ** (i / k)), ys = xs.map(f), roots = []; let iter = 0;
+  for (let i = 0; i < k; i++) {
+    if (ys[i] === 0) { roots.push(xs[i]); continue; }
+    if (fin(ys[i]) && fin(ys[i + 1]) && ys[i] * ys[i + 1] < 0) { const r = brent(f, xs[i], xs[i + 1], { xtol: 1e-15 }); iter += r.iter; if (r.status === 'ok') roots.push(r.root); }
+  }
+  if (ys[k] === 0) roots.push(xs[k]);
+  const out = [];
+  for (const r of roots) { const p = out[out.length - 1]; if (!out.length || !(Math.abs(r - p) <= 1e-9 * Math.abs(p))) out.push(r); }
+  return { roots: out, iter };
+}

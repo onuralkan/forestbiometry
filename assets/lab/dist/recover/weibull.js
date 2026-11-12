@@ -26,7 +26,7 @@
 // 'ok'; none → 'invalid' (no solution in the interval); more than one → 'multiple' (candidates in diagnostics, no
 // parameters: the method alone cannot choose). Every solution is checked by back-calculating the targets.
 import { lnGamma } from '../../core/special.js';
-import { brent } from '../../core/roots.js';
+import { scanRoots as scanGrid } from '../../core/roots.js';
 import { weibull } from '../families/weibull.js';
 import { percentileParams } from '../fit/weibull.js';
 import { quantile7 } from '../data.js';
@@ -45,17 +45,8 @@ export const EXACT = { m2: ['mean', 'variance'], m3: ['dq', 'variance'], m4: ['q
   m6: ['dq', 'ratio'], m7: ['dq', 'ratio'], m8: ['mean', 'q95'], m9: ['dq', 'q95'], m10: ['dq', 'ratio'] };
 const SELECTION = 'none: every root in the interval is reported; one root gives the result, several give the state multiple (no hidden c > 1 rule)';
 
-/** All roots of f on [lo, hi] (geometric grid + Brent). Returns { roots, iter }. Exact zeros on the grid are kept. */
-export function scanRoots(f, lo = C_RANGE[0], hi = C_RANGE[1], k = GRID) {
-  const xs = Array.from({ length: k + 1 }, (_, i) => lo * (hi / lo) ** (i / k)), ys = xs.map(f), roots = []; let iter = 0;
-  for (let i = 0; i < k; i++) {
-    if (ys[i] === 0) { roots.push(xs[i]); continue; }
-    if (fin(ys[i]) && fin(ys[i + 1]) && ys[i] * ys[i + 1] < 0) { const r = brent(f, xs[i], xs[i + 1], { xtol: 1e-15 }); iter += r.iter; if (r.status === 'ok') roots.push(r.root); }
-  }
-  if (ys[k] === 0) roots.push(xs[k]);
-  const out = []; for (const r of roots) if (!out.length || Math.abs(r / out[out.length - 1] - 1) > 1e-9) out.push(r);   // merge repeated roots
-  return { roots: out, iter };
-}
+/** All roots of f on [lo, hi] (geometric grid + Brent); core/roots.js scanRoots with this engine's interval and grid. */
+export const scanRoots = (f, lo = C_RANGE[0], hi = C_RANGE[1], k = GRID) => scanGrid(f, lo, hi, k);
 /** Positive scale from Dq: B_q(c). Requires q > a ≥ 0. */
 export function Bq(c, a, q) { const g1 = G(1, c), g2 = G(2, c); return (-a * g1 + Math.sqrt(a * a * g1 * g1 + g2 * (q * q - a * a))) / g2; }
 

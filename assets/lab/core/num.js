@@ -48,12 +48,14 @@ export function detectDecimal(values) {
   return r;
 }
 
-/** Unit conversion to internal units: dbh cm, height m, area m², coordinates m. */
+/** Unit conversion to internal units: dbh cm, height m, area m², coordinates m; double bark thickness mm, age years. */
 export const UNITS = {
   dbh: { cm: 1, mm: 0.1, m: 100 },
   height: { m: 1, dm: 0.1, cm: 0.01 },
   area: { m2: 1, ha: 10000 },
   xy: { m: 1 },
+  bark: { mm: 1, cm: 10 },
+  age: { yr: 1 },
 };
 export function toInternal(kind, unit, v) {
   const f = UNITS[kind] && UNITS[kind][unit];

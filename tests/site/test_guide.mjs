@@ -14,7 +14,7 @@ const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } }
 const G = { tr: await rd('inc/guide/tr.php'), en: await rd('inc/guide/en.php') }, site = await rd('inc/site.php');
 const ids = s => [...s.matchAll(/\$sec\('([a-z-]+)'/g)].map(m => m[1]);
 const tools = [...site.matchAll(/'file' => '([a-z-]+)\.php', 'v' =>/g)].map(m => m[1]);
-ok(tools.length === 7, 'seven tools in inc/site.php');
+ok(tools.length >= 7 && tools.length === (site.match(/'file' => '[a-z0-9-]+\.php'/g) || []).length, `tools read from site_tools(): ${tools.length}`);
 ok(ids(G.tr).join() === ids(G.en).join(), 'same sections in the same order in both languages: ' + ids(G.tr));
 ok(['genel', 'is-akisi', ...tools].every(id => ids(G.tr).includes(id)), 'a section for the general part, the workflow and every tool');
 const subs = s => s.split(/<section /).slice(1).map(x => (x.match(/<h3>/g) || []).length);

@@ -13,13 +13,16 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 page.on('pageerror', e => errors.push(e.message));
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+// tool and category counts come from inc/site.php (site_tools(), site_cats()), so adding a tool does not break this test
+const SITE = await readFile(new URL('../../inc/site.php', import.meta.url), 'utf8');
+const N_TOOLS = (SITE.match(/'file' => '[a-z0-9-]+\.php', 'v' =>/g) || []).length, N_CATS = (SITE.slice(SITE.indexOf('function site_cats'), SITE.indexOf('function site_icon')).match(/\['id' => '/g) || []).length;
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 
 // 1. tools index is the home page; every ready tool link opens
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('h1').textContent()).trim() === 'Ormancılık Biyometrisi Araçları', 'home page is the tools index (TR)');
 const links = await page.locator('.toollist li.ready h3 a').evaluateAll(a => a.map(x => x.getAttribute('href')));
-ok(links.length === 7, 'seven ready tools listed: ' + links.join(', '));
+ok(links.length === N_TOOLS && N_TOOLS >= 7, `${N_TOOLS} ready tools listed: ` + links.join(', '));
 for (const l of links) { const r = await page.request.get(BASE + '/' + l); ok(r.status() === 200, l + ' opens'); }
 ok((await page.locator('.toollist li.planned').count()) === 0, 'no planned tool left without a link');
 ok((await page.locator('text=/Meşcere Postası|Stand Gazette|Bulmaca/').count()) === 0, 'no trace of the gazette');
@@ -56,7 +59,7 @@ await shot('site-3-telefon-koyu', phone);
 
 // 6. sidebar: categories, current tool, narrow mode remembered, drawer on phones; stem map labelled as illustration
 await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('#side .b-cat').count()) === 4 && (await page.locator('#side .b-side-nav a').count()) === 7, 'sidebar: 4 categories, 7 tools');
+ok((await page.locator('#side .b-cat').count()) === N_CATS && (await page.locator('#side .b-side-nav a').count()) === N_TOOLS, `sidebar: ${N_CATS} categories, ${N_TOOLS} tools`);
 ok((await page.locator('.dir-group').count()) === 4, 'home directory grouped in 4 categories');
 ok((await page.locator('svg.stemmap title', { hasText: 'çizim, gerçek ölçüm değil' }).count()) === 1 && (await page.locator('.stemmap .sm-t').count()) > 20, 'stem map drawn and labelled as an illustration');
 await page.click('#side a[href="boy-cap.php"]'); await page.waitForURL(/boy-cap/);

@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- Test page for the shared coefficient-set editor (core/coef-ui.js). Not published (tests/ is never uploaded).
+     Forms registered here are TEST forms with no coefficients of any real species. -->
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>coef-ui test</title>
+<link rel="stylesheet" href="../../assets/lab/lab.css"></head>
+<body><main id="m" style="max-width:900px;margin:20px auto;padding:0 16px"></main>
+<script type="module">
+if (new URLSearchParams(location.search).get('lang') === 'en') document.documentElement.lang = 'en';   // read by core/i18n.js at import
+const C = await import('../../assets/lab/core/coef.js');
+const { mountCoefEditor } = await import('../../assets/lab/core/coef-ui.js');
+C.registerForm({ id: 'test.pow', tool: 'test', params: [{ key: 'a' }, { key: 'b' }], inputs: { D: { unit: 'cm', bark: 'ob' } }, output: { name: 'B', unit: 'kg' }, formula: { tr: 'B = a·D^b', en: 'B = a·D^b' } });
+C.registerForm({ id: 'test.log', tool: 'test', params: [{ key: 'a' }, { key: 'b' }], inputs: { D: { unit: 'cm' } }, output: { name: 'B', unit: 'kg' }, formula: { tr: 'ln B = a + b·ln D', en: 'ln B = a + b·ln D' }, transform: 'log' });
+C.registerForm({ id: 'other.lin', tool: 'other', params: [{ key: 'a' }], inputs: { x: { unit: 'm' } }, output: { name: 'y', unit: 'm' }, formula: { tr: 'y = a·x', en: 'y = a·x' } });
+window.C = C;
+window.editor = mountCoefEditor(document.getElementById('m'), { tool: 'test', onChange: s => { window.changes = (window.changes || 0) + 1; window.lastSets = s; } });
+</script></body></html>

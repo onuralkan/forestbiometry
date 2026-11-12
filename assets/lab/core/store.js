@@ -2,6 +2,7 @@
 // Nothing here leaves the browser. Keys in use:
 //   'session:<tool>'     autosaved working state of a tool (survives reloads and language switches)
 //   'dataset:approved'   the last dataset approved in the Data Checker (handoff to other tools; schema in docs/PROJECT.md §4b)
+//   'coef:<id>'          one coefficient set of the shared coefficient library (model-coef/1, core/coef.js; TOOLS_SPEC §1.3)
 const DB = 'forestbiometry', OS = 'kv';
 const mem = new Map();
 let dbp = null;
@@ -32,6 +33,16 @@ export async function put(key, value) {
 export async function get(key) {
   try { const d = await db(); if (!d) return mem.get(key); return await tx('readonly', s => s.get(key)); }
   catch (e) { return mem.get(key); }
+}
+/** Keys starting with prefix, sorted (IndexedDB key range; the memory fallback is searched the same way). */
+export async function keys(prefix = '') {
+  const inMem = () => [...mem.keys()].filter(k => typeof k === 'string' && k.startsWith(prefix)).sort();
+  try {
+    const d = await db(); if (!d) return inMem();
+    const range = prefix ? IDBKeyRange.bound(prefix, prefix + '\uffff') : undefined;
+    const r = await tx('readonly', s => s.getAllKeys(range));
+    return [...new Set([...(r || []), ...inMem()])].sort();
+  } catch (e) { return inMem(); }
 }
 export async function del(key) {
   try { const d = await db(); mem.delete(key); if (d) await tx('readwrite', s => s.delete(key)); } catch (e) { mem.delete(key); }
