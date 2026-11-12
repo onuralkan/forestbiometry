@@ -502,7 +502,7 @@ Allometrik biçimlerin kendisi için test değerleri, bağımsız referans beti�
 - Cieszewski, C.J., Bailey, R.L. 2000. Generalized algebraic difference approach: theory based derivation of dynamic site equations with polymorphism and variable asymptotes. *Forest Science* 46: 116–126.
 - Clark, P.J., Evans, F.C. 1954. Distance to nearest neighbor as a measure of spatial relationships in populations. *Ecology* 35: 445–453.
 - Donnelly, K.P. 1978. Simulations to determine the variance and edge effect of total nearest-neighbour distance. (Hodder, I. (ed.), *Simulation Studies in Archaeology*, Cambridge University Press.)
-- Pommerening, A. 2002. Approaches to quantifying forest structures. *Forestry* 75: 305–324. (W, M, T, U ve kenar düzeltmeleri.)
+- Pommerening, A. 2002. Approaches to quantifying forest structures. *Forestry* 75: 305–324. (W, M, T, U ve kenar düzeltmeleri.) (SS02: Clark–Evans, Donnelly ve Pommerening geçici tanım istisnasıyla uygulandı, 12 Kasım 2026 kullanıcı kararı; kaynaklar yüklenince doğrulanacak.)
 - Hegyi, F. 1974. A simulation model for managing jack-pine stands. (Fries, J. (ed.), *Growth Models for Tree and Stand Simulation*, Royal College of Forestry, Stockholm.)
 - Reineke, L.H. 1933. Perfecting a stand-density index for even-aged forests. *Journal of Agricultural Research* 46: 627–638. (Okundu [B], METHODS §16.)
 - Curtis, R.O. 1982. A simple index of stand density for Douglas-fir. *Forest Science* 28: 92–94. (Okundu [B], METHODS §16. Hart–Becking göreli aralık: tanım istisnası, 12 Kasım 2026 kullanıcı kararı.)
