@@ -754,3 +754,26 @@ Seksiyon hacmi, bonitet, meşcere yapısı, biyokütle ve gövde profili araçla
 
 **Testler:** `tests/core/test_t01.mjs` 88/88 (biçim kaydı, 18 geçersiz set durumu, düzeltme etkenleri, geçerlilik aralığı, JSON gidiş-dönüş, saklama ve listeleme, birimler, gövde tablosundaki her hata ve uyarı durumu satır numarasıyla, ağaç listesi bağlama, dönemler, kök tarayıcının dağılım motoruyla aynılığı); `tests/core/e2e.mjs` 22/22 (düzenleyici: virgüllü katsayı ve kaynaksız set reddi, geçerlilik aralığı, log biçim ve Baskerville, düzenleme, silme, JSON indirme ve yükleme, yeniden yüklemede kalıcılık, İngilizce, telefon genişliği). Site testleri (`test_cite`, `test_guide`, `e2e`) araç ve kategori sayısını artık `inc/site.php`'den okur.
 
+
+## 14. Seksiyon hacmi / Stem Section Volume (`assets/lab/secvol/calc.js`; TOOLS_SPEC §2)
+
+### SV01: hesap çekirdeği (12 Kasım 2026)
+Girdi: `stem-sections/1` tablosundan bir ağaç (§13): yerden yükseklikle sıralı ölçüm noktaları, kabuklu (d) ve/veya kabuksuz (d_ib) çaplar, toplam boy H, kesim yüksekliği, dbh. g(d) = (π/4)(d/100)² m², uzunluk m, hacim m³. Kaynaklar: seksiyon formülleri ders kitabı tanımlarıdır (Avery ve Burkhart 2002; Kershaw ve ark. 2016; West 2009) **[D]**, bu aşamada okunmadı; formüller tanım gereği yazıldı ve bilinen cisimlerde SciPy integraliyle doğrulandı. Hohenadl yöntemi **[D]** (kaynağı okunmadı; beş eşit seksiyon Huber tanımı olarak uygulandı).
+
+| Yöntem (kimlik) | Hacim | Kabul ettiği veri düzeni |
+|---|---|---|
+| `huber` | g_m·L | `mids` (her nokta bir seksiyon ortası) ya da `triples` (ortalar kullanılır) |
+| `smalian` | (g₁ + g₂)/2·L | `ends` (her nokta bir seksiyon sınırı) ya da `triples` (uçlar kullanılır) |
+| `newton` | L/6·(g₁ + 4g_m + g₂) | `triples` (uç, orta, uç, orta, …, uç) |
+| `hohenadl` | (H/5)·Σ g(d₀.₁H, d₀.₃H, d₀.₅H, d₀.₇H, d₀.₉H) | 0.1H … 0.9H'de noktalar (tolerans 0.05 m, ayar); yerden tepeye bütün gövde, ayrı kütük ve uç seksiyon yok |
+
+- **Veri düzeni kullanıcının seçimidir**, araç tahmin etmez. Şartname iki düzen sayıyordu (uç ve orta ölçümleri); Newton her seksiyonda uç ve orta ister, bu yüzden üçüncü düzen `triples` eklendi (uç–orta–uç dizisi; orta noktanın gerçekten ortada olması 0.01 m toleransla denetlenir, ayar).
+- **Orta ölçümlerinden sınırlar:** b₀ = kesim yüksekliği (zorunlu), b(i+1) = 2·m(i) − b(i). Bir orta, önceki sınırın üstünde değilse ya da türetilen son sınır toplam boyu aşıyorsa hesaplanmaz. `stump`, `dbh` ve `top` türündeki noktalar orta sayılmaz; son sınırda `top` türünde bir nokta varsa uç seksiyonun taban çapı odur.
+- **Dip kütük:** zemin ile kesim yüksekliği arası silindir, kesim yüksekliğindeki ölçülmüş çapla; ayrı satırdır ve toplama yalnızca `includeStump` seçilirse katılır (varsayılan: katılmaz). Kesim yüksekliğinde nokta yoksa kütük hesaplanmaz; ilk nokta kesimin üstündeyse aradaki boşluk raporlanır, doldurulmaz.
+- **Uç seksiyon:** son sınırdan toplam boya; koni gL/3 (varsayılan, araç kuralı K7), paraboloit gL/2, neiloit gL/4 (genel biçim g(t) = g₀(1 − t/L)^r, r = 1, 2, 3; hacim g₀L/(r + 1)). Toplam boy yoksa ya da son sınırda çap yoksa uç seksiyon yoktur ve hacim "son sınıra kadar" diye etiketlenir.
+- **Kabuk:** kabuklu ve kabuksuz hacim ayrı hesaplanır; bir ağacın bütün noktalarında ilgili çap yoksa o hacim hesaplanmaz (uyarı), tahmin edilmez.
+- **Biçim sayısı:** f₁.₃ = V/(g₁.₃·H), göğüs yüksekliği biçim sayısı; V'nin kütüğü içerip içermediği (ya da Hohenadl'de yerden tepeye olduğu) sonuçta yazılır. Hacim "son sınıra kadar" ise verilmez.
+- **Kullanılabilir hacim (isteğe bağlı tepe çapı d*):** ölçülmüş gövde içinde d*'nin yüksekliği komşu noktalar arasında çapta **doğrusal aradeğerle**, kesilen seksiyon aynı yöntemle ve doğrusal aradeğerli çaplarla hesaplanır; d* uç seksiyonun içindeyse seçilen cismin kendi profiliyle: d(t) = d₀(1 − t/L)^(r/2), t* = L[1 − (d*/d₀)^(2/r)], hacim g₀L/(r + 1)·[1 − (1 − t*/L)^(r+1)]. Kütük kullanılabilir hacme katılmaz. Kural sonuçta yazılır.
+- **Durumlar:** hatalı ağaç (`stem-sections/1` kontrolleri), yönteme uymayan düzen, eksik Hohenadl noktası, toplam boyun altında kalan ölçüm hesaplanmaz; hiçbiri sıfır ya da kısmi bir sayı olarak gösterilmez.
+
+**Doğrulama:** `tests/ref/make_secvol_sv01.py` (SciPy 1.18.1, NumPy 2.5.3): paraboloit, koni ve neiloitte tam hacim `scipy.integrate.quad` ile; Huber, Smalian, Newton (bir ve dört seksiyon) ve Hohenadl toplamları tanımdan ayrı yazıldı; uç seksiyonda d* yüksekliği `brentq`, hacmi `quad`; 40 benzetim ağacında (eşit olmayan seksiyonlar, gerçek ölçüm değildir) üç düzen, kütük, üç uç cismi ve kullanılabilir hacim (`numpy.interp`). `tests/secvol/test_sv01.mjs` 949/949: TOOLS_SPEC §8.1 tablosu, Newton'un koni ve neiloitte tamlığı, Huber eksik / Smalian fazla davranışı, türetilen sınırlar, kabuklu/kabuksuz ayrımı, biçim sayısı, bütün durum kodları, tablo okuyucudan uçtan uca.
