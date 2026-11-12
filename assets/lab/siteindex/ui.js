@@ -21,7 +21,8 @@ const num = v => { const t = String(v ?? '').trim(); if (!t) return null; const 
 const EXTRA = [
   { key: 'ageType', type: 'choice', required: true, label: { tr: T('x.ageType'), en: T('x.ageType') }, values: S.AGE_TYPES.map(v => ({ v, tr: T('x.ageType.' + v), en: T('x.ageType.' + v) })), note: { tr: T('x.ageType.note'), en: T('x.ageType.note') } },
   { key: 'topDef', type: 'choice', required: true, label: { tr: T('x.topDef'), en: T('x.topDef') }, values: ['h0dbh', 'h0height', 'other'].map(v => ({ v, tr: T('x.topDef.' + v), en: T('x.topDef.' + v) })) },
-  { key: 'topNote', type: 'text', label: { tr: T('x.topNote'), en: T('x.topNote') } }];
+  { key: 'topNote', type: 'text', label: { tr: T('x.topNote'), en: T('x.topNote') } },
+  { key: 'cov', type: 'text', label: { tr: T('x.cov'), en: T('x.cov') }, note: { tr: T('x.cov.note'), en: T('x.cov.note') } }];
 
 let S0 = blank(), sets = [], R = null, approved = null;
 function blank() {
@@ -56,7 +57,7 @@ function modelProblems() {
 let editor = null;
 function renderStep1() {
   const el = $('step1');
-  if (!editor) { el.innerHTML = '<div id="coefbox"></div><details class="card more" id="fitbox"><summary>' + T('fit.h') + '</summary><div id="fitbody"></div></details><div id="m-rest"></div>'; $('fitbox').open = !!S0.fit.open; $('fitbox').addEventListener('toggle', e => { S0.fit.open = e.target.open; save(); if (e.target.open) renderFit(); }); if (S0.fit.open) setTimeout(renderFit, 0); editor = mountCoefEditor($('coefbox'), { tool: 'siteindex', extra: EXTRA, onChange: s => { sets = s; if (S0.setId && !curSet()) S0.setId = null; if (!S0.setId && sets.length === 1) S0.setId = sets[0].id; renderRest(); } }); }
+  if (!editor) { el.innerHTML = '<div id="coefbox"></div><details class="card more" id="fitbox"><summary>' + T('fit.h') + '</summary><div id="fitbody"></div></details><div id="m-rest"></div>'; $('fitbox').open = !!S0.fit.open; $('fitbox').addEventListener('toggle', e => { S0.fit.open = e.target.open; save(); if (e.target.open) renderFit(); }); if (S0.fit.open) setTimeout(renderFit, 0); editor = mountCoefEditor($('coefbox'), { tool: 'siteindex', extra: EXTRA, onChange: s => { sets = s; if (S0.setId && !curSet()) S0.setId = null; if (!S0.setId && sets.length === 1) S0.setId = sets[0].id; R = null; renderRest(); renderSteps(); } }); }
   renderRest();
   function renderRest() {
     const set = curSet(), cd = S.classesOf(classDef());
@@ -143,6 +144,8 @@ function drawFit() {
   h += `<figure class="chartbox" id="ch-fit">${plotChart({ title: T('fit.ch.curves'), xmin: 0, xmax: amax, ymin: 0, lines, points: FR.series.flatMap(s => s.points.map(p => [p.A, p.H])), xLabel: T('fit.ch.age'), yLabel: T('fit.ch.h'), fmt: v => fmtNum(v, 1) })}
     <figcaption class="muted small">${T('fit.ch.note')}</figcaption></figure>
     <figure class="chartbox" id="ch-res">${scatterChart({ title: T('fit.ch.res'), points: FR.residuals.map(r => [r.A2, r.e]), xLabel: T('fit.ch.age2'), yLabel: T('fit.ch.e'), hline: 0, fmt: v => fmtNum(v, 1) })}</figure>`;
+  h += `<h3>${T('bt.h')}</h3><p class="muted small">${T('bt.sub')}</p><div class="lims"><label>${T('bt.B')} <input type="text" inputmode="numeric" size="6" id="bt-B" value="${esc(F.bootB ?? S.BOOT_DEFAULTS.B)}"></label><label>${T('bt.seed')} <input type="text" inputmode="numeric" size="10" id="bt-seed" value="${esc(F.bootSeed ?? S.BOOT_DEFAULTS.seed)}"></label>
+    <button type="button" class="btn ghost" id="bt-run">${T('bt.run')}</button></div><div id="bt-out">${FR.boot ? bootHTML(FR.boot) : ''}</div>`;
   h += `<h3>${T('fit.save.h')}</h3><p class="muted small">${T('fit.save.sub')}</p>
     <div class="lims"><label>${T('x.ageType')} <select id="fx-age"><option value="">${T('none')}</option>${S.AGE_TYPES.map(v => `<option value="${v}"${F.ageType === v ? ' selected' : ''}>${T('x.ageType.' + v)}</option>`).join('')}</select></label>
       <label>${T('x.topDef')} <select id="fx-top"><option value="">${T('none')}</option>${['h0dbh', 'h0height', 'other'].map(v => `<option value="${v}"${F.topDef === v ? ' selected' : ''}>${T('x.topDef.' + v)}</option>`).join('')}</select></label>
@@ -151,17 +154,33 @@ function drawFit() {
     <div class="nav"><button type="button" class="btn" id="fx-save">${T('fit.save')}</button></div><div id="fx-msg"></div>`;
   out.innerHTML = h;
   for (const [id, k] of [['fx-age', 'ageType'], ['fx-top', 'topDef'], ['fx-note', 'topNote'], ['fx-cit', 'cit']]) $(id).addEventListener('change', e => { F[k] = e.target.value; save(); });
+  $('bt-B').addEventListener('change', e => { F.bootB = e.target.value; save(); }); $('bt-seed').addEventListener('change', e => { F.bootSeed = e.target.value; save(); });
+  $('bt-run').addEventListener('click', () => {
+    const B = Number(String(F.bootB ?? S.BOOT_DEFAULTS.B).trim()), seed = Number(String(F.bootSeed ?? S.BOOT_DEFAULTS.seed).trim());
+    if (!(Number.isInteger(B) && B >= 20 && B <= 5000 && Number.isInteger(seed) && seed >= 0)) { $('bt-out').innerHTML = `<p class="note err small">${T('bt.bad')}</p>`; return; }
+    $('bt-out').innerHTML = `<p class="small">${T('bt.busy', { B })}</p>`; $('bt-run').disabled = true;
+    setTimeout(() => { FR.boot = S.bootstrapSeries(FR.form, FR.series, FR.pairing, FR, { B, seed }); $('bt-run').disabled = false; $('bt-out').innerHTML = bootHTML(FR.boot); }, 30);
+  });
   $('fx-save').addEventListener('click', async () => {
     const miss = [!F.ageType && T('x.ageType'), !F.topDef && T('x.topDef'), !String(F.cit).trim() && T('fit.cit')].filter(Boolean);
     if (miss.length) { $('fx-msg').innerHTML = `<p class="note err small">${esc(T('fit.miss', { list: miss.join(', ') }))}</p>`; return; }
     const allA = FR.series.flatMap(s => s.points.map(p => p.A)), allH = FR.series.flatMap(s => s.points.map(p => p.H));
     const set = { ...blankSet('si.' + FR.form), params: { ...FR.params }, valid: { A: [Math.min(...allA), Math.max(...allA)], H: [Math.min(...allH), Math.max(...allH)] },
       meta: { ageType: F.ageType, topDef: F.topDef, ...(F.topNote.trim() ? { topNote: F.topNote.trim() } : {}) }, source: { citation: F.cit.trim() }, origin: 'fitted',
-      fit: { data: F.imp ? F.imp.name : null, n: FR.n, nSeries: FR.nSeries, pairing: FR.pairing, method: 'Levenberg–Marquardt', start: FR.start, startFrom: FR.startFrom, iter: FR.iter, rmse: FR.rmse, bias: FR.bias, sigma: FR.sigma, se: FR.se, seNote: FR.seNote, created: FR.created } };
+      fit: { data: F.imp ? F.imp.name : null, n: FR.n, nSeries: FR.nSeries, pairing: FR.pairing, method: 'Levenberg–Marquardt', start: FR.start, startFrom: FR.startFrom, iter: FR.iter, rmse: FR.rmse, bias: FR.bias, sigma: FR.sigma, se: FR.se, seNote: FR.seNote, created: FR.created,
+        ...(FR.boot && !FR.boot.problem ? { bootstrap: { B: FR.boot.B, seed: FR.boot.seed, level: FR.boot.level, nOk: FR.boot.nOk, nFail: FR.boot.nFail, failRate: FR.boot.failRate, resampling: 'series', interval: FR.boot.interval, params: FR.boot.params, thetas: FR.boot.thetas } } : {}) } };
     const r = await saveCoef(set);
     if (!r.ok) { $('fx-msg').innerHTML = `<p class="note err small">${esc(r.problems.map(p => p.code).join(', '))}</p>`; return; }
-    S0.setId = r.set.id; save(); $('fx-msg').innerHTML = `<p class="note ok small" id="fx-ok">${T('fit.saved')}</p>`; editor && editor.refresh();
+    S0.setId = r.set.id; R = null; save(); renderSteps(); $('fx-msg').innerHTML = `<p class="note ok small" id="fx-ok">${T('fit.saved')}</p>`; editor && editor.refresh();
   });
+}
+
+function bootHTML(b) {
+  if (b.problem) return `<p class="note err small" id="bt-res">${T('c.' + b.problem)}</p>`;
+  const fm = S.FORMS[FR.form];
+  return `<p class="small" id="bt-res">${esc(T('bt.sum', { B: b.B, seed: b.seed, ok: b.nOk, fail: b.nFail, rate: fmtNum(100 * b.failRate, 1) }))}</p>
+    <div class="tscroll"><table class="grid" id="bt-tab"><thead><tr><th>${T('fit.par')}</th><th>${T('fit.est')}</th><th>${T('bt.ci')}</th><th>${T('bt.sd')}</th></tr></thead><tbody>
+    ${fm.params.map(k => `<tr><th>${k}</th><td class="num">${fmtNum(b.params[k].est, 8)}</td><td class="num">${f(b.params[k].lo, 8)} – ${f(b.params[k].hi, 8)}</td><td class="num">${f(b.params[k].sd, 6)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 /* ---------------- data ---------------- */
@@ -241,13 +260,25 @@ function compute() {
   const set = curSet(), m = S.modelFromSet(set, a0()), classes = S.classesOf(classDef()).classes, { rows } = rowsFromInput();
   const ev = S.evaluate(m, rows.map(r => ({ ...r, A: r.pre && r.pre.length ? null : r.A })), { valid: set.valid, classes })
     .map((r, i) => r.pre && r.pre.length ? { ...r, status: 'invalid', si: null, cls: null, problems: r.pre } : r);
-  R = { set, m, classes, rows: ev, created: new Date().toISOString() };
+  // uncertainty of SI: bootstrap replicates of a fitted set, or the delta method with a covariance from the source
+  let unc = { method: 'none' };
+  const bt = set.fit && set.fit.bootstrap, covText = set.meta && set.meta.cov;
+  if (bt && bt.thetas && bt.thetas.length) {
+    const theta = S.FORMS[m.form].params.map(k => m.params[k]), iv = S.siIntervals(m.form, bt.thetas, theta, ev.map(r => ({ A: r.A, H: r.H })), m.baseAge, bt.level);
+    ev.forEach((r, i) => { if (r.status === 'ok') r.ci = { lo: iv[i].lo, hi: iv[i].hi }; });
+    unc = { method: 'bootstrap', B: bt.B, seed: bt.seed, level: bt.level, nOk: bt.nOk };
+  } else if (covText) {
+    const cov = S.parseCov(covText);
+    ev.forEach(r => { if (r.status !== 'ok') return; const d = S.deltaSI(m, cov, r.A, r.H); if (d.problem) r.warnings.push({ code: d.problem }); else r.ci = { lo: d.lo, hi: d.hi }; });
+    unc = { method: 'delta', level: S.BOOT_DEFAULTS.level };
+  }
+  R = { set, m, classes, rows: ev, unc, created: new Date().toISOString() };
   save();
 }
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function resTable() {
-  const head = [T('t.unit'), T('t.plot'), T('t.period'), T('t.A'), T('t.H'), T('t.Hsrc'), T('t.SI', { a0: fmtNum(R.m.baseAge, 2) }), ...(R.classes.length ? [T('t.cls')] : []), T('t.note'), T('t.state')];
-  const rows = R.rows.map(r => ({ ok: r.status === 'ok', cells: [r.unit, r.plot, r.period, r.A, r.H, T('src.' + r.Hsrc), r.si, ...(R.classes.length ? [r.status === 'ok' ? r.cls ?? T('cls.out') : null] : []),
+  const head = [T('t.unit'), T('t.plot'), T('t.period'), T('t.A'), T('t.H'), T('t.Hsrc'), T('t.SI', { a0: fmtNum(R.m.baseAge, 2) }), ...(R.unc.method !== 'none' ? [T('t.ci')] : []), ...(R.classes.length ? [T('t.cls')] : []), T('t.note'), T('t.state')];
+  const rows = R.rows.map(r => ({ ok: r.status === 'ok', cells: [r.unit, r.plot, r.period, r.A, r.H, T('src.' + r.Hsrc), r.si, ...(R.unc.method !== 'none' ? [r.ci ? `${fmtNum(r.ci.lo, 3)} – ${fmtNum(r.ci.hi, 3)}` : null] : []), ...(R.classes.length ? [r.status === 'ok' ? r.cls ?? T('cls.out') : null] : []),
     [...r.problems, ...r.warnings].map(p => T('c.' + p.code, p)).join('; ') || '–', T('st.' + r.status)] }));
   return { head, rows };
 }
@@ -263,6 +294,7 @@ function renderStep3() {
   const ageTxt = T('x.ageType.' + R.m.ageType);
   let h = `<div class="card"><p class="small" id="rmodel">${esc(T('r.model', { form: formName(R.m.form), a0: fmtNum(R.m.baseAge, 2), age: ageTxt, top: topText(set) }))}</p>
     <p class="note small" id="rsrc">${esc(T('r.src', { src: set.source.citation }))}</p>
+    <p class="small" id="runc">${esc(R.unc.method === 'bootstrap' ? T('u.boot', { B: R.unc.B, seed: R.unc.seed, ok: R.unc.nOk }) : R.unc.method === 'delta' ? T('u.delta') : T('u.none'))}</p>
     <p class="small" id="rsum">${T('r.sum', { n: R.rows.length, ok: ok.length, bad: R.rows.length - ok.length, out })}</p>
     <div class="tscroll"><table class="grid" id="rtab"><thead><tr>${t.head.map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r => `<tr${r.ok ? '' : ' class="st-bad"'}>${r.cells.map(c => `<td class="${typeof c === 'number' ? 'num' : ''}">${typeof c === 'number' ? f(c, 3) : esc(c ?? '–')}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
   if (cv.lines.length) h += `<figure class="chartbox card" id="ch-si">${plotChart({ title: T('ch.title', { a0: fmtNum(R.m.baseAge, 2) }), xmin: 0, xmax: cv.ages[cv.ages.length - 1], ymin: 0,
@@ -274,13 +306,13 @@ function renderStep3() {
   $('back2').addEventListener('click', () => go(2));
   $('ch-svg') && $('ch-svg').addEventListener('click', () => download(fname('bonitet-egrileri', 'site-index-curves') + '.svg', svgForDownload($('ch-si').querySelector('svg')), 'image/svg+xml'));
   $('x-csv').addEventListener('click', () => downloadCSV(fname('bonitet', 'site-index') + '.csv', [t.head, ...t.rows.map(r => r.cells)], lang));
-  $('x-json').addEventListener('click', () => downloadJSON(fname('bonitet', 'site-index') + '.json', { tool: S.TOOL, created: R.created, model: R.m, set: R.set, classes: R.classes, input: S0.mode, results: R.rows }));
+  $('x-json').addEventListener('click', () => downloadJSON(fname('bonitet', 'site-index') + '.json', { tool: S.TOOL, created: R.created, model: R.m, set: R.set, classes: R.classes, input: S0.mode, results: R.rows, uncertainty: R.unc }));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
     const info = [[T('x.k'), T('x.v')], [T('x.tool'), `${S.TOOL.id} ${S.TOOL.version}`], [T('x.date'), R.created], [T('x.form'), formName(R.m.form)],
       [T('x.params'), Object.entries(R.m.params).map(([k, v]) => `${k} = ${v}`).join('; ')], [T('x.source'), [set.source.citation, set.source.doi, set.source.page, set.source.table].filter(Boolean).join('; ')],
       [T('x.a0'), R.m.baseAge], [T('x.age'), ageTxt], [T('x.top'), topText(set)], [T('x.valid'), set.valid ? JSON.stringify(set.valid) : '–'],
-      [T('x.cls'), R.classes.length ? R.classes.map(c => `${c.name}: ${c.lo}–${c.hi}`).join('; ') : '–'], [T('x.input'), T('d.' + S0.mode)], ['', T('r.src', { src: set.source.citation })], ['', T('m.a0.note')], ['', T('cls.note')]];
+      [T('x.cls'), R.classes.length ? R.classes.map(c => `${c.name}: ${c.lo}–${c.hi}`).join('; ') : '–'], [T('x.input'), T('d.' + S0.mode)], ['', R.unc.method === 'bootstrap' ? T('u.boot', { B: R.unc.B, seed: R.unc.seed, ok: R.unc.nOk }) : R.unc.method === 'delta' ? T('u.delta') : T('u.none')], ['', T('r.src', { src: set.source.citation })], ['', T('m.a0.note')], ['', T('cls.note')]];
     const cur = [[T('ch.x', { age: ageTxt }), ...cv.lines.map(l => T('ch.curve', { si: l.si }))], ...cv.ages.map((a, i) => [a, ...cv.lines.map(l => { const p = S.curve(R.m, l.si, [a])[0]; return p[1]; })])];
     download(fname('bonitet', 'site-index') + '.xlsx', xlsxBlob(XLSX, [{ name: T('sheet.info'), rows: info, widths: [24, 100] }, { name: T('sheet.res'), rows: [t.head, ...t.rows.map(r => r.cells)], textCols: [0, 1, 2] }, { name: T('sheet.curves'), rows: cur }]));
   });

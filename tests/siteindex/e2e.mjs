@@ -83,7 +83,7 @@ const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-cs
 ok((await readFile(await dc.path(), 'utf8')).split('\n').length >= 5, 'CSV downloads');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dj.path(), 'utf8'));
-ok(js.tool.version === '1.0.0-beta.2' && js.model.baseAge === 100 && js.model.ageType === 'total' && js.set.source.citation === 'Test, not a real equation' && js.results.length === 4, 'JSON: model, set with source, results');
+ok(js.tool.version === '1.0.0-beta.3' && js.model.baseAge === 100 && js.model.ageType === 'total' && js.set.source.citation === 'Test, not a real equation' && js.results.length === 4, 'JSON: model, set with source, results');
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]); ok((await dx.suggestedFilename()).endsWith('.xlsx'), 'Excel report');
 
 // 4. approved data: H0 by the Plot & Stand definition (shared code), mean recorded age
@@ -110,7 +110,7 @@ await page.click('#steps [data-go="1"]'); await page.locator('#fitbox > summary'
 await page.locator('#fitimp details summary').click(); await page.fill('#fitimp textarea', tsv); await page.click('#fitimp [data-act="paste"]'); await page.waitForSelector('#f-run');
 ok(await page.inputValue('#fm-series') === '0' && await page.inputValue('#fm-A') === '1' && await page.inputValue('#fm-H') === '2', 'series, age and height columns recognised');
 await page.check('input[name="fstart"][value="user"]'); await fillC('#fs-b1', String(REF.start['cr.ada.b0'][0])); await fillC('#fs-b2', String(REF.start['cr.ada.b0'][1]));
-for (const mode of ['consecutive', 'all']) {
+for (const mode of ['all', 'consecutive']) {
   await page.check(`input[name="fpair"][value="${mode}"]`); await page.click('#f-run'); await page.waitForSelector('#fittab');
   const ref = rec.fits[mode], est = await page.evaluate(() => [...document.querySelectorAll('#fittab tbody tr')].map(tr => parseFloat(tr.children[1].textContent)));
   near(est[0], ref.theta[0], 1e-7, `${mode}: b1 = SciPy least_squares`); near(est[1], ref.theta[1], 1e-7, `${mode}: b2 = SciPy`);
@@ -118,14 +118,36 @@ for (const mode of ['consecutive', 'all']) {
   near(num((await page.locator('#fitgof').textContent()).match(/RMSE ([\d.]+)/)[1]), ref.rmse, 6e-4, `${mode}: RMSE`);
 }
 ok((await page.locator('#fitbox', { hasText: 'Gözlemler bağımsız varsayımıyla' }).count()) === 1 && (await page.locator('#ch-fit svg').count()) === 1 && (await page.locator('#ch-res svg').count()) === 1, 'SE label, curve and residual charts');
+// series-level bootstrap (SI04): the same seed and B as the Python reference → the same percentile intervals
+const R4 = JSON.parse(await readFile(new globalThis.URL('../ref/siteindex_si04.json', import.meta.url), 'utf8')), c4 = R4.cases.find(c => c.form === 'cr.ada.b0');
+await fillC('#bt-B', String(R4.B)); await fillC('#bt-seed', String(R4.seed)); await page.click('#bt-run'); await page.waitForSelector('#bt-tab');
+{ const iv = await page.evaluate(() => [...document.querySelectorAll('#bt-tab tbody tr')].map(tr => tr.children[2].textContent.split('–').map(x => parseFloat(x))));
+  iv.forEach(([lo, hi], i) => { near(lo, c4.lo[i], 1e-7, `bootstrap ${['b1', 'b2'][i]} lower = Python`); near(hi, c4.hi[i], 1e-7, `bootstrap ${['b1', 'b2'][i]} upper = Python`); });
+  ok((await page.locator('#bt-res').textContent()).includes(`B = ${R4.B}, tohum ${R4.seed}: ${R4.B} tekrar başarılı, 0 başarısız`), 'B, seed and failures shown'); }
 await page.click('#fx-save'); ok((await page.locator('#fx-msg').textContent()).includes('Eksik') && (await page.locator('#fx-msg').textContent()).includes('Kaynak künyesi'), 'saving needs age type, top height definition and a citation');
 await page.selectOption('#fx-age', 'total'); await page.selectOption('#fx-top', 'h0dbh'); await fillC('#fx-cit', 'Simulated stem analyses (test)'); await page.click('#fx-save'); await page.waitForSelector('#fx-ok');
 { const lib = await page.evaluate(async () => (await (await import('/assets/lab/core/coef.js')).listCoefs('siteindex')));
   const fitted = lib.find(s => s.origin === 'fitted');
-  ok(fitted && fitted.fit.pairing === 'all' && fitted.fit.n === rec.fits.all.n && fitted.fit.seNote === 'independent-observations' && Math.abs(fitted.params.b1 - rec.fits.all.theta[0]) < 1e-7 * rec.fits.all.theta[0] && fitted.valid.A[0] > 0 && fitted.meta.ageType === 'total', 'fitted set stored with origin, fit summary and the data range as validity range');
+  ok(fitted && fitted.fit.pairing === 'consecutive' && fitted.fit.n === rec.fits.consecutive.n && fitted.fit.seNote === 'independent-observations' && fitted.fit.bootstrap.B === R4.B && fitted.fit.bootstrap.thetas.length === R4.B && Math.abs(fitted.params.b1 - rec.fits.consecutive.theta[0]) < 1e-7 * rec.fits.consecutive.theta[0] && fitted.valid.A[0] > 0 && fitted.meta.ageType === 'total', 'fitted set stored with origin, fit summary and the data range as validity range');
   ok(await page.inputValue('#setsel') === fitted.id, 'the fitted set is chosen for the calculation'); }
 
-// 5. English and phone + dark (back to the results with the fitted set)
+// SI intervals in the results: bootstrap replicates of the fitted set; delta method for a user set with a covariance
+await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab');
+{ const th = await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent)), rr = await rows(), ci = th.indexOf('SI %95 aralığı');
+  ok(ci > 0 && (await page.locator('#runc').textContent()).includes(`B = ${R4.B}, tohum ${R4.seed}`), 'bootstrap interval column and its description');
+  const okRow = rr.find(r => r[ci] !== '–'), [lo, hi] = okRow[ci].split('–').map(x => parseFloat(x)); ok(lo <= num(okRow[ci - 1]) && num(okRow[ci - 1]) <= hi, 'interval contains the site index'); }
+await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js');
+  await C.saveCoef({ ...C.blankSet('si.cr.ada.b0'), id: 'covset', params: { b1: 0.03, b2: 1.4 }, meta: { ageType: 'total', topDef: 'h0dbh', cov: '1.9e-6 3.1e-5; 3.1e-5 8.1e-4' }, source: { citation: 'Test with covariance' } }); });
+await page.reload(); await page.waitForSelector('#steps'); await page.click('#steps [data-go="1"]'); await page.waitForSelector('#setsel'); await page.selectOption('#setsel', 'covset');
+await page.click('#steps [data-go="2"]'); await page.check('input[name="dmode"][value="single"]'); await fillC('#sA', '30'); await fillC('#sH', '15'); await page.click('#calc'); await page.waitForSelector('#rtab');
+{ const d = SI.deltaSI({ form: 'cr.ada.b0', params: { b1: 0.03, b2: 1.4 }, baseAge: 100, ageType: 'total' }, [[1.9e-6, 3.1e-5], [3.1e-5, 8.1e-4]], 30, 15), r0 = (await rows())[0], th = await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent)), ci = th.indexOf('SI %95 aralığı');
+  const [lo, hi] = r0[ci].split('–').map(x => parseFloat(x)); near(lo, d.lo, 6e-4, 'delta lower = engine'); near(hi, d.hi, 6e-4, 'delta upper = engine');
+  ok((await page.locator('#runc').textContent()).includes('delta yöntemi'), 'delta method named'); }
+{ const plain = await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js'); return (await C.listCoefs('siteindex')).find(x => x.origin !== 'fitted' && x.id !== 'covset').id; });
+  await page.click('#steps [data-go="1"]'); await page.selectOption('#setsel', plain); await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab');
+  ok((await page.locator('#runc').textContent()).includes('Belirsizlik bilgisi yok') && !(await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent))).includes('SI %95 aralığı'), 'user set without covariance: "no uncertainty information", no interval column'); }
+
+// 5. English and phone + dark (back to the results)
 await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab'); await page.waitForTimeout(400);
 const en = await ctx.newPage(); en.on('pageerror', e => errors.push(e.message));
 await en.goto(URL + '?lang=en'); await en.waitForSelector('#rtab');

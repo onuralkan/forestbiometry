@@ -6,8 +6,9 @@
 // The site ships NO coefficients (TOOLS_SPEC K1): the user enters them with their source, or fits them (SI03).
 import { registerForm } from '../core/coef.js';
 import { levenbergMarquardt, covariance } from '../core/nls.js';
+import { rng, normQuantile } from '../core/stats.js';
 
-export const TOOL = { id: 'bonitet', version: '1.0.0-beta.2' };
+export const TOOL = { id: 'bonitet', version: '1.0.0-beta.3' };
 export const AGE_TYPES = ['total', 'bh'];                         // total age, breast-height age (K8: never converted)
 
 /** ln(1 − e^(−x)) for x > 0 without cancellation (log(−expm1(−x)) below ln 2, log1p(−e^(−x)) above). */
@@ -239,4 +240,75 @@ export function seriesFromTable(tbl, map, decimal, parseNumber, cellText) {
     s.points.push({ A: A.value, H: H.value, row });
   });
   return { series: [...by.values()], problems };
+}
+
+/* ---------------- SI04: uncertainty ---------------- */
+// Series-level bootstrap for fitted sets: whole SERIES are resampled with replacement (never single observations, which
+// are not independent), the pairs are rebuilt with the same pairing and the equation is refitted from the full-data
+// estimate. Percentile intervals (sample quantile type 7) of the successful replicates; the failure rate is reported.
+// For user-entered sets a covariance matrix from the source gives a delta-method interval; without one there is none.
+
+export const BOOT_DEFAULTS = { B: 200, seed: 20261112, level: 0.95 };   // tool rules, written into the result
+const q7 = (s, p) => { const n = s.length, h = (n - 1) * p, lo = Math.floor(h); return lo + 1 >= n ? s[n - 1] : s[lo] + (h - lo) * (s[lo + 1] - s[lo]); };
+/** Indices of the resampled series for replicate b: k draws floor(r()·k) from one stream rng(seed) (replicates in order). */
+export function resampleIndices(k, B, seed) { const r = rng(seed), out = []; for (let b = 0; b < B; b++) out.push(Array.from({ length: k }, () => Math.floor(r() * k))); return out; }
+/**
+ * series, pairing: as for fitPairs; full: the full-data fit (its theta is the start of every replicate).
+ * opts: { B, seed, level, points: [{ A, H }], baseAge, onProgress?(b) }. Returns { B, seed, level, nOk, nFail,
+ * failRate, thetas: [[θ]], params: { k: { est, lo, hi, sd } }, si?: [{ A, H, est, lo, hi }] } — or { problem }.
+ */
+export function bootstrapSeries(id, series, pairing, full, opts = {}) {
+  const { B, seed, level } = { ...BOOT_DEFAULTS, ...opts }, f = FORMS[id];
+  if (!full || full.status !== 'ok') return { problem: 'boot.nofit' };
+  if (series.length < 2) return { problem: 'boot.fewseries' };
+  const idx = resampleIndices(series.length, B, seed), thetas = [];
+  let nFail = 0;
+  idx.forEach((ix, b) => {
+    const rs = ix.map((i, j) => ({ id: `${series[i].id}#${j}`, points: series[i].points })), P = makePairs(rs, pairing);
+    const r = fitPairs(id, P, { start: full.theta });
+    if (r.status === 'ok') thetas.push(r.theta); else nFail++;
+    if (opts.onProgress) opts.onProgress(b + 1);
+  });
+  const a = (1 - level) / 2, sd = v => { const m = v.reduce((x, y) => x + y, 0) / v.length; return Math.sqrt(v.reduce((x, y) => x + (y - m) ** 2, 0) / (v.length - 1)); };
+  const params = Object.fromEntries(f.params.map((k, i) => { const v = thetas.map(t => t[i]).sort((x, y) => x - y); return [k, { est: full.theta[i], lo: v.length ? q7(v, a) : null, hi: v.length ? q7(v, 1 - a) : null, sd: v.length > 1 ? sd(v) : null }]; }));
+  const out = { B, seed, level, nOk: thetas.length, nFail, failRate: nFail / B, thetas, params, interval: 'percentile (type 7)', resampling: 'series' };
+  if (opts.points && opts.baseAge) out.si = siIntervals(id, thetas, full.theta, opts.points, opts.baseAge, level);
+  return out;
+}
+/** SI at the base age for each point, from every replicate's parameters: percentile interval; est from the full fit. */
+export function siIntervals(id, thetas, theta, points, baseAge, level = BOOT_DEFAULTS.level) {
+  const f = FORMS[id], P = th => Object.fromEntries(f.params.map((k, i) => [k, th[i]])), a = (1 - level) / 2;
+  return points.map(({ A, H }) => {
+    const est = project({ form: id, params: P(theta) }, baseAge, A, H);
+    const v = thetas.map(th => project({ form: id, params: P(th) }, baseAge, A, H)).filter(r => r.status === 'ok').map(r => r.value).sort((x, y) => x - y);
+    return { A, H, est: est.status === 'ok' ? est.value : null, lo: v.length ? q7(v, a) : null, hi: v.length ? q7(v, 1 - a) : null, n: v.length };
+  });
+}
+/**
+ * Delta method for a user-entered set with a covariance matrix of its global parameters (from the source):
+ * Var(SI) ≈ gᵀ Σ g, g = ∂SI/∂θ (analytic gradient of the difference equation at A2 = A0); normal interval ± z·se.
+ * Returns { est, se, lo, hi, level, method: 'delta' } or { problem }.
+ */
+export function deltaSI(m, cov, A, H, level = BOOT_DEFAULTS.level) {
+  const f = FORMS[m.form]; if (!f) return { problem: 'form.unknown' };
+  const p = f.params.length;
+  if (!Array.isArray(cov) || cov.length !== p || cov.some(r => !Array.isArray(r) || r.length !== p || r.some(v => !fin(v)))) return { problem: 'cov.shape' };
+  for (let i = 0; i < p; i++) { if (!(cov[i][i] > 0)) return { problem: 'cov.diag' }; for (let j = 0; j < i; j++) if (Math.abs(cov[i][j] - cov[j][i]) > 1e-12 * Math.max(Math.abs(cov[i][j]), 1e-300)) return { problem: 'cov.sym' }; }
+  // positive semi-definite: Cholesky of Σ + tiny diagonal jitter must succeed (checks the matrix, not one gradient)
+  const Lc = Array.from({ length: p }, () => new Array(p).fill(0));
+  for (let i = 0; i < p; i++) for (let j = 0; j <= i; j++) {
+    let v = cov[i][j]; for (let k = 0; k < j; k++) v -= Lc[i][k] * Lc[j][k];
+    if (i === j) { v += 1e-12 * cov[i][i]; if (!(v > 0)) return { problem: 'cov.notpsd' }; Lc[i][i] = Math.sqrt(v); } else Lc[i][j] = v / Lc[j][j];
+  }
+  const r = siteIndex(m, A, H); if (r.status !== 'ok') return { problem: 'si.invalid', problems: r.problems };
+  const g = GRAD[m.form](f.params.map(k => m.params[k]), { A1: A, H1: H, A2: m.baseAge });
+  let v = 0; for (let i = 0; i < p; i++) for (let j = 0; j < p; j++) v += g[i] * cov[i][j] * g[j];
+  if (!(v >= 0)) return { problem: 'cov.notpsd' };
+  const se = Math.sqrt(v), z = normQuantile(1 - (1 - level) / 2);
+  return { est: r.value, se, lo: r.value - z * se, hi: r.value + z * se, level, method: 'delta', gradient: g };
+}
+/** Covariance text "v11 v12; v21 v22" (rows by ';', decimal point) → matrix, or null. */
+export function parseCov(text) {
+  const t = String(text ?? '').trim(); if (!t) return null;
+  return t.split(';').map(r => r.trim().split(/\s+/).map(Number));
 }
