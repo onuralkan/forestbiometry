@@ -1,7 +1,7 @@
 # Yeni araçlar: teknik şartname ve aşamalı geliştirme promptları
 
 Hazırlanma tarihi: 12 Kasım 2026
-Durum: **onaylandı** (12 Kasım 2026, kullanıcı). Bölüm 0'daki K1–K9 kararları bağlayıcıdır; CLAUDE.md'de bağlantısı vardır.
+Durum: **onaylandı** (12 Kasım 2026, kullanıcı); T00 raporunun §5'teki 1–3 düzeltmeleri işlendi (12 Kasım 2026, kullanıcı onayı). Bölüm 0'daki K1–K9 kararları bağlayıcıdır; CLAUDE.md'de bağlantısı vardır.
 Kapsam: kullanıcının istediği sırayla beş yeni araç (12 Kasım 2026):
 
 1. Seksiyon hacmi hesaplayıcısı / Stem Section Volume
@@ -138,7 +138,7 @@ Sonuç ekranı: ağaç başına tek tablo (ağaç, yöntem, kabuklu ve kabuksuz 
 
 Ağaç tablosunda örnek alan alanı varsa ağaç hacimleri genişletme faktörüyle hektara toplanır (m³/ha); seksiyon ölçümü olmayan ağaçlar bu toplama sessizce katılmaz: sayıları ve "ölçülmemiş" durumu raporlanır (hacim modeli ile tamamlama bu aşamada yok).
 
-Excel/CSV/JSON dışa aktarma, kılavuz bölümü (TR/EN), site_tools satırı (K2, K3, K4), simge. Örnek veri benzetimdir ve öyle etiketlenir (tests/ref altında üretici betikle).
+Excel/CSV/JSON dışa aktarma, kılavuz bölümü (TR/EN), site_tools satırı (K2, K3, K4), simge; "Ağaç ve gövde" kategorisi bu araçla birlikte site_cats()'a eklenir. Örnek veri benzetimdir ve öyle etiketlenir (tests/ref altında üretici betikle).
 
 Kabul: e2e testinde bilinen cisimlerden üretilmiş örnek veriyle ekrandaki hacimler motorla aynı; uç seksiyon ve dip kütük seçenekleri değerleri doğru değiştirir; eksik veri satır numarasıyla raporlanır; telefon genişliğinde yatay kaydırma yok; TR/EN aynı sayılar.
 ~~~
@@ -217,7 +217,7 @@ Bonitet aracının sayfasını (bonitet.php) ekle. Kullanıcı T01 katsayı kayd
 
 Girdi: tek ağaç/örnek alan için elle (yaş, üst boy) ya da tablo (örnek alan, dönem, yaş, üst boy). Ağaç tablosundan üst boy hesaplanacaksa Örnek Alan ve Meşcere aracının H0 tanımı aynen kullanılır (kodu yeniden yazılmaz, paylaşılır) ve tanım sonuçta yazılır.
 
-Çıktı: SI, bonitet sınıfı (Bölüm 3.4; sınıf tanımı kullanıcıdan), eğri demeti grafiği (sınıf sınırları ve gözlemler), geçerlilik aralığı dışı uyarıları. Excel/CSV/JSON, kılavuz, site_tools satırı.
+Çıktı: SI, bonitet sınıfı (Bölüm 3.4; sınıf tanımı kullanıcıdan), eğri demeti grafiği (sınıf sınırları ve gözlemler), geçerlilik aralığı dışı uyarıları. Excel/CSV/JSON, kılavuz, site_tools satırı; "Meşcere ve yetişme ortamı" kategorisi bu araçla birlikte site_cats()'a eklenir.
 
 Kabul: e2e'de ekrandaki SI motorla aynı; yaş türü ve dayanak yaş sonuçta görünür; kaynak alanı boş set kaydedilemez; sınıf sınırları değişince sınıflar değişir, SI değişmez.
 ~~~
@@ -319,7 +319,7 @@ Amaç: tek ağaç ve meşcere düzeyinde bileşen biyokütlesi (gövde, dal, yap
 
 Logaritmik biçimlerde geri dönüşüm düzeltmesi açık bir seçimdir: yok; Baskerville CF = exp(SEE²/2) (SEE kaynaktan, doğal logaritma ölçeğinde); Snowdon oranı (kaynaktan); kullanıcı tanımlı etken. log10 ile verilmiş denklemler ayrı `transform.kind` ile tutulur; ln'ye sessizce çevrilmez. Her bileşen ayrı katsayı setidir; "toplam" ayrıca bir denklemse, bileşenlerin toplamıyla farkı uyarı olarak gösterilir (toplanabilirlik garanti değildir).
 
-**B. Hacimden dönüşüm (meşcere ya da ağaç).** B = V × ρ × BEF × (1 + R): V gövde hacmi (m³; Seksiyon hacmi aracından, Örnek Alan aracındaki kullanıcı hacminden ya da elle), ρ temel odun yoğunluğu (Mg kuru madde / m³ taze hacim), BEF biyokütle genişletme faktörü (gövde → toprak üstü), R kök/gövde oranı. Hepsi kullanıcı girişi (K1). Hacmin kabuklu/kabuksuz olduğu ve katsayıların hangisiyle tanımlandığı eşleşmelidir; eşleşmezse hesaplanmaz.
+**B. Hacimden dönüşüm (meşcere ya da ağaç).** B = V × ρ × BEF × (1 + R): V gövde hacmi (m³; Seksiyon hacmi aracından ya da elle; Örnek Alan ve Meşcere aracında hacim hesabı yoktur, T00 §5), ρ temel odun yoğunluğu (Mg kuru madde / m³ taze hacim), BEF biyokütle genişletme faktörü (gövde → toprak üstü), R kök/gövde oranı. Hepsi kullanıcı girişi (K1). Hacmin kabuklu/kabuksuz olduğu ve katsayıların hangisiyle tanımlandığı eşleşmelidir; eşleşmezse hesaplanmaz.
 
 **Karbon:** C = B × CF (bileşen başına CF kullanıcıdan), CO₂ = C × 44/12. Meşcere düzeyinde genişletme faktörüyle Mg/ha.
 
@@ -343,10 +343,10 @@ Biyokütle ve karbon aracının sayfasını (biyokutle-karbon.php) ekle. Veri: a
 Kabul: e2e'de değerler motorla aynı; eşlenmeyen tür ve eksik boy durumları satır numarasıyla; kaynak alanı Excel "Bilgi" sayfasında.
 ~~~
 
-### BC03 — Seksiyon hacmi ve Örnek Alan araçlarıyla bağlantı
+### BC03 — Seksiyon hacmi aracıyla bağlantı
 
 ~~~text
-Hacimden dönüşüm yaklaşımı için girdi olarak Seksiyon hacmi aracının ağaç hacimlerini ve Örnek Alan aracının (kullanıcı katsayılı) hacmini tarayıcı deposu üzerinden okumayı ekle (forest-dataset/1 'derived' bölümüne yeni bir sürüm numarasıyla yazılır; şema değişikliği PROJECT.md §4b'ye işlenir). Kabuklu/kabuksuz eşleşmesi zorunlu.
+Hacimden dönüşüm yaklaşımı için girdi olarak Seksiyon hacmi aracının ağaç hacimlerini tarayıcı deposu üzerinden okumayı ekle (Örnek Alan ve Meşcere aracında hacim hesabı yoktur; T00 §5) (forest-dataset/1 'derived' bölümüne yeni bir sürüm numarasıyla yazılır; şema değişikliği PROJECT.md §4b'ye işlenir). Kabuklu/kabuksuz eşleşmesi zorunlu.
 
 Kabul: aynı ağaçlar için iki yol (allometrik ve hacimden) ayrı satırlarda; araçlar arası aktarımda değerler bit düzeyinde aynı; eski şema sürümü okunabiliyor.
 ~~~
@@ -445,9 +445,9 @@ TOOLS_SPEC'teki beş araç için mevcut kodu incele ve docs/TOOLS_T00.md raporun
 ### T01 — Ortak altyapı: katsayı kaydı ve gövde ölçüm sözleşmesi
 
 ~~~text
-TOOLS_SPEC Bölüm 1.2 ve 1.3'ü uygula: model-coef/1 kaydı (core/coef.js: doğrulama, IndexedDB'de saklama, JSON içe/dışa aktarma, kaynak alanı zorunlu, biçim kaydı arayüzü) ve ortak katsayı seti düzenleyici bileşeni (core/coef-ui.js; biçimin formülünü gösterir, parametreleri, birimleri, geçerlilik aralığını, dönüşüm/düzeltmeyi ve kaynağı alır). stem-sections/1 okuyucusu ve kontrolleri (core/stems.js). Örnek Alan aracındaki genişletme faktörü, H0/D0 ve birim gruplama hesaplarını, sonuçlarını değiştirmeden paylaşılabilir modüle taşı (testleri değişmeden geçmeli). site_cats()'a K3'teki kategorileri ekle (araçlar henüz eklenmez).
+TOOLS_SPEC Bölüm 1.2 ve 1.3'ü uygula: model-coef/1 kaydı (core/coef.js: doğrulama, IndexedDB'de saklama, JSON içe/dışa aktarma, kaynak alanı zorunlu, biçim kaydı arayüzü) ve ortak katsayı seti düzenleyici bileşeni (core/coef-ui.js; biçimin formülünü gösterir, parametreleri, birimleri, geçerlilik aralığını, dönüşüm/düzeltmeyi ve kaynağı alır). stem-sections/1 okuyucusu ve kontrolleri (core/stems.js). core/store.js'e anahtar önekiyle listeleme; core/num.js UNITS'e kabuk kalınlığı (mm) ve yaş; dağılım motorundaki çoklu kök tarayıcısını (scanRoots) davranışı değişmeden core/roots.js'e taşı. Örnek Alan aracının paylaşılacak işlevleri (validateDataset, buildUnits, unitMetrics, dominantWeights/dominant, sınıf işlevleri, tableToDataset) taşınmaz: yeni araçlar ../stand/calc.js'ten doğrudan içe aktarır; bu işlevlerin girdi/çıktı sözleşmesi METHODS §6'ya yazılır (T00 §2). tests/site/test_guide.mjs ve test_cite.mjs'teki sabit araç sayısını site_tools() satırlarından okunacak hâle getir. Kenar çubuğu kategorileri bu aşamada eklenmez; her kategori ilk aracıyla (SV02, SI02) eklenir (T00 §5).
 
-Kabul: model-coef/1 doğrulayıcısı geçersiz setleri (kaynak yok, bilinmeyen biçim, eksik parametre, birim yok) reddeder; JSON gidiş-dönüş bit düzeyinde aynı; stem-sections kontrolleri Bölüm 1.2'deki her durum için satır numarasıyla sorun üretir; Örnek Alan aracının bütün testleri değişmeden geçer.
+Kabul: model-coef/1 doğrulayıcısı geçersiz setleri (kaynak yok, bilinmeyen biçim, eksik parametre, birim yok) reddeder; JSON gidiş-dönüş bit düzeyinde aynı; stem-sections kontrolleri Bölüm 1.2'deki her durum için satır numarasıyla sorun üretir; katsayı düzenleyicisi yayınlanmayan bir test sayfasında tarayıcı testinden geçer; dağılım, Örnek Alan ve site testleri değişmeden geçer.
 ~~~
 
 ## 8. Bağımsız sayısal referanslar
