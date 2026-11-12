@@ -311,6 +311,30 @@ function site_bottom(string $script = ''): void {
 ?>
 <script type="module" src="assets/lab/core/cite-ui.js?v=<?= site_ver('assets/lab/core/cite-ui.js') ?>"></script>
 <?= $script ?>
+<?php if ($script !== ''): ?>
+<script>
+// Boot watchdog: a tool draws its steps (#steps) or planner (#app) from its modules. If a module request hangs or
+// fails, or the browser store stalls, the page would stay blank under the top bar; after 10 s (or at once on a
+// failed module) say so and offer a reload. Removed again as soon as the tool draws.
+(function () {
+  var box = document.getElementById('steps') || document.getElementById('app'); if (!box) return;
+  var note = null;
+  function warn() {
+    if (note || box.children.length) return;
+    note = document.createElement('div'); note.id = 'bootwarn'; note.className = 'note warn'; note.setAttribute('role', 'alert');
+    note.innerHTML = <?= json_encode($tr
+        ? '<b>Araç yüklenemedi ya da çok yavaş yükleniyor.</b> Tarayıcı aracın program dosyalarını alamadı (bağlantı kesintisi ya da sunucunun güvenlik kontrolü olabilir). Verileriniz bu tarayıcıda kalır. Sayfayı yenileyin; sorun sürerse bu sitenin açık diğer sekmelerini kapatıp yeniden deneyin. '
+        : '<b>The tool did not load, or is loading very slowly.</b> The browser did not receive its program files (a connection problem or the server\'s security check). Your data stay in this browser. Reload the page; if it persists, close other open tabs of this site and try again. ', JSON_UNESCAPED_UNICODE) ?>;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'btn small'; b.textContent = <?= json_encode($tr ? 'Yenile' : 'Reload', JSON_UNESCAPED_UNICODE) ?>;
+    b.addEventListener('click', function () { location.reload(); }); note.appendChild(b);
+    box.parentNode.insertBefore(note, box);
+  }
+  var t = setTimeout(warn, 10000);
+  document.addEventListener('error', function (e) { var s = e.target; if (s && s.tagName === 'SCRIPT' && s.type === 'module') warn(); }, true);
+  if (window.MutationObserver) new MutationObserver(function (m, o) { if (box.children.length) { clearTimeout(t); if (note) { note.remove(); note = null; } o.disconnect(); } }).observe(box, { childList: true });
+})();
+</script>
+<?php endif; ?>
 </body>
 </html>
 <?php

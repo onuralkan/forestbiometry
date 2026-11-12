@@ -15,11 +15,6 @@ site_top([
   <noscript><p class="card"><?= $tr ? 'Bu araç JavaScript gerektirir.' : 'This tool needs JavaScript.' ?></p></noscript>
   <div id="wf"></div>
   <nav class="steps" id="steps" aria-label="<?= $tr ? 'Adımlar' : 'Steps' ?>"></nav>
-  <div id="loadfail" class="note warn" role="alert" hidden>
-    <?= $tr ? 'Araç yüklenemedi: tarayıcı aracın program dosyalarını alamadı (bağlantı kesintisi ya da sunucunun güvenlik kontrolü olabilir). Verileriniz bu tarayıcıda saklanır; sayfayı yenileyin.'
-            : 'The tool could not be loaded: the browser did not receive its program files (a connection problem or the server\'s security check). Your data stay in this browser; reload the page.' ?>
-    <button type="button" class="btn small" onclick="location.reload()"><?= $tr ? 'Sayfayı yenile' : 'Reload the page' ?></button>
-  </div>
   <div id="status" class="status" role="status" aria-live="polite"></div>
   <section id="step1" class="step"></section>
   <section id="step2" class="step" hidden></section>
@@ -27,7 +22,6 @@ site_top([
   <section id="recover" class="step" hidden></section>
   <section id="standwf" class="step" hidden></section>
 <?php
-// Load watchdog: the interface is an ES module tree; if any file of it fails (offline, or the host's bot check serving an
-// HTML page instead of JavaScript) the page would otherwise stay empty without a word. ui.js sets window.__distReady.
-site_bottom('<script>function __distFail(){if(!window.__distReady){var e=document.getElementById("loadfail");if(e)e.hidden=false;}}setTimeout(__distFail,15000);</script>'
-  . '<script type="module" src="assets/lab/dist/ui.js?v=28" onerror="__distFail()"></script>');
+// the shell's boot watchdog (site_bottom) warns if the module tree does not load
+site_bottom(''
+  . '<script type="module" src="assets/lab/dist/ui.js?v=28"></script>');

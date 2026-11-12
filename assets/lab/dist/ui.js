@@ -1154,5 +1154,5 @@ function render() {
   $('privacy').textContent = T('privacy');
   try { const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, sum: { ...blank().sum, ...(saved.sum || {}) }, wb: { ...blank().wb, ...(saved.wb || {}) }, prs: { ...blank().prs, ...(saved.prs || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); } } catch (e) { S = blank(); }
   render();
-  window.__distReady = true;                                // the load watchdog in cap-dagilimi.php stays quiet
+  window.__distReady = true;                                // ready flag (the shell's boot watchdog watches #steps)
 })();

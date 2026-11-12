@@ -473,11 +473,11 @@ await page.waitForSelector('#panel .srcs');
   await c4.close(); }
 { const c5 = await browser.newContext(), q = await c5.newPage();
   await q.route('**/assets/lab/dist/ui.js*', r => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>One moment, please...</title>' }));
-  await q.goto(URL + '?lang=en'); await q.waitForSelector('#loadfail:not([hidden])', { timeout: 20000 });
-  ok((await q.locator('#loadfail').textContent()).includes('could not be loaded') && (await q.locator('#loadfail button').count()) === 1, 'load failure (HTML instead of JavaScript): warning with a reload button');
+  await q.goto(URL + '?lang=en'); await q.waitForSelector('#bootwarn', { timeout: 20000 });
+  ok((await q.locator('#bootwarn').textContent()).includes('did not load') && (await q.locator('#bootwarn button').count()) === 1, 'load failure (HTML instead of JavaScript): warning with a reload button');
   await c5.close(); }
-{ await page.goto(URL + '?lang=tr'); await page.waitForTimeout(16000);
-  ok(await page.isHidden('#loadfail'), 'normal load: no warning after the watchdog time'); }
+{ await page.goto(URL + '?lang=tr'); await page.waitForTimeout(11000);
+  ok((await page.locator('#bootwarn').count()) === 0, 'normal load: no warning after the watchdog time'); }
 
 // 2n. stand models (P16): sample data, training (NLS, SUR), plot-level validation, model file out and in, prediction
 { const c6 = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } }), q = await c6.newPage();
