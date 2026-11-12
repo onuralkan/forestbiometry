@@ -108,8 +108,8 @@ function renderStep2() {
     <p class="muted small">${T('m.note')}</p>
     ${S.layout !== 'hohenadl' ? `<p class="small"><b>${T('top.h')}</b></p><div class="radios">${Object.keys(V.SOLIDS).sort((a, b) => (a === 'cone' ? -1 : b === 'cone' ? 1 : 0)).map(s => `<label><input type="radio" name="top" value="${s}"${S.top === s ? ' checked' : ''}> ${T('top.' + s)}</label>`).join(' ')}</div>
       <p class="muted small">${T('top.note')}</p><label class="small"><input type="checkbox" id="incstump"${S.includeStump ? ' checked' : ''}> ${T('stump.inc')}</label>` : ''}
-    <div class="lims"><label>${T('dtop')} <input type="text" inputmode="decimal" size="6" id="dtop" value="${esc(S.dTop)}"></label></div>
-    ${Number.isNaN(dTopVal()) ? `<p class="note err">${T('dtop.bad')}</p>` : ''}</div>`;
+    ${S.layout !== 'hohenadl' ? `<div class="lims"><label>${T('dtop')} <input type="text" inputmode="decimal" size="6" id="dtop" value="${esc(S.dTop)}"></label></div>
+    ${Number.isNaN(dTopVal()) ? `<p class="note err">${T('dtop.bad')}</p>` : ''}` : `<p class="muted small">${T('dtop.hoh')}</p>`}</div>`;
   h += `<div class="card"><h2>${T('area.h')}</h2><div class="radios col">${['none', 'col', 'const', ...(S.useDs ? ['ds'] : [])].map(v => `<label><input type="radio" name="area" value="${v}"${S.areaMode === v ? ' checked' : ''}> ${T('area.' + v)}${v === 'const' ? ` <input type="text" inputmode="decimal" size="7" id="aconst" value="${esc(S.areaConst)}" aria-label="m²"> m²` : ''}</label>`).join('')}</div>
     <p class="muted small">${T('p.partial')}</p></div>`;
   h += `<details class="card more"><summary>${T('adv.h')}</summary><div class="lims">${[['buttressH', 'adv.buttress'], ['dbhTol', 'adv.dbhtol'], ['topShare', 'adv.topshare'], ['midTol', 'adv.midtol'], ['hohTol', 'adv.hohtol']].map(([k, l]) => `<label>${T(l)} <input type="text" inputmode="decimal" size="6" id="adv-${k}" value="${esc(S.adv[k])}"></label>`).join('')}</div></details>`;
@@ -127,7 +127,7 @@ function renderStep2() {
   el.querySelectorAll('[data-meth]').forEach(x => x.addEventListener('change', () => { S.methods[x.dataset.meth] = x.checked; re(); }));
   el.querySelectorAll('input[name="top"]').forEach(x => x.addEventListener('change', () => { S.top = x.value; re(); }));
   $('incstump') && $('incstump').addEventListener('change', e => { S.includeStump = e.target.checked; re(); });
-  $('dtop').addEventListener('change', e => { S.dTop = e.target.value; re(); });
+  $('dtop') && $('dtop').addEventListener('change', e => { S.dTop = e.target.value; re(); });
   el.querySelectorAll('input[name="area"]').forEach(x => x.addEventListener('change', () => { S.areaMode = x.value; re(); }));
   $('aconst').addEventListener('change', e => { S.areaConst = e.target.value; if (S.areaMode !== 'const') S.areaMode = 'const'; re(); });
   for (const k of Object.keys(S.adv)) $('adv-' + k).addEventListener('change', e => { S.adv[k] = e.target.value; re(); });
@@ -136,11 +136,18 @@ function renderStep2() {
 }
 
 /* ---------------- computation ---------------- */
+/** Plot × period units of the approved tree list, and plots recorded without trees (so that they are not dropped). */
+function approvedUnits() {
+  const seen = new Map();
+  for (const t of approved.trees) { const k = `${t.plot_id}\u0001${t.period ?? ''}`; if (!seen.has(k)) seen.set(k, { plot_id: t.plot_id, period: t.period ?? null }); }
+  for (const p of approved.plots || []) if (![...seen.values()].some(u => u.plot_id === p.plot_id)) seen.set(`${p.plot_id}\u0001`, { plot_id: p.plot_id, period: null });
+  return [...seen.values()];
+}
 function compute() {
   const a = advVal();
   const st = readStems(S.src, mapForStems(), { decimal: S.decimal, units: { h: S.u.h, d: S.u.d, bark_t: S.u.bark_t, dbh: S.u.dbh, height: S.u.height }, bark: S.barkDef, combine: S.combine, buttressH: a.buttressH, dbhTol: a.dbhTol },
     S.useDs && approved ? approved.trees : null);
-  const settings = { layout: S.layout, top: S.top, includeStump: S.includeStump, dTop: dTopVal(), midTol: a.midTol, hohTol: a.hohTol };
+  const settings = { layout: S.layout, top: S.top, includeStump: S.includeStump, dTop: S.layout === 'hohenadl' ? null : dTopVal(), midTol: a.midTol, hohTol: a.hohTol };
   const methods = chosen(), res = Object.fromEntries(methods.map(m => [m, V.allTrees(st, { ...settings, method: m })]));
   let areaOf = null, areaProblems = [];
   if (S.areaMode === 'col') { const r = V.plotAreas(S.src, S.map.plot, S.map.area, S.decimal, S.map.period); areaOf = r.areaOf; areaProblems = r.problems; }
@@ -151,7 +158,8 @@ function compute() {
     const have = new Set(st.trees.map(T => T.key));
     unmeasuredOf = (plot, per) => approved.trees.filter(t => t.plot_id === plot && (t.period ?? null) === per && !have.has(keyOf(t.plot_id, t.tree_id, t.period ?? null))).length;
   }
-  const plots = areaOf ? Object.fromEntries(methods.map(m => [m, V.plotTotals(res[m], areaOf, unmeasuredOf)])) : null;
+  const units = S.useDs && approved ? approvedUnits() : [];
+  const plots = areaOf ? Object.fromEntries(methods.map(m => [m, V.plotTotals(res[m], areaOf, unmeasuredOf, units)])) : null;
   const ref = methods.includes('newton') ? 'newton' : methods[0];
   const quality = V.qualityReport(st, res[ref], { topShareMax: a.topShare }), comp = methods.length > 1 ? V.methodComparison(res, ref) : null;
   R = { st, res, methods, ref, plots, areaProblems, settings, quality, comp, created: new Date().toISOString() };
@@ -165,6 +173,7 @@ function allProblems() {
     const k = keyOf(r.tree.plot_id, r.tree.tree_id, r.tree.period), row = rowOf.get(k) ?? null, tag = { row, tree: r.tree.tree_id, plot: r.tree.plot_id };
     for (const q of r.problems) if (q.code !== 'tree.error') out.push({ ...q, ...tag, severity: 'error' });
     for (const side of ['ob', 'ib']) if (r[side]) for (const w of r[side].warnings) if (!(side === 'ib' && r.ob)) out.push({ ...w, ...tag, severity: 'warning' });
+    const ms = r.ob || r.ib; if (ms && ms.merch && ms.merch.status !== 'ok') out.push({ code: ms.merch.code, dTop: ms.merch.dTop, ...tag, severity: 'warning' });
     for (const w of r.warnings) if (w.code === 'ib.none' && r.ob) continue; else out.push({ ...w, ...tag, severity: 'warning' });
   }
   if (R.plots) for (const p of R.plots[R.ref]) if (p.area == null) out.push({ code: 'area.none', severity: 'warning', row: null, plot: p.plot_id, tree: null });
@@ -231,10 +240,13 @@ function drawDetail() {
     ${sides.length > 1 ? `<span class="radios"><span class="small">${T('d.bark')}:</span> ${sides.map(s => `<label class="small"><input type="radio" name="dbark" value="${s}"${S.bark === s ? ' checked' : ''}> ${T('d.' + s)}</label>`).join(' ')}</span>` : ''}</div>`;
   h += `<h3>${T('d.sec')} (${esc(mName(R.ref))})</h3><div class="tscroll"><table class="grid" id="sectab"><thead><tr><th>${T('d.kind')}</th><th>${T('d.lo')}</th><th>${T('d.hi')}</th><th>${T('d.L')}</th><th>${T('d.dlo')}</th><th>${T('d.dmid')}</th><th>${T('d.dhi')}</th><th>${T('d.v')}</th></tr></thead><tbody>
     ${part.sections.map(q => `<tr><td>${q.kind === 'top' ? T('kind.top', { s: T('top.' + q.solid).replace(/ \(.*\)$/, '').toLocaleLowerCase(LOC) }) : T('kind.' + q.kind)}</td><td class="num">${f(q.lo, 2)}</td><td class="num">${f(q.hi, 2)}</td><td class="num">${f(q.L, 2)}</td><td class="num">${f(q.d.lo, 1)}</td><td class="num">${f(q.d.mid, 1)}</td><td class="num">${f(q.d.hi, 1)}</td><td class="num">${f(q.v, 5)}</td></tr>`).join('')}</tbody></table></div>`;
+  if (part.formQuotients) h += `<p class="small" id="hohfq">${T('d.fq', { eta: part.formQuotients.eta.map(x => fmtNum(x, 3)).join(', '), l: fmtNum(part.formQuotients.lambda09, 4) })}</p>`;
   const T0 = R.st.trees.find(t => t.key === S.selTree), dOf = p => S.bark === 'ob' ? p.d : p.d_ib, pts = T0.points.filter(p => dOf(p) != null).map(p => [p.h, dOf(p)]);
   const lines = [{ name: T('d.' + S.bark), k: 0, pts }], top = part.sections.find(q => q.kind === 'top');
   if (top) { const r = V.SOLIDS[top.solid]; lines.push({ name: T('kind.top', { s: T('top.' + top.solid).replace(/ \(.*\)$/, '').toLocaleLowerCase(LOC) }), k: 0, dash: true, pts: Array.from({ length: 41 }, (_, i) => { const t = top.L * i / 40; return [top.lo + t, top.d.lo * (1 - t / top.L) ** (r / 2)]; }) }); }
   const xmax = Math.max(T0.height ?? 0, ...pts.map(p => p[0])), ymax = Math.max(...pts.map(p => p[1]));
+  const bounds = [...new Set(part.sections.flatMap(q => [q.lo, q.hi]))];
+  bounds.forEach((b, i) => lines.push({ name: i ? null : T('d.bounds'), k: 2, dot: true, pts: [[b, 0], [b, ymax * 1.1]] }));
   h += `<figure class="chartbox" id="ch-prof">${plotChart({ title: T('d.chart', { t: name }), xmin: 0, xmax: xmax * 1.02, ymin: 0, ymax: ymax * 1.1, lines, points: pts, xLabel: T('d.hx'), yLabel: T('d.dy'), fmt: v => fmtNum(v, 1) })}
     <figcaption><button type="button" class="btn ghost small" id="ch-svg">SVG</button></figcaption></figure>`;
   body.innerHTML = h;
@@ -272,17 +284,17 @@ function settingsRecord() {
     barkDefault: S.barkDef, areaMode: S.areaMode, areaConst: S.areaMode === 'const' ? num(S.areaConst) : null, linkedApprovedData: !!(S.useDs && approved), thresholds: advVal(), decimal: S.decimal, units: S.u };
 }
 async function exportXLSX() {
-  let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
+  let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }
   const tt = treeTable(), pt = plotTable(), s = settingsRecord(), yn = b => b ? T('x.yes') : T('x.no');
   const info = [[T('x.k'), T('x.v')], [T('x.tool'), `${V.TOOL.id} ${V.TOOL.version}`], [T('x.date'), R.created], [T('x.src'), S.imp ? S.imp.name : ''], [T('x.layout'), T('lay.' + s.layout)],
     [T('x.methods'), s.methods.map(mName).join(', ')], [T('x.top'), s.top ? T('top.' + s.top) : '–'], [T('x.stump'), yn(s.includeStump)], [T('x.combine'), s.combine ? T('col.combine.' + s.combine) : '–'],
     [T('x.dtop'), s.dTop ?? '–'], [T('x.area'), T('area.' + s.areaMode) + (s.areaConst ? ` ${s.areaConst} m²` : '')], [T('x.units'), T('x.unitsv')],
-    [T('x.thr'), `${T('adv.buttress')} ${s.thresholds.buttressH}; ${T('adv.dbhtol')} ${s.thresholds.dbhTol * 100}; ${T('adv.topshare')} ${s.thresholds.topShare * 100}; ${T('adv.midtol')} ${s.thresholds.midTol}; ${T('adv.hohtol')} ${s.thresholds.hohTol}`],
+    [T('x.thr'), `${T('adv.buttress')} ${s.thresholds.buttressH}; ${T('adv.dbhtol')} ${+(s.thresholds.dbhTol * 100).toPrecision(12)}; ${T('adv.topshare')} ${+(s.thresholds.topShare * 100).toPrecision(12)}; ${T('adv.midtol')} ${s.thresholds.midTol}; ${T('adv.hohtol')} ${s.thresholds.hohTol}`],
     ['', T('c.behav')],
     ['', T('m.note')], ['', T('top.note')], ['', T('p.partial')], ['', T('x.merch.rule')]];
   const secs = [[T('t.plot'), T('t.tree'), T('t.period'), T('x.methods'), T('d.bark'), T('d.kind'), T('d.lo'), T('d.hi'), T('d.L'), T('d.dlo'), T('d.dmid'), T('d.dhi'), T('d.v')]];
   for (const m of R.methods) for (const r of R.res[m]) for (const side of ['ob', 'ib']) if (r[side] && r[side].status === 'ok')
-    for (const q of r[side].sections) secs.push([r.tree.plot_id, r.tree.tree_id, r.tree.period, mName(m), T('d.' + side), q.kind === 'top' ? T('kind.top', { s: q.solid }) : T('kind.' + q.kind), q.lo, q.hi, q.L, q.d.lo, q.d.mid, q.d.hi, q.v]);
+    for (const q of r[side].sections) secs.push([r.tree.plot_id, r.tree.tree_id, r.tree.period, mName(m), T('d.' + side), q.kind === 'top' ? T('kind.top', { s: T('top.' + q.solid).replace(/ \(.*\)$/, '').toLocaleLowerCase(LOC) }) : T('kind.' + q.kind), q.lo, q.hi, q.L, q.d.lo, q.d.mid, q.d.hi, q.v]);
   const probs = [[T('pr.row'), T('t.plot'), T('pr.tree'), T('pr.sev'), T('pr.msg')], ...allProblems().map(p => [p.row, p.plot ?? null, p.tree ?? null, T('sev.' + p.severity), T('c.' + p.code, p)])];
   const sheets = [{ name: T('sheet.info'), rows: info, widths: [26, 100] }, { name: T('sheet.trees'), rows: [tt.head, ...tt.rows.map(r => r.cells)], textCols: [0, 1, 2] }];
   if (pt) sheets.push({ name: T('sheet.plots'), rows: [pt.head, ...pt.rows.map(r => r.cells)], textCols: [0, 1] });

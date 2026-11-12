@@ -373,8 +373,8 @@ function parsedPreview(table, field, text) {
   const r = parseNumber(text, S.settings.decimal);
   if (r.status === 'empty') return '';
   if (r.status !== 'ok') return `<span class="bad">${T('dlg.parsebad')}</span>`;
-  const v = r.value * UNITS[fd.unit][S.settings.units[fd.unit]];
-  return T('dlg.parsed', { v: `${fmtNum(v, 6)} ${{ dbh: 'cm', height: 'm', area: 'm²', xy: 'm' }[fd.unit]}` });
+  const v = r.value * UNITS[fd.unit][S.settings.units[fd.unit] ?? C.DEFAULT_UNITS[fd.unit]];
+  return T('dlg.parsed', { v: `${fmtNum(v, 6)} ${{ dbh: 'cm', height: 'm', area: 'm²', xy: 'm', age: T('u.yr') }[fd.unit]}` });
 }
 function editDialog(table, recI, field, issueCode = null) {
   const rec = S.work[table][recI], old = C.currentText(S.sources, S.work, table, rec, field);
@@ -492,7 +492,7 @@ function issueRows() {
   return [T('x.issueCols'), ...ev.issues.map(i => [T('sev.' + i.severity), T('kind.' + i.kind), T('cat.' + i.category), i.code, T('t.' + i.table), i.row ?? '', i.plot ?? '',
     i.field ? T('f.' + i.field) : '', i.column || '', i.text ?? '', msg(i), i.suggestion ? i.suggestion.value : '', i.accepted ? i.accepted.reason : ''])];
 }
-const DATA_COLS = [['row', 'row'], ['plot_id', 'plot_id'], ['tree_id', 'tree_id'], ['stem_id', 'stem_id'], ['period', 'period'], ['species', 'species'], ['dbh', 'dbh_cm'], ['height', 'height_m'], ['status', 'status'], ['stratum', 'stratum'], ['x', 'x_m'], ['y', 'y_m']];
+const DATA_COLS = [['row', 'row'], ['plot_id', 'plot_id'], ['tree_id', 'tree_id'], ['stem_id', 'stem_id'], ['period', 'period'], ['species', 'species'], ['dbh', 'dbh_cm'], ['height', 'height_m'], ['status', 'status'], ['stratum', 'stratum'], ['x', 'x_m'], ['y', 'y_m'], ['age', 'age_yr']];
 function dataRows(ds) {
   const extra = [...new Set(ds.trees.flatMap(t => Object.keys(t.extra || {})))];
   return [[...DATA_COLS.map(c => c[1]), ...extra.map(e => 'extra.' + e)], ...ds.trees.map(t => [...DATA_COLS.map(c => t[c[0]]), ...extra.map(e => t.extra[e] ?? '')])];

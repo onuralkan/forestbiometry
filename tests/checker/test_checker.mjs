@@ -200,5 +200,18 @@ const plotsTxt = readFileSync(path.join(root, 'assets/lab/checker/ornek/ornek-al
   eq(decodeBytes(Uint8Array.from([0xef, 0xbb, 0xbf, 0x41])), 'A', 'BOM stripped');
 }
 
+/* tree age (years): mapped from "yaş"/"age", positive, carried in the approved dataset (used by the Site Index tool) */
+{ const r = run('alan;agac;tur;cap;yaş\n1;1;Ps;20,5;45\n1;2;Ps;22;\n1;3;Ps;18;0\n', 'alan;alan buyuklugu\n1;400\n', S());
+  eq(C.suggestMapping(['plot', 'tree', 'species', 'dbh', 'Yaş'], C.TREE_FIELDS).map.age, 4, '"Yaş" header suggested as tree age');
+  ok(r.mapping.trees.age === 4, 'age mapped');
+  let ev = r.ev(); const bad = codes(ev, 'num.nonpos').filter(i => i.field === 'age');
+  ok(bad.length === 1 && bad[0].row === 4, 'age 0: error on its row'); ok(!ev.issues.some(i => i.field === 'age' && i.row === 3), 'empty age: allowed (optional), never 0');
+  C.excludeRecord ? C.excludeRecord(r.work, r.work.trees[2], 'test') : (r.work.trees[2].excluded = true);
+  ev = C.evaluate(r.sources, r.work, r.settings);
+  const ds = C.approve(r.sources, r.work, r.mapping, r.settings, ev);
+  ok(ds.trees.find(t => t.row === 2).age === 45 && ds.trees.find(t => t.row === 3).age === null && ds.units.age === 'yr', 'approved data: age 45 years, missing age null, unit years'); }
+{ const old = { decimal: '.', units: { dbh: 'cm', height: 'm', area: 'm2', xy: 'm' }, limits: { ...C.DEFAULT_LIMITS } }, r = run('plot,tree,species,dbh,age\n1,1,Ps,20,30\n', 'plot,area\n1,400\n', old, ',');
+  ok(C.approve(r.sources, r.work, r.mapping, old, r.ev()).trees[0].age === 30, 'a session saved before the age field (no age unit) still reads ages'); }
+
 console.log(`checker: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

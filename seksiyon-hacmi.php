@@ -16,4 +16,4 @@ site_top([
   <section id="step1" class="step"></section>
   <section id="step2" class="step" hidden></section>
   <section id="step3" class="step wide" hidden></section>
-<?php site_bottom('<script type="module" src="assets/lab/secvol/ui.js?v=1"></script>');
+<?php site_bottom('<script type="module" src="assets/lab/secvol/ui.js?v=2"></script>');

@@ -4,9 +4,10 @@ type: software
 title: "Forest Biometrics Tools (Ormancılık Biyometrisi Araçları)"
 abstract: >-
   Browser-based tools for forest inventory and biometrics data: forest data checking, plot and stand metrics,
-  model evaluation, diameter distributions (eight families, direct fitting, measurement thresholds, grouped data,
-  parameter recovery, model comparison and bootstrap uncertainty), height–diameter modelling, inventory sampling
-  planning and relative ranking. Data stay in the user's browser. Every scientific calculation is tested against an
+  model evaluation, diameter distributions (eight families and two optional ones, direct fitting, measurement
+  thresholds, grouped data, parameter recovery, stand models, model comparison and bootstrap uncertainty),
+  height–diameter modelling, inventory sampling planning, relative ranking, stem section volume and site index.
+  Data stay in the user's browser. Every scientific calculation is tested against an
   independent reference.
 authors:
   - family-names: Alkan

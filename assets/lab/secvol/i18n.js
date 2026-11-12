@@ -49,7 +49,7 @@ const tr = {
   't.area': 'Alan (m²)', 't.n': 'Ağaç', 't.nok': 'Hesaplanan', 't.nbad': 'Hesaplanamayan', 't.unm': 'Ölçülmemiş (ağaç listesinde)', 't.vhaob': p => `${p.m}, kabuklu (m³/ha)`, 't.vhaib': p => `${p.m}, kabuksuz (m³/ha)`,
   'lab.to-top': 'kesimden tepeye', 'lab.to-last-boundary': 'son ölçüm noktasına kadar', 'lab.ground-to-top': 'yerden tepeye', 'lab.stump': ' + kütük',
   'st.ok': 'tamam', 'st.invalid': 'hesaplanmadı', 'st.partial': 'eksik ağaç var',
-  'p.partial': 'Hektar değerleri yalnızca hesaplanan ağaçların toplamıdır; hesaplanamayan ya da gövdesi ölçülmemiş ağaçlar hacme katılmaz (bu aşamada hacim modeliyle tamamlama yok).',
+  'p.partial': 'Hektar değerleri yalnızca hesaplanan ağaçların toplamıdır; hesaplanamayan ya da gövdesi ölçülmemiş ağaçlar hacme katılmaz (hacim modeliyle tamamlanmaz).',
   'd.h': 'Ağaç ayrıntısı', 'd.tree': 'Ağaç', 'd.sec': 'Seksiyon dökümü', 'd.kind': 'Parça', 'd.lo': 'Alt (m)', 'd.hi': 'Üst (m)', 'd.L': 'Uzunluk (m)', 'd.dlo': 'Alt çap (cm)', 'd.dmid': 'Orta çap (cm)', 'd.dhi': 'Üst çap (cm)', 'd.v': 'Hacim (m³)',
   'kind.stump': 'kütük', 'kind.section': 'seksiyon', 'kind.top': p => `uç (${p.s})`, 'd.chart': p => `Gövde profili: ${p.t}`, 'd.hx': 'Yerden yükseklik (m)', 'd.dy': 'Çap (cm)', 'd.pts': 'ölçüm noktaları', 'd.ob': 'kabuklu', 'd.ib': 'kabuksuz',
   'd.bark': 'Gösterilen', 'd.notree': 'Hesaplanan ağaç yok.',
@@ -72,6 +72,9 @@ const tr = {
   'c.top.below': p => `son nokta (${p.boundary} m) toplam boyun üstünde`, 'c.stump.nod': 'kesim yüksekliğinde çap ölçülmemiş: kütük hesaplanmadı', 'c.stump.noh': 'kesim yüksekliği yok: kütük hesaplanmadı',
   'c.gap.base': p => `kesim (${p.from} m) ile ilk nokta (${p.to} m) arası hacme katılmadı`, 'c.top.noh': 'toplam boy yok: uç seksiyon hesaplanmadı', 'c.top.nod': 'son sınırda çap yok: uç seksiyon hesaplanmadı',
   'c.area.bad': p => `örnek alan büyüklüğü okunamadı ya da pozitif değil ("${p.text}")`, 'c.area.conflict': p => `aynı örnek alan için farklı büyüklükler (${p.a} / ${p.b} m²)`, 'c.area.none': 'örnek alan büyüklüğü yok: hektar değeri hesaplanmadı',
+  'c.merch.nosec': 'seksiyon yok: kullanılabilir hacim hesaplanamadı', 'c.merch.hoh': 'Hohenadl beş eşit seksiyonla hesaplar; tepe çapına göre kullanılabilir hacim verilmez', 'c.base.split': p => `kesim yüksekliğinin (${p.cut} m) altındaki ${p.n} nokta seksiyonlara katılmadı; o kısım dip kütüktür`,
+  'c.base.below': p => `kesim yüksekliğinde (${p.cut} m) ölçüm yok ve seksiyonlar ${p.first} m'den başlıyor: kütük ayrılamadı, gövde hacmi bu noktadan itibarendir`,
+  'dtop.hoh': 'Hohenadl beş eşit seksiyonla hesaplar; tepe çapına göre kullanılabilir hacim verilmez.', 'd.bounds': 'seksiyon sınırları', 'd.fq': p => `Gerçek biçim bölümleri η (0.1H, 0.3H … 0.9H yerden; d₀.₁H'ye göre): ${p.eta}; gerçek silindirik biçim sayısı λ₀.₉ = 0.2·Ση² = ${p.l} (Heger 1965, Hohenadl'a göre).`, 'x.fail': 'Excel kitaplığı yüklenemedi; sayfayı yenileyip yeniden deneyin.',
   'c.ob.none': 'kabuklu çap yok', 'c.ib.none': 'kabuksuz çap yok (kabuk kalınlığı girilmemiş)', 'c.merch.notop': 'tepe çapına ölçülmüş gövdede inilmiyor ve uç seksiyon yok', 'c.merch.nod': 'tepe çapı için aradeğer yapılamadı',
 };
 const en = {
@@ -122,7 +125,7 @@ const en = {
   't.area': 'Area (m²)', 't.n': 'Trees', 't.nok': 'Computed', 't.nbad': 'Not computed', 't.unm': 'Unmeasured (in the tree list)', 't.vhaob': p => `${p.m}, over bark (m³/ha)`, 't.vhaib': p => `${p.m}, under bark (m³/ha)`,
   'lab.to-top': 'cut to tip', 'lab.to-last-boundary': 'to the last measured point', 'lab.ground-to-top': 'ground to tip', 'lab.stump': ' + stump',
   'st.ok': 'ok', 'st.invalid': 'not computed', 'st.partial': 'trees missing',
-  'p.partial': 'Per-hectare values are sums over the computed trees only; trees that could not be computed or whose stems were not measured are not added (no completion by a volume model at this stage).',
+  'p.partial': 'Per-hectare values are sums over the computed trees only; trees that could not be computed or whose stems were not measured are not added (no completion by a volume model).',
   'd.h': 'Tree details', 'd.tree': 'Tree', 'd.sec': 'Section breakdown', 'd.kind': 'Piece', 'd.lo': 'Lower (m)', 'd.hi': 'Upper (m)', 'd.L': 'Length (m)', 'd.dlo': 'Lower diameter (cm)', 'd.dmid': 'Middle diameter (cm)', 'd.dhi': 'Upper diameter (cm)', 'd.v': 'Volume (m³)',
   'kind.stump': 'stump', 'kind.section': 'section', 'kind.top': p => `top (${p.s})`, 'd.chart': p => `Stem profile: ${p.t}`, 'd.hx': 'Height above ground (m)', 'd.dy': 'Diameter (cm)', 'd.pts': 'measured points', 'd.ob': 'over bark', 'd.ib': 'under bark',
   'd.bark': 'Shown', 'd.notree': 'No computed tree.',
@@ -144,6 +147,9 @@ const en = {
   'c.top.below': p => `last point (${p.boundary} m) above the total height`, 'c.stump.nod': 'no diameter at the cut height: stump not computed', 'c.stump.noh': 'no cut height: stump not computed',
   'c.gap.base': p => `between the cut (${p.from} m) and the first point (${p.to} m): not included`, 'c.top.noh': 'no total height: no top piece', 'c.top.nod': 'no diameter at the last boundary: no top piece',
   'c.area.bad': p => `plot size not readable or not positive ("${p.text}")`, 'c.area.conflict': p => `different sizes for the same plot (${p.a} / ${p.b} m²)`, 'c.area.none': 'no plot size: no per-hectare value',
+  'c.merch.nosec': 'no sections: no merchantable volume', 'c.merch.hoh': 'Hohenadl uses five equal sections; no merchantable volume to a top diameter is given', 'c.base.split': p => `${p.n} point(s) below the cut height (${p.cut} m) not used for the sections; that part is the stump`,
+  'c.base.below': p => `no measurement at the cut height (${p.cut} m) and the sections start at ${p.first} m: the stump could not be separated, the stem volume starts there`,
+  'dtop.hoh': 'Hohenadl uses five equal sections; no merchantable volume to a top diameter is given.', 'd.bounds': 'section boundaries', 'd.fq': p => `True form quotients η (at 0.1H, 0.3H … 0.9H above the ground; relative to d at 0.1H): ${p.eta}; true cylindrical form factor λ0.9 = 0.2·Ση² = ${p.l} (Heger 1965, after Hohenadl).`, 'x.fail': 'The Excel library could not be loaded; reload the page and try again.',
   'c.ob.none': 'no over-bark diameters', 'c.ib.none': 'no under-bark diameters (no bark thickness)', 'c.merch.notop': 'the top diameter is not reached in the measured stem and there is no top piece', 'c.merch.nod': 'no interpolation possible for the top diameter',
 };
 export const T = makeT({ tr, en });

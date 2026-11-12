@@ -14,7 +14,7 @@
 // Without a total height there is no top section and the volume is labelled "to the last boundary".
 import { parseNumber } from '../core/num.js';
 import { cellText } from '../core/table.js';
-export const TOOL = { id: 'seksiyon-hacmi', version: '1.0.0-beta.1' };
+export const TOOL = { id: 'seksiyon-hacmi', version: '1.0.0-beta.2' };
 export const METHODS = ['huber', 'smalian', 'newton', 'hohenadl'];
 export const LAYOUTS = { huber: ['mids', 'triples'], smalian: ['ends', 'triples'], newton: ['triples'], hohenadl: ['hohenadl'] };
 export const SOLIDS = { paraboloid: 1, cone: 2, neiloid: 3 };            // g(t) = g0·(1 − t/L)^r
@@ -56,15 +56,21 @@ function part(tree, s, dOf) {
   const pts = tree.points.map(p => ({ h: p.h, d: dOf(p), kind: p.kind, row: p.row })), H = tree.height ?? null, problems = [], warnings = [];
   const out = (o) => ({ status: problems.length ? 'invalid' : 'ok', sections: [], stem: null, stump: null, top: null, total: null, label: null, problems, warnings, ...o });
   if (s.method === 'hohenadl') return hohenadl(pts, H, s, problems, out);
-  // section list from the layout
-  let secs = [], lastBoundary = null, dAtLast = null;
+  // section list from the layout. 'ends' and 'triples': with a cut height and a point at it, the stem sections start
+  // there; points below the cut belong to the stump (never counted twice). Without a point at the cut, sections that
+  // start below it are reported (the stump cannot be separated).
+  let secs = [], lastBoundary = null, dAtLast = null, base = pts;
+  if ((s.layout === 'ends' || s.layout === 'triples') && tree.stump_h > 0 && pts.length && pts[0].h < tree.stump_h - 1e-9) {
+    if (pts.some(p => Math.abs(p.h - tree.stump_h) <= 1e-9)) { base = pts.filter(p => p.h >= tree.stump_h - 1e-9); warnings.push({ code: 'base.split', n: pts.length - base.length, cut: tree.stump_h }); }
+    else warnings.push({ code: 'base.below', first: pts[0].h, cut: tree.stump_h });
+  }
   if (s.layout === 'ends') {
-    const e = pts;
+    const e = base;
     if (e.length < 2) problems.push({ code: 'ends.few', n: e.length });
     for (let i = 0; i + 1 < e.length; i++) secs.push({ lo: e[i].h, hi: e[i + 1].h, d: { lo: e[i].d, mid: null, hi: e[i + 1].d } });
     if (e.length) { lastBoundary = e[e.length - 1].h; dAtLast = e[e.length - 1].d; }
   } else if (s.layout === 'triples') {
-    const e = pts;
+    const e = base;
     if (e.length < 3 || e.length % 2 === 0) problems.push({ code: 'triples.count', n: e.length });
     else for (let i = 0; i + 2 < e.length; i += 2) {
       const a = e[i], m = e[i + 1], b = e[i + 2];
@@ -127,8 +133,13 @@ function hohenadl(pts, H, s, problems, out) {
     sections.push({ kind: 'section', lo: (f - 0.1) * H, hi: (f + 0.1) * H, L: H / 5, d: { lo: null, mid: p.d, hi: null }, hMeasured: p.h, v: ba(p.d) * H / 5 });
   }
   if (problems.length) return out();
-  const total = sections.reduce((a, q) => a + q.v, 0);
-  return out({ sections, stem: total, total, label: 'ground-to-top' });
+  const total = sections.reduce((a, q) => a + q.v, 0), dRef = sections[0].d.mid;
+  // Heger (1965, after Hohenadl): true form quotients η_i = d_i / d_0.9 (d_0.9 is the diameter at 0.1H above the
+  // ground, i.e. 0.9H from the apex) and the true cylindrical form factor λ_0.9 = 0.2·Σ η_i², V = (π/4)·d_0.9²·H·λ_0.9
+  const eta = sections.map(q => q.d.mid / dRef), lambda09 = dRef > 0 ? 0.2 * eta.reduce((a, x) => a + x * x, 0) : null;
+  const o = out({ sections, stem: total, total, label: 'ground-to-top', formQuotients: dRef > 0 ? { eta, lambda09 } : null });
+  if (s.dTop != null) o.merch = { status: 'invalid', code: 'merch.hoh', dTop: s.dTop };   // five equal sections: no profile to cut at a top diameter
+  return o;
 }
 
 /**
@@ -174,21 +185,25 @@ export function allTrees(st, settings = {}) { return st.trees.map(T => treeVolum
  * computed are counted, never filled in: a plot with failed or unmeasured trees has status 'partial' (the total covers
  * the computed trees only). A bark state is summed only if every computed tree has it; otherwise it is null.
  */
-export function plotTotals(results, areaOf, unmeasuredOf = null) {
+export function plotTotals(results, areaOf, unmeasuredOf = null, units = []) {
   const by = new Map();
   for (const r of results) {
     const k = `${r.tree.plot_id ?? ''}\u0001${r.tree.period ?? ''}`;
     if (!by.has(k)) by.set(k, { plot_id: r.tree.plot_id ?? null, period: r.tree.period ?? null, list: [] });
     by.get(k).list.push(r);
   }
+  // units of the tree list (approved data) without any stem measurement are listed too: their trees are unmeasured,
+  // and a unit with no trees at all has zero volume
+  for (const u of units) { const k = `${u.plot_id ?? ''}\u0001${u.period ?? ''}`; if (!by.has(k)) by.set(k, { plot_id: u.plot_id ?? null, period: u.period ?? null, list: [] }); }
   return [...by.values()].map(({ plot_id, period, list }) => {
     const ok = list.filter(r => r.status === 'ok'), area = areaOf ? areaOf(plot_id, period) : null, ef = area > 0 ? 10000 / area : null;
     const sum = side => ok.length && ok.every(r => r[side] && r[side].status === 'ok') ? ok.reduce((a, r) => a + r[side].total, 0) : null;
     const labels = [...new Set(ok.map(r => (r.ob || r.ib).label))];
     const unmeasured = unmeasuredOf ? unmeasuredOf(plot_id, period) : null;
-    const vOb = sum('ob'), vIb = sum('ib');
+    let vOb = sum('ob'), vIb = sum('ib');
+    if (!list.length && unmeasured === 0) { vOb = 0; vIb = 0; }                       // an empty plot: no trees, zero volume
     return { plot_id, period, area, ef, nTrees: list.length, nComputed: ok.length, nFailed: list.length - ok.length, unmeasured,
-      status: list.length - ok.length > 0 || unmeasured > 0 ? 'partial' : 'ok', labels,
+      status: list.length - ok.length > 0 || unmeasured > 0 || (!list.length && unmeasured == null) ? 'partial' : 'ok', labels,
       ob: vOb, ib: vIb, obHa: vOb != null && ef ? vOb * ef : null, ibHa: vIb != null && ef ? vIb * ef : null };
   });
 }

@@ -8,8 +8,8 @@ import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core/export.js';
 import { plotChart, svgForDownload } from '../core/chart.js';
-import { renderImport } from '../core/importer.js';
-import { mountCoefEditor } from '../core/coef-ui.js';
+import { renderImport, readImport } from '../core/importer.js';
+import { mountCoefEditor, problemText } from '../core/coef-ui.js';
 import { saveCoef, blankSet } from '../core/coef.js';
 import { scatterChart } from '../core/chart.js';
 import { buildUnits, unitMetrics } from '../stand/calc.js';
@@ -57,12 +57,20 @@ function modelProblems() {
 let editor = null;
 function renderStep1() {
   const el = $('step1');
-  if (!editor) { el.innerHTML = '<div id="coefbox"></div><details class="card more" id="fitbox"><summary>' + T('fit.h') + '</summary><div id="fitbody"></div></details><div id="m-rest"></div>'; $('fitbox').open = !!S0.fit.open; $('fitbox').addEventListener('toggle', e => { S0.fit.open = e.target.open; save(); if (e.target.open) renderFit(); }); if (S0.fit.open) setTimeout(renderFit, 0); editor = mountCoefEditor($('coefbox'), { tool: 'siteindex', extra: EXTRA, onChange: s => { sets = s; if (S0.setId && !curSet()) S0.setId = null; if (!S0.setId && sets.length === 1) S0.setId = sets[0].id; R = null; renderRest(); renderSteps(); } }); }
+  if (!editor) {
+    // two ways to a coefficient set, one at a time: enter a set from a source, or fit one to your own series
+    el.innerHTML = `<div class="tabs" role="tablist" aria-label="${esc(T('mt.label'))}">${['coef', 'fit'].map(t => `<button type="button" role="tab" id="mt-${t}" aria-controls="${t === 'coef' ? 'coefbox' : 'fitbox'}">${T('mt.' + t)}</button>`).join('')}</div>
+      <div id="coefbox"></div><div class="card" id="fitbox"><h2>${T('fit.h')}</h2><div id="fitbody"></div></div><div id="m-rest"></div>`;
+    const tab = t => { S0.fit.open = t === 'fit'; save(); $('mt-coef').setAttribute('aria-selected', String(t === 'coef')); $('mt-fit').setAttribute('aria-selected', String(t === 'fit')); $('coefbox').hidden = t !== 'coef'; $('fitbox').hidden = t !== 'fit'; if (t === 'fit') renderFit(); };
+    $('mt-coef').addEventListener('click', () => tab('coef')); $('mt-fit').addEventListener('click', () => tab('fit'));
+    editor = mountCoefEditor($('coefbox'), { tool: 'siteindex', extra: EXTRA, onChange: s => { sets = s; if (S0.setId && !curSet()) S0.setId = null; if (!S0.setId && sets.length === 1) S0.setId = sets[0].id; R = null; renderRest(); renderSteps(); } });
+    tab(S0.fit.open ? 'fit' : 'coef');
+  }
   renderRest();
   function renderRest() {
     const set = curSet(), cd = S.classesOf(classDef());
     let h = `<div class="card"><h2>${T('m.h')}</h2>${sets.length ? `<div class="lims"><label>${T('m.set')} <select id="setsel"><option value="">${T('none')}</option>${sets.map(s => `<option value="${esc(s.id)}"${s.id === S0.setId ? ' selected' : ''}>${esc([s.species, s.region].filter(Boolean).join(' · ') || s.source.citation)} — ${esc(formName(String(s.form).replace(/^si\./, '')))}</option>`).join('')}</select></label></div>` : `<p class="small">${T('m.noset')}</p>`}
-      ${set ? `<p class="small" id="setinfo">${esc(T('m.info', { form: formName(S.modelFromSet(set).form), age: set.meta ? T('x.ageType.' + set.meta.ageType) : '–', top: topText(set), src: set.source.citation }))}</p>` : ''}
+      ${set ? `<p class="small" id="setinfo">${esc(T('m.info', { form: formName(S.modelFromSet(set).form), age: set.meta && set.meta.ageType ? T('x.ageType.' + set.meta.ageType) : '–', top: topText(set), src: set.source.citation }))}</p>` : ''}
       <div class="lims"><label>${T('m.a0')} <input type="text" inputmode="decimal" size="6" id="a0" value="${esc(S0.a0)}"></label></div><p class="muted small">${T('m.a0.note')}</p></div>
       <div class="card"><h2>${T('cls.h')}</h2><div class="radios">${['none', 'equal', 'breaks'].map(m => `<label><input type="radio" name="clsmode" value="${m}"${S0.cls.mode === m ? ' checked' : ''}> ${T('cls.' + m)}</label>`).join(' ')}</div>
       ${S0.cls.mode === 'equal' ? `<div class="lims">${[['start', 'cls.start'], ['width', 'cls.width'], ['n', 'cls.n']].map(([k, l]) => `<label>${T(l)} <input type="text" inputmode="decimal" size="6" id="cls-${k}" value="${esc(S0.cls[k])}"></label>`).join('')}</div>` : ''}
@@ -104,7 +112,13 @@ function renderFit() {
       ${F.startMode === 'user' ? `<div class="lims">${fm.params.map(k => `<label>${k} <input type="text" inputmode="decimal" size="8" id="fs-${k}" value="${esc(F.start[k] ?? '')}"></label>`).join('')}</div>` : ''}
       <div class="nav"><button type="button" class="btn" id="f-run"${F.map.series == null || F.map.A == null || F.map.H == null ? ' disabled' : ''}>${T('fit.run')}</button></div><div id="fitout"></div>`;
   }
+  if (!F.src) h += `<div class="card sample"><button type="button" class="btn ghost" id="fsample">${T('fit.sample')}</button><span class="muted small">${T('fit.sample.note')}</span></div>`;
   el.innerHTML = h;
+  $('fsample') && $('fsample').addEventListener('click', async () => {
+    const buf = await (await fetch(BASE + 'assets/lab/siteindex/ornek/ornek-yas-boy.csv')).arrayBuffer();
+    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-yas-boy.csv (benzetim)' : 'ornek-yas-boy.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const src = await readImport(imp, BASE); F.imp = imp; F.src = src; F.map = { series: 0, plot: null, A: 1, H: 2 }; F.decimal = '.'; F.decimalChosen = true; FR = null; save(); renderFit();
+  });
   renderImport($('fitimp'), { imp: F.imp, src: F.src }, { base: BASE, title: T('fit.imp'), sub: T('fit.imp.sub'), onChange: st => {
     F.imp = st.imp; F.src = st.src; F.map = { series: null, plot: null, A: null, H: null }; F.decimalChosen = false; FR = null;
     if (F.src) { const H = F.src.headers.map(x => x.toLocaleLowerCase('tr').trim()); for (const [k, names] of Object.entries(FGUESS)) { const i = H.findIndex(x => names.includes(x)); if (i >= 0) F.map[k] = i; } }
@@ -158,8 +172,13 @@ function drawFit() {
   $('bt-run').addEventListener('click', () => {
     const B = Number(String(F.bootB ?? S.BOOT_DEFAULTS.B).trim()), seed = Number(String(F.bootSeed ?? S.BOOT_DEFAULTS.seed).trim());
     if (!(Number.isInteger(B) && B >= 20 && B <= 5000 && Number.isInteger(seed) && seed >= 0)) { $('bt-out').innerHTML = `<p class="note err small">${T('bt.bad')}</p>`; return; }
-    $('bt-out').innerHTML = `<p class="small">${T('bt.busy', { B })}</p>`; $('bt-run').disabled = true;
-    setTimeout(() => { FR.boot = S.bootstrapSeries(FR.form, FR.series, FR.pairing, FR, { B, seed }); $('bt-run').disabled = false; $('bt-out').innerHTML = bootHTML(FR.boot); }, 30);
+    $('bt-out').innerHTML = `<p class="small" id="bt-busy">${T('bt.busy', { B })}</p>`; $('bt-run').disabled = true;
+    const finish = res => { FR.boot = res; $('bt-run').disabled = false; $('bt-out').innerHTML = bootHTML(FR.boot); };
+    let w = null; try { w = new Worker(new URL('./boot-worker.js', import.meta.url), { type: 'module' }); } catch (e) { w = null; }
+    if (!w) { setTimeout(() => finish(S.bootstrapSeries(FR.form, FR.series, FR.pairing, FR, { B, seed })), 30); return; }
+    w.onmessage = e => { if (e.data.progress) { const b = $('bt-busy'); if (b) b.textContent = T('bt.prog', { b: e.data.progress, B }); } else { w.terminate(); finish(e.data.done); } };
+    w.onerror = () => { w.terminate(); finish(S.bootstrapSeries(FR.form, FR.series, FR.pairing, FR, { B, seed })); };
+    w.postMessage({ id: FR.form, series: FR.series, pairing: FR.pairing, full: { status: FR.status, theta: FR.theta }, opts: { B, seed } });
   });
   $('fx-save').addEventListener('click', async () => {
     const miss = [!F.ageType && T('x.ageType'), !F.topDef && T('x.topDef'), !String(F.cit).trim() && T('fit.cit')].filter(Boolean);
@@ -170,7 +189,7 @@ function drawFit() {
       fit: { data: F.imp ? F.imp.name : null, n: FR.n, nSeries: FR.nSeries, pairing: FR.pairing, method: 'Levenberg–Marquardt', start: FR.start, startFrom: FR.startFrom, iter: FR.iter, rmse: FR.rmse, bias: FR.bias, sigma: FR.sigma, se: FR.se, seNote: FR.seNote, created: FR.created,
         ...(FR.boot && !FR.boot.problem ? { bootstrap: { B: FR.boot.B, seed: FR.boot.seed, level: FR.boot.level, nOk: FR.boot.nOk, nFail: FR.boot.nFail, failRate: FR.boot.failRate, resampling: 'series', interval: FR.boot.interval, params: FR.boot.params, thetas: FR.boot.thetas } } : {}) } };
     const r = await saveCoef(set);
-    if (!r.ok) { $('fx-msg').innerHTML = `<p class="note err small">${esc(r.problems.map(p => p.code).join(', '))}</p>`; return; }
+    if (!r.ok) { $('fx-msg').innerHTML = `<p class="note err small">${esc(r.problems.map(problemText).join('; '))}</p>`; return; }
     S0.setId = r.set.id; R = null; save(); renderSteps(); $('fx-msg').innerHTML = `<p class="note ok small" id="fx-ok">${T('fit.saved')}</p>`; editor && editor.refresh();
   });
 }
@@ -220,7 +239,8 @@ function dataProblems() {
   if (S0.mode === 'table' && (!S0.src || S0.map.A == null || S0.map.H == null)) p.push(T('d.col.need'));
   if (S0.mode === 'ds' && !approved) p.push(T('d.nods'));
   if (!S0.dAge) p.push(T('d.agetype.need'));
-  else if (set && set.meta && S0.dAge !== set.meta.ageType) p.push(T('d.agetype.diff', { d: T('x.ageType.' + S0.dAge), m: T('x.ageType.' + set.meta.ageType) }));
+  else if (set && !(set.meta && set.meta.ageType)) p.push(T('d.set.noage'));
+  else if (set && S0.dAge !== set.meta.ageType) p.push(T('d.agetype.diff', { d: T('x.ageType.' + S0.dAge), m: T('x.ageType.' + set.meta.ageType) }));
   return p;
 }
 function renderStep2() {
@@ -277,8 +297,8 @@ function compute() {
 }
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function resTable() {
-  const head = [T('t.unit'), T('t.plot'), T('t.period'), T('t.A'), T('t.H'), T('t.Hsrc'), T('t.SI', { a0: fmtNum(R.m.baseAge, 2) }), ...(R.unc.method !== 'none' ? [T('t.ci')] : []), ...(R.classes.length ? [T('t.cls')] : []), T('t.note'), T('t.state')];
-  const rows = R.rows.map(r => ({ ok: r.status === 'ok', cells: [r.unit, r.plot, r.period, r.A, r.H, T('src.' + r.Hsrc), r.si, ...(R.unc.method !== 'none' ? [r.ci ? `${fmtNum(r.ci.lo, 3)} – ${fmtNum(r.ci.hi, 3)}` : null] : []), ...(R.classes.length ? [r.status === 'ok' ? r.cls ?? T('cls.out') : null] : []),
+  const head = [T('t.unit'), T('t.plot'), T('t.period'), T('t.A'), T('t.H'), T('t.Hsrc'), T('t.SI', { a0: fmtNum(R.m.baseAge, 2) }), ...(R.unc.method !== 'none' ? [T('t.cilo'), T('t.cihi')] : []), ...(R.classes.length ? [T('t.cls')] : []), T('t.note'), T('t.state')];
+  const rows = R.rows.map(r => ({ ok: r.status === 'ok', cells: [r.unit, r.plot, r.period, r.A, r.H, T('src.' + r.Hsrc), r.si, ...(R.unc.method !== 'none' ? [r.ci ? r.ci.lo : null, r.ci ? r.ci.hi : null] : []), ...(R.classes.length ? [r.status === 'ok' ? r.cls ?? T('cls.out') : null] : []),
     [...r.problems, ...r.warnings].map(p => T('c.' + p.code, p)).join('; ') || '–', T('st.' + r.status)] }));
   return { head, rows };
 }
@@ -291,7 +311,7 @@ function curves() {
 function renderStep3() {
   if (!R) compute();
   const el = $('step3'), t = resTable(), set = R.set, ok = R.rows.filter(r => r.status === 'ok'), out = R.rows.filter(r => r.warnings.length).length, cv = curves();
-  const ageTxt = T('x.ageType.' + R.m.ageType);
+  const ageTxt = R.m.ageType ? T('x.ageType.' + R.m.ageType) : '–';
   let h = `<div class="card"><p class="small" id="rmodel">${esc(T('r.model', { form: formName(R.m.form), a0: fmtNum(R.m.baseAge, 2), age: ageTxt, top: topText(set) }))}</p>
     <p class="note small" id="rsrc">${esc(T('r.src', { src: set.source.citation }))}</p>
     <p class="small" id="runc">${esc(R.unc.method === 'bootstrap' ? T('u.boot', { B: R.unc.B, seed: R.unc.seed, ok: R.unc.nOk }) : R.unc.method === 'delta' ? T('u.delta') : T('u.none'))}</p>
@@ -308,7 +328,7 @@ function renderStep3() {
   $('x-csv').addEventListener('click', () => downloadCSV(fname('bonitet', 'site-index') + '.csv', [t.head, ...t.rows.map(r => r.cells)], lang));
   $('x-json').addEventListener('click', () => downloadJSON(fname('bonitet', 'site-index') + '.json', { tool: S.TOOL, created: R.created, model: R.m, set: R.set, classes: R.classes, input: S0.mode, results: R.rows, uncertainty: R.unc }));
   $('x-xlsx').addEventListener('click', async () => {
-    let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
+    let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }
     const info = [[T('x.k'), T('x.v')], [T('x.tool'), `${S.TOOL.id} ${S.TOOL.version}`], [T('x.date'), R.created], [T('x.form'), formName(R.m.form)],
       [T('x.params'), Object.entries(R.m.params).map(([k, v]) => `${k} = ${v}`).join('; ')], [T('x.source'), [set.source.citation, set.source.doi, set.source.page, set.source.table].filter(Boolean).join('; ')],
       [T('x.a0'), R.m.baseAge], [T('x.age'), ageTxt], [T('x.top'), topText(set)], [T('x.valid'), set.valid ? JSON.stringify(set.valid) : '–'],

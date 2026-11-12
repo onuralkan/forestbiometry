@@ -34,7 +34,7 @@ const engine = (s) => TREES.map(([p, t, D0, H, st, hs]) => { const d = cone(D0, 
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('#side .b-cat', { hasText: 'Ağaç ve gövde' }).count()) === 1 && (await page.locator('#side a[href="seksiyon-hacmi.php"]').count()) === 1, 'sidebar: "Ağaç ve gövde" with Seksiyon Hacmi');
 await page.goto(URL + '?lang=tr');
-ok((await page.locator('h1').textContent()).includes('Seksiyon Hacmi') && (await page.locator('text=1.0.0-beta.1').count()) >= 1, 'page title and version 1.0.0-beta.1');
+ok((await page.locator('h1').textContent()).includes('Seksiyon Hacmi') && (await page.locator('text=1.0.0-beta.2').count()) >= 1, 'page title and version 1.0.0-beta.2');
 
 // 1. paste the table, columns recognised, defaults
 await page.locator('#impbox details summary').click(); await page.fill('#impbox textarea', lines.join('\n')); await page.click('#impbox [data-act="paste"]');
@@ -96,7 +96,7 @@ const csv = await readFile(await dl.path(), 'utf8');
 ok(csv.split('\n')[0].includes('Smalian, kabuklu (m³)') && csv.includes('A,') && !/\d,\d{3}\b/.test(csv.split('\n')[1].replace(/^[^,]*,[^,]*,[^,]*,/, '')), 'CSV with comma separator and decimal point');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dj.path(), 'utf8'));
-ok(js.tool.version === '1.0.0-beta.1' && js.settings.top === 'paraboloid' && js.settings.includeStump === true && js.results.smalian.length === 4 && js.results.smalian[0].ob.sections.length > 0, 'JSON: settings and full results');
+ok(js.tool.version === '1.0.0-beta.2' && js.settings.top === 'paraboloid' && js.settings.includeStump === true && js.results.smalian.length === 4 && js.results.smalian[0].ob.sections.length > 0, 'JSON: settings and full results');
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 ok((await dx.suggestedFilename()).endsWith('.xlsx'), 'Excel report downloads');
 

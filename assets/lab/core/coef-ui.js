@@ -137,10 +137,17 @@ export function mountCoefEditor(el, opts) {
     $('cf-imp') && $('cf-imp').addEventListener('change', async e => {
       const file = e.target.files[0]; if (!file) return;
       let obj; try { obj = JSON.parse(await file.text()); } catch (err) { msg = { kind: 'err', text: problemText({ code: 'library.schema' }) }; render(); return; }
-      const r = C.importLibrary(obj), mine = r.sets.filter(s => s.tool === tool);
+      const r = C.importLibrary(obj), ofTool = r.sets.filter(s => s.tool === tool);
+      // the tool's own required fields (e.g. the age type of a site-index equation) are checked as in the editor
+      const metaProblems = s => (opts.extra || []).flatMap(x => { const v = (s.meta || {})[x.key], what = x.label[lang] || x.label.tr;
+        if (v == null || v === '') return x.required ? [{ code: 'extra.missing', what }] : [];
+        if (x.type === 'choice' && !x.values.some(o => o.v === v)) return [{ code: 'extra.missing', what }];
+        return x.type === 'number' && !(Number.isFinite(v) && v > 0) ? [{ code: 'extra.num', what }] : []; });
+      const mine = ofTool.filter(s => !metaProblems(s).length);
+      for (const s of ofTool) if (metaProblems(s).length) r.rejected.push({ set: s, problems: metaProblems(s) });
       for (const s of mine) await C.saveCoef(s, s.modified || undefined);
-      const rej = r.rejected.length + (r.sets.length - mine.length);
-      msg = rej ? { kind: 'warn', text: T('imported', { n: mine.length }) + ' ' + T('rejected', { n: rej, why: [...new Set(r.rejected.flatMap(x => x.problems.map(problemText)).concat(r.sets.length - mine.length ? [problemText({ code: 'form.tool' })] : []))].join('; ') }) } : { kind: 'ok', text: T('imported', { n: mine.length }) };
+      const rej = r.rejected.length + (r.sets.length - ofTool.length);
+      msg = rej ? { kind: 'warn', text: T('imported', { n: mine.length }) + ' ' + T('rejected', { n: rej, why: [...new Set(r.rejected.flatMap(x => x.problems.map(problemText)).concat(r.sets.length - ofTool.length ? [problemText({ code: 'form.tool' })] : []))].join('; ') }) } : { kind: 'ok', text: T('imported', { n: mine.length }) };
       await refresh();
     });
     if (!draft) return;

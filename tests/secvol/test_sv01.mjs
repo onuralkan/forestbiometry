@@ -129,7 +129,7 @@ for (const [s, code] of [[{ method: 'newton', layout: 'ends' }, 'layout.method']
   ok(all.length === 3 && all[0].status === 'ok' && all[1].status === 'ok' && all[2].status === 'invalid' && all[2].problems[0].code === 'tree.error', 'all trees: single-point tree not computed');
   near(all[0].ob.total, (V.ba(31) + V.ba(28)) / 2 + (V.ba(28) + V.ba(23.5)) / 2 * 4 + (V.ba(23.5) + V.ba(18)) / 2 * 4 + V.ba(18) * 8.7 / 3, 'tree 1 by hand: Smalian + cone');
   eq(all[0].tree, { plot_id: 'A', tree_id: '1', period: null }, 'tree ids in the result'); }
-eq(V.TOOL, { id: 'seksiyon-hacmi', version: '1.0.0-beta.1' }, 'tool id and version (K4)');
+eq(V.TOOL, { id: 'seksiyon-hacmi', version: '1.0.0-beta.2' }, 'tool id and version (K4)');
 
 console.log(`secvol SV01: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

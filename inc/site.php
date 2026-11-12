@@ -45,7 +45,7 @@ function site_ctx(): array {
 function site_tools(?bool $tr = null): array {
     $tr = $tr ?? site_ctx()['tr'];
     return [
-        ['n' => 1, 'cat' => 'data', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.0.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
+        ['n' => 1, 'cat' => 'data', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.1.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
          'desc' => $tr ? 'Ağaç ve örnek alan tablolarınızı içe aktarın, sütunları eşleyin, biçim hatalarını ve şüpheli ölçümleri bulun; düzeltmeleri gerekçesiyle kaydedip veriyi onaylayın.'
                        : 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
         ['n' => 2, 'cat' => 'inventory', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.1.0', 'lab' => 'stand', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
@@ -66,12 +66,12 @@ function site_tools(?bool $tr = null): array {
         ['n' => 7, 'cat' => 'model', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.0.0', 'lab' => 'rank', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
          'desc' => $tr ? 'Başarı ölçütleri tablosundan (R², FI, RMSE, MAE, Bias, AIC, BIC…) ölçüt bazında ve genel nispi sıralar; en iyi ve en kötü modellerin radar grafiği.'
                        : 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.'],
-        ['n' => 8, 'cat' => 'tree', 'icon' => 'secvol', 'short' => $tr ? 'Seksiyon Hacmi' : 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.1', 'lab' => 'secvol', 'title' => $tr ? 'Seksiyon Hacmi Hesaplayıcısı' : 'Stem Section Volume',
+        ['n' => 8, 'cat' => 'tree', 'icon' => 'secvol', 'short' => $tr ? 'Seksiyon Hacmi' : 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.2', 'lab' => 'secvol', 'title' => $tr ? 'Seksiyon Hacmi Hesaplayıcısı' : 'Stem Section Volume',
          'desc' => $tr ? 'Ölçülmüş seksiyon çaplarından tek ağaç gövde hacmi: Huber, Smalian, Newton ve Hohenadl; dip kütük ve uç seksiyon ayrı, kabuklu ve kabuksuz hacim, biçim sayısı, kullanılabilir hacim ve örnek alan büyüklüğüyle hektara toplam.'
                        : 'Single-tree stem volume from measured section diameters: Huber, Smalian, Newton and Hohenadl; stump and top piece apart, over- and under-bark volume, form factor, merchantable volume and per-hectare totals from plot sizes.'],
         ['n' => 9, 'cat' => 'site', 'icon' => 'siteindex', 'short' => $tr ? 'Bonitet' : 'Site Index', 'file' => 'bonitet.php', 'v' => '1.0.0-beta.3', 'lab' => 'siteindex', 'title' => $tr ? 'Bonitet Hesaplayıcısı' : 'Site Index',
-         'desc' => $tr ? 'Üst boy ve yaştan dayanak yaştaki bonitet endeksi: Chapman–Richards ve Schumacher fark denklemleri kendi katsayı setinizle (kaynağı zorunlu), yaş türü, kullanıcı tanımlı bonitet sınıfları, eğri demeti; onaylanmış veriden H0.'
-                       : 'Site index at a base age from top height and age: Chapman–Richards and Schumacher difference equations with your own coefficient set (source required), age type, user-defined site classes, curve family; H0 from approved data.'],
+         'desc' => $tr ? 'Üst boy ve yaştan dayanak yaştaki bonitet endeksi: Chapman–Richards ve Schumacher fark denklemleri kendi katsayı setinizle (kaynağı zorunlu), ya da kendi gövde analizi ve tekrarlı ölçümlerinizden uydurulan katsayılarla; yaş türü, kullanıcı tanımlı bonitet sınıfları, eğri demeti, bootstrap ya da delta yöntemiyle güven aralığı; onaylanmış veriden H0.'
+                       : 'Site index at a base age from top height and age: Chapman–Richards and Schumacher difference equations with your own coefficient set (source required), or with coefficients fitted to your own stem analyses and repeated measurements; age type, user-defined site classes, curve family, confidence intervals by bootstrap or the delta method; H0 from approved data.'],
     ];
 }
 
@@ -138,6 +138,10 @@ function site_top(array $o = []): void {
 <title><?= h($pageTitle) ?></title>
 <meta name="description" content="<?= h($o['desc'] ?? '') ?>">
 <?php if (!empty($o['robots'])): ?><meta name="robots" content="<?= h($o['robots']) ?>">
+<?php else: $pg = $here === 'index.php' ? '' : $here; ?><link rel="canonical" href="<?= h(SITE_BASE . $pg . '?lang=' . $c['L']) ?>">
+<link rel="alternate" hreflang="tr" href="<?= h(SITE_BASE . $pg . '?lang=tr') ?>">
+<link rel="alternate" hreflang="en" href="<?= h(SITE_BASE . $pg . '?lang=en') ?>">
+<link rel="alternate" hreflang="x-default" href="<?= h(SITE_BASE . $pg) ?>">
 <?php endif; ?><meta name="author" content="<?= h(SITE_AUTHOR['name']) ?>">
 <meta name="theme-color" content="#eef1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121814" media="(prefers-color-scheme: dark)">

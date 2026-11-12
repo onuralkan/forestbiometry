@@ -4,7 +4,7 @@
 import { parseNumber, toInternal, detectDecimal, UNITS } from '../core/num.js';
 import { cellText } from '../core/table.js';
 
-export const TOOL = { id: 'veri-denetcisi', version: '1.0.0' };
+export const TOOL = { id: 'veri-denetcisi', version: '1.1.0' };
 export const SCHEMA = 'forest-dataset/1';
 
 export const TREE_FIELDS = [
@@ -14,6 +14,7 @@ export const TREE_FIELDS = [
   { key: 'stem_id', kind: 'id' }, { key: 'plot_area', kind: 'num', unit: 'area' },
   { key: 'stratum', kind: 'code' }, { key: 'status', kind: 'code' },
   { key: 'x', kind: 'num', unit: 'xy' }, { key: 'y', kind: 'num', unit: 'xy' },
+  { key: 'age', kind: 'num', unit: 'age' },
 ];
 export const PLOT_FIELDS = [
   { key: 'plot_id', kind: 'id', req: true }, { key: 'plot_area', kind: 'num', unit: 'area', req: true }, { key: 'stratum', kind: 'code' },
@@ -21,7 +22,7 @@ export const PLOT_FIELDS = [
 export const FIELDS = { trees: TREE_FIELDS, plots: PLOT_FIELDS };
 /** Screening thresholds, not scientific limits: users adjust them to their data (METHODS.md §5). */
 export const DEFAULT_LIMITS = { dbhMin: 1, dbhMax: 200, hMin: 2, hMax: 60, slMin: 15, slMax: 200 };
-export const DEFAULT_UNITS = { dbh: 'cm', height: 'm', area: 'm2', xy: 'm' };
+export const DEFAULT_UNITS = { dbh: 'cm', height: 'm', area: 'm2', xy: 'm', age: 'yr' };
 const HARD = new Set(['format', 'missing', 'invalid', 'duplicate', 'conflict', 'reference']);
 
 /* ---------------- column mapping suggestions (exact names only; the user confirms) ---------------- */
@@ -37,6 +38,7 @@ const ALIASES = {
   stratum: ['stratum', 'strata', 'tabaka', 'katman'],
   status: ['status', 'durum', 'state'],
   x: ['x', 'koordx', 'easting', 'east', 'dogu'], y: ['y', 'koordy', 'northing', 'north', 'kuzey'],
+  age: ['age', 'yas', 'agacyasi', 'treeage'],
 };
 const UNIT_SUFFIX = { dbh: ['cm', 'mm', 'm'], height: ['m', 'dm', 'cm'], plot_area: ['m2', 'ha'], x: ['m'], y: ['m'] };
 export function normHeader(h) {
@@ -117,10 +119,10 @@ export function currentText(sources, work, table, rec, field) {
 function valueOf(fd, cell, settings) {
   if (fd.kind === 'num') {
     if (!cell || (cell.t === 's' && String(cell.v).trim() === '')) return { status: 'empty', value: null };
-    if (cell.t === 'n') return { status: 'ok', value: toInternal(fd.unit, settings.units[fd.unit], cell.v) };
+    if (cell.t === 'n') return { status: 'ok', value: toInternal(fd.unit, settings.units[fd.unit] ?? DEFAULT_UNITS[fd.unit], cell.v) };
     if (cell.t !== 's') return { status: 'bad', reason: 'cell-type', value: null };
     const r = parseNumber(cell.v, settings.decimal);
-    if (r.status === 'ok') return { status: 'ok', value: toInternal(fd.unit, settings.units[fd.unit], r.value) };
+    if (r.status === 'ok') return { status: 'ok', value: toInternal(fd.unit, settings.units[fd.unit] ?? DEFAULT_UNITS[fd.unit], r.value) };
     return { status: r.status, reason: r.reason, value: null };
   }
   const text = fd.kind === 'period' && cell && cell.t === 'n' && cell.date ? cell.date : cellText(cell);
@@ -337,7 +339,7 @@ export function approve(sources, work, mapping, settings, ev, meta = {}) {
   const hdr = t => sources[t] ? sources[t].headers : [];
   return {
     schema: SCHEMA, created: new Date().toISOString(), tool: TOOL,
-    units: { dbh: 'cm', height: 'm', plot_area: 'm2', x: 'm', y: 'm' },
+    units: { dbh: 'cm', height: 'm', plot_area: 'm2', x: 'm', y: 'm', age: 'yr' },
     source: {
       trees: sources.trees && { name: sources.trees.name, kind: sources.trees.kind, meta: sources.trees.meta, records: sources.trees.rows.length },
       plots: sources.plots && { name: sources.plots.name, kind: sources.plots.kind, meta: sources.plots.meta, records: sources.plots.rows.length },

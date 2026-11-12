@@ -46,7 +46,7 @@
 <p><b>Ağaç / ölçüm tablosu</b> zorunludur: her satır bir ağacın bir dönemdeki ölçümü. <b>Örnek alan tablosu</b> isteğe bağlıdır: alan büyüklükleri ve boş örnek alanlar için.</p>
 <h3>2. Sütunlar ve birimler</h3>
 <ul>
-<li>Ağaç tablosunda zorunlu: örnek alan kimliği, ağaç kimliği, tür, göğüs çapı. İsteğe bağlı: boy, dönem, gövde kimliği, örnek alan büyüklüğü, tabaka, durum, X ve Y koordinatı. Örnek alan büyüklüğü ağaç tablosunda ya da örnek alan tablosunda bulunmalıdır.</li>
+<li>Ağaç tablosunda zorunlu: örnek alan kimliği, ağaç kimliği, tür, göğüs çapı. İsteğe bağlı: boy, dönem, gövde kimliği, örnek alan büyüklüğü, tabaka, durum, X ve Y koordinatı, ağaç yaşı (yıl; Bonitet aracı onaylanmış veriden yaşı buradan alır; yaşın türü orada seçilir). Örnek alan büyüklüğü ağaç tablosunda ya da örnek alan tablosunda bulunmalıdır.</li>
 <li>Öneriler yalnızca birebir başlık eşleşmesinden gelir (ör. <code>alan_no</code>, <code>agac_no</code>, <code>tur</code>, <code>cap_cm</code>); <code>_cm</code>, <code>_m2</code> gibi ekler birimi de önerir.</li>
 <li>Birimler: çap cm/mm/m, boy m/dm/cm, alan m²/ha. Seçiminize göre çevrilmiş en küçük, ortanca ve en büyük değerler gösterilir; birimi bunlara bakarak denetleyin.</li>
 </ul>
@@ -257,13 +257,13 @@
 <li><b>Onaylanmış veriyi bağla</b>: Veri Denetçisi'nde onaylanan ağaç tablosundan eksik dbh ve boylar eklenir, örnek alan büyüklükleri alınır, gövdesi ölçülmemiş ağaçlar sayılır.</li>
 <li><b>Yöntem ve veri düzeni</b>: ölçümleri seksiyon sınırlarında (Smalian), ortalarında (Huber), uç–orta–uç sırasıyla (Newton; Huber ve Smalian da hesaplanabilir) ya da 0.1H…0.9H yüksekliklerinde (Hohenadl) almış olabilirsiniz. Düzeni siz seçersiniz; uymayan yöntem listelenmez.</li>
 <li><b>Uç seksiyon</b>: son noktadan tepeye koni (varsayılan), paraboloit ya da neiloit. Toplam boy yoksa uç seksiyon yoktur ve hacim "son ölçüm noktasına kadar" diye yazılır. Dip kütük isterseniz toplama katılır.</li>
-<li><b>Kullanılabilir tepe çapı</b> verilirse o çapa kadar olan hacim ve çapın yüksekliği hesaplanır.</li>
+<li><b>Kullanılabilir tepe çapı</b> verilirse o çapa kadar olan hacim ve çapın yüksekliği hesaplanır. Hohenadl beş eşit seksiyonla çalıştığı için bu hacmi vermez; hesaplanamadığı her durumda nedeni Veri sorunları listesinde yazılır.</li>
 <li><b>Hektara genişletme</b>: tablodaki büyüklük sütunundan, bütün alanlar için tek bir büyüklükten ya da onaylanmış veriden.</li>
-<li><b>Kontrol eşikleri</b>: kök şişkinliği bölgesi, 1.30 m çapı ile dbh farkı, orta nokta ve Hohenadl toleransları; hepsi araç kuralıdır ve rapora yazılır.</li>
+<li><b>Kontrol eşikleri</b>: kök şişkinliği bölgesi, 1.30 m çapı ile dbh farkı, uç seksiyonun hacimdeki payı, orta nokta ve Hohenadl toleransları; hepsi araç kuralıdır ve rapora yazılır.</li>
 </ul>
 <h3>Sonuçlar</h3>
 <ul>
-<li><b>Ağaç hacimleri</b>: yöntem başına kabuklu hacim, kabuksuz hacim, birden çok yöntemde yüzde fark, biçim sayısı, kapsam ("kesimden tepeye", "son ölçüm noktasına kadar") ve durum.</li>
+<li><b>Ağaç hacimleri</b>: yöntem başına kabuklu hacim, kabuksuz hacim, birden çok yöntemde yüzde fark, biçim sayısı, kapsam ("kesimden tepeye", "son ölçüm noktasına kadar", Hohenadl'da "yerden tepeye"; dip kütük katıldıysa "+ kütük") ve durum. Kesim yüksekliğinin altında ölçüm noktası varsa o kısım yalnızca dip kütük sayılır, seksiyonlara katılmaz. Hohenadl'da ayrıca gerçek biçim bölümleri ve λ₀.₉ (Heger 1965) verilir.</li>
 <li><b>Örnek alanlar</b>: hesaplanan ve hesaplanamayan ağaç sayıları ile m³/ha. Eksik ağaç varsa durum "eksik ağaç var" olur.</li>
 <li><b>Veri kalitesi</b>: kök şişkinliği bölgesi dışında yükseklikle artan çaplar, seksiyon uzunlukları, uç seksiyonun hacimdeki payı (eşiğin üstündeyse sonuç seçilen uç cismine duyarlıdır) ve 1.30 m çapı ile dbh farkı; eşikler Kontrol eşikleri altında değiştirilir ve sonuçta yazılır.</li>
 <li><b>Yöntemler arası fark</b> (birden çok yöntem seçildiyse): toplam hacim ve ağaç başına fark, referans yönteme göre yüzde. Referans yalnızca paydadır; hiçbir yöntem doğru ilan edilmez, bilinen davranış ayrıntılarda açıklanır.</li>
@@ -282,7 +282,7 @@
 <ul>
 <li><b>Katsayı setleri</b>: biçim (Chapman–Richards anamorfik ya da polimorfik, Schumacher), katsayılar, <b>yaş türü</b> ve <b>üst boy tanımı</b> (zorunlu), isteğe bağlı geçerlilik aralığı ve kaynak künyesi (zorunlu). Setler yalnızca bu tarayıcıda saklanır, JSON olarak indirilip yüklenebilir.</li>
 <li>Schumacher biçimi ln H = b₀ + b₁/A olarak yazılmıştır; büyüyen bir eğri için b₁ negatiftir. Kaynağınız H = b₀·exp(−b₁/A) yazıyorsa katsayıyı −b₁ olarak girin.</li>
-<li><b>Katsayıları kendi verimden uydur</b>: gövde analizi ya da tekrarlı üst boy ölçümleri (dizi kimliği, yaş, boy). Denklem aynı dizinin gözlem çiftlerine uydurulur; çiftler ardışık, ilk gözlemden ya da bütün çiftler olabilir ve sonucu değiştirir. Başlangıç değerleri otomatik ya da sizin; standart hatalar gözlemler bağımsız varsayımıyla verilir (aynı dizinin gözlemleri bağımsız değildir). Sonuç; yaş türü, üst boy tanımı ve kaynak künyesiyle katsayı kaydına "uydurulan" set olarak yazılır, verinin yaş ve boy aralığı geçerlilik aralığı olur.</li>
+<li><b>Kendi verimden uydur</b> sekmesi (Model adımında, <b>Kaynaktan katsayı seti</b> sekmesinin yanında): gövde analizi ya da tekrarlı üst boy ölçümleri (dizi kimliği, yaş, boy). Denemek için benzetim bir örnek veri yüklenebilir; ürettiği katsayılar hiçbir tür ya da yöreye ait değildir. Denklem aynı dizinin gözlem çiftlerine uydurulur; çiftler ardışık, ilk gözlemden ya da bütün çiftler olabilir ve sonucu değiştirir. Başlangıç değerleri otomatik ya da sizin; standart hatalar gözlemler bağımsız varsayımıyla verilir (aynı dizinin gözlemleri bağımsız değildir). Sonuç; yaş türü, üst boy tanımı ve kaynak künyesiyle katsayı kaydına "uydurulan" set olarak yazılır, verinin yaş ve boy aralığı geçerlilik aralığı olur.</li>
 <li><b>Belirsizlik: dizi düzeyinde bootstrap</b>: diziler (tek tek gözlemler değil) yeniden örneklenir ve denklem her tekrarda yeniden uydurulur; katsayıların %95 yüzdelik aralığı, başarısız tekrar oranı, B ve tohum gösterilir. Bootstrap yapılmış bir set kaydedilirse sonuçlarda her noktanın bonitet endeksi için %95 aralığı verilir. Kendi girdiğiniz setlerde aralık yalnızca kaynağın verdiği kovaryans matrisini girerseniz (delta yöntemi) hesaplanır; yoksa "belirsizlik bilgisi yok" yazılır.</li>
 <li><b>Dayanak yaş</b>: varsayılanı yoktur; kullandığınız sınıflandırmanın dayanak yaşını girin. Fark denklemleri dayanak yaştan bağımsızdır, yani dayanak yaş eğrileri değil endeksin okunduğu yaşı değiştirir.</li>
 <li><b>Bonitet sınıfları</b> (isteğe bağlı): eşit aralıklı ya da sınırları sizin yazdığınız sınıflar; I en yüksek ya da en düşük bonitet olabilir. Sınıfların dışında kalan endeks "sınıf dışı" yazılır.</li>
