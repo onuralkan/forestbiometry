@@ -119,6 +119,17 @@ await page.goto(BASE + '/boy-cap.php?lang=tr'); await page.click('.b-head .b-gui
 ok(Math.abs(await page.evaluate(() => document.getElementById('boy-cap').getBoundingClientRect().top)) < 120, 'tool header link opens the tool\'s section of the guide');
 await page.goto(BASE + '/kilavuz.php?lang=tr'); await page.click('.guide-sec a.guide-open[href="ornekleme.php"]'); ok(page.url().includes('/ornekleme.php'), 'the guide links back to each tool');
 
+// module loading: every script and style of every page carries a version tag (import map from inc/site.php), so that
+// versioned files can be cached for long; a module missing from the graph would be requested without a tag
+{ const site = (await import('node:fs')).readFileSync(new URL('../../inc/site.php', import.meta.url), 'utf8');
+  const files = ['', 'kilavuz.php', 'hakkinda.php', ...[...site.matchAll(/'file' => '([a-z-]+\.php)', 'v' =>/g)].map(m => m[1])];
+  const q = await browser.newPage(); q.on('pageerror', e => errors.push(e.message));
+  for (const f of files) { const un = []; let mods = 0; const h = r => { const u = r.url(); if (/\.(m?js|css)(\?|$)/.test(u)) { mods++; if (!/[?&]v=/.test(u)) un.push(u.replace(BASE, '')); } };
+    q.on('request', h); await q.goto(BASE + '/' + f, { waitUntil: 'networkidle' }); q.off('request', h);
+    const im = await q.evaluate(() => { const s = document.querySelector('script[type="importmap"]'); return s ? Object.keys(JSON.parse(s.textContent).imports).length : 0; });
+    ok(un.length === 0 && im > 0, `${f || 'index.php'}: ${mods} scripts and styles, all versioned (import map of ${im} modules)${un.length ? '; unversioned: ' + un.join(' ') : ''}`); }
+  await q.close(); }
+
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();
 console.log(`site e2e: ${pass} passed, ${fail} failed`);

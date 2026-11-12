@@ -146,7 +146,7 @@ function site_top(array $o = []): void {
 <meta name="theme-color" content="#eef1ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121814" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/playfair-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/lab/lab.css?v=25">
+<link rel="stylesheet" href="assets/lab/lab.css?v=<?= site_ver('assets/lab/lab.css') ?>">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231d5b45'/><circle cx='16' cy='16' r='10.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-dasharray='3 2.4'/><circle cx='13' cy='14' r='3' fill='%23fff'/><circle cx='19.5' cy='19' r='2' fill='%23fff'/></svg>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
@@ -206,6 +206,52 @@ function site_top(array $o = []): void {
 <?php endif;
 }
 
+/** Version tag of a site file: its modification time (it changes whenever the deployment uploads that file). */
+function site_ver(string $rel): string {
+    $f = __DIR__ . '/../' . $rel;
+    return is_file($f) ? (string) filemtime($f) : '0';
+}
+/** 'a/b/../c.js' → 'a/c.js'; null if it leaves the site root. */
+function site_norm(string $p): ?string {
+    $out = [];
+    foreach (explode('/', $p) as $seg) {
+        if ($seg === '' || $seg === '.') continue;
+        if ($seg === '..') { if (!$out) return null; array_pop($out); } else $out[] = $seg;
+    }
+    return implode('/', $out);
+}
+/**
+ * ES modules reachable from the entry files through relative imports (static `from '…'`, `import '…'` and literal
+ * `import('…')`), as paths relative to the site root, in discovery order. Workers (new URL(…, import.meta.url)) are
+ * not followed: they load without a version tag and are revalidated each time.
+ */
+function site_module_graph(array $entries): array {
+    $root = __DIR__ . '/..'; $seen = []; $order = []; $stack = array_reverse($entries);
+    while ($stack) {
+        $rel = array_pop($stack);
+        if (isset($seen[$rel]) || !is_file($root . '/' . $rel)) continue;
+        $seen[$rel] = true; $order[] = $rel;
+        preg_match_all('~(?:\bfrom\s*|\bimport\s*\(?\s*)[\'"](\.{1,2}/[^\'"]+\.m?js)[\'"]~', (string) file_get_contents($root . '/' . $rel), $m);
+        foreach (array_reverse($m[1]) as $spec) { $q = site_norm(dirname($rel) . '/' . $spec); if ($q !== null && !isset($seen[$q])) $stack[] = $q; }
+    }
+    return $order;
+}
+/**
+ * Module loading for a page: an import map that adds a version tag (file time) to every module of the page, and
+ * modulepreload links so that the browser fetches the whole graph in parallel instead of import by import. Versioned
+ * files can be cached for long (.htaccess); a changed file gets a new tag, an unchanged one stays in the cache.
+ */
+function site_modules_html(array $entries): string {
+    $base = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/') . '/';
+    $map = []; $pre = '';
+    foreach (site_module_graph($entries) as $rel) {
+        $v = $rel . '?v=' . site_ver($rel);
+        $map[$base . $rel] = $base . $v;
+        $pre .= '<link rel="modulepreload" href="' . h($v) . '">' . "\n";
+    }
+    return '<script type="importmap">' . json_encode(['imports' => $map], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) . "</script>\n" . $pre;
+}
+
 function site_bottom(string $script = ''): void {
     $c = site_ctx(); $tr = $c['tr'];
     ?>
@@ -247,7 +293,18 @@ function site_bottom(string $script = ''): void {
 ?>
 <dialog id="citedlg" class="dlg citedlg" aria-label="<?= $tr ? 'Kaynak gösterme' : 'How to cite' ?>"></dialog>
 <script type="application/json" id="cite-data"><?= json_encode($cd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
-<script type="module" src="assets/lab/core/cite-ui.js?v=2"></script>
+<?php
+    // entry modules: the shell's citation dialog and the page's own script(s); their src gets the file time as version
+    $entries = ['assets/lab/core/cite-ui.js'];
+    $script = preg_replace_callback('~src="([^"?]+\.js)(?:\?v=[^"]*)?"~', function ($m) use (&$entries) { $entries[] = $m[1]; return 'src="' . $m[1] . '?v=' . site_ver($m[1]) . '"'; }, $script);
+    // inline modules of the page: their relative imports (resolved from the page folder) belong to the graph too
+    if (preg_match_all('~<script type="module">(.*?)</script>~s', $script, $im)) foreach ($im[1] as $body) {
+        preg_match_all('~(?:\bfrom\s*|\bimport\s*\(?\s*)[\'"](\.{1,2}/[^\'"]+\.m?js)[\'"]~', $body, $m);
+        foreach ($m[1] as $spec) { $q = site_norm($spec); if ($q !== null) $entries[] = $q; }
+    }
+    echo site_modules_html($entries);
+?>
+<script type="module" src="assets/lab/core/cite-ui.js?v=<?= site_ver('assets/lab/core/cite-ui.js') ?>"></script>
 <?= $script ?>
 </body>
 </html>

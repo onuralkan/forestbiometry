@@ -16,10 +16,15 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
   Header always set Referrer-Policy strict-origin-when-cross-origin
 </IfModule>
 
-# Scripts and styles: the browser asks the server each time whether its copy is still current (ETag), so a
-# changed shared module (assets/lab/core/*.js, imported without a version tag) is never served stale.
+# Scripts and styles. Pages request every module with a version tag (?v=file time, set by inc/site.php through an
+# import map): those responses are cached for a year, a changed file gets a new tag. Without a tag (workers and their
+# imports) the browser asks the server each time whether its copy is still current (ETag), so nothing is served stale.
+RewriteCond %{QUERY_STRING} (^|&)v=
+RewriteRule \.(js|mjs|css)$ - [E=FB_VERSIONED:1]
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|mjs|css)$">
     Header set Cache-Control "no-cache"
+    Header set Cache-Control "public, max-age=31536000, immutable" env=FB_VERSIONED
+    Header set Cache-Control "public, max-age=31536000, immutable" env=REDIRECT_FB_VERSIONED
   </FilesMatch>
 </IfModule>
