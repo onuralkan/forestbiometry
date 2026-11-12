@@ -95,7 +95,7 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 | SS-04 | Çeşitlilik endeksleri (Shannon, Simpson, tür zenginliği) | yolda | (`mescere-yapisi.php`) | İstatistiksel tanım |
 | SS-05 | Yapısal çeşitlilik endeksleri (Gini, karışım, farklılaşma) | yolda | (`mescere-yapisi.php`) | Gini tanım; M, T, U Pommerening (2002): yüklendi, doğrulama bekliyor |
 | SS-06 | Mekânsal desen çözümlemesi (Ripley K/L, çift korelasyon, Clark–Evans) | yolda | (`mescere-yapisi.php`) | Clark–Evans ve Donnelly hazır (yüklendi, doğrulama bekliyor); Ripley K/L ve çift korelasyon işlevi için kaynak: kullanıcıdan PDF |
-| SS-07 | Rekabet endeksleri (Hegyi; uzaklığa bağlı ve bağımsız) | yolda | (`mescere-yapisi.php`) | TOOLS_SPEC SS03; Hegyi (1974): kullanıcıdan PDF |
+| SS-07 | Rekabet endeksleri (Hegyi; uzaklığa bağlı ve bağımsız) | yolda | (`mescere-yapisi.php`) | SS-07/a1 hesabı hazır (`structure/competition.js`); Hegyi (1974) geçici istisna, kullanıcıdan PDF |
 
 ### SQ — Yetişme ortamı verimliliği
 
