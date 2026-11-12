@@ -19,10 +19,13 @@ identifiers:
     value: "10.5281/zenodo.24135603"
     description: "Concept DOI: all versions of the archive (resolves to the latest)"
   - type: doi
+    value: "10.5281/zenodo.24167712"
+    description: "Version DOI of v2026.11.1"
+  - type: doi
     value: "10.5281/zenodo.24135604"
     description: "Version DOI of v2026.11.0"
-version: "2026.11.0"
-date-released: "2026-11-11"
+version: "2026.11.1"
+date-released: "2026-11-12"
 url: "https://forestbiometry.online"
 repository-code: "https://github.com/onuralkan/forestbiometry"
 license:
