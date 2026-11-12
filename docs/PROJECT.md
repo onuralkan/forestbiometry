@@ -48,7 +48,10 @@ legacy/weibull/              Eski Çap Dağılımı 1.0.0 (Weibull): calc.js (sa
 assets/lab/core/special.js   lnGamma (tools.js'ten değişmeden taşındı)
 assets/lab/core/stats.js     Düzenlenmiş eksik beta ve gamma, normal ve Student t dağılımı ve yüzdelikleri (Modül 6'da normal eklendi), tohumlu üreteç (mulberry32) ve karıştırma (Modül 5)
 assets/lab/core/nls.js       Levenberg–Marquardt, küçük doğrusal cebir, σ̂²(JᵀJ)⁻¹ kovaryansı, delta yöntemi, OLS (Modül 5)
-assets/lab/core/roots.js     Brent kök bulucu ve geometrik ikiye bölme, durum bildirimli (çap dağılımı revizyonu P01, P05)
+assets/lab/core/roots.js     Brent kök bulucu, geometrik ikiye bölme, çoklu kök tarayıcısı scanRoots (çap dağılımı revizyonu P01, P05; scanRoots T01'de taşındı)
+assets/lab/core/coef.js      Katsayı kaydı model-coef/1: biçim kaydı, doğrulama, düzeltme etkeni, geçerlilik aralığı, JSON kütüphane, tarayıcıda saklama (TOOLS_SPEC T01; yerleşik katsayı yok)
+assets/lab/core/coef-ui.js   Ortak katsayı seti düzenleyicisi (TR/EN); test sayfası tests/core/coef-ui.html (yayınlanmaz)
+assets/lab/core/stems.js     Gövde ölçüm tablosu stem-sections/1: okuma, birimler, kabuk, satır numaralı kontroller (TOOLS_SPEC T01)
 assets/lab/core/quad.js      Gauss–Legendre düğümleri, standart normal altında beklenen değer (çap dağılımı revizyonu P08)
 assets/lab/dist/             Yeni çap dağılımı motoru: registry.js (aile/yöntem kaydı, sonuç sözleşmesi, hatalar), families/ (weibull, normal, lognormal, gamma, beta, johnsonsb, exponential, loglogistic), fit/ (doğrudan tahmin), recover/ (moments.js: normal, lognormal, gamma; weibull.js: Poudel ve Cao M2–M5) (özetlerden geri kazanım), gof.js, data.js, ui.js, i18n.js; sayfa cap-dagilimi.php (2.0.0-beta.1; cap-dagilimi-2.php yalnızca yönlendirme); eski Weibull aracı legacy/weibull/
 assets/lab/sampling/         calc.js (saf), ui.js, i18n.js, ornek/ornek-pilot.csv (tests/ref/make_sampling_reference.py ile üretilen benzetim)

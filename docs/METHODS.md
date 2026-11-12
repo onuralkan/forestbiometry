@@ -211,6 +211,21 @@ D0/H0, yaş ve diğer parametreler: `tests/ref/make_stand_dominant_reference.py`
 
 ---
 
+### Paylaşılan işlevler: yeni araçlar için sözleşme (T01, 12 Kasım 2026)
+Yeni araçlar (TOOLS_SPEC) bu işlevleri `assets/lab/stand/calc.js`'ten **doğrudan içe aktarır**; taşınmaz, kopyalanmaz (T00 §2). Davranışları yukarıdaki tanımlardır; değişirlerse Örnek Alan aracının testleri ve onları kullanan araçların testleri birlikte güncellenir.
+
+| İşlev | Girdi | Çıktı |
+|---|---|---|
+| `validateDataset(ds)` | `forest-dataset/1` nesnesi | sorun kodları dizisi (boş = geçerli) |
+| `periodsOf(ds)`, `statusesOf(ds)` | aynı | dönemler (null = dönemsiz; sayısal dönemler sayıca sıralı), durum değerleri |
+| `buildUnits(ds, { status, emptyCombos })` | aynı; dahil edilecek durumlar; ağaçsız örnek alan–dönem birleşiminin anlamı | `[{ plot_id, period, area (m²), stratum, state: 'measured'\|'empty'\|'unmeasured'\|'unknown', nRecords, trees }]` |
+| `unitMetrics(u, classes?)` | bir birim (yalnızca `measured`/`empty`), isteğe bağlı sınıflar | `{ ef = 10000/A, n, Nha, G_m2, Gha, d_mean, dq, d_min, d_max, d_sd, classes?, species, h_measured, h_estimated, h_missing, age, dom: { k, d, h } }` |
+| `dominantWeights(trees, k, rank)`, `dominant(trees, k, rank)` | ağaçlar, k = 100·A/10000, `'dbh'` ya da `'height'` (yalnızca ölçülmüş boy) | ağaç başına ağırlıklar (kesirli k, eşitlerde paylaşım) ya da null; ağırlıklı ortalama ve `short` bayrağı |
+| `classesFromBreaks`, `breaksFromWidth`, `classIndex` | sınır dizisi / başlangıç, genişlik, bitiş / sınıflar ve çap | yarı açık [lo, hi) sınıflar; −1 alt, `classes.length` üst taşma |
+| `tableToDataset(tbl, map, spec, parseNumber, toInternal)` | ham tablo, sütun eşlemesi, okuma ayarları | `{ ds, problems }` (satır numaralı sorunlar; sorun varsa ds = null) |
+
+Sınırlama, bu işlevleri kullanan her araca geçer: genişletme faktörü yalnızca **sabit alanlı** örnek alanlar içindir (iç içe örnek alan ve açı sayımı yok).
+
 ## 7. Model Başarısı Değerlendiricisi (Modül 3, `assets/lab/eval/calc.js`)
 **Girdi:** Herhangi bir tablo (CSV/TSV/yapıştırma/XLSX) veya onaylanmış veri paketi. Kullanıcı bir gözlenen sütunu, bir veya daha fazla tahmin sütunu ve isteğe bağlı örnek alan, tür, çap (sınıflara ayrılır) ve doğrulama katı sütunlarını seçer. Sayı okuma kuralları Veri Denetçisi'yle aynıdır (§5): ondalık ayırıcı kullanıcı seçimi (varsayılan nokta, dosya açıkça virgül kullanıyorsa virgül); XLSX sayı hücreleri doğrudan sayıdır.
 
@@ -720,3 +735,22 @@ Kaynak: Parresol (2003) Denklem 9–16 **[B]** (şartname §3.8). `dist/recover/
   - model dosyası.
 
   `tests/dist/e2e.mjs` 180/180: Web Worker'da modified CDFR, amaç değeri motorla aynı.
+
+## 13. Yeni araçların ortak altyapısı (TOOLS_SPEC T01, 12 Kasım 2026)
+Seksiyon hacmi, bonitet, meşcere yapısı, biyokütle ve gövde profili araçlarının (`docs/TOOLS_SPEC.md`) ortak parçaları. Bilimsel hesap içermez; veri kuralları elle kurulmuş durumlarla sınanır.
+
+**Katsayı kaydı `model-coef/1`** (`core/coef.js`). Site hiçbir tür ya da yöre katsayısı içermez (K1). Her araç desteklediği denklem **biçimlerini** kaydeder (`registerForm`: kimlik, araç, parametre adları, girdi ve çıktı birimleri, kabuk durumu, ekranda gösterilen formül, yazıldığı ölçek: doğrusal, ln ya da log10); kullanıcı yalnızca kayıtlı bir biçime katsayı girer, serbest formül yazılmaz. Doğrulama (`validateCoef`) şu durumları ayrı kodlarla reddeder: şema, kimlik, araç, bilinmeyen ya da başka araca ait biçim, eksik/fazla/sayı olmayan katsayı, birimsiz girdi ya da çıktı, geçersiz kabuk durumu (`ob`/`ib`), en küçük ≥ en büyük olan geçerlilik aralığı, biçimin ölçeğiyle uyuşmayan dönüşüm (log10 biçim hiçbir zaman ln diye okunmaz), değeri olmayan düzeltme, **boş kaynak künyesi**, geçersiz köken (yalnızca `user-entered` ve `fitted`; "yerleşik" köken yoktur), uydurma özeti olmayan `fitted` set.
+- Geri dönüşüm düzeltmesi (`correctionFactor`): Baskerville exp(SEE²/2), SEE doğal logaritma ölçeğinde; log10 ile yazılmış denklemde önce SEE·ln 10'a çevrilir. Snowdon oranı ve kullanıcı etkeni olduğu gibi. Kaynak: Baskerville (1972), Sprugel (1983), Snowdon (1991) **[D]** (okunmadı; formül standart tanımdır, kullanıldığı aşamada kaynak okunacak).
+- Geçerlilik aralığı (`outsideValid`): aralık dışındaki girdiler listelenir; araçlar hesaplar ve uyarır (TOOLS_SPEC §1.1).
+- Saklama: tarayıcıda `coef:<id>` anahtarlarıyla (`core/store.js`, yeni `keys(önek)` listeleme işleviyle); JSON kütüphane dosyası `model-coef-library/1` (dışa/içe aktarma; sayılar JSON'da bit düzeyinde korunur; geçersiz ve başka araca ait setler sessizce atılmaz, sorunlarıyla raporlanır).
+- Düzenleyici (`core/coef-ui.js`): biçim seçimi, katsayılar (yalnızca ondalık nokta, 1.2e-5 gibi üslü yazım kabul; virgüllü ya da okunamayan değer reddedilir, tahmin edilmez), birimler (biçimden), geçerlilik aralığı, düzeltme, tür/yöre/bileşen, kaynak (künye zorunlu; DOI, sayfa, tablo, not). Yayınlanmayan test sayfası `tests/core/coef-ui.html`.
+
+**Gövde ölçüm tablosu `stem-sections/1`** (`core/stems.js`, `readStems`). Bir satır = bir ağacın bir ölçüm noktası. İç birimler: h m (**zeminden**), d cm, çift kabuk kalınlığı mm (`core/num.js` `UNITS.bark`; yaş için `UNITS.age`). İki çapraz çap varsa birleştirme kuralı ayardır: aritmetik ortalama (varsayılan) ya da √((d₁² + d₂²)/2) (eşit alan). Kabuk: tablo varsayılanı ya da satır başına `ob`/`ib`; kabuk kalınlığı varsa d_ib = d − kalınlık/10. Kabuksuz ölçülmüş bir nokta yalnızca d_ib taşır, kabuklu çapla karıştırılmaz. Ağaç düzeyi alanlar (dbh, boy, kesim yüksekliği) tablonun kendisinden ya da bir ağaç listesinden (`forest-dataset/1` ağaçları) gelir; liste **kontrollerden önce** bağlanır.
+- Hata (ağaç hesaplanmaz; `state: 'error'`): okunamayan ya da eksik değer, negatif yükseklik, sıfır/negatif çap, kabuktan ince çap, geçersiz kabuk kodu, aynı ağaçta yinelenen yükseklik, toplam boydan yüksek ölçüm, boydan yüksek kesim, tek ölçüm noktası, aynı ağacın satırları ya da tablo ile ağaç listesi arasında çelişen dbh/boy/kesim yüksekliği. Bir satırın kaybı ağacın hacmini sessizce küçülteceği için o ağacın tamamı hatalı sayılır.
+- Uyarı (ağaç hesaplanır): kök şişkinliği bölgesi (varsayılan h < 1.3 m, ayar) dışında yükseklikle artan çap; 1.30 m'de ölçülen çap ile dbh arasında %10'dan büyük fark (ayar); aynı ağaçta kabuklu ve kabuksuz noktalar; ağaç listesinde kaydı olmayan ağaç.
+- Kimlikler metindir ("01" ≠ "1"); aynı ağacın farklı dönemleri ayrı kayıtlardır. Eşikler araç kuralıdır, kaynak değeri değildir, ve sonuçla birlikte yazılır.
+
+**Çoklu kök tarayıcısı** `core/roots.js` `scanRoots(f, lo, hi, k, { grid })`: dağılım motorundan (`dist/recover/weibull.js`) davranışı değişmeden taşındı (geometrik ızgara + Brent; tekrar eden kökler 10⁻⁹ göreli farkla birleşir); yükseklik gibi sıfırdan başlayan aralıklar için doğrusal ızgara seçeneği eklendi. Dağılım motoru aynı işlevi kendi aralığıyla çağırır (P06, P07 testleri değişmeden geçti).
+
+**Testler:** `tests/core/test_t01.mjs` 88/88 (biçim kaydı, 18 geçersiz set durumu, düzeltme etkenleri, geçerlilik aralığı, JSON gidiş-dönüş, saklama ve listeleme, birimler, gövde tablosundaki her hata ve uyarı durumu satır numarasıyla, ağaç listesi bağlama, dönemler, kök tarayıcının dağılım motoruyla aynılığı); `tests/core/e2e.mjs` 22/22 (düzenleyici: virgüllü katsayı ve kaynaksız set reddi, geçerlilik aralığı, log biçim ve Baskerville, düzenleme, silme, JSON indirme ve yükleme, yeniden yüklemede kalıcılık, İngilizce, telefon genişliği). Site testleri (`test_cite`, `test_guide`, `e2e`) araç ve kategori sayısını artık `inc/site.php`'den okur.
+
