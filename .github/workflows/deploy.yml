@@ -45,6 +45,7 @@ jobs:
           node tests/siteindex/test_si04.mjs
           node tests/siteindex/test_si_classes.mjs
           node tests/structure/test_ss01.mjs
+          node tests/structure/test_ss02.mjs
           node tests/dist/test_p01.mjs
           node tests/dist/test_p05.mjs
           node tests/dist/test_p06.mjs
