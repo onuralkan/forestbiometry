@@ -1146,3 +1146,37 @@ Yeni bilimsel hesap yok. Paneller sınanmış motorları kullanır: örnek alan 
 | Tür süzgeci | N/ha ve G/ha o türün örnek alandaki payı; türün bulunmadığı ölçülmüş birimde 0 |
 
 Test: `node tests/dashboard/test_di04.mjs` (24; elle sayılmış sınıflar ve N, G; kapalı biçim Weibull yoğunluğu ve eşikli hâli; yazılı Näslund eğrisi), tarayıcı `node tests/dashboard/e2e.mjs` (22).
+
+## 22. Biyokütle ve karbon / Biomass and carbon (`assets/lab/biomass/calc.js`; TOOLS_SPEC §5, BC01; PLATFORM_PLAN BC-01, BC-03, BC-04)
+Site hiçbir tür katsayısı, odun yoğunluğu, genişletme etkeni, kök oranı ya da karbon oranı içermez (K1, K9): denklem katsayıları `model-coef/1` setlerinden (kaynak zorunlu), etkenler kullanıcı girişinden gelir.
+
+**A. Allometrik denklemler (ağaç düzeyi).** D cm (kabuklu), H m, B kg kuru madde. Kayıtlı biçimler (`biomass.<kimlik>`):
+
+| Kimlik | Biçim | Ölçek |
+|---|---|---|
+| `pow.d` | B = a·D^b | doğrusal |
+| `pow.dh` | B = a·D^b·H^c | doğrusal |
+| `pow.d2h` | B = a·(D²H)^b | doğrusal |
+| `lin.d2h` | B = a + b·D²H | doğrusal |
+| `log.d` | ln B = a + b·ln D | ln |
+| `log.dh` | ln B = a + b·ln D + c·ln H | ln |
+| `log10.d` | log₁₀ B = a + b·log₁₀ D | log₁₀ |
+| `log10.dh` | log₁₀ B = a + b·log₁₀ D + c·log₁₀ H | log₁₀ |
+
+Kaynak durumu: biçimler, kullanıcının katsayılarıyla uygulanan genel işlev tanımlarıdır; **tanım istisnası [D]** (16 Kasım 2026, kullanıcı kararı; Huber, Smalian ve Hart–Becking istisnasıyla aynı türden). Her sonuç, kullanılan katsayı setinin kaynağını taşır. log₁₀ biçimleri kendi ölçeğinde (10^(…)) hesaplanır, ln'ye sessizce çevrilmez; birimler biçimin birimleridir (D cm, H m, B kg), başka birimle girilmiş set reddedilir, çevrilmez.
+
+Geri dönüşüm düzeltmesi (log biçimleri): yok; Snowdon oranı ya da kullanıcı etkeni, kaynaktaki değerle çarpılır (formül yok). **Baskerville etkeni exp(SEE²/2)** ortak çekirdekte vardır (§13), ancak araç bu seçeneği kaynağı okunana ya da iki açık erişimli ikincil kaynakla ([A]) doğrulanana kadar uygulamaz: sonuç "hesaplanmadı, düzeltmenin kaynağı bekleniyor" durumunu alır (`BASKERVILLE_READY`). Baskerville (1972) ve Clifford ve ark. (2013) ücretli erişimlidir (16 Kasım 2026 denetimi); açık erişimli ikincil kaynak araştırılıyor.
+
+Durumlar: `ok`; `noheight` (H gereken biçimde boy yok: hesaplanmadı; boy tahmini Boy–Çap aracında yapılır, tahmini boyla hesaplananlar `height_source` ile sayılır); `invalid` (geçersiz set, birim uyuşmazlığı, D ya da H geçersiz, sonuç pozitif ve sonlu değil: örneğin `lin.d2h` küçük ağaçta negatif kütle verirse sayı gösterilmez); `unsupported` (kaynağı bekleyen düzeltme). Geçerlilik aralığı dışındaki ağaç hesaplanır ve uyarı alır; sayılar raporlanır.
+
+Bileşenler: her bileşen ayrı bir settir; bileşenlerin toplamı yalnızca hepsi hesaplandığında verilir. Ayrı bir "toplam" denklemi de girilmişse fark (toplam − bileşen toplamı) ve göreli fark yazılır: toplanabilirlik varsayılmaz.
+
+**B. Hacimden dönüşüm.** IPCC (2006), Cilt 4, Bölüm 2, Denklem 2.8b **[B]** (16 Kasım 2026'da özgün metinden okundu): C = Σ A·V·BCEF_S·(1 + R)·CF, BCEF_S = BEF_S·D. Araçta ağaç ya da birim düzeyinde: AGB = V·D·BEF (ya da V·BCEF), BGB = AGB·R, toplam = AGB·(1 + R). Tanımlar IPCC'deki gibidir: V ticari dikili gövde hacmi (m³), D temel odun yoğunluğu (Mg kuru madde / m³), BEF genişletme etkeni (–), BCEF dönüşüm ve genişletme etkeni (Mg / m³), R toprak altı / toprak üstü biyokütle oranı (TOOLS_SPEC'teki "kök/gövde oranı" ifadesi IPCC tanımıyla düzeltildi). Hacmin kabuk tarafı etkenlerin tanımlandığı tarafla eşleşmezse hesaplanmaz; hacim tanımının (ticari gövde, toplam gövde) etkenlerin tanımıyla aynı olması kullanıcının sorumluluğundadır ve sonuçta yazılır (BC02).
+
+**Karbon.** C = B·CF, CF bileşen başına kullanıcıdan, 0 < CF ≤ 1. CO₂ = C·44/12: molekül ağırlıkları oranı (IPCC 2006, Cilt 4, Bölüm 2, §2.2.3 **[B]**); katsayı değil sabittir (K9).
+
+**Meşcere düzeyi.** Örnek alan × dönem başına Σ kg · 10000 / A / 1000 = Mg/ha (sabit alanlı örnek alanlar; birimler Örnek Alan ve Meşcere motorunun `buildUnits` işleviyle, §6). Birimde hesaplanamayan bir ağaç varsa birim toplamı verilmez (kısmi toplam toplam gibi gösterilmez); sayıları yazılır.
+
+Test: `node tests/biomass/test_bc01.mjs` (24); referans `tests/ref/make_biomass_bc01.py` (yalın Python; rastgele, türe ait olmayan katsayılar; log₁₀ biçimleri ln ölçeğine çevrilerek; meşcere toplamları ayrı döngülerle; TOOLS_SPEC §8.4 sabitleri).
+
+Kaynaklar: IPCC 2006. *2006 IPCC Guidelines for National Greenhouse Gas Inventories*, Cilt 4 (AFOLU), Bölüm 2 (Generic Methodologies Applicable to Multiple Land-Use Categories), Denklem 2.8, §2.2.3. IGES, Japonya. **[B]** · Baskerville, G.L. 1972. Use of logarithmic regression in the estimation of plant biomass. *Canadian Journal of Forest Research* 2: 49–53. **[D]** (kaynak bekleniyor).

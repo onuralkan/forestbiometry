@@ -44,7 +44,7 @@ ikisi birlikte koşul 3'ü karşılar. "Yeni sayılır": kaynak zaten görece ye
 | ☑ | Baskerville, G.L. 1972. Use of logarithmic regression in the estimation of plant biomass. *Canadian Journal of Forest Research* 2: 49–53. | BC-01 | Clifford, D., Cressie, N., England, J.R., Roxburgh, S.H., Paul, K.I. 2013. Correction factors for unbiased, efficient estimation and prediction of biomass from log–log allometric models. *Forest Ecology and Management* 310: 375–381 |
 | ☐ | Sprugel, D.G. **1983**. Correcting for bias in log-transformed allometric equations. *Ecology* 64: 209–210. | BC-01 | Clifford, D., Cressie, N., England, J.R., Roxburgh, S.H., Paul, K.I. 2013. Correction factors for unbiased, efficient estimation and prediction of biomass from log–log allometric models. *Forest Ecology and Management* 310: 375–381 |
 | ☐ | Snowdon, P. 1991. A ratio estimator for bias correction in logarithmic regressions. *Canadian Journal of Forest Research* 21: 720–724. | BC-01 | Clifford, D., Cressie, N., England, J.R., Roxburgh, S.H., Paul, K.I. 2013. Correction factors for unbiased, efficient estimation and prediction of biomass from log–log allometric models. *Forest Ecology and Management* 310: 375–381 |
-| ☐ | **Açık** — IPCC 2006. *2006 IPCC Guidelines for National Greenhouse Gas Inventories*, Cilt 4 Bölüm 2 ve 4; Cilt 1 Bölüm 3. ipcc-nggip.iges.or.jp | BC-03…06 | gerekmez (ücretsiz) |
+| ☑ | **Açık** — IPCC 2006. *2006 IPCC Guidelines for National Greenhouse Gas Inventories*, Cilt 4 Bölüm 2 ve 4; Cilt 1 Bölüm 3. ipcc-nggip.iges.or.jp (16 Kasım 2026: Cilt 4 Bölüm 2 Denklem 2.8 ve §2.2.3 okundu, METHODS §22 [B]) | BC-03…06 | gerekmez (ücretsiz) |
 
 ### B — modülüne gelince
 
