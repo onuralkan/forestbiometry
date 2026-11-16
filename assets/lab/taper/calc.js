@@ -12,6 +12,14 @@
 //   Y(x) = b1(x²/2 − x) + b2(x³/3 − x) + b3·[a1³ − (a1 − min(x, a1))³]/3 + b4·[a2³ − (a2 − min(x, a2))³]/3
 // Height of a given diameter: every root of d(h) = d* on [0, H] (sign changes on a grid, refined by Brent; join points
 // are grid points); several roots are possible (butt swell) and all are reported.
+// kozak02 (stage SV-02/a2): Kozak, A. 2004. My last words on taper equations. The Forestry Chronicle 80: 507–515,
+// Model 02 (equation 4) [B]:
+//   d = a0·D^a1·H^a2·X^E,  E = b1·z⁴ + b2·(1/e^(D/H)) + b3·X^0.1 + b4·(1/D) + b5·H^Q + b6·X
+//   X = [1 − z^(1/3)] / [1 − p^(1/3)], Q = 1 − z^(1/3), z = h/H, p = 1.3/H
+//   d inside bark (cm) in the paper, D dbh outside bark (cm), H total height (m), h height above the ground (m).
+//   X = 1 at 1.3 m (so d(1.3) = a0·D^a1·H^a2) and X = 0 at the tip (d = 0 when the exponent there is > 0).
+//   No closed-form volume: adaptive Gauss–Legendre on d².
+// Every form gives y = d²/D² (possibly depending on D and H); volume (π/40000)·D²·H·∫ y dx.
 // No bark model here: no sourced bark-model form has been read; outside- and inside-bark profiles are separate sets.
 import { registerForm, validateCoef } from '../core/coef.js';
 import { brent } from '../core/roots.js';
@@ -20,7 +28,7 @@ import { gaussLegendre } from '../core/quad.js';
 export const TOOL = { id: 'govde-profili', version: '1.0.0-beta.1' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
-/** Registered forms: params in the order of the source; y(x) and its antiderivative Y(x) on 0 ≤ x ≤ 1. */
+/** Registered forms: params in the order of the source; y(p, x, D, H) = d²/D²; Y (antiderivative in x) if closed. */
 export const FORMS = {
   mb76: {
     id: 'mb76', params: ['b1', 'b2', 'b3', 'b4', 'a1', 'a2'], joins: p => [p.a1, p.a2],
@@ -38,6 +46,19 @@ export const FORMS = {
       if (c2 > 0) { const v = -c1 / (2 * c2); if (v > lo && v < hi) m = Math.min(m, q(v)); }
       return m;
     },
+  },
+  kozak02: {
+    id: 'kozak02', params: ['a0', 'a1', 'a2', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6'], joins: () => [],
+    source: 'Kozak (2004), Model 02',
+    formula: { tr: 'd = a0·D^a1·H^a2·X^(b1·z⁴ + b2/e^(D/H) + b3·X^0.1 + b4/D + b5·H^Q + b6·X); X = [1 − z^(1/3)]/[1 − p^(1/3)], Q = 1 − z^(1/3), z = h/H, p = 1.3/H',
+               en: 'd = a0·D^a1·H^a2·X^(b1·z⁴ + b2/e^(D/H) + b3·X^0.1 + b4/D + b5·H^Q + b6·X); X = [1 − z^(1/3)]/[1 − p^(1/3)], Q = 1 − z^(1/3), z = h/H, p = 1.3/H' },
+    y: (p, x, D, H) => {
+      const X = (1 - Math.cbrt(x)) / (1 - Math.cbrt(1.3 / H)), Q = 1 - Math.cbrt(x);
+      const E = p.b1 * x ** 4 + p.b2 / Math.exp(D / H) + p.b3 * X ** 0.1 + p.b4 / D + p.b5 * H ** Q + p.b6 * X;
+      const d = p.a0 * D ** p.a1 * H ** p.a2 * X ** E;
+      return d * d / (D * D);
+    },
+    check: () => [],
   },
 };
 for (const f of Object.values(FORMS)) {
@@ -66,44 +87,66 @@ export function checkTree(D, H) {
 }
 
 /** Relative profile y = d²/D² at relative height x (no checks). */
-export const relProfile = (set, x) => formOf(set).y(set.params, x);
+export const relProfile = (set, x, D, H) => formOf(set).y(set.params, x, D, H);
 
 /**
  * Diameter at height h (cm) for a tree (D cm, H m). Returns { d, status: 'ok' | 'outside' (h < 0 or h > H) |
- * 'negative' (y < 0: the coefficients give no real diameter there), y }.
+ * 'negative' (y < 0: the coefficients give no real diameter there) | 'nonfinite' (e.g. 0 to a negative power), y }.
  */
 export function diameterAt(set, D, H, h) {
   if (!(fin(h) && h >= 0 && h <= H)) return { d: null, status: 'outside', y: null };
-  const y = relProfile(set, h / H);
+  const y = relProfile(set, h / H, D, H);
+  if (Number.isNaN(y) || y === Infinity) return { d: null, status: 'nonfinite', y: null };
   if (!(y >= 0)) return { d: null, status: 'negative', y };
   return { d: D * Math.sqrt(y), status: 'ok', y };
 }
 
-/** Sub-intervals of [x1, x2] (between join points) where y < 0 somewhere: exact minimum of each polynomial piece. */
+/** Sub-intervals of [x1, x2] (between join points) where y < 0 somewhere: exact minimum of each polynomial piece
+ * (forms without minOn, such as kozak02, cannot be negative: y is a square). */
 function negativeParts(set, x1, x2) {
-  const f = formOf(set), p = set.params, cuts = [x1, ...f.joins(p).filter(a => a > x1 && a < x2).sort((a, b) => a - b), x2], bad = [];
+  const f = formOf(set), p = set.params; if (!f.minOn) return [];
+  const cuts = [x1, ...f.joins(p).filter(a => a > x1 && a < x2).sort((a, b) => a - b), x2], bad = [];
   for (let i = 0; i + 1 < cuts.length; i++) if (f.minOn(p, cuts[i], cuts[i + 1]) < -1e-12) bad.push([cuts[i], cuts[i + 1]]);
   return bad;
 }
+/**
+ * ∫ g over [a, b] by adaptive Gauss–Legendre: 10 against 20 nodes per panel; a panel is bisected until the two agree
+ * within its share of an absolute error budget (rtol × the first whole-interval estimate × panel width / (b − a)).
+ * Near the tip the profile's slope can be infinite (X^0.1 in kozak02); the absolute budget keeps the bisection finite.
+ */
+function adaptiveGL(g, a, b, rtol = 1e-14) {
+  const q = (lo, hi, n) => { const { x, w } = gaussLegendre(n), c = (hi - lo) / 2, m = (lo + hi) / 2; let s = 0; for (let j = 0; j < n; j++) s += w[j] * g(m + c * x[j]); return s * c; };
+  const whole = q(a, b, 20); if (!Number.isFinite(whole)) return NaN;
+  const budget = rtol * Math.max(Math.abs(whole), 1e-300), stack = [[a, b, 0]]; let sum = 0, panels = 0;
+  while (stack.length) {
+    const [lo, hi, depth] = stack.pop(), s10 = q(lo, hi, 10), s20 = q(lo, hi, 20); panels++;
+    if (!Number.isFinite(s20)) return NaN;
+    if (Math.abs(s20 - s10) <= budget * (hi - lo) / (b - a) || depth >= 60 || panels > 20000) { sum += s20; continue; }
+    const m = (lo + hi) / 2; stack.push([m, hi, depth + 1], [lo, m, depth + 1]);
+  }
+  return sum;
+}
 
 /**
- * Volume (m³) between heights h1 < h2 (m), closed form. Returns { V, status: 'ok' | 'outside' | 'order' | 'negative'
- * (y < 0 somewhere in the interval: no volume) }.
+ * Volume (m³) between heights h1 < h2 (m): closed form when the form has one (mb76), otherwise adaptive Gauss–Legendre
+ * on y (kozak02). Returns { V, status: 'ok' | 'outside' | 'order' | 'negative' (y < 0 somewhere in the interval: no
+ * volume) | 'nonfinite', method: 'closed' | 'numeric' }.
  */
 export function volume(set, D, H, h1, h2) {
   if (!(fin(h1) && fin(h2) && h1 >= 0 && h2 <= H)) return { V: null, status: 'outside' };
   if (!(h2 > h1)) return { V: h2 === h1 ? 0 : null, status: h2 === h1 ? 'ok' : 'order' };
-  const x1 = h1 / H, x2 = h2 / H;
+  const x1 = h1 / H, x2 = h2 / H, f = formOf(set);
   if (negativeParts(set, x1, x2).length) return { V: null, status: 'negative' };
-  const f = formOf(set);
-  return { V: Math.PI / 40000 * D * D * H * (f.Y(set.params, x2) - f.Y(set.params, x1)), status: 'ok' };
+  if (f.Y) return { V: Math.PI / 40000 * D * D * H * (f.Y(set.params, x2) - f.Y(set.params, x1)), status: 'ok', method: 'closed' };
+  const I = adaptiveGL(x => f.y(set.params, x, D, H), x1, x2);
+  return Number.isFinite(I) ? { V: Math.PI / 40000 * D * D * H * I, status: 'ok', method: 'numeric' } : { V: null, status: 'nonfinite', method: 'numeric' };
 }
 /** Same volume by composite Gauss–Legendre on d(h)², split at the join points (the check of the closed form). */
 export function volumeNumeric(set, D, H, h1, h2, nodes = 20) {
   if (!(fin(h1) && fin(h2) && h1 >= 0 && h2 <= H && h2 > h1)) return { V: null, status: 'outside' };
   const f = formOf(set), cuts = [h1, ...f.joins(set.params).map(a => a * H).filter(h => h > h1 && h < h2).sort((a, b) => a - b), h2], { x, w } = gaussLegendre(nodes);
   let s = 0;
-  for (let i = 0; i + 1 < cuts.length; i++) { const a = cuts[i], b = cuts[i + 1], c = (b - a) / 2, m = (a + b) / 2; for (let j = 0; j < x.length; j++) s += w[j] * c * D * D * f.y(set.params, (m + c * x[j]) / H); }
+  for (let i = 0; i + 1 < cuts.length; i++) { const a = cuts[i], b = cuts[i + 1], c = (b - a) / 2, m = (a + b) / 2; for (let j = 0; j < x.length; j++) s += w[j] * c * D * D * f.y(set.params, (m + c * x[j]) / H, D, H); }
   return { V: Math.PI / 40000 * s, status: 'ok' };
 }
 
@@ -114,7 +157,7 @@ export function volumeNumeric(set, D, H, h1, h2, nodes = 20) {
  */
 export function heightOf(set, D, H, dStar, k = 2000) {
   if (!(fin(dStar) && dStar >= 0)) return { heights: [], status: 'invalid' };
-  const f = formOf(set), g = h => D * D * f.y(set.params, h / H) - dStar * dStar;
+  const f = formOf(set), g = h => D * D * f.y(set.params, h / H, D, H) - dStar * dStar;
   const grid = [...new Set([...Array.from({ length: k + 1 }, (_, i) => H * i / k), ...f.joins(set.params).map(a => a * H).filter(h => h > 0 && h < H)])].sort((a, b) => a - b);
   const vals = grid.map(g), out = [];
   for (let i = 0; i < grid.length; i++) {
@@ -126,7 +169,8 @@ export function heightOf(set, D, H, dStar, k = 2000) {
 }
 
 /**
- * Consistency of a set for one tree (TOOLS_SPEC §6.1): d at the tip (0 for mb76 by construction), d at 1.3 m against D
+ * Consistency of a set for one tree (TOOLS_SPEC §6.1): d at the tip (0 for mb76 by construction; for kozak02 0 when the
+ * exponent at the tip is > 0, otherwise reported), d at 1.3 m against D
  * (the difference is reported, not corrected: inside-bark sets are below D by the bark), and whether y < 0 anywhere on
  * the stem (the coefficients then give no diameter there).
  */
@@ -147,6 +191,7 @@ export function evaluateTree(set, D, H) {
   if (set.valid) for (const [key, r] of Object.entries(set.valid)) { const v = key === 'D' ? D : key === 'H' ? H : null; if (v != null && ((fin(r[0]) && v < r[0]) || (fin(r[1]) && v > r[1]))) warnings.push({ code: 'valid.outside', key, value: v, min: r[0], max: r[1] }); }
   const c = consistency(set, D, H);
   if (c.negative.length) warnings.push({ code: 'profile.negative', parts: c.negative });
+  if (c.dTip === null) warnings.push({ code: 'tip.nonfinite' });   // e.g. kozak02 with an exponent ≤ 0 at the tip: no diameter there; heights near the tip are not searched
   return { ...head, status: 'ok', problems, warnings, consistency: c,
     profile: h => diameterAt(set, D, H, h), volume: (h1, h2) => volume(set, D, H, h1, h2), heightOf: d => heightOf(set, D, H, d) };
 }

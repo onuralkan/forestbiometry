@@ -52,6 +52,7 @@ jobs:
           node tests/structure/test_ss02.mjs
           node tests/structure/test_ss02_r.mjs
           node tests/taper/test_tp01.mjs
+          node tests/taper/test_sv02a2.mjs
           node tests/structure/test_ss07.mjs
           node tests/structure/test_ss04.mjs
           node tests/dist/test_p01.mjs
