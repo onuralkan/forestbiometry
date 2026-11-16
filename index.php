@@ -39,20 +39,15 @@ $tools = site_tools();
 
   <section class="dir" aria-labelledby="h-tools">
     <h2 id="h-tools" class="b-h2"><?= $tr ? 'Araçlar' : 'Tools' ?></h2>
-    <p class="muted dir-note"><?= $tr ? 'Araçlar on bir modülde toplanır. Gri olanlar planlıdır; "yolda" işaretliler geliştiriliyor. Planın tamamı ve kimlikleri: proje deposundaki docs/PLATFORM_PLAN.md.' : 'Tools are grouped in eleven modules. Greyed ones are planned; those marked "soon" are being built. The full plan and the tool ids: docs/PLATFORM_PLAN.md in the project repository.' ?></p>
+    <p class="muted dir-note"><?= $tr ? 'Araçlar on bir modülde toplanır; her kart bir araca götürür, kartlardaki çizimler aracın çıktı türünü gösteren temsilî çizimlerdir (veri değildir). Gri olanlar planlıdır; "yolda" işaretliler geliştiriliyor. Planın tamamı ve kimlikleri: proje deposundaki docs/PLATFORM_PLAN.md.' : 'Tools are grouped in eleven modules; each card opens a tool, its drawing illustrates the kind of output (it is not data). Greyed ones are planned; those marked "soon" are being built. The full plan and the tool ids: docs/PLATFORM_PLAN.md in the project repository.' ?></p>
     <?php $catalog = site_catalog(); foreach (site_modules() as $mod): $it = site_module_items($mod['id'], $tools, $catalog); ?>
     <div class="dir-group" id="mod-<?= $mod['id'] ?>">
       <div class="dir-cat"><h3><?= h($mod['title']) ?></h3><p><?= h($mod['desc']) ?></p></div>
       <div>
       <?php if ($it['home']): ?>
-      <ul class="toollist">
-        <?php foreach ($it['home'] as $t): ?>
-        <li class="ready">
-          <span class="tico" aria-hidden="true"><?= site_icon($t['icon']) ?></span>
-          <div><h3><a href="<?= h($t['file']) ?>"><?= h($t['title']) ?></a></h3><p><?= h($t['desc']) ?></p></div>
-        </li>
-        <?php endforeach; ?>
-      </ul>
+      <div class="dir-cards" role="list" aria-label="<?= h($mod['title']) ?>">
+        <?php foreach ($it['home'] as $t) echo tool_card($t, $tr); ?>
+      </div>
       <?php endif; if ($it['also']): ?>
       <p class="dir-also"><?= $tr ? 'Bu modülde ayrıca' : 'Also in this module' ?>: <?= implode(', ', array_map(function ($c) { return '<a href="' . h($c['page']) . '">' . h($c['name']) . '</a>'; }, $it['also'])) ?></p>
       <?php endif; if ($it['planned']): ?>

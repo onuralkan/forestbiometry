@@ -24,10 +24,10 @@ const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path
 // 1. tools index is the home page; every ready tool link opens
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('h1').textContent()).trim() === 'Ormancılık Biyometrisi Araçları', 'home page is the tools index (TR)');
-const links = await page.locator('.toollist li.ready h3 a').evaluateAll(a => a.map(x => x.getAttribute('href')));
+const links = await page.locator('.dir-cards a.hz-card').evaluateAll(a => a.map(x => x.getAttribute('href')));
 ok(links.length === N_TOOLS && N_TOOLS >= 7, `${N_TOOLS} ready tools listed: ` + links.join(', '));
 for (const l of links) { const r = await page.request.get(BASE + '/' + l); ok(r.status() === 200, l + ' opens'); }
-ok((await page.locator('.toollist li.planned').count()) === 0, 'no planned tool left without a link');
+ok((await page.locator('.dir-cards a.hz-card').evaluateAll(a => a.every(x => x.querySelectorAll('svg.hz-fig *').length > 5 && x.querySelector('.hz-sub').textContent.trim().length > 10 && x.querySelector('.hz-sub').textContent.length <= 90 && (x.getAttribute('title') || '').length > 40))), 'tools index: every tool a card with a drawing, a short caption (≤ 90 characters) and the full description as a tooltip');
 ok((await page.locator('text=/Meşcere Postası|Stand Gazette|Bulmaca/').count()) === 0, 'no trace of the gazette');
 await shot('site-1-dizin');
 
@@ -75,7 +75,7 @@ ok((await page.locator('.dir-group').count()) === N_CATS, `home directory groupe
   ok((await b.getAttribute('aria-expanded')) !== was && (await g.evaluate(x => x.classList.contains('collapsed'))) === (was === 'true'), 'a module opens and closes from its heading');
   await page.reload(); ok((await page.locator('#side .b-group[data-mod="TM"] .b-cat').getAttribute('aria-expanded')) !== was, 'the state of the module is remembered in this browser'); }
 { // home showcase: one card per live tool it names, each a link to an existing tool page; labelled as illustrations
-  const cards = await page.locator('.hz-card').evaluateAll(a => a.map(x => [x.getAttribute('href'), x.querySelectorAll('svg.hz-fig *').length]));
+  const cards = await page.locator('.hz-show .hz-card').evaluateAll(a => a.map(x => [x.getAttribute('href'), x.querySelectorAll('svg.hz-fig *').length]));
   ok(cards.length === 5 && cards.every(([h, n]) => TOOL_IDS.includes(h.replace('.php', '')) && n > 5), 'home showcase: 5 drawings linking to live tools');
   ok((await page.locator('.hz-cap').textContent()).includes('benzetim'), 'showcase labelled as illustrations (points simulated)');
   const st = await page.locator('.hz-stats b').allTextContents();

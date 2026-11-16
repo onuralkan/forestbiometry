@@ -104,6 +104,158 @@ function hero_map(): string {
     return $o . '<path class="hz-axis" d="M' . ($cx - 6) . ' ' . $cy . 'h12M' . $cx . ' ' . ($cy - 6) . 'v12"/>';
 }
 
+/* ---------------- drawings of the other live tools (tools index cards; illustrations, no data) ---------------- */
+/** Data Checker: a table with a format error, a suspect value and checked rows. */
+function hero_checker(): string {
+    $o = ''; $x0 = 22; $y0 = 16; $cw = [46, 46, 54, 54]; $rh = 18;
+    $x = $x0; foreach ($cw as $w) { $o .= '<rect class="hz-hdr" x="' . $x . '" y="' . $y0 . '" width="' . ($w - 3) . '" height="' . ($rh - 4) . '" rx="3"/>'; $x += $w; }
+    $flag = [1 => [2, 'hz-errc'], 3 => [3, 'hz-warnc']];
+    for ($r = 1; $r <= 5; $r++) {
+        $x = $x0; $y = $y0 + $r * $rh + 4;
+        foreach ($cw as $c => $w) { $cls = isset($flag[$r]) && $flag[$r][0] === $c ? $flag[$r][1] : 'hz-cell'; $o .= '<rect class="' . $cls . '" x="' . $x . '" y="' . $y . '" width="' . ($w - 3) . '" height="' . ($rh - 4) . '" rx="3"/>'; $x += $w; }
+        $st = $r === 1 ? 'hz-err' : ($r === 3 ? 'hz-warn' : 'hz-ok');
+        $o .= '<circle class="' . $st . '" cx="' . ($x + 14) . '" cy="' . ($y + 7) . '" r="5"/>';
+    }
+    return $o . '<path class="hz-chk" d="M242 128l8 8 16-18"/>';
+}
+/** Plot & Stand: stems per hectare by diameter class (reverse J) with the plot outline. */
+function hero_stand(): string {
+    $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $i = 0;
+    for ($k = 0; $k < 11; $k++) { $v = 92 * exp(-0.26 * $k) + 4; $o .= '<rect class="hz-bar" style="--i:' . $i++ . '" x="' . ($l + 4 + $k * 19) . '" y="' . round($Y - $v, 1) . '" width="16" height="' . round($v, 1) . '"/>'; }
+    foreach ([[0, 10], [5, 30], [10, 50]] as [$k, $t]) $o .= '<text class="hz-tick" x="' . ($l + 12 + $k * 19) . '" y="' . ($H - 4) . '" text-anchor="middle">' . $t . '</text>';
+    return $o . '<circle class="hz-plot" cx="252" cy="44" r="26"/><text class="hz-unit" x="252" y="48" text-anchor="middle">N/ha</text>';
+}
+/** Model evaluation: observed against predicted around the 1:1 line. */
+function hero_eval(): string {
+    $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $r = hero_rng(20261116);
+    $o .= '<path class="hz-ref" d="M' . ($l + 4) . ' ' . ($Y - 4) . 'L' . ($W - 12) . ' 12"/>';
+    for ($k = 0; $k < 40; $k++) { $u = $r(); $e = ($r() + $r() + $r() - 1.5) * 0.12; $x = $l + 10 + $u * 240; $y = $Y - 8 - ($u + $e) * 100; $o .= '<circle class="hz-pt" style="--i:' . $k . '" cx="' . round($x, 1) . '" cy="' . round(max(12, $y), 1) . '" r="2.6"/>'; }
+    return $o . '<text class="hz-unit" x="' . ($W - 8) . '" y="' . ($H - 4) . '" text-anchor="end">ŷ</text><text class="hz-unit" x="' . ($l + 6) . '" y="18">y</text>';
+}
+/** Sampling planner: number of plots against the target relative error, n ∝ 1/E². */
+function hero_sampling(): string {
+    $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $px = 240 / 20; $pts = [];
+    for ($e = 3; $e <= 20.01; $e += 0.25) $pts[] = [$l + $e * $px, $Y - min(116, 2600 / ($e * $e))];
+    $o .= '<path class="hz-line hz-c1" pathLength="1" d="' . hero_path($pts) . '"/>';
+    $xm = $l + 10 * $px; $ym = $Y - 26;
+    $o .= '<path class="hz-ref" d="M' . $xm . ' ' . $Y . 'V' . $ym . 'H' . $l . '"/><circle class="hz-dot hz-s1" cx="' . $xm . '" cy="' . $ym . '" r="3.5"/>';
+    foreach ([5, 10, 15, 20] as $t) $o .= '<text class="hz-tick" x="' . round($l + $t * $px, 1) . '" y="' . ($H - 4) . '" text-anchor="middle">' . $t . '</text>';
+    return $o . '<text class="hz-unit" x="' . ($W - 8) . '" y="' . ($H - 4) . '" text-anchor="end">E %</text><text class="hz-unit" x="' . ($l + 6) . '" y="18">n</text>';
+}
+/** Relative ranking: radar of two models over six criteria. */
+function hero_rank(): string {
+    $cx = 150; $cy = 76; $R = 60; $o = '';
+    $pt = function ($k, $v) use ($cx, $cy, $R) { $a = -M_PI / 2 + 2 * M_PI * $k / 6; return [$cx + $R * $v * cos($a), $cy + $R * $v * sin($a)]; };
+    foreach ([1 / 3, 2 / 3, 1] as $g) $o .= '<path class="hz-axis" d="' . hero_path(array_map(function ($k) use ($pt, $g) { return $pt($k % 6, $g); }, range(0, 6))) . '"/>';
+    for ($k = 0; $k < 6; $k++) { $p = $pt($k, 1); $o .= '<path class="hz-axis" d="M' . $cx . ' ' . $cy . 'L' . round($p[0], 1) . ' ' . round($p[1], 1) . '"/>'; }
+    foreach ([[0, [.9, .8, .95, .7, .85, .9]], [1, [.5, .65, .4, .6, .45, .55]]] as [$j, $v]) $o .= '<path class="hz-area hz-a' . $j . '" d="' . hero_path(array_map(function ($k) use ($pt, $v) { return $pt($k, $v[$k]); }, range(0, 5))) . 'Z"/>';
+    return $o;
+}
+/** Stem taper: over- and under-bark profile of a stem along its height. */
+function hero_taper(): string {
+    $W = 300; $H = 150; $l = 16; $L = 268; $cy = 70; $R = 34; $o = '';
+    $rad = function ($x, $k) use ($R) { return $R * $k * (pow(1 - $x, 0.7) + 0.25 * exp(-$x * 30)); };
+    foreach ([[1.0, 'hz-k0'], [0.86, 'hz-wood']] as [$k, $cls]) {
+        $top = []; $bot = [];
+        for ($i = 0; $i <= 60; $i++) { $x = $i / 60; $r = $rad($x, $k); $top[] = [$l + $x * $L, $cy - $r]; $bot[] = [$l + $x * $L, $cy + $r]; }
+        $o .= '<path class="' . $cls . '" d="' . hero_path(array_merge($top, array_reverse($bot))) . 'Z"/>';
+    }
+    $o .= '<path class="hz-ref" d="M' . $l . ' ' . $cy . 'H' . ($l + $L) . '"/>';
+    foreach ([[0, '0'], [0.5, 'h'], [1, 'H']] as [$x, $t]) $o .= '<text class="hz-tick" x="' . round($l + $x * $L, 1) . '" y="' . ($H - 6) . '" text-anchor="middle">' . $t . '</text>';
+    return $o;
+}
+/** Growth function: a sigmoid growth curve through observations, with its inflection point. */
+function hero_growth(): string {
+    $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $px = 2.4; $r = hero_rng(20261117);
+    $g = function ($t) { return 100 * pow(1 - exp(-0.035 * $t), 2.6); };
+    $pts = []; for ($t = 0; $t <= 100; $t += 2) $pts[] = [$l + $t * $px, $Y - $g($t)];
+    for ($k = 0; $k < 18; $k++) { $t = 6 + $k * 5.3; $o .= '<circle class="hz-pt" style="--i:' . $k . '" cx="' . round($l + $t * $px, 1) . '" cy="' . round($Y - $g($t) + ($r() - .5) * 10, 1) . '" r="2.6"/>'; }
+    $o .= '<path class="hz-line hz-c2" pathLength="1" d="' . hero_path($pts) . '"/>';
+    $ti = log(2.6) / 0.035; $o .= '<path class="hz-ref" d="M' . round($l + $ti * $px, 1) . ' ' . $Y . 'V14"/>';
+    foreach ([25, 50, 75, 100] as $t) $o .= '<text class="hz-tick" x="' . round($l + $t * $px, 1) . '" y="' . ($H - 4) . '" text-anchor="middle">' . $t . '</text>';
+    return $o . '<text class="hz-unit" x="' . ($W - 8) . '" y="' . ($H - 18) . '" text-anchor="end">t</text>';
+}
+/** Coefficient library: stacked coefficient sets, each with its parameters and a source line. */
+function hero_coeflib(): string {
+    $o = '';
+    foreach ([[46, 28], [30, 18], [14, 8]] as $i => [$x, $y]) {
+        $o .= '<rect class="hz-box" x="' . $x . '" y="' . $y . '" width="210" height="96" rx="8"/>';
+        if ($i < 2) continue;
+        $o .= '<rect class="hz-hdr" x="' . ($x + 12) . '" y="' . ($y + 12) . '" width="110" height="10" rx="3"/>';
+        foreach (['a', 'b', 'c'] as $k => $n) { $cx = $x + 12 + $k * 52; $o .= '<rect class="hz-chip" x="' . $cx . '" y="' . ($y + 34) . '" width="44" height="20" rx="10"/><text class="hz-tick" x="' . ($cx + 22) . '" y="' . ($y + 48) . '" text-anchor="middle">' . $n . '</text>'; }
+        $o .= '<rect class="hz-row" x="' . ($x + 12) . '" y="' . ($y + 66) . '" width="150" height="6" rx="3"/><rect class="hz-row" x="' . ($x + 12) . '" y="' . ($y + 78) . '" width="96" height="6" rx="3"/>';
+    }
+    return $o;
+}
+/** Record Verifier: a run record with its fingerprint line and a seal that holds. */
+function hero_record(): string {
+    $o = '<rect class="hz-box" x="60" y="12" width="150" height="126" rx="6"/><rect class="hz-hdr" x="72" y="24" width="80" height="9" rx="3"/>';
+    foreach ([[42, 112], [56, 96], [70, 120], [84, 88]] as [$y, $w]) $o .= '<rect class="hz-row" x="72" y="' . $y . '" width="' . $w . '" height="6" rx="3"/>';
+    $o .= '<text class="hz-mono" x="72" y="114">SHA-256 3f9a…c1</text>';
+    return $o . '<circle class="hz-ok" cx="214" cy="104" r="22"/><path class="hz-chk" d="M203 104l8 8 14-16"/>';
+}
+/** Inventory Data Manager: plot × period record counts of a package. */
+function hero_projects(): string {
+    $o = ''; $x0 = 92; $y0 = 26; $cw = 54; $rh = 20; $v = [[3, 4, 2], [2, 0, 3], [4, 4, 4], [4, 1, 0], [0, 2, 3]];
+    foreach (['t₁', 't₂', 't₃'] as $j => $t) $o .= '<text class="hz-tick" x="' . ($x0 + $j * $cw + 24) . '" y="' . ($y0 - 6) . '" text-anchor="middle">' . $t . '</text>';
+    foreach ($v as $i => $row) {
+        $y = $y0 + $i * $rh; $o .= '<text class="hz-tick" x="' . ($x0 - 10) . '" y="' . ($y + 13) . '" text-anchor="end">P' . ($i + 1) . '</text>';
+        foreach ($row as $j => $n) $o .= '<rect class="hz-heat" style="--a:' . ($n / 4) . '" x="' . ($x0 + $j * $cw) . '" y="' . $y . '" width="' . ($cw - 4) . '" height="' . ($rh - 4) . '" rx="3"/>';
+    }
+    return $o;
+}
+/** Dashboard: four small panels. */
+function hero_dashboard(): string {
+    $o = ''; $p = [[14, 10], [154, 10], [14, 80], [154, 80]];
+    foreach ($p as [$x, $y]) $o .= '<rect class="hz-box" x="' . $x . '" y="' . $y . '" width="132" height="62" rx="6"/>';
+    foreach ([30, 46, 38, 22, 14] as $k => $h) $o .= '<rect class="hz-bar" style="--i:' . $k . '" x="' . (26 + $k * 22) . '" y="' . (64 - $h) . '" width="16" height="' . $h . '"/>';
+    $pts = []; for ($t = 0; $t <= 20; $t++) $pts[] = [166 + $t * 5.4, 60 - 40 * (1 - exp(-$t / 6))];
+    $o .= '<path class="hz-line hz-c1" pathLength="1" d="' . hero_path($pts) . '"/>';
+    $r = hero_rng(7); for ($k = 0; $k < 16; $k++) { $u = $r(); $o .= '<circle class="hz-pt" style="--i:' . $k . '" cx="' . round(26 + $u * 108, 1) . '" cy="' . round(132 - $u * 40 - $r() * 10, 1) . '" r="2.2"/>'; }
+    foreach ([[180, 'hz-a0', 0.58], [230, 'hz-a1', 0.32]] as [$cx, $cls, $f]) $o .= '<rect class="hz-area ' . $cls . '" x="' . ($cx - 18) . '" y="' . round(132 - 40 * $f / 0.6, 1) . '" width="36" height="' . round(40 * $f / 0.6, 1) . '" rx="3"/>';
+    return $o;
+}
+/** Report Generator: a printable page with headings, text, a chart and a table. */
+function hero_report(): string {
+    $o = '<rect class="hz-box" x="80" y="6" width="140" height="138" rx="4"/><rect class="hz-title" x="92" y="16" width="86" height="9" rx="3"/>';
+    foreach ([[32, 112], [42, 98]] as [$y, $w]) $o .= '<rect class="hz-row" x="92" y="' . $y . '" width="' . $w . '" height="5" rx="2.5"/>';
+    foreach ([18, 30, 24, 12] as $k => $h) $o .= '<rect class="hz-bar" style="--i:' . $k . '" x="' . (96 + $k * 16) . '" y="' . (88 - $h) . '" width="11" height="' . $h . '"/>';
+    $o .= '<path class="hz-axis" d="M92 88H170"/>';
+    for ($r = 0; $r < 4; $r++) $o .= '<path class="hz-axis" d="M92 ' . (100 + $r * 10) . 'H208"/>';
+    return $o . '<path class="hz-axis" d="M130 100V130M170 100V130"/>';
+}
+
+/** Drawing and short caption of each live tool's card (keyed by the tool's page; tools index). */
+function tool_card_data(bool $tr): array {
+    return [
+        'veri-denetcisi.php' => ['hero_checker', $tr ? 'Biçim hataları ve şüpheli ölçümler; gerekçeli düzeltme ve onay' : 'Format errors and suspect measurements; logged fixes and approval'],
+        'katsayi-kutuphanesi.php' => ['hero_coeflib', $tr ? 'Bütün araçların katsayı setleri, kaynaklarıyla tek yerde' : 'Every tool\'s coefficient sets with their sources'],
+        'kayit-dogrulayici.php' => ['hero_record', $tr ? 'Çalışma kaydının mührü, sürümü ve girdi parmak izleri' : 'Seal, version and input fingerprints of a run record'],
+        'veri-yoneticisi.php' => ['hero_projects', $tr ? 'Onaylı paketler, etkin paket, örnek alan × dönem özeti' : 'Approved packages, the active one, plot × period overview'],
+        'pano.php' => ['hero_dashboard', $tr ? 'Süzgeçli paneller; çalışma kayıtlarından eğriler' : 'Filtered panels with curves from run records'],
+        'rapor.php' => ['hero_report', $tr ? 'Paket ve kayıtlardan yazdırılabilir rapor; PDF ve HTML' : 'Printable report from a package and records; PDF and HTML'],
+        'ornek-alan.php' => ['hero_stand', $tr ? 'Hektarda N ve G, çap sınıfları, tasarıma dayalı kestirim' : 'N and G per hectare, diameter classes, design-based estimate'],
+        'model-degerlendirme.php' => ['hero_eval', $tr ? 'Yanlılık, MAE, RMSE, tahmin R²; artık grafikleri' : 'Bias, MAE, RMSE, prediction R²; residual plots'],
+        'cap-dagilimi.php' => ['hero_dist', $tr ? 'Weibull ve yedi dağılım daha; uydurma ve geri kazanım' : 'Weibull and seven more; fitting and recovery'],
+        'boy-cap.php' => ['hero_hd', $tr ? 'Altı doğrusal olmayan model, çapraz doğrulama' : 'Six nonlinear models, cross-validation'],
+        'ornekleme.php' => ['hero_sampling', $tr ? 'Hedef hataya göre örnek alan sayısı' : 'Number of plots for a target error'],
+        'nispi-siralama.php' => ['hero_rank', $tr ? 'Başarı ölçütlerinden genel sıra, radar grafiği' : 'Overall rank from fit criteria, radar chart'],
+        'seksiyon-hacmi.php' => ['hero_stem', $tr ? 'Huber, Smalian, Newton, Hohenadl; ağaç ve hektar hacmi' : 'Huber, Smalian, Newton, Hohenadl; tree and per-hectare volume'],
+        'bonitet.php' => ['hero_site', $tr ? 'Fark denklemleri, kendi katsayılarınız, bonitet sınıfları' : 'Difference equations with your coefficients, site classes'],
+        'mescere-yapisi.php' => ['hero_map', $tr ? 'Çap yapısı, sıklık, mekânsal desen ve rekabet' : 'Diameter structure, density, spatial pattern, competition'],
+        'govde-profili.php' => ['hero_taper', $tr ? 'Max–Burkhart ve Kozak; kullanılabilir hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking'],
+        'buyume-islevi.php' => ['hero_growth', $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination'],
+    ];
+}
+/** One tool card of the tools index: icon, short name, drawing, short caption; the full description as a tooltip. */
+function tool_card(array $t, bool $tr): string {
+    static $data = null; if ($data === null) $data = tool_card_data($tr);
+    $d = $data[$t['file']] ?? null;
+    $fig = $d ? '<svg class="hz-fig" viewBox="0 0 300 150" aria-hidden="true" focusable="false">' . call_user_func($d[0]) . '</svg>' : '';
+    return '<a role="listitem" class="hz-card" href="' . h($t['file']) . '" title="' . h($t['desc']) . '"><span class="hz-head"><span class="hz-ico">' . site_icon($t['icon']) . '</span><b>' . h($t['short']) . '</b>'
+        . site_icon('chev', 'ico hz-go') . '</span>' . $fig . '<span class="hz-sub">' . h($d ? $d[1] : $t['desc']) . '</span></a>';
+}
+
 /** The showcase: cards linking to the live tools. */
 function hero_showcase(bool $tr): string {
     $cards = [
