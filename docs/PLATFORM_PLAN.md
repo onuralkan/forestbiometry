@@ -45,7 +45,7 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 | Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
 |---|---|---|---|---|
 | DI-01 | Veri içe aktarma ve denetim | yayında | `veri-denetcisi.php` | Ormancılık Verisi Denetçisi |
-| DI-02 | Katsayı ve denklem kütüphanesi | planlı | – | Kütüphane çekirdeği var (`core/coef.js`, `core/coef-ui.js`, her araçta); ayrı sayfa planlı. Yerleşik set yok (P2). |
+| DI-02 | Katsayı ve denklem kütüphanesi | yolda | `katsayi-kutuphanesi.php` | Kütüphane çekirdeği `core/coef.js`, `core/coef-ui.js`. DI-02/a1 (16 Kasım 2026, kullanıcı kararı: merkezî yönetim): bütün araçların setleri tek sayfada (`assets/lab/coeflib/`), süzme/arama, ayrıntı, aynı düzenleyiciyle düzenleme, kopya, silme, aynı katsayılı ve sorunlu setler, tek dosyayla yedek ve önizlemeli geri yükleme; 1.0.0-beta.1. Yerleşik set yok (P2). Yayına alma kullanıcı kararı bekliyor |
 | DI-03 | Proje ve envanter verisi yöneticisi | planlı | – | Tarayıcıda (P1); örnek alan–ağaç–ölçüm hiyerarşisi `forest-dataset/1` ile. |
 | DI-04 | Görselleştirme panosu | planlı | – | |
 | DI-05 | Rapor üretici | planlı | – | P7 |

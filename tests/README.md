@@ -22,6 +22,7 @@ committed, so the tests run without Python.
 - Page bundles: `node scripts/bundle.mjs --check` (needs `acorn`: `npm install --no-save acorn@8.18.0`). The server
   serves `assets/build/`; run the browser tests against it too: `FB_BUNDLE=1 php -S 127.0.0.1:8092`, then the e2e scripts.
 - `node tests/growth/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Growth Function Fitter.
+- `node tests/coeflib/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Coefficient Library (DI-02): editor, seeded sets of three tools, duplicates and problems, filters, details, copy, delete, edit, backup and restore with a preview.
 - `node tests/taper/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Stem Taper (fit with the sample, one tree,
   tree table, downloads, English, phone).
 - `node tests/site/e2e_boot.mjs http://127.0.0.1:8092`: tool pages must not stay blank when IndexedDB stalls (open or
