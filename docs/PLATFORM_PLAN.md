@@ -68,7 +68,7 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 | Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
 |---|---|---|---|---|
 | SV-01 | Seksiyon hacmi (Huber, Smalian, Newton, Hohenadl) | yayında | `seksiyon-hacmi.php` | Huber/Smalian/Newton tanım istisnası [D]; Hohenadl Heger (1965) [B] |
-| SV-02 | Gövde profili denklemleri (Max ve Burkhart, Kozak, değişken üslü) | yolda | – | TOOLS_SPEC TP01–TP02. SV-02/a1 (16 Kasım 2026): Max ve Burkhart (1976) Model 4 çekirdeği [B] (`assets/lab/taper/calc.js`). Sıradaki: a2 Kozak (2004), a3 uydurma (TP02); sayfa TP04 ile |
+| SV-02 | Gövde profili denklemleri (Max ve Burkhart, Kozak, değişken üslü) | yolda | – | TOOLS_SPEC TP01–TP02. SV-02/a1 (16 Kasım 2026): Max ve Burkhart (1976) Model 4 çekirdeği [B] (`assets/lab/taper/calc.js`). SV-02/a2 (16 Kasım 2026): Kozak (2004) Model 02 [B]. Sıradaki: a3 uydurma (TP02); sayfa TP04 ile |
 | SV-03 | Kullanılabilir hacim (profil integrali, tepe çapı ve tomruk boyu sınırları) | planlı | – | TP01–TP03 |
 | SV-04 | Hacim denklemleri | planlı | – | TOOLS_SPEC SV04 (isteğe bağlı); katsayılar kullanıcıdan |
 | SV-05 | Tomruk ölçüm kuralları (Doyle, Scribner, International ¼″, kübik) | planlı, düşük öncelik | – | ABD'ye özgü; P4 |
