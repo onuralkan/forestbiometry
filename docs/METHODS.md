@@ -3,6 +3,7 @@
 Kaynak durumu işaretleri:
 - **[B]** Birincil kaynakta kontrol edildi.
 - **[İ]** İkincil bir kaynağın kaynakçasında künyesi doğrulandı.
+- **[P]** Paket belgesinden doğrulandı (16 Kasım 2026, kullanıcı kararı): denklem biçimi bir R/CRAN paketinin yardım sayfasından alındı; paket adı, sürüm ve okuma tarihi yazılır, özgün makale ayrıca [D]/[İ]/[B] olarak kalır. Koşullar: (1) paket fiilen standart ya da hakemli bir yayınla tanıtılmış (ör. *Journal of Statistical Software*, *The R Journal*); (2) yardım sayfası denklemi ve parametrelemeyi açıkça yazar (yalnız koddan çıkarılan biçim [P] sayılmaz); (3) aracın bağımsız test referansı o paketin çıktısıdır (`tests/ref/*.R`, kullanıcı çalıştırır, çıktı commit edilir). Paket kodu siteye kopyalanmaz (lisans); paketteki katsayı/veri tabloları gömülmez (K1). Koşullardan biri tutmazsa birincil kaynak (PDF) şarttır.
 - **[D]** Henüz doğrulanmadı; künye bilgiden yazıldı, **kullanmadan önce doğrulanmalı**.
 
 Sayısal doğrulama: her aracın `tests/<araç>/test_*.mjs` testi (referanslar `tests/ref/`); eski kod için `node legacy/test_math.js`. Tarayıcı testleri `tests/*/e2e.mjs`.

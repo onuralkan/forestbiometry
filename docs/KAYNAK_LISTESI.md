@@ -1,160 +1,152 @@
 # Gerekli kaynaklar (16 Kasım 2026)
 
-Planlı modüller (`docs/PLATFORM_PLAN.md`) için okunması gereken makale ve kitaplar. Künyeler bilgiden yazıldı **[D]**:
-yazar ve yıl güvenilir, cilt/sayfa yanlış olabilir; PDF gelince METHODS.md'de [B] yapılır. Kural (TOOLS_SPEC K1, P2):
-bu kaynaklardan **denklem biçimi ve yöntem** alınır; tür/yöre katsayısı, tablo değeri ya da varsayılan sabit siteye
-gömülmez.
+Planlı modüller (`docs/PLATFORM_PLAN.md`) için kaynaklar, iki bölümde:
 
-Öncelik: **A** sıradaki aşamalar için şart; **B** o modüle gelince gerekir; **C** isteğe bağlı (genel başvuru ya da
-mevcut araçların doğrulama borcu).
+1. **PDF gerekli:** denklem ya da yöntem birincil kaynaktan okunacak (yeterli paket yok, paket belgesi formülü
+   yazmıyor ya da yöntem bir kitabın bütünü).
+2. **Paket yeterli ([P]):** denklem biçimi bir CRAN paketinin yardım sayfasında açıkça yazılı; test referansı o
+   paketin çıktısı olacak (`tests/ref/*.R`, kullanıcı R'da çalıştırır). Özgün makale yalnızca künye için yazılır,
+   PDF gerekmez. Koşullar METHODS.md başında (16 Kasım 2026, kullanıcı kararı).
 
-## 0. Daha önce yüklenen ama bu oturumda kaybolanlar (yeniden yükle)
+Künyeler bilgiden yazıldı **[D]**: yazar ve yıl güvenilir, cilt/sayfa yanlış olabilir. Paket sürümleri ve yardım
+sayfaları 16 Kasım 2026'da CRAN'da (search.r-project.org) kontrol edildi. Kural (K1, P2): kaynaktan **denklem biçimi
+ve yöntem** alınır; tür/yöre katsayısı, tablo değeri, paket verisi ya da varsayılan sabit siteye gömülmez.
 
-- [ ] A — Clark, P.J., Evans, F.C. 1954. Distance to nearest neighbor as a measure of spatial relationships in populations. *Ecology* 35: 445–453. (SS-06)
-- [ ] A — Donnelly, K.P. 1978. Simulations to determine the variance and edge effect of total nearest-neighbour distance. Hodder (ed.), *Simulation Studies in Archaeology*, Cambridge Univ. Press. (SS-06)
-- [ ] A — Pommerening, A. 2002. Approaches to quantifying forest structures. *Forestry* 75: 305–324. (SS-05)
-- [ ] A — Max, T.A., Burkhart, H.E. 1976. Segmented polynomial regression applied to taper equations. *Forest Science* 22: 283–289. (SV-02)
-- [ ] A — Krajicek, J.E., Brinkman, K.A., Gingrich, S.F. 1961. Crown competition — a measure of density. *Forest Science* 7: 35–42. (SS-02 CCF)
+Öncelik: **A** sıradaki aşamalar için şart; **B** o modüle gelince; **C** isteğe bağlı. **Açık** = okul ağı
+gerekmez (açık erişim ya da ücretsiz belge).
 
-## 1. Hâlâ eksik olan, istisnayla çalışan ya da yanlış gelenler
+---
 
-- [ ] A — Hegyi, F. 1974. A simulation model for managing jack-pine stands. Fries (ed.), *Growth Models for Tree and Stand Simulation*, Royal College of Forestry, Stockholm. (SS-07, geçici istisna)
-- [ ] A — Sprugel, D.G. **1983**. Correcting for bias in log-transformed allometric equations. *Ecology* 64: 209–210. (BC-01; daha önce 1990 makalesi gelmişti)
-- [ ] A — Cieszewski, C.J., **Bailey, R.L. 2000**. Generalized algebraic difference approach… *Forest Science* 46: 116–126. (SQ-02 GADA; daha önce Cieszewski ve Strub 2008 gelmişti)
-- [ ] A — Kozak, A. 2004. My last words on taper equations. *The Forestry Chronicle* 80: 507–515. (SV-02)
+## Bölüm 1. PDF gerekli
 
-## 2. SV — Gövde hacmi ve profili (sıradaki modül)
+### A — sıradaki aşamalar
 
-- [ ] A — Kozak, A. 1988. A variable-exponent taper equation. *Canadian Journal of Forest Research* 18: 1363–1368.
-- [ ] B — Kozak, A., Munro, D.D., Smith, J.H.G. 1969. Taper functions and their application in forest inventory. *The Forestry Chronicle* 45: 278–283.
-- [ ] B — Demaerschalk, J.P. 1972. Converting volume equations to compatible taper equations. *Forest Science* 18: 241–245.
-- [ ] B — Clutter, J.L. 1980. Development of taper functions from variable-top merchantable volume equations. *Forest Science* 26: 117–120.
-- [ ] B — Fang, Z., Borders, B.E., Bailey, R.L. 2000. Compatible volume–taper models for loblolly and slash pine based on a system with segmented-stem form factors. *Forest Science* 46: 1–12.
-- [ ] B — Schumacher, F.X., Hall, F.D.S. 1933. Logarithmic expression of timber-tree volume. *Journal of Agricultural Research* 47: 719–734. (SV-04 hacim denklemleri)
-- [ ] A — Pnevmaticos, S.M., Mann, S.H. 1972. Dynamic programming in tree bucking. *Forest Products Journal* 22(2): 26–30. (SV-06 sortiman)
+- [ ] Pommerening, A. 2002. Approaches to quantifying forest structures. *Forestry* 75: 305–324. (SS-05; yeniden yükle. `forestSAS` M, U, W'yi 4 komşuyla hesaplıyor ama formülü yazmıyor: sayısal referans olur, tanım için PDF.)
+- [ ] Clark, P.J., Evans, F.C. 1954. Distance to nearest neighbor as a measure of spatial relationships in populations. *Ecology* 35: 445–453. (SS-06; yeniden yükle. `spatstat.explore::clarkevans` sayısal referans.)
+- [ ] Donnelly, K.P. 1978. Simulations to determine the variance and edge effect of total nearest-neighbour distance. Hodder (ed.), *Simulation Studies in Archaeology*, Cambridge Univ. Press. (SS-06; yeniden yükle. `clarkevans(correction = "Donnelly")` düzeltmeyi uyguluyor ama formülünü yazmıyor.)
+- [ ] Krajicek, J.E., Brinkman, K.A., Gingrich, S.F. 1961. Crown competition — a measure of density. *Forest Science* 7: 35–42. (SS-02 CCF; yeniden yükle)
+- [ ] Max, T.A., Burkhart, H.E. 1976. Segmented polynomial regression applied to taper equations. *Forest Science* 22: 283–289. (SV-02; yeniden yükle)
+- [ ] Kozak, A. 2004. My last words on taper equations. *The Forestry Chronicle* 80: 507–515. (SV-02)
+- [ ] Kozak, A. 1988. A variable-exponent taper equation. *Canadian Journal of Forest Research* 18: 1363–1368. (SV-02)
+- [ ] Pnevmaticos, S.M., Mann, S.H. 1972. Dynamic programming in tree bucking. *Forest Products Journal* 22(2): 26–30. (SV-06)
+- [ ] Cieszewski, C.J., Bailey, R.L. 2000. Generalized algebraic difference approach… *Forest Science* 46: 116–126. (SQ-02 GADA; daha önce yanlış makale gelmişti)
+- [ ] Baskerville, G.L. 1972. Use of logarithmic regression in the estimation of plant biomass. *Canadian Journal of Forest Research* 2: 49–53. (BC-01)
+- [ ] Sprugel, D.G. **1983**. Correcting for bias in log-transformed allometric equations. *Ecology* 64: 209–210. (BC-01; daha önce 1990 gelmişti)
+- [ ] Snowdon, P. 1991. A ratio estimator for bias correction in logarithmic regressions. *Canadian Journal of Forest Research* 21: 720–724. (BC-01)
+- [ ] **Açık** — IPCC 2006. *2006 IPCC Guidelines for National Greenhouse Gas Inventories*, Cilt 4 (AFOLU) Bölüm 2 ve 4; Cilt 1 Bölüm 3 (belirsizlik). ipcc-nggip.iges.or.jp. (BC-03…BC-06)
 
-## 3. BC — Biyokütle ve karbon
+### B — modülüne gelince
 
-- [ ] A — Baskerville, G.L. 1972. Use of logarithmic regression in the estimation of plant biomass. *Canadian Journal of Forest Research* 2: 49–53.
-- [ ] A — Snowdon, P. 1991. A ratio estimator for bias correction in logarithmic regressions. *Canadian Journal of Forest Research* 21: 720–724.
-- [ ] A — IPCC 2006. *2006 IPCC Guidelines for National Greenhouse Gas Inventories*, Cilt 4 (AFOLU), Bölüm 2 ve 4; Cilt 1, Bölüm 3 (belirsizlik). Ücretsiz: ipcc-nggip.iges.or.jp. (BC-03…BC-06)
-- [ ] B — IPCC 2019. *2019 Refinement to the 2006 IPCC Guidelines*, Cilt 4, Bölüm 4. (aynı site)
-- [ ] B — Parresol, B.R. 1999. Assessing tree and stand biomass: a review with examples and critical comparisons. *Forest Science* 45: 573–593.
-- [ ] B — Parresol, B.R. 2001. Additivity of nonlinear biomass equations. *Canadian Journal of Forest Research* 31: 865–878. (BC-02, SM-04)
-- [ ] B — Jenkins, J.C., Chojnacky, D.C., Heath, L.S., Birdsey, R.A. 2003. National-scale biomass estimators for United States tree species. *Forest Science* 49: 12–35.
-- [ ] B — Chave, J. ve ark. 2014. Improved allometric models to estimate the aboveground biomass of tropical trees. *Global Change Biology* 20: 3177–3190.
-- [ ] B — Somogyi, Z. ve ark. 2007. Indirect methods of large-scale forest biomass estimation. *European Journal of Forest Research* 126: 197–207. (BEF)
-- [ ] B — Lehtonen, A. ve ark. 2004. Biomass expansion factors (BEFs) for Scots pine, Norway spruce and birch according to stand age for boreal forests. *Forest Ecology and Management* 188: 211–224.
-- [ ] B — Thomas, S.C., Martin, A.R. 2012. Carbon content of tree tissues: a synthesis. *Forests* 3: 332–352. (karbon oranı kullanıcıdan; kavram için)
-- [ ] B — JCGM 101:2008. *Evaluation of measurement data — Supplement 1 to the GUM: Propagation of distributions using a Monte Carlo method.* Ücretsiz: bipm.org. (BC-06)
-- [ ] C — Zianis, D. ve ark. 2005. Biomass and stem volume equations for tree species in Europe. *Silva Fennica Monographs* 4. (denklem kütüphanesine kullanıcının gireceği örnekler)
-- [ ] C — Tolunay, D. 2011. Total carbon stocks and carbon accumulation in living tree biomass in forest ecosystems of Turkey. *Turkish Journal of Agriculture and Forestry* 35: 265–279.
+**SV — gövde hacmi**
+- [ ] Kozak, A., Munro, D.D., Smith, J.H.G. 1969. Taper functions and their application in forest inventory. *The Forestry Chronicle* 45: 278–283. (`forestmangr::avg_tree_curve` "Kozak taper model" diyor; hangi Kozak olduğu belirsiz, bu yüzden PDF.)
+- [ ] Demaerschalk, J.P. 1972. Converting volume equations to compatible taper equations. *Forest Science* 18: 241–245.
+- [ ] Clutter, J.L. 1980. Development of taper functions from variable-top merchantable volume equations. *Forest Science* 26: 117–120.
+- [ ] Fang, Z., Borders, B.E., Bailey, R.L. 2000. Compatible volume–taper models for loblolly and slash pine based on a system with segmented-stem form factors. *Forest Science* 46: 1–12.
+- [ ] Schumacher, F.X., Hall, F.D.S. 1933. Logarithmic expression of timber-tree volume. *Journal of Agricultural Research* 47: 719–734. (SV-04)
 
-## 4. SS — Meşcere yapısı (kalan: Ripley K/L, çift korelasyon)
+**BC — biyokütle ve karbon**
+- [ ] Parresol, B.R. 1999. Assessing tree and stand biomass: a review with examples and critical comparisons. *Forest Science* 45: 573–593.
+- [ ] Parresol, B.R. 2001. Additivity of nonlinear biomass equations. *Canadian Journal of Forest Research* 31: 865–878. (BC-02, SM-04)
+- [ ] Somogyi, Z. ve ark. 2007. Indirect methods of large-scale forest biomass estimation. *European Journal of Forest Research* 126: 197–207. (BEF)
+- [ ] Lehtonen, A. ve ark. 2004. Biomass expansion factors (BEFs) for Scots pine, Norway spruce and birch according to stand age for boreal forests. *Forest Ecology and Management* 188: 211–224.
+- [ ] **Açık** — IPCC 2019. *2019 Refinement to the 2006 IPCC Guidelines*, Cilt 4, Bölüm 4.
+- [ ] **Açık** — JCGM 101:2008. *Supplement 1 to the GUM: Propagation of distributions using a Monte Carlo method.* bipm.org. (BC-06)
 
-- [ ] B — Ripley, B.D. 1977. Modelling spatial patterns. *Journal of the Royal Statistical Society B* 39: 172–212. (Besag'ın L işlevi aynı sayının tartışma kısmında)
-- [ ] B — Ripley, B.D. 1976. The second-order analysis of stationary point processes. *Journal of Applied Probability* 13: 255–266.
-- [ ] B — Illian, J., Penttinen, A., Stoyan, H., Stoyan, D. 2008. *Statistical Analysis and Modelling of Spatial Point Patterns.* Wiley. (çift korelasyon işlevi, kenar düzeltmeleri)
+**SI — örnekleme ve envanter**
+- [ ] Gregoire, T.G., Valentine, H.T. 2008. *Sampling Strategies for Natural Resources and the Environment.* Chapman & Hall/CRC. (modülün ana kaynağı; varsa aşağıdaki makalelerin çoğuna gerek kalmaz)
+- [ ] Mandallaz, D. 2008. *Sampling Techniques for Forest Inventories.* Chapman & Hall/CRC. (SI-07)
+- [ ] Grosenbaugh, L.R. 1952. Plotless timber estimates — new, fast, easy. *Journal of Forestry* 50: 32–37. (SI-04)
+- [ ] Gregoire, T.G. 1982. The unbiasedness of the mirage correction procedure for boundary overlap. *Forest Science* 28: 504–508. (SI-05)
+- [ ] Ducey, M.J., Gove, J.H., Valentine, H.T. 2004. A walkthrough solution to the boundary overlap problem. *Forest Science* 50: 427–435. (SI-05)
+- [ ] Warren, W.G., Olsen, P.F. 1964. A line intersect technique for assessing logging waste. *Forest Science* 10: 267–276. (SI-06)
+- [ ] Van Wagner, C.E. 1968. The line intersect method in forest fuel sampling. *Forest Science* 14: 20–26. (SI-06)
+- [ ] Beers, T.W. 1962. Components of forest growth. *Journal of Forestry* 60: 245–248. (SI-09)
 
-## 5. TM — Ağaç ölçümü (ders kitabı düzeyi)
+**SM — istatistiksel modelleme** (algoritmalar kitap düzeyinde; paketler sayısal referans olur)
+- [ ] Mehtätalo, L., Lappi, J. 2020. *Biometry for Forestry and Environmental Data.* Chapman & Hall/CRC. (SM-03 karma modeller, boy–çap kalibrasyonu; `lmfor` bu kitabın paketi)
+- [ ] Pinheiro, J.C., Bates, D.M. 2000. *Mixed-Effects Models in S and S-PLUS.* Springer. (SM-03; `nlme` bu kitabın paketi)
+- [ ] Bates, D.M., Watts, D.G. 1988. *Nonlinear Regression Analysis and Its Applications.* Wiley. (SM-02)
+- [ ] Efron, B., Tibshirani, R.J. 1993. *An Introduction to the Bootstrap.* Chapman & Hall. (SM-07)
 
-- [ ] B — Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest Mensuration*, 5. baskı. Wiley. (boy ölçümü, eğim düzeltmesi, kabuk, biçim sayısı)
-- [ ] B — van Laar, A., Akça, A. 2007. *Forest Mensuration*, 2. baskı. Springer.
-- [ ] C — Avery, T.E., Burkhart, H.E. 2002. *Forest Measurements*, 5. baskı. McGraw-Hill. (SV-05 tomruk kuralları da burada)
-- [ ] C — West, P.W. 2009. *Tree and Forest Measurement*, 2. baskı. Springer.
-- [ ] C — Kalıpsız, A. *Dendrometri.* İÜ Orman Fakültesi yayını (elindeki baskı). Türkçe terimler için.
+**GY — büyüme ve hasılat** (paketle karşılanmıyor)
+- [ ] Weiskittel, A.R., Hann, D.W., Kershaw, J.A., Vanclay, J.K. 2011. *Forest Growth and Yield Modeling.* Wiley-Blackwell. (modülün ana kaynağı)
+- [ ] Burkhart, H.E., Tomé, M. 2012. *Modeling Forest Trees and Stands.* Springer. (gövde profili, bonitet ve rekabet için de)
+- [ ] Usher, M.B. 1966. A matrix approach to the management of renewable resources, with special reference to selection forests. *Journal of Applied Ecology* 3: 355–367. (GY-02)
+- [ ] Buongiorno, J., Michie, B.R. 1980. A matrix model of uneven-aged forest management. *Forest Science* 26: 609–625. (GY-02)
+- [ ] Wykoff, W.R. 1990. A basal area increment model for individual conifers in the northern Rocky Mountains. *Forest Science* 36: 1077–1104. (GY-03)
+- [ ] Monserud, R.A., Sterba, H. 1996. A basal area increment model for individual trees growing in even- and uneven-aged forest stands in Austria. *Forest Ecology and Management* 80: 57–80. (GY-03)
+- [ ] Monserud, R.A., Sterba, H. 1999. Modeling individual tree mortality for Austrian forest species. *Forest Ecology and Management* 113: 109–123. (GY-04)
+- [ ] Drew, T.J., Flewelling, J.W. 1979. Stand density management: an alternative approach and its application to Douglas-fir plantations. *Forest Science* 25: 518–532. (GY-06)
+- [ ] Newton, P.F. 1997. Stand density management diagrams: review of their development and utility in stand-level management planning. *Forest Ecology and Management* 98: 251–265. (GY-06)
+- [ ] Yoda, K., Kira, T., Ogawa, H., Hozumi, K. 1963. Self-thinning in overcrowded pure stands under cultivated and natural conditions. *Journal of Biology, Osaka City University* 14: 107–129. (GY-07)
 
-## 6. SQ — Büyüme işlevleri (SQ-03)
+**ML — mekânsal tahmin**
+- [ ] Cressie, N. 1993. *Statistics for Spatial Data*, gözden geçirilmiş baskı. Wiley. (ML-05 kriging)
+- [ ] Moeur, M., Stage, A.R. 1995. Most similar neighbor: an improved sampling inference procedure for natural resource planning. *Forest Science* 41: 337–359. (ML-04)
+- [ ] Roberts, D.R. ve ark. 2017. Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. *Ecography* 40: 913–929. (ML-06)
+- [ ] Särndal, C.-E., Swensson, B., Wretman, J. 1992. *Model Assisted Survey Sampling.* Springer. (ML-08, SI-08)
 
-- [ ] B — Richards, F.J. 1959. A flexible growth function for empirical use. *Journal of Experimental Botany* 10: 290–300.
-- [ ] B — Chapman, D.G. 1961. Statistical problems in dynamics of exploited fisheries populations. *Proc. 4th Berkeley Symposium on Mathematical Statistics and Probability* 4: 153–168.
-- [ ] B — Schumacher, F.X. 1939. A new growth curve and its application to timber yield studies. *Journal of Forestry* 37: 819–820.
-- [ ] B — Zeide, B. 1993. Analysis of growth equations. *Forest Science* 39: 594–616. (Korf, Gompertz ve diğerlerinin karşılaştırması)
-- [ ] C — Bailey, R.L., Clutter, J.L. 1974. Base-age invariant polymorphic site curves. *Forest Science* 20: 155–159.
+**DS — karar destek**
+- [ ] Faustmann, M. 1849 (İngilizce çevirisi 1995). Calculation of the value which forest land and immature stands possess for forestry. *Journal of Forest Economics* 1: 7–44. (DS-01)
+- [ ] Johnson, K.N., Scheurman, H.L. 1977. Techniques for prescribing optimal timber harvest and investment under different objectives. *Forest Science Monograph* 18. (DS-02; LP çözücüsü için `lpSolve` sayısal referans)
+- [ ] Harmon, M.E. ve ark. 1986. Ecology of coarse woody debris in temperate ecosystems. *Advances in Ecological Research* 15: 133–302. (DS-04)
+- [ ] Nowak, D.J. ve ark. 2008. A ground-based method of assessing urban forest structure and ecosystem services. *Arboriculture & Urban Forestry* 34: 347–358. (DS-06)
+- DS-05 (zarar değerlendirmesi) için kaynak, aracın kapsamı belirlenince seçilecek.
 
-## 7. SI — Örnekleme ve envanter
+**TM — ağaç ölçümü** (ders kitabı düzeyi; biri yeter)
+- [ ] Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest Mensuration*, 5. baskı. Wiley. (`forestmangr` bu kitabı kaynak gösteriyor)
+- [ ] C — van Laar, A., Akça, A. 2007. *Forest Mensuration*, 2. baskı. Springer.
+- [ ] C — Avery, T.E., Burkhart, H.E. 2002. *Forest Measurements*, 5. baskı. McGraw-Hill. (SV-05 tomruk kuralları)
+- [ ] C — Kalıpsız, A. *Dendrometri.* İÜ Orman Fakültesi (elindeki baskı). Türkçe terimler için.
 
-- [ ] B — Gregoire, T.G., Valentine, H.T. 2008. *Sampling Strategies for Natural Resources and the Environment.* Chapman & Hall/CRC. (modülün ana kaynağı: tasarımlar, Bitterlich, hat kesişim, kenar etkisi)
-- [ ] B — Mandallaz, D. 2008. *Sampling Techniques for Forest Inventories.* Chapman & Hall/CRC. (iki aşamalı, çift örnekleme)
-- [ ] B — Cochran, W.G. 1977. *Sampling Techniques*, 3. baskı. Wiley. (METHODS'ta [D])
-- [ ] B — Horvitz, D.G., Thompson, D.J. 1952. A generalization of sampling without replacement from a finite universe. *JASA* 47: 663–685.
-- [ ] B — Grosenbaugh, L.R. 1952. Plotless timber estimates — new, fast, easy. *Journal of Forestry* 50: 32–37. (SI-04)
-- [ ] C — Bitterlich, W. 1984. *The Relascope Idea.* Commonwealth Agricultural Bureaux.
-- [ ] B — Gregoire, T.G. 1982. The unbiasedness of the mirage correction procedure for boundary overlap. *Forest Science* 28: 504–508. (SI-05)
-- [ ] B — Ducey, M.J., Gove, J.H., Valentine, H.T. 2004. A walkthrough solution to the boundary overlap problem. *Forest Science* 50: 427–435. (SI-05)
-- [ ] B — Warren, W.G., Olsen, P.F. 1964. A line intersect technique for assessing logging waste. *Forest Science* 10: 267–276. (SI-06)
-- [ ] B — Van Wagner, C.E. 1968. The line intersect method in forest fuel sampling. *Forest Science* 14: 20–26. (SI-06)
-- [ ] C — de Vries, P.G. 1986. *Sampling Theory for Forest Inventory.* Springer.
-- [ ] B — Beers, T.W. 1962. Components of forest growth. *Journal of Forestry* 60: 245–248. (SI-09)
-- [ ] C — Ware, K.D., Cunia, T. 1962. Continuous forest inventory with partial replacement of samples. *Forest Science Monograph* 3. (SI-09)
-- [ ] C — Schreuder, H.T., Gregoire, T.G., Wood, G.B. 1993. *Sampling Methods for Multiresource Forest Inventory.* Wiley.
+---
 
-## 8. SM — İstatistiksel modelleme
+## Bölüm 2. Paket yeterli ([P] adayları)
 
-- [ ] B — Mehtätalo, L., Lappi, J. 2020. *Biometry for Forestry and Environmental Data.* Chapman & Hall/CRC. (SM modülünün ana kaynağı; karma modeller, boy–çap kalibrasyonu)
-- [ ] B — Pinheiro, J.C., Bates, D.M. 2000. *Mixed-Effects Models in S and S-PLUS.* Springer. (SM-03)
-- [ ] B — Lindstrom, M.J., Bates, D.M. 1990. Nonlinear mixed effects models for repeated measures data. *Biometrics* 46: 673–687. (SM-03)
-- [ ] C — Calama, R., Montero, G. 2004. Interregional nonlinear height–diameter model with random coefficients for stone pine in Spain. *Canadian Journal of Forest Research* 34: 150–163. (EBLUP kalibrasyonu örneği)
-- [ ] B — Bates, D.M., Watts, D.G. 1988. *Nonlinear Regression Analysis and Its Applications.* Wiley. (SM-02)
-- [ ] C — Marquardt, D.W. 1963. An algorithm for least-squares estimation of nonlinear parameters. *J. SIAM* 11: 431–441. (mevcut çekirdeğin doğrulama borcu)
-- [ ] B — Zellner, A. 1962. An efficient method of estimating seemingly unrelated regressions and tests for aggregation bias. *JASA* 57: 348–368. (SM-04)
-- [ ] B — Borders, B.E. 1989. Systems of equations in forest stand modeling. *Forest Science* 35: 548–556. (SM-04)
-- [ ] B — Cox, D.R. 1972. Regression models and life-tables. *JRSS B* 34: 187–220. (SM-05)
-- [ ] B — Efron, B., Tibshirani, R.J. 1993. *An Introduction to the Bootstrap.* Chapman & Hall. (SM-07)
-- [ ] C — Davison, A.C., Hinkley, D.V. 1997. *Bootstrap Methods and their Application.* Cambridge Univ. Press.
+PDF gerekmez. Her satırda: araç kimliği, paket ve işlev, paketin verdiği (**formül** = yardım sayfası denklemi açıkça
+yazıyor; **sayısal** = yalnız test referansı), paketi tanıtan yayın (çoğu **açık**). İşlev uygulanmadan önce yardım
+sayfası okunur ve METHODS'ta [P] ile işaretlenir; belirsiz bir yazım çıkarsa (aşağıdaki Chapman–Richards notu) paketin
+kodu ve sayısal çıktısıyla netleştirilir, yine belirsizse PDF'e dönülür.
 
-## 9. GY — Büyüme ve hasılat
+| Araç | Paket ve işlev | Verdiği | Özgün kaynak (künye; PDF gerekmez) | Paketin yayını |
+|---|---|---|---|---|
+| SS-07 Hegyi | `siplab` 1.6: `pairwise(kernel = powers_ker)` | formül: (S_j/S_i)/R, p_i = p_j = p_r = 1; özgün Hegyi'nin uzaklığa 1 ft eklediği notu | Hegyi 1974 | García, O. 2014. siplab, a spatial individual-based plant modelling system. *Computational Ecology and Software* 4(4): 215–222. **Açık** |
+| SS-06 Ripley K, L | `spatstat.explore` 3.8-3: `Kest`, `Lest` | formül + kenar düzeltmeleri | Ripley 1976, 1977; Besag 1977 | Baddeley, A., Turner, R. 2005. spatstat: an R package for analyzing spatial point patterns. *J. Statistical Software* 12(6). **Açık** |
+| SS-06 çift korelasyon | `spatstat.explore`: `pcf` | formül (çekirdek kestirimi) | Stoyan ve Stoyan 1994; Illian ve ark. 2008 | aynı |
+| SS-04 çeşitlilik (ek doğrulama) | `vegan` 2.7-6: `diversity` | formül | Shannon, Simpson | — |
+| SQ-03 büyüme işlevleri | `growthmodels` 1.3.1: `chapmanRichards`, `gompertz`, `richard`, `schnute`, `weibull`, `vonBertalanffy`… | formül (dikkat: Chapman–Richards sayfasındaki yazımda parantez belirsiz; kod ve sayısal çıktıyla netleştirilecek) | Richards 1959; Chapman 1961; Gompertz 1825; Schumacher 1939 | paketin gösterdiği kaynak: Fekedulegn, D., Mac Siurtain, M., Colbert, J. 1999. Parameter estimation of nonlinear growth models in forestry. *Silva Fennica* 33(4): 327–336. **Açık** |
+| SM-04 SUR | `systemfit` 1.1-30 | formül + sayısal | Zellner 1962 | Henningsen, A., Hamann, J.D. 2007. systemfit: a package for estimating systems of simultaneous equations in R. *J. Statistical Software* 23(4). **Açık** |
+| SM-03 karma modeller | `nlme` 3.1, `lme4` 2.1 | sayısal (yöntem için Bölüm 1'deki kitaplar) | Lindstrom ve Bates 1990 | Bates, D., Mächler, M., Bolker, B., Walker, S. 2015. Fitting linear mixed-effects models using lme4. *J. Statistical Software* 67(1). **Açık** |
+| SM-01/03 boy–çap | `lmfor` 1.7 | formül (zaten [B] olarak kullanıldı, 9 Kasım) | Mehtätalo ve ark. 2015 | Mehtätalo ve Lappi 2020 (Bölüm 1) |
+| SM-05 sağkalım | `survival` 3.8 | sayısal | Cox 1972 | — |
+| SM-07 bootstrap | `boot` 1.3 | sayısal | Efron ve Tibshirani 1993 | Davison ve Hinkley 1997 (paketin kitabı) |
+| SI-02, SI-03 tasarımlar | `forestmangr` 0.9: `sprs`, `strs`, `ss_diffs` | sayısal | Kershaw ve ark. 2016 | — |
+| SI-08 Horvitz–Thompson, GREG | `survey` 4.5: `svytotal`, `calibrate` | formül + sayısal | Horvitz ve Thompson 1952; Särndal ve ark. 1992 | Lumley, T. 2004. Analysis of complex survey samples. *J. Statistical Software* 9(8). **Açık** |
+| ML-07 küçük alan | `sae` 1.4: `eblupFH`, `eblupBHF` | formül + sayısal | Fay ve Herriot 1979; Battese, Harter ve Fuller 1988 | Molina, I., Marhuenda, Y. 2015. sae: an R package for small area estimation. *The R Journal* 7(1): 81–98. **Açık** |
+| ML-01 rastgele orman | `ranger` 0.18 | sayısal (rastgelelik nedeniyle dağılım düzeyinde) | Breiman 2001 | Wright, M.N., Ziegler, A. 2017. ranger: a fast implementation of random forests for high dimensional data in C++ and R. *J. Statistical Software* 77(1). **Açık** |
+| ML-04 k-NN atama | `yaImpute` 1.0 | formül + sayısal | Moeur ve Stage 1995 | Crookston, N.L., Finley, A.O. 2008. yaImpute: an R package for kNN imputation. *J. Statistical Software* 23(10). **Açık** |
+| ML-05 kriging | `gstat` 2.1 | sayısal (yöntem: Cressie, Bölüm 1) | Matheron; Cressie 1993 | Pebesma, E.J. 2004. Multivariable geostatistics in S: the gstat package. *Computers & Geosciences* 30: 683–691. |
+| DS-02 doğrusal programlama | `lpSolve` 5.6 | sayısal (çözücü) | — | — |
+| BC-01 tropik biyokütle (yalnız test) | `BIOMASS` 2.2: `computeAGB`, `AGBmonteCarlo` | formül + sayısal; paketin odun yoğunluğu ve katsayıları **gömülmez** (K1) | Chave ve ark. 2014 | Réjou-Méchain, M. ve ark. 2017. BIOMASS: an R package for estimating above-ground biomass and its uncertainty in tropical forests. *Methods in Ecology and Evolution* 8: 1163–1167. |
+| SV-02 B-spline gövde profili (isteğe bağlı ek model) | `TapeR` 0.5 | sayısal | Kublin, E., Breidenbach, J., Kändler, G. 2013. A flexible stem taper and volume prediction method based on mixed-effects B-spline regression. *European Journal of Forest Research* 132: 983–997. | — |
 
-- [ ] B — Weiskittel, A.R., Hann, D.W., Kershaw, J.A., Vanclay, J.K. 2011. *Forest Growth and Yield Modeling.* Wiley-Blackwell. (modülün ana kaynağı)
-- [ ] B — Burkhart, H.E., Tomé, M. 2012. *Modeling Forest Trees and Stands.* Springer. (gövde profili, bonitet ve rekabet için de)
-- [ ] C — Vanclay, J.K. 1994. *Modelling Forest Growth and Yield.* CAB International.
-- [ ] C — Clutter, J.L., Fortson, J.C., Pienaar, L.V., Brister, G.H., Bailey, R.L. 1983. *Timber Management: A Quantitative Approach.* Wiley.
-- [ ] C — Pretzsch, H. 2009. *Forest Dynamics, Growth and Yield.* Springer. (GY-05 aralama)
-- [ ] B — Usher, M.B. 1966. A matrix approach to the management of renewable resources, with special reference to selection forests. *Journal of Applied Ecology* 3: 355–367. (GY-02)
-- [ ] B — Buongiorno, J., Michie, B.R. 1980. A matrix model of uneven-aged forest management. *Forest Science* 26: 609–625. (GY-02)
-- [ ] B — Wykoff, W.R. 1990. A basal area increment model for individual conifers in the northern Rocky Mountains. *Forest Science* 36: 1077–1104. (GY-03)
-- [ ] B — Monserud, R.A., Sterba, H. 1996. A basal area increment model for individual trees growing in even- and uneven-aged forest stands in Austria. *Forest Ecology and Management* 80: 57–80. (GY-03)
-- [ ] B — Monserud, R.A., Sterba, H. 1999. Modeling individual tree mortality for Austrian forest species. *Forest Ecology and Management* 113: 109–123. (GY-04)
-- [ ] B — Drew, T.J., Flewelling, J.W. 1979. Stand density management: an alternative approach and its application to Douglas-fir plantations. *Forest Science* 25: 518–532. (GY-06)
-- [ ] B — Newton, P.F. 1997. Stand density management diagrams: review of their development and utility in stand-level management planning. *Forest Ecology and Management* 98: 251–265. (GY-06)
-- [ ] B — Yoda, K., Kira, T., Ogawa, H., Hozumi, K. 1963. Self-thinning in overcrowded pure stands under cultivated and natural conditions. *Journal of Biology, Osaka City University* 14: 107–129. (GY-07)
+Bölüm 2 ile Bölüm 1'den düşenler (artık PDF aranmaz): Hegyi 1974; Ripley 1976, 1977; Illian ve ark. 2008;
+Richards 1959; Chapman 1961; Schumacher 1939; Zeide 1993; Zellner 1962; Borders 1989; Cox 1972; Davison ve Hinkley
+1997; Horvitz ve Thompson 1952; Cochran 1977 (tasarım formülleri için `survey`/`forestmangr`); Fay ve Herriot 1979;
+Battese ve ark. 1988; Rao ve Molina 2015; Breiman 2001; Hastie ve ark. 2009; Crookston ve Finley 2008; Rasmussen ve
+Williams 2006 (kriging `gstat` ile); Ploton ve ark. 2020; Ståhl ve ark. 2016 (açık erişim; istenirse okunur); Chave ve
+ark. 2014; Jenkins ve ark. 2003; Zianis ve ark. 2005; Tolunay 2011; Thomas ve Martin 2012 (karbon oranı zaten
+kullanıcıdan); Bitterlich 1984; de Vries 1986; Schreuder ve ark. 1993; Ware ve Cunia 1962; Vanclay 1994; Clutter ve
+ark. 1983; Pretzsch 2009; Bettinger ve ark. 2017; West 2009; Calama ve Montero 2004; Marquardt 1963.
 
-## 10. ML — Makine öğrenmesi ve mekânsal tahmin
+---
 
-- [ ] B — Breiman, L. 2001. Random forests. *Machine Learning* 45: 5–32. (ML-01)
-- [ ] C — Hastie, T., Tibshirani, R., Friedman, J. 2009. *The Elements of Statistical Learning*, 2. baskı. Springer. (ücretsiz PDF yazarların sayfasında)
-- [ ] B — Moeur, M., Stage, A.R. 1995. Most similar neighbor: an improved sampling inference procedure for natural resource planning. *Forest Science* 41: 337–359. (ML-04)
-- [ ] B — Crookston, N.L., Finley, A.O. 2008. yaImpute: an R package for kNN imputation. *Journal of Statistical Software* 23(10). (ML-04; ücretsiz)
-- [ ] B — Cressie, N. 1993. *Statistics for Spatial Data*, gözden geçirilmiş baskı. Wiley. (ML-05 kriging)
-- [ ] B — Rasmussen, C.E., Williams, C.K.I. 2006. *Gaussian Processes for Machine Learning.* MIT Press. (ML-05; ücretsiz PDF gaussianprocess.org)
-- [ ] B — Roberts, D.R. ve ark. 2017. Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. *Ecography* 40: 913–929. (ML-06)
-- [ ] C — Ploton, P. ve ark. 2020. Spatial validation reveals poor predictive performance of large-scale ecological mapping models. *Nature Communications* 11: 4540. (ML-06; açık erişim)
-- [ ] B — Fay, R.E., Herriot, R.A. 1979. Estimates of income for small places: an application of James–Stein procedures to census data. *JASA* 74: 269–277. (ML-07)
-- [ ] B — Battese, G.E., Harter, R.M., Fuller, W.A. 1988. An error-components model for prediction of county crop areas using survey and satellite data. *JASA* 83: 28–36. (ML-07)
-- [ ] C — Rao, J.N.K., Molina, I. 2015. *Small Area Estimation*, 2. baskı. Wiley.
-- [ ] B — Särndal, C.-E., Swensson, B., Wretman, J. 1992. *Model Assisted Survey Sampling.* Springer. (ML-08 ve SI-08 GREG)
-- [ ] B — Ståhl, G. ve ark. 2016. Use of models in large-area forest surveys: comparing model-assisted, model-based and hybrid estimation. *Forest Ecosystems* 3: 5. (ML-08; açık erişim)
+## Bölüm 3. Mevcut araçların doğrulama borcu (C; METHODS.md'de [D])
 
-## 11. DS — Karar destek
+Yayındaki hesaplar bağımsız sayısal referansla zaten test edildi; bunlar künye ve tanım doğrulaması için. Çoğu
+[P] ile kapatılabilir: çap dağılımları `fitdistrplus` (Delignette-Muller, M.L., Dutang, C. 2015. *J. Statistical
+Software* 64(4), **açık**), `lmomco`, `ForestFit`; uyum testleri ve AIC `stats`/`fitdistrplus`.
 
-- [ ] B — Faustmann, M. 1849 (İngilizce çevirisi 1995). Calculation of the value which forest land and immature stands possess for forestry. *Journal of Forest Economics* 1: 7–44. (DS-01)
-- [ ] B — Johnson, K.N., Scheurman, H.L. 1977. Techniques for prescribing optimal timber harvest and investment under different objectives — discussion and synthesis. *Forest Science Monograph* 18. (DS-02 Model I/II)
-- [ ] C — Bettinger, P., Boston, K., Siry, J.P., Grebner, D.L. 2017. *Forest Management and Planning*, 2. baskı. Academic Press. (DS-02)
-- [ ] B — Harmon, M.E. ve ark. 1986. Ecology of coarse woody debris in temperate ecosystems. *Advances in Ecological Research* 15: 133–302. (DS-04)
-- [ ] B — Nowak, D.J. ve ark. 2008. A ground-based method of assessing urban forest structure and ecosystem services. *Arboriculture & Urban Forestry* 34: 347–358. (DS-06)
-- DS-05 (zarar değerlendirmesi) için kaynak, aracın kapsamı (fırtına, yangın, böcek?) belirlenince seçilecek.
-
-## 12. Mevcut araçların doğrulama borcu (C; METHODS.md'de [D])
-
-Yayındaki hesaplar bağımsız sayısal referansla zaten test edildi; bunlar yalnızca künye ve tanım doğrulaması için.
-
-- [ ] Johnson, N.L. 1949. Systems of frequency curves generated by methods of translation. *Biometrika* 36: 149–176. (Johnson SB)
-- [ ] Burk, T.E., Newberry, J.D. 1984. A simple algorithm for moment-based recovery of Weibull distribution parameters. *Forest Science* 30: 329–332.
-- [ ] Knoebel, B.R., Burkhart, H.E. 1991. A bivariate distribution approach to modeling forest diameter distributions at two points in time. *Biometrics* 47: 241–253.
-- [ ] Cohen, A.C. 1965. Maximum likelihood estimation in the Weibull distribution based on complete and on censored samples. *Technometrics* 7: 579–588.
-- [ ] Anderson, T.W., Darling, D.A. 1954. A test of goodness of fit. *JASA* 49: 765–769.
-- [ ] Massey, F.J. 1951. The Kolmogorov–Smirnov test for goodness of fit. *JASA* 46: 68–78.
-- [ ] Akaike, H. 1974. A new look at the statistical model identification. *IEEE Transactions on Automatic Control* 19: 716–723.
-- [ ] Näslund, M. 1936. Skogsförsöksanstaltens gallringsförsök i tallskog. *Meddelanden från Statens Skogsförsöksanstalt* 29. (boy–çap)
-- [ ] Assmann, E. 1970. *The Principles of Forest Yield Study.* Pergamon. (üst boy tanımı)
-- [ ] Hyndman, R.J., Fan, Y. 1996. Sample quantiles in statistical packages. *The American Statistician* 50: 361–365.
+- Johnson 1949 (Johnson SB; `ForestFit`), Burk ve Newberry 1984 (moment geri kazanımı), Knoebel ve Burkhart 1991,
+  Cohen 1965, Anderson ve Darling 1954, Massey 1951, Akaike 1974, Hyndman ve Fan 1996 (R `quantile` type 7 belgesi
+  yeter), Näslund 1936 (`lmfor` [B] ile karşılandı), Assmann 1970 (üst boy tanımı; ders kitabı).
