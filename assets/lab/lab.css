@@ -515,3 +515,12 @@ details.assumebox > summary { font: 600 16px var(--head); color: var(--ink); mar
 .dir-also { font-size: 13.5px; margin: 8px 0 0; }
 .dir-planned { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .dir-planned li { font-size: 13px; color: var(--muted); background: var(--line2); border-radius: 999px; padding: 3px 10px; }
+/* product bucking drawing (taper page, SV-06) */
+.bres { fill: var(--sunk); stroke: var(--muted); stroke-width: 1; }
+.bstump { fill: var(--muted); fill-opacity: .35; }
+.bpiece polygon { stroke: var(--ink); stroke-width: .6; }
+.bpiece .bpat { stroke: none; }
+.bcut { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 2; }
+.blab { font-size: 12px; font-weight: 600; text-anchor: middle; fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,.7); stroke-width: 3px; }
+.bsw { vertical-align: -2px; border: 1px solid var(--line); }
+#bprod input { width: 100%; min-width: 4.5em; }

@@ -13,6 +13,8 @@ const { tableFromText } = await import('../../assets/lab/core/table.js');
 const { readStems } = await import('../../assets/lab/core/stems.js');
 const TP = await import('../../assets/lab/taper/calc.js');
 const FIT = await import('../../assets/lab/taper/fit.js');
+const BK = await import('../../assets/lab/taper/bucking.js');
+const { blankSet } = await import('../../assets/lab/core/coef.js');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/govde-profili.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
@@ -72,6 +74,51 @@ const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-cs
 const csvOut = await readFile(await dc.path(), 'utf8'); { const L = csvOut.trim().split(/\r?\n/), hd = L[0].split(','), v = Number(L[1].split(',')[hd.indexOf('merch_m3')]); ok(hd.includes('merch_m3') && Math.abs(v - m.merch) <= 1e-5 * m.merch && String(v).length > 8, 'CSV with full-precision merchantable volume'); }
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'taper-res.png'), fullPage: true });
 
+// product bucking (SV-06) on the same tree: user products, value method, then priority; results = engine
+await page.click('#steps [data-go="2"]'); await page.check('#b-on'); await page.waitForSelector('#b-add');
+ok(await page.isDisabled('#calc') && (await page.textContent('#step2')).includes('En az bir ürün'), 'bucking on without products: cannot compute');
+const PRODS = [['tomruk', '20', '4', '6', '0.5', '10', '1', '120'], ['kısa tomruk', '12', '2.5', '', '', '10', '2', '80'], ['lif-yonga', '7', '2', '', '', '0', '3', '30']];
+const KS = ['name', 'dMin', 'L', 'Lmax', 'Lstep', 'trim', 'priority', 'value'];
+for (const [i, row] of PRODS.entries()) {
+  await page.click('#b-add'); await page.waitForSelector(`#bprod input[data-row="${i}"][data-k="name"]`);
+  for (const [j, v] of row.entries()) { const sel = `#bprod input[data-row="${i}"][data-k="${KS[j]}"]`; await page.fill(sel, v); await page.press(sel, 'Tab'); }
+}
+await page.waitForSelector('#calc:not([disabled])');
+const LIST = { bark: 'ib', currency: null, products: PRODS.map((r, i) => ({ id: String(i + 1), name: r[0], dMin: +r[1], L: +r[2], Lmax: r[3] ? +r[3] : null, Lstep: r[3] ? +r[4] : null, trim: +r[5], priority: +r[6], value: +r[7] })) };
+await page.fill('#bprod input[data-row="1"][data-k="trim"]', '5'); await page.press('#bprod input[data-row="1"][data-k="trim"]', 'Tab');
+ok(await page.isDisabled('#calc') && (await page.textContent('#step2')).includes('tam katı değil'), 'length + trim off the 0.1 m grid: refused with a message');
+await page.fill('#bprod input[data-row="1"][data-k="trim"]', '10'); await page.press('#bprod input[data-row="1"][data-k="trim"]', 'Tab'); await page.waitForSelector('#calc:not([disabled])');
+await page.click('#calc'); await page.waitForSelector('#bsum');
+const bset = { ...blankSet('taper.mb76'), id: 'e', params: E.params, output: { name: 'd', unit: 'cm', bark: 'ib' }, source: { citation: 'e2e' } };
+const bOpts = { method: 'value', objective: 'value', step: 0.1, stump: 0.3, dTop: 7 }, BV = BK.buckTree(bset, 30, 24, LIST, bOpts);
+const sumRows = await page.$$eval('#bsum tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
+ok(BV.status === 'ok' && sumRows.length === 4 && BV.byProduct.every((b, k) => Number(sumRows[k][1]) === b.n && Math.abs(num(sumRows[k][2]) - b.V) <= 5e-5 * Math.max(1, b.V) + 1e-4 && Math.abs(num(sumRows[k][3]) - b.value) <= 0.005 + 1e-6 * b.value),
+  `value method: product summary = engine (${BV.byProduct.map(b => b.n + '×' + b.name).join(', ')}; value ${BV.valueTotal.toFixed(2)})`);
+ok(Math.abs(num(sumRows[3][3]) - BV.valueTotal) <= 0.005 + 1e-6 * BV.valueTotal && await page.locator('#ch-buck svg g.bpiece').count() === BV.pieces.length && await page.locator('#bpieces tbody tr').count() === BV.pieces.length, 'total value, one drawn shape and one table row per piece');
+const pcs = await page.$$eval('#bpieces tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
+ok(pcs.every((c, i) => Math.abs(num(c[2]) - BV.pieces[i].h1) <= 5e-3 && Math.abs(num(c[3]) - BV.pieces[i].h2) <= 5e-3 && num(c[7]) >= LIST.products[BV.pieces[i].product].dMin - 0.05), 'pieces: heights = engine, small ends not below the minimum');
+ok((await page.textContent('#bused')).includes('dinamik programlama') && (await page.textContent('#bbal')).includes('toplam gövde'), 'method, settings and volume balance written');
+ok(await page.locator('#ch-buck svg pattern').count() === 3 && await page.locator('#bsum .bsw').count() === 3, 'each product has a pattern and a legend swatch (not colour alone)');
+const [dxb] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
+const wbb = XLSX.read(await readFile(await dxb.path()), { type: 'buffer' }), pz = XLSX.utils.sheet_to_json(wbb.Sheets['Parçalar'], { header: 1 });
+ok(wbb.SheetNames.includes('Ürünler') && pz.length === BV.pieces.length + 1 && Math.abs(pz[1][pz[0].indexOf('V_m3')] - BV.pieces[0].V) <= 1e-4 * BV.pieces[0].V, 'Excel: Products and Pieces sheets, piece volumes at full precision');
+if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'taper-buck.png'), fullPage: true });
+// changing a product changes the bucking; priority method = engine
+await page.click('#steps [data-go="2"]'); await page.fill('#bprod input[data-row="0"][data-k="dMin"]', '26'); await page.press('#bprod input[data-row="0"][data-k="dMin"]', 'Tab');
+await page.check('input[name="bmethod"][value="priority"]'); await page.waitForSelector('#calc:not([disabled])'); await page.click('#calc'); await page.waitForSelector('#bsum');
+const LIST2 = { ...LIST, products: LIST.products.map((p, i) => i === 0 ? { ...p, dMin: 26 } : p) }, BP = BK.buckTree(bset, 30, 24, LIST2, { ...bOpts, method: 'priority' });
+const sum2 = await page.$$eval('#bsum tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
+ok(BP.byProduct.every((b, k) => Number(sum2[k][1]) === b.n) && (await page.textContent('#bused')).includes('öncelik sırası') && JSON.stringify(sum2.map(r => r[1])) !== JSON.stringify(sumRows.map(r => r[1])), 'new minimum diameter and priority method: bucking changes and = engine');
+// product list JSON: download, clear, load back
+await page.click('#steps [data-go="2"]');
+const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#b-save')]); const pj = await dj.path();
+const back = BK.parseProducts(await readFile(pj, 'utf8')); ok(back.problems.length === 0 && back.list.products.length === 3 && back.list.products[0].dMin === 26, 'product list downloaded as bucking-products/1 JSON');
+for (let i = 0; i < 3; i++) await page.click('[data-bdel="0"]');
+ok(await page.locator('#bprod tbody tr').count() === 0, 'products deleted');
+await page.setInputFiles('#b-load', pj); await page.waitForSelector('#bprod input[data-row="2"]');
+ok(await page.inputValue('#bprod input[data-row="0"][data-k="dMin"]') === '26' && (await page.textContent('#status')).includes('yüklendi'), 'product list loaded back from the JSON');
+await page.uncheck('#b-on');
+
 // a tree table (pasted) and an invalid tree
 await page.click('#steps [data-go="2"]'); await page.check('input[name="tmode"][value="table"]');
 await page.evaluate(() => { document.querySelector('#timp details').open = true; });
@@ -81,7 +128,7 @@ const rows = await page.$$eval('#rtab tbody tr', rs => rs.map(r => r.textContent
 ok(rows.length === 3 && rows[2].includes('göğüs çapı eksik'), 'tree table: three trees, the invalid one with its note');
 
 // session survives a reload; English
-await page.reload(); await page.waitForSelector('#rtab'); ok((await page.textContent('#status')).includes('geri yüklendi'), 'session restored after reload');
+await page.waitForTimeout(400); await page.reload(); await page.waitForSelector('#rtab'); ok((await page.textContent('#status')).includes('geri yüklendi'), 'session restored after reload');
 await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps button');
 ok((await page.locator('h1').textContent()).includes('Stem Taper') && (await page.textContent('#steps')).includes('Results'), 'English page');
 // phone and dark theme

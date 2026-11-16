@@ -4,10 +4,10 @@ $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Gövde Profili' : 'Stem Taper',
     'kicker' => $tr ? 'Gövde profili denklemleri' : 'Taper equations',
-    'lede'   => $tr ? 'Kendi katsayı setinizle (kaynağıyla) ya da gövde ölçümlerinizden uydurduğunuz profil denklemiyle herhangi bir yükseklikteki çapı, bir çapın yüksekliğini, toplam hacmi ve tepe çapına kadar kullanılabilir hacmi hesaplayın; kabuklu ve kabuksuz profili birlikte görün.'
-                    : 'With your own coefficient set (and its source), or a taper equation fitted to your stem measurements, compute the diameter at any height, the height of a diameter, the total volume and the merchantable volume to a top diameter; see the outside- and inside-bark profiles together.',
-    'desc'   => $tr ? 'Gövde profili: Max ve Burkhart (1976) ve Kozak (2004) denklemleri, katsayı kütüphanesi, gövde ölçümlerinden uydurma, toplam ve kullanılabilir hacim, profil grafiği.'
-                    : 'Stem taper: Max and Burkhart (1976) and Kozak (2004) equations, coefficient library, fitting to stem measurements, total and merchantable volume, profile chart.',
+    'lede'   => $tr ? 'Kendi katsayı setinizle (kaynağıyla) ya da gövde ölçümlerinizden uydurduğunuz profil denklemiyle herhangi bir yükseklikteki çapı, bir çapın yüksekliğini, toplam hacmi ve tepe çapına kadar kullanılabilir hacmi hesaplayın, gövdeyi kendi ürünlerinize en yüksek değerle bölün; kabuklu ve kabuksuz profili birlikte görün.'
+                    : 'With your own coefficient set (and its source), or a taper equation fitted to your stem measurements, compute the diameter at any height, the height of a diameter, the total volume and the merchantable volume to a top diameter, and buck the stem into your own products for the highest value; see the outside- and inside-bark profiles together.',
+    'desc'   => $tr ? 'Gövde profili: Max ve Burkhart (1976) ve Kozak (2004) denklemleri, katsayı kütüphanesi, gövde ölçümlerinden uydurma, toplam ve kullanılabilir hacim, profil grafiği, ürün bölme (dinamik programlama).'
+                    : 'Stem taper: Max and Burkhart (1976) and Kozak (2004) equations, coefficient library, fitting to stem measurements, total and merchantable volume, profile chart, product bucking (dynamic programming).',
 ]);
 ?>
   <p class="privacy" id="privacy"></p>

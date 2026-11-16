@@ -25,7 +25,7 @@ import { registerForm, validateCoef } from '../core/coef.js';
 import { brent } from '../core/roots.js';
 import { gaussLegendre } from '../core/quad.js';
 
-export const TOOL = { id: 'govde-profili', version: '1.0.0-beta.1' };
+export const TOOL = { id: 'govde-profili', version: '1.0.0-beta.2' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /** Registered forms: params in the order of the source; y(p, x, D, H) = d²/D²; Y (antiderivative in x) if closed. */
