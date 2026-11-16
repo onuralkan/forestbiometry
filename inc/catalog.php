@@ -47,7 +47,7 @@ function site_catalog(): array {
         ['SV-03', 'planned', 'Kullanılabilir hacim', 'Merchantable volume'],
         ['SV-04', 'planned', 'Hacim denklemleri', 'Volume equations'],
         ['SV-05', 'planned', 'Tomruk ölçüm kuralları', 'Log scaling rules'],
-        ['SV-06', 'planned', 'Ürün bölme (sortiman) eniyileme', 'Log bucking optimizer'],
+        ['SV-06', 'live', 'Ürün bölme (sortiman) eniyileme', 'Log bucking optimizer', 'govde-profili.php'],
         ['BC-01', 'planned', 'Allometrik biyokütle', 'Allometric biomass'],
         ['BC-02', 'planned', 'Biyokütle bileşenleri', 'Biomass components'],
         ['BC-03', 'planned', 'Biyokütle dönüşüm etkeni (BEF)', 'Biomass expansion factor (BEF)'],

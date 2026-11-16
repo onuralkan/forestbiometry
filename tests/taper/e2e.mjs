@@ -37,7 +37,7 @@ const E = FIT.fitTaper(st, { form: 'mb76', bark: 'ib', scale: 'd' });
 
 await page.goto(URL + '?lang=tr'); await page.waitForSelector('#steps button');
 const VER = TP.TOOL.version;
-ok((await page.locator('h1').textContent()).includes('Gövde Profili') && (await page.locator('.b-ids').textContent()).trim() === 'SV-02' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool id SV-02, version ${VER}`);
+ok((await page.locator('h1').textContent()).includes('Gövde Profili') && (await page.locator('.b-ids').textContent()).trim() === 'SV-02 · SV-06' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SV-02 · SV-06, version ${VER}`);
 ok(await page.isDisabled('#to2'), 'no profile set: cannot continue');
 
 // fitting tab with the sample stems
