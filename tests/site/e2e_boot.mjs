@@ -34,7 +34,7 @@ for (const f of PAGES) {
 // 3. the tool module never arrives: a warning with a reload button after 10 s (TR text on a TR page)
 {
   const ctx = await browser.newContext(); const p = await ctx.newPage();
-  await p.route('**/assets/lab/secvol/ui.js*', () => {}); // never answered
+  await p.route('**/secvol/ui.js*', () => {}); // never answered
   await p.goto(`${BASE}/seksiyon-hacmi.php?lang=tr`, { waitUntil: 'commit' });
   const w = await p.waitForSelector('#bootwarn', { timeout: 13000 }).then(() => true, () => false);
   ok(w, 'hung module: warning shown');
@@ -45,7 +45,7 @@ for (const f of PAGES) {
 // 4. the tool module fails (404): the warning comes at once
 {
   const ctx = await browser.newContext(); const p = await ctx.newPage();
-  await p.route('**/assets/lab/secvol/calc.js*', r => r.fulfill({ status: 404, body: '' }));
+  await p.route('**/secvol/ui.js*', r => r.fulfill({ status: 404, body: '' }));
   await p.goto(`${BASE}/seksiyon-hacmi.php?lang=en`);
   ok(await p.waitForSelector('#bootwarn', { timeout: 4000 }).then(() => true, () => false), 'failed module: warning at once');
   await ctx.close();

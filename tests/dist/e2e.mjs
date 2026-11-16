@@ -472,7 +472,7 @@ await page.waitForSelector('#panel .srcs');
   ok((await q.locator('#nodata').textContent()).includes('Analize girecek çap yok') && (await q.locator('#acc').textContent()).includes('2 değer okunamadı') && (await q.locator('table.ptab').count()) === 0, 'empty/missing data: stated, no tables');
   await c4.close(); }
 { const c5 = await browser.newContext(), q = await c5.newPage();
-  await q.route('**/assets/lab/dist/ui.js*', r => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>One moment, please...</title>' }));
+  await q.route('**/dist/ui.js*', r => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>One moment, please...</title>' }));
   await q.goto(URL + '?lang=en'); await q.waitForSelector('#bootwarn', { timeout: 20000 });
   ok((await q.locator('#bootwarn').textContent()).includes('did not load') && (await q.locator('#bootwarn button').count()) === 1, 'load failure (HTML instead of JavaScript): warning with a reload button');
   await c5.close(); }

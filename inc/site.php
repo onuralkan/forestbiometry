@@ -205,6 +205,15 @@ function site_top(array $o = []): void {
 }
 
 /** Version tag of a site file: its modification time (it changes whenever the deployment uploads that file). */
+/**
+ * true: pages load one bundled file each from assets/build/ (scripts/bundle.mjs), as on the server. The PHP built-in
+ * server (development, browser tests) uses the module sources unless FB_BUNDLE=1, so an edit is seen without a build.
+ */
+function site_bundles(): bool {
+    static $on = null;
+    if ($on === null) $on = is_file(__DIR__ . '/../assets/build/core/cite-ui.js') && (PHP_SAPI !== 'cli-server' || getenv('FB_BUNDLE') === '1');
+    return $on;
+}
 function site_ver(string $rel): string {
     $f = __DIR__ . '/../' . $rel;
     return is_file($f) ? (string) filemtime($f) : '0';
@@ -299,19 +308,30 @@ function site_bottom(string $script = ''): void {
 <dialog id="citedlg" class="dlg citedlg" aria-label="<?= $tr ? 'Kaynak gösterme' : 'How to cite' ?>"></dialog>
 <script type="application/json" id="cite-data"><?= json_encode($cd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
 <?php
-    // entry modules: the shell's citation dialog and the page's own script(s); their src gets the file time as version
-    $entries = ['assets/lab/core/cite-ui.js'];
-    $script = preg_replace_callback('~src="([^"?]+\.js)(?:\?v=[^"]*)?"~', function ($m) use (&$entries) { $entries[] = $m[1]; return 'src="' . $m[1] . '?v=' . site_ver($m[1]) . '"'; }, $script);
+    // entry modules: the shell's citation dialog and the page's own script(s). With bundles (site_bundles()) the page's
+    // tool script and the citation dialog come as one file from assets/build/; otherwise as ES module trees whose files
+    // get the file time as version (import map + modulepreload).
+    $entries = []; $main = ''; $hasScript = $script !== '';
+    if (site_bundles()) {
+        $script = preg_replace_callback('~<script type="module" src="assets/lab/([^"?]+\.js)(?:\?v=[^"]*)?"></script>~', function ($m) use (&$main) {
+            $b = 'assets/build/' . $m[1];
+            if ($main === '' && is_file(__DIR__ . '/../' . $b)) { $main = $b; return ''; }
+            return $m[0];
+        }, $script);
+        if ($main === '') $main = 'assets/build/core/cite-ui.js';
+    } else $entries[] = 'assets/lab/core/cite-ui.js';
+    $script = preg_replace_callback('~src="(assets/lab/[^"?]+\.js)(?:\?v=[^"]*)?"~', function ($m) use (&$entries) { $entries[] = $m[1]; return 'src="' . $m[1] . '?v=' . site_ver($m[1]) . '"'; }, $script);
     // inline modules of the page: their relative imports (resolved from the page folder) belong to the graph too
     if (preg_match_all('~<script type="module">(.*?)</script>~s', $script, $im)) foreach ($im[1] as $body) {
         preg_match_all('~(?:\bfrom\s*|\bimport\s*\(?\s*)[\'"](\.{1,2}/[^\'"]+\.m?js)[\'"]~', $body, $m);
         foreach ($m[1] as $spec) { $q = site_norm($spec); if ($q !== null) $entries[] = $q; }
     }
-    echo site_modules_html($entries);
+    if ($entries) echo site_modules_html($entries);
+    $first = $main !== '' ? $main : 'assets/lab/core/cite-ui.js';
 ?>
-<script type="module" src="assets/lab/core/cite-ui.js?v=<?= site_ver('assets/lab/core/cite-ui.js') ?>"></script>
+<script type="module" src="<?= h($first) ?>?v=<?= site_ver($first) ?>"></script>
 <?= $script ?>
-<?php if ($script !== ''): ?>
+<?php if ($hasScript): ?>
 <script>
 // Boot watchdog: a tool draws its steps (#steps) or planner (#app) from its modules. If a module request hangs or
 // fails, or the browser store stalls, the page would stay blank under the top bar; after 10 s (or at once on a

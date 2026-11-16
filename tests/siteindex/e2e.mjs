@@ -136,7 +136,8 @@ await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab');
 { const th = await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent)), rr = await rows(), ci = th.indexOf('SI %95 aralığı alt');
   ok(ci > 0 && th[ci + 1] === 'SI %95 aralığı üst' && (await page.locator('#runc').textContent()).includes(`B = ${R4.B}, tohum ${R4.seed}`), 'bootstrap interval as two numeric columns (lower, upper) and its description');
   const okRow = rr.find(r => r[ci] !== '–'), lo = num(okRow[ci]), hi = num(okRow[ci + 1]); ok(lo <= num(okRow[ci - 1]) && num(okRow[ci - 1]) <= hi, 'interval contains the site index'); }
-await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js');
+// the page may run a bundle (its own module copies): load the source forms first, then save through the shared store
+await page.evaluate(async () => { await import('/assets/lab/siteindex/calc.js'); const C = await import('/assets/lab/core/coef.js');
   await C.saveCoef({ ...C.blankSet('si.cr.ada.b0'), id: 'covset', params: { b1: 0.03, b2: 1.4 }, meta: { ageType: 'total', topDef: 'h0dbh', cov: '1.9e-6 3.1e-5; 3.1e-5 8.1e-4' }, source: { citation: 'Test with covariance' } }); });
 await page.reload(); await page.waitForSelector('#steps'); await page.click('#steps [data-go="1"]'); await page.waitForSelector('#setsel'); await page.selectOption('#setsel', 'covset');
 await page.click('#steps [data-go="2"]'); await page.check('input[name="dmode"][value="single"]'); await fillC('#sA', '30'); await fillC('#sH', '15'); await page.click('#calc'); await page.waitForSelector('#rtab');

@@ -23,6 +23,10 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      - name: Page bundles are up to date (assets/build from assets/lab; scripts/bundle.mjs)
+        run: |
+          npm install --no-save --no-package-lock acorn@8.18.0
+          node scripts/bundle.mjs --check
       - name: Numerical tests
         run: |
           node legacy/test_math.js

@@ -139,7 +139,11 @@ await page.goto(BASE + '/kilavuz.php?lang=tr'); await page.click('.guide-sec a.g
   for (const f of files) { const un = []; let mods = 0; const h = r => { const u = r.url(); if (/\.(m?js|css)(\?|$)/.test(u)) { mods++; if (!/[?&]v=/.test(u)) un.push(u.replace(BASE, '')); } };
     q.on('request', h); await q.goto(BASE + '/' + f, { waitUntil: 'networkidle' }); q.off('request', h);
     const im = await q.evaluate(() => { const s = document.querySelector('script[type="importmap"]'); return s ? Object.keys(JSON.parse(s.textContent).imports).length : 0; });
-    ok(un.length === 0 && im > 0, `${f || 'index.php'}: ${mods} scripts and styles, all versioned (import map of ${im} modules)${un.length ? '; unversioned: ' + un.join(' ') : ''}`); }
+    // bundled (the server, or FB_BUNDLE=1): one file from assets/build/ instead of the module tree, so a page makes only
+    // a few requests (the host's bot protection answers bursts with an HTML page; docs/PROGRESS.md, 16 Nov 2026)
+    const bundled = await q.evaluate(() => !!document.querySelector('script[type="module"][src^="assets/build/"]'));
+    if (bundled) ok(un.length === 0 && mods <= 4, `${f || 'index.php'}: bundled, ${mods} scripts and styles, all versioned${un.length ? '; unversioned: ' + un.join(' ') : ''}`);
+    else ok(un.length === 0 && im > 0, `${f || 'index.php'}: ${mods} scripts and styles, all versioned (import map of ${im} modules)${un.length ? '; unversioned: ' + un.join(' ') : ''}`); }
   await q.close(); }
 
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
