@@ -33,8 +33,9 @@ ok(worst < 1e-12, `${REF.cases.length} trees over 8 forms, corrections none / Sn
 ok(B.CO2_PER_C === REF.co2_per_c && Math.abs(B.CO2_PER_C - 3.666666666667) < 1e-12, 'CO₂/C = 44/12 = 3.666666666667');
 ok(Math.abs(correctionFactor({ transform: { kind: 'log', correction: 'baskerville', value: 0.2 } }) - REF['baskerville_see_0.2']) < 1e-15 && Math.abs(REF['baskerville_see_0.2'] - 1.020201340027) < 1e-12, 'Baskerville factor exp(0.2²/2) = 1.020201340027 in the shared core');
 const bask = B.treeBiomass(mk('log.d', { a: -2, b: 2.4 }, { kind: 'log', correction: 'baskerville', value: 0.2 }), { D: 30 });
-ok(B.BASKERVILLE_READY ? bask.status === 'ok' && rel(bask.value, Math.exp(-2 + 2.4 * Math.log(30)) * REF['baskerville_see_0.2']) < 1e-12 : bask.status === 'unsupported' && bask.problems[0].code === 'correction.baskerville.source',
-  B.BASKERVILLE_READY ? 'Baskerville applied' : 'Baskerville waits for its source: not computed, reason given');
+ok(bask.status === 'ok' && rel(bask.value, Math.exp(-2 + 2.4 * Math.log(30)) * REF['baskerville_see_0.2']) < 1e-12 && rel(bask.cf, 1.020201340027) < 1e-12, 'Baskerville on the ln scale: exp(a + b·ln D) · exp(SEE²/2), SEE = 0.2 → factor 1.020201340027');
+const bask10 = B.treeBiomass(mk('log10.d', { a: -1, b: 2.4 }, { kind: 'log10', correction: 'baskerville', value: 0.1 }), { D: 30 });
+ok(bask10.status === 'unsupported' && bask10.problems[0].code === 'correction.baskerville.log10.source' && bask10.value === null, 'Baskerville on a log10 equation waits for its source: not computed, reason given');
 
 // states
 const dh = mk('pow.dh', { a: 0.05, b: 2, c: 0.7 });

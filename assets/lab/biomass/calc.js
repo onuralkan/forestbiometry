@@ -5,8 +5,9 @@
 // A. Allometric equations, tree level (registered forms 'biomass.<id>', D in cm, H in m, B in kg dry matter). The forms
 //    are general function definitions applied with the user's coefficients (definition exception, 16 Nov 2026 user
 //    decision; METHODS §22). Log forms are kept on their own scale: ln and log10 are separate forms, never converted
-//    silently. Back-transformation correction: none, Snowdon ratio or a user factor as given in the source; the
-//    Baskerville factor exp(SEE²/2) waits for its source (BASKERVILLE_READY).
+//    silently. Back-transformation correction: none, Snowdon ratio or a user factor as given in the source, or the
+//    Baskerville factor exp(SEE²/2) on the ln scale (Baskerville 1972, cited via Chave et al. 2014 and Baia et al.
+//    2025 [A]); for log10 equations the factor waits for its own source (Sprugel 1983) and is not applied.
 // B. Conversion from volume (IPCC 2006, Vol. 4, Ch. 2, Eq. 2.8b [B]): AGB = V · D · BEF (or V · BCEF), total
 //    = AGB · (1 + R), R = below-ground / above-ground biomass. The bark side of the volume must match the side the
 //    factors were defined for; otherwise nothing is computed.
@@ -17,8 +18,8 @@ import { buildUnits } from '../stand/calc.js';
 
 export const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.1' };
 export const CO2_PER_C = 44 / 12;
-/** The Baskerville correction is offered once its source is read ([B]) or cited through two open sources ([A]). */
-export const BASKERVILLE_READY = false;
+/** Scales on which the Baskerville correction is applied: ln ([A], METHODS §22); log10 waits for its source. */
+export const BASKERVILLE_SCALES = ['log'];
 
 /** Registered forms. f(p, D, H) gives B on the form's own scale (linear, ln B or log10 B). */
 export const FORMS = {
@@ -64,7 +65,7 @@ export function treeBiomass(set, x) {
     out.estimatedHeight = x.heightSource === 'estimated';
   }
   const t = set.transform;
-  if (f.scale !== 'none' && t && t.correction === 'baskerville' && !BASKERVILLE_READY) return bad('unsupported', 'correction.baskerville.source');
+  if (f.scale !== 'none' && t && t.correction === 'baskerville' && !BASKERVILLE_SCALES.includes(f.scale)) return bad('unsupported', 'correction.baskerville.log10.source');
   const y = f.f(set.params, D, H);
   let v;
   if (f.scale === 'none') v = y;
