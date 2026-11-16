@@ -66,9 +66,12 @@ for d in $(dirs_needed | awk '{ print length, $0 }' | sort -n | cut -d' ' -f2-);
   fi
 done
 
-# 4. upload, one request per folder (overwrite existing files)
+# 4. upload, one request per folder (overwrite existing files). Order: assets and every other folder first, then inc/,
+#    the site root (pages, .htaccess) last, so a page never goes live before the scripts and styles it loads (a new
+#    page referring to a bundle not yet uploaded gave short 404s during deployments).
+upload_order() { while read -r f; do d=$(dirname "$f"); case "$d" in .) k=2 ;; inc|inc/*) k=1 ;; *) k=0 ;; esac; echo "$k $d"; done | sort -u | sort -k1,1n -k2,2 | cut -d' ' -f2-; }
 fail=0
-for d in $(while read -r f; do dirname "$f"; done < "$RUNNER_TEMP/list.txt" | sort -u); do
+for d in $(upload_order < "$RUNNER_TEMP/list.txt"); do
   args=(); i=0
   while read -r f; do [ "$(dirname "$f")" = "$d" ] || continue; i=$((i + 1)); args+=(-F "file-$i=@$(src_of "$f");filename=$(basename "$f")"); done < "$RUNNER_TEMP/list.txt"
   target="$DIR"; [ "$d" = . ] || target="$DIR/$d"
