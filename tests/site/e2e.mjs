@@ -64,9 +64,15 @@ await shot('site-3-telefon-koyu', phone);
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('#side .b-cat').count()) === N_CATS && N_CATS === 11 && (await page.locator('#side .b-live a').count()) === N_TOOLS, `sidebar: ${N_CATS} modules, ${N_TOOLS} tool pages`);
 ok((await page.locator('.dir-group').count()) === N_CATS, `home directory grouped in ${N_CATS} modules`);
+{ const g = page.locator('.dir-group[data-mod="SS"]'), b = g.locator('.dir-cat');
+  ok((await page.locator('.dir-group.collapsed').count()) === N_CATS && !(await g.locator('.dir-cards').isVisible()), 'home: modules closed by default');
+  await b.click(); ok(await g.locator('.dir-cards').isVisible() && (await b.getAttribute('aria-expanded')) === 'true', 'home: a module opens from its heading');
+  await page.reload(); ok(await page.locator('.dir-group[data-mod="SS"] .dir-cards').isVisible(), 'home: an open module stays open after a reload');
+  await page.click('#dir-open'); ok((await page.locator('.dir-group.collapsed').count()) === 0, 'home: open all');
+  await page.click('#dir-close'); ok((await page.locator('.dir-group.collapsed').count()) === N_CATS, 'home: close all'); }
 { const pl = CATALOG.filter(c => !c.page && c.status !== 'out'), out = CATALOG.filter(c => c.status === 'out');
   ok(CATALOG.length === 74 && out.length === 6, `catalogue: 74 tool ids, 6 out of scope (${out.map(c => c.id).join(', ')})`);
-  ok((await page.locator('#side .b-pl').count()) === pl.length && (await page.locator('#side .b-pl a').count()) === 0 && (await page.locator('.dir-planned li').count()) === pl.length, `${pl.length} planned tools greyed in the sidebar and the directory, without links`);
+  ok((await page.locator('#side .b-pl').count()) === pl.length && (await page.locator('#side .b-pl a').count()) === 0 && (await page.locator('.dir-cards .hz-card.soon').count()) === pl.length && (await page.locator('.dir-cards .hz-card.soon a, .dir-cards a.hz-card.soon').count()) === 0 && (await page.locator('.dir-cards .hz-card.soon .hz-badge').count()) === pl.length && (await page.locator('.dir-cards .hz-card.soon svg.hz-fig').evaluateAll(a => a.every(x => x.childElementCount > 0))), `${pl.length} planned tools greyed in the sidebar and the directory, without links`);
   const titles = await page.locator('#side .b-pl .b-planned').evaluateAll(a => a.map(x => x.getAttribute('title')));
   ok(!out.some(c => titles.some(t => t.startsWith(c.id + ' '))), 'out-of-scope tools are not shown');
   ok(CATALOG.filter(c => c.page).every(c => TOOL_IDS.includes(c.page.replace('.php', ''))), 'every catalogue page exists in site_tools()'); }

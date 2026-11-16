@@ -39,21 +39,22 @@ $tools = site_tools();
 
   <section class="dir" aria-labelledby="h-tools">
     <h2 id="h-tools" class="b-h2"><?= $tr ? 'Araçlar' : 'Tools' ?></h2>
-    <p class="muted dir-note"><?= $tr ? 'Araçlar on bir modülde toplanır; her kart bir araca götürür, kartlardaki çizimler aracın çıktı türünü gösteren temsilî çizimlerdir (veri değildir). Gri olanlar planlıdır; "yolda" işaretliler geliştiriliyor. Planın tamamı ve kimlikleri: proje deposundaki docs/PLATFORM_PLAN.md.' : 'Tools are grouped in eleven modules; each card opens a tool, its drawing illustrates the kind of output (it is not data). Greyed ones are planned; those marked "soon" are being built. The full plan and the tool ids: docs/PLATFORM_PLAN.md in the project repository.' ?></p>
-    <?php $catalog = site_catalog(); foreach (site_modules() as $mod): $it = site_module_items($mod['id'], $tools, $catalog); ?>
-    <div class="dir-group" id="mod-<?= $mod['id'] ?>">
-      <div class="dir-cat"><h3><?= h($mod['title']) ?></h3><p><?= h($mod['desc']) ?></p></div>
-      <div>
-      <?php if ($it['home']): ?>
+    <p class="muted dir-note"><?= $tr ? 'Araçlar on bir modülde toplanır; her kart bir araca götürür, kartlardaki çizimler aracın çıktı türünü gösteren temsilî çizimlerdir (veri değildir). Modüller başlıklarına tıklayınca açılır. Soluk kartlar henüz yayında olmayan araçlardır: "Yolda" olanlar geliştiriliyor, "Yakında" olanlar planlı. Planın tamamı ve kimlikleri: proje deposundaki docs/PLATFORM_PLAN.md.' : 'Tools are grouped in eleven modules; each card opens a tool, its drawing illustrates the kind of output (it is not data). Modules open when you click their heading. Faded cards are tools not yet live: "In progress" ones are being built, "Soon" ones are planned. The full plan and the tool ids: docs/PLATFORM_PLAN.md in the project repository.' ?></p>
+    <p class="dir-all"><button type="button" class="btn ghost small" id="dir-open"><?= $tr ? 'Tümünü aç' : 'Open all' ?></button> <button type="button" class="btn ghost small" id="dir-close"><?= $tr ? 'Tümünü kapat' : 'Close all' ?></button></p>
+    <?php $catalog = site_catalog(); foreach (site_modules() as $mod): $it = site_module_items($mod['id'], $tools, $catalog); $nl = count($it['home']); $np = count($it['planned']); ?>
+    <div class="dir-group" id="mod-<?= $mod['id'] ?>" data-mod="<?= $mod['id'] ?>">
+      <button type="button" class="dir-cat" aria-expanded="true" aria-controls="dir-<?= $mod['id'] ?>">
+        <span class="dir-t"><span class="dir-h"><?= h($mod['title']) ?></span><span class="dir-d"><?= h($mod['desc']) ?></span></span>
+        <span class="dir-n"><?= $nl ? '<span class="dir-live">' . $nl . ' ' . ($tr ? 'yayında' : 'live') . '</span>' : '' ?><?= $np ? '<span>' . $np . ' ' . ($tr ? 'yolda ve planlı' : 'coming') . '</span>' : '' ?></span>
+        <?= site_icon('chev', 'ico chev') ?>
+      </button>
+      <div class="dir-body" id="dir-<?= $mod['id'] ?>">
+      <?php if ($it['home'] || $it['planned']): ?>
       <div class="dir-cards" role="list" aria-label="<?= h($mod['title']) ?>">
-        <?php foreach ($it['home'] as $t) echo tool_card($t, $tr); ?>
+        <?php foreach ($it['home'] as $t) echo tool_card($t, $tr); foreach ($it['planned'] as $c) echo soon_card($c, $tr); ?>
       </div>
       <?php endif; if ($it['also']): ?>
       <p class="dir-also"><?= $tr ? 'Bu modülde ayrıca' : 'Also in this module' ?>: <?= implode(', ', array_map(function ($c) { return '<a href="' . h($c['page']) . '">' . h($c['name']) . '</a>'; }, $it['also'])) ?></p>
-      <?php endif; if ($it['planned']): ?>
-      <ul class="dir-planned" aria-label="<?= $tr ? 'Planlı araçlar' : 'Planned tools' ?>">
-        <?php foreach ($it['planned'] as $c): ?><li title="<?= h($c['id']) ?>"><?= h($c['name']) ?><?= $c['status'] === 'dev' ? ' <em class="b-dev">' . ($tr ? 'yolda' : 'soon') . '</em>' : '' ?></li><?php endforeach; ?>
-      </ul>
       <?php endif; ?>
       </div>
     </div>
@@ -63,7 +64,16 @@ $tools = site_tools();
 <?php
 ob_start(); ?>
 <script type="module">
-import { get, del } from './assets/lab/core/store.js';   // keys of core/projects.js (DI-03), read directly to keep this page light
+import { get, del } from './assets/lab/core/store.js';
+// module groups of the tools index open and close like the sidebar's; closed by default, remembered in this browser
+{ let st = {}; try { st = JSON.parse(localStorage.getItem('dirMods') || '{}'); } catch (e) {}
+  const groups = [...document.querySelectorAll('.dir-group[data-mod]')];
+  const set = (g, open, keep = true) => { g.classList.toggle('collapsed', !open); g.querySelector('.dir-cat').setAttribute('aria-expanded', open ? 'true' : 'false'); if (keep) st[g.dataset.mod] = open ? 1 : 0; };
+  const save = () => { try { localStorage.setItem('dirMods', JSON.stringify(st)); } catch (e) {} };
+  const hash = location.hash.replace('#mod-', '');
+  for (const g of groups) { set(g, g.dataset.mod === hash || !!st[g.dataset.mod], false); g.querySelector('.dir-cat').addEventListener('click', () => { set(g, g.classList.contains('collapsed')); save(); }); }
+  document.getElementById('dir-open').addEventListener('click', () => { groups.forEach(g => set(g, true)); save(); });
+  document.getElementById('dir-close').addEventListener('click', () => { groups.forEach(g => set(g, false)); save(); }); }   // keys of core/projects.js (DI-03), read directly to keep this page light
 const tr = document.documentElement.lang !== 'en';
 const box = document.getElementById('handoff');
 async function show() {

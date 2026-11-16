@@ -325,8 +325,17 @@ tr.empty td { color: var(--muted); font-style: italic; }
 
 .dir .b-h2 { margin-top: 8px; }
 .dir-group { padding: 18px 0; border-top: 1px solid var(--line); }
-.dir-cat h3 { font: 600 18px/1.25 var(--head); margin: 2px 0 6px; }
-.dir-cat p { margin: 0; color: var(--muted); font-size: 14px; }
+.dir-all { margin: -6px 0 6px; display: flex; gap: 6px; justify-content: flex-end; }
+.dir-cat { display: flex; align-items: center; gap: 14px; width: 100%; padding: 4px 2px; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; border-radius: 8px; font: inherit; }
+.dir-cat:hover { background: var(--sunk); } .dir-cat:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.dir-t { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.dir-h { font: 600 18px/1.25 var(--head); } .dir-d { color: var(--muted); font-size: 14px; }
+.dir-n { display: flex; gap: 6px; flex: none; font-size: 12px; } .dir-n span { padding: 2px 8px; border-radius: 999px; background: var(--line2); color: var(--muted); }
+.dir-n .dir-live { background: var(--acc-soft); color: var(--acc); }
+.dir-cat .chev { width: 18px; height: 18px; flex: none; fill: var(--muted); transition: transform .15s ease; }
+.dir-group.collapsed .dir-cat .chev { transform: rotate(-90deg); }
+.dir-group.collapsed .dir-body { display: none; }
+@media (max-width: 640px) { .dir-n { display: none; } }
 /* tools index: one card per live tool under its module (same card as the showcase; drawings shown still) */
 .dir-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-top: 12px; }
 .dir-cards .hz-card { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; animation: none; }
@@ -334,6 +343,20 @@ tr.empty td { color: var(--muted); font-style: italic; }
 .dir-cards .hz-sub { display: block; font-size: 12.5px; }
 .dir-cards .hz-bar, .dir-cards .hz-pt, .dir-cards .hz-sec, .dir-cards .hz-tree { animation: none; }
 .dir-cards .hz-line { animation: none; stroke-dashoffset: 0; }
+.hz-card.soon { cursor: default; border-style: dashed; background: var(--sunk); }
+.hz-card.soon:hover { transform: none; border-color: var(--line); box-shadow: none; }
+.hz-card.soon .hz-fig { filter: grayscale(1); opacity: .55; }
+.hz-card.soon .hz-head b { color: var(--muted); font-weight: 600; }
+.hz-id { flex: none; font: 600 10.5px var(--mono); color: var(--muted); background: var(--line2); border-radius: 5px; padding: 2px 5px; }
+.hz-badge { margin-left: auto; flex: none; font: 600 10.5px var(--ui); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; background: var(--surface); }
+.hz-card.dev .hz-badge { color: var(--acc); border-color: var(--acc); background: var(--acc-soft); }
+.hz-trunk { fill: var(--bark); } .hz-crown { fill: color-mix(in srgb, var(--c3) 55%, var(--surface)); }
+.hz-ringl { fill: none; stroke: var(--bark); stroke-width: 1; } .hz-cut { stroke: var(--err); stroke-width: 1.6; stroke-dasharray: 4 3; }
+.hz-st0 { fill: var(--c1); } .hz-st1 { fill: var(--c2); } .hz-st2 { fill: var(--c3); }
+.hz-arrow { fill: none; stroke: var(--muted); stroke-width: 2; } .hz-bandf { fill: var(--acc-soft); }
+.hz-plotr { fill: var(--acc-soft); stroke: var(--acc); stroke-width: 1.2; }
+.hz-log { stroke: var(--bark); stroke-width: 7; stroke-linecap: round; } .hz-ground { stroke: var(--line); stroke-width: 2; }
+.hz-dmg { fill: var(--err-bg); stroke: var(--err); stroke-dasharray: 4 3; }
 .about { max-width: 860px; }
 .about .b-h2 { margin-top: 0; }
 dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 8px 0 0; }
