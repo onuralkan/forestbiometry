@@ -9,7 +9,8 @@
 //   mono  monomolecular     y = b0·(1 − b1·e^(−b2·t))                     [A] Fekedulegn et al. 1999; growthmodels
 //   weib  Weibull           y = b0 − b1·e^(−b2·t^b3)                      [A] Fekedulegn et al. 1999; growthmodels
 // Derived (definitions): current annual increment CAI(t) = dy/dt, mean annual increment MAI(t) = y/t, the age of the
-// inflection point (maximum CAI) and the age where MAI culminates (MAI = CAI, i.e. t·y'(t) = y(t)).
+// inflection point (maximum CAI) and the age where MAI culminates (MAI = CAI with MAI turning from rising to falling,
+// i.e. t·y'(t) − y(t) changing from + to −; a change from − to + is a minimum of MAI, not its culmination).
 import { levenbergMarquardt, covariance } from '../core/nls.js';
 import { brent } from '../core/roots.js';
 import { registerForm } from '../core/coef.js';
@@ -124,15 +125,15 @@ export function fitGrowth(obs, id, opts = {}) {
 
 /**
  * Derived quantities of a fitted curve: asymptote, inflection age (maximum CAI; null when the form has none for these
- * parameters), CAI at it, and the age where MAI culminates (MAI = CAI; every sign change of t·y' − y on (0, tMax·10],
- * the first one used; null when MAI only decreases or only increases there). tMax: the oldest observation.
+ * parameters), CAI at it, and the age where MAI culminates (MAI = CAI; t·y' − y on (0, tMax·10],
+ * the first change from + to −, i.e. a maximum of MAI; null when MAI has no maximum there). tMax: the oldest observation.
  */
 export function derived(id, theta, tMax) {
   const F = FORMS[id], ti = F.inflection(theta), g = t => t * F.dy(theta, t) - F.f(theta, t);
   let tm = null; const hi = tMax * 10, k = 4000;
   for (let i = 1; i < k; i++) {
     const a = hi * i / k, b = hi * (i + 1) / k, ga = g(a), gb = g(b);
-    if (Number.isFinite(ga) && Number.isFinite(gb) && ga * gb < 0) { const r = brent(g, a, b, { xtol: 1e-12 }); if (r.status === 'ok') { tm = r.root; break; } }
+    if (Number.isFinite(ga) && Number.isFinite(gb) && ga > 0 && gb < 0) { const r = brent(g, a, b, { xtol: 1e-12 }); if (r.status === 'ok') { tm = r.root; break; } }
   }
   return { asymptote: F.asymptote(theta), inflection: ti != null && ti > 0 ? ti : null, caiMax: ti != null && ti > 0 ? F.dy(theta, ti) : null,
     maiCulmination: tm, maiMax: tm != null ? F.f(theta, tm) / tm : null };

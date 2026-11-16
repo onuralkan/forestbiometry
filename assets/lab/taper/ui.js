@@ -33,6 +33,7 @@ function blank() {
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
 async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
+addEventListener('pagehide', () => { if (saveT) flush(); });   // a pending save is written when the page goes away
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const guess = (src, G) => { const H = src.headers.map(h => String(h).toLocaleLowerCase('tr').trim()), m = {}; for (const [k, names] of Object.entries(G)) { const i = H.findIndex(h => names.includes(h)); m[k] = i >= 0 ? i : null; } return m; };

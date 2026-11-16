@@ -56,7 +56,7 @@ def derived(form, p, tmax):
             prev = (t, v)
         return None
     infl = first(d2, lambda a, b: a > 0 and b < 0)
-    mai = first(g, lambda a, b: a * b < 0)
+    mai = first(g, lambda a, b: a > 0 and b < 0)          # MAI turns from rising to falling (a maximum)
     return dict(inflection=infl, maiCulmination=mai)
 
 

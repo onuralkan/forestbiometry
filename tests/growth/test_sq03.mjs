@@ -46,6 +46,15 @@ for (const s of R.sims) {
   const c = G.curve(s.form, r.theta, 100, 1), F = G.FORMS[s.form], t0 = 37;
   ok(Math.abs(c[t0 - 1].cai - (F.f(r.theta, t0 + 1e-6) - F.f(r.theta, t0 - 1e-6)) / 2e-6) <= 1e-5 * Math.max(1, c[t0 - 1].cai) && Math.abs(c[t0 - 1].mai - c[t0 - 1].y / t0) < 1e-12, `simulated ${s.form}: CAI = dy/dt, MAI = y/t`);
 }
+/* 3b. MAI culmination is a maximum of MAI, never a minimum: Gompertz with y(0) > 0 (the page's sample fit) falls from
+   +∞, has a minimum, then a maximum; and every reported culmination has MAI above its neighbours */
+{ const th = [29.02995, 2.93288, 0.03814], F = G.FORMS.gomp, mai = t => F.f(th, t) / t, d = G.derived('gomp', th, 90);
+  ok(d.maiCulmination != null && mai(d.maiCulmination) > mai(d.maiCulmination - 0.5) && mai(d.maiCulmination) > mai(d.maiCulmination + 0.5), `Gompertz with y(0) > 0: culmination at ${d.maiCulmination?.toFixed(2)} is a maximum of MAI`);
+  ok(mai(17.3) < mai(16.8) || mai(17.3) < mai(17.8) ? Math.abs(d.maiCulmination - 17.3) > 1 : true, 'the minimum of MAI (about 17 years) is not reported as the culmination'); }
+for (const s of [...R.sims, ...Object.entries(K.fits).map(([form, v]) => ({ form, params: v.params }))]) {
+  const d = G.derived(s.form, s.params, 90), F = G.FORMS[s.form], mai = t => F.f(s.params, t) / t;
+  if (d.maiCulmination != null) ok(mai(d.maiCulmination) >= mai(d.maiCulmination * 0.98) && mai(d.maiCulmination) >= mai(d.maiCulmination * 1.02), `${s.form}: reported MAI culmination is a local maximum`);
+}
 /* 4. data handling and sets */
 ok(G.fitGrowth(obs.slice(0, 3), 'cr').status === 'invalid', 'too few observations: no fit');
 { const r = G.fitGrowth(obs, 'cr'), set = G.fitToSet(r, { citation: 'test', variable: 'H0', unit: 'm' });

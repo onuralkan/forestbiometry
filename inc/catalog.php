@@ -63,7 +63,7 @@ function site_catalog(): array {
         ['SS-07', 'live', 'Rekabet endeksleri', 'Competition indices', 'mescere-yapisi.php'],
         ['SQ-01', 'live', 'Bonitet endeksi', 'Site index', 'bonitet.php'],
         ['SQ-02', 'live', 'Bonitet eğrisi kurma', 'Site index curve builder', 'bonitet.php'],
-        ['SQ-03', 'planned', 'Büyüme işlevi uydurma', 'Growth function fitter'],
+        ['SQ-03', 'live', 'Büyüme işlevi uydurma', 'Growth function fitter', 'buyume-islevi.php'],
         ['SQ-04', 'out', 'Çevresel verilerden verimlilik', 'Productivity from environmental data'],
         ['SI-01', 'live', 'Örnek büyüklüğü', 'Sample size', 'ornekleme.php'],
         ['SI-02', 'planned', 'Örnekleme tasarımı üretici', 'Sampling design generator'],
