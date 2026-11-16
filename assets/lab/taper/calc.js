@@ -67,6 +67,8 @@ for (const f of Object.values(FORMS)) {
       output: { name: 'd', unit: 'cm' }, formula: f.formula, transform: 'none' });
   } catch (e) { /* already registered (module loaded twice in one page) */ }
 }
+/** Bark side of a set's output: output.bark, or meta.bark (the coefficient editor stores tool fields in meta). */
+export const barkOf = set => (set && set.output && ['ob', 'ib'].includes(set.output.bark) ? set.output.bark : set && set.meta && ['ob', 'ib'].includes(set.meta.bark) ? set.meta.bark : null);
 export const formOf = set => (set && typeof set.form === 'string' && set.form.startsWith('taper.') ? FORMS[set.form.slice(6)] : null) || null;
 
 /** Problems of a taper set: the coefficient-library checks, the form's own checks, and the bark side of the output. */
@@ -75,7 +77,7 @@ export function checkSet(set) {
   if (set && set.tool !== 'taper') p.push({ code: 'tool', tool: set.tool ?? null });
   if (!f) { if (!p.some(q => q.code === 'form.unknown')) p.push({ code: 'form.unknown', form: set && set.form }); return p; }
   if (!p.some(q => q.code.startsWith('param'))) p.push(...f.check(set.params));
-  if (!set.output || !['ob', 'ib'].includes(set.output.bark)) p.push({ code: 'bark.missing' });
+  if (!barkOf(set)) p.push({ code: 'bark.missing' });
   return p;
 }
 /** Problems of a tree: D > 0 (cm), H > 1.3 (m). */
@@ -186,7 +188,7 @@ export function consistency(set, D, H) {
 export function evaluateTree(set, D, H) {
   const problems = [...checkSet(set), ...checkTree(D, H)], warnings = [];
   const head = { schema: 'taper-result/1', tool: `${TOOL.id} ${TOOL.version}`, units: { D: 'cm', H: 'm', h: 'm', d: 'cm', V: 'm3' },
-    set: set ? { id: set.id ?? null, form: set.form ?? null, bark: set.output ? set.output.bark ?? null : null, source: set.source ? set.source.citation ?? null : null } : null, D, H };
+    set: set ? { id: set.id ?? null, form: set.form ?? null, bark: barkOf(set), source: set.source ? set.source.citation ?? null : null } : null, D, H };
   if (problems.length) return { ...head, status: 'invalid', problems, warnings };
   if (set.valid) for (const [key, r] of Object.entries(set.valid)) { const v = key === 'D' ? D : key === 'H' ? H : null; if (v != null && ((fin(r[0]) && v < r[0]) || (fin(r[1]) && v > r[1]))) warnings.push({ code: 'valid.outside', key, value: v, min: r[0], max: r[1] }); }
   const c = consistency(set, D, H);
@@ -194,4 +196,24 @@ export function evaluateTree(set, D, H) {
   if (c.dTip === null) warnings.push({ code: 'tip.nonfinite' });   // e.g. kozak02 with an exponent ≤ 0 at the tip: no diameter there; heights near the tip are not searched
   return { ...head, status: 'ok', problems, warnings, consistency: c,
     profile: h => diameterAt(set, D, H, h), volume: (h1, h2) => volume(set, D, H, h1, h2), heightOf: d => heightOf(set, D, H, d) };
+}
+
+/**
+ * Volumes of one tree for a page or a table (SV-02 page; merchantable part as in TOOLS_SPEC §6.1, SV-03 basics):
+ * total from the cut height (stump, m) to the tip, and, when a top diameter dTop (cm) is given, the height where the
+ * profile last falls to dTop (the highest root of d(h) = dTop above the stump) and the volume from the stump to it.
+ * Returns { status, stump, total, dTop, hTop, merch, note } with note 'below-at-stump' (d at the cut < dTop: nothing
+ * merchantable), 'multiple' (several heights; the highest is used) or null.
+ */
+export function merchantable(set, D, H, { stump = 0, dTop = null } = {}) {
+  if (!(fin(stump) && stump >= 0 && stump < H)) return { status: 'invalid', code: 'stump.bad', stump };
+  const tot = volume(set, D, H, stump, H), out = { status: tot.status === 'ok' ? 'ok' : tot.status, stump, total: tot.status === 'ok' ? tot.V : null, dTop: dTop ?? null, hTop: null, merch: null, note: null };
+  if (dTop == null) return out;
+  if (!(fin(dTop) && dTop > 0)) return { ...out, status: 'invalid', code: 'dtop.bad' };
+  const at = diameterAt(set, D, H, stump);
+  if (at.status === 'ok' && at.d < dTop) return { ...out, hTop: null, merch: 0, note: 'below-at-stump' };
+  const r = heightOf(set, D, H, dTop), above = r.heights.filter(h => h > stump);
+  if (!above.length) return { ...out, note: 'none' };
+  const hTop = above[above.length - 1], v = volume(set, D, H, stump, hTop);
+  return { ...out, hTop, merch: v.status === 'ok' ? v.V : null, note: above.length > 1 ? 'multiple' : null };
 }

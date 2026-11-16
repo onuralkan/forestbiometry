@@ -43,7 +43,7 @@ function site_catalog(): array {
         ['TM-05', 'planned', 'Ağaç yaşı ve çap artımı', 'Tree age and radial increment'],
         ['TM-06', 'planned', 'Biçim sayısı ve biçim bölümü', 'Form factor and form quotient'],
         ['SV-01', 'live', 'Seksiyon hacmi', 'Sectional volume', 'seksiyon-hacmi.php'],
-        ['SV-02', 'dev', 'Gövde profili denklemleri', 'Taper models'],
+        ['SV-02', 'live', 'Gövde profili denklemleri', 'Taper models', 'govde-profili.php'],
         ['SV-03', 'planned', 'Kullanılabilir hacim', 'Merchantable volume'],
         ['SV-04', 'planned', 'Hacim denklemleri', 'Volume equations'],
         ['SV-05', 'planned', 'Tomruk ölçüm kuralları', 'Log scaling rules'],

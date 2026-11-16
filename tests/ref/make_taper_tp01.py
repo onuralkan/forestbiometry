@@ -69,7 +69,11 @@ for s in sets:
         if s["name"].startswith("non-monotone"):
             dstar.append(D * math.sqrt(y(p, 0.4 * p["a2"])))      # reached once below a2 and once above it
         hd = [dict(d=ds, h=heights(p, D, H, ds)) for ds in dstar]
-        cases.append(dict(set=s["name"], params=p, D=D, H=H, heights=hs, d=dd, volumes=V, heightOf=hd))
+        # merchantable part: stump 0.15 m, top diameter 0.2·D: the highest height with d = dTop above the stump, volume to it
+        mh = [h for h in heights(p, D, H, 0.2 * D) if h > 0.15]
+        merch = dict(stump=0.15, dTop=0.2 * D, hTop=mh[-1] if mh else None,
+                     V=None if not mh or neg(0.15, mh[-1]) else vol(p, D, H, 0.15, mh[-1]))
+        cases.append(dict(set=s["name"], params=p, D=D, H=H, heights=hs, d=dd, volumes=V, heightOf=hd, merch=merch))
 out = {"numpy": np.__version__, "scipy": scipy.__version__, "seed": 20261116, "cases": cases}
 (here / "taper_tp01.json").write_text(json.dumps(out, indent=1))
 print("written", here / "taper_tp01.json", len(cases), "cases")

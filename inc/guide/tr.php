@@ -316,3 +316,21 @@
 <h3>İndirme</h3>
 <p><b>Excel raporu</b> (Bilgi, Örnek alanlar, Ağaçlar, Sınıflar, Türler), ağaç tablosunuza rekabet sütunları eklenmiş Excel, örnek alanlar CSV ve sonuç kayıtları JSON.</p>
 </section>
+
+<section class="card guide-sec">
+<?= $sec('govde-profili', 'Gövde Profili') ?>
+<p>Bir profil denklemiyle (Max ve Burkhart 1976, Model 4; Kozak 2004, Model 02) herhangi bir yükseklikteki çapı, bir çapın yüksekliğini, toplam hacmi ve tepe çapına kadar kullanılabilir hacmi hesaplar. Katsayıları siz girersiniz (kaynağıyla) ya da gövde ölçümlerinizden uydurursunuz; site hazır katsayı vermez.</p>
+<p><b>Yapmadıkları:</b> kabuk modeli (kabuklu ve kabuksuz profil ayrı katsayı setleridir); ürün (sortiman) bölme; karma etkili uydurma.</p>
+<h3>Model</h3>
+<ul>
+<li><b>Katsayı seti gir</b>: biçimi seçin, katsayıları ve kaynağı yazın; setin kabuklu mu kabuksuz mu çap verdiğini (<b>Kabuk</b>) seçmek zorunludur.</li>
+<li><b>Gövde ölçümlerinden uydur</b>: Seksiyon Hacmi aracıyla aynı gövde tablosu (ağaç, yükseklik, çap; göğüs çapı ve boy ağaç sütunlarından). Uydurulacak çap (kabuklu ya da kabuksuz), biçim ve <b>Uydurma ölçeği</b> seçilir. Sonuçta katsayılar, göreli yükseklik sınıflarına göre yanlılık ve RMSE, artık grafiği ve ağaç başına seksiyon hacmiyle profil hacmi karşılaştırması gösterilir; kaynak yazılarak set kütüphaneye kaydedilir. Standart hatalar bağımsız gözlem varsayımıyla hesaplanır.</li>
+<li><b>Kullanılacak profil setleri</b>: bir kabuklu ve bir kabuksuz set seçilebilir; ikisi seçilirse sonuçlar ikisini de gösterir.</li>
+</ul>
+<h3>Ağaçlar ve sonuçlar</h3>
+<ul>
+<li><b>Tek ağaç</b> (göğüs çapı ve boy) ya da <b>Ağaç tablosu</b>; kesim yüksekliği, isteğe bağlı tepe çapı ve profil tablosu adımı.</li>
+<li>Ağaç başına toplam hacim (kesimden tepeye), tepe çapının yüksekliği ve kullanılabilir hacim, d(1.3) ve notlar (geçerlilik aralığı dışı, çap tanımsız bölgeler). Seçilen ağacın gövde profili grafiği ve profil tablosu.</li>
+<li>İndirme: Excel (Bilgi, Ağaçlar, Profil), CSV ve JSON.</li>
+</ul>
+</section>

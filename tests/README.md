@@ -21,6 +21,8 @@ committed, so the tests run without Python.
 - `python3 tests/ref/make_stand_reference.py`: regenerates `tests/ref/stand.json` from `tests/stand/fixture.json` (numpy).
 - Page bundles: `node scripts/bundle.mjs --check` (needs `acorn`: `npm install --no-save acorn@8.18.0`). The server
   serves `assets/build/`; run the browser tests against it too: `FB_BUNDLE=1 php -S 127.0.0.1:8092`, then the e2e scripts.
+- `node tests/taper/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Stem Taper (fit with the sample, one tree,
+  tree table, downloads, English, phone).
 - `node tests/site/e2e_boot.mjs http://127.0.0.1:8092`: tool pages must not stay blank when IndexedDB stalls (open or
   transaction never answers) or a module hangs or fails (boot watchdog warning with a reload button).
 - `node tests/stand/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Plot & Stand Metrics.

@@ -50,6 +50,17 @@ for (const c of R.cases) {
   }
 }
 ok(R.cases.some(c => c.heightOf.some(t => t.h.length === 2)), 'reference includes a diameter reached twice (all roots reported)');
+/* merchantable part (page): stump 0.15 m, top diameter 0.2·D: highest height of dTop, volume from the stump to it */
+let nm = 0;
+for (const c of R.cases) {
+  const m = TP.merchantable(mkSet(c.params), c.D, c.H, { stump: c.merch.stump, dTop: c.merch.dTop }), tag = `${c.set}, D = ${c.D}, H = ${c.H}`;
+  if (c.merch.hTop === null) { ok(m.hTop === null, `${tag}: no top height`); continue; }
+  ok(Math.abs(m.hTop - c.merch.hTop) <= 1e-9, `${tag}: merchantable height ${m.hTop} vs ${c.merch.hTop}`);
+  if (c.merch.V !== null) { nm++; ok(rel(m.merch, c.merch.V) <= 1e-10, `${tag}: merchantable volume = quad (${m.merch} vs ${c.merch.V})`); } else ok(m.merch === null, `${tag}: y < 0 below the top height: no merchantable volume`);
+  const t = c.volumes.find(v => v.h1 === 0.15 && v.h2 === c.H); if (t) ok(t.V === null ? m.total === null : rel(m.total, t.V) <= 1e-10, `${tag}: total from the stump = V(0.15, H)`);
+}
+{ const s = mkSet(R.cases[0].params); ok(TP.merchantable(s, 25, 20, { stump: 0.3, dTop: 200 }).note === 'below-at-stump' && TP.merchantable(s, 25, 20, { stump: 25 }).status === 'invalid', 'top diameter above the stump diameter: nothing merchantable; stump above the tip rejected'); }
+console.log(`merchantable checks: ${nm} volumes`);
 console.log(`checked ${nd} diameters, ${nv} volumes (+${nvn} with y < 0), ${nh} height searches; worst relative: V vs quad ${worstV.toExponential(2)}, closed vs Gauss–Legendre ${worstQ.toExponential(2)}, d(h(d)) ${worstH.toExponential(2)}`);
 console.log(`taper TP01: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -316,3 +316,21 @@
 <h3>Downloads</h3>
 <p><b>Excel report</b> (Info, Plots, Trees, Classes, Species), your tree table with the competition columns appended (Excel), the plots as CSV and the result records as JSON.</p>
 </section>
+
+<section class="card guide-sec">
+<?= $sec('govde-profili', 'Stem Taper') ?>
+<p>With a taper equation (Max and Burkhart 1976, Model 4; Kozak 2004, Model 02) computes the diameter at any height, the height of a diameter, the total volume and the merchantable volume to a top diameter. You enter the coefficients (with their source) or fit them to your stem measurements; the site ships no coefficients.</p>
+<p><b>What it does not do:</b> a bark model (outside- and inside-bark profiles are separate coefficient sets); bucking into products; mixed-effects fitting.</p>
+<h3>Model</h3>
+<ul>
+<li><b>Enter a coefficient set</b>: choose the form, enter the coefficients and the source; choosing whether the set gives diameters outside or inside bark (<b>Bark</b>) is required.</li>
+<li><b>Fit to stem measurements</b>: the same stem table as the Stem Section Volume tool (tree, height, diameter; dbh and height from the tree columns). Choose the diameter to fit (outside or inside bark), the form and the <b>Fitting scale</b>. The result shows the coefficients, bias and RMSE by relative height class, a residual chart and, per tree, the section volume against the profile volume; enter a source to save the set to the library. Standard errors assume independent observations.</li>
+<li><b>Profile sets to use</b>: one outside-bark and one inside-bark set can be chosen; with both, the results show both.</li>
+</ul>
+<h3>Trees and results</h3>
+<ul>
+<li><b>One tree</b> (dbh and height) or a <b>Tree table</b>; cut height, optional top diameter and the profile table step.</li>
+<li>Per tree: total volume (cut to tip), the height of the top diameter and the merchantable volume, d(1.3) and notes (outside the valid range, regions without a diameter). The stem profile chart and profile table of the chosen tree.</li>
+<li>Downloads: Excel (Info, Trees, Profile), CSV and JSON.</li>
+</ul>
+</section>
