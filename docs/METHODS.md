@@ -1133,3 +1133,16 @@ Kaynaklar:
 - NIST 2015. *Secure Hash Standard (SHS).* FIPS PUB 180-4. **[D]** (standart; SHA-256 tarayıcının Web Crypto işlevidir, uygulanmaz; test: Node `node:crypto` (OpenSSL) ve "abc", "" test vektörleri)
 
 Test: `node tests/record/test_di07.mjs` (34), tarayıcı `node tests/record/e2e.mjs` (29).
+
+## 21. Görselleştirme panosu / Visualization dashboard (`assets/lab/dashboard/calc.js`; PLATFORM_PLAN DI-04)
+Yeni bilimsel hesap yok. Paneller sınanmış motorları kullanır: örnek alan × dönem N/ha ve G/ha §6'daki Örnek Alan ve Meşcere motorundan (`computeAll`; kaydı olmayan birleşimler kullanıcı seçimiyle "ölçülmedi" ya da "boş"); kayıtlardaki çap dağılımı sonuçlarının yoğunluğu Çap Dağılımı motorundan (eşikli uydurmada koşullu yoğunluk f(x)/[F(U) − F(L)], DIST_SPEC P11); boy eğrileri Boy–Çap motorundan (h = bh + f(θ, d)). Panoda tanımlananlar:
+
+| Büyüklük | Tanım |
+|---|---|
+| Histogram | [alt, üst) sınıfları, ilk sınıf genişliğin katında başlar, en büyük değer son sınıftadır; çubuk yüksekliği n_k / (n · w) (yoğunluk; toplam alan 1) |
+| Otomatik sınıf genişliği | aralık/12'ye en yakın 1, 2, 5 × 10^k (yukarı) |
+| Tür payı | ağaç sayısı ve göğüs yüzeyi g = π/4 · (d/100)² toplamlarının oranı (süzülen kayıtlar) |
+| Ortalama N, G | gösterilen örnek alan × dönem değerlerinin ağırlıksız aritmetik ortalaması (tasarıma dayalı kestirim değildir) |
+| Tür süzgeci | N/ha ve G/ha o türün örnek alandaki payı; türün bulunmadığı ölçülmüş birimde 0 |
+
+Test: `node tests/dashboard/test_di04.mjs` (24; elle sayılmış sınıflar ve N, G; kapalı biçim Weibull yoğunluğu ve eşikli hâli; yazılı Näslund eğrisi), tarayıcı `node tests/dashboard/e2e.mjs` (22).
