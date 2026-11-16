@@ -3,7 +3,7 @@
 import { cellText } from '../core/table.js';
 import { readNum } from '../eval/calc.js';
 
-export const TOOL = { id: 'nispi-siralama', version: '1.0.0' };
+export const TOOL = { id: 'nispi-siralama', version: '1.1.0' };
 export const DIRS = ['max', 'min', 'abs'];       // larger is better | smaller is better | closest to zero is better (|value|)
 
 /* ---------------- direction suggestion from the column name (the user confirms) ---------------- */

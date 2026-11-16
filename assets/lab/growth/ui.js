@@ -5,7 +5,8 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
-import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core/export.js';
+import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { saveCoef } from '../core/coef.js';
@@ -113,7 +114,7 @@ function renderStep3() {
       <details class="more"><summary>${T('r.tab')}</summary><div class="lims"><label>${T('r.step')} <input type="text" inputmode="decimal" size="4" id="tstep" value="${esc(S.step3)}"></label></div><div class="tscroll"><table class="grid" id="ttab"><thead><tr><th>${T('r.age')}</th><th>${esc(S.variable || 'y')}</th><th>CAI</th><th>MAI</th></tr></thead><tbody>${tab.map(c => `<tr><td class="num">${f(c.t, 1)}</td><td class="num">${f(c.y, 3)}</td><td class="num">${f(c.cai, 4)}</td><td class="num">${f(c.mai, 4)}</td></tr>`).join('')}</tbody></table></div></details>
       <div class="lims"><label class="field"><span>${T('r.cit')}</span><input type="text" id="cit" value="${esc(S.cit)}"></label></div><div class="nav"><button type="button" class="btn" id="savecoef">${T('r.save')}</button></div></div>`;
   }
-  h += `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('r.excel')}</button><button type="button" class="btn ghost" id="x-csv">${T('r.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('r.json')}</button></div></div>
+  h += `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('r.excel')}</button><button type="button" class="btn ghost" id="x-csv">${T('r.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('r.json')}</button>${recordOption()}</div></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   el.querySelectorAll('[data-sel]').forEach(b => b.addEventListener('click', () => { if (R.fits.find(x => x.form === b.dataset.sel && x.status === 'ok')) { S.sel = b.dataset.sel; save(); renderStep3(); } }));
@@ -128,7 +129,9 @@ function renderStep3() {
   $('back2').addEventListener('click', () => go(2));
   const name = ext => `${lang === 'tr' ? 'buyume-islevi' : 'growth'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), cmpRows(), lang));
-  $('x-json').addEventListener('click', () => downloadJSON(name('json'), { tool: G.TOOL, created: R.created, variable: S.variable, unit: S.unit, n: R.n, fits: R.fits.map(({ residuals, ...r }) => r) }));
+  $('x-json').addEventListener('click', () => downloadRecord(name('json'), { tool: G.TOOL, created: R.created, variable: S.variable, unit: S.unit,
+    settings: { columns: Object.fromEntries(Object.entries(S.map).map(([k, i]) => [k, i == null ? null : S.src.headers[i]])), decimal: S.decimal, forms: chosen() }, n: R.n, fits: R.fits.map(({ residuals, ...r }) => r) },
+    G.TOOL, [['data', S.imp]], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', async () => {
     const XLSX = await loadXLSX(BASE), ok = R.fits.filter(x => x.status === 'ok');
     const info = [[T('x.k'), T('x.v')], [T('x.tool'), `${G.TOOL.id} ${G.TOOL.version}`], [T('x.date'), R.created], [T('x.lang'), lang], [T('x.data'), S.imp ? S.imp.name : ''], [T('x.var'), `${S.variable} ${S.unit}`.trim()],

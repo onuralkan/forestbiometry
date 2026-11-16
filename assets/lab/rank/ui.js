@@ -6,6 +6,7 @@ import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordButton } from '../core/record-ui.js';
 import { radarChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 
@@ -196,7 +197,12 @@ function infoRows() {
 }
 function tabExport(p) {
   if (Rk.problems.length) { p.innerHTML = notes(); return; }
-  p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button></div><p class="muted small">${T('ex.note')}</p>`;
+  p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button>${recordButton('x-json')}</div><p class="muted small">${T('ex.note')}</p>`;
+  $('x-json').addEventListener('click', () => downloadRecord(fname('nispi-siralama', 'relative-ranking') + '.json', { tool: C.TOOL, created: new Date().toISOString(),
+    settings: { headerRow: S.headerRow, modelColumn: S.modelCol, criteria: S.crit, decimal: S.decimal, excluded: D.models.filter(m => S.excl.includes(m.row)).map(m => ({ row: m.row, label: m.label })) },
+    criteria: Rk.per.map(c => ({ name: c.name, dir: c.dir, best: c.best, worst: c.worst, constant: !!c.constant })), m: Rk.m,
+    incomplete: Rk.incomplete.map(i => D.models[i].label), sameRanks: Rk.sameRanks,
+    ranks: Rk.rows.map(r => ({ ordinal: r.ordinal, label: r.label, row: r.row, values: r.values, R: r.R, sum: r.sum, overall: r.overall })) }, C.TOOL, [['table', S.imp]], m => status(m, 'err')));
   $('x-csv').addEventListener('click', () => downloadCSV(fname('nispi-siralama', 'relative-ranking') + '.csv', rankRows(), lang));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }

@@ -7,3 +7,5 @@ files/
 node_modules/
 __pycache__/
 .DS_Store
+# Last deployed commit, written on the server by the upload (DI-07 run records read it); never committed
+deploy-commit.txt

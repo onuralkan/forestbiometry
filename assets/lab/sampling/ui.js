@@ -6,6 +6,7 @@ import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordButton } from '../core/record-ui.js';
 import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 
@@ -176,11 +177,18 @@ function renderResult() {
       <figcaption><button type="button" class="btn ghost small" id="svg">${T('ch.svg')}</button></figcaption></figure></div>
     <p class="muted small">${T('grid.note', { cv: f(p.cv, 2), level: lvl })}</p>`;
   h += `<details class="more assumebox"><summary>${T('as.h')}</summary><ul class="assume">${T('as.list').map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="note">${T('as.not')}</p></details>`;
-  h += `<h3>${T('x.h')}</h3><div class="exports"><button type="button" class="btn" id="x-txt">${T('x.txt')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-xlsx">${T('x.xlsx')}</button></div><p class="muted small">${T('x.note')}</p>`;
+  h += `<h3>${T('x.h')}</h3><div class="exports"><button type="button" class="btn" id="x-txt">${T('x.txt')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-xlsx">${T('x.xlsx')}</button>${recordButton('x-json')}</div><p class="muted small">${T('x.note')}</p>`;
   el.innerHTML = h;
   $('svg').addEventListener('click', () => download(fname('ornek-sayisi', 'sample-size') + '.svg', svgForDownload($('ch-n').querySelector('svg')), 'image/svg+xml'));
   $('x-txt').addEventListener('click', () => download(fname('ornekleme-varsayimlar', 'sampling-assumptions') + '.txt', summaryLines(inp, r).join('\r\n') + '\r\n', 'text/plain;charset=utf-8'));
   $('x-csv').addEventListener('click', () => downloadCSV(fname('ornekleme-hata-hedefleri', 'sampling-error-targets') + '.csv', gridRows(p, r), lang));
+  $('x-json').addEventListener('click', () => {
+    const col = c => c == null || !S.tbl ? null : S.tbl.headers[c], pl = inp.pl;
+    downloadRecord(fname('ornekleme', 'sampling') + '.json', { tool: P.TOOL, created: new Date().toISOString(),
+      settings: { source: S.src, ...(S.src === 'pilot' ? { columns: { value: col(S.vcol), plot: col(S.pcol), filter: col(S.fcol) }, filterValue: S.fval ?? null, unit: S.unit, decimal: S.decimal } : { cvNote: S.cvNote }), pilotInDesign: S.inDesign },
+      input: p, pilot: pl && pl.st ? { n: pl.st.n, mean: pl.st.mean, sd: pl.st.sd ?? null, cv: pl.st.cv } : null, plan: r, grid: P.grid(p, [p.e]) },
+      P.TOOL, S.src === 'pilot' ? [['pilot', S.imp]] : [], m => status(m, 'err'));
+  });
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
     const sheets = [{ name: T('sheet.info'), rows: summaryLines(inp, r).map(l => [l]), widths: [140] }, { name: T('sheet.grid'), rows: gridRows(p, r) }];

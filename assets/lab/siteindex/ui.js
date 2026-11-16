@@ -6,7 +6,8 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
-import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core/export.js';
+import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { mountCoefEditor, problemText } from '../core/coef-ui.js';
@@ -315,13 +316,15 @@ function renderStep3() {
   if (cv.lines.length) h += `<figure class="chartbox card" id="ch-si">${plotChart({ title: T('ch.title', { a0: fmtNum(R.m.baseAge, 2) }), xmin: 0, xmax: cv.ages[cv.ages.length - 1], ymin: 0,
       lines: cv.lines.map((l, i) => ({ name: T('ch.curve', { si: fmtNum(l.si, 2) }), k: i % 6, pts: l.pts })), points: ok.map(r => [r.A, r.H]), xLabel: T('ch.x', { age: ageTxt }), yLabel: T('ch.y'), fmt: v => fmtNum(v, 1) })}
     <figcaption><span class="muted small">${R.classes.length ? T('ch.note.cls') : T('ch.note.q')}</span> <button type="button" class="btn ghost small" id="ch-svg">SVG</button></figcaption></figure>`;
-  h += `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('ex.json')}</button></div>
+  h += `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('ex.json')}</button>${recordOption()}</div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('back2').addEventListener('click', () => go(2));
   $('ch-svg') && $('ch-svg').addEventListener('click', () => download(fname('bonitet-egrileri', 'site-index-curves') + '.svg', svgForDownload($('ch-si').querySelector('svg')), 'image/svg+xml'));
   $('x-csv').addEventListener('click', () => downloadCSV(fname('bonitet', 'site-index') + '.csv', [t.head, ...t.rows.map(r => r.cells)], lang));
-  $('x-json').addEventListener('click', () => downloadJSON(fname('bonitet', 'site-index') + '.json', { tool: S.TOOL, created: R.created, model: R.m, set: R.set, classes: R.classes, input: S0.mode, results: R.rows, uncertainty: R.unc }));
+  $('x-json').addEventListener('click', () => downloadRecord(fname('bonitet', 'site-index') + '.json', { tool: S.TOOL, created: R.created, model: R.m, set: R.set, classes: R.classes, input: S0.mode, results: R.rows, uncertainty: R.unc,
+    reading: S0.mode === 'table' && S0.src ? { columns: Object.fromEntries(Object.entries(S0.map).map(([k, i]) => [k, i == null ? null : S0.src.headers[i]])), decimal: S0.decimal, ageType: S0.dAge ?? null } : null },
+    S.TOOL, S0.mode === 'table' ? [['data', S0.imp]] : S0.mode === 'ds' && approved ? [['dataset', { kind: 'dataset', dataset: approved }]] : [], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }
     const info = [[T('x.k'), T('x.v')], [T('x.tool'), `${S.TOOL.id} ${S.TOOL.version}`], [T('x.date'), R.created], [T('x.form'), formName(R.m.form)],

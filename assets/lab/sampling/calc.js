@@ -9,7 +9,7 @@ import { normQuantile } from '../core/stats.js';
 import { readNum } from '../eval/calc.js';
 import { cellText } from '../core/table.js';
 
-export const TOOL = { id: 'ornekleme-planlayici', version: '1.0.0' };
+export const TOOL = { id: 'ornekleme-planlayici', version: '1.1.0' };
 export const LEVELS = [80, 90, 95, 99];
 export const E_GRID = [2.5, 5, 7.5, 10, 12.5, 15, 20, 25, 30];
 export const PILOT_FEW = 10;                 // "small pilot" warning threshold (tool rule, not literature)

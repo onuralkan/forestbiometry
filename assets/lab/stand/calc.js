@@ -1,7 +1,7 @@
 // Plot & Stand Metrics: pure logic (no DOM). Definitions: docs/METHODS.md §6.
 // Scope: fixed-area plots, every tree on the plot has the same inclusion probability.
 // Nested plots and angle counts (Bitterlich) need per-tree expansion factors and are NOT handled here.
-export const TOOL = { id: 'ornek-alan-mescere', version: '1.1.0' };
+export const TOOL = { id: 'ornek-alan-mescere', version: '1.2.0' };
 /** Dominant trees per hectare for D0 and H0 (the user's definition: the 100 largest trees per hectare). */
 export const DOM_PER_HA = 100;
 export const SCHEMA = 'forest-dataset/1';

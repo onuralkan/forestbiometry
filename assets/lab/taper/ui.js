@@ -7,7 +7,8 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
-import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core/export.js';
+import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { mountCoefEditor } from '../core/coef-ui.js';
@@ -349,7 +350,7 @@ function renderStep3() {
       <details class="more"><summary>${T('res.ptab')}</summary><div class="tscroll"><table class="grid" id="ptab"><thead><tr><th>${T('res.h')}</th>${P.cols.map(c => `<th>${T('res.d')} (${T('bark.' + c.bark)})</th>`).join('')}</tr></thead><tbody>${P.hs.map((x, i) => `<tr><td class="num">${f(x, 2)}</td>${P.cols.map(c => `<td class="num">${f(c.d[i], 2)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details></div>`;
   }
   h += buckSection();
-  h += `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('res.excel')}</button><button type="button" class="btn ghost" id="x-csv">${T('res.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('res.json')}</button></div></div>
+  h += `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('res.excel')}</button><button type="button" class="btn ghost" id="x-csv">${T('res.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('res.json')}</button>${recordOption()}</div></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   el.querySelectorAll('[data-sel]').forEach(b => b.addEventListener('click', () => { S.sel = +b.dataset.sel; save(); renderStep3(); }));
@@ -359,7 +360,9 @@ function renderStep3() {
   const name = ext => `${lang === 'tr' ? 'govde-profili' : 'taper'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), treeTable(), lang));
   $('x-csv-b') && $('x-csv-b').addEventListener('click', () => downloadCSV(name('csv').replace('.csv', lang === 'tr' ? '-parcalar.csv' : '-pieces.csv'), piecesTable(), lang));
-  $('x-json').addEventListener('click', () => downloadJSON(name('json'), { tool: TP.TOOL, created: R.created, settings: R.settings, sets: R.sets, trees: R.trees, bucking: R.buck }));
+  $('x-json').addEventListener('click', () => downloadRecord(name('json'), { tool: TP.TOOL, created: R.created, settings: R.settings, sets: R.sets, trees: R.trees, bucking: R.buck,
+    reading: S.trees.mode === 'table' && S.trees.src ? { columns: Object.fromEntries(Object.entries(S.trees.map).map(([k, i]) => [k, i == null ? null : S.trees.src.headers[i]])), decimal: S.trees.decimal } : { mode: S.trees.mode } },
+    TP.TOOL, S.trees.mode === 'table' ? [['trees', S.trees.imp]] : [], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', async () => {
     const XLSX = await loadXLSX(BASE), prof = [['plot_id', 'tree_id', 'D_cm', 'H_m', 'h_m', ...R.sets.map(s => `d_${s.bark}_cm`)]];
     for (const t of R.trees) { if (t.by.every(b => b.status === 'invalid')) continue; const P = profileOf(t); P.hs.forEach((x, i) => prof.push([t.plot_id, t.tree_id, t.D, t.H, x, ...P.cols.map(c => c.d[i])])); }

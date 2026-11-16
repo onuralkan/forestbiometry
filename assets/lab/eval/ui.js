@@ -6,6 +6,7 @@ import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordButton } from '../core/record-ui.js';
 import { scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { classesFromBreaks } from '../stand/calc.js';
@@ -248,12 +249,23 @@ function infoRows() {
     [T('x.obs'), S.src.headers[S.obs]], [T('x.rs'), T('rs.' + S.rowSet)], [T('x.norm'), S.norm ? T('norm.' + S.norm) : T('norm.none')], [T('x.dec'), S.decimal],
     ...R.models.map(m => [`${T('m.model')}: ${m.name}`, `${S.src.headers[m.col]} · ${T('role.' + m.role)}`]), ['', T('x.def')], ['', T('noinf')]];
 }
+/** JSON run record (DI-07): settings and every model's measures, overall and by group (no row-level residuals: CSV). */
+function recordPayload() {
+  const col = c => c == null ? null : S.src.headers[c];
+  return { tool: E.TOOL, created: new Date().toISOString(),
+    settings: { observed: col(S.obs), models: S.models.map(m => ({ column: col(m.col), name: m.name, role: m.role })), rowSet: S.rowSet, norm: S.norm, decimal: S.decimal,
+      groups: { plot: col(S.groups.plot), species: col(S.groups.species), fold: col(S.groups.fold), dclass: S.groups.dcol == null ? null : { column: col(S.groups.dcol), breaks: S.groups.breaks, openTop: S.groups.openTop } } },
+    rows: { N: R.N, common: R.nCommon, sameSample: R.sameSample },
+    models: R.models.map(m => ({ name: m.name, column: col(m.col), role: m.role, accounting: m.acc, overall: m.overall, groups: m.groups })) };
+}
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-m">${T('ex.metrics')}</button>
-    <button type="button" class="btn ghost" id="x-g"${groupKeys().length ? '' : ' disabled'}>${T('ex.groups')}</button><button type="button" class="btn ghost" id="x-r">${T('ex.rows')}</button></div><p class="muted small">${T('ex.note')}</p>`;
+    <button type="button" class="btn ghost" id="x-g"${groupKeys().length ? '' : ' disabled'}>${T('ex.groups')}</button><button type="button" class="btn ghost" id="x-r">${T('ex.rows')}</button>${recordButton('x-json')}</div><p class="muted small">${T('ex.note')}</p>`;
   $('x-m').addEventListener('click', () => downloadCSV(fname('model-olcutleri', 'model-measures') + '.csv', metricsRows(), lang));
   $('x-g').addEventListener('click', () => downloadCSV(fname('grup-olcutleri', 'group-measures') + '.csv', groupRows(), lang));
   $('x-r').addEventListener('click', () => downloadCSV(fname('artiklar', 'residuals') + '.csv', residualRows(), lang));
+  $('x-json').addEventListener('click', () => downloadRecord(fname('model-degerlendirme', 'model-evaluation') + '.json', recordPayload(), E.TOOL,
+    [[S.imp && S.imp.kind === 'dataset' ? 'dataset' : 'data', S.imp && S.imp.kind === 'dataset' ? { kind: 'dataset', dataset: approved } : S.imp]], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
     const sheets = [{ name: T('sheet.info'), rows: infoRows(), widths: [30, 100] }, { name: T('sheet.metrics'), rows: metricsRows() }, { name: T('sheet.acc'), rows: accRows() }];

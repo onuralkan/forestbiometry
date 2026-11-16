@@ -4,6 +4,7 @@ import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordButton } from '../core/record-ui.js';
 import { barChart, svgForDownload } from '../core/chart.js';
 import { createUnitNav } from '../core/unitnav.js';
 import { renderImport } from '../core/importer.js';
@@ -462,7 +463,15 @@ function infoRows() {
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-trees">${T('ex.trees')}</button></div><p class="muted small">${T('ex.trees.note')}</p>
     <div class="exports"><button type="button" class="btn ghost" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-units">${T('ex.units')}</button>
-    <button type="button" class="btn ghost" id="x-cls">${T('ex.cls')}</button><button type="button" class="btn ghost" id="x-sp">${T('ex.sp')}</button></div><p class="muted small">${T('ex.note')}</p>`;
+    <button type="button" class="btn ghost" id="x-cls">${T('ex.cls')}</button><button type="button" class="btn ghost" id="x-sp">${T('ex.sp')}</button>${recordButton('x-json')}</div><p class="muted small">${T('ex.note')}</p>`;
+  $('x-json').addEventListener('click', () => {
+    const fromTable = S.dsSrc && S.dsSrc.kind === 'table' && S.tbl;
+    downloadRecord(fname('ornek-alan', 'plot-stand') + '.json', { tool: C.TOOL, created: new Date().toISOString(),
+      settings: { source: S.dsSrc ? { kind: S.dsSrc.kind, name: S.dsSrc.name || null } : null, status: S.status, emptyCombos: S.emptyCombos, classes: R.classes, design: designObj(), domainBy: S.domBy || 'both',
+        reading: fromTable ? { columns: Object.fromEntries(Object.entries(S.tbl.map).map(([k, i]) => [k, i == null ? null : S.tbl.src.headers[i]])), ...S.tbl.spec } : null },
+      units: R.metrics, periods: R.periods, noPeriod: R.noPeriod, byPeriod: R.byPeriod },
+      C.TOOL, fromTable ? [['trees', S.tbl.imp]] : S.ds ? [['dataset', { kind: 'dataset', dataset: S.ds }]] : [], m => status(m, 'err'));
+  });
   $('x-units').addEventListener('click', () => downloadCSV(fname('ornek-alanlar', 'plots') + '.csv', unitRows(), lang));
   $('x-cls').addEventListener('click', () => downloadCSV(fname('cap-siniflari', 'diameter-classes') + '.csv', classRows(), lang));
   $('x-sp').addEventListener('click', () => downloadCSV(fname('tur-katilimi', 'species') + '.csv', speciesRows(), lang));

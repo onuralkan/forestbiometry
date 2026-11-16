@@ -5,6 +5,7 @@ import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { download, downloadJSON, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordOption } from '../core/record-ui.js';
 import * as REP from './report.js';
 import * as SRC from './sources.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
@@ -393,7 +394,7 @@ function srcBlock(rs, boot = false) {
     <ol class="small refs">${refs.map(k => { const x = SRC.REFS[k]; return `<li data-ref="${k}">${esc(x.cite)}${x.url ? ` <a href="${esc(x.url)}" rel="noopener" target="_blank">${T('src.link')}</a>` : ''} <span class="muted">(${T('src.st.' + x.status)})</span></li>`; }).join('')}</ol>
     <p class="muted small">${T('src.note')}</p></details>`;
 }
-const exportButtons = (pre, kinds) => `<div class="exports">${kinds.map(([k, lab, main]) => `<button type="button" class="btn${main ? '' : ' ghost'}" id="${pre}-${k}">${T(lab)}</button>`).join('')}</div><p class="muted small">${T('ex.note')}</p>`;
+const exportButtons = (pre, kinds) => `<div class="exports">${kinds.map(([k, lab, main]) => `<button type="button" class="btn${main ? '' : ' ghost'}" id="${pre}-${k}">${T(lab)}</button>`).join('')}${kinds.some(x => x[0] === 'json') ? recordOption() : ''}</div><p class="muted small">${T('ex.note')}</p>`;
 function tabParams(p) {
   const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
   const s = u.desc, tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
@@ -420,9 +421,10 @@ function tabParams(p) {
   p.innerHTML = h; bindBar(); bindCompare(p);
   p.querySelector('details.ptabs').addEventListener('toggle', e => { S.ptabsOpen = e.target.open; save(); });
   for (const k of ['xlsx', 'fits', 'params']) $('x-' + k).addEventListener('click', () => exportRaw(k));
-  $('x-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-sonuc-${new Date().toISOString().slice(0, 10)}.json`,
+  $('x-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-sonuc-${new Date().toISOString().slice(0, 10)}.json`,
     { tool: D.TOOL, created: new Date().toISOString(), source: S.imp ? S.imp.name : null, settings: jsonSettings(), results: R.units.flatMap(x => x.results.map(({ gof, ...r }) => ({ ...r, fit: gof || null }))),
-      bootstrap: bootRecords().map(({ u, r, ...b }) => b), sources: srcJSON([...R.units.flatMap(x => x.results.map(r => r.method))]) }));
+      bootstrap: bootRecords().map(({ u, r, ...b }) => b), sources: srcJSON([...R.units.flatMap(x => x.results.map(r => r.method))]) },
+    D.TOOL, [['data', S.imp]], m => status(m, 'err')));
 }
 function niceWidth(range) { const raw = range / 12, p = 10 ** Math.floor(Math.log10(raw)), m = raw / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
 function tabCharts(p) {
@@ -553,7 +555,7 @@ function bootOut(u, r, kind) {
   }
   return h + `<button type="button" class="btn ghost small" data-btjson="${kind}">${T('p.json')}</button>`;
 }
-document.addEventListener('click', e => { const b = e.target.closest('[data-btjson]'); if (!b) return; const u = curUnit(), kind = b.dataset.btjson, key = `${u.id}|${S.boot.fit}|${kind}`, res = BOOT.get(key); if (res) downloadJSON(`cap-dagilimi-bootstrap-${kind}-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), unit: { plot: u.plot === D.POOL ? null : u.plot, period: u.period }, fit: S.boot.fit, result: res }); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-btjson]'); if (!b) return; const u = curUnit(), kind = b.dataset.btjson, key = `${u.id}|${S.boot.fit}|${kind}`, res = BOOT.get(key); if (res) downloadRecord(`cap-dagilimi-bootstrap-${kind}-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), settings: jsonSettings(), unit: { plot: u.plot === D.POOL ? null : u.plot, period: u.period }, fit: S.boot.fit, result: res }, D.TOOL, [['data', S.imp]], m => status(m, 'err')); });
 
 /* ---------------- comparison (P13): grouped by observation process; likelihood fits vs descriptive; chosen criterion ---------------- */
 function classErr(u, r) {
@@ -743,7 +745,7 @@ function drawRecover() {
   const sInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(summaryInput()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('rec.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('s-' + k).addEventListener('click', () => exportRec(k, RS, sInfo(), ['cap-dagilimi-geri-kazanim', 'diameter-distribution-recovery']));
   $('ch-r-svg') && $('ch-r-svg').addEventListener('click', () => download('geri-kazanim.svg', svgForDownload($('ch-r').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), fits: okR.map(r => ({ method: r.method, params: r.params, targets: r.targets })) }), 'image/svg+xml'));
-  $('s-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), results: RS, sources: srcJSON(RS.map(r => r.method)) }));
+  $('s-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), results: RS, sources: srcJSON(RS.map(r => r.method)) }, D.TOOL, [], m => status(m, 'err')));
 }
 
 /* ---------------- Weibull recovery, Poudel and Cao (2013) M2–M10: targets typed, predicted, or computed from loaded data ---------------- */
@@ -844,7 +846,7 @@ function drawWb() {
     ...Object.entries(wbOpts()).map(([k, v]) => [T('x.in', { k }), v]), S.wb.from ? [T('x.in', { k: 'unit' }), S.wb.from.label] : null, ['', T('wb.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('w-' + k).addEventListener('click', () => exportRec(k, RW, wInfo(), ['cap-dagilimi-weibull-geri-kazanim', 'diameter-distribution-weibull-recovery']));
   $('ch-w-svg') && $('ch-w-svg').addEventListener('click', () => download('weibull-geri-kazanim.svg', svgForDownload($('ch-w').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), fits: okR.map(r => ({ method: r.method, params: r.params, fixed: r.fixed, targets: r.targets })) }), 'image/svg+xml'));
-  $('w-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-weibull-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), results: RW, sources: srcJSON(RW.map(r => r.method)) }));
+  $('w-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-weibull-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), results: RW, sources: srcJSON(RW.map(r => r.method)) }, D.TOOL, [], m => status(m, 'err')));
 }
 /* ---------------- Johnson SB recovery, Parresol (2003): ξ fixed, λ, γ, δ recovered ---------------- */
 function prsSummary() {
@@ -911,7 +913,7 @@ function drawPrs() {
   $('ch-p-svg') && $('ch-p-svg').addEventListener('click', () => download('johnson-sb-parresol.svg', svgForDownload($('ch-p').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), fits: [{ method: r.method, params: r.params, targets: r.targets }] }), 'image/svg+xml'));
   const pInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(prsSummary()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('prs.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('p-' + k).addEventListener('click', () => exportRec(k, RP, pInfo(), ['cap-dagilimi-johnson-sb-parresol', 'diameter-distribution-johnson-sb-parresol']));
-  $('p-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-johnson-sb-parresol-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), results: RP, sources: srcJSON(RP.map(r => r.method)) }));
+  $('p-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-johnson-sb-parresol-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), results: RP, sources: srcJSON(RP.map(r => r.method)) }, D.TOOL, [], m => status(m, 'err')));
 }
 /* ---------------- stand models (P16): train on many plots, predict from stand variables ---------------- */
 const STAND_GUESS = { ncol: ['n_ha', 'nha', 'n/ha', 'agac_ha', 'ağaç_ha', 'n_per_ha', 'stems_ha', 'trees_ha', 'n'], hcol: ['h_m', 'h', 'h0', 'h0_h', 'h0_d', 'hdom', 'h_dom', 'boy', 'ust_boy', 'üst_boy', 'hm'], acol: ['yas', 'yaş', 'age', 'a', 'yas_yil'] };
@@ -1125,7 +1127,7 @@ function drawFns() {
   $('ch-f-svg') && $('ch-f-svg').addEventListener('click', () => download('johnson-sb-fonseca.svg', svgForDownload($('ch-f').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: fnsSummary(), fits: [{ method: r.method, params: r.params, targets: r.targets }] }), 'image/svg+xml'));
   const fInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(fnsSummary()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('fns.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('fx-' + k).addEventListener('click', () => exportRec(k, RF, fInfo(), ['cap-dagilimi-johnson-sb-fonseca', 'diameter-distribution-johnson-sb-fonseca']));
-  $('fx-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-johnson-sb-fonseca-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: fnsSummary(), results: RF, sources: srcJSON(RF.map(x => x.method)) }));
+  $('fx-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-johnson-sb-fonseca-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: fnsSummary(), results: RF, sources: srcJSON(RF.map(x => x.method)) }, D.TOOL, [], m => status(m, 'err')));
 }
 function renderWf() {
   $('wf').innerHTML = `<div class="tabs wftabs" role="tablist" aria-label="${esc(T('wf.label'))}">${['raw', 'summary', 'stand'].map(w => `<button type="button" role="tab" id="wf-${w}" aria-selected="${S.wf === w}" data-wf="${w}">${T('wf.' + w)}</button>`).join('')}</div>`;

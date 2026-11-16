@@ -5,7 +5,8 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
-import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core/export.js';
+import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { readStems, keyOf } from '../core/stems.js';
@@ -218,14 +219,15 @@ function renderStep3() {
   h += `<details class="card more" id="tdetail"${S.detailOpen ? ' open' : ''}><summary>${T('d.h')}</summary><div id="tdbody"></div></details>`;
   h += `<details class="card more" id="probs"><summary>${T('pr.h', { e: nE, w: nW })}</summary>${probs.length ? `<div class="tscroll"><table class="grid" id="prtab"><thead><tr><th>${T('pr.row')}</th><th>${T('pr.tree')}</th><th>${T('pr.sev')}</th><th>${T('pr.msg')}</th></tr></thead><tbody>
     ${probs.slice(0, 300).map(p => `<tr data-code="${esc(p.code)}"><td class="rn">${p.row ?? '–'}</td><td>${esc([p.plot, p.tree].filter(x => x != null).join(' / ') || '–')}</td><td>${T('sev.' + p.severity)}</td><td>${esc(T('c.' + p.code, p))}</td></tr>`).join('')}</tbody></table></div>${probs.length > 300 ? `<p class="small">${T('pr.more', { n: probs.length - 300 })}</p>` : ''}` : ''}</details>`;
-  h += `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('ex.json')}</button></div>
+  h += `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('ex.json')}</button>${recordOption()}</div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('tdetail').addEventListener('toggle', e => { S.detailOpen = e.target.open; save(); });
   $('ttab').querySelectorAll('tr[data-key]').forEach(tr => tr.addEventListener('click', () => { S.selTree = tr.dataset.key; S.detailOpen = true; $('tdetail').open = true; drawDetail(); save(); }));
   $('back2').addEventListener('click', () => go(2));
   $('x-csv').addEventListener('click', () => downloadCSV(fname('seksiyon-hacmi-agaclar', 'stem-volume-trees') + '.csv', [tt.head, ...tt.rows.map(r => r.cells)], lang));
-  $('x-json').addEventListener('click', () => downloadJSON(fname('seksiyon-hacmi', 'stem-volume') + '.json', { tool: V.TOOL, created: R.created, source: S.imp ? S.imp.name : null, settings: settingsRecord(), problems: R.st.problems, results: R.res, plots: R.plots, quality: R.quality, comparison: R.comp }));
+  $('x-json').addEventListener('click', () => downloadRecord(fname('seksiyon-hacmi', 'stem-volume') + '.json', { tool: V.TOOL, created: R.created, source: S.imp ? S.imp.name : null, settings: settingsRecord(), problems: R.st.problems, results: R.res, plots: R.plots, quality: R.quality, comparison: R.comp },
+    V.TOOL, [['stems', S.imp], ...(S.useDs && approved ? [['dataset', { kind: 'dataset', dataset: approved }]] : [])], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', exportXLSX);
   drawDetail();
 }
@@ -281,7 +283,8 @@ function qualityCard() {
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function settingsRecord() {
   return { layout: S.layout, methods: R.methods, reference: R.ref, top: S.layout === 'hohenadl' ? null : S.top, includeStump: S.includeStump, dTop: R.settings.dTop, combine: S.dmode === 'two' ? S.combine : null,
-    barkDefault: S.barkDef, areaMode: S.areaMode, areaConst: S.areaMode === 'const' ? num(S.areaConst) : null, linkedApprovedData: !!(S.useDs && approved), thresholds: advVal(), decimal: S.decimal, units: S.u };
+    barkDefault: S.barkDef, areaMode: S.areaMode, areaConst: S.areaMode === 'const' ? num(S.areaConst) : null, linkedApprovedData: !!(S.useDs && approved), thresholds: advVal(), decimal: S.decimal, units: S.u,
+    columns: S.src ? Object.fromEntries(Object.entries(S.map).map(([k, i]) => [k, i == null || typeof i !== 'number' ? i ?? null : S.src.headers[i]])) : null };
 }
 async function exportXLSX() {
   let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }

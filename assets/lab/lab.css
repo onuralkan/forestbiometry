@@ -531,3 +531,8 @@ details.assumebox > summary { font: 600 16px var(--head); color: var(--ink); mar
 #libtab .kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
 #libtab .kv dt { color: var(--muted); } #libtab .kv dd { margin: 0; }
 #libtab .params { width: auto; }
+/* reproducibility layer (DI-07): run-record option next to JSON buttons; Record Verifier */
+.exports .rec-embed { align-self: center; font-size: .85em; }
+#app span.ok { color: var(--ok); } #app span.err, #app b.err { color: var(--err); }
+code.hash { font-size: .82em; font-family: var(--mono); overflow-wrap: anywhere; }
+pre.json { max-height: 420px; overflow: auto; font-size: .82em; background: var(--sunk); border: 1px solid var(--line2); padding: 10px 12px; border-radius: var(--r); font-family: var(--mono); }

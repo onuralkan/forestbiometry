@@ -35,7 +35,7 @@ function site_catalog(): array {
         ['DI-04', 'planned', 'Görselleştirme panosu', 'Visualization dashboard'],
         ['DI-05', 'planned', 'Rapor üretici', 'Report generator'],
         ['DI-06', 'out', 'API ve betik arayüzü', 'API and scripting interface'],
-        ['DI-07', 'planned', 'Tekrarlanabilirlik katmanı', 'Reproducibility layer'],
+        ['DI-07', 'live', 'Tekrarlanabilirlik katmanı', 'Reproducibility layer', 'kayit-dogrulayici.php'],
         ['TM-01', 'planned', 'Boy hesaplayıcı', 'Height calculator'],
         ['TM-02', 'planned', 'Çap ve göğüs yüzeyi', 'DBH and basal area'],
         ['TM-03', 'planned', 'Kabuk kalınlığı ve kabuksuz çap', 'Bark thickness and under-bark diameter'],

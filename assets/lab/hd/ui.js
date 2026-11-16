@@ -6,6 +6,7 @@ import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordButton } from '../core/record-ui.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 
@@ -376,15 +377,29 @@ function infoRows() {
     ['', !p.hasPlot ? T('inf.noplot') : p.nPlots > 1 ? T('inf.multi', { n: p.nPlots }) : T('inf.one')], ['', T('c.fit.note')], ['', R.inference ? T('c.aic.note') : T('c.aic.off')],
     ['', R.inference ? T('nd.defs') : T('nd.noint')], ['', T('pr.sep')], ['', T('src.note')]];
 }
+/** JSON run record (DI-07): settings, every fit, cross-validation summary, predictions for the new diameters. */
+function recordPayload() {
+  const p = R.prep, sf = selFit(), col = c => c == null ? null : S.src.headers[c], nd = ndRows();
+  return { tool: H.TOOL, created: new Date().toISOString(),
+    settings: { columns: { d: col(S.dcol), h: col(S.hcol), plot: col(S.pcol), species: col(S.scol), filter: col(S.fcol) }, species: S.sval ?? null, filterValue: S.fval ?? null,
+      units: { d: S.dunit, h: S.hunit }, decimal: S.decimal, breastHeight: p.bh, cv: S.cv, model: sf ? sf.id : null },
+    data: { fitted: p.fitRows.length, dmin: p.dmin, dmax: p.dmax, plots: p.hasPlot ? p.nPlots : 0, excluded: p.acc }, inference: R.inference,
+    fits: R.fits.map(fi => { const m = H.modelById(fi.id); return { id: fi.id, formula: m.formula, status: fi.status, names: m.names, theta: fi.theta ?? null, se: fi.se ?? null, ci: fi.ci ?? null, n: fi.n,
+      rmse: fi.rmse ?? null, mae: fi.mae ?? null, bias: fi.bias ?? null, sigma: fi.sigma ?? null, aic: R.inference ? fi.aicValue ?? null : null, bic: R.inference ? fi.bicValue ?? null : null, iter: fi.iter ?? null }; }),
+    crossValidation: !R.cv ? null : R.cv.problem ? { problem: R.cv.problem } : { mode: R.cv.mode, k: R.cv.k, lopo: R.cv.lopo, models: H.MODELS.map((m, k) => ({ id: m.id, ...R.cv.sum.models[k], chosen: R.cv.sum.chosen[k] })), selection: R.cv.sum.selection },
+    newDiameters: nd ? { model: nd.sf.id, rows: nd.rows.map(x => ({ d: x.d, h: x.yhat, ci: x.ci || null, pi: x.pi || null, outside: !!x.outside })) } : null };
+}
 function tabExport(p) {
   const nd = ndExport();
   p.innerHTML = `${selFit() ? '' : `<p class="note warn">${T('ex.nomodel')}</p>`}<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button>
     <button type="button" class="btn ghost" id="x-t">${T('ex.trees')}</button><button type="button" class="btn ghost" id="x-p">${T('ex.params')}</button>
-    ${R.cv && !R.cv.problem ? `<button type="button" class="btn ghost" id="x-cv">${T('ex.cv')}</button>` : ''}${nd ? `<button type="button" class="btn ghost" id="x-nd">${T('ex.nd')}</button>` : ''}</div><p class="muted small">${T('ex.note')}</p>`;
+    ${R.cv && !R.cv.problem ? `<button type="button" class="btn ghost" id="x-cv">${T('ex.cv')}</button>` : ''}${nd ? `<button type="button" class="btn ghost" id="x-nd">${T('ex.nd')}</button>` : ''}${recordButton('x-json')}</div><p class="muted small">${T('ex.note')}</p>`;
   $('x-t').addEventListener('click', () => downloadCSV(fname('boy-cap-agaclar', 'height-diameter-trees') + '.csv', treeRows(), lang));
   $('x-p').addEventListener('click', () => downloadCSV(fname('boy-cap-parametreler', 'height-diameter-parameters') + '.csv', paramRows(), lang));
   $('x-cv') && $('x-cv').addEventListener('click', () => downloadCSV(fname('boy-cap-capraz-dogrulama', 'height-diameter-cv') + '.csv', cvRows(), lang));
   $('x-nd') && $('x-nd').addEventListener('click', () => downloadCSV(fname('boy-cap-yeni-caplar', 'height-diameter-new') + '.csv', ndExport(), lang));
+  $('x-json').addEventListener('click', () => downloadRecord(fname('boy-cap', 'height-diameter') + '.json', recordPayload(), H.TOOL,
+    [[S.imp && S.imp.kind === 'dataset' ? 'dataset' : 'trees', S.imp && S.imp.kind === 'dataset' ? { kind: 'dataset', dataset: approved } : S.imp]], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
     const sheets = [{ name: T('sheet.info'), rows: infoRows(), widths: [26, 110] }, { name: T('sheet.params'), rows: paramRows() }, { name: T('sheet.cv'), rows: cvRows() }, { name: T('sheet.trees'), rows: treeRows() }];

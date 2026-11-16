@@ -7,7 +7,7 @@ import { readNum } from '../eval/calc.js';
 import { cellText } from '../core/table.js';
 import { UNITS } from '../core/num.js';
 
-export const TOOL = { id: 'boy-cap', version: '1.0.0' };
+export const TOOL = { id: 'boy-cap', version: '1.1.0' };
 export const DIVERGE_FACTOR = 50;      // asymptote above 50 × the largest observed (h − bh): "not identified by the data" (tool rule)
 export const CV_SEED = 20261109;       // fixed seed: folds are reproducible
 export const CV_K = 10;                // folds for random tree-level CV and for grouped CV with many plots

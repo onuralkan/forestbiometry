@@ -5,7 +5,8 @@ import { appendColumns } from './competition.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
-import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core/export.js';
+import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
+import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { barChart, plotChart, svgForDownload } from '../core/chart.js';
 import { createUnitNav } from '../core/unitnav.js';
 import { renderImport, readImport } from '../core/importer.js';
@@ -259,9 +260,11 @@ function infoRows() {
 }
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-trees">${T('ex.trees')}</button>
-    <button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('ex.json')}</button></div><p class="muted small">${T('ex.note')}</p>`;
+    <button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('ex.json')}</button>${recordOption()}</div><p class="muted small">${T('ex.note')}</p>`;
   $('x-csv').addEventListener('click', () => downloadCSV(fname('mescere-yapisi', 'stand-structure') + '.csv', unitRows(), lang));
-  $('x-json').addEventListener('click', () => downloadJSON(fname('mescere-yapisi', 'stand-structure') + '.json', { tool: S.TOOL, created: R.created, settings: settings(), units: R.units.map(({ trees, ...u }) => u), skipped: R.skipped }));
+  $('x-json').addEventListener('click', () => downloadRecord(fname('mescere-yapisi', 'stand-structure') + '.json', { tool: S.TOOL, created: R.created, settings: settings(), units: R.units.map(({ trees, ...u }) => u), skipped: R.skipped,
+    reading: st.dsSrc && st.dsSrc.kind === 'table' && st.tbl ? { columns: Object.fromEntries(Object.entries(st.tbl.map).map(([k, i]) => [k, i == null ? null : st.tbl.src.headers[i]])), ...st.tbl.spec } : null },
+    S.TOOL, st.dsSrc && st.dsSrc.kind === 'table' && st.tbl ? [['trees', st.tbl.imp]] : st.ds ? [['dataset', { kind: 'dataset', dataset: st.ds }]] : [], m => status(m, 'err')));
   const xl = async sheets => { let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('ex.fail'), 'err'); return null; } return XLSX; };
   $('x-xlsx').addEventListener('click', async () => {
     const XLSX = await xl(); if (!XLSX) return;

@@ -4,7 +4,7 @@ import { parseNumber } from '../core/num.js';
 import { cellText } from '../core/table.js';
 import { classIndex } from '../stand/calc.js';
 
-export const TOOL = { id: 'model-degerlendirme', version: '1.0.0' };
+export const TOOL = { id: 'model-degerlendirme', version: '1.1.0' };
 export const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 export const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 

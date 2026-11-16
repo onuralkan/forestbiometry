@@ -48,22 +48,22 @@ function site_tools(?bool $tr = null): array {
         ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.1.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
          'desc' => $tr ? 'Ağaç ve örnek alan tablolarınızı içe aktarın, sütunları eşleyin, biçim hatalarını ve şüpheli ölçümleri bulun; düzeltmeleri gerekçesiyle kaydedip veriyi onaylayın.'
                        : 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
-        ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.1.0', 'lab' => 'stand', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
+        ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.2.0', 'lab' => 'stand', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
          'desc' => $tr ? 'Onaylanmış veriden her örnek alan ve dönem için hektarda ağaç sayısı ve göğüs yüzeyi, ortalama çaplar, çap sınıfları ve tür katılımı; örnek alanlar arası özet ve tasarıma dayalı orman tahmini.'
                        : 'From approved data, per plot and period: stems and basal area per hectare, mean diameters, diameter classes and species composition; between-plot summary and design-based forest estimate.'],
-        ['n' => 3, 'cat' => 'SM', 'icon' => 'eval', 'short' => $tr ? 'Model Başarısı' : 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.0.0', 'lab' => 'eval', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
+        ['n' => 3, 'cat' => 'SM', 'icon' => 'eval', 'short' => $tr ? 'Model Başarısı' : 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.1.0', 'lab' => 'eval', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
          'desc' => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE ve tahmin R²; gözlenen–tahmin ve artık grafikleri, gruplara göre başarı tabloları.'
                        : 'Bias, MAE, RMSE and prediction R² from observed and predicted values; observed–predicted and residual plots, performance tables by group.'],
         ['n' => 4, 'cat' => 'SS', 'icon' => 'dist', 'short' => $tr ? 'Çap Dağılımı' : 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'v' => '2.2.0', 'lab' => 'dist', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
          'desc' => $tr ? 'Weibull, normal, lognormal, gamma, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik: en çok olabilirlik, momentler ve yüzdeliklerle doğrudan uydurma, örnek alan ve dönem bazında; ortalama ile varyans ya da Dq\'dan geri kazanım; Weibull için Poudel ve Cao M2–M10, Johnson SB için Parresol; Excel ve CSV çıktısı. Ölçüm eşiğinde koşullu en çok olabilirlik; sınıf tabloları ve sınıflandırılmış sıklıklardan uydurma; model karşılaştırma, Q–Q ve P–P grafikleri; bootstrap p değerleri ve aralıklar.'
                        : 'Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic: direct fitting by maximum likelihood, moments and percentiles, per plot and period; recovery from the mean and the variance or Dq; Poudel and Cao M2–M10 for the Weibull, Parresol for the Johnson SB; Excel and CSV output. Conditional maximum likelihood for measurement thresholds; class tables and fitting from class frequencies; model comparison, Q–Q and P–P plots; bootstrap p-values and intervals.'],
-        ['n' => 5, 'cat' => 'SM', 'icon' => 'hd', 'short' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter', 'file' => 'boy-cap.php', 'v' => '1.0.0', 'lab' => 'hd', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
+        ['n' => 5, 'cat' => 'SM', 'icon' => 'hd', 'short' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter', 'file' => 'boy-cap.php', 'v' => '1.1.0', 'lab' => 'hd', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
          'desc' => $tr ? 'Sabit etkili sürüm: Näslund, Michailoff, Curtis, kuvvet, Chapman–Richards ve Weibull denklemlerini doğrusal olmayan en küçük karelerle uydurun; aynı ağaçlar üzerinde karşılaştırma, örnek alan bazında çapraz doğrulama, eksik boylar için ayrı tahmin sütunu. Karma etkili modeller sonraki aşamada.'
                        : 'Fixed-effects version: fit the Näslund, Michailoff, Curtis, power, Chapman–Richards and Weibull equations by nonlinear least squares; comparison on the same trees, plot-based cross-validation, a separate prediction column for missing heights. Mixed-effects models in a later stage.'],
-        ['n' => 6, 'cat' => 'SI', 'icon' => 'sampling', 'short' => $tr ? 'Örnekleme Planlayıcısı' : 'Sampling Planner', 'file' => 'ornekleme.php', 'v' => '1.0.0', 'lab' => 'sampling', 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner',
+        ['n' => 6, 'cat' => 'SI', 'icon' => 'sampling', 'short' => $tr ? 'Örnekleme Planlayıcısı' : 'Sampling Planner', 'file' => 'ornekleme.php', 'v' => '1.1.0', 'lab' => 'sampling', 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner',
          'desc' => $tr ? 'Basit rastgele örneklemede bir ortalamayı hedeflenen bağıl hatayla tahmin etmek için yaklaşık örnek alan sayısı: pilot ölçümlerden veya girilen CV\'den, isteğe bağlı sonlu çerçeve düzeltmesiyle. Tabakalı, sistematik ve kümeli tasarımlar sonraki sürümlerde.'
                        : 'Approximate number of plots to estimate a mean with a target relative error under simple random sampling: from pilot measurements or a CV you enter, with an optional finite-frame correction. Stratified, systematic and cluster designs in later versions.'],
-        ['n' => 7, 'cat' => 'SM', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.0.0', 'lab' => 'rank', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
+        ['n' => 7, 'cat' => 'SM', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.1.0', 'lab' => 'rank', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
          'desc' => $tr ? 'Başarı ölçütleri tablosundan (R², FI, RMSE, MAE, Bias, AIC, BIC…) ölçüt bazında ve genel nispi sıralar; en iyi ve en kötü modellerin radar grafiği.'
                        : 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.'],
         ['n' => 8, 'cat' => 'SV', 'icon' => 'secvol', 'short' => $tr ? 'Seksiyon Hacmi' : 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.2', 'lab' => 'secvol', 'title' => $tr ? 'Seksiyon Hacmi Hesaplayıcısı' : 'Stem Section Volume',
@@ -84,6 +84,9 @@ function site_tools(?bool $tr = null): array {
         ['n' => 13, 'cat' => 'DI', 'icon' => 'library', 'short' => $tr ? 'Katsayı Kütüphanesi' : 'Coefficient Library', 'file' => 'katsayi-kutuphanesi.php', 'v' => '1.0.0-beta.1', 'lab' => 'coeflib', 'title' => $tr ? 'Katsayı Kütüphanesi' : 'Coefficient Library',
          'desc' => $tr ? 'Bütün araçlardaki katsayı setleriniz tek yerde: arama ve süzme, ayrıntı, düzenleme, kopyalama, silme; aynı katsayılı ve sorunlu setlerin bulunması; kütüphanenin tamamını tek JSON dosyasıyla yedekleme ve önizlemeli geri yükleme.'
                        : 'The coefficient sets of every tool in one place: search and filter, details, editing, copying, deleting; finding sets with the same coefficients and sets with problems; backing up the whole library in one JSON file and restoring it with a preview.'],
+        ['n' => 14, 'cat' => 'DI', 'icon' => 'verify', 'short' => $tr ? 'Kayıt Doğrulayıcı' : 'Record Verifier', 'file' => 'kayit-dogrulayici.php', 'v' => '1.0.0-beta.1', 'lab' => 'record', 'title' => $tr ? 'Kayıt Doğrulayıcı' : 'Record Verifier',
+         'desc' => $tr ? 'Araçların indirdiği çalışma kayıtlarını (JSON) açın: kaydın değişmediğini mühürle denetleyin; aracı, sürümü, kaynak kodunun commit\'ini ve ayarları görün; özgün veri dosyalarınızın kayıttaki girdilerle bayt bayt aynı olduğunu SHA-256 parmak iziyle doğrulayın.'
+                       : 'Open the run records (JSON) that the tools download: check with the seal that a record has not changed; see the tool, its version, the source-code commit and the settings; confirm with SHA-256 fingerprints that your original data files are byte for byte the inputs of the record.'],
     ];
 }
 
@@ -106,6 +109,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'secvol' => 'M12 2C9.89 2 3 2.29 3 6V18C3 21.71 9.89 22 12 22C14.11 22 21 21.71 21 18V6C21 2.29 14.11 2 12 2M12 10C13.38 10 16.8 9.87 19 8.75V15.25C16.8 14.13 13.38 14 12 14S7.2 14.13 5 15.25V8.75C7.2 9.87 10.62 10 12 10M12 4C15.87 4 19 4.89 19 6C19 7.11 15.87 8 12 8C8.13 8 5 7.11 5 6C5 4.89 8.13 4 12 4M12 20C8.13 20 5 19.11 5 18C5 16.9 8.13 16 12 16C15.87 16 19 16.9 19 18C19 19.11 15.87 20 12 20Z', // mdiCylinder
         'growth' => 'M3.5,18.5L9.5,12.5L13.5,16.5L22,6.92L20.59,5.5L13.5,13.5L9.5,9.5L2,17L3.5,18.5Z', // mdiChartLineVariant
         'library' => 'M9 3V18H12V3H9M12 5L16 18L19 17L15 4L12 5M5 5V18H8V5H5M3 19V21H21V19H3Z', // mdiBookshelf
+        'verify' => 'M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z', // mdiShieldCheck
         'siteindex' => 'M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z', // mdiTrendingUp
         'rank' => 'M12,7.09L14.45,8.58L13.8,5.77L16,3.89L13.11,3.64L12,1L10.87,3.64L8,3.89L10.18,5.77L9.5,8.58L12,7.09M4,13.09L6.45,14.58L5.8,11.77L8,9.89L5.11,9.64L4,7L2.87,9.64L0,9.89L2.18,11.77L1.5,14.58L4,13.09M20,10.09L22.45,11.58L21.8,8.77L24,6.89L21.11,6.64L20,4L18.87,6.64L16,6.89L18.18,8.77L17.5,11.58L20,10.09M15,23H9V10H15V23M7,23H1V17H7V23M23,23H17V13H23V23Z', // mdiPodium
         'structure' => 'M7.2,11.2C8.97,11.2 10.4,12.63 10.4,14.4C10.4,16.17 8.97,17.6 7.2,17.6C5.43,17.6 4,16.17 4,14.4C4,12.63 5.43,11.2 7.2,11.2M14.8,16A2,2 0 0,1 16.8,18A2,2 0 0,1 14.8,20A2,2 0 0,1 12.8,18A2,2 0 0,1 14.8,16M15.2,4A4.8,4.8 0 0,1 20,8.8C20,11.45 17.85,13.6 15.2,13.6A4.8,4.8 0 0,1 10.4,8.8C10.4,6.15 12.55,4 15.2,4Z', // mdiChartBubble
@@ -215,6 +219,15 @@ function site_top(array $o = []): void {
 <?php endif;
 }
 
+/**
+ * Git commit of the deployed site (DI-07 run records): deploy-commit.txt, written by the GitHub upload after every
+ * deployment (.github/deploy-cpanel.sh; not served, .htaccess). null in development (no such file).
+ */
+function site_commit(): ?string {
+    static $c = false;
+    if ($c === false) { $f = __DIR__ . '/../deploy-commit.txt'; $t = is_file($f) ? trim((string) file_get_contents($f)) : ''; $c = preg_match('/^[0-9a-f]{40}$/', $t) ? $t : null; }
+    return $c;
+}
 /** Version tag of a site file: its modification time (it changes whenever the deployment uploads that file). */
 /**
  * true: pages load one bundled file each from assets/build/ (scripts/bundle.mjs), as on the server. The PHP built-in
@@ -314,7 +327,8 @@ function site_bottom(string $script = ''): void {
     $cur = site_current_tool(); $en = site_tools(false); $trT = site_tools(true); $ct = null;
     if ($cur) foreach ($trT as $i => $t) if ($t['file'] === $cur['file']) $ct = ['file' => $t['file'], 'v' => $t['v'], 'tr' => $t['title'], 'en' => $en[$i]['title']];
     $cd = ['author' => ['family' => SITE_AUTHOR['family'], 'given' => SITE_AUTHOR['given']], 'year' => SITE_YEAR, 'base' => SITE_BASE,
-           'site' => ['tr' => 'Ormancılık Biyometrisi Araçları', 'en' => 'Forest Biometrics Tools'], 'tool' => $ct, 'doi' => SITE_DOI];
+           'site' => ['tr' => 'Ormancılık Biyometrisi Araçları', 'en' => 'Forest Biometrics Tools'], 'tool' => $ct, 'doi' => SITE_DOI,
+           'ids' => $cur ? array_values(array_column(array_filter(site_catalog(), function ($e) use ($cur) { return $e['page'] === $cur['file']; }), 'id')) : [], 'commit' => site_commit()];
 ?>
 <dialog id="citedlg" class="dlg citedlg" aria-label="<?= $tr ? 'Kaynak gösterme' : 'How to cite' ?>"></dialog>
 <script type="application/json" id="cite-data"><?= json_encode($cd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
