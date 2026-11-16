@@ -46,7 +46,7 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 |---|---|---|---|---|
 | DI-01 | Veri içe aktarma ve denetim | yayında | `veri-denetcisi.php` | Ormancılık Verisi Denetçisi |
 | DI-02 | Katsayı ve denklem kütüphanesi | yayında | `katsayi-kutuphanesi.php` | Kütüphane çekirdeği `core/coef.js`, `core/coef-ui.js`. DI-02/a1 (16 Kasım 2026, kullanıcı kararı: merkezî yönetim): bütün araçların setleri tek sayfada (`assets/lab/coeflib/`), süzme/arama, ayrıntı, aynı düzenleyiciyle düzenleme, kopya, silme, aynı katsayılı ve sorunlu setler, tek dosyayla yedek ve önizlemeli geri yükleme; 1.0.0-beta.1, yayına alındı (16 Kasım 2026, kullanıcı kararı). Yerleşik set yok (P2) |
-| DI-03 | Proje ve envanter verisi yöneticisi | planlı | – | Tarayıcıda (P1); örnek alan–ağaç–ölçüm hiyerarşisi `forest-dataset/1` ile. |
+| DI-03 | Proje ve envanter verisi yöneticisi | yayında | `veri-yoneticisi.php` | Tarayıcıda (P1); örnek alan–ağaç–ölçüm hiyerarşisi `forest-dataset/1` ile. DI-03/a1 (16 Kasım 2026, kullanıcı kararı: çoklu veri paketi + etkin paket; yalnızca üst bilgi düzenlenir): Envanter Verisi Yöneticisi 1.0.0-beta.1 (`forest-project/1`, PROJECT §4b): proje bilgileri, örnek alan × dönem özeti, etkin paket (`dataset:approved`, araçlar değişmedi), içe/dışa aktarma ve önizlemeli yedek, kopya, silme; Veri Denetçisi 1.2.0 onayları listeye ekler. Sonraki: dönem birleştirme (SI-09'un zemini), paketi Denetçi'de yeniden açma. |
 | DI-04 | Görselleştirme panosu | planlı | – | |
 | DI-05 | Rapor üretici | planlı | – | P7 |
 | DI-06 | API ve betik arayüzü | kapsam dışı | – | P1; yerine Node'da çalışan motorlar ve planlı "R kodunu da ver" düğmesi. |
