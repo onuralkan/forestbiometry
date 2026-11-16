@@ -1111,3 +1111,25 @@ Gövde profili katsayı setiyle (§17) bir ağacın kullanılabilir gövdesi kul
 Ayrı sayfa açılmadı: katsayı seti ve ağaçlar zaten Gövde Profili sayfasında (kullanıcı onayı). Adım 2'de isteğe bağlı "Ürün bölme" kartı: ürünlerin çap tarafı, bölme adımı (varsayılan 0.1 m), para birimi (yalnızca etiket), yöntem (en yüksek değer: değer ya da hacim; öncelik sırası), düzenlenebilir ürün tablosu (ekle/sil; JSON indir ve yükle, `bucking-products/1`); kesim yüksekliği ve tepe çapı hacim ayarlarından. Hatalar (ızgara dışı boy, eksik değer, o tarafta profil seti yok) Hesapla düğmesini kapatır ve ürün numarasıyla yazılır. Adım 3'te: yöntem ve ayarlar, ürün özeti (bütün ağaçlar; renk + desen örneği), hacim dengesi, ağaç başına tablo, seçilen ağacın gövde çizimi (profil silueti; her ürün renk ve desenle, kesimler kesikli çizgi, numara etiketi; SVG indirilebilir) ve parça tablosu; Excel'de Ürünler ve Parçalar sayfaları, parçalar CSV'si, JSON'da `bucking`. Bölme hesabı değiştiği için araç sürümü 1.0.0-beta.2 (K4).
 - **Doğrulama:** `tests/taper/e2e.mjs` 33/33 (kaynak ve birleştirilmiş modda): ürünsüz ve ızgara dışı boyla hesap kapalı, değer yönteminde ürün özeti, toplam değer, parça yükseklikleri ve ince uçlar motorla (`buckTree`) aynı, parça başına bir çizim ve bir satır, ürün başına desen, Excel sayfaları tam duyarlıkla, en küçük çap ve yöntem değişince bölme değişir ve motorla aynı, ürün listesi JSON gidiş-dönüşü; kılavuz bölümü (`test_guide` 162/162).
 
+
+## 20. Tekrarlanabilirlik katmanı / Reproducibility layer (`assets/lab/core/record.js`; PLATFORM_PLAN DI-07)
+Bilimsel hesap yok: bu bölüm, araçların JSON indirmelerine eklenen ortak çalışma kaydının (`run-record/1`, PROJECT.md §4c) parmak izi ve mühür tanımlarıdır.
+
+| Büyüklük | Tanım |
+|---|---|
+| Dosya parmak izi | SHA-256(dosyanın okunduğu hâliyle baytları); kodlama, ayırıcı, başlık satırı ve çalışma sayfası ayrıca yazılır |
+| Yapıştırılan tablo | SHA-256(metnin UTF-8 baytları) |
+| Veri paketi / JSON değeri | SHA-256(RFC 8785 kanonik JSON): boşluk yok, nesne anahtarları UTF-16 kod birimi sırasında, sayılar ECMAScript en kısa gösterimi, dizgiler `JSON.stringify` kaçışlarıyla |
+| Kayıt mührü (`integrity.value`) | SHA-256(kanonik JSON(kayıt − `integrity`)); kayıt önce dosyaya yazıldığı gibi normalleştirilir (NaN, ±∞ → null; tanımsız alanlar düşer) |
+| Derleme kimliği (`build.commit`) | Sunucudaki `deploy-commit.txt` (yükleme işi her yayından sonra yazar; dışarıya kapalı); geliştirme ortamında null |
+
+Notlar:
+- Mühür imza değildir: herkes yeniden hesaplayabilir; kazara ya da bilerek yapılan değişikliği gösterir, sahteciliği önlemez. Bağımsız denetim: kanonik metin RFC 8785'i uygulayan herhangi bir kütüphaneyle üretilip SHA-256'sı alınır. Python'un `json.dumps(sort_keys=True)` çıktısı sayı gösteriminde (ör. `1e-07` / `1e-7`) ve anahtar sırasında (Unicode kod noktası / UTF-16) ayrışabilir; kanonik biçim yerine geçmez.
+- Bir bayt farkı (ör. Excel'de açılıp yeniden kaydedilen CSV) parmak izini değiştirir; doğrulayıcı bunu "eşleşmedi" olarak gösterir. Veri Denetçisi'nden indirilen veri paketi, biçimlendirmesinden ve UTF-8 BOM'dan bağımsız olarak kanonik biçimiyle eşleşir.
+- Gömülü veri (isteğe bağlı): dosya baytları base64, yapıştırılan metin UTF-8, veri paketi JSON olarak; doğrulayıcı gömülü verinin parmak iziyle tuttuğunu ayrıca denetler.
+
+Kaynaklar:
+- Rundgren, A., Jordan, B., Erdtman, S. 2020. *JSON Canonicalization Scheme (JCS).* RFC 8785, IETF. **[D]** (standart; uygulama RFC'nin §3.2.3 sıralama ve §3.2.4 örnek girdi/çıktısıyla test edilir)
+- NIST 2015. *Secure Hash Standard (SHS).* FIPS PUB 180-4. **[D]** (standart; SHA-256 tarayıcının Web Crypto işlevidir, uygulanmaz; test: Node `node:crypto` (OpenSSL) ve "abc", "" test vektörleri)
+
+Test: `node tests/record/test_di07.mjs` (34), tarayıcı `node tests/record/e2e.mjs` (29).

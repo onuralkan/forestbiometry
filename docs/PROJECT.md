@@ -113,6 +113,20 @@ Boş örnek alanlar `plots` içinde `n_records: 0` ile yer alır. İsteğe bağl
 
 Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfayı yeniden yükler ve oturum geri gelir.
 
+## 4c. Çalışma kaydı (`run-record/1`; DI-07, 16 Kasım 2026)
+Araçların sonuç JSON'u ortak bir zarfla yazılır (`assets/lab/core/record.js`, sayfa tarafı `core/record-ui.js`). Aracın eski JSON alanları **en üst düzeyde aynen kalır** (eski okuyucular etkilenmez); ayrılmış alanlar eklenir:
+```
+{ format: 'run-record/1',
+  tool: { id, version, ids: [katalog kimlikleri], page },
+  build: { commit: yayındaki git commit'i | null (geliştirme), site: SITE_BASE },
+  created: ISO, lang: 'tr'|'en',
+  inputs: [{ role, kind: 'file'|'paste'|'dataset'|'table', name, bytes, sha256, format?, encoding?, delimiter?, header?, sheet?,
+             schema?, trees?, data?: { encoding: 'base64'|'utf-8'|'json', value } }],
+  …aracın kendi alanları (settings, results, fits, units…),
+  integrity: { algorithm: 'SHA-256', canonicalization: 'RFC 8785 (JCS)', value } }
+```
+Parmak izi ve mühür tanımları METHODS §20. `data` yalnızca kullanıcı "Girdi verisini kayda ekle"yi işaretlediğinde yazılır (sayfa başına ortak seçim, `localStorage` `recEmbed`; varsayılan kapalı). Commit, sunucuda yükleme işinin yazdığı `deploy-commit.txt`'ten okunur (`site_commit()`, `#cite-data`); dosya dışarıya kapalıdır, depoya girmez. Veri biçimleri (onaylanmış veri paketi `forest-dataset/1`, katsayı setleri `model-coef/1`, kütüphane yedeği, Çap Dağılımı meşcere modeli) kayıt değildir, kendi şemalarıyla kalır. Kayıt Doğrulayıcı (`kayit-dogrulayici.php`) mührü, araç sürümünü ve girdilerin parmak izini tarayıcıda denetler. Biçim değişirse `run-record/2`.
+
 ## 5. Ortak kurallar (her modül)
 1. Bir turda yalnızca istenen modül uygulanır; tamamlanmış modüller yeniden yazılmaz.
 2. Arayüz, yardım, doğrulama mesajları, grafik etiketleri ve indirilen raporlar TR/EN.

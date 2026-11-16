@@ -50,7 +50,7 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 | DI-04 | Görselleştirme panosu | planlı | – | |
 | DI-05 | Rapor üretici | planlı | – | P7 |
 | DI-06 | API ve betik arayüzü | kapsam dışı | – | P1; yerine Node'da çalışan motorlar ve planlı "R kodunu da ver" düğmesi. |
-| DI-07 | Tekrarlanabilirlik katmanı | planlı | – | Kısmen var: her dışa aktarmada sürüm, ayarlar ve kaynaklar; Zenodo DOI. |
+| DI-07 | Tekrarlanabilirlik katmanı | yayında | `kayit-dogrulayici.php` | DI-07/a1 (16 Kasım 2026, kullanıcı kararı: ortak kayıt + doğrulayıcı; girdi varsayılan olarak yalnızca parmak izi, veri gömme isteğe bağlı): bütün araçların JSON indirmesi `run-record/1` (PROJECT §4c, METHODS §20): araç, sürüm, katalog kimlikleri, yayındaki commit, ayarlar, girdi SHA-256'ları, RFC 8785 + SHA-256 mührü; JSON'u olmayan beş araca (boy–çap SM-01, model değerlendirme ve nispi sıralama SM-06, örnekleme SI-01, örnek alan SI-03) kayıt indirmesi. Kayıt Doğrulayıcı 1.0.0-beta.1. Sonraki: kaydı aracında yeniden açıp hesabı tekrarlama ve karşılaştırma; Zenodo DOI. |
 
 ### TM — Ağaç ölçümü
 
