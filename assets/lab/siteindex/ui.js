@@ -13,17 +13,12 @@ import { mountCoefEditor, problemText } from '../core/coef-ui.js';
 import { saveCoef, blankSet } from '../core/coef.js';
 import { scatterChart } from '../core/chart.js';
 import { buildUnits, unitMetrics } from '../stand/calc.js';
+import { EXTRA } from './coef-extra.js';
 
 const BASE = './', KEY = 'session:' + S.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const t = String(v ?? '').trim(); if (!t) return null; const x = Number(t.replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
-const EXTRA = [
-  { key: 'ageType', type: 'choice', required: true, label: { tr: T('x.ageType'), en: T('x.ageType') }, values: S.AGE_TYPES.map(v => ({ v, tr: T('x.ageType.' + v), en: T('x.ageType.' + v) })), note: { tr: T('x.ageType.note'), en: T('x.ageType.note') } },
-  { key: 'topDef', type: 'choice', required: true, label: { tr: T('x.topDef'), en: T('x.topDef') }, values: ['h0dbh', 'h0height', 'other'].map(v => ({ v, tr: T('x.topDef.' + v), en: T('x.topDef.' + v) })) },
-  { key: 'topNote', type: 'text', label: { tr: T('x.topNote'), en: T('x.topNote') } },
-  { key: 'cov', type: 'text', label: { tr: T('x.cov'), en: T('x.cov') }, note: { tr: T('x.cov.note'), en: T('x.cov.note') } }];
-
 let S0 = blank(), sets = [], R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, setId: null, a0: '', cls: { mode: 'none', start: '', width: '', n: '', list: '', order: 'desc' },

@@ -38,6 +38,7 @@ const L = {
   'assets/lab/growth/i18n.js': [['Yaş (yıl)', 'Age (years)'], ['Büyüklük', 'Size'], ['Uydurulacak modeller', 'Models to fit'], ['Model karşılaştırması', 'Model comparison']],
   'assets/lab/taper/i18n.js': [['Katsayı seti gir', 'Enter a coefficient set'], ['Gövde ölçümlerinden uydur', 'Fit to stem measurements'], ['Uydurma ölçeği', 'Fitting scale'], ['Kullanılacak profil setleri', 'Profile sets to use'], ['Tek ağaç', 'One tree'], ['Ağaç tablosu', 'Tree table'], ['Kabuk', 'Bark']],
   'assets/lab/structure/i18n.js': [['Kenar etkisi', 'Edge effect'], ['Örnek alan geometrisi', 'Plot geometry'], ['Bütün sütunlar', 'All columns'], ['Ağaç tablosu', 'Tree table']],
+  'assets/lab/coeflib/i18n.js': [['Yedek indir (JSON)', 'Download a backup (JSON)'], ['Yedekten geri yükle', 'Restore from a backup'], ['Geri yükleme önizlemesi', 'Restore preview'], ['Uygula', 'Apply'], ['Set düzenleyici', 'Set editor'], ['yalnızca sorunlular', 'only sets with problems'], ['Ayrıntı', 'Details'], ['Kopyala', 'Copy']],
   'assets/lab/rank/i18n.js': [['Radar grafiği', 'Radar chart'], ['Sıralamaya kat', 'Use in ranking'], ['İyi olan', 'Better is']],
 };
 for (const [file, pairs] of Object.entries(L)) {

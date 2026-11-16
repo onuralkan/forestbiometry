@@ -524,3 +524,10 @@ details.assumebox > summary { font: 600 16px var(--head); color: var(--ink); mar
 .blab { font-size: 12px; font-weight: 600; text-anchor: middle; fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,.7); stroke-width: 3px; }
 .bsw { vertical-align: -2px; border: 1px solid var(--line); }
 #bprod input { width: 100%; min-width: 4.5em; }
+/* coefficient library (DI-02) */
+.tag.st-err { color: var(--err); border-color: var(--err); background: var(--err-bg); }
+.tag.st-warn { color: var(--warn); border-color: var(--warn); background: var(--warn-bg); text-transform: none; letter-spacing: 0; }
+#libtab td.acts { white-space: nowrap; }
+#libtab .kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+#libtab .kv dt { color: var(--muted); } #libtab .kv dd { margin: 0; }
+#libtab .params { width: auto; }

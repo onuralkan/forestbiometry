@@ -30,7 +30,7 @@ function site_catalog(): array {
     $L = function (array $rows) use ($tr) { return array_map(function ($r) use ($tr) { return ['id' => $r[0], 'status' => $r[1], 'name' => $tr ? $r[2] : $r[3], 'page' => $r[4] ?? null]; }, $rows); };
     return $L([
         ['DI-01', 'live', 'Veri içe aktarma ve denetim', 'Data import and validation', 'veri-denetcisi.php'],
-        ['DI-02', 'planned', 'Katsayı ve denklem kütüphanesi', 'Coefficient and equation library'],
+        ['DI-02', 'live', 'Katsayı ve denklem kütüphanesi', 'Coefficient and equation library', 'katsayi-kutuphanesi.php'],
         ['DI-03', 'planned', 'Proje ve envanter verisi yöneticisi', 'Project and inventory data manager'],
         ['DI-04', 'planned', 'Görselleştirme panosu', 'Visualization dashboard'],
         ['DI-05', 'planned', 'Rapor üretici', 'Report generator'],

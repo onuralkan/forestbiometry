@@ -53,6 +53,13 @@ const RE = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 /** Coefficient text → number (decimal point only); '' → null; otherwise NaN (reported, never guessed). */
 export const readNum = t => { const s = String(t ?? '').trim().replace(/−/g, '-'); return s === '' ? null : RE.test(s) ? Number(s) : NaN; };
 const show = v => v == null ? '' : String(v);              // full precision as stored
+/** Problems of a set against a tool's own fields (set.meta; e.g. the age type of a site-index equation), as in the editor. */
+export function metaProblems(extra, s) {
+  return (extra || []).flatMap(x => { const v = (s.meta || {})[x.key], what = x.label[lang] || x.label.tr;
+    if (v == null || v === '') return x.required ? [{ code: 'extra.missing', what }] : [];
+    if (x.type === 'choice' && !x.values.some(o => o.v === v)) return [{ code: 'extra.missing', what }];
+    return x.type === 'number' && !(Number.isFinite(v) && v > 0) ? [{ code: 'extra.num', what }] : []; });
+}
 
 /**
  * Mounts the library + editor into el. opts = { tool, onChange?(sets), extra? }. Returns { refresh() }.
@@ -60,6 +67,8 @@ const show = v => v == null ? '' : String(v);              // full precision as 
  *   [{ key, label: { tr, en }, type: 'choice' | 'number' | 'text', values?: [{ v, tr, en }], required?: bool, note?: { tr, en } }]
  * A required extra field left empty refuses the save (problem 'extra.missing'); numbers use a decimal point.
  * Every control has a stable id prefixed with 'cf-' so tools and tests can address it.
+ * opts.compact: no list of sets and no JSON buttons (the coefficient library page, DI-02, shows its own list); the
+ * returned edit(id) opens a stored set in the editor.
  */
 export function mountCoefEditor(el, opts) {
   const tool = opts.tool, forms = C.formsFor(tool);
@@ -93,11 +102,11 @@ export function mountCoefEditor(el, opts) {
         <td class="small">${esc(s.source.citation)}</td><td class="small">${esc(String(s.modified || '').slice(0, 10))}</td>
         <td><button type="button" class="btn ghost small" data-act="edit">${T('edit')}</button> <button type="button" class="btn ghost small" data-act="del">${T('del')}</button></td></tr>`; };
     let h = `<div class="card coefcard"><h2>${T('h')}</h2><p class="muted small">${T('sub')}</p>
-      ${sets.length ? `<div class="tscroll"><table class="grid" id="cf-list"><thead><tr><th>${T('th_form')}</th><th>${T('th_scope')}</th><th>${T('th_src')}</th><th>${T('th_mod')}</th><th></th></tr></thead><tbody>${sets.map(row).join('')}</tbody></table></div>` : `<p class="small" id="cf-none">${T('none')}</p>`}
+      ${opts.compact ? '' : sets.length ? `<div class="tscroll"><table class="grid" id="cf-list"><thead><tr><th>${T('th_form')}</th><th>${T('th_scope')}</th><th>${T('th_src')}</th><th>${T('th_mod')}</th><th></th></tr></thead><tbody>${sets.map(row).join('')}</tbody></table></div>` : `<p class="small" id="cf-none">${T('none')}</p>`}
       <div class="lims"><label>${T('form')} <select id="cf-form">${forms.map(f => `<option value="${esc(f.id)}">${esc(f.formula[lang] || f.formula.tr)}</option>`).join('')}</select></label>
         <button type="button" class="btn ghost small" id="cf-new"${forms.length ? '' : ' disabled'}>${T('new')}</button>
-        <button type="button" class="btn ghost small" id="cf-exp"${sets.length ? '' : ' disabled'}>${T('exp')}</button>
-        <label class="btn ghost small">${T('imp')} <input type="file" id="cf-imp" accept=".json,application/json" hidden></label></div>
+        ${opts.compact ? '' : `<button type="button" class="btn ghost small" id="cf-exp"${sets.length ? '' : ' disabled'}>${T('exp')}</button>
+        <label class="btn ghost small">${T('imp')} <input type="file" id="cf-imp" accept=".json,application/json" hidden></label>`}</div>
       ${msg ? `<p class="note ${msg.kind}" id="cf-msg">${esc(msg.text)}</p>` : ''}
       ${draft ? editor() : ''}</div>`;
     el.innerHTML = h; bind();
@@ -139,12 +148,9 @@ export function mountCoefEditor(el, opts) {
       let obj; try { obj = JSON.parse(await file.text()); } catch (err) { msg = { kind: 'err', text: problemText({ code: 'library.schema' }) }; render(); return; }
       const r = C.importLibrary(obj), ofTool = r.sets.filter(s => s.tool === tool);
       // the tool's own required fields (e.g. the age type of a site-index equation) are checked as in the editor
-      const metaProblems = s => (opts.extra || []).flatMap(x => { const v = (s.meta || {})[x.key], what = x.label[lang] || x.label.tr;
-        if (v == null || v === '') return x.required ? [{ code: 'extra.missing', what }] : [];
-        if (x.type === 'choice' && !x.values.some(o => o.v === v)) return [{ code: 'extra.missing', what }];
-        return x.type === 'number' && !(Number.isFinite(v) && v > 0) ? [{ code: 'extra.num', what }] : []; });
-      const mine = ofTool.filter(s => !metaProblems(s).length);
-      for (const s of ofTool) if (metaProblems(s).length) r.rejected.push({ set: s, problems: metaProblems(s) });
+      const mp = s => metaProblems(opts.extra, s);
+      const mine = ofTool.filter(s => !mp(s).length);
+      for (const s of ofTool) if (mp(s).length) r.rejected.push({ set: s, problems: mp(s) });
       for (const s of mine) await C.saveCoef(s, s.modified || undefined);
       const rej = r.rejected.length + (r.sets.length - ofTool.length);
       msg = rej ? { kind: 'warn', text: T('imported', { n: mine.length }) + ' ' + T('rejected', { n: rej, why: [...new Set(r.rejected.flatMap(x => x.problems.map(problemText)).concat(r.sets.length - ofTool.length ? [problemText({ code: 'form.tool' })] : []))].join('; ') }) } : { kind: 'ok', text: T('imported', { n: mine.length }) };
@@ -177,5 +183,5 @@ export function mountCoefEditor(el, opts) {
     });
   }
   refresh();
-  return { refresh };
+  return { refresh, edit: async id => { await refresh(); const s = sets.find(x => x.id === id); if (s) startDraft(s); return !!s; } };
 }

@@ -13,12 +13,12 @@ import { renderImport, readImport } from '../core/importer.js';
 import { mountCoefEditor } from '../core/coef-ui.js';
 import { saveCoef, listCoefs } from '../core/coef.js';
 import { readStems } from '../core/stems.js';
+import { EXTRA } from './coef-extra.js';
 
 const BASE = './', KEY = 'session:' + TP.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const t = String(v ?? '').trim(); if (!t) return null; const x = Number(t.replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
-const EXTRA = [{ key: 'bark', type: 'choice', required: true, label: { tr: T('x.bark'), en: T('x.bark') }, values: ['ob', 'ib'].map(v => ({ v, tr: T('x.bark.' + v), en: T('x.bark.' + v) })), note: { tr: T('x.bark.note'), en: T('x.bark.note') } }];
 const FKEYS = ['tree', 'plot', 'period', 'h', 'd', 'bark_t', 'dbh', 'height', 'stump_h'];
 const FGUESS = { tree: ['agac', 'ağaç', 'tree', 'tree_id'], plot: ['alan', 'plot', 'plot_id'], period: ['donem', 'dönem', 'period'], h: ['h', 'h_m', 'yukseklik', 'yükseklik'], d: ['d', 'cap', 'çap', 'cap_cm', 'çap_cm'],
   bark_t: ['kabuk', 'kabuk_mm', 'bark_mm'], dbh: ['dbh', 'd13', 'gogus_capi'], height: ['boy', 'boy_m', 'height'], stump_h: ['kesim', 'kesim_m', 'stump_h'] };

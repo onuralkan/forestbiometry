@@ -55,6 +55,7 @@ jobs:
           node tests/taper/test_sv02a2.mjs
           node tests/taper/test_sv02a3.mjs
           node tests/taper/test_sv06.mjs
+          node tests/coeflib/test_di02.mjs
           node tests/growth/test_sq03.mjs
           node tests/structure/test_ss07.mjs
           node tests/structure/test_ss04.mjs
