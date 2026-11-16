@@ -22,15 +22,14 @@ const SITE_AUTHOR = [
 
 function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
-/** ?lang= wins and is remembered in a cookie; otherwise the cookie, otherwise the browser language. */
+/** ?lang= wins and is remembered in a cookie; otherwise the cookie; otherwise English (the site's default language). */
 function lang(): string {
     if (isset($_GET['lang']) && in_array($_GET['lang'], ['tr', 'en'], true)) {
         setcookie('lang', $_GET['lang'], ['expires' => time() + 31536000, 'path' => '/', 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
         return $_GET['lang'];
     }
     if (isset($_COOKIE['lang']) && in_array($_COOKIE['lang'], ['tr', 'en'], true)) return $_COOKIE['lang'];
-    $al = strtolower($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '');
-    return substr($al, 0, 2) === 'tr' ? 'tr' : 'en';
+    return 'en'; // default English (16 Nov 2026, user decision); Turkish by the language switch (?lang=tr, kept in a cookie)
 }
 
 function site_ctx(): array {

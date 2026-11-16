@@ -74,7 +74,17 @@ ok((await page.locator('.dir-group').count()) === N_CATS, `home directory groupe
   const was = await b.getAttribute('aria-expanded'); await b.click();
   ok((await b.getAttribute('aria-expanded')) !== was && (await g.evaluate(x => x.classList.contains('collapsed'))) === (was === 'true'), 'a module opens and closes from its heading');
   await page.reload(); ok((await page.locator('#side .b-group[data-mod="TM"] .b-cat').getAttribute('aria-expanded')) !== was, 'the state of the module is remembered in this browser'); }
-ok((await page.locator('svg.stemmap title', { hasText: 'çizim, gerçek ölçüm değil' }).count()) === 1 && (await page.locator('.stemmap .sm-t').count()) > 20, 'stem map drawn and labelled as an illustration');
+{ // home showcase: one card per live tool it names, each a link to an existing tool page; labelled as illustrations
+  const cards = await page.locator('.hz-card').evaluateAll(a => a.map(x => [x.getAttribute('href'), x.querySelectorAll('svg.hz-fig *').length]));
+  ok(cards.length === 5 && cards.every(([h, n]) => TOOL_IDS.includes(h.replace('.php', '')) && n > 5), 'home showcase: 5 drawings linking to live tools');
+  ok((await page.locator('.hz-cap').textContent()).includes('benzetim'), 'showcase labelled as illustrations (points simulated)');
+  const st = await page.locator('.hz-stats b').allTextContents();
+  ok(+st[0] === CATALOG.filter(c => c.status === 'live').length && +st[1] === CATALOG.length, 'home figures from the catalogue (live, all)'); }
+// default language: English without ?lang and without a cookie, whatever the browser language (16 Nov 2026)
+{ const c = await browser.newContext({ locale: 'tr-TR', extraHTTPHeaders: { 'Accept-Language': 'tr-TR,tr;q=0.9' } }), q = await c.newPage();
+  await q.goto(BASE + '/'); ok(await q.getAttribute('html', 'lang') === 'en', 'default language is English even for a Turkish browser');
+  await q.goto(BASE + '/?lang=tr'); await q.goto(BASE + '/'); ok(await q.getAttribute('html', 'lang') === 'tr', 'Turkish once chosen is remembered (cookie)');
+  await c.close(); }
 await page.click('#side a[href="boy-cap.php"]'); await page.waitForURL(/boy-cap/);
 ok((await page.locator('#side a[aria-current="page"]').getAttribute('href')) === 'boy-cap.php' && (await page.locator('.b-headico svg').count()) === 1, 'current tool marked in the sidebar, icon in the page head');
 await page.click('#sidenarrow'); await page.reload();
