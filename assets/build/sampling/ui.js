@@ -1159,7 +1159,10 @@ __fb_x(__fb_e, { "del": () => del, "get": () => get, "keys": () => keys, "persis
 // Browser-local storage for the tools section (IndexedDB, falls back to memory).
 // Nothing here leaves the browser. Keys in use:
 //   'session:<tool>'     autosaved working state of a tool (survives reloads and language switches)
-//   'dataset:approved'   the last dataset approved in the Data Checker (handoff to other tools; schema in docs/PROJECT.md §4b)
+//   'dataset:approved'   the active data package (handoff to other tools; schema in docs/PROJECT.md §4b): the last one approved
+//                        in the Data Checker, or the one made active in the Inventory Data Manager (DI-03)
+//   'project:<id>'      one kept data package with its project details (forest-project/1, core/projects.js; DI-03)
+//   'project:active'    id of the active project; its package is the one in 'dataset:approved'
 //   'coef:<id>'          one coefficient set of the shared coefficient library (model-coef/1, core/coef.js; TOOLS_SPEC §1.3)
 const DB = 'forestbiometry', OS = 'kv';
 // IndexedDB can stall without an error (a stuck backing store, another tab holding the database, a blocked open);
