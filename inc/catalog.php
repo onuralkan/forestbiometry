@@ -32,7 +32,7 @@ function site_catalog(): array {
         ['DI-01', 'live', 'Veri içe aktarma ve denetim', 'Data import and validation', 'veri-denetcisi.php'],
         ['DI-02', 'live', 'Katsayı ve denklem kütüphanesi', 'Coefficient and equation library', 'katsayi-kutuphanesi.php'],
         ['DI-03', 'live', 'Proje ve envanter verisi yöneticisi', 'Project and inventory data manager', 'veri-yoneticisi.php'],
-        ['DI-04', 'planned', 'Görselleştirme panosu', 'Visualization dashboard'],
+        ['DI-04', 'live', 'Görselleştirme panosu', 'Visualization dashboard', 'pano.php'],
         ['DI-05', 'planned', 'Rapor üretici', 'Report generator'],
         ['DI-06', 'out', 'API ve betik arayüzü', 'API and scripting interface'],
         ['DI-07', 'live', 'Tekrarlanabilirlik katmanı', 'Reproducibility layer', 'kayit-dogrulayici.php'],

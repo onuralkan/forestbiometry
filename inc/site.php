@@ -90,6 +90,9 @@ function site_tools(?bool $tr = null): array {
         ['n' => 15, 'cat' => 'DI', 'icon' => 'database', 'short' => $tr ? 'Veri Yöneticisi' : 'Data Manager', 'file' => 'veri-yoneticisi.php', 'v' => '1.0.0-beta.1', 'lab' => 'projects', 'title' => $tr ? 'Envanter Verisi Yöneticisi' : 'Inventory Data Manager',
          'desc' => $tr ? 'Onaylanmış veri paketlerinizi tarayıcıda proje olarak saklayın: ad, yer, yıl ve notlar; örnek alan × dönem özeti; birini etkin yapın, onaylanmış veriyi okuyan araçlar onu kullansın; içe ve dışa aktarma, kopya, yedek.'
                        : 'Keep your approved data packages in the browser as projects: name, place, year and notes; plot × period overview; make one active and the tools that read approved data use it; import and export, copies, backup.'],
+        ['n' => 16, 'cat' => 'DI', 'icon' => 'dashboard', 'short' => $tr ? 'Görselleştirme Panosu' : 'Dashboard', 'file' => 'pano.php', 'v' => '1.0.0-beta.1', 'lab' => 'dashboard', 'title' => $tr ? 'Görselleştirme Panosu' : 'Visualization Dashboard',
+         'desc' => $tr ? 'Bir veri paketini tek bakışta görün: özet, çap dağılımı, tür katılımı, örnek alan başına N/ha ve G/ha, boy–çap ve ağaç haritası; dönem, tabaka, tür ve örnek alan süzgeçleri; araçların çalışma kayıtlarından çap dağılımı yoğunlukları ve boy–çap eğrileri aynı grafikte.'
+                       : 'See a data package at a glance: summary, diameter distribution, species composition, N/ha and G/ha per plot, height–diameter and a tree map; period, stratum, species and plot filters; diameter densities and height curves from the tools\' run records on the same charts.'],
     ];
 }
 
@@ -113,6 +116,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'growth' => 'M3.5,18.5L9.5,12.5L13.5,16.5L22,6.92L20.59,5.5L13.5,13.5L9.5,9.5L2,17L3.5,18.5Z', // mdiChartLineVariant
         'library' => 'M9 3V18H12V3H9M12 5L16 18L19 17L15 4L12 5M5 5V18H8V5H5M3 19V21H21V19H3Z', // mdiBookshelf
         'database' => 'M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z', // mdiDatabase
+        'dashboard' => 'M13,3V9H21V3M13,21H21V11H13M3,21H11V15H3M3,13H11V3H3V13Z', // mdiViewDashboard
         'verify' => 'M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z', // mdiShieldCheck
         'siteindex' => 'M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z', // mdiTrendingUp
         'rank' => 'M12,7.09L14.45,8.58L13.8,5.77L16,3.89L13.11,3.64L12,1L10.87,3.64L8,3.89L10.18,5.77L9.5,8.58L12,7.09M4,13.09L6.45,14.58L5.8,11.77L8,9.89L5.11,9.64L4,7L2.87,9.64L0,9.89L2.18,11.77L1.5,14.58L4,13.09M20,10.09L22.45,11.58L21.8,8.77L24,6.89L21.11,6.64L20,4L18.87,6.64L16,6.89L18.18,8.77L17.5,11.58L20,10.09M15,23H9V10H15V23M7,23H1V17H7V23M23,23H17V13H23V23Z', // mdiPodium
