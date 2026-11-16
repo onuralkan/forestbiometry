@@ -72,7 +72,7 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 | SV-03 | Kullanılabilir hacim (profil integrali, tepe çapı ve tomruk boyu sınırları) | planlı | – | TP01–TP03 |
 | SV-04 | Hacim denklemleri | planlı | – | TOOLS_SPEC SV04 (isteğe bağlı); katsayılar kullanıcıdan |
 | SV-05 | Tomruk ölçüm kuralları (Doyle, Scribner, International ¼″, kübik) | planlı, düşük öncelik | – | ABD'ye özgü; P4 |
-| SV-06 | Ürün bölme (sortiman) eniyileme | planlı | – | TP03; Pnevmaticos ve Mann (1972): kullanıcıdan PDF |
+| SV-06 | Ürün bölme (sortiman) eniyileme | yolda | – | TP03. SV-06/a1 (16 Kasım 2026): öncelik sırası ve dinamik programlama çekirdeği (`assets/lab/taper/bucking.js`); Grondin (1998) ve Bennemann ve ark. (2025) [B]; Pnevmaticos ve Mann (1972) aktarılan [D]. Sayfa sırada |
 
 ### BC — Biyokütle ve karbon
 
