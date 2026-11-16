@@ -60,6 +60,7 @@ jobs:
           node tests/projects/test_di03.mjs
           node tests/dashboard/test_di04.mjs
           node tests/report/test_di05.mjs
+          node tests/biomass/test_bc01.mjs
           node tests/growth/test_sq03.mjs
           node tests/structure/test_ss07.mjs
           node tests/structure/test_ss04.mjs
