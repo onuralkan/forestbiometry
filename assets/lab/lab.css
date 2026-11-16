@@ -544,3 +544,14 @@ form.pmeta input[type="text"], form.pmeta textarea { display: block; width: 100%
 #ptab tr.is-active > td { background: var(--acc-soft); }
 #ptab .tag { margin-left: 4px; color: var(--acc); border-color: var(--acc); }
 code.hash { word-break: break-all; }
+/* report generator (DI-05): the preview is the report on white paper; printing shows the report alone */
+label.blk { display: block; margin-top: 8px; } label.blk textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 2px; }
+#seccard .secrow { padding: 6px 0; border-top: 1px solid var(--line2); } #seccard .secrow:first-of-type { border-top: 0; }
+.r-preview { background: #fff; color: #1f2328; border: 1px solid var(--line); border-radius: var(--r); padding: 0 16px; overflow-x: auto; }
+@media print {
+  body.report-page .b-top, body.report-page .b-side, body.report-page .b-scrim, body.report-page .b-foot, body.report-page .b-head, body.report-page .privacy,
+  body.report-page #status, body.report-page #app > :not(#preview), body.report-page #bootwarn, body.report-page dialog { display: none !important; }
+  body.report-page, body.report-page .b-shell, body.report-page .b-main { display: block; margin: 0; padding: 0; background: #fff; }
+  body.report-page .r-preview { border: 0; padding: 0; overflow: visible; }
+  body.report-page .report { padding: 0; max-width: none; }
+}

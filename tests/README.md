@@ -29,6 +29,8 @@ committed, so the tests run without Python.
 - `node tests/projects/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Inventory Data Manager: adoption of an earlier approval, import preview, activation read by Plot & Stand Metrics and the tools index, details, editing, copy, download, backup and restore, delete, deactivate, English, phone.
 - `node tests/dashboard/test_di04.mjs`: Visualization Dashboard (DI-04): filters, histogram classes and per-plot N/ha, G/ha counted by hand, Weibull density in closed form (plain and thresholded) against the record curves, Näslund curve written out, record reading.
 - `node tests/dashboard/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the dashboard: sample package, filters, empty combinations, records (distribution densities, height curves, other tools, broken file), downloads, a package from the manager, reload, English, phone.
+- `node tests/report/test_di05.mjs`: Report Generator (DI-05): number and cell text, table columns, record sections of several tools, references, citations (same as the Cite dialog), escaping of user text, sections on and off, both languages, standalone file.
+- `node tests/report/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the report: sample package, details and notes, records (file, dashboard, order), sections, English report, HTML file, print view, reload, phone.
 - `node tests/taper/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Stem Taper (fit with the sample, one tree,
   tree table, downloads, English, phone).
 - `node tests/site/e2e_boot.mjs http://127.0.0.1:8092`: tool pages must not stay blank when IndexedDB stalls (open or
