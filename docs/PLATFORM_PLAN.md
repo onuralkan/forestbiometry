@@ -78,7 +78,7 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 
 | Kimlik | Araç | Durum | Not ve kaynak |
 |---|---|---|---|
-| BC-01 | Allometrik biyokütle | yolda | TOOLS_SPEC BC01–BC02. BC-01/a1 = BC01 (16 Kasım 2026): çekirdek `assets/lab/biomass/calc.js`; biçimler tanım istisnası [D] (kullanıcı kararı); Baskerville düzeltmesi kaynak bekliyor (Baskerville 1972, Clifford ve ark. 2013 ücretli; açık erişimli [A] aranıyor); Snowdon ve kullanıcı etkeni değer olarak. Sayfa BC02 ile |
+| BC-01 | Allometrik biyokütle | yolda | TOOLS_SPEC BC01–BC02. BC-01/a1 = BC01 (16 Kasım 2026): çekirdek `assets/lab/biomass/calc.js`; biçimler tanım istisnası [D] (kullanıcı kararı); Baskerville düzeltmesi ln ölçeğinde [A] (Chave ve ark. 2014, Baia ve ark. 2025); log₁₀'da Sprugel 1983 bekleniyor; Snowdon ve kullanıcı etkeni değer olarak. Sayfa BC02 ile |
 | BC-02 | Biyokütle bileşenleri (gövde, dal, yaprak, kök; toplamsal sistemler) | planlı | Toplamsal sistemler SM-04 ile |
 | BC-03 | Biyokütle dönüşüm etkeni (BEF) | yolda | TOOLS_SPEC BC03; etkenler kullanıcıdan. BC01'de hacimden dönüşüm çekirdeği: IPCC 2006 Cilt 4 Bölüm 2 Denklem 2.8b [B] |
 | BC-04 | Karbon stoku ve CO₂ eşdeğeri | yolda | K9: CO₂ = C × 44/12 (IPCC 2006 §2.2.3 [B]), karbon oranı kullanıcıdan. BC01'de çekirdek |
