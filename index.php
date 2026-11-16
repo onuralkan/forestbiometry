@@ -30,11 +30,11 @@ $tools = site_tools();
   </section>
 
   <section class="card" id="handoff" aria-live="polite" hidden>
-    <h2><?= $tr ? 'Onaylanmış veri' : 'Approved dataset' ?></h2>
+    <h2><?= $tr ? 'Etkin veri paketi' : 'Active data package' ?></h2>
     <p id="handoff-text"></p>
     <p class="b-actions"><a class="btn" href="ornek-alan.php"><?= $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı\'nda kullan' : 'Use in Plot & Stand Metrics' ?></a>
-      <a class="btn ghost" href="veri-denetcisi.php"><?= $tr ? 'Denetçide aç' : 'Open in the checker' ?></a>
-      <button type="button" class="btn ghost" id="handoff-clear"><?= $tr ? 'Bu tarayıcıdan sil' : 'Remove from this browser' ?></button></p>
+      <a class="btn ghost" href="veri-yoneticisi.php"><?= $tr ? 'Envanter Verisi Yöneticisi' : 'Inventory Data Manager' ?></a>
+      <button type="button" class="btn ghost" id="handoff-clear"><?= $tr ? 'Etkinliği kaldır' : 'Deactivate' ?></button></p>
   </section>
 
   <section class="dir" aria-labelledby="h-tools">
@@ -68,20 +68,21 @@ $tools = site_tools();
 <?php
 ob_start(); ?>
 <script type="module">
-import { get, del } from './assets/lab/core/store.js';
+import { get, del } from './assets/lab/core/store.js';   // keys of core/projects.js (DI-03), read directly to keep this page light
 const tr = document.documentElement.lang !== 'en';
 const box = document.getElementById('handoff');
 async function show() {
   const ds = await get('dataset:approved');
   if (!ds || ds.schema !== 'forest-dataset/1') { box.hidden = true; return; }
   const when = new Date(ds.created).toLocaleString(tr ? 'tr-TR' : 'en-GB');
-  const src = ds.source && ds.source.trees ? ds.source.trees.name : '';
+  const id = await get('project:active'), p = id ? await get('project:' + id) : null;
+  const src = p ? p.name : ds.source && ds.source.trees ? ds.source.trees.name : '';
   document.getElementById('handoff-text').textContent = tr
-    ? `${src ? '"' + src + '", ' : ''}${ds.trees.length} ağaç kaydı, ${ds.plots.length} örnek alan; ${when} tarihinde onaylandı. Bu veri yalnızca bu tarayıcıda saklanıyor; Örnek Alan ve Meşcere Hesaplayıcısı bu veriyi kullanır.`
-    : `${src ? '"' + src + '", ' : ''}${ds.trees.length} tree records, ${ds.plots.length} plots; approved ${when}. Stored only in this browser; Plot & Stand Metrics uses it.`;
+    ? `${src ? '"' + src + '", ' : ''}${ds.trees.length} ağaç kaydı, ${ds.plots.length} örnek alan; ${when} tarihinde onaylandı. Bu veri yalnızca bu tarayıcıda saklanıyor; onaylanmış veriyi okuyan araçlar bu paketi kullanır. "Etkinliği kaldır" paketi silmez; Envanter Verisi Yöneticisi'nde kalır.`
+    : `${src ? '"' + src + '", ' : ''}${ds.trees.length} tree records, ${ds.plots.length} plots; approved ${when}. Stored only in this browser; the tools that read approved data use this package. "Deactivate" does not delete it; it stays in the Inventory Data Manager.`;
   box.hidden = false;
 }
-document.getElementById('handoff-clear').addEventListener('click', async () => { await del('dataset:approved'); show(); });
+document.getElementById('handoff-clear').addEventListener('click', async () => { await del('project:active'); await del('dataset:approved'); show(); });
 show();
 </script>
 <?php site_bottom(ob_get_clean());

@@ -536,3 +536,11 @@ details.assumebox > summary { font: 600 16px var(--head); color: var(--ink); mar
 #app span.ok { color: var(--ok); } #app span.err, #app b.err { color: var(--err); }
 code.hash { font-size: .82em; font-family: var(--mono); overflow-wrap: anywhere; }
 pre.json { max-height: 420px; overflow: auto; font-size: .82em; background: var(--sunk); border: 1px solid var(--line2); padding: 10px 12px; border-radius: var(--r); font-family: var(--mono); }
+/* inventory data manager (DI-03) */
+#ptab td.acts { white-space: nowrap; }
+#ptab .pdetail { padding: 4px 2px 8px; }
+form.pmeta label { display: block; margin: 0 0 8px; }
+form.pmeta input[type="text"], form.pmeta textarea { display: block; width: 100%; max-width: 32rem; box-sizing: border-box; margin-top: 2px; }
+#ptab tr.is-active > td { background: var(--acc-soft); }
+#ptab .tag { margin-left: 4px; color: var(--acc); border-color: var(--acc); }
+code.hash { word-break: break-all; }

@@ -4,7 +4,7 @@
 import { parseNumber, toInternal, detectDecimal, UNITS } from '../core/num.js';
 import { cellText } from '../core/table.js';
 
-export const TOOL = { id: 'veri-denetcisi', version: '1.1.0' };
+export const TOOL = { id: 'veri-denetcisi', version: '1.2.0' };
 export const SCHEMA = 'forest-dataset/1';
 
 export const TREE_FIELDS = [

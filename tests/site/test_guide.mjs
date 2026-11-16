@@ -36,6 +36,7 @@ const L = {
   'assets/lab/siteindex/i18n.js': [['Dayanak yaş', 'Base age'], ['Bonitet sınıfları', 'Site classes'], ['Verideki yaşın türü', 'Age type in the data'], ['Kendi verimden uydur', 'Fit to my own data'], ['Kaynaktan katsayı seti', 'Coefficient set from a source'], ['Belirsizlik: dizi düzeyinde bootstrap', 'Uncertainty: series-level bootstrap'], ['Excel raporu', 'Excel report']],
   'assets/lab/core/coef-ui.js': [['Katsayı setleri', 'Coefficient sets']],
   'assets/lab/core/record-ui.js': [['Girdi verisini kayda ekle', 'Include the input data in the record'], ['Çalışma kaydı (JSON)', 'Run record (JSON)']],
+  'assets/lab/projects/i18n.js': [['Etkin yap', 'Make active'], ['Yedek indir (JSON)', 'Download a backup (JSON)'], ['İçe aktar (JSON)', 'Import (JSON)'], ['Veri paketi (JSON)', 'Data package (JSON)'], ['Ayrıntı', 'Details'], ['Kopyala', 'Copy'], ['Uygula', 'Apply']],
   'assets/lab/record/i18n.js': [['Kayıt seç (.json)', 'Choose a record (.json)'], ['Elinizdeki dosyaları denetleyin', 'Check the files you have'], ['Girdiler', 'Inputs']],
   'assets/lab/growth/i18n.js': [['Yaş (yıl)', 'Age (years)'], ['Büyüklük', 'Size'], ['Uydurulacak modeller', 'Models to fit'], ['Model karşılaştırması', 'Model comparison']],
   'assets/lab/taper/i18n.js': [['Katsayı seti gir', 'Enter a coefficient set'], ['Gövde ölçümlerinden uydur', 'Fit to stem measurements'], ['Uydurma ölçeği', 'Fitting scale'], ['Kullanılacak profil setleri', 'Profile sets to use'], ['Tek ağaç', 'One tree'], ['Ağaç tablosu', 'Tree table'], ['Kabuk', 'Bark']],

@@ -31,7 +31,7 @@
 <?= $sec('is-akisi', 'Araçlar birlikte') ?>
 <p>Araçlar tek başına kullanılabilir; birlikte kullanıldığında veri bir kez denetlenir ve sonraki araçlar aynı veriyi okur.</p>
 <ol>
-<li><b>Ormancılık Verisi Denetçisi</b>: ağaç ve örnek alan tablolarını denetleyin, düzeltmeleri gerekçesiyle kaydedin ve veriyi <b>onaylayın</b>. Onaylanan veri bu tarayıcıda saklanır.</li>
+<li><b>Ormancılık Verisi Denetçisi</b>: ağaç ve örnek alan tablolarını denetleyin, düzeltmeleri gerekçesiyle kaydedin ve veriyi <b>onaylayın</b>. Onaylanan veri bu tarayıcıda saklanır; birden çok onaylı paket <b>Envanter Verisi Yöneticisi</b>'nde tutulur ve biri etkin seçilir.</li>
 <li>Onaylanmış veriyi doğrudan okuyan araçlar: <b>Örnek Alan ve Meşcere Hesaplayıcısı</b> ("Denetçide onaylanmış veri"), <b>Boy–Çap Modelleme</b> ve <b>Model Başarısı Değerlendiricisi</b> ("Onaylanmış veriden al"). Bu araçlar ayrıca doğrudan tablo da kabul eder.</li>
 <li><b>Envanter Örnekleme Planlayıcısı</b>, örnek alan düzeyindeki değerleri bekler: Örnek Alan ve Meşcere Hesaplayıcısı'nın "Örnek alan tablosu (CSV)" çıktısı bunun için kullanılabilir.</li>
 <li><b>Çap Dağılımı Laboratuvarı</b> ve <b>Nispi Sıralama</b> kendi tablolarını yükler (çap listesi ya da sınıf tablosu; başarı ölçütleri tablosu).</li>
@@ -59,7 +59,7 @@
 <li><b>Bilgi</b>: ağacı olmayan örnek alan (hektarda 0 ağaçla veride kalır).</li>
 </ul>
 <p><b>Sorunlar</b> sekmesinde her satır için: Düzelt, öneriyi uygula, kaydı dışla (silinmez), geri al, uyarıyı kabul et, çelişkide değer seç, alan büyüklüğü gir. Her işlem bir gerekçe ister ve <b>Değişiklik günlüğü</b>ne yazılır; ham değerler korunur. <b>Veri</b> sekmesinde hücreye tıklayarak da düzeltilir.</p>
-<p><b>Onay ve dışa aktarma</b>: hata kalmadığında "Veriyi onayla ve kaydet" etkinleşir; açık uyarılar veriyle birlikte saklanır. Onaylanan veri bu tarayıcıda saklanır ve Örnek Alan, Boy–Çap ve Model Başarısı araçlarınca okunur. Onaydan sonra veri değişirse yeniden onaylamanız istenir. "Oturumu sıfırla" onaylanmış veriyi silmez.</p>
+<p><b>Onay ve dışa aktarma</b>: hata kalmadığında "Veriyi onayla ve kaydet" etkinleşir; açık uyarılar veriyle birlikte saklanır. Onaylanan veri bu tarayıcıda saklanır, <b>Envanter Verisi Yöneticisi</b>'nin listesine eklenir ve etkin paket olur; onaylanmış veriyi okuyan araçlar etkin paketi kullanır. Onaydan sonra veri değişirse yeniden onaylamanız istenir. "Oturumu sıfırla" onaylanmış veriyi silmez.</p>
 <h3>İndirme</h3>
 <p>Sorun tablosu ve değişiklik günlüğü (CSV); onaydan sonra onaylanmış veri (CSV), veri paketi (JSON) ve tam rapor (Excel). CSV dosyasını Excel'de açarken baştaki sıfırlar (ör. 001) kaybolabilir.</p>
 <h3>Sık karşılaşılanlar</h3>
@@ -394,5 +394,24 @@
 <li><b>Girdiler</b> tablosu her girdinin rolünü, boyutunu, parmak izini ve okuma ayarlarını (kodlama, ayırıcı, başlık satırı, çalışma sayfası) gösterir. Kayıtta veri varsa parmak iziyle tuttuğu denetlenir ve dosya indirilebilir.</li>
 <li><b>Elinizdeki dosyaları denetleyin</b>: özgün veri dosyalarınızı seçin; her biri kayıttaki girdilerle karşılaştırılır. Tek bir bayt farkı eşleşmeyi bozar (ör. Excel'de açılıp yeniden kaydedilen CSV).</li>
 <li>DI-07 öncesi indirilen JSON dosyaları da açılır: aracı, sürümü ve zamanı okunur; mühür ve parmak izi yoktur.</li>
+</ul>
+</section>
+
+<section class="card guide-sec">
+<?= $sec('veri-yoneticisi', 'Envanter Verisi Yöneticisi') ?>
+<p>Veri Denetçisi'nde onayladığınız veri paketlerini (<code>forest-dataset/1</code>) bu tarayıcıda proje olarak tutar. Paketlerden biri <b>etkin</b>dir: Örnek Alan ve Meşcere, Meşcere Yapısı, Boy–Çap, Bonitet, Seksiyon Hacmi ve Model Başarısı araçları onaylanmış veri olarak etkin paketi okur. Paketler yalnızca bu tarayıcıda saklanır.</p>
+<p><b>Yapmadıkları:</b> ağaç ve örnek alan kayıtlarını değiştirmez (ölçüm düzeltmeleri Veri Denetçisi'nde gerekçesiyle yapılır ve yeniden onaylanır); iki paketi birleştirmez; paketleri başka bir cihaza kendiliğinden taşımaz (yedek dosyasıyla taşınır).</p>
+<h3>Paketler</h3>
+<ul>
+<li>Veri Denetçisi'nde her onay listeye eklenir ve etkin olur; aynı paket ikinci kez eklenmez (paketin SHA-256 parmak iziyle tanınır). DI-03'ten önce onaylanmış veri ilk açılışta "önceki onay" olarak listeye alınır.</li>
+<li><b>Etkin yap</b> paketi araçlara verir; açık araç sayfalarını yenileyin. Araçlar dizinindeki <b>Etkinliği kaldır</b> paketi silmez, yalnızca araçların görmesini durdurur.</li>
+<li><b>Ayrıntı</b>: proje bilgileri (ad, envanter yılı, yer, açıklama, notlar; ad zorunlu, yıl dört haneli), paketin özeti (örnek alanlar, dönemler, kayıtlar, türler, çap aralığı, ölçülmüş ve tahmini boylar, yaş, koordinat, tabakalar, uyarılar, dışlanan satırlar, değişiklik günlüğü, onay zamanı, parmak izi) ve örnek alan × dönem kayıt sayıları.</li>
+<li><b>Kopyala</b> aynı paketle yeni bir proje oluşturur; <b>Sil</b> onay ister ve geri alınamaz. Etkin paket silinirse araçlar onaylanmış veri görmez.</li>
+</ul>
+<h3>İçe ve dışa aktarma</h3>
+<ul>
+<li><b>Veri paketi (JSON)</b>: paketin kendisi (Veri Denetçisi'nin JSON'uyla aynı biçim); Örnek Alan ve Meşcere aracına dosya olarak da yüklenebilir.</li>
+<li><b>Yedek indir (JSON)</b>: bütün projeler bilgileriyle tek dosyada (<code>forest-project-library/1</code>).</li>
+<li><b>İçe aktar (JSON)</b>: veri paketi, tek proje ya da yedek. Önce bir önizleme gösterilir: yeni, zaten var (aynı paket; atlanır) ve geçersiz (nedeniyle); <b>Uygula</b>'ya basmadan hiçbir şey değişmez.</li>
 </ul>
 </section>

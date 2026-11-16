@@ -5,6 +5,7 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { tableFromText, tableFromSheet, detectDelimiter, decodeBytes, utf8Suspicious, cellText } from '../core/table.js';
 import { parseNumber, UNITS, defaultDecimal } from '../core/num.js';
 import { put, get, del } from '../core/store.js';
+import { registerApproved } from '../core/projects.js';
 import { csvText, download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX, XLSX_READ_OPTS } from '../core/export.js';
 
 const BASE = './', KEY = 'session:' + C.TOOL.id, PAGE = 200;
@@ -511,11 +512,11 @@ function tabApprove(p) {
     <button type="button" class="btn" id="x-xlsx">${T('ex.all')}</button>
     <button type="button" class="btn ghost" id="x-json"${approvedDs ? '' : ' disabled'}>${T('ex.json')}</button></div>
     ${approvedDs ? '' : `<p class="muted small">${T('ex.need')}</p>`}<p class="muted small">${T('ex.csvnote')}</p>
-    <p>${approvedDs ? `<a class="btn" href="ornek-alan.php">${T('to.stand')}</a> ` : ''}<a href="./">${T('to.tools')}</a></p></div>`;
+    <p>${approvedDs ? `<a class="btn" href="ornek-alan.php">${T('to.stand')}</a> <a class="btn ghost" href="veri-yoneticisi.php">${T('to.manager')}</a> ` : ''}<a href="./">${T('to.tools')}</a></p></div>`;
   p.innerHTML = h;
   $('approve').addEventListener('click', async () => {
     const ds = C.approve(S.sources, S.work, S.mapping, S.settings, ev, { lang });
-    await put('dataset:approved', ds);
+    await registerApproved(ds, lang);       // kept in the Inventory Data Manager's list and made active (DI-03)
     approvedDs = ds; S.approved = { created: ds.created, sig: sig() }; save(); tabApprove(p);
   });
   $('x-issues').addEventListener('click', () => downloadCSV(fname('sorunlar', 'issues') + '.csv', issueRows(), lang));

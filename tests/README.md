@@ -25,6 +25,8 @@ committed, so the tests run without Python.
 - `node tests/coeflib/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Coefficient Library (DI-02): editor, seeded sets of three tools, duplicates and problems, filters, details, copy, delete, edit, backup and restore with a preview.
 - `node tests/record/test_di07.mjs`: reproducibility layer (DI-07, `assets/lab/core/record.js`): RFC 8785 canonical JSON against the RFC's examples, SHA-256 against `node:crypto` and the FIPS 180 vectors, input fingerprints, record seal, verification of changed, embedded and legacy files.
 - `node tests/record/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: run-record downloads of six tools (fingerprints checked in Node) and the Record Verifier page (seal, versions, commit link, user files, embedded data, legacy files, English, phone).
+- `node tests/projects/test_di03.mjs`: Inventory Data Manager core (DI-03, `assets/lab/core/projects.js`): hierarchy summary counted by hand, package and detail checks, import plans (package, project, backup; same package by fingerprint), storage rules (adopt, register, activate, delete) on the memory fallback.
+- `node tests/projects/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the Inventory Data Manager: adoption of an earlier approval, import preview, activation read by Plot & Stand Metrics and the tools index, details, editing, copy, download, backup and restore, delete, deactivate, English, phone.
 - `node tests/taper/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Stem Taper (fit with the sample, one tree,
   tree table, downloads, English, phone).
 - `node tests/site/e2e_boot.mjs http://127.0.0.1:8092`: tool pages must not stay blank when IndexedDB stalls (open or

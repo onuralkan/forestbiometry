@@ -31,7 +31,7 @@
 <?= $sec('is-akisi', 'Tools together') ?>
 <p>The tools can be used on their own; used together, the data are checked once and the later tools read the same data.</p>
 <ol>
-<li><b>Forest Data Checker</b>: check the tree and plot tables, record fixes with their reasons and <b>approve</b> the data. The approved data are kept in this browser.</li>
+<li><b>Forest Data Checker</b>: check the tree and plot tables, record fixes with their reasons and <b>approve</b> the data. The approved data are kept in this browser; several approved packages are kept in the <b>Inventory Data Manager</b>, one of them active.</li>
 <li>Tools that read the approved data directly: <b>Plot &amp; Stand Metrics</b> ("Data approved in the checker"), <b>Height–Diameter Modelling</b> and <b>Model Evaluation</b> ("Use approved data"). These tools also accept a table directly.</li>
 <li>The <b>Inventory Sampling Planner</b> expects plot-level values: the "Plot table (CSV)" export of Plot &amp; Stand Metrics can be used for it.</li>
 <li>The <b>Diameter Distribution Lab</b> and <b>Relative Ranking</b> load their own tables (a list of diameters or a class table; a table of goodness-of-fit statistics).</li>
@@ -59,7 +59,7 @@
 <li><b>Notes</b>: a plot without trees (it stays in the data with 0 trees per hectare).</li>
 </ul>
 <p>On the <b>Issues</b> tab each row offers: Fix, apply the suggestion, exclude the record (it is not deleted), include again, accept a warning, choose a value in a conflict, enter a plot size. Every action asks for a reason and is written to the <b>Change log</b>; raw values are kept. On the <b>Data</b> tab you can also fix a cell by clicking it.</p>
-<p><b>Approve and export</b>: "Approve and save" is enabled once no error remains; open warnings are saved with the data. The approved data are kept in this browser and read by Plot &amp; Stand Metrics, Height–Diameter Modelling and Model Evaluation. If the data change after approval you are asked to approve again. "Reset session" does not delete the approved data.</p>
+<p><b>Approve and export</b>: "Approve and save" is enabled once no error remains; open warnings are saved with the data. The approved data are kept in this browser, added to the list of the <b>Inventory Data Manager</b> and made the active package; the tools that read approved data use the active package. If the data change after approval you are asked to approve again. "Reset session" does not delete the approved data.</p>
 <h3>Downloads</h3>
 <p>Issue table and change log (CSV); after approval the approved data (CSV), the data package (JSON) and the full report (Excel). When a CSV file is opened in Excel, leading zeros (e.g. 001) may be lost.</p>
 <h3>Common situations</h3>
@@ -394,5 +394,24 @@
 <li>The <b>Inputs</b> table shows each input's role, size, fingerprint and reading options (encoding, delimiter, header row, worksheet). If the record holds the data, it is checked against its fingerprint and can be downloaded.</li>
 <li><b>Check the files you have</b>: choose your original data files; each one is compared with the inputs of the record. A single different byte breaks the match (e.g. a CSV opened and saved again in Excel).</li>
 <li>JSON files downloaded before DI-07 open too: their tool, version and time are read; they have no seal or fingerprints.</li>
+</ul>
+</section>
+
+<section class="card guide-sec">
+<?= $sec('veri-yoneticisi', 'Inventory Data Manager') ?>
+<p>Keeps the data packages (<code>forest-dataset/1</code>) you approved in the Data Checker in this browser as projects. One package is <b>active</b>: Plot &amp; Stand Metrics, Stand Structure, Height–Diameter, Site Index, Section Volume and Model Evaluation read the active package as approved data. Packages are stored in this browser only.</p>
+<p><b>What it does not do:</b> it does not change tree or plot records (measurement corrections are made in the Data Checker, with a reason, and approved again); it does not merge two packages; it does not carry packages to another device by itself (a backup file does).</p>
+<h3>Packages</h3>
+<ul>
+<li>Every approval in the Data Checker is added to the list and made active; the same package is not added twice (it is recognised by its SHA-256 fingerprint). Data approved before DI-03 are taken into the list as "earlier approval" on the first visit.</li>
+<li><b>Make active</b> hands the package to the tools; reload tool pages that are open. <b>Deactivate</b> on the tools index does not delete the package, it only stops the tools from seeing it.</li>
+<li><b>Details</b>: project details (name, inventory year, place, description, notes; the name is required, the year has four digits), a summary of the package (plots, periods, records, species, diameter range, measured and estimated heights, ages, coordinates, strata, warnings, excluded rows, change log, approval time, fingerprint) and record counts per plot × period.</li>
+<li><b>Copy</b> makes a new project with the same package; <b>Delete</b> asks first and cannot be undone. If the active package is deleted, the tools see no approved data.</li>
+</ul>
+<h3>Import and export</h3>
+<ul>
+<li><b>Data package (JSON)</b>: the package itself (same format as the Data Checker's JSON); it can also be loaded as a file in Plot &amp; Stand Metrics.</li>
+<li><b>Download a backup (JSON)</b>: every project with its details in one file (<code>forest-project-library/1</code>).</li>
+<li><b>Import (JSON)</b>: a data package, one project or a backup. A preview comes first: new, already there (same package; skipped) and invalid (with the reason); nothing changes until you press <b>Apply</b>.</li>
 </ul>
 </section>

@@ -45,7 +45,7 @@ function site_ctx(): array {
 function site_tools(?bool $tr = null): array {
     $tr = $tr ?? site_ctx()['tr'];
     return [
-        ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.1.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
+        ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.2.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
          'desc' => $tr ? 'Ağaç ve örnek alan tablolarınızı içe aktarın, sütunları eşleyin, biçim hatalarını ve şüpheli ölçümleri bulun; düzeltmeleri gerekçesiyle kaydedip veriyi onaylayın.'
                        : 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
         ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.2.0', 'lab' => 'stand', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
@@ -87,6 +87,9 @@ function site_tools(?bool $tr = null): array {
         ['n' => 14, 'cat' => 'DI', 'icon' => 'verify', 'short' => $tr ? 'Kayıt Doğrulayıcı' : 'Record Verifier', 'file' => 'kayit-dogrulayici.php', 'v' => '1.0.0-beta.1', 'lab' => 'record', 'title' => $tr ? 'Kayıt Doğrulayıcı' : 'Record Verifier',
          'desc' => $tr ? 'Araçların indirdiği çalışma kayıtlarını (JSON) açın: kaydın değişmediğini mühürle denetleyin; aracı, sürümü, kaynak kodunun commit\'ini ve ayarları görün; özgün veri dosyalarınızın kayıttaki girdilerle bayt bayt aynı olduğunu SHA-256 parmak iziyle doğrulayın.'
                        : 'Open the run records (JSON) that the tools download: check with the seal that a record has not changed; see the tool, its version, the source-code commit and the settings; confirm with SHA-256 fingerprints that your original data files are byte for byte the inputs of the record.'],
+        ['n' => 15, 'cat' => 'DI', 'icon' => 'database', 'short' => $tr ? 'Veri Yöneticisi' : 'Data Manager', 'file' => 'veri-yoneticisi.php', 'v' => '1.0.0-beta.1', 'lab' => 'projects', 'title' => $tr ? 'Envanter Verisi Yöneticisi' : 'Inventory Data Manager',
+         'desc' => $tr ? 'Onaylanmış veri paketlerinizi tarayıcıda proje olarak saklayın: ad, yer, yıl ve notlar; örnek alan × dönem özeti; birini etkin yapın, onaylanmış veriyi okuyan araçlar onu kullansın; içe ve dışa aktarma, kopya, yedek.'
+                       : 'Keep your approved data packages in the browser as projects: name, place, year and notes; plot × period overview; make one active and the tools that read approved data use it; import and export, copies, backup.'],
     ];
 }
 
@@ -109,6 +112,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'secvol' => 'M12 2C9.89 2 3 2.29 3 6V18C3 21.71 9.89 22 12 22C14.11 22 21 21.71 21 18V6C21 2.29 14.11 2 12 2M12 10C13.38 10 16.8 9.87 19 8.75V15.25C16.8 14.13 13.38 14 12 14S7.2 14.13 5 15.25V8.75C7.2 9.87 10.62 10 12 10M12 4C15.87 4 19 4.89 19 6C19 7.11 15.87 8 12 8C8.13 8 5 7.11 5 6C5 4.89 8.13 4 12 4M12 20C8.13 20 5 19.11 5 18C5 16.9 8.13 16 12 16C15.87 16 19 16.9 19 18C19 19.11 15.87 20 12 20Z', // mdiCylinder
         'growth' => 'M3.5,18.5L9.5,12.5L13.5,16.5L22,6.92L20.59,5.5L13.5,13.5L9.5,9.5L2,17L3.5,18.5Z', // mdiChartLineVariant
         'library' => 'M9 3V18H12V3H9M12 5L16 18L19 17L15 4L12 5M5 5V18H8V5H5M3 19V21H21V19H3Z', // mdiBookshelf
+        'database' => 'M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z', // mdiDatabase
         'verify' => 'M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z', // mdiShieldCheck
         'siteindex' => 'M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z', // mdiTrendingUp
         'rank' => 'M12,7.09L14.45,8.58L13.8,5.77L16,3.89L13.11,3.64L12,1L10.87,3.64L8,3.89L10.18,5.77L9.5,8.58L12,7.09M4,13.09L6.45,14.58L5.8,11.77L8,9.89L5.11,9.64L4,7L2.87,9.64L0,9.89L2.18,11.77L1.5,14.58L4,13.09M20,10.09L22.45,11.58L21.8,8.77L24,6.89L21.11,6.64L20,4L18.87,6.64L16,6.89L18.18,8.77L17.5,11.58L20,10.09M15,23H9V10H15V23M7,23H1V17H7V23M23,23H17V13H23V23Z', // mdiPodium
