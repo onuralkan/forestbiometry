@@ -1,7 +1,8 @@
 // Stand Structure, stage SS02: spatial structure (Clark–Evans with and without Donnelly, W, M, T, U, edge handling).
 //   node tests/structure/test_ss02.mjs
 // Reference: tests/ref/structure_ss02.json (tests/ref/make_structure_ss02.py: scipy.spatial.cKDTree, also periodic;
-// azimuths by numpy) and TOOLS_SPEC §8.3. Definitions provisional until their sources are read (METHODS §16 SS02).
+// azimuths by numpy) and TOOLS_SPEC §8.3. Clark and Evans (1954) and Pommerening (2002) read [B] (16 Nov 2026): their
+// worked values and definitions are checked here; U and Donnelly remain a provisional exception (METHODS §16 SS02).
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -18,11 +19,20 @@ const close = (a, b, tol = 1e-12) => a.length === b.length && a.every((v, i) => 
 { const T = []; for (let i = 0; i < 20; i++) for (let j = 0; j < 20; j++) T.push({ row: T.length + 2, x: i + 0.5, y: j + 0.5, dbh: 20, species: 'A' });
   const r = SP.spatialUnit(T, { shape: 'rect', x0: 0, y0: 0, x1: 20, y1: 20 }, { edge: 'toroidal' });
   near(r.ce.R, 2, '§8.3 Clark–Evans R, square lattice', 1e-13); near(r.ce.R, R.lattice.squareR, 'square lattice = cKDTree (periodic)', 1e-13);
-  ok(r.means.W === 0 && R.lattice.squareW === 0, '§8.3 W = 0, square lattice, k = 4, standard angle 72°');
-  ok(r.means.M === 0 && r.means.T === 0 && r.means.U === 1, 'one species, equal diameters: M = 0, T = 0, U = 1 (equal counts as not smaller)');
+  ok(r.means.W === 0 && R.lattice.squareW === 0, '§8.3 W = 0, square lattice, k = 4, standard angle 90° (default, Pommerening 2002)');
+  ok(SP.spatialUnit(T, { shape: 'rect', x0: 0, y0: 0, x1: 20, y1: 20 }, { edge: 'toroidal', wAngle: 'k1' }).means.W === 0 && R.lattice.squareW1 === 0, 'W = 0, square lattice, standard angle 72° (option)');
+  ok(r.means.M === 0 && r.means.T === 0 && r.means.T1 === 0 && r.means.U === 1, 'one species, equal diameters: M = 0, T = 0, U = 1 (equal counts as not smaller)');
   const h = Math.sqrt(3) / 2, H = []; for (let a = 0; a < 20; a++) for (let c = 0; c < 20; c++) H.push({ x: c + (a % 2) * 0.5 + 0.25, y: a * h + h / 2, dbh: 20, species: 'A' });
   const rh = SP.spatialUnit(H, { shape: 'rect', x0: 0, y0: 0, x1: 20, y1: 20 * h }, { edge: 'toroidal', k: 1 });
   near(rh.ce.R, 2.149139863647, '§8.3 Clark–Evans R, hexagonal lattice', 1e-11); near(rh.ce.R, R.lattice.hexR, 'hexagonal lattice = cKDTree', 1e-12); }
+
+/* 1b. Clark and Evans (1954), Table II: expected distance and R from N, area and the observed mean (units of the paper) */
+for (const [tag, N, A, rA, rE, Rv] of [['synthetic random (mm)', 116, 25781, 7.1821, 7.4540, 0.9635], ['Solidago (ft)', 89, 23936, 5.9578, 8.1998, 0.7266],
+  ['Liatris (ft; r̄A printed 8.0537 in the scan, 3.0537 = R·r̄E)', 197, 23936, 3.0537, 5.5114, 0.5541], ['Lespedeza (ft)', 184, 23936, 2.7859, 5.7028, 0.4885],
+  ['forest trees (ft)', 174, 69696, 11.3793, 10.0069, 1.1371]]) {
+  const c = SP.clarkEvans([rA], N, A, 1); near(c.rE, rE, `Clark and Evans 1954 Table II, ${tag}: r̄E`, 1e-4);
+  near(c.R, Rv, `Clark and Evans 1954 Table II, ${tag}: R`, 1e-4); }
+ok(SP.spatialUnit([{ x: 1, y: 1 }, { x: 2, y: 2 }], { shape: 'rect', x0: 0, y0: 0, x1: 5, y1: 5 }, { k: 1, wAngle: '72' }).problems.some(q => q.code === 'sp.wangle'), 'unknown standard angle rejected');
 
 /* 2. random patterns: neighbours and every index against cKDTree */
 R.cases.forEach((c, k) => {
@@ -30,7 +40,8 @@ R.cases.forEach((c, k) => {
   const r = SP.spatialUnit(trees, c.geom, { edge: 'none' });
   ok(r.status === 'ok' && r.trees.every((t, i) => t.neighbours.join() === c.idx[i].map(j => j + 2).join()), `${tag}: 4 nearest neighbours = cKDTree`);
   ok(close(r.trees.map(t => t.nn1), c.nn1) && close(r.trees.map(t => t.edgeDist), c.edgeDist, 1e-12), `${tag}: nearest-neighbour and boundary distances`);
-  for (const q of ['W', 'M', 'T', 'U']) ok(close(r.trees.map(t => t[q]), c[q], 1e-12), `${tag}: ${q} per tree`);
+  for (const q of ['W', 'M', 'T', 'T1', 'U']) ok(close(r.trees.map(t => t[q]), c[q], 1e-12), `${tag}: ${q} per tree`);
+  ok(close(SP.spatialUnit(trees, c.geom, { edge: 'none', wAngle: 'k1' }).trees.map(t => t.W), c.W1, 1e-12), `${tag}: W per tree, standard angle 360°/(k + 1)`);
   ok(r.trees.every((t, i) => t.edge === c.edge[i]) && r.nEdge === c.edge.filter(Boolean).length, `${tag}: edge trees flagged (closer to the boundary than to the 4th neighbour)`);
   near(r.ce.R, c.ce.R, `${tag}: Clark–Evans R`); near(r.ce.RD, c.ce.RD, `${tag}: Clark–Evans R, Donnelly`);
   const b = SP.spatialUnit(trees, c.geom, { edge: 'buffer', buffer: 5 });
@@ -38,7 +49,7 @@ R.cases.forEach((c, k) => {
   near(b.ce.R, c.ceBuffer.R, `${tag}: buffer R (reference trees, λ of the whole plot)`); near(b.means.W, c.ceBuffer.W, `${tag}: buffer W`); near(b.ce.RD, c.ce.RD, `${tag}: Donnelly R unchanged by the buffer (all trees)`);
   if (c.torus) { const t = SP.spatialUnit(trees, c.geom, { edge: 'toroidal' });
     ok(t.trees.every((q, i) => q.neighbours.join() === c.torus.idx[i].map(j => j + 2).join()), `${tag}: toroidal neighbours = cKDTree(boxsize)`);
-    near(t.ce.R, c.torus.R, `${tag}: toroidal R`); for (const q of ['W', 'M', 'T', 'U']) near(t.means[q], c.torus[q], `${tag}: toroidal ${q}`); }
+    near(t.ce.R, c.torus.R, `${tag}: toroidal R`); for (const q of ['W', 'M', 'T', 'T1', 'U']) near(t.means[q], c.torus[q], `${tag}: toroidal ${q}`); }
 });
 
 /* 3. Poisson patterns: the plain R is biased upwards by the edge; Donnelly's expectation reduces the bias */

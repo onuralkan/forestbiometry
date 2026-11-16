@@ -14,6 +14,7 @@ const { tableFromText } = await import('../../assets/lab/core/table.js');
 const { parseNumber, toInternal } = await import('../../assets/lab/core/num.js');
 const { tableToDataset } = await import('../../assets/lab/stand/calc.js');
 const RUN = await import('../../assets/lab/structure/run.js');
+const VER = (await import('../../assets/lab/structure/calc.js')).TOOL.version;
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/mescere-yapisi.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
@@ -36,12 +37,13 @@ const E = RUN.analyse(ds, { structure: {}, spatial: { k: 4, edge: 'none', buffer
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('#side a[href="mescere-yapisi.php"]').count()) === 1 && (await page.locator('#side .b-group[data-mod="SS"] a[href="mescere-yapisi.php"]').count()) === 1, 'sidebar: Meşcere Yapısı under "Meşcere yapısı ve sıklığı"');
 await page.goto(URL + '?lang=tr');
-ok((await page.locator('h1').textContent()).includes('Meşcere Yapısı') && (await page.locator('.b-ids').textContent()).trim() === 'SS-02 · SS-04 · SS-05 · SS-06 · SS-07' && (await page.locator('.b-ver').textContent()).includes('1.0.0-beta.1'), 'page title, tool ids SS-02, SS-04…SS-07, version 1.0.0-beta.1');
+ok((await page.locator('h1').textContent()).includes('Meşcere Yapısı') && (await page.locator('.b-ids').textContent()).trim() === 'SS-02 · SS-04 · SS-05 · SS-06 · SS-07' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SS-02, SS-04…SS-07, version ${VER}`);
 
 // 1. sample data
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
 ok((await page.textContent('#dsinfo')).includes('158 ağaç, 3 örnek alan, koordinatlı') && (await page.locator('.fname', { hasText: 'benzetim' }).count()) === 1, 'sample: simulated, 158 trees, 3 plots, coordinates found');
 await page.click('#to2'); await page.waitForSelector('#geocard');
+ok(await page.isChecked('input[name="gwang"][value="k"]'), 'W standard angle: 360°/k by default (Pommerening 2002)');
 ok((await page.isChecked('input[name="gshape"][value="circle-area"]')) && (await page.isChecked('input[name="gedge"][value="none"]')) && (await page.inputValue('[data-set="sdiBeta"]')) === '1.605', 'defaults: circle from the plot area, no edge correction, β = 1.605');
 await shot('settings');
 await page.click('#calc'); await page.waitForSelector('#utab');
@@ -80,7 +82,7 @@ await page.click('#tab-export');
   ok(wb.SheetNames.join() === 'Bilgi,Ornek alanlar,Agaclar,Siniflar,Turler', 'Excel sheets: ' + wb.SheetNames.join());
   const tr = XLSX.utils.sheet_to_json(wb.Sheets.Agaclar, { header: 1 });
   ok(tr[0].slice(0, 8).join() === 'alan,agac,tur,cap,boy,x,y,alan_buyuklugu' && tr[0].includes('BAL_m2_ha') && tr[0].includes('hegyi') && tr.length === 159 && tr[1][3] === '23.4' && typeof tr[1][tr[0].indexOf('BAL_m2_ha')] === 'number', 'tree sheet: the source rows exactly as read, competition columns appended as numbers');
-  const info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 }); ok(info.some(r => String(r[1]).includes('"edge":"buffer"')) && info.some(r => r[0] === 'Araç' && r[1] === 'mescere-yapisi 1.0.0-beta.1'), 'Info: tool and version, settings with the edge handling'); }
+  const info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 }); ok(info.some(r => String(r[1]).includes('"edge":"buffer"')) && info.some(r => r[0] === 'Araç' && r[1] === 'mescere-yapisi ' + VER), 'Info: tool and version, settings with the edge handling'); }
 
 // 6. data without coordinates: spatial part "–", the reason given
 { const q = await ctx.newPage(); q.on('pageerror', e => errors.push(e.message));

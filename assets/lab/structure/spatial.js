@@ -1,7 +1,8 @@
 // Stand Structure, stage SS02: spatial structure (no DOM). TOOLS_SPEC §4.1; formulas and their reading status in
-// METHODS §16 (SS02). The sources (Clark and Evans 1954; Donnelly 1978; Pommerening 2002) are NOT read yet: the
-// definitions below are implemented under a provisional definition exception (user decision, 12 Nov 2026) and are to be
-// checked against the sources when they are uploaded.
+// METHODS §16 (SS02). Read (16 Nov 2026): Clark and Evans (1954) [B] for R; Pommerening (2002) [B] for W, M and T
+// (standard angle 360°/k, T per neighbour pair, T1 with the nearest neighbour). Still a provisional exception (user
+// decision, 12 and 16 Nov 2026): U (Hui et al. 1998) and Donnelly's (1978) edge-corrected expectation, sources not in
+// hand; checked numerically against R packages by tests/ref/ss02_check.R when the user runs it.
 //
 // Plot geometry (user given): { shape: 'circle', cx, cy, r } or { shape: 'rect', x0, y0, x1, y1 } (axis-parallel), m.
 // Every tree needs x, y inside the plot; a tree without coordinates or outside the plot is a problem with its row, and
@@ -10,14 +11,18 @@
 //   Clark–Evans  R = r̄_A / r̄_E, r̄_A mean distance to the nearest neighbour, r̄_E = 0.5/√λ, λ = n/A (trees per m²)
 //                Donnelly (edge-corrected expectation): r̄_E,D = 0.5·√(A/n) + (0.0514 + 0.041/√n)·P/n, P perimeter
 //   W (uniform angle) W_i = (1/k)·Σ v_j over the k angles between azimuth-adjacent neighbours (each the smaller angle,
-//                ≤ 180°), v_j = 1 if the angle < α0 = 360°/(k + 1) (72° for k = 4), else 0
+//                ≤ 180°), v_j = 1 if the angle < α0, else 0; α0 = 360°/k (Pommerening 2002; 90° for k = 4; default)
+//                or 360°/(k + 1) (72° for k = 4; later literature, option wAngle: 'k1', source not read)
 //   M (mingling)  M_i = (1/k)·Σ [species_j ≠ species_i]
-//   T (diameter differentiation) T_i = (1/k)·Σ (1 − min(d_i, d_j)/max(d_i, d_j))
+//   T (diameter differentiation) T_ij = 1 − min(d_i, d_j)/max(d_i, d_j); T_i = (1/k)·Σ_j T_ij (tool rule: mean over
+//                the k neighbours) and T1_i = T_i1 with the nearest neighbour (Pommerening 2002 reports T1, T2, T3)
 //   U (dominance) U_i = (1/k)·Σ v_j, v_j = 0 if neighbour j is smaller than tree i, else 1 (equal diameters count 1)
 // Edge handling (written with every result): 'none' (all trees are reference trees; a tree closer to the boundary than
 // to its k-th neighbour is flagged as an edge tree), 'buffer' (trees closer than b m to the boundary are neighbours
 // only), 'toroidal' (rectangles only: distances wrap around, every tree is a reference tree).
-export const SPATIAL_DEFAULTS = { k: 4, edge: 'none', buffer: 5 };
+export const SPATIAL_DEFAULTS = { k: 4, edge: 'none', buffer: 5, wAngle: 'k' };
+/** Standard angle of W (radians): 'k' → 360°/k (Pommerening 2002), 'k1' → 360°/(k + 1). */
+export const standardAngle = (k, mode = 'k') => 2 * Math.PI / (mode === 'k1' ? k + 1 : k);
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 export function geomArea(G) { return G.shape === 'circle' ? Math.PI * G.r * G.r : (G.x1 - G.x0) * (G.y1 - G.y0); }
@@ -76,9 +81,9 @@ export function clarkEvans(nnDist, n, A, P) {
   const rA = nnDist.reduce((a, b) => a + b, 0) / nnDist.length, rE = 0.5 / Math.sqrt(n / A), rED = 0.5 * Math.sqrt(A / n) + (0.0514 + 0.041 / Math.sqrt(n)) * P / n;
   return { rA, rE, rED, R: rA / rE, RD: rA / rED };
 }
-/** W of one tree from the azimuths (radians) of its k neighbours. */
-export function uniformAngle(az, k = az.length) {
-  const a = az.map(v => ((v % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)).sort((p, q) => p - q), a0 = 2 * Math.PI / (k + 1);
+/** W of one tree from the azimuths (radians) of its k neighbours; mode: standard angle ('k' default, or 'k1'). */
+export function uniformAngle(az, k = az.length, mode = 'k') {
+  const a = az.map(v => ((v % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)).sort((p, q) => p - q), a0 = standardAngle(k, mode);
   let c = 0;
   for (let i = 0; i < a.length; i++) { const gap = i + 1 < a.length ? a[i + 1] - a[i] : a[0] + 2 * Math.PI - a[i], ang = Math.min(gap, 2 * Math.PI - gap); if (ang < a0 - 1e-12) c++; }
   return c / a.length;
@@ -87,13 +92,14 @@ export function uniformAngle(az, k = az.length) {
 /**
  * Spatial structure of one unit. trees: [{ row, x, y, dbh, species }]. geom: plot geometry. opts: SPATIAL_DEFAULTS.
  * Returns { status: 'ok'|'nocoord'|'invalid', problems, warnings, settings, n, A, P, ce: { R, RD, rA, rE, rED, nRef },
- *   means: { W, M, T, U } (over the reference trees), trees: [{ row, nn1, edgeDist, ref, edge, W, M, T, U }] }.
+ *   means: { W, M, T, T1, U } (over the reference trees), trees: [{ row, nn1, edgeDist, ref, edge, W, M, T, T1, U }] }.
  */
 export function spatialUnit(trees, geom, opts = {}) {
   const s = { ...SPATIAL_DEFAULTS, ...opts }, problems = [...checkGeom(geom)], warnings = [];
   const base = { settings: { ...s, geometry: geom }, problems, warnings };
   if (!(Number.isInteger(s.k) && s.k >= 1 && s.k <= 20)) problems.push({ code: 'sp.k', k: s.k });
   if (!['none', 'buffer', 'toroidal'].includes(s.edge)) problems.push({ code: 'sp.edge', edge: s.edge });
+  if (!['k', 'k1'].includes(s.wAngle)) problems.push({ code: 'sp.wangle', wAngle: s.wAngle });
   if (s.edge === 'buffer' && !(fin(s.buffer) && s.buffer > 0)) problems.push({ code: 'sp.buffer', buffer: s.buffer });
   if (s.edge === 'toroidal' && geom && geom.shape !== 'rect') problems.push({ code: 'sp.torus.shape' });
   if (problems.length) return { ...base, status: 'invalid' };
@@ -116,8 +122,8 @@ export function spatialUnit(trees, geom, opts = {}) {
     const az = J.map(j => { let dx = xs[j] - t.x, dy = ys[j] - t.y; if (torus) { if (dx > torus.w / 2) dx -= torus.w; else if (dx < -torus.w / 2) dx += torus.w; if (dy > torus.h / 2) dy -= torus.h; else if (dy < -torus.h / 2) dy += torus.h; } return Math.atan2(dy, dx); });
     const dI = t.dbh, Td = J.map(j => { const a = trees[j].dbh; return fin(a) && fin(dI) && a > 0 && dI > 0 ? 1 - Math.min(a, dI) / Math.max(a, dI) : null; });
     return { row: t.row ?? null, tree_id: t.tree_id ?? null, nn1: nb[i].dist[0], edgeDist: e, ref, edge, neighbours: J.map(j => trees[j].row ?? j),
-      W: uniformAngle(az, s.k), M: hasSp ? J.filter(j => trees[j].species !== t.species).length / J.length : null,
-      T: Td.every(v => v != null) ? Td.reduce((a, b) => a + b, 0) / J.length : null,
+      W: uniformAngle(az, s.k, s.wAngle), M: hasSp ? J.filter(j => trees[j].species !== t.species).length / J.length : null,
+      T: Td.every(v => v != null) ? Td.reduce((a, b) => a + b, 0) / J.length : null, T1: Td[0],
       U: fin(dI) ? J.filter(j => !(trees[j].dbh < dI)).length / J.length : null };
   });
   const R = rows.filter(r => r.ref);
@@ -129,5 +135,5 @@ export function spatialUnit(trees, geom, opts = {}) {
   const ce = clarkEvans(R.map(r => r.nn1), n, A, P), plain = torus ? knn(xs, ys, 1).map(q => q.dist[0]) : rows.map(r => r.nn1), ced = clarkEvans(plain, n, A, P);
   if (fin(s.areaRecorded) && Math.abs(A - s.areaRecorded) > 0.01 * s.areaRecorded) warnings.push({ code: 'geom.area', geom: A, recorded: s.areaRecorded });
   return { ...base, status: 'ok', n, A, P, lambda: n / A, nRef: R.length, nEdge: rows.filter(r => r.edge).length,
-    ce: { R: ce.R, rA: ce.rA, rE: ce.rE, nRef: R.length, RD: ced.RD, rAplain: ced.rA, rED: ced.rED }, means: { W: mean('W'), M: mean('M'), T: mean('T'), U: mean('U') }, trees: rows };
+    ce: { R: ce.R, rA: ce.rA, rE: ce.rE, nRef: R.length, RD: ced.RD, rAplain: ced.rA, rED: ced.rED }, means: { W: mean('W'), M: mean('M'), T: mean('T'), T1: mean('T1'), U: mean('U') }, trees: rows };
 }

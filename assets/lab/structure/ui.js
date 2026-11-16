@@ -23,7 +23,7 @@ let st = blank(), R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, tab: 'units', ds: null, dsSrc: null, tbl: null, sel: null, nav: null, allCols: false,
     set: { classStart: '0', classWidth: '4', giniOn: 'g', balTies: 'exclude', sdiBeta: '1.605', sdiRef: '25', rdExp: '0.5', spacing: 'square', h0From: 'dbh' },
-    geo: { shape: 'circle-area', cx: '0', cy: '0', r: '', x0: '', y0: '', x1: '', y1: '', k: '4', edge: 'none', buffer: '5', ciMode: 'knn', radius: '' } };
+    geo: { shape: 'circle-area', cx: '0', cy: '0', r: '', x0: '', y0: '', x1: '', y1: '', k: '4', edge: 'none', buffer: '5', wAngle: 'k', ciMode: 'knn', radius: '' } };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -108,7 +108,7 @@ function settings() {
   const s = st.set, g = st.geo;
   const structure = { classStart: num(s.classStart), classWidth: num(s.classWidth), giniOn: s.giniOn, balTies: s.balTies, sdiBeta: num(s.sdiBeta), sdiRef: num(s.sdiRef), rdExp: num(s.rdExp), spacing: s.spacing, h0From: s.h0From };
   const geometry = g.shape === 'circle-area' ? { shape: 'circle-area', cx: num(g.cx), cy: num(g.cy) } : g.shape === 'circle' ? { shape: 'circle', cx: num(g.cx), cy: num(g.cy), r: num(g.r) } : { shape: 'rect', x0: num(g.x0), y0: num(g.y0), x1: num(g.x1), y1: num(g.y1) };
-  const spatial = hasXY(st.ds) ? { k: num(g.k), edge: g.edge, buffer: num(g.buffer) } : null;
+  const spatial = hasXY(st.ds) ? { k: num(g.k), edge: g.edge, buffer: num(g.buffer), wAngle: g.wAngle || 'k' } : null;
   const competition = { mode: g.ciMode, k: num(g.k), radius: g.ciMode === 'radius' ? num(g.radius) : null, edge: g.edge, buffer: num(g.buffer) };
   return { structure, spatial, geometry, competition };
 }
@@ -132,6 +132,7 @@ function renderStep2() {
       <div class="lims">${g.shape === 'rect' ? inp('g.x0', g.x0, 'x₀') + inp('g.y0', g.y0, 'y₀') + inp('g.x1', g.x1, 'x₁') + inp('g.y1', g.y1, 'y₁') : inp('g.cx', g.cx, 'x') + inp('g.cy', g.cy, 'y') + (g.shape === 'circle' ? inp('g.r', g.r, 'r (m)') : '')}</div>
       <p class="muted small">${T('geo.note')}</p>
       <div class="lims">${inp('g.k', g.k, T('geo.k'), 4)}<span class="small"><b>${T('geo.edge')}</b></span>${radio('gedge', g.edge, ['none', 'buffer', 'toroidal'].map(v => [v, T('geo.edge.' + v)]))}${g.edge === 'buffer' ? inp('g.buffer', g.buffer, T('geo.buffer')) : ''}</div>
+      <div class="lims"><span class="small"><b>${T('geo.wangle')}</b></span>${radio('gwang', g.wAngle || 'k', [['k', T('geo.wangle.k')], ['k1', T('geo.wangle.k1')]])}</div>
       <div class="lims"><span class="small"><b>${T('geo.ci')}</b></span>${radio('gci', g.ciMode, [['knn', T('geo.ci.knn')], ['radius', T('geo.ci.radius')]])}${g.ciMode === 'radius' ? inp('g.radius', g.radius, T('geo.radius')) : ''}</div>
       <p class="muted small">${T('geo.src')}</p>`;
   }
@@ -144,6 +145,7 @@ function renderStep2() {
   for (const n of ['giniOn', 'balTies', 'sdiRef', 'spacing', 'h0From']) el.querySelectorAll(`input[name="${n}"]`).forEach(x => x.addEventListener('change', () => { st.set[n] = x.value; re(); }));
   el.querySelectorAll('input[name="gshape"]').forEach(x => x.addEventListener('change', () => { st.geo.shape = x.value; re(); }));
   el.querySelectorAll('input[name="gedge"]').forEach(x => x.addEventListener('change', () => { st.geo.edge = x.value; re(); }));
+  el.querySelectorAll('input[name="gwang"]').forEach(x => x.addEventListener('change', () => { st.geo.wAngle = x.value; re(); }));
   el.querySelectorAll('input[name="gci"]').forEach(x => x.addEventListener('change', () => { st.geo.ciMode = x.value; re(); }));
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); st.tab = 'units'; go(3); });
@@ -153,7 +155,7 @@ function renderStep2() {
 function compute() { R = analyse(st.ds, settings()); R.created = new Date().toISOString(); if (!R.units.some(u => ukey(u) === st.sel)) st.sel = R.units.length ? ukey(R.units[0]) : null; save(); }
 const COLS = [['c.n', u => u.n, 0], ['c.Nha', u => u.st.Nha, 1], ['c.Gha', u => u.st.Gha, 3], ['c.Dq', u => u.st.Dq, 2], ['c.H0', u => u.st.H0, 2], ['c.cv', u => m(u, 'cv'), 3], ['c.skew', u => m(u, 'skew'), 3, 1], ['c.kurt', u => m(u, 'kurt'), 3, 1],
   ['c.gini', u => m(u, 'gini'), 3], ['c.shD', u => m(u, 'shannonD'), 3], ['c.shS', u => m(u, 'shannonSp'), 3, 1], ['c.simp', u => m(u, 'simpson'), 3], ['c.sdi', u => m(u, 'sdi'), 1], ['c.rd', u => m(u, 'rd'), 2], ['c.hart', u => m(u, 'hartPct'), 1, 1],
-  ['c.R', u => u.sp.status === 'ok' ? u.sp.ce.R : null, 3], ['c.RD', u => u.sp.status === 'ok' ? u.sp.ce.RD : null, 3], ['c.W', u => spm(u, 'W'), 3], ['c.M', u => spm(u, 'M'), 3], ['c.T', u => spm(u, 'T'), 3], ['c.U', u => spm(u, 'U'), 3, 1],
+  ['c.R', u => u.sp.status === 'ok' ? u.sp.ce.R : null, 3], ['c.RD', u => u.sp.status === 'ok' ? u.sp.ce.RD : null, 3], ['c.W', u => spm(u, 'W'), 3], ['c.M', u => spm(u, 'M'), 3], ['c.T', u => spm(u, 'T'), 3], ['c.T1', u => spm(u, 'T1'), 3, 1], ['c.U', u => spm(u, 'U'), 3, 1],
   ['c.hegyi', u => { if (u.ci.status !== 'ok') return null; const v = u.ci.trees.map(t => t.hegyi).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }, 3, 1]];
 function m(u, k) { return u.st.status === 'ok' && u.st.measures ? u.st.measures[k] : null; }
 function spm(u, k) { return u.sp.status === 'ok' ? u.sp.means[k] : null; }
@@ -232,18 +234,18 @@ function tabDetail(p) {
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function unitRows() {
   return [['plot_id', 'period', 'state', 'n', 'N_ha', 'G_m2_ha', 'Dq_cm', 'H0_m', 'd_mean', 'd_sd', 'cv', 'skewness', 'kurtosis_excess', 'gini', 'shannon_d', 'species_n', 'shannon_species', 'simpson', 'simpson_dominance', 'sdi', 'curtis_rd', 'spacing_a_m', 'relative_spacing_pct',
-    'clark_evans_R', 'clark_evans_R_donnelly', 'W', 'M', 'T', 'U', 'n_reference', 'n_edge', 'hegyi_mean', 'spatial_state'],
+    'clark_evans_R', 'clark_evans_R_donnelly', 'W', 'W_standard_angle_deg', 'M', 'T', 'T1', 'U', 'n_reference', 'n_edge', 'hegyi_mean', 'spatial_state'],
     ...R.units.map(u => { const ms = u.st.measures || {}, sp = u.sp.status === 'ok' ? u.sp : null, hm = COLS.find(c => c[0] === 'c.hegyi')[1](u);
       return [u.plot_id, u.period, u.st.status, u.n, u.st.Nha ?? null, u.st.Gha ?? null, u.st.Dq ?? null, u.st.H0 ?? null, ms.d_mean ?? null, ms.d_sd ?? null, ms.cv ?? null, ms.skew ?? null, ms.kurt ?? null, ms.gini ?? null, ms.shannonD ?? null, ms.speciesN ?? null, ms.shannonSp ?? null, ms.simpson ?? null, ms.simpsonD ?? null,
-        ms.sdi ?? null, ms.rd ?? null, ms.spacingA ?? null, ms.hartPct ?? null, sp ? sp.ce.R : null, sp ? sp.ce.RD : null, sp ? sp.means.W : null, sp ? sp.means.M : null, sp ? sp.means.T : null, sp ? sp.means.U : null, sp ? sp.nRef : null, sp ? sp.nEdge : null, hm, u.sp.status]; })];
+        ms.sdi ?? null, ms.rd ?? null, ms.spacingA ?? null, ms.hartPct ?? null, sp ? sp.ce.R : null, sp ? sp.ce.RD : null, sp ? sp.means.W : null, sp ? 360 / (sp.settings.wAngle === 'k1' ? sp.settings.k + 1 : sp.settings.k) : null, sp ? sp.means.M : null, sp ? sp.means.T : null, sp ? sp.means.T1 : null, sp ? sp.means.U : null, sp ? sp.nRef : null, sp ? sp.nEdge : null, hm, u.sp.status]; })];
 }
 function treeVals() {
   const per = new Map();
   for (const u of R.units) { if (u.st.status !== 'ok') continue; const ci = u.ci.status === 'ok' ? u.ci.trees : null, sp = u.sp.status === 'ok' ? u.sp.trees : null;
-    u.st.trees.forEach((t, i) => per.set(t.row, { bal: t.bal, relD: t.relD, relG: t.relG, hegyi: ci ? ci[i].hegyi : null, edge: ci ? (ci[i].edge ? 1 : 0) : null, W: sp ? sp[i].W : null, M: sp ? sp[i].M : null, T: sp ? sp[i].T : null, U: sp ? sp[i].U : null })); }
+    u.st.trees.forEach((t, i) => per.set(t.row, { bal: t.bal, relD: t.relD, relG: t.relG, hegyi: ci ? ci[i].hegyi : null, edge: ci ? (ci[i].edge ? 1 : 0) : null, W: sp ? sp[i].W : null, M: sp ? sp[i].M : null, T: sp ? sp[i].T : null, T1: sp ? sp[i].T1 : null, U: sp ? sp[i].U : null })); }
   return per;
 }
-const TREE_COLS = [['BAL_m2_ha', 'bal'], ['d_Dq', 'relD'], ['g_gmean', 'relG'], ['hegyi', 'hegyi'], ['edge_tree', 'edge'], ['W', 'W'], ['M', 'M'], ['T', 'T'], ['U', 'U']];
+const TREE_COLS = [['BAL_m2_ha', 'bal'], ['d_Dq', 'relD'], ['g_gmean', 'relG'], ['hegyi', 'hegyi'], ['edge_tree', 'edge'], ['W', 'W'], ['M', 'M'], ['T', 'T'], ['T1', 'T1'], ['U', 'U']];
 function treeRows() {
   const per = treeVals(), fromTable = st.dsSrc && st.dsSrc.kind === 'table' && st.tbl && st.tbl.src;
   if (fromTable) { const src = st.tbl.src; return appendColumns(src.headers.map(String), src.rows.map(r => src.headers.map((_, k) => { const c = r[k]; return c == null || cellText(c) === '' ? null : c.t === 'n' ? c.v : cellText(c); })), src.rowNumbers, per, TREE_COLS); }

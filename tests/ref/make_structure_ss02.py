@@ -1,7 +1,9 @@
 """Reference for the Stand Structure tool, stage SS02: spatial structure (docs/TOOLS_SPEC.md §4.1, §8.3).
 
 Written apart from the JavaScript code: neighbours by scipy.spatial.cKDTree (boxsize for the toroidal case), azimuths by
-numpy.arctan2. Definitions as in METHODS §16 (SS02); their sources are not read yet (provisional definition exception).
+numpy.arctan2. Definitions as in METHODS §16 (SS02): Clark and Evans (1954) and Pommerening (2002) read [B] (16 Nov
+2026); W with both standard angles, 360°/k (Pommerening 2002, default) and 360°/(k + 1) (option); T1 = T with the
+nearest neighbour (Pommerening 2002); U and Donnelly's expectation still a provisional exception.
   - square and hexagonal lattices on a torus: Clark–Evans R = 2 and 2.149139863647 (TOOLS_SPEC §8.3), W = 0 (square, k = 4)
   - random patterns in a rectangle and a circle (numpy default_rng(20261114); NOT real trees): per tree the k nearest
     neighbours, W, M, T, U, distance to the boundary, edge flag, buffer reference set; Clark–Evans R and Donnelly R
@@ -26,19 +28,20 @@ def indices(xy, sp, d, k, box=None):
     tree = cKDTree(xy, boxsize=box)
     dist, idx = tree.query(xy, k=k + 1)
     dist, idx = dist[:, 1:], idx[:, 1:]                              # drop the point itself
-    a0 = 2 * math.pi / (k + 1)
-    W, M, T, U = [], [], [], []
+    a0, a1 = 2 * math.pi / k, 2 * math.pi / (k + 1)
+    W, W1, M, T, U, T1 = [], [], [], [], [], []
     for i in range(len(xy)):
         dx = xy[idx[i], 0] - xy[i, 0]; dy = xy[idx[i], 1] - xy[i, 1]
         if box is not None:
             dx = (dx + box[0] / 2) % box[0] - box[0] / 2; dy = (dy + box[1] / 2) % box[1] - box[1] / 2
         az = np.sort(np.mod(np.arctan2(dy, dx), 2 * math.pi))
         gaps = np.diff(np.append(az, az[0] + 2 * math.pi)); ang = np.minimum(gaps, 2 * math.pi - gaps)
-        W.append(float(np.mean(ang < a0 - 1e-12)))
+        W.append(float(np.mean(ang < a0 - 1e-12))); W1.append(float(np.mean(ang < a1 - 1e-12)))
         M.append(float(np.mean(sp[idx[i]] != sp[i])))
         T.append(float(np.mean(1 - np.minimum(d[idx[i]], d[i]) / np.maximum(d[idx[i]], d[i]))))
         U.append(float(np.mean(~(d[idx[i]] < d[i]))))
-    return dist, idx, W, M, T, U
+        T1.append(float(1 - min(d[idx[i][0]], d[i]) / max(d[idx[i][0]], d[i])))
+    return dist, idx, W, M, T, U, W1, T1
 
 
 def ce(nn, n, A, P):
@@ -48,11 +51,11 @@ def ce(nn, n, A, P):
 
 # 1. lattices on a torus
 sq = np.array([[i + 0.5, j + 0.5] for i in range(20) for j in range(20)])
-dist, idx, W, *_ = indices(sq, np.zeros(400), np.full(400, 20.0), 4, box=(20, 20))
+dist, idx, W, M_, T_, U_, W1, _ = indices(sq, np.zeros(400), np.full(400, 20.0), 4, box=(20, 20))
 h = math.sqrt(3) / 2
 hx = np.array([[c + (r % 2) * 0.5 + 0.25, r * h + h / 2] for r in range(20) for c in range(20)])
 dh, *_ = indices(hx, np.zeros(400), np.full(400, 20.0), 1, box=(20, 20 * h))
-out["lattice"] = dict(squareR=ce(dist[:, 0], 400, 400, 80)["R"], squareW=float(np.mean(W)), hexR=float(np.mean(dh[:, 0]) / (0.5 / math.sqrt(400 / (20 * 20 * h)))))
+out["lattice"] = dict(squareR=ce(dist[:, 0], 400, 400, 80)["R"], squareW=float(np.mean(W)), squareW1=float(np.mean(W1)), hexR=float(np.mean(dh[:, 0]) / (0.5 / math.sqrt(400 / (20 * 20 * h)))))
 
 # 2. random patterns
 cases = []
@@ -65,14 +68,14 @@ for shape in ["rect", "circle", "rect"]:
         geom = dict(shape="circle", cx=0.0, cy=0.0, r=17.84); rr = 17.84 * np.sqrt(rng.uniform(0, 1, n)); th = rng.uniform(0, 2 * math.pi, n)
         xy = np.column_stack([rr * np.cos(th), rr * np.sin(th)]); A, P = math.pi * 17.84 ** 2, 2 * math.pi * 17.84; bd = 17.84 - np.hypot(xy[:, 0], xy[:, 1])
     d = np.round(rng.gamma(5, 5, n), 3); sp = rng.choice(["Ps", "Ab", "Fo"], n)
-    dist, idx, W, M, T, U = indices(xy, sp, d, 4)
+    dist, idx, W, M, T, U, W1, T1 = indices(xy, sp, d, 4)
     ref = bd >= 5.0
     case = dict(geom=geom, x=xy[:, 0].tolist(), y=xy[:, 1].tolist(), dbh=d.tolist(), species=sp.tolist(), idx=idx.tolist(), nn1=dist[:, 0].tolist(),
-                W=W, M=M, T=T, U=U, edgeDist=bd.tolist(), edge=(bd < dist[:, -1]).tolist(), ref=ref.tolist(), ce=ce(dist[:, 0], n, A, P),
+                W=W, W1=W1, T1=T1, M=M, T=T, U=U, edgeDist=bd.tolist(), edge=(bd < dist[:, -1]).tolist(), ref=ref.tolist(), ce=ce(dist[:, 0], n, A, P),
                 ceBuffer=dict(R=float(np.mean(dist[ref, 0])) / (0.5 / math.sqrt(n / A)), W=float(np.mean(np.array(W)[ref]))))
     if shape == "rect":
-        dt, it, Wt, Mt, Tt, Ut = indices(xy, sp, d, 4, box=(40, 25))
-        case["torus"] = dict(idx=it.tolist(), R=float(np.mean(dt[:, 0])) / (0.5 / math.sqrt(n / A)), W=float(np.mean(Wt)), M=float(np.mean(Mt)), T=float(np.mean(Tt)), U=float(np.mean(Ut)))
+        dt, it, Wt, Mt, Tt, Ut, Wt1, Tt1 = indices(xy, sp, d, 4, box=(40, 25))
+        case["torus"] = dict(idx=it.tolist(), R=float(np.mean(dt[:, 0])) / (0.5 / math.sqrt(n / A)), W=float(np.mean(Wt)), W1=float(np.mean(Wt1)), T1=float(np.mean(Tt1)), M=float(np.mean(Mt)), T=float(np.mean(Tt)), U=float(np.mean(Ut)))
     cases.append(case)
 out["cases"] = cases
 

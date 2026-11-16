@@ -1245,7 +1245,7 @@ const { unitMetrics, classesFromBreaks, breaksFromWidth, classIndex } = __fb_r("
 //                spacing (geometric definition; textbook-definition exception, user decision 12 Nov 2026)
 
 
-const TOOL = { id: 'mescere-yapisi', version: '1.0.0-beta.1' };
+const TOOL = { id: 'mescere-yapisi', version: '1.0.0-beta.2' };
 const SCHEMA = 'structure-result/1';
 const DEFAULTS = { giniOn: 'g', classStart: 0, classWidth: 4, balTies: 'exclude', sdiBeta: 1.605, sdiRef: 25, rdExp: 0.5, spacing: 'square', h0From: 'dbh' };
 const g = d => Math.PI / 4 * (d / 100) ** 2;
@@ -1510,11 +1510,12 @@ const tr = {
   'geo.note': 'Koordinatlar bütün örnek alanlarda aynı çerçevede olmalıdır (ör. her alanın merkezinden ölçülmüş). Alan dışındaki ya da koordinatı eksik ağaçlar satır numarasıyla bildirilir ve o alan hesaplanmaz.',
   'geo.k': 'Komşu sayısı k', 'geo.edge': 'Kenar etkisi', 'geo.edge.none': 'düzeltme yok (kenar ağaçları işaretlenir)', 'geo.edge.buffer': 'tampon', 'geo.edge.toroidal': 'toroidal öteleme (yalnızca dikdörtgen)', 'geo.buffer': 'Tampon genişliği (m)',
   'geo.ci': 'Hegyi rakipleri', 'geo.ci.knn': 'en yakın k ağaç', 'geo.ci.radius': 'yarıçap içindekiler', 'geo.radius': 'Yarıçap R (m)',
-  'geo.src': 'Clark–Evans, Donnelly, W, M, T, U ve Hegyi geçici tanım istisnasıyla uygulanır; kaynakları doğrulanınca METHODS\'ta [B] olur.',
+  'geo.src': 'Kaynak durumu: Clark–Evans R (Clark ve Evans 1954) ve W, M, T, T1 (Pommerening 2002) okundu [B]; Hegyi (1974) aktarılan biçimiyle [A] (Contreras ve ark. 2011; siplab R paketi belgesi); özgün Hegyi\'de uzaklığa 1 ft (0,3048 m) eklendiği bildirilir, bu araç eklemesiz biçimi kullanır. U (Hui ve ark. 1998) ve Donnelly (1978) düzeltmesi kaynakları okunana kadar geçici istisnadır.',
+  'geo.wangle': 'W standart açısı', 'geo.wangle.k': '360°/k (Pommerening 2002; k = 4 için 90°)', 'geo.wangle.k1': '360°/(k + 1) (k = 4 için 72°; kaynak okunmadı)',
   'res.units': 'Örnek alanlar', 'res.detail': 'Ayrıntı', 'res.export': 'İndir', 'res.skipped': p => `${p.n} örnek alan–dönem birleşiminde ağaç kaydı yok; ölçülmedi sayıldı ve hesaplanmadı.`,
   'c.unit': 'Örnek alan', 'c.period': 'Dönem', 'c.n': 'n', 'c.Nha': 'N/ha', 'c.Gha': 'G (m²/ha)', 'c.Dq': 'Dq (cm)', 'c.H0': 'H0 (m)', 'c.cv': 'ÇK', 'c.skew': 'Çarpıklık', 'c.kurt': 'Basıklık (fazlalık)',
   'c.gini': 'Gini', 'c.shD': 'Shannon (çap)', 'c.shS': 'Shannon (tür)', 'c.simp': 'Simpson (1 − Σp²)', 'c.sdi': 'SDI', 'c.rd': 'Curtis RD', 'c.hart': 'Göreli aralık S%',
-  'c.R': 'Clark–Evans R', 'c.RD': 'R (Donnelly)', 'c.W': 'W', 'c.M': 'M', 'c.T': 'T', 'c.U': 'U', 'c.state': 'Durum', 'c.hegyi': 'Hegyi (ort.)',
+  'c.R': 'Clark–Evans R', 'c.RD': 'R (Donnelly)', 'c.W': 'W', 'c.M': 'M', 'c.T': 'T', 'c.T1': 'T1', 'c.U': 'U', 'c.state': 'Durum', 'c.hegyi': 'Hegyi (ort.)',
   'st.ok': 'tamam', 'st.empty': 'ağaçsız', 'st.invalid': 'hesaplanamadı', 'st.nocoord': 'koordinat yok', 'st.nogeom': 'geometri yok', 'st.off': '–',
   'units.note': 'Her satır bir örnek alan × dönem. "–" hesaplanamayan değerdir; nedeni Ayrıntı sekmesinde yazar. Gizli sütunlar için "Bütün sütunlar".', 'units.all': 'Bütün sütunlar',
   'd.trees': 'Ağaçlar', 'd.hist': 'Çap sınıfları (ağaç/ha)', 'd.lorenz': p => `Lorenz eğrisi (${p.on})`, 'd.lorenz.eq': 'tam eşitlik', 'd.map': 'Gövde haritası (renk: Hegyi endeksi)', 'd.map.lo': 'düşük', 'd.map.hi': 'yüksek', 'd.map.none': 'endeks yok', 'd.map.note': p => `Daireler göğüs çapıyla orantılı, ${p.x} kat büyütülmüş; renk örnek alandaki Hegyi değerlerinin üçte birlik dilimleri.`,
@@ -1523,6 +1524,7 @@ const tr = {
   'w.xy.same': p => `aynı konumda iki ağaç (satır ${p.rows.join(', ')})`, 'w.sp.nospecies': 'tür yok: M hesaplanmaz', 'w.sp.buffer.large': p => `tampon büyük: ${p.n} ağaçtan yalnızca ${p.nRef} referans ağaç`, 'w.geom.area': p => `geometrinin alanı (${p.geom}) kayıtlı alandan (${p.recorded}) farklı`,
   'w.ci.samepos.n': p => `${p.n} ağaç aynı konumda: Hegyi verilmez`, 'w.ci.nocomp': p => `${p.n} ağacın R içinde rakibi yok (Hegyi = 0)`,
   'p.xy.missing': p => `${p.count} ağaçta koordinat eksik (satır ${p.rows.join(', ')})`, 'p.xy.outside': p => `${p.count} ağaç alanın dışında (satır ${p.rows.join(', ')})`, 'p.sp.few': p => `en az k + 1 = ${p.k + 1} ağaç gerekir`,
+  'p.sp.wangle': 'W standart açısı tanınmadı',
   'p.sp.noref': 'tampon alanın tamamını kaplıyor: referans ağaç yok', 'p.sp.torus.shape': 'toroidal öteleme yalnızca dikdörtgen alanda', 'p.ci.radius': 'Hegyi yarıçapı girilmedi', 'p.ci.torus.radius': 'toroidal kipte 2R kısa kenardan küçük olmalı',
   'p.geom.circle': 'daire geometrisi eksik', 'p.geom.rect': 'dikdörtgen geometrisi eksik', 'p.geom.shape': 'geometri seçilmedi', 'p.unit.state': 'örnek alan–dönem ölçülmemiş', 'p.ci.samepos': p => `aynı konumda iki ağaç (satır ${p.rows.join(', ')})`,
   'p.d.nonpos': 'çap sıfır ya da negatif', 'p.set.classes.many': 'çap sınıfı çok fazla (genişliği büyütün)',
@@ -1564,11 +1566,12 @@ const en = {
   'geo.note': 'Coordinates must be in the same frame in every plot (e.g. measured from each plot centre). Trees outside the plot or without coordinates are reported with their rows and that plot is not computed.',
   'geo.k': 'Number of neighbours k', 'geo.edge': 'Edge effect', 'geo.edge.none': 'no correction (edge trees flagged)', 'geo.edge.buffer': 'buffer', 'geo.edge.toroidal': 'toroidal translation (rectangles only)', 'geo.buffer': 'Buffer width (m)',
   'geo.ci': 'Hegyi competitors', 'geo.ci.knn': 'k nearest trees', 'geo.ci.radius': 'within a radius', 'geo.radius': 'Radius R (m)',
-  'geo.src': 'Clark–Evans, Donnelly, W, M, T, U and Hegyi are implemented under a provisional definition exception; they become [B] in METHODS once their sources are checked.',
+  'geo.src': 'Source status: Clark–Evans R (Clark and Evans 1954) and W, M, T, T1 (Pommerening 2002) read [B]; Hegyi (1974) in the form cited by secondary sources [A] (Contreras et al. 2011; siplab R package documentation); the original Hegyi index is reported to add 1 ft (0.3048 m) to the distance, this tool uses the form without it. U (Hui et al. 1998) and the Donnelly (1978) correction remain a provisional exception until their sources are read.',
+  'geo.wangle': 'W standard angle', 'geo.wangle.k': '360°/k (Pommerening 2002; 90° for k = 4)', 'geo.wangle.k1': '360°/(k + 1) (72° for k = 4; source not read)',
   'res.units': 'Plots', 'res.detail': 'Details', 'res.export': 'Download', 'res.skipped': p => `${p.n} plot–period combination(s) have no tree records; treated as not measured and not computed.`,
   'c.unit': 'Plot', 'c.period': 'Period', 'c.n': 'n', 'c.Nha': 'N/ha', 'c.Gha': 'G (m²/ha)', 'c.Dq': 'Dq (cm)', 'c.H0': 'H0 (m)', 'c.cv': 'CV', 'c.skew': 'Skewness', 'c.kurt': 'Kurtosis (excess)',
   'c.gini': 'Gini', 'c.shD': 'Shannon (diameter)', 'c.shS': 'Shannon (species)', 'c.simp': 'Simpson (1 − Σp²)', 'c.sdi': 'SDI', 'c.rd': 'Curtis RD', 'c.hart': 'Relative spacing S%',
-  'c.R': 'Clark–Evans R', 'c.RD': 'R (Donnelly)', 'c.W': 'W', 'c.M': 'M', 'c.T': 'T', 'c.U': 'U', 'c.state': 'State', 'c.hegyi': 'Hegyi (mean)',
+  'c.R': 'Clark–Evans R', 'c.RD': 'R (Donnelly)', 'c.W': 'W', 'c.M': 'M', 'c.T': 'T', 'c.T1': 'T1', 'c.U': 'U', 'c.state': 'State', 'c.hegyi': 'Hegyi (mean)',
   'st.ok': 'ok', 'st.empty': 'no trees', 'st.invalid': 'not computed', 'st.nocoord': 'no coordinates', 'st.nogeom': 'no geometry', 'st.off': '–',
   'units.note': 'Each row is a plot × period. "–" is a value that could not be computed; the reason is in the Details tab. "All columns" shows the hidden ones.', 'units.all': 'All columns',
   'd.trees': 'Trees', 'd.hist': 'Diameter classes (trees/ha)', 'd.lorenz': p => `Lorenz curve (${p.on})`, 'd.lorenz.eq': 'perfect equality', 'd.map': 'Stem map (colour: Hegyi index)', 'd.map.lo': 'low', 'd.map.hi': 'high', 'd.map.none': 'no index', 'd.map.note': p => `Circles proportional to diameter at breast height, enlarged ${p.x} times; colour: thirds of the Hegyi values in the plot.`,
@@ -1577,6 +1580,7 @@ const en = {
   'w.xy.same': p => `two trees at the same position (rows ${p.rows.join(', ')})`, 'w.sp.nospecies': 'no species: M not computed', 'w.sp.buffer.large': p => `wide buffer: only ${p.nRef} reference trees out of ${p.n}`, 'w.geom.area': p => `the area of the geometry (${p.geom}) differs from the recorded area (${p.recorded})`,
   'w.ci.samepos.n': p => `${p.n} trees at the same position: no Hegyi index for them`, 'w.ci.nocomp': p => `${p.n} tree(s) have no competitor within R (Hegyi = 0)`,
   'p.xy.missing': p => `${p.count} tree(s) without coordinates (rows ${p.rows.join(', ')})`, 'p.xy.outside': p => `${p.count} tree(s) outside the plot (rows ${p.rows.join(', ')})`, 'p.sp.few': p => `at least k + 1 = ${p.k + 1} trees are needed`,
+  'p.sp.wangle': 'unknown W standard angle',
   'p.sp.noref': 'the buffer covers the whole plot: no reference tree', 'p.sp.torus.shape': 'toroidal translation only in a rectangular plot', 'p.ci.radius': 'no Hegyi radius entered', 'p.ci.torus.radius': 'toroidal: 2R must be smaller than the shorter side',
   'p.geom.circle': 'circle geometry incomplete', 'p.geom.rect': 'rectangle geometry incomplete', 'p.geom.shape': 'no geometry chosen', 'p.unit.state': 'plot–period not measured', 'p.ci.samepos': p => `two trees at the same position (rows ${p.rows.join(', ')})`,
   'p.d.nonpos': 'diameter zero or negative', 'p.set.classes.many': 'too many diameter classes (use a wider class)',
@@ -1654,11 +1658,12 @@ function analyse(ds, opts = {}) {
 
 // ---- assets/lab/structure/spatial.js
 __fb_m["structure/spatial.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "SPATIAL_DEFAULTS": () => SPATIAL_DEFAULTS, "boundaryDist": () => boundaryDist, "checkGeom": () => checkGeom, "clarkEvans": () => clarkEvans, "geomArea": () => geomArea, "geomPerimeter": () => geomPerimeter, "knn": () => knn, "spatialUnit": () => spatialUnit, "uniformAngle": () => uniformAngle });
+__fb_x(__fb_e, { "SPATIAL_DEFAULTS": () => SPATIAL_DEFAULTS, "boundaryDist": () => boundaryDist, "checkGeom": () => checkGeom, "clarkEvans": () => clarkEvans, "geomArea": () => geomArea, "geomPerimeter": () => geomPerimeter, "knn": () => knn, "spatialUnit": () => spatialUnit, "standardAngle": () => standardAngle, "uniformAngle": () => uniformAngle });
 // Stand Structure, stage SS02: spatial structure (no DOM). TOOLS_SPEC §4.1; formulas and their reading status in
-// METHODS §16 (SS02). The sources (Clark and Evans 1954; Donnelly 1978; Pommerening 2002) are NOT read yet: the
-// definitions below are implemented under a provisional definition exception (user decision, 12 Nov 2026) and are to be
-// checked against the sources when they are uploaded.
+// METHODS §16 (SS02). Read (16 Nov 2026): Clark and Evans (1954) [B] for R; Pommerening (2002) [B] for W, M and T
+// (standard angle 360°/k, T per neighbour pair, T1 with the nearest neighbour). Still a provisional exception (user
+// decision, 12 and 16 Nov 2026): U (Hui et al. 1998) and Donnelly's (1978) edge-corrected expectation, sources not in
+// hand; checked numerically against R packages by tests/ref/ss02_check.R when the user runs it.
 //
 // Plot geometry (user given): { shape: 'circle', cx, cy, r } or { shape: 'rect', x0, y0, x1, y1 } (axis-parallel), m.
 // Every tree needs x, y inside the plot; a tree without coordinates or outside the plot is a problem with its row, and
@@ -1667,14 +1672,18 @@ __fb_x(__fb_e, { "SPATIAL_DEFAULTS": () => SPATIAL_DEFAULTS, "boundaryDist": () 
 //   Clark–Evans  R = r̄_A / r̄_E, r̄_A mean distance to the nearest neighbour, r̄_E = 0.5/√λ, λ = n/A (trees per m²)
 //                Donnelly (edge-corrected expectation): r̄_E,D = 0.5·√(A/n) + (0.0514 + 0.041/√n)·P/n, P perimeter
 //   W (uniform angle) W_i = (1/k)·Σ v_j over the k angles between azimuth-adjacent neighbours (each the smaller angle,
-//                ≤ 180°), v_j = 1 if the angle < α0 = 360°/(k + 1) (72° for k = 4), else 0
+//                ≤ 180°), v_j = 1 if the angle < α0, else 0; α0 = 360°/k (Pommerening 2002; 90° for k = 4; default)
+//                or 360°/(k + 1) (72° for k = 4; later literature, option wAngle: 'k1', source not read)
 //   M (mingling)  M_i = (1/k)·Σ [species_j ≠ species_i]
-//   T (diameter differentiation) T_i = (1/k)·Σ (1 − min(d_i, d_j)/max(d_i, d_j))
+//   T (diameter differentiation) T_ij = 1 − min(d_i, d_j)/max(d_i, d_j); T_i = (1/k)·Σ_j T_ij (tool rule: mean over
+//                the k neighbours) and T1_i = T_i1 with the nearest neighbour (Pommerening 2002 reports T1, T2, T3)
 //   U (dominance) U_i = (1/k)·Σ v_j, v_j = 0 if neighbour j is smaller than tree i, else 1 (equal diameters count 1)
 // Edge handling (written with every result): 'none' (all trees are reference trees; a tree closer to the boundary than
 // to its k-th neighbour is flagged as an edge tree), 'buffer' (trees closer than b m to the boundary are neighbours
 // only), 'toroidal' (rectangles only: distances wrap around, every tree is a reference tree).
-const SPATIAL_DEFAULTS = { k: 4, edge: 'none', buffer: 5 };
+const SPATIAL_DEFAULTS = { k: 4, edge: 'none', buffer: 5, wAngle: 'k' };
+/** Standard angle of W (radians): 'k' → 360°/k (Pommerening 2002), 'k1' → 360°/(k + 1). */
+const standardAngle = (k, mode = 'k') => 2 * Math.PI / (mode === 'k1' ? k + 1 : k);
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 function geomArea(G) { return G.shape === 'circle' ? Math.PI * G.r * G.r : (G.x1 - G.x0) * (G.y1 - G.y0); }
@@ -1733,9 +1742,9 @@ function clarkEvans(nnDist, n, A, P) {
   const rA = nnDist.reduce((a, b) => a + b, 0) / nnDist.length, rE = 0.5 / Math.sqrt(n / A), rED = 0.5 * Math.sqrt(A / n) + (0.0514 + 0.041 / Math.sqrt(n)) * P / n;
   return { rA, rE, rED, R: rA / rE, RD: rA / rED };
 }
-/** W of one tree from the azimuths (radians) of its k neighbours. */
-function uniformAngle(az, k = az.length) {
-  const a = az.map(v => ((v % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)).sort((p, q) => p - q), a0 = 2 * Math.PI / (k + 1);
+/** W of one tree from the azimuths (radians) of its k neighbours; mode: standard angle ('k' default, or 'k1'). */
+function uniformAngle(az, k = az.length, mode = 'k') {
+  const a = az.map(v => ((v % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)).sort((p, q) => p - q), a0 = standardAngle(k, mode);
   let c = 0;
   for (let i = 0; i < a.length; i++) { const gap = i + 1 < a.length ? a[i + 1] - a[i] : a[0] + 2 * Math.PI - a[i], ang = Math.min(gap, 2 * Math.PI - gap); if (ang < a0 - 1e-12) c++; }
   return c / a.length;
@@ -1744,13 +1753,14 @@ function uniformAngle(az, k = az.length) {
 /**
  * Spatial structure of one unit. trees: [{ row, x, y, dbh, species }]. geom: plot geometry. opts: SPATIAL_DEFAULTS.
  * Returns { status: 'ok'|'nocoord'|'invalid', problems, warnings, settings, n, A, P, ce: { R, RD, rA, rE, rED, nRef },
- *   means: { W, M, T, U } (over the reference trees), trees: [{ row, nn1, edgeDist, ref, edge, W, M, T, U }] }.
+ *   means: { W, M, T, T1, U } (over the reference trees), trees: [{ row, nn1, edgeDist, ref, edge, W, M, T, T1, U }] }.
  */
 function spatialUnit(trees, geom, opts = {}) {
   const s = { ...SPATIAL_DEFAULTS, ...opts }, problems = [...checkGeom(geom)], warnings = [];
   const base = { settings: { ...s, geometry: geom }, problems, warnings };
   if (!(Number.isInteger(s.k) && s.k >= 1 && s.k <= 20)) problems.push({ code: 'sp.k', k: s.k });
   if (!['none', 'buffer', 'toroidal'].includes(s.edge)) problems.push({ code: 'sp.edge', edge: s.edge });
+  if (!['k', 'k1'].includes(s.wAngle)) problems.push({ code: 'sp.wangle', wAngle: s.wAngle });
   if (s.edge === 'buffer' && !(fin(s.buffer) && s.buffer > 0)) problems.push({ code: 'sp.buffer', buffer: s.buffer });
   if (s.edge === 'toroidal' && geom && geom.shape !== 'rect') problems.push({ code: 'sp.torus.shape' });
   if (problems.length) return { ...base, status: 'invalid' };
@@ -1773,8 +1783,8 @@ function spatialUnit(trees, geom, opts = {}) {
     const az = J.map(j => { let dx = xs[j] - t.x, dy = ys[j] - t.y; if (torus) { if (dx > torus.w / 2) dx -= torus.w; else if (dx < -torus.w / 2) dx += torus.w; if (dy > torus.h / 2) dy -= torus.h; else if (dy < -torus.h / 2) dy += torus.h; } return Math.atan2(dy, dx); });
     const dI = t.dbh, Td = J.map(j => { const a = trees[j].dbh; return fin(a) && fin(dI) && a > 0 && dI > 0 ? 1 - Math.min(a, dI) / Math.max(a, dI) : null; });
     return { row: t.row ?? null, tree_id: t.tree_id ?? null, nn1: nb[i].dist[0], edgeDist: e, ref, edge, neighbours: J.map(j => trees[j].row ?? j),
-      W: uniformAngle(az, s.k), M: hasSp ? J.filter(j => trees[j].species !== t.species).length / J.length : null,
-      T: Td.every(v => v != null) ? Td.reduce((a, b) => a + b, 0) / J.length : null,
+      W: uniformAngle(az, s.k, s.wAngle), M: hasSp ? J.filter(j => trees[j].species !== t.species).length / J.length : null,
+      T: Td.every(v => v != null) ? Td.reduce((a, b) => a + b, 0) / J.length : null, T1: Td[0],
       U: fin(dI) ? J.filter(j => !(trees[j].dbh < dI)).length / J.length : null };
   });
   const R = rows.filter(r => r.ref);
@@ -1786,7 +1796,7 @@ function spatialUnit(trees, geom, opts = {}) {
   const ce = clarkEvans(R.map(r => r.nn1), n, A, P), plain = torus ? knn(xs, ys, 1).map(q => q.dist[0]) : rows.map(r => r.nn1), ced = clarkEvans(plain, n, A, P);
   if (fin(s.areaRecorded) && Math.abs(A - s.areaRecorded) > 0.01 * s.areaRecorded) warnings.push({ code: 'geom.area', geom: A, recorded: s.areaRecorded });
   return { ...base, status: 'ok', n, A, P, lambda: n / A, nRef: R.length, nEdge: rows.filter(r => r.edge).length,
-    ce: { R: ce.R, rA: ce.rA, rE: ce.rE, nRef: R.length, RD: ced.RD, rAplain: ced.rA, rED: ced.rED }, means: { W: mean('W'), M: mean('M'), T: mean('T'), U: mean('U') }, trees: rows };
+    ce: { R: ce.R, rA: ce.rA, rE: ce.rE, nRef: R.length, RD: ced.RD, rAplain: ced.rA, rED: ced.rED }, means: { W: mean('W'), M: mean('M'), T: mean('T'), T1: mean('T1'), U: mean('U') }, trees: rows };
 }
 };
 
@@ -1831,7 +1841,7 @@ let st = blank(), R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, tab: 'units', ds: null, dsSrc: null, tbl: null, sel: null, nav: null, allCols: false,
     set: { classStart: '0', classWidth: '4', giniOn: 'g', balTies: 'exclude', sdiBeta: '1.605', sdiRef: '25', rdExp: '0.5', spacing: 'square', h0From: 'dbh' },
-    geo: { shape: 'circle-area', cx: '0', cy: '0', r: '', x0: '', y0: '', x1: '', y1: '', k: '4', edge: 'none', buffer: '5', ciMode: 'knn', radius: '' } };
+    geo: { shape: 'circle-area', cx: '0', cy: '0', r: '', x0: '', y0: '', x1: '', y1: '', k: '4', edge: 'none', buffer: '5', wAngle: 'k', ciMode: 'knn', radius: '' } };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -1916,7 +1926,7 @@ function settings() {
   const s = st.set, g = st.geo;
   const structure = { classStart: num(s.classStart), classWidth: num(s.classWidth), giniOn: s.giniOn, balTies: s.balTies, sdiBeta: num(s.sdiBeta), sdiRef: num(s.sdiRef), rdExp: num(s.rdExp), spacing: s.spacing, h0From: s.h0From };
   const geometry = g.shape === 'circle-area' ? { shape: 'circle-area', cx: num(g.cx), cy: num(g.cy) } : g.shape === 'circle' ? { shape: 'circle', cx: num(g.cx), cy: num(g.cy), r: num(g.r) } : { shape: 'rect', x0: num(g.x0), y0: num(g.y0), x1: num(g.x1), y1: num(g.y1) };
-  const spatial = hasXY(st.ds) ? { k: num(g.k), edge: g.edge, buffer: num(g.buffer) } : null;
+  const spatial = hasXY(st.ds) ? { k: num(g.k), edge: g.edge, buffer: num(g.buffer), wAngle: g.wAngle || 'k' } : null;
   const competition = { mode: g.ciMode, k: num(g.k), radius: g.ciMode === 'radius' ? num(g.radius) : null, edge: g.edge, buffer: num(g.buffer) };
   return { structure, spatial, geometry, competition };
 }
@@ -1940,6 +1950,7 @@ function renderStep2() {
       <div class="lims">${g.shape === 'rect' ? inp('g.x0', g.x0, 'x₀') + inp('g.y0', g.y0, 'y₀') + inp('g.x1', g.x1, 'x₁') + inp('g.y1', g.y1, 'y₁') : inp('g.cx', g.cx, 'x') + inp('g.cy', g.cy, 'y') + (g.shape === 'circle' ? inp('g.r', g.r, 'r (m)') : '')}</div>
       <p class="muted small">${T('geo.note')}</p>
       <div class="lims">${inp('g.k', g.k, T('geo.k'), 4)}<span class="small"><b>${T('geo.edge')}</b></span>${radio('gedge', g.edge, ['none', 'buffer', 'toroidal'].map(v => [v, T('geo.edge.' + v)]))}${g.edge === 'buffer' ? inp('g.buffer', g.buffer, T('geo.buffer')) : ''}</div>
+      <div class="lims"><span class="small"><b>${T('geo.wangle')}</b></span>${radio('gwang', g.wAngle || 'k', [['k', T('geo.wangle.k')], ['k1', T('geo.wangle.k1')]])}</div>
       <div class="lims"><span class="small"><b>${T('geo.ci')}</b></span>${radio('gci', g.ciMode, [['knn', T('geo.ci.knn')], ['radius', T('geo.ci.radius')]])}${g.ciMode === 'radius' ? inp('g.radius', g.radius, T('geo.radius')) : ''}</div>
       <p class="muted small">${T('geo.src')}</p>`;
   }
@@ -1952,6 +1963,7 @@ function renderStep2() {
   for (const n of ['giniOn', 'balTies', 'sdiRef', 'spacing', 'h0From']) el.querySelectorAll(`input[name="${n}"]`).forEach(x => x.addEventListener('change', () => { st.set[n] = x.value; re(); }));
   el.querySelectorAll('input[name="gshape"]').forEach(x => x.addEventListener('change', () => { st.geo.shape = x.value; re(); }));
   el.querySelectorAll('input[name="gedge"]').forEach(x => x.addEventListener('change', () => { st.geo.edge = x.value; re(); }));
+  el.querySelectorAll('input[name="gwang"]').forEach(x => x.addEventListener('change', () => { st.geo.wAngle = x.value; re(); }));
   el.querySelectorAll('input[name="gci"]').forEach(x => x.addEventListener('change', () => { st.geo.ciMode = x.value; re(); }));
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); st.tab = 'units'; go(3); });
@@ -1961,7 +1973,7 @@ function renderStep2() {
 function compute() { R = analyse(st.ds, settings()); R.created = new Date().toISOString(); if (!R.units.some(u => ukey(u) === st.sel)) st.sel = R.units.length ? ukey(R.units[0]) : null; save(); }
 const COLS = [['c.n', u => u.n, 0], ['c.Nha', u => u.st.Nha, 1], ['c.Gha', u => u.st.Gha, 3], ['c.Dq', u => u.st.Dq, 2], ['c.H0', u => u.st.H0, 2], ['c.cv', u => m(u, 'cv'), 3], ['c.skew', u => m(u, 'skew'), 3, 1], ['c.kurt', u => m(u, 'kurt'), 3, 1],
   ['c.gini', u => m(u, 'gini'), 3], ['c.shD', u => m(u, 'shannonD'), 3], ['c.shS', u => m(u, 'shannonSp'), 3, 1], ['c.simp', u => m(u, 'simpson'), 3], ['c.sdi', u => m(u, 'sdi'), 1], ['c.rd', u => m(u, 'rd'), 2], ['c.hart', u => m(u, 'hartPct'), 1, 1],
-  ['c.R', u => u.sp.status === 'ok' ? u.sp.ce.R : null, 3], ['c.RD', u => u.sp.status === 'ok' ? u.sp.ce.RD : null, 3], ['c.W', u => spm(u, 'W'), 3], ['c.M', u => spm(u, 'M'), 3], ['c.T', u => spm(u, 'T'), 3], ['c.U', u => spm(u, 'U'), 3, 1],
+  ['c.R', u => u.sp.status === 'ok' ? u.sp.ce.R : null, 3], ['c.RD', u => u.sp.status === 'ok' ? u.sp.ce.RD : null, 3], ['c.W', u => spm(u, 'W'), 3], ['c.M', u => spm(u, 'M'), 3], ['c.T', u => spm(u, 'T'), 3], ['c.T1', u => spm(u, 'T1'), 3, 1], ['c.U', u => spm(u, 'U'), 3, 1],
   ['c.hegyi', u => { if (u.ci.status !== 'ok') return null; const v = u.ci.trees.map(t => t.hegyi).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }, 3, 1]];
 function m(u, k) { return u.st.status === 'ok' && u.st.measures ? u.st.measures[k] : null; }
 function spm(u, k) { return u.sp.status === 'ok' ? u.sp.means[k] : null; }
@@ -2040,18 +2052,18 @@ function tabDetail(p) {
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function unitRows() {
   return [['plot_id', 'period', 'state', 'n', 'N_ha', 'G_m2_ha', 'Dq_cm', 'H0_m', 'd_mean', 'd_sd', 'cv', 'skewness', 'kurtosis_excess', 'gini', 'shannon_d', 'species_n', 'shannon_species', 'simpson', 'simpson_dominance', 'sdi', 'curtis_rd', 'spacing_a_m', 'relative_spacing_pct',
-    'clark_evans_R', 'clark_evans_R_donnelly', 'W', 'M', 'T', 'U', 'n_reference', 'n_edge', 'hegyi_mean', 'spatial_state'],
+    'clark_evans_R', 'clark_evans_R_donnelly', 'W', 'W_standard_angle_deg', 'M', 'T', 'T1', 'U', 'n_reference', 'n_edge', 'hegyi_mean', 'spatial_state'],
     ...R.units.map(u => { const ms = u.st.measures || {}, sp = u.sp.status === 'ok' ? u.sp : null, hm = COLS.find(c => c[0] === 'c.hegyi')[1](u);
       return [u.plot_id, u.period, u.st.status, u.n, u.st.Nha ?? null, u.st.Gha ?? null, u.st.Dq ?? null, u.st.H0 ?? null, ms.d_mean ?? null, ms.d_sd ?? null, ms.cv ?? null, ms.skew ?? null, ms.kurt ?? null, ms.gini ?? null, ms.shannonD ?? null, ms.speciesN ?? null, ms.shannonSp ?? null, ms.simpson ?? null, ms.simpsonD ?? null,
-        ms.sdi ?? null, ms.rd ?? null, ms.spacingA ?? null, ms.hartPct ?? null, sp ? sp.ce.R : null, sp ? sp.ce.RD : null, sp ? sp.means.W : null, sp ? sp.means.M : null, sp ? sp.means.T : null, sp ? sp.means.U : null, sp ? sp.nRef : null, sp ? sp.nEdge : null, hm, u.sp.status]; })];
+        ms.sdi ?? null, ms.rd ?? null, ms.spacingA ?? null, ms.hartPct ?? null, sp ? sp.ce.R : null, sp ? sp.ce.RD : null, sp ? sp.means.W : null, sp ? 360 / (sp.settings.wAngle === 'k1' ? sp.settings.k + 1 : sp.settings.k) : null, sp ? sp.means.M : null, sp ? sp.means.T : null, sp ? sp.means.T1 : null, sp ? sp.means.U : null, sp ? sp.nRef : null, sp ? sp.nEdge : null, hm, u.sp.status]; })];
 }
 function treeVals() {
   const per = new Map();
   for (const u of R.units) { if (u.st.status !== 'ok') continue; const ci = u.ci.status === 'ok' ? u.ci.trees : null, sp = u.sp.status === 'ok' ? u.sp.trees : null;
-    u.st.trees.forEach((t, i) => per.set(t.row, { bal: t.bal, relD: t.relD, relG: t.relG, hegyi: ci ? ci[i].hegyi : null, edge: ci ? (ci[i].edge ? 1 : 0) : null, W: sp ? sp[i].W : null, M: sp ? sp[i].M : null, T: sp ? sp[i].T : null, U: sp ? sp[i].U : null })); }
+    u.st.trees.forEach((t, i) => per.set(t.row, { bal: t.bal, relD: t.relD, relG: t.relG, hegyi: ci ? ci[i].hegyi : null, edge: ci ? (ci[i].edge ? 1 : 0) : null, W: sp ? sp[i].W : null, M: sp ? sp[i].M : null, T: sp ? sp[i].T : null, T1: sp ? sp[i].T1 : null, U: sp ? sp[i].U : null })); }
   return per;
 }
-const TREE_COLS = [['BAL_m2_ha', 'bal'], ['d_Dq', 'relD'], ['g_gmean', 'relG'], ['hegyi', 'hegyi'], ['edge_tree', 'edge'], ['W', 'W'], ['M', 'M'], ['T', 'T'], ['U', 'U']];
+const TREE_COLS = [['BAL_m2_ha', 'bal'], ['d_Dq', 'relD'], ['g_gmean', 'relG'], ['hegyi', 'hegyi'], ['edge_tree', 'edge'], ['W', 'W'], ['M', 'M'], ['T', 'T'], ['T1', 'T1'], ['U', 'U']];
 function treeRows() {
   const per = treeVals(), fromTable = st.dsSrc && st.dsSrc.kind === 'table' && st.tbl && st.tbl.src;
   if (fromTable) { const src = st.tbl.src; return appendColumns(src.headers.map(String), src.rows.map(r => src.headers.map((_, k) => { const c = r[k]; return c == null || cellText(c) === '' ? null : c.t === 'n' ? c.v : cellText(c); })), src.rowNumbers, per, TREE_COLS); }
