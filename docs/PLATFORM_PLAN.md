@@ -12,7 +12,7 @@ raporlayan, yöntemleri şeffaf, kaynaklı ve tekrarlanabilir açık kaynaklı b
 - **Yalnızca hesap araçları:** her araç girdi alır, hesaplanmış, modellenmiş ya da görselleştirilmiş çıktı verir.
 - **Ortak veri:** araçlar aynı veri sözleşmelerini okur ve yazar (`forest-dataset/1`, `stem-sections/1`,
   `model-coef/1`; PROJECT.md §4b, TOOLS_SPEC §1).
-- **Şeffaf yöntem:** her denklemin formülü, kaynağı (METHODS.md'de [B]/[İ]/[P]/[D]), birimleri ve geçerlilik aralığı yazılır.
+- **Şeffaf yöntem:** her denklemin formülü, kaynağı (METHODS.md'de [B]/[İ]/[P]/[A]/[D]), birimleri ve geçerlilik aralığı yazılır.
 - **Tekrarlanabilirlik:** her sonuç girdileri, ayarları, yöntem sürümleri ve kaynaklarıyla dışa aktarılır; sürümlü
   arşiv Zenodo DOI'siyle.
 - **Açıklık:** kaynak kodu Apache-2.0, belgeler CC BY 4.0.
