@@ -103,7 +103,7 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 |---|---|---|---|---|
 | SQ-01 | Bonitet endeksi | yayında | `bonitet.php` | Hernández-Cuevas ve ark. (2018) [B]; eğri kütüphanesi kullanıcıdan (P2) |
 | SQ-02 | Bonitet eğrisi kurma (ADA/GADA uydurma) | yayında (ADA) | `bonitet.php` | GADA için Cieszewski ve Bailey (2000): kullanıcıdan PDF |
-| SQ-03 | Büyüme işlevi uydurma (Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler, Weibull) | sayfa hazır (yayın kararı bekliyor) | `buyume-islevi.php` | CR ve Schumacher [B] (Hernández-Cuevas ve ark. 2018); diğerleri [A] (Fekedulegn ve ark. 1999 + `growthmodels`); Korf kaynak bekliyor |
+| SQ-03 | Büyüme işlevi uydurma (Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler, Weibull) | yayında | `buyume-islevi.php` | CR ve Schumacher [B] (Hernández-Cuevas ve ark. 2018); diğerleri [A] (Fekedulegn ve ark. 1999 + `growthmodels`); Korf kaynak bekliyor |
 | SQ-04 | Çevresel verilerden verimlilik | kapsam dışı | – | P4 |
 
 ### SI — Örnekleme ve envanter
