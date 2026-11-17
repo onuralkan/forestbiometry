@@ -6,6 +6,7 @@ import { validateCoef, form, SCHEMA, LIBRARY_SCHEMA, newId } from '../core/coef.
 import '../taper/calc.js';
 import '../growth/calc.js';
 import '../siteindex/calc.js';
+import '../biomass/calc.js';
 
 export const TOOL = { id: 'katsayi-kutuphanesi', version: '1.0.0-beta.1' };
 /** Tools that keep sets in the library: catalogue id, page, names. Order = display order. */
@@ -13,6 +14,7 @@ export const TOOLS = [
   { tool: 'siteindex', id: 'SQ-01', page: 'bonitet.php', name: { tr: 'Bonitet', en: 'Site Index' } },
   { tool: 'growth', id: 'SQ-03', page: 'buyume-islevi.php', name: { tr: 'Büyüme İşlevi', en: 'Growth Functions' } },
   { tool: 'taper', id: 'SV-02', page: 'govde-profili.php', name: { tr: 'Gövde Profili', en: 'Stem Taper' } },
+  { tool: 'biomass', id: 'BC-01', page: 'biyokutle-karbon.php', name: { tr: 'Biyokütle ve Karbon', en: 'Biomass and Carbon' } },
 ];
 export const toolInfo = t => TOOLS.find(x => x.tool === t) || null;
 

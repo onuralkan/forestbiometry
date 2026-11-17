@@ -99,6 +99,9 @@ function site_tools(?bool $tr = null): array {
         ['n' => 18, 'cat' => 'TM', 'icon' => 'measure', 'short' => $tr ? 'Ağaç Ölçümü' : 'Tree Measurement', 'file' => 'agac-olcumu.php', 'v' => '1.0.0-beta.1', 'lab' => 'tree', 'title' => $tr ? 'Ağaç Ölçümü' : 'Tree Measurement',
          'desc' => $tr ? 'Eğim ölçer ya da mesafe ölçer okumalarından ağaç boyu (tanjant, bakış doğrusu uzaklığı, gölge ve iki sırık yöntemleri); çap ya da çevreden göğüs yüzeyi, dik iki çap ya da elips, ağaç listesinde ortalama göğüs yüzeyli ağacın çapı; göğüs yüksekliği, mutlak ve normal biçim sayısı, biçim üssü ve biçim bölümü.'
                        : 'Tree height from clinometer or rangefinder readings (tangent, line-of-sight distance, shadow and two-pole methods); basal area from a diameter or girth, two diameters at right angles or an ellipse, the diameter of the tree of mean basal area in a tree list; breast-height, absolute and normal form factors, form exponent and form quotient.'],
+        ['n' => 19, 'cat' => 'BC', 'icon' => 'biomass', 'short' => $tr ? 'Biyokütle ve Karbon' : 'Biomass & Carbon', 'file' => 'biyokutle-karbon.php', 'v' => '1.0.0-beta.1', 'lab' => 'biomass', 'title' => $tr ? 'Biyokütle ve Karbon' : 'Biomass and Carbon',
+         'desc' => $tr ? 'Ağaç tablonuzdan ya da onaylanmış veriden bileşen biyokütlesi, karbon ve CO₂: kendi katsayı setlerinizle allometrik denklemler (tür eşlemesi, eksik boy ve eşlenmeyen tür satır numarasıyla) ya da hacimden dönüşüm (IPCC 2006); örnek alan × dönem başına Mg/ha. Site katsayı, yoğunluk ya da karbon oranı içermez.'
+                       : 'Component biomass, carbon and CO₂ from your tree table or approved data: allometric equations with your own coefficient sets (species mapping; missing heights and unmapped species with row numbers) or conversion from volume (IPCC 2006); Mg/ha per plot × period. The site ships no coefficients, densities or carbon fractions.'],
     ];
 }
 
@@ -125,6 +128,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'database' => 'M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z', // mdiDatabase
         'dashboard' => 'M13,3V9H21V3M13,21H21V11H13M3,21H11V15H3M3,13H11V3H3V13Z', // mdiViewDashboard
         'report' => 'M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M15,18H9V16H15V18M15,14H9V12H15V14M13,9V3.5L18.5,9H13Z', // mdiFileDocument
+        'biomass' => 'M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z', // mdiLeaf
         'verify' => 'M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z', // mdiShieldCheck
         'siteindex' => 'M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z', // mdiTrendingUp
         'rank' => 'M12,7.09L14.45,8.58L13.8,5.77L16,3.89L13.11,3.64L12,1L10.87,3.64L8,3.89L10.18,5.77L9.5,8.58L12,7.09M4,13.09L6.45,14.58L5.8,11.77L8,9.89L5.11,9.64L4,7L2.87,9.64L0,9.89L2.18,11.77L1.5,14.58L4,13.09M20,10.09L22.45,11.58L21.8,8.77L24,6.89L21.11,6.64L20,4L18.87,6.64L16,6.89L18.18,8.77L17.5,11.58L20,10.09M15,23H9V10H15V23M7,23H1V17H7V23M23,23H17V13H23V23Z', // mdiPodium

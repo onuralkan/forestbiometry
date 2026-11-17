@@ -143,3 +143,77 @@ export function countStates(results) {
   for (const r of results) { c[r.status] = (c[r.status] || 0) + 1; if (r.warnings.some(w => w.code === 'valid.outside')) c.outside++; if (r.status === 'ok' && r.estimatedHeight) c.estimatedHeight++; }
   return c;
 }
+
+/* ---------------- BC02: a whole data package (species mapping, components, units) ---------------- */
+const spKey = t => t.species == null ? '' : String(t.species);
+/** Species of a package with their record counts ('' = no species recorded). */
+export function speciesOf(ds) {
+  const m = new Map(); for (const t of ds.trees) m.set(spKey(t), (m.get(spKey(t)) || 0) + 1);
+  return [...m.entries()].map(([species, n]) => ({ species, n })).sort((a, b) => b.n - a.n || String(a.species).localeCompare(String(b.species), 'tr'));
+}
+
+/**
+ * A. Allometric equations over a package. cfg = { components: [{ key, label, CF }], map: { species: { componentKey: setId } },
+ * total: { species: setId } (optional separate total equations), emptyCombos }. sets: Map(id → model-coef set).
+ * A species without a set for a component is never computed with another species' equation: its trees get status
+ * 'unmapped' for that component and are listed with their row numbers.
+ * → { trees: [{ t, row, species, comps: { key: { status, value (kg), C (kg), setId, problems, warnings, estimatedHeight } },
+ *              sum (kg) | null, C (kg) | null, total, additivity }],
+ *     counts: { key: countStates + unmapped }, unmapped: [{ species, component, rows }], noheight: [{ component, rows }],
+ *     units: [{ plot_id, period, state, area, n, comps: { key: { perHa, nMissing } }, B, C, CO2 (per ha, Mg) | null }] }
+ */
+export function computeAllometric(ds, cfg, sets) {
+  const comps = cfg.components || [], map = cfg.map || {}, totalMap = cfg.total || {};
+  const unmapped = new Map(), noh = new Map();
+  const trees = ds.trees.map(t => {
+    const sp = spKey(t), x = { D: t.dbh, H: t.height ?? null, heightSource: t.height_source }, out = { t, row: t.row ?? null, species: sp, comps: {} };
+    for (const c of comps) {
+      const id = (map[sp] || {})[c.key], set = id ? sets.get(id) : null;
+      if (!set) {
+        out.comps[c.key] = { status: 'unmapped', value: null, C: null, setId: id || null, problems: [{ code: id ? 'set.missing' : 'species.unmapped' }], warnings: [], estimatedHeight: false };
+        const k = sp + '\u0001' + c.key; if (!unmapped.has(k)) unmapped.set(k, { species: sp, component: c.key, rows: [] }); unmapped.get(k).rows.push(out.row);
+        continue;
+      }
+      const r = treeBiomass(set, x), cb = r.status === 'ok' ? carbon(r.value, c.CF) : null;
+      out.comps[c.key] = { ...r, setId: id, C: cb && cb.status === 'ok' ? cb.C : null, cfProblem: cb && cb.status !== 'ok' };
+      if (r.status === 'noheight') { if (!noh.has(c.key)) noh.set(c.key, { component: c.key, rows: [] }); noh.get(c.key).rows.push(out.row); }
+    }
+    const all = comps.length && comps.every(c => out.comps[c.key].status === 'ok');
+    out.sum = all ? comps.reduce((a, c) => a + out.comps[c.key].value, 0) : null;
+    out.C = all && comps.every(c => out.comps[c.key].C != null) ? comps.reduce((a, c) => a + out.comps[c.key].C, 0) : null;
+    const tset = totalMap[sp] ? sets.get(totalMap[sp]) : null;
+    out.total = tset ? { setId: tset.id, ...treeBiomass(tset, x) } : null;
+    out.additivity = out.sum != null && out.total && out.total.status === 'ok' ? { diff: out.total.value - out.sum, rel: (out.total.value - out.sum) / out.total.value } : null;
+    return out;
+  });
+  const counts = Object.fromEntries(comps.map(c => { const rs = trees.map(x => x.comps[c.key]); const k = countStates(rs.filter(r => r.status !== 'unmapped')); return [c.key, { ...k, n: rs.length, unmapped: rs.filter(r => r.status === 'unmapped').length }]; }));
+  const per = key => new Map(trees.map(x => [x.t, key(x)]));
+  const ec = cfg.emptyCombos || 'unmeasured';
+  const compUnits = Object.fromEntries(comps.map(c => [c.key, standTotals(ds, per(x => x.comps[c.key].status === 'ok' ? x.comps[c.key].value : null), ec)]));
+  const sumU = standTotals(ds, per(x => x.sum), ec), cU = standTotals(ds, per(x => x.C), ec);
+  const units = sumU.map((u, i) => ({ plot_id: u.plot_id, period: u.period, state: u.state, area: u.area, n: u.n,
+    comps: Object.fromEntries(comps.map(c => [c.key, { perHa: compUnits[c.key][i].perHa, nMissing: compUnits[c.key][i].nMissing }])),
+    B: u.perHa, C: cU[i].perHa, CO2: cU[i].perHa == null ? null : cU[i].perHa * CO2_PER_C }));
+  return { trees, counts, unmapped: [...unmapped.values()], noheight: [...noh.values()], units };
+}
+
+/**
+ * B. Conversion from volume over a package. volumeOf(t) → V (m³) | null; cfg = { bark (side of the volumes), factors:
+ * { mode, bark, D, BEF, BCEF, R }, CF, emptyCombos }. Per tree in kg (Mg · 1000). A tree without a volume is not
+ * computed (status 'novolume'); different bark sides compute nothing.
+ * → { trees: [{ t, row, status, problems, V, agb, bgb, total, C (kg) }], units: [{ …, AGB, BGB, B, C, CO2 (Mg/ha) | null }], missing: rows }
+ */
+export function computeVolume(ds, volumeOf, cfg) {
+  const trees = ds.trees.map(t => {
+    const V = volumeOf(t), row = t.row ?? null;
+    if (!fin(V)) return { t, row, status: 'novolume', problems: [{ code: 'input.V.missing' }], V: null, agb: null, bgb: null, total: null, C: null };
+    const r = fromVolume({ V, bark: cfg.bark }, cfg.factors);
+    if (r.status !== 'ok') return { t, row, status: r.status, problems: r.problems, V, agb: null, bgb: null, total: null, C: null };
+    const cb = carbon(r.total * 1000, cfg.CF);
+    return { t, row, status: 'ok', problems: cb.status === 'ok' ? [] : cb.problems, V, agb: r.agb * 1000, bgb: r.bgb * 1000, total: r.total * 1000, C: cb.status === 'ok' ? cb.C : null };
+  });
+  const per = k => new Map(trees.map(x => [x.t, x[k]])), ec = cfg.emptyCombos || 'unmeasured';
+  const A = standTotals(ds, per('agb'), ec), Bg = standTotals(ds, per('bgb'), ec), T = standTotals(ds, per('total'), ec), Cc = standTotals(ds, per('C'), ec);
+  const units = T.map((u, i) => ({ plot_id: u.plot_id, period: u.period, state: u.state, area: u.area, n: u.n, nMissing: u.nMissing, AGB: A[i].perHa, BGB: Bg[i].perHa, B: u.perHa, C: Cc[i].perHa, CO2: Cc[i].perHa == null ? null : Cc[i].perHa * CO2_PER_C }));
+  return { trees, units, missing: trees.filter(x => x.status === 'novolume').map(x => x.row) };
+}
