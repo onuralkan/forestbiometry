@@ -15,7 +15,8 @@ const mk = (formId, extra = {}) => {
 };
 // one set of every registered form of the three tools
 const all = L.TOOLS.flatMap(t => formsFor(t.tool).map(f => mk(f.id, { species: t.tool === 'taper' ? 'Pinus brutia' : 'Abies', region: t.tool === 'growth' ? 'Isparta' : 'Bolu' })));
-ok(L.TOOLS.every(t => formsFor(t.tool).length > 0) && all.length === L.TOOLS.reduce((n, t) => n + formsFor(t.tool).length, 0), `forms of every library tool registered (${all.length} forms: ${L.TOOLS.map(t => t.tool + ' ' + formsFor(t.tool).length).join(', ')})`);
+// mixed-model forms exist only once a set is fitted or restored (registered from the set's own formula)
+ok(L.TOOLS.every(t => t.tool === 'mixed' || formsFor(t.tool).length > 0) && all.length === L.TOOLS.reduce((n, t) => n + formsFor(t.tool).length, 0), `forms of every library tool registered (${all.length} forms: ${L.TOOLS.map(t => t.tool + ' ' + formsFor(t.tool).length).join(', ')})`);
 // taper sets need a bark side in the tool's own check; mb76 needs join points inside (0, 1)
 for (const s of all) if (s.tool === 'taper') { s.output.bark = 'ib'; s.meta = { bark: 'ib' }; if (s.form === 'taper.mb76') Object.assign(s.params, { a1: 0.7, a2: 0.1 }); }
 ok(all.every(s => L.problemsOf(s).length === 0), 'every hand-made set passes the schema check: ' + JSON.stringify(all.map(s => [s.form, L.problemsOf(s)]).filter(x => x[1].length)));

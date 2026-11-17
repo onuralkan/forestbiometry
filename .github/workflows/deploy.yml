@@ -59,6 +59,7 @@ jobs:
           node tests/volume/test_sv04.mjs
           node tests/logscale/test_sv05.mjs
           node tests/nlsreg/test_sm02.mjs
+          node tests/mixed/test_sm03.mjs
           node tests/tree/test_tm01.mjs
           node tests/tree/test_tm02_06.mjs
           node tests/tree/test_tm05.mjs
