@@ -16,7 +16,7 @@ function site_modules(): array {
         ['id' => 'SS', 'title' => $tr ? 'Meşcere yapısı ve sıklığı' : 'Stand structure and density', 'desc' => $tr ? 'Meşcere özeti, çap dağılımı, sıklık, çeşitlilik, mekânsal yapı ve rekabet.' : 'Stand summary, diameter distribution, density, diversity, spatial pattern and competition.'],
         ['id' => 'SQ', 'title' => $tr ? 'Yetişme ortamı verimliliği' : 'Site quality and productivity', 'desc' => $tr ? 'Bonitet endeksi, bonitet eğrileri ve büyüme işlevleri.' : 'Site index, site curves and growth functions.'],
         ['id' => 'SI', 'title' => $tr ? 'Örnekleme ve envanter' : 'Sampling and inventory', 'desc' => $tr ? 'Örnek büyüklüğü ve sabit alanlı örnek alan kestirimi.' : 'Sample size and fixed-area plot estimation.'],
-        ['id' => 'SM', 'title' => $tr ? 'İstatistiksel modelleme' : 'Statistical modelling', 'desc' => $tr ? 'Model uydurma, karşılaştırma ve değerlendirme.' : 'Model fitting, comparison and evaluation.'],
+        ['id' => 'SM', 'title' => $tr ? 'İstatistiksel modelleme' : 'Statistical modelling', 'desc' => $tr ? 'Model fit etme, karşılaştırma ve değerlendirme.' : 'Model fitting, comparison and evaluation.'],
     ];
 }
 
@@ -62,7 +62,7 @@ function site_catalog(): array {
         ['SS-07', 'live', 'Rekabet endeksleri', 'Competition indices', 'mescere-yapisi.php'],
         ['SQ-01', 'live', 'Bonitet endeksi', 'Site index', 'bonitet.php'],
         ['SQ-02', 'live', 'Bonitet eğrisi kurma', 'Site index curve builder', 'bonitet.php'],
-        ['SQ-03', 'live', 'Büyüme işlevi uydurma', 'Growth function fitter', 'buyume-islevi.php'],
+        ['SQ-03', 'live', 'Büyüme işlevi fit etme', 'Growth function fitter', 'buyume-islevi.php'],
         ['SQ-04', 'out', 'Çevresel verilerden verimlilik', 'Productivity from environmental data'],
         ['SI-01', 'live', 'Örnek büyüklüğü', 'Sample size', 'ornekleme.php'],
         ['SI-02', 'out', 'Örnekleme tasarımı üretici', 'Sampling design generator'],

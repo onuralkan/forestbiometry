@@ -55,7 +55,7 @@ function renderStep1() {
   renderImport($('impbox'), { imp: S.imp, src: S.src }, { base: BASE, title: T('imp.h'), sub: T('imp.sub'), onChange: setTable, onError: m => status(m, 'err'), rawRows: true });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/rank/ornek/ornek-olcutler.xlsx')).arrayBuffer();
-    const imp = { kind: 'xlsx', name: lang === 'tr' ? 'ornek-olcutler.xlsx (uydurma)' : 'ornek-olcutler.xlsx (made up)', buf, header: false, sheet: null };
+    const imp = { kind: 'xlsx', name: lang === 'tr' ? 'ornek-olcutler.xlsx (benzetim)' : 'ornek-olcutler.xlsx (made up)', buf, header: false, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
   });
   $('reset').addEventListener('click', async () => { S = blank(); D = Rk = null; status(''); render(); await del(KEY); });

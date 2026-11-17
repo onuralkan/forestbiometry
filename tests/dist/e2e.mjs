@@ -105,7 +105,7 @@ ok((await page.locator('#ch-h svg rect').count()) > 3 && (await page.locator('#c
 await page.locator('[data-fit]').first().uncheck();
 ok((await page.locator('[data-fit]:checked').count()) === 10, 'a fit can be hidden (eleven fits: Weibull 3 × 2 locations, normal, lognormal 2, gamma 2)');
 await page.click('#ulist [data-u="C"]');
-ok((await page.locator('#panel .note.warn', { hasText: 'tamamlanmış uydurma yok' }).count()) === 1 && (await page.locator('#ch-h').count()) === 0, 'no chart for a unit without a fit');
+ok((await page.locator('#panel .note.warn', { hasText: 'tamamlanmış fit etme yok' }).count()) === 1 && (await page.locator('#ch-h').count()) === 0, 'no chart for a unit without a fit');
 await shot('dist-2-grafik');
 // result records (contract)
 await page.click('#tab-params');
@@ -119,8 +119,8 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
   ok(/^cap-dagilimi-\d{4}-\d{2}-\d{2}\.xlsx$/.test(dx.suggestedFilename()), 'Excel file name: ' + dx.suggestedFilename());
   const wb = XLSX.read(await readFile(await dx.path()));
-  ok(wb.SheetNames.join() === 'Bilgi,Uydurmalar,Parametreler,Ornek alanlar,Siniflar,GY dagilimi,Karsilastirma,Bootstrap,Kaynaklar', 'Excel sheets: ' + wb.SheetNames.join());
-  const fits = XLSX.utils.sheet_to_json(wb.Sheets.Uydurmalar, { header: 1 }), H = fits[0], info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 });
+  ok(wb.SheetNames.join() === 'Bilgi,Fit işlemleri,Parametreler,Ornek alanlar,Siniflar,GY dagilimi,Karsilastirma,Bootstrap,Kaynaklar', 'Excel sheets: ' + wb.SheetNames.join());
+  const fits = XLSX.utils.sheet_to_json(wb.Sheets.Fit işlemleri, { header: 1 }), H = fits[0], info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 });
   ok(fits.length === 45 && H[5] === 'method_id' && H[8] === 'status', 'Excel fits: 44 results + header');
   const f0 = fits.find(r => r[0] === 'A' && String(r[1]) === '2019' && r[5] === 'weibull.ml');
   ok(f0 && f0[13] === ml0.b && f0[15] === ml0.c && typeof f0[13] === 'number', 'Excel: Weibull b, c are numeric cells at full precision: ' + (f0 && [f0[13], f0[15]]));
@@ -131,7 +131,7 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
   const units = XLSX.utils.sheet_to_json(wb.Sheets['Ornek alanlar'], { header: 1 });
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
-  ok(/^cap-dagilimi-uydurmalar-.*\.csv$/.test(dc.suggestedFilename()) && csv.charCodeAt(0) === 0xFEFF && csv.includes(',' + ml0.b + ',') && csv.split('\r\n').length === 45, 'fits CSV: BOM, comma separator, full-precision b, 45 lines');
+  ok(/^cap-dagilimi-fit-islemleri-.*\.csv$/.test(dc.suggestedFilename()) && csv.charCodeAt(0) === 0xFEFF && csv.includes(',' + ml0.b + ',') && csv.split('\r\n').length === 45, 'fits CSV: BOM, comma separator, full-precision b, 45 lines');
   const [dp] = await Promise.all([page.waitForEvent('download'), page.click('#x-params')]); ok(/parametreler/.test(dp.suggestedFilename()) && (await readFile(await dp.path(), 'utf8')).includes(',theta,'), 'parameters CSV'); }
 
 // 2. English keeps the values; comma setting; pooled mode
@@ -322,7 +322,7 @@ await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weib
   ok(wt.length >= 1 && wt[0].m === 'weibull.tml' && wt[0].s === 'ok' && Math.abs(parseFloat(wt[0].c[3]) - ex.params.b) < 6e-5 && Math.abs(parseFloat(wt[0].c[4]) - ex.params.c) < 6e-5, 'Weibull conditional ML equals the engine: ' + JSON.stringify(wt[0].c.slice(0, 6)));
   ok(Math.abs(parseFloat(wt[0].c[9]) - ks) < 6e-5 && wt[0].c[12].startsWith('Nelder–Mead'), 'KS against the conditional distribution; solver named');
   ok((await page.locator('ul.notes li', { hasText: 'eşik 9 ≤ d ≤ ∞ cm' }).count()) >= 1 && (await page.locator('.tile span', { hasText: 'eşik içinde' }).count()) === 1, 'threshold, mass and implied total stated; n labelled as measured inside the threshold');
-  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), fits = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Uydurmalar, { header: 1 }), H = fits[0], w = fits.find(r => r[5] === 'weibull.tml');
+  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), fits = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Fit işlemleri, { header: 1 }), H = fits[0], w = fits.find(r => r[5] === 'weibull.tml');
   ok(w && w[H.indexOf('Alt eşik (cm)')] === 9 && w[H.indexOf('Üst eşik (cm)')] == null && Math.abs(w[H.indexOf('P(eşik içinde)')] - ex.truncation.mass) < 1e-7 && w[H.indexOf('N (seçilen kapsam)')] === 25, 'Excel: thresholds, mass and N (observed) columns: ' + JSON.stringify(w && [H.indexOf('Alt eşik (cm)'), w[H.indexOf('Alt eşik (cm)')], w[H.indexOf('Üst eşik (cm)')], w[H.indexOf('P(eşik içinde)')], ex.truncation.mass, w[H.indexOf('N (seçilen kapsam)')]])); }
 await page.click('#steps [data-go="2"]'); await page.check('input[name="trn"][value="population"]'); await page.fill('#tr-L', '10'); await page.locator('#tr-L').dispatchEvent('change');
 await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });

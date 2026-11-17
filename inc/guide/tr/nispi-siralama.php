@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('nispi-siralama', 'Nispi Sıralama') ?>
 <p>Modellerinizin başarı ölçütleri tablosundan ölçüt bazında ve genel nispi sıraları hesaplar (Poudel ve Cao 2013) ve en iyi ile en kötü modelleri radar grafiğinde karşılaştırır. En iyi model 1, en kötü model m (model sayısı) alır; aradakiler değerlerine orantılı sıralanır.</p>
-<p><b>Yapmadıkları:</b> başarı ölçütlerini hesaplamaz (tabloyu siz getirirsiniz); ağırlıklar her zaman eşittir; aynı sıralamayı veren iki ölçütten birini kendiliğinden düşürmez; AIC ve BIC'nin karşılaştırılabilir olup olmadığını denetleyemez (yalnızca aynı veriye uydurulmuş modeller için karşılaştırılabilir).</p>
+<p><b>Yapmadıkları:</b> başarı ölçütlerini hesaplamaz (tabloyu siz getirirsiniz); ağırlıklar her zaman eşittir; aynı sıralamayı veren iki ölçütten birini kendiliğinden düşürmez; AIC ve BIC'nin karşılaştırılabilir olup olmadığını denetleyemez (yalnızca aynı veriye fit edilmiş modeller için karşılaştırılabilir).</p>
 <h3>Veri</h3>
 <p>Her satır bir model, her sütun bir başarı ölçütü. Başlık satırı ve model adı sütunu önerilir, değiştirilebilir. Yalnızca sayı içeren sütunlar ölçüt olur.</p>
 <h3>Ölçütler</h3>

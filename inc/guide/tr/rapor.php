@@ -5,7 +5,7 @@
 <h3>İçerik</h3>
 <ul>
 <li><b>Rapor bilgileri</b>: başlık, hazırlayan, kurum, tarih, giriş metni ve <b>Rapor dili</b> (Türkçe ya da İngilizce; arayüz dilinden bağımsız).</li>
-<li><b>Veri paketi</b>: Envanter Verisi Yöneticisi'ndeki bir paket (ya da uydurma örnek paket); süzgeçler Görselleştirme Panosu'ndakilerle aynıdır ve yalnızca grafikleri etkiler.</li>
+<li><b>Veri paketi</b>: Envanter Verisi Yöneticisi'ndeki bir paket (ya da benzetim örnek paket); süzgeçler Görselleştirme Panosu'ndakilerle aynıdır ve yalnızca grafikleri etkiler.</li>
 <li><b>Çalışma kayıtları</b>: <b>Kayıt ekle (.json)</b> ya da <b>Panodaki kayıtları al</b>; sıraları değiştirilebilir. Her kayıt için araç, sürüm, mühür, verinin kaynağı, ayarlar ve sonuç tabloları (uzun tablolarda ilk 60 satır) yazılır.</li>
 </ul>
 <h3>Bölümler ve çıktı</h3>

@@ -1,11 +1,11 @@
 <section class="card guide-sec">
-<?= $sec('buyume-islevi', 'Büyüme İşlevi Uydurma') ?>
-<p>Yaş–büyüklük verinize (boy, çap, hacim…) altı büyüme işlevini aynı anda uydurur ve karşılaştırır: Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler ve Weibull. Katsayılar sizin verinizden gelir; site hazır eğri vermez.</p>
-<p><b>Yapmadıkları:</b> Korf işlevi (kaynağı henüz okunmadı); dizi ya da örnek alan düzeyinde rastgele etkiler (bütün gözlemlere tek eğri uydurulur); bonitet eğrisi (bunun için Bonitet aracı).</p>
+<?= $sec('buyume-islevi', 'Büyüme İşlevi Fit Etme') ?>
+<p>Yaş–büyüklük verinize (boy, çap, hacim…) altı büyüme işlevini aynı anda fit eder ve karşılaştırır: Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler ve Weibull. Katsayılar sizin verinizden gelir; site hazır eğri vermez.</p>
+<p><b>Yapmadıkları:</b> Korf işlevi (kaynağı henüz okunmadı); dizi ya da örnek alan düzeyinde rastgele etkiler (bütün gözlemlere tek eğri fit edilir); bonitet eğrisi (bunun için Bonitet aracı).</p>
 <h3>Veri ve modeller</h3>
 <ul>
 <li>Tablo ya da yapıştırma: <b>Yaş (yıl)</b> ve <b>Büyüklük</b> sütunları zorunlu, dizi sütunu isteğe bağlı. Değişkenin adı ve birimi grafiklerde ve indirmelerde yazılır. Okunamayan satırlar numaralarıyla bildirilir.</li>
-<li><b>Uydurulacak modeller</b>: istediğiniz biçimleri seçin; her biçimin yanında kaynak durumu yazılır.</li>
+<li><b>Fit edilecek modeller</b>: istediğiniz biçimleri seçin; her biçimin yanında kaynak durumu yazılır.</li>
 </ul>
 <h3>Sonuçlar</h3>
 <ul>

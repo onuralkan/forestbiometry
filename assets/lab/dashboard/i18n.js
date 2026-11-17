@@ -4,9 +4,9 @@ import { makeT } from '../core/i18n.js';
 export const T = makeT({
   tr: {
     privacy: 'Veri ve kayıtlar yalnızca bu tarayıcıda okunur; sunucuya gönderilmez.',
-    'src.h': 'Veri paketi', 'src.pick': 'Gösterilen paket', 'src.active': 'etkin', 'src.sample': 'Örnek paketi göster (uydurma veri)',
+    'src.h': 'Veri paketi', 'src.pick': 'Gösterilen paket', 'src.active': 'etkin', 'src.sample': 'Örnek paketi göster (benzetim verisi)',
     'src.none': 'Bu tarayıcıda onaylanmış veri paketi yok. Veriyi Veri Denetçisi\'nde onaylayın ya da Envanter Verisi Yöneticisi\'ne içe aktarın.',
-    'src.samplenote': 'Gösterilen: Örnek Alan aracının örnek veri paketi (uydurma, yalnızca deneme için).', 'src.checker': 'Veri Denetçisi', 'src.manager': 'Envanter Verisi Yöneticisi',
+    'src.samplenote': 'Gösterilen: Örnek Alan aracının örnek veri paketi (benzetim, yalnızca deneme için).', 'src.checker': 'Veri Denetçisi', 'src.manager': 'Envanter Verisi Yöneticisi',
     'f.h': 'Süzgeçler', 'f.period': 'Dönem', 'f.stratum': 'Tabaka', 'f.species': 'Tür', 'f.plot': 'Örnek alan', 'f.all': 'hepsi', 'f.noper': 'dönemsiz', 'f.nosp': 'tür yok',
     'f.width': 'Çap sınıfı genişliği (cm)', 'f.auto': 'otomatik', 'f.ec': 'Kaydı olmayan örnek alan × dönem', 'f.ec.unmeasured': 'ölçülmedi (dışarıda)', 'f.ec.empty': 'boş (N = G = 0)',
     'f.est': 'Tahmini boyları da göster',

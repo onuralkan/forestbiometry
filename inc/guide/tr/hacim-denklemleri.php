@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('hacim-denklemleri', 'Hacim Denklemleri') ?>
-<p>Hacmi bilinen ağaçlarınızdan (göğüs çapı D, boy H, hacim V) ağaç hacim denklemi uydurur. Biçimler Kershaw ve ark. (2016) §6.2'deki standart ve yerel hacim denklemleridir; site hazır katsayı vermez.</p>
-<p><b>Yapmadıkları:</b> biçim (form) değişkenli denklemler, doğrusal olmayan uydurma (V = b1·D^b2·H^b3 logaritmik biçimiyle uydurulur), karma etkili modeller, hacim tablosu basımı.</p>
+<p>Hacmi bilinen ağaçlarınızdan (göğüs çapı D, boy H, hacim V) ağaç hacim denklemi fit eder. Biçimler Kershaw ve ark. (2016) §6.2'deki standart ve yerel hacim denklemleridir; site hazır katsayı vermez.</p>
+<p><b>Yapmadıkları:</b> biçim (form) değişkenli denklemler, doğrusal olmayan fit etme (V = b1·D^b2·H^b3 logaritmik biçimiyle fit edilir), karma etkili modeller, hacim tablosu basımı.</p>
 <h3>Veri</h3>
 <ul>
 <li><b>Ağaç tablosu</b>: D (cm), H (m; yerel denklemlerde gerekmez), V (m³) sütunları ve hacmin kabuk tarafı. Benzetim tablosu yalnızca denemek içindir.</li>

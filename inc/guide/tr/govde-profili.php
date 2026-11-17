@@ -1,11 +1,11 @@
 <section class="card guide-sec">
 <?= $sec('govde-profili', 'Gövde Profili') ?>
-<p>Bir profil denklemiyle (Max ve Burkhart 1976, Model 4; Kozak 2004, Model 02) herhangi bir yükseklikteki çapı, bir çapın yüksekliğini, toplam hacmi ve tepe çapına kadar kullanılabilir hacmi hesaplar. Katsayıları siz girersiniz (kaynağıyla) ya da gövde ölçümlerinizden uydurursunuz; site hazır katsayı vermez.</p>
-<p><b>Yapmadıkları:</b> kabuk modeli (kabuklu ve kabuksuz profil ayrı katsayı setleridir); karma etkili uydurma; ürün bölmede kusur, eğrilik ya da kalite sınıfı (yalnızca çap ve boy).</p>
+<p>Bir profil denklemiyle (Max ve Burkhart 1976, Model 4; Kozak 2004, Model 02) herhangi bir yükseklikteki çapı, bir çapın yüksekliğini, toplam hacmi ve tepe çapına kadar kullanılabilir hacmi hesaplar. Katsayıları siz girersiniz (kaynağıyla) ya da gövde ölçümlerinize fit edersiniz; site hazır katsayı vermez.</p>
+<p><b>Yapmadıkları:</b> kabuk modeli (kabuklu ve kabuksuz profil ayrı katsayı setleridir); karma etkili fit etme; ürün bölmede kusur, eğrilik ya da kalite sınıfı (yalnızca çap ve boy).</p>
 <h3>Model</h3>
 <ul>
 <li><b>Katsayı seti gir</b>: biçimi seçin, katsayıları ve kaynağı yazın; setin kabuklu mu kabuksuz mu çap verdiğini (<b>Kabuk</b>) seçmek zorunludur.</li>
-<li><b>Gövde ölçümlerinden uydur</b>: Seksiyon Hacmi aracıyla aynı gövde tablosu (ağaç, yükseklik, çap; göğüs çapı ve boy ağaç sütunlarından). Uydurulacak çap (kabuklu ya da kabuksuz), biçim ve <b>Uydurma ölçeği</b> seçilir. Sonuçta katsayılar, göreli yükseklik sınıflarına göre yanlılık ve RMSE, artık grafiği ve ağaç başına seksiyon hacmiyle profil hacmi karşılaştırması gösterilir; kaynak yazılarak set kütüphaneye kaydedilir. Standart hatalar bağımsız gözlem varsayımıyla hesaplanır.</li>
+<li><b>Gövde ölçümlerine fit et</b>: Seksiyon Hacmi aracıyla aynı gövde tablosu (ağaç, yükseklik, çap; göğüs çapı ve boy ağaç sütunlarından). Fit edilecek çap (kabuklu ya da kabuksuz), biçim ve <b>Fit etme ölçeği</b> seçilir. Sonuçta katsayılar, göreli yükseklik sınıflarına göre yanlılık ve RMSE, artık grafiği ve ağaç başına seksiyon hacmiyle profil hacmi karşılaştırması gösterilir; kaynak yazılarak set kütüphaneye kaydedilir. Standart hatalar bağımsız gözlem varsayımıyla hesaplanır.</li>
 <li><b>Kullanılacak profil setleri</b>: bir kabuklu ve bir kabuksuz set seçilebilir; ikisi seçilirse sonuçlar ikisini de gösterir.</li>
 </ul>
 <h3>Ağaçlar ve sonuçlar</h3>

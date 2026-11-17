@@ -4,7 +4,7 @@ import { makeT } from '../core/i18n.js';
 export const T = makeT({
   tr: {
     privacy: 'Verileriniz ve katsayı setleriniz yalnızca bu tarayıcıda kalır; sunucuya gönderilmez. Site hiçbir tür ya da yöre katsayısı içermez.',
-    'step.1': 'Veri', 'step.2': 'Sistem', 'step.3': 'Sonuçlar', next: 'Devam', back: 'Geri', reset: 'Oturumu sıfırla', calc: 'Uydur', none: '—',
+    'step.1': 'Veri', 'step.2': 'Sistem', 'step.3': 'Sonuçlar', next: 'Devam', back: 'Geri', reset: 'Oturumu sıfırla', calc: 'Fit et', none: '—',
     restored: p => `Önceki oturum geri yüklendi (${p.when}).`,
     'tb.h': 'Veri tablosu', 'tb.sub': 'Her satır bir gözlem (ör. ağaç); sistemin bütün denklemlerinin bağımlı ve açıklayıcı değişkenleri sütun olarak. Bir denklemde değeri eksik olan satır bütün sistemden çıkarılır.',
     'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'nokta (12.5)', 'dec.comma': 'virgül (12,5)', 'tb.info': p => `${p.name}: ${p.n} satır, ${p.c} sütun.`,
@@ -19,12 +19,12 @@ export const T = makeT({
     'px.char': p => `${p.pos + 1}. karakter geçersiz`, 'px.end': 'formül eksik bitiyor', 'px.expected': p => `${p.pos + 1}. konumda ")" bekleniyor`, 'px.token': p => `${p.pos + 1}. konumda beklenmeyen işaret`, 'px.trailing': p => `${p.pos + 1}. konumdan sonrası fazla (çarpma için * yazın)`,
     'px.empty': 'formül boş', 'px.long': 'formül 500 karakteri aşıyor', 'px.deep': 'çok fazla iç içe ayraç', 'px.log': '"log" belirsiz: ln ya da log10 yazın', 'px.func': p => `bilinmeyen işlev ${p.name}`, 'px.funcname': p => `${p.name} bir işlevdir, ayraçla yazın`, 'px.args': 'işlevler tek bağımsız değişken alır',
     'r.sum': p => `${p.method}; ${p.T} gözlem, ${p.G} denklem, ${p.K} katsayı${p.it ? `, ${p.it} yineleme` : ''}.`, 'r.drop': p => `${p.n} satır dışarıda bırakıldı (bir denklemde eksik ya da geçersiz değer): satırlar ${p.rows}.`,
-    'r.bad': p => `Uydurulamadı: ${p.why}.`, 'e.n.few': 'gözlem sayısı çok az', 'e.converge': 'yakınsamadı (başlangıç değerlerini değiştirin)', 'e.sigma.singular': 'kalıntı kovaryans matrisi tekil', 'e.singular': 'denklem sistemi tekil (katsayılar belirlenemiyor)',
+    'r.bad': p => `Fit edilemedi: ${p.why}.`, 'e.n.few': 'gözlem sayısı çok az', 'e.converge': 'yakınsamadı (başlangıç değerlerini değiştirin)', 'e.sigma.singular': 'kalıntı kovaryans matrisi tekil', 'e.singular': 'denklem sistemi tekil (katsayılar belirlenemiyor)',
     'r.coef': 'Katsayılar', 'r.name': 'Katsayı', 'r.eqs': 'Denklemler', 'r.est': 'Tahmin', 'r.se': 'Standart hata', 'r.t': 't',
     'r.eqh': 'Denklemler', 'r.eq': 'Denklem', 'r.r2': 'R²', 'r.ssr': 'SSR', 'r.s': 'σ̂', 'r.sys': p => `Sistem: OLS R² ${p.ols}, McElroy R² ${p.mc}; log L ${p.ll} (sd ${p.df}).`,
     'r.corr': 'Denklemler arası kalıntı korelasyonu', 'r.cmp': 'Yöntem karşılaştırması', 'r.cmpnote': 'Aynı sistem ve kalıntı kovaryansı seçimiyle üç yöntem; standart hatalar ayraç içinde.',
     'r.note': 'cov(b) = (XᵀΩ̂⁻¹X)⁻¹ (Denklem 8); OLS’de σ̂ denklem başına, katsayılar ortaksa tek σ̂² (systemfit’in öntanımı). R² denklem başına (Denklem 42); McElroy R² sistem için (Denklem 43); log L, Σ̂ = kalıntılar/T ile çok değişkenli normal olabilirlik (sd: OLS’de K + 1, SUR’da K + G(G + 1)/2).',
-    'lrt.h': 'Ortak katsayıların testi (olabilirlik oranı)', 'lrt.sub': 'Sistem, ortak katsayılar her denklemde ayrı olacak biçimde (ör. a yerine a_1 ve a_2) bir kez daha uydurulur; iki uydurma yinelemeli SUR ve T bölenli kalıntı kovaryansıyla (en çok olabilirlik) yapılır. LR = T(log|Σ̂_kısıtlı| − log|Σ̂_kısıtsız|), χ² dağılımı, serbestlik derecesi eklenen katsayı sayısı (Henningsen ve Hamann 2007, Denklem 48). Küçük p, ortak katsayı kısıtının veriyle uyuşmadığını gösterir.', 'lrt.go': 'Testi yap',
+    'lrt.h': 'Ortak katsayıların testi (olabilirlik oranı)', 'lrt.sub': 'Sistem, ortak katsayılar her denklemde ayrı olacak biçimde (ör. a yerine a_1 ve a_2) bir kez daha fit edilir; iki fit etme yinelemeli SUR ve T bölenli kalıntı kovaryansıyla (en çok olabilirlik) yapılır. LR = T(log|Σ̂_kısıtlı| − log|Σ̂_kısıtsız|), χ² dağılımı, serbestlik derecesi eklenen katsayı sayısı (Henningsen ve Hamann 2007, Denklem 48). Küçük p, ortak katsayı kısıtının veriyle uyuşmadığını gösterir.', 'lrt.go': 'Testi yap',
     'r.noconv': 'Uyarı: kestirim yineleme sınırına ulaştı, tam yakınsamamış olabilir (başlangıç değerlerini ya da modeli gözden geçirin; katsayılar birbirinin yerine geçebiliyor olabilir).',
     'lrt.res': p => `LR = ${p.L}, sd = ${p.df}, p = ${p.p}. log L: kısıtlı ${p.lr}, kısıtsız ${p.lu}.`, 'lrt.bad': p => `Test yapılamadı: ${p.why}.`, 'lrt.names': p => `Kısıtsız sistemdeki adlar: ${p.n}.`,
     'ch.obs': p => `${p.e}: gözlenen–tahmin`, 'ch.xo': 'Gözlenen', 'ch.yo': 'Tahmin',

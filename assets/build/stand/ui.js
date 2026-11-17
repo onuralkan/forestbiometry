@@ -1482,7 +1482,7 @@ const tr = {
   'src.h': 'Veri kaynağı', 'src.sub': 'Ağaç tablonuzu (Excel, CSV) doğrudan yükleyebilir ya da Ormancılık Verisi Denetçisi\'nde onaylanmış veriyi kullanabilirsiniz. Denetçi, kodlama ve birim hatalarını ayrıntılı tarar; doğrudan yüklemede yalnızca okunamayan değerler bildirilir.',
   'src.approved': 'Denetçide onaylanmış veri', 'src.use': 'Bu veriyi kullan', 'src.none': 'Bu tarayıcıda onaylanmış veri yok.',
   'src.checker': 'Veri Denetçisi\'ni aç', 'src.file': 'veya veri paketi (JSON) yükleyin', 'src.filebtn': 'Veri paketi seç (.json)',
-  'src.sample': 'Örnek veri paketini yükle', 'src.sample.note': 'Örnek paket uydurmadır, gerçek ölçüm değildir: denetçinin örnek dosyalarından düzeltilerek onaylanmıştır.',
+  'src.sample': 'Örnek veri paketini yükle', 'src.sample.note': 'Örnek paket benzetimdir, gerçek ölçüm değildir: denetçinin örnek dosyalarından düzeltilerek onaylanmıştır.',
   'src.info': p => `${p.name}: ${p.trees} kayıt, ${p.plots} örnek alan, ${p.periods} dönem; onay ${p.when}.`,
   'src.current': 'Kullanılan veri', 'src.newer': 'Denetçide bundan daha yeni onaylanmış veri var.',
   'src.bad': p => `Veri paketi kullanılamıyor (${p.codes}). Denetçiden indirilmiş bir "forest-dataset/1" paketi seçin.`,
@@ -1849,7 +1849,7 @@ function renderStep1() {
   });
   $('sample').addEventListener('click', async () => {
     const ds = await (await fetch(BASE + 'assets/lab/stand/ornek/ornek-veri.json')).json();
-    useDataset(ds, { kind: 'sample', name: lang === 'tr' ? 'örnek veri paketi (uydurma)' : 'sample data package (made up)' });
+    useDataset(ds, { kind: 'sample', name: lang === 'tr' ? 'örnek veri paketi (benzetim)' : 'sample data package (made up)' });
   });
   $('scope').addEventListener('change', e => { S.scopeOk = e.target.checked; save(); renderStep1(); renderSteps(); });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });

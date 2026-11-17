@@ -398,7 +398,7 @@ const tr = {
   'xlsx.loading': 'Excel okuyucusu yükleniyor…', 'xlsx.fail': 'Excel okuyucusu yüklenemedi.', 'read.fail': 'Dosya okunamadı.',
   'xlsx.only': 'Eski .xls biçimi desteklenmiyor; dosyayı .xlsx veya CSV olarak kaydedin.',
   'preview': p => `Önizleme: ilk ${p.k} kayıt / toplam ${p.n} kayıt, ${p.c} sütun`, 'rowno': 'Satır',
-  'sample': 'Örnek veriyi yükle', 'sample.note': 'Örnek dosyalar uydurmadır, gerçek ölçüm değildir; denetçinin kontrollerini göstermek için bilerek sorunlu hazırlanmıştır.',
+  'sample': 'Örnek veriyi yükle', 'sample.note': 'Örnek dosyalar benzetimdir, gerçek ölçüm değildir; denetçinin kontrollerini göstermek için bilerek sorunlu hazırlanmıştır.',
   'sample.dl': 'Örnek dosyaları indir',
   'next': 'Devam', 'back': 'Geri', 'need.trees': 'Önce ağaç tablosunu yükleyin.',
   'reset': 'Oturumu sıfırla', 'reset.q': 'Yüklenen tablolar, eşleme, düzeltmeler ve günlük silinsin mi? (Onaylanmış veri kaydı korunur.)',

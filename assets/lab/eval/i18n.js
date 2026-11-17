@@ -6,7 +6,7 @@ const tr = {
   'privacy': 'Dosyanız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Oturum yalnızca bu tarayıcıda (IndexedDB) saklanır.',
   'imp.h': 'Gözlenen ve tahmin edilen değerler', 'imp.sub': 'Her satırda bir gözlem: gözlenen değer ve bir veya daha fazla modelin tahmini. Örnek alan, tür, çap ve doğrulama katı sütunları isteğe bağlıdır.',
   'ds.h': 'Onaylanmış veriden al', 'ds.sub': 'Veri Denetçisi\'nde onaylanan veride tahmin sütunları (eşlenmemiş sütunlar) varsa onları kullanabilirsiniz.', 'ds.use': 'Onaylanmış veriyi tablo olarak aç', 'ds.none': 'Bu tarayıcıda onaylanmış veri yok.',
-  'sample': 'Örnek dosyayı yükle', 'sample.note': 'Örnek dosya uydurmadır (gerçek ölçüm veya model değildir); bilerek boş ve okunamayan hücreler içerir.',
+  'sample': 'Örnek dosyayı yükle', 'sample.note': 'Örnek dosya benzetimdir (gerçek ölçüm veya model değildir); bilerek boş ve okunamayan hücreler içerir.',
   'next': 'Devam', 'back': 'Geri', 'calc': 'Hesapla', 'reset': 'Oturumu sıfırla', 'need.data': 'Önce bir tablo yükleyin.',
   'restored': p => `Önceki oturum geri yüklendi (${p.when}).`,
   'handoff': p => `Başka bir araçtan aktarılan tablo yüklendi: ${p.name}. Gözlenen ve model sütunları seçili.`,

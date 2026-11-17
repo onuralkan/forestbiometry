@@ -5281,8 +5281,8 @@ const T = makeT({
   tr: {
     privacy: 'Rapor bu tarayıcıda hazırlanır; paket, kayıtlar ve notlar sunucuya gönderilmez.',
     'm.h': 'Rapor bilgileri', 'm.title': 'Başlık', 'm.author': 'Hazırlayan', 'm.org': 'Kurum', 'm.date': 'Tarih', 'm.intro': 'Giriş metni', 'm.lang': 'Rapor dili', 'm.tr': 'Türkçe', 'm.en': 'İngilizce',
-    'p.h': 'Veri paketi', 'p.pick': 'Paket', 'p.none': '(paket yok)', 'p.sample': 'Örnek paket (uydurma veri)', 'p.empty': 'Envanter Verisi Yöneticisi\'nde paket yok; rapor yalnızca kayıtlardan da hazırlanabilir.',
-    'p.samplenote': 'Raporda uydurma örnek paket kullanılıyor (yalnızca deneme için).',
+    'p.h': 'Veri paketi', 'p.pick': 'Paket', 'p.none': '(paket yok)', 'p.sample': 'Örnek paket (benzetim verisi)', 'p.empty': 'Envanter Verisi Yöneticisi\'nde paket yok; rapor yalnızca kayıtlardan da hazırlanabilir.',
+    'p.samplenote': 'Raporda benzetim örnek paket kullanılıyor (yalnızca deneme için).',
     'f.period': 'Dönem', 'f.stratum': 'Tabaka', 'f.species': 'Tür', 'f.plot': 'Örnek alan', 'f.all': 'hepsi', 'f.noper': 'dönemsiz', 'f.nosp': 'tür yok',
     'f.width': 'Çap sınıfı genişliği (cm)', 'f.auto': 'otomatik', 'f.ec': 'Kaydı olmayan örnek alan × dönem', 'f.ec.unmeasured': 'ölçülmedi', 'f.ec.empty': 'boş (N = G = 0)',
     'r.h': 'Çalışma kayıtları', 'r.file': 'Kayıt ekle (.json)', 'r.pano': 'Panodaki kayıtları al', 'r.none': 'Kayıt eklenmedi.', 'r.bad': p => `${p.f}: çalışma kaydı değil.`, 'r.read': p => `${p.f}: JSON olarak okunamadı.`,

@@ -284,7 +284,7 @@ function tool_card_data(bool $tr): array {
         'rapor.php' => ['hero_report', $tr ? 'Paket ve kayıtlardan yazdırılabilir rapor; PDF ve HTML' : 'Printable report from a package and records; PDF and HTML'],
         'ornek-alan.php' => ['hero_stand', $tr ? 'Hektarda N ve G, çap sınıfları, tasarıma dayalı kestirim' : 'N and G per hectare, diameter classes, design-based estimate'],
         'model-degerlendirme.php' => ['hero_eval', $tr ? 'Yanlılık, MAE, RMSE, tahmin R²; artık grafikleri' : 'Bias, MAE, RMSE, prediction R²; residual plots'],
-        'cap-dagilimi.php' => ['hero_dist', $tr ? 'Weibull ve yedi dağılım daha; uydurma ve geri kazanım' : 'Weibull and seven more; fitting and recovery'],
+        'cap-dagilimi.php' => ['hero_dist', $tr ? 'Weibull ve yedi dağılım daha; fit etme ve geri kazanım' : 'Weibull and seven more; fitting and recovery'],
         'boy-cap.php' => ['hero_hd', $tr ? 'Altı doğrusal olmayan model, çapraz doğrulama' : 'Six nonlinear models, cross-validation'],
         'ornekleme.php' => ['hero_sampling', $tr ? 'Hedef hataya göre örnek alan sayısı' : 'Number of plots for a target error'],
         'nispi-siralama.php' => ['hero_rank', $tr ? 'Başarı ölçütlerinden genel sıra, radar grafiği' : 'Overall rank from fit criteria, radar chart'],
@@ -314,7 +314,7 @@ function tool_card(array $t, bool $tr): string {
 /** The showcase: cards linking to the live tools. */
 function hero_showcase(bool $tr): string {
     $cards = [
-        ['dist',     'cap-dagilimi.php',  'wide', $tr ? 'Çap dağılımı' : 'Diameter distribution', $tr ? 'Weibull ve yedi dağılım daha; uydurma ve geri kazanım' : 'Weibull and seven more; fitting and recovery', hero_dist()],
+        ['dist',     'cap-dagilimi.php',  'wide', $tr ? 'Çap dağılımı' : 'Diameter distribution', $tr ? 'Weibull ve yedi dağılım daha; fit etme ve geri kazanım' : 'Weibull and seven more; fitting and recovery', hero_dist()],
         ['hd',       'boy-cap.php',       '',     $tr ? 'Boy–çap' : 'Height–diameter',              $tr ? 'Doğrusal olmayan modeller' : 'Nonlinear models',                        hero_hd()],
         ['siteindex','bonitet.php',       '',     $tr ? 'Bonitet' : 'Site index',                   $tr ? 'Eğri ailesi, referans yaş' : 'Curve family, reference age',              hero_site()],
         ['secvol',   'seksiyon-hacmi.php','',     $tr ? 'Seksiyon hacmi' : 'Section volume',        $tr ? 'Huber, Smalian, Newton, Hohenadl' : 'Huber, Smalian, Newton, Hohenadl', hero_stem()],

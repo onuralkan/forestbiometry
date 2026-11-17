@@ -192,13 +192,13 @@ const T = makeT({
     cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verim, yayımlanmamış".',
     extra: 'Denklemin tanımı', choose: '— seçin —', 'p.extra.missing': p => `${p.what} seçilmedi`, 'p.extra.num': p => `${p.what} pozitif bir sayı olmalı`,
     saved: 'Set kaydedildi.', imported: p => `${p.n} set yüklendi.`, rejected: p => `${p.n} set geçersiz olduğu için yüklenmedi: ${p.why}`,
-    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Değişti', origin_fitted: 'uydurulan',
+    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Değişti', origin_fitted: 'fit edilen',
     'p.schema': 'şema geçersiz', 'p.id': 'kimlik yok', 'p.tool': 'araç yok', 'p.form.unknown': 'biçim tanınmıyor', 'p.form.tool': 'biçim bu araca ait değil',
     'p.param.missing': p => `${p.key} katsayısı girilmedi`, 'p.param.extra': p => `${p.key} bu biçimde yok`, 'p.param.nonfinite': p => `${p.key} sayı değil`,
     'p.unit.input': p => `${p.key} girdisinin birimi yok`, 'p.unit.output': 'çıktı birimi yok', 'p.bark': 'kabuk durumu ob ya da ib olmalı',
     'p.valid.bad': p => `${p.key ?? ''} geçerlilik aralığı geçersiz (en küçük < en büyük olmalı)`, 'p.transform.bad': 'dönüşüm biçimle uyuşmuyor',
     'p.correction.bad': 'düzeltme türü geçersiz', 'p.correction.value': 'düzeltme için pozitif bir değer girin', 'p.source.missing': 'kaynak künyesi zorunlu',
-    'p.origin.bad': 'köken geçersiz', 'p.fit.missing': 'uydurma özeti yok', 'p.library.schema': 'dosya bir katsayı kütüphanesi değil', 'p.num': p => `${p.what}: sayı okunamadı ("${p.text}")`,
+    'p.origin.bad': 'köken geçersiz', 'p.fit.missing': 'fit etme özeti yok', 'p.library.schema': 'dosya bir katsayı kütüphanesi değil', 'p.num': p => `${p.what}: sayı okunamadı ("${p.text}")`,
   },
   en: {
     h: 'Coefficient sets', sub: 'This tool contains no species or regional coefficients. You enter the sets; the source is mandatory. Sets are stored in this browser only.',
@@ -1870,7 +1870,7 @@ const T = makeT({
     'd.list': 'Ağaç listesi', 'd.list.sub': 'Her satır bir ağaç (ya da bir çap sınıfı ve ağaç sayısı). Çap ya da çevre sütunu zorunlu, sayı sütunu isteğe bağlı.',
     'd.col.d': 'Çap ya da çevre sütunu', 'd.col.n': 'Ağaç sayısı (isteğe bağlı)', 'd.col.kind': 'Sütundaki değer', 'd.col.unit': 'Birimi', 'd.dec': 'Ondalık ayırıcı', 'd.dec.dot': 'nokta', 'd.dec.comma': 'virgül',
     'd.sum': p => `${p.N} ağaç; toplam göğüs yüzeyi ${p.G} m²; ortalama göğüs yüzeyi ${p.gm} m²; aritmetik ortalama çap ${p.dm} cm; ortalama göğüs yüzeyli ağacın çapı ${p.dg} cm${p.skip ? `; ${p.skip} satır okunamadı (satır ${p.rows})` : ''}.`,
-    'd.sample': 'Örnek listeyi yükle', 'd.sample.note': 'Örnek uydurmadır (gerçek ölçüm değildir).',
+    'd.sample': 'Örnek listeyi yükle', 'd.sample.note': 'Örnek benzetimdir (gerçek ölçüm değildir).',
     'd.rules.h': 'Göğüs çapı ölçme kuralları (Hamilton 1975; Graves 1906)',
     'd.rules': ['Çap zeminden 1.3 m yükseklikte ölçülür; şerit gergin ve gövdeye dik, kumpas gövdeye dik tutulur.', 'Eğimli zeminde 1.3 m, ağacın üst tarafındaki zeminden ölçülür.', 'Düz zeminde eğik ağaçta 1.3 m alt taraftan, gövde eksenine paralel ölçülür.', 'Sürülmüş ya da tümsekli zeminde kök boğazı ya da zemin, hangisi yüksekse oradan ölçülür.', '1.3 m\'de şişkinlik varsa çap, şişkinliğin altında en ince yerde ölçülür (Graves: üstünde ya da altında, ya da ikisinin ortalaması).', 'Gövde 1.3 m\'nin altında çatallanıyorsa her kol ayrı ağaçtır; 1.3 m\'de çatallanıyorsa tek ağaçtır, çap çatalın altında en ince yerde ölçülür.', 'Çevre şeridi düzensizlikleri de sardığı için kumpastan genellikle büyük ölçer (Graves); dairesel olmayan gövdede dik iki çap ölçüp ortalayın.'],
     'f.ff': 'Biçim sayısı F = V/(B·H)', 'f.V': 'Hacim V (m³)', 'f.d': 'Çap (cm)', 'f.H': 'Boy H (m)', 'f.kind': 'Tür',
@@ -1897,7 +1897,7 @@ const T = makeT({
     'b.k.h': 'Örnek ağaçlardan kabuk oranı', 'b.k.sub': 'Aynı meşcereden ölçülmüş örnek ağaçların kabuklu ve kabuksuz çapları. Kabuk oranı k = d_kabuksuz / d_kabuklu (Meyer 1942), oranların ortalaması kestiricisiyle: k = Σd_kabuksuz / Σd_kabuklu.',
     'b.paste': 'İki sütun yapıştır', 'b.paste.q': 'Her satırda kabuklu ve kabuksuz çap (cm), sekme, boşluk ya da ; ile ayrılmış:', 'b.paste.none': 'Okunabilir iki sütunlu satır bulunamadı.', 'b.paste.ok': p => `${p.n} satır eklendi.`,
     'b.k.res': p => `${p.n} ağaç; k = ${p.kr} (tam değer ${p.k}); ters oran 1/k = ${p.inv}.`,
-    'b.k.line': p => `Doğrusal uydurma (en küçük kareler): d_kabuksuz = ${p.a} + ${p.b}·D; R² = ${p.r2}, artık standart hata ${p.se} cm; örnekteki çaplar ${p.min}–${p.max} cm.`,
+    'b.k.line': p => `Doğrusal fit etme (en küçük kareler): d_kabuksuz = ${p.a} + ${p.b}·D; R² = ${p.r2}, artık standart hata ${p.se} cm; örnekteki çaplar ${p.min}–${p.max} cm.`,
     'b.k.noline': 'Doğru için en az üç ağaç ve farklı çaplar gerekir.', 'b.k.bad': p => `Dışarıda bırakılan satırlar (kabuksuz çap kabukludan büyük ya da değer okunamadı): ${p.rows}.`,
     'b.k.empty': p => `Geçerli satır yok. Okunamayan satırlar: ${p.rows}.`,
     'b.k.note': 'Meyer, bir meşcerede kabuklu ve kabuksuz çap arasında doğrusal bir ilişki varsaymıştır; bu, kabuk kalınlığı ile çap arasında da doğrusal ilişki demektir (van Laar ve Akça 2007). Oran tür, köken, yaş, çap ve yetişme ortamıyla değişir; başka bir meşcereye taşımadan önce düşünün.',
@@ -2247,7 +2247,7 @@ function bindDiameter() {
   renderImport($('dimp'), { imp: d.imp, src: d.src }, { base: BASE, title: T('d.list'), sub: T('d.list.sub'), onChange: onImp, onError: m => status(m, 'err') });
   $('d-sample') && $('d-sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/tree/ornek/ornek-capler.csv')).arrayBuffer();
-    d.imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-capler.csv (uydurma)' : 'ornek-capler.csv (made up)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    d.imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-capler.csv (benzetim)' : 'ornek-capler.csv (made up)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     d.src = await readImport(d.imp, BASE); d.col = null; d.ncol = null; d.decimalChosen = false; guessList(); re();
   });
   if (!d.src) return;

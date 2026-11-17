@@ -63,7 +63,7 @@ function renderStep1() {
   });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/eval/ornek/ornek-tahminler.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-tahminler.csv (uydurma)' : 'ornek-tahminler.csv (made up)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-tahminler.csv (benzetim)' : 'ornek-tahminler.csv (made up)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
     S.obs = S.src.headers.indexOf('h_obs');
     S.models = ['h_m1', 'h_m2'].map(h => ({ col: S.src.headers.indexOf(h), name: h, role: 'unknown' }));

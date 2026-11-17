@@ -75,7 +75,7 @@ ok(head.join() === 'satir,ornek_alan,tur,cap_kaynak,cap_cm,boy_kaynak,boy_olcule
 const iH = head.indexOf('boy_olculen_m'), iP = head.indexOf('boy_tahmin_m'), iS = head.indexOf('boy_kaynak'), iSt = head.indexOf('durum'), iO = head.indexOf('cap_araligi_disinda');
 ok(rows.length === FIX.length, 'every source row exported');
 ok(rows.every((r, k) => r[iS] === FIX[k][4]), 'source height text exported unchanged');
-ok(rows.filter(r => r[iSt] === 'ölçülen, uydurmada').every(r => r[iP] === '' && r[iH] !== ''), 'measured rows: predicted column empty');
+ok(rows.filter(r => r[iSt] === 'ölçülen, fit işleminde').every(r => r[iP] === '' && r[iH] !== ''), 'measured rows: predicted column empty');
 ok(rows.filter(r => r[iSt] === 'boy eksik, tahmin').every(r => r[iH] === '' && r[iP] !== ''), 'missing rows: measured column empty, prediction filled');
 ok(rows.filter(r => r[iP] !== '').length === nMiss, 'predictions only for missing heights');
 ok(rows.find(r => r[4] === '95').at(iO) === 'evet' && rows.filter(r => r[iO] === 'evet').length === 2, 'out-of-range flag in export');

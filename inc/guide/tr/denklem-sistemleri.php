@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('denklem-sistemleri', 'Denklem Sistemleri') ?>
-<p>Aynı gözlemlerde birbiriyle ilişkili birden çok denklemi birlikte uydurur (ör. bir ağacın boyu ve hacmi). Denklemlerin hataları birbiriyle ilişkili olduğunda birlikte kestirim daha etkindir; denklemler arasında ortak katsayılar uyumlu sistemler kurar. Site hazır katsayı vermez.</p>
+<p>Aynı gözlemlerde birbiriyle ilişkili birden çok denklemi birlikte fit eder (ör. bir ağacın boyu ve hacmi). Denklemlerin hataları birbiriyle ilişkili olduğunda birlikte kestirim daha etkindir; denklemler arasında ortak katsayılar uyumlu sistemler kurar. Site hazır katsayı vermez.</p>
 <p><b>Yapmadıkları:</b> içsel açıklayıcı değişkenler için araç değişkenli yöntemler (2SLS, 3SLS), denklem başına farklı gözlem sayısı, hataların ağırlıklandırılması, katsayılar üzerinde eşitlik dışındaki doğrusal kısıtlar.</p>
 <h3>Sistem</h3>
 <ul>
@@ -12,7 +12,7 @@
 <h3>Sonuçlar</h3>
 <ul>
 <li>Katsayılar (tahmin, standart hata, t; hangi denklemlerde geçtiği, ortak olup olmadığı), denklem başına R², SSR ve σ̂, sistem için OLS R² ve McElroy R², log L, denklemler arası kalıntı korelasyonu, her denklem için gözlenen–tahmin grafiği.</li>
-<li><b>Ortak katsayıların testi</b>: sistem ortak katsayılar her denklemde ayrı olacak biçimde yeniden uydurulur ve olabilirlik oranı testi yapılır (iki uydurma da yinelemeli SUR, en çok olabilirlik); küçük p, ortak katsayı kısıtının veriyle uyuşmadığını gösterir.</li>
+<li><b>Ortak katsayıların testi</b>: sistem ortak katsayılar her denklemde ayrı olacak biçimde yeniden fit edilir ve olabilirlik oranı testi yapılır (iki fit etme da yinelemeli SUR, en çok olabilirlik); küçük p, ortak katsayı kısıtının veriyle uyuşmadığını gösterir.</li>
 <li><b>Yöntem karşılaştırması</b>: aynı sistem OLS, SUR ve yinelemeli SUR ile; katsayılar ve standart hataları yan yana.</li>
 <li><b>Setleri kaydet</b>: her denklem ayrı bir set olarak, ortak katsayıları ve kovaryansıyla, aynı sistem kimliğiyle kaydedilir. İndirme: Excel (Bilgi, Katsayılar, Denklemler, Gözlemler), CSV, JSON çalışma kaydı.</li>
 </ul>

@@ -1595,7 +1595,7 @@ const tr = {
   'restored': p => `Önceki oturum geri yüklendi (${p.when}).`, 'reset': 'Oturumu sıfırla',
   'src.h': '1. Değişkenlik: değişim katsayısı (CV)', 'src.pilot': 'Pilot ölçümlerden hesapla (örnek alan düzeyinde değerler)', 'src.manual': 'CV\'yi kendim gireceğim',
   'imp.h': 'Pilot örnek alanlar', 'imp.sub': 'Her satır bir örnek alan ve o örnek alanın değeri olmalı (ör. hacim m³/ha, göğüs yüzeyi m²/ha, ağaç sayısı/ha). Örnek Alan ve Meşcere Hesaplayıcısı\'nın "örnek alanlar" CSV\'si kullanılabilir. Ağaç düzeyindeki ölçümler (tek ağaç çapı, boyu) burada kullanılmaz: ağaçlar arasındaki çap değişkenliği, örnek alan düzeyindeki bir değişkenin değişkenliği değildir.',
-  'sample': 'Örnek pilot veriyi yükle', 'sample.note': 'Örnek veri sabit tohumla üretilmiş benzetimdir (uydurma; gerçek ölçüm değildir): 14 örnek alanın hektardaki hacmi, biri boş.',
+  'sample': 'Örnek pilot veriyi yükle', 'sample.note': 'Örnek veri sabit tohumla üretilmiş benzetimdir (benzetim; gerçek ölçüm değildir): 14 örnek alanın hektardaki hacmi, biri boş.',
   'col.v': 'Değer sütunu (örnek alan düzeyinde)', 'col.p': 'Örnek alan kimliği (isteğe bağlı, tekrar denetimi için)', 'col.f': 'Süzgeç sütunu (isteğe bağlı, ör. dönem)', 'col.fv': 'Süzgeç değeri', 'none': '— yok —',
   'col.unit': 'Değerin birimi (raporda yazılır; hesabı etkilemez)',
   'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'Nokta (24.5)', 'dec.comma': 'Virgül (24,5)', 'dec.choose': 'Ondalık ayırıcıyı seçin.',

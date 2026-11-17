@@ -1289,7 +1289,7 @@ const tr = {
   'step.1': 'Veri', 'step.2': 'Ölçütler', 'step.3': 'Sonuçlar',
   'privacy': 'Dosyanız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Oturum yalnızca bu tarayıcıda (IndexedDB) saklanır.',
   'imp.h': 'Başarı ölçütleri tablosu', 'imp.sub': 'Her satır bir model, her sütun bir başarı ölçütü (R², FI, RMSE, MAE, Bias, AIC, BIC…). Ölçüt sayısı serbest. Excel dosyasında ilk çalışma sayfası okunur; başka bir sayfa seçebilirsiniz.',
-  'sample': 'Örnek dosyayı yükle', 'sample.note': 'Örnek dosya uydurmadır, gerçek bir çalışmanın sonucu değildir. Bilerek tekrarlanan bir model adı, eksik bir değer, aynı sırayı veren iki ölçüt (R² ve FI) ve çok kötü bir model içerir.',
+  'sample': 'Örnek dosyayı yükle', 'sample.note': 'Örnek dosya benzetimdir, gerçek bir çalışmanın sonucu değildir. Bilerek tekrarlanan bir model adı, eksik bir değer, aynı sırayı veren iki ölçüt (R² ve FI) ve çok kötü bir model içerir.',
   'next': 'Devam', 'back': 'Geri', 'calc': 'Sırala', 'reset': 'Oturumu sıfırla', 'need.data': 'Önce bir tablo yükleyin.',
   'restored': p => `Önceki oturum geri yüklendi (${p.when}).`,
   'hdr.h': 'Tablo düzeni', 'hdr.row': 'Başlık satırı', 'hdr.model': 'Model adı sütunu', 'hdr.guess': 'Başlık satırı kendiliğinden bulundu; doğru değilse değiştirin.',
@@ -1307,7 +1307,7 @@ const tr = {
   'same': p => `Şu ölçütler bütün modellerde aynı nispi sırayı veriyor: ${p.list}. Eşit ağırlıkla ikisi birlikte girerse aynı bilgi iki kez sayılır; birini çıkarmayı düşünün (ör. FI = 1 − SSE/SST ile tahmin R² aynıdır).`,
   'constant': p => `Bütün modellerin eşit olduğu ölçüt: ${p.list}. Bu ölçütte herkes 1 aldı; sıralamayı değiştirmez.`,
   'sens': 'Nispi sıra, en iyi ve en kötü değerlere göre ölçeklenir: çok kötü tek bir model ötekileri birbirine yaklaştırır. Gerekirse o modeli sıralamadan çıkarın; sıralar kalan modellerle yeniden hesaplanır (Poudel ve Cao 2013 de iki yöntemi bu nedenle çıkarmıştır).',
-  'aicnote': 'AIC ve BIC yalnızca aynı veriye uydurulmuş modeller arasında karşılaştırılabilir; araç bunu denetleyemez.',
+  'aicnote': 'AIC ve BIC yalnızca aynı veriye fit edilmiş modeller arasında karşılaştırılabilir; araç bunu denetleyemez.',
   'th.ord': 'Sıra', 'th.model': 'Model', 'th.row': 'Satır', 'th.sum': 'Toplam', 'th.overall': 'Genel nispi sıra', 'th.use': 'Dahil',
   'show.vals': 'Ölçüt değerlerini de göster', 'excl.h': 'Sıralama dışı bırakılan modeller', 'excl.none': 'Dışarıda bırakılan model yok.', 'excl.back': 'Geri al',
   'bestworst': p => `Ölçütte en iyi: ${p.best}, en kötü: ${p.worst}`,
@@ -1428,7 +1428,7 @@ function renderStep1() {
   renderImport($('impbox'), { imp: S.imp, src: S.src }, { base: BASE, title: T('imp.h'), sub: T('imp.sub'), onChange: setTable, onError: m => status(m, 'err'), rawRows: true });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/rank/ornek/ornek-olcutler.xlsx')).arrayBuffer();
-    const imp = { kind: 'xlsx', name: lang === 'tr' ? 'ornek-olcutler.xlsx (uydurma)' : 'ornek-olcutler.xlsx (made up)', buf, header: false, sheet: null };
+    const imp = { kind: 'xlsx', name: lang === 'tr' ? 'ornek-olcutler.xlsx (benzetim)' : 'ornek-olcutler.xlsx (made up)', buf, header: false, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
   });
   $('reset').addEventListener('click', async () => { S = blank(); D = Rk = null; status(''); render(); await del(KEY); });

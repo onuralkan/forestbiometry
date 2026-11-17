@@ -367,7 +367,7 @@ const chartMeta = (u, rs) => ({ tool: D.TOOL, created: new Date().toISOString(),
   fits: rs.map(r => ({ method: r.method, family: r.family, fixed: r.fixed, params: r.params, settings: r.settings, truncation: r.truncation })) });
 function exportRaw(kind) {
   const h = repH();
-  if (kind === 'fits') return downloadCSV(fname('cap-dagilimi-uydurmalar', 'diameter-distribution-fits', 'csv'), REP.fitRows(R.units, h));
+  if (kind === 'fits') return downloadCSV(fname('cap-dagilimi-fit-islemleri', 'diameter-distribution-fits', 'csv'), REP.fitRows(R.units, h));
   if (kind === 'params') return downloadCSV(fname('cap-dagilimi-parametreler', 'diameter-distribution-parameters', 'csv'), REP.paramRows(R.units, h));
   return loadXLSX(BASE).then(XLSX => download(fname('cap-dagilimi', 'diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
     { name: T('sheet.info'), rows: REP.infoRows(settingsInfo(), T), widths: [34, 110] }, { name: T('sheet.fits'), rows: REP.fitRows(R.units, h) },
