@@ -16,7 +16,7 @@
 import { registerForm, form, validateCoef, correctionFactor, outsideValid } from '../core/coef.js';
 import { buildUnits } from '../stand/calc.js';
 
-export const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.2' };
+export const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.3' };
 export const CO2_PER_C = 44 / 12;
 /** Scales on which the Baskerville correction is applied: ln ([A], METHODS §22); log10 waits for its source. */
 export const BASKERVILLE_SCALES = ['log'];

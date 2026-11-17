@@ -8,9 +8,10 @@ import { mountCoefEditor, metaProblems, problemText } from '../core/coef-ui.js';
 import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core/export.js';
 import { EXTRA as TAPER_EXTRA } from '../taper/coef-extra.js';
 import { EXTRA as SI_EXTRA } from '../siteindex/coef-extra.js';
+import { EXTRA as BIOMASS_EXTRA } from '../biomass/coef-extra.js';
 
 const BASE = './', $ = id => document.getElementById(id);
-const EXTRAS = { taper: TAPER_EXTRA, siteindex: SI_EXTRA, growth: [], biomass: [], bark: [], ccf: [] };
+const EXTRAS = { taper: TAPER_EXTRA, siteindex: SI_EXTRA, growth: [], biomass: BIOMASS_EXTRA, bark: [], ccf: [] };
 const extraCheck = (tool, s) => metaProblems(EXTRAS[tool] || [], s);
 const probs = s => L.problemsOf(s, extraCheck);
 const ptext = q => { const own = 'p.' + q.code, t = T(own, q); return t !== own ? t : problemText(q); };

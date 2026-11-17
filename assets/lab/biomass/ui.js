@@ -6,6 +6,8 @@ import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { listCoefs, form as formOf } from '../core/coef.js';
 import { mountCoefEditor } from '../core/coef-ui.js';
+import { EXTRA } from './coef-extra.js';
+import * as MC from './mc.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, toInternal, detectDecimal, defaultDecimal } from '../core/num.js';
@@ -19,10 +21,10 @@ import { readDerived, volumeLookup, storeKey, KIND_VOLUME } from '../core/derive
 const BASE = './', KEY = 'session:' + B.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
-let S = blank(), R = null, sets = [], approved = null, saveT = null, dv = null;
+let S = blank(), R = null, sets = [], approved = null, saveT = null, dv = null, U = null;
 function blank() {
   return { v: 1, step: 1, tbl: null, ds: null, dsSrc: null, approach: 'allometric', comps: [{ key: 'c1', label: T('c.default'), CF: '' }], map: {}, total: {}, ec: 'unmeasured',
-    vol: { from: 'col', col: null, bark: 'ob', mode: 'bef', D: '', BEF: '', BCEF: '', R: '', fbark: 'ob', src: '', CF: '' } };
+    mc: { B: String(MC.MC_DEFAULTS.B), seed: String(MC.MC_DEFAULTS.seed), level: '0.95' }, vol: { from: 'col', col: null, bark: 'ob', mode: 'bef', D: '', BEF: '', BCEF: '', R: '', fbark: 'ob', src: '', CF: '' } };
 }
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
 function flush() { clearTimeout(saveT); saveT = null; return put(KEY, { ...S, saved: new Date().toISOString() }); }
@@ -147,8 +149,8 @@ function renderStep2() {
   const el = $('step2'), sp = B.speciesOf(S.ds), A = S.approach;
   let h = `<div class="card"><h2>${T('a.h')}</h2><div class="radios col">${['allometric', 'volume', 'both'].map(a => `<label><input type="radio" name="appr" value="${a}"${A === a ? ' checked' : ''}> ${T('a.' + a)}</label>`).join('')}</div></div>`;
   if (A !== 'volume') {
-    h += `<div class="card"><h2>${T('c.h')}</h2><p class="muted small">${T('c.sub')}</p><table class="grid" id="comptab"><thead><tr><th>${T('c.name')}</th><th>${T('c.cf')}</th><th></th></tr></thead><tbody>
-      ${S.comps.map((c, i) => `<tr><td><input type="text" size="18" data-cl="${i}" value="${esc(c.label)}"></td><td><input type="text" inputmode="decimal" size="6" data-cf="${i}" value="${esc(c.CF)}"></td><td>${S.comps.length > 1 ? `<button type="button" class="btn ghost small" data-crm="${i}">${T('c.rm')}</button>` : ''}</td></tr>`).join('')}</tbody></table>
+    h += `<div class="card"><h2>${T('c.h')}</h2><p class="muted small">${T('c.sub')}</p><div class="tscroll"><table class="grid" id="comptab"><thead><tr><th>${T('c.name')}</th><th>${T('c.cf')}</th><th></th></tr></thead><tbody>
+      ${S.comps.map((c, i) => `<tr><td><input type="text" size="18" data-cl="${i}" value="${esc(c.label)}"></td><td><input type="text" inputmode="decimal" size="6" data-cf="${i}" value="${esc(c.CF)}"></td><td>${S.comps.length > 1 ? `<button type="button" class="btn ghost small" data-crm="${i}">${T('c.rm')}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>
       <p><button type="button" class="btn ghost small" id="cadd">${T('c.add')}</button></p></div>`;
     const opts = (cur) => `<option value="">${T('m.choose')}</option>` + sets.map(s => `<option value="${esc(s.id)}"${cur === s.id ? ' selected' : ''}>${esc(setLabel(s))}</option>`).join('');
     h += `<div class="card"><h2>${T('m.h')}</h2><p class="muted small">${T('m.sub')}</p>${sets.length ? '' : `<p class="note warn small" id="nosets">${T('m.nosets')}</p>`}
@@ -190,7 +192,7 @@ function renderStep2() {
   $('vsrc') && $('vsrc').addEventListener('change', e => { S.vol.src = e.target.value; re(); });
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); go(3); });
-  if ($('coefbox')) mountCoefEditor($('coefbox'), { tool: 'biomass', onChange: list => { const changed = list.length !== sets.length || list.some((s, i) => !sets[i] || sets[i].id !== s.id || sets[i].modified !== s.modified); sets = list; if (changed) { R = null; renderStep2(); } } }).refresh();
+  if ($('coefbox')) mountCoefEditor($('coefbox'), { tool: 'biomass', extra: EXTRA, onChange: list => { const changed = list.length !== sets.length || list.some((s, i) => !sets[i] || sets[i].id !== s.id || sets[i].modified !== s.modified); sets = list; if (changed) { R = null; renderStep2(); } } }).refresh();
 }
 /** What the browser holds from the Stem Section Volume tool for this package. */
 function dvHTML() {
@@ -211,7 +213,7 @@ function volRun(created) {
   return { kind: 'volume', created, cfg: { from, col: v.from === 'secvol' ? null : v.col, bark: v.bark, factors, CF: num(v.CF), src: v.src, emptyCombos: S.ec }, ...B.computeVolume(S.ds, volumeOf(), { bark: v.bark, factors, CF: num(v.CF), emptyCombos: S.ec }) };
 }
 function compute() {
-  const created = new Date().toISOString();
+  const created = new Date().toISOString(); U = null;
   if (S.approach === 'allometric') R = alloRun(created);
   else if (S.approach === 'volume') R = volRun(created);
   else { const a = alloRun(created), v = volRun(created); R = { kind: 'both', created, allo: a, vol: v, cmp: B.bothApproaches(a, v) }; }
@@ -272,10 +274,12 @@ function renderStep3() {
   const el = $('step3'), sx = R.kind === 'both' ? ['-a', '-v'] : [''];
   let h = R.kind === 'both' ? cmpHTML() : '';
   parts().forEach((P, i) => { h += partHTML(P, sx[i]); });
+  h += `<div class="card" id="mccard">${mcHTML()}</div>`;
   h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}</div></div>`;
   h += `<div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('back2').addEventListener('click', () => go(2));
+  bindMC();
   sx.forEach(x => $('svg' + x).addEventListener('click', () => download(fname() + (x ? x : '') + '.svg', svgForDownload($('ch-b' + x).querySelector('svg')), 'image/svg+xml')));
   $('x-csv').addEventListener('click', () => downloadCSV(fname() + '.csv', R.kind === 'both' ? bothTreeRows() : treeRows(R), lang));
   $('x-xlsx').addEventListener('click', async () => {
@@ -283,6 +287,7 @@ function renderStep3() {
     const sheets = [{ name: T('x.info'), rows: infoRows(), widths: [26, 110] }];
     if (R.kind === 'both') sheets.push({ name: T('x.cmpu'), rows: bothUnitRows() }, { name: T('x.cmpt'), rows: bothTreeRows() }, { name: T('x.units') + ' A', rows: unitRows(R.allo) }, { name: T('x.trees') + ' A', rows: treeRows(R.allo) }, { name: T('x.units') + ' V', rows: unitRows(R.vol) }, { name: T('x.trees') + ' V', rows: treeRows(R.vol) });
     else sheets.push({ name: T('x.units'), rows: unitRows(R) }, { name: T('x.trees'), rows: treeRows(R) });
+    if (U && U.status === 'ok') sheets.push({ name: T('x.mcu'), rows: mcUnitRows() }, { name: T('x.mct'), rows: mcTreeRows() });
     download(fname() + '.xlsx', xlsxBlob(XLSX, sheets));
   });
   $('x-json').addEventListener('click', () => {
@@ -290,6 +295,7 @@ function renderStep3() {
     const body = { tool: B.TOOL, created: R.created, settings: recordSettings(), sets: used.map(s => ({ id: s.id, form: s.form, params: s.params, transform: s.transform, valid: s.valid, species: s.species, component: s.component, source: s.source })) };
     if (R.kind === 'both') Object.assign(body, { allometric: partRecord(R.allo), volume: partRecord(R.vol), comparison: R.cmp.units });
     else Object.assign(body, partRecord(R));
+    if (U) body.uncertainty = U.status === 'ok' ? U : { status: U.status, problems: U.problems, B: U.B, seed: U.seed, level: U.level, sets: U.sets };
     downloadRecord(fname() + '.json', body, B.TOOL, S.dsSrc && S.dsSrc.kind === 'table' && S.tbl ? [['trees', S.tbl.imp]] : S.ds ? [['dataset', { kind: 'dataset', dataset: S.ds }]] : [], m => status(m, 'err'));
   });
 }
@@ -314,6 +320,7 @@ function infoRows() {
     }
   }
   if (R.kind === 'both') rows.push([T('x.rule'), T('b.sub')]);
+  if (U) rows.push([T('mc.h'), U.status === 'ok' ? mcSettingsText() : T('mc.st.' + U.status)], ...(U.status === 'ok' ? [['', T('mc.assume')]] : []));
   rows.push([T('x.rule'), T('u.note')], [T('x.rule'), 'CO₂ = C × 44/12']);
   return rows;
 }
@@ -327,6 +334,62 @@ function treeRows(P) {
 }
 function bothUnitRows() { return [[T('u.plot'), T('u.period'), T('b.appr'), T('u.n'), `${T('u.B')} (Mg/ha)`, `${T('u.C')} (Mg/ha)`, `${T('u.CO2')} (Mg/ha)`], ...R.cmp.units.map(u => [u.plot_id, u.period ?? '', T('a.' + u.approach + '.s'), u.n, u.B, u.C, u.CO2])]; }
 function bothTreeRows() { return [[T('g.row'), T('u.plot'), 'tree', T('u.period'), T('m.sp'), 'D (cm)', T('b.appr'), T('g.status'), 'B (kg)', 'C (kg)'], ...R.cmp.trees.map(x => [x.row, x.t.plot_id, x.t.tree_id ?? '', x.t.period ?? '', x.t.species ?? '', x.t.dbh, T('a.' + x.approach + '.s'), x.status, x.B, x.C])]; }
+
+/* ---------------- BC04: Monte Carlo uncertainty (mc.js) ---------------- */
+const alloPart = () => R.kind === 'allometric' ? R : R.kind === 'both' ? R.allo : null;
+const mcSettingsText = () => T('mc.settings', { B: U.B, seed: U.seed, level: U.level * 100 });
+const partsText = parts => parts.length ? parts.map(p => T('mc.part.' + p)).join(' + ') : T('mc.part.none');
+function mcHTML() {
+  let h = `<h2>${T('mc.h')}</h2>`;
+  const A = alloPart();
+  if (!A) return h + `<p class="note small" id="mcnone">${T('mc.vol')}</p>`;
+  h += `<p class="muted small">${T('mc.sub')}</p>${R.kind === 'both' ? `<p class="note small">${T('mc.vol')}</p>` : ''}
+    <div class="lims"><label>${T('mc.B')} <input type="text" inputmode="numeric" size="7" id="mc-B" value="${esc(S.mc.B)}"></label><label>${T('mc.seed')} <input type="text" inputmode="numeric" size="11" id="mc-seed" value="${esc(S.mc.seed)}"></label>
+    <label>${T('mc.level')} <select id="mc-level">${['0.9', '0.95', '0.99'].map(v => `<option value="${v}"${S.mc.level === v ? ' selected' : ''}>${+v * 100} %</option>`).join('')}</select></label>
+    <button type="button" class="btn ghost" id="mc-run">${T('mc.run')}</button></div><div id="mcout">${U ? mcResultHTML() : ''}</div>`;
+  return h;
+}
+function mcResultHTML() {
+  if (U.status === 'noinfo') return `<p class="note warn" id="mcnoinfo">${T('mc.st.noinfo')}</p>`;
+  if (U.status === 'bad') return `<p class="note err" id="mcbad">${esc(U.problems.map(p => (p.set ? (setsById().get(p.set) ? setLabel(setsById().get(p.set)) : p.set) + ': ' : '') + T('mc.p.' + p.code)).join(' · '))}</p>`;
+  const sl = id => { const s = setsById().get(id); return s ? setLabel(s) : id; };
+  let h = `<p class="small" id="mcset">${esc(mcSettingsText())}</p><ul class="small" id="mcparts">${U.sets.map(x => `<li data-set="${esc(x.id)}">${esc(sl(x.id))}: <b>${esc(partsText(x.parts))}</b></li>`).join('')}</ul>`;
+  if (U.fixed.length) h += `<p class="note warn small" id="mcfixed">${esc(T('mc.fixed', { n: U.fixed.length }))}</p>`;
+  if (U.negative) h += `<p class="note warn small" id="mcneg">${esc(T('mc.neg', { n: U.negative }))}</p>`;
+  const cell = q => q ? `<td class="num">${f(q.point, 3)}</td><td class="num" data-k="mean">${f(q.mean, 3)}</td><td class="num" data-k="sd">${f(q.sd, 3)}</td><td class="num">${q.cv == null ? '–' : f(q.cv * 100, 1)}</td><td class="num" data-k="lo">${f(q.lo, 3)}</td><td class="num" data-k="hi">${f(q.hi, 3)}</td>` : '<td colspan="6" class="muted">–</td>';
+  const head = q => `<th>${q}</th><th>${T('mc.mean')}</th><th>${T('mc.sd')}</th><th>CV %</th><th>${T('mc.lo')}</th><th>${T('mc.hi')}</th>`;
+  h += `<div class="tscroll"><table class="grid" id="mctab"><thead><tr><th rowspan="2">${T('u.plot')}</th><th rowspan="2">${T('u.period')}</th><th colspan="6">${T('u.B')} (Mg/ha)</th><th colspan="6">CO₂ (Mg/ha)</th></tr><tr>${head(T('mc.point'))}${head(T('mc.point'))}</tr></thead><tbody>
+    ${U.units.map(u => `<tr data-u="${esc(u.plot_id)}|${esc(u.period ?? '')}"><th>${esc(u.plot_id)}</th><td>${esc(u.period ?? '–')}</td>${cell(u.B)}${cell(u.CO2)}</tr>`).join('')}</tbody></table></div>`;
+  const K = 200, tr = U.trees.map((t, i) => [t, alloPart().trees[i]]).filter(([t]) => t).slice(0, K);
+  h += `<details class="more"><summary>${T('mc.trees')}</summary><div class="tscroll tall"><table class="grid" id="mcttab"><thead><tr><th>${T('g.row')}</th><th>${T('u.plot')}</th><th>${T('m.sp')}</th>${head('B (kg)')}</tr></thead><tbody>
+    ${tr.map(([t, x]) => `<tr><td class="num">${t.row ?? '–'}</td><td>${esc(x.t.plot_id)}</td><td>${esc(x.t.species ?? '')}</td>${cell(t.B)}</tr>`).join('')}</tbody></table></div></details>
+    <p class="muted small" id="mcassume">${T('mc.assume')}</p>`;
+  return h;
+}
+function bindMC() {
+  if (!$('mc-run')) return;
+  const keep = () => { S.mc = { B: $('mc-B').value.trim(), seed: $('mc-seed').value.trim(), level: $('mc-level').value }; save(); };
+  ['mc-B', 'mc-seed', 'mc-level'].forEach(id => $(id).addEventListener('change', keep));
+  $('mc-run').addEventListener('click', () => {
+    keep(); $('mcout').innerHTML = `<p class="small">${T('mc.busy')}</p>`;
+    setTimeout(() => {
+      const A = alloPart(), cfg = { components: S.comps.map(c => ({ key: c.key, label: c.label, CF: num(c.CF) })), map: S.map, total: S.total, emptyCombos: S.ec };
+      const Bn = /^\d+$/.test(S.mc.B) ? +S.mc.B : NaN, seed = /^\d+$/.test(S.mc.seed) ? +S.mc.seed : NaN;
+      U = MC.monteCarlo(S.ds, cfg, setsById(), A, { B: Bn, seed, level: +S.mc.level });
+      $('mcout').innerHTML = mcResultHTML();
+    }, 20);
+  });
+}
+function mcUnitRows() {
+  const q = ['point', 'mean', 'sd', 'cv', 'lo', 'hi'], H = k => q.map(x => `${k} ${T('mc.c.' + x)}`);
+  return [[T('u.plot'), T('u.period'), T('u.n'), ...H('B (Mg/ha)'), ...H('C (Mg/ha)'), ...H('CO₂ (Mg/ha)')], ...U.units.map(u => [u.plot_id, u.period ?? '', u.n, ...['B', 'C', 'CO2'].flatMap(k => q.map(x => u[k] ? u[k][x] : null))]), [], [mcSettingsText()], [T('mc.assume')],
+    ...U.sets.map(x => [x.id, partsText(x.parts)])];
+}
+function mcTreeRows() {
+  const q = ['point', 'mean', 'sd', 'cv', 'lo', 'hi'], A = alloPart();
+  return [[T('g.row'), T('u.plot'), 'tree', T('m.sp'), ...q.map(x => `B (kg) ${T('mc.c.' + x)}`), ...q.map(x => `C (kg) ${T('mc.c.' + x)}`)],
+    ...U.trees.map((t, i) => { const x = A.trees[i]; return [x.row, x.t.plot_id, x.t.tree_id ?? '', x.t.species ?? '', ...q.map(k => t ? t.B[k] ?? null : null), ...q.map(k => t ? t.C[k] ?? null : null)]; })];
+}
 
 /* ---------------- shell ---------------- */
 function canGo(n) { if (n <= 1) return true; if (!S.ds) return false; if (n === 2) return true; return !settingsProblems().length; }
@@ -346,7 +409,7 @@ function render() {
   try {
     const a = await get('dataset:approved'); if (a && !validateDataset(a).length) approved = a;
     sets = await listCoefs('biomass');
-    const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, vol: { ...blank().vol, ...(saved.vol || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
+    const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, vol: { ...blank().vol, ...(saved.vol || {}) }, mc: { ...blank().mc, ...(saved.mc || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
     if (S.tbl && S.tbl.imp && S.tbl.imp.buf && !S.tbl.src) S.tbl.src = await readImport(S.tbl.imp, BASE).catch(() => null);
     await loadDerived();
   } catch (e) { S = blank(); }

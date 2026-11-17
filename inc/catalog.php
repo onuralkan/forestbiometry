@@ -53,7 +53,7 @@ function site_catalog(): array {
         ['BC-03', 'live', 'Biyokütle dönüşüm etkeni (BEF)', 'Biomass expansion factor (BEF)', 'biyokutle-karbon.php'],
         ['BC-04', 'live', 'Karbon stoku ve CO₂ eşdeğeri', 'Carbon stock and CO₂ equivalent', 'biyokutle-karbon.php'],
         ['BC-05', 'planned', 'IPCC karbon hesabı (katman 1–3)', 'IPCC carbon accounting (tier 1–3)'],
-        ['BC-06', 'planned', 'Karbon belirsizliği', 'Carbon uncertainty'],
+        ['BC-06', 'live', 'Karbon belirsizliği', 'Carbon uncertainty', 'biyokutle-karbon.php'],
         ['SS-01', 'live', 'Meşcere özeti', 'Stand summary', 'ornek-alan.php'],
         ['SS-02', 'live', 'Meşcere sıklık endeksleri', 'Stand density indices', 'mescere-yapisi.php'],
         ['SS-03', 'live', 'Çap dağılımı', 'Diameter distribution', 'cap-dagilimi.php'],

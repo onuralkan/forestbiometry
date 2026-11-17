@@ -78,7 +78,7 @@ ok(both.units.length === 2 * allo.units.length && both.trees.length === 2 * ds.t
 ok(both.trees.every((x, i) => x.approach === (i % 2 ? 'volume' : 'allometric') && x.row === ds.trees[i >> 1].row), 'tree rows alternate allometric / volume for the same package row');
 ok(both.trees.filter(x => x.approach === 'allometric').every((x, i) => Object.is(x.B, allo.trees[i].sum)) && both.trees.filter(x => x.approach === 'volume').every((x, i) => Object.is(x.B, vol.trees[i].total)), 'values are those of each approach, not mixed or averaged');
 ok(both.units.filter(u => u.approach === 'volume').every((u, i) => Object.is(u.B, vol.units[i].B) && Object.is(u.CO2, vol.units[i].CO2)) && both.units.filter(u => u.approach === 'allometric').every((u, i) => Object.is(u.C, allo.units[i].C)), 'unit rows equal each approach\'s own totals');
-ok(B.TOOL.version === '1.0.0-beta.2', 'tool version 1.0.0-beta.2 (new input source and approach)');
+ok(/^1\.0\.0-beta\.[2-9]$/.test(B.TOOL.version), 'tool version at least 1.0.0-beta.2 (new input source and approach)');
 
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

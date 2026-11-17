@@ -89,7 +89,7 @@ ok(cmp.length === 2 * trees.length + 1 && cmp[1][0] === cmp[2][0] && cmp[1][6] !
 const info = XLSX.utils.sheet_to_json(wb.Sheets['Bilgi'], { header: 1 }).flat().join(' ');
 ok(info.includes(stored.sha) && info.includes('e2e test values S') && info.includes('e2e factors'), 'Excel info: package fingerprint, set source, factor source');
 const bj = await dl('#x-json'), bRec = JSON.parse(await readFile(await bj.path(), 'utf8'));
-ok(bRec.settings.approach === 'both' && bRec.settings.volume.volumeFrom.kind === 'secvol' && bRec.settings.volume.volumeFrom.package === stored.sha && bRec.comparison.length === 2 * units && bRec.tool.version === '1.0.0-beta.2', 'run record: both approaches, volume source with the package fingerprint');
+ok(bRec.settings.approach === 'both' && bRec.settings.volume.volumeFrom.kind === 'secvol' && bRec.settings.volume.volumeFrom.package === stored.sha && bRec.comparison.length === 2 * units && /^1\.0\.0-beta\.[2-9]$/.test(bRec.tool.version), 'run record: both approaches, volume source with the package fingerprint');
 
 // 4. another package: the old volumes are not used
 await page.evaluate(async ds => { const S = await import('/assets/lab/core/store.js'); await S.put('dataset:approved', { ...ds, created: '2026-11-18T00:00:00Z' }); }, DS);
