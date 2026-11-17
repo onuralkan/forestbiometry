@@ -57,19 +57,26 @@ N1r <- update(N1, method = "REML")
 nlrt <- anova(N1, N3)
 
 # calibration of the new plot under N1 and N3: random effects maximizing the conditional density (penalized least
-# squares, Gauss–Newton with a numeric Jacobian; written here, not from the package)
+# squares, Gauss–Newton with a numeric Jacobian; written here, not from the package), and the one-step approximation
 cal_nlme <- function(m, nd, re) {
   b <- fixef(m); D <- as.matrix(getVarCov(m)); s2 <- m$sigma^2; q <- length(re)
   f <- function(u) { p <- b; p[re] <- p[re] + u; cr(nd$D_cm, p["a"], p["b"], p["c"]) }
+  # one-step approximation (Vonesh and Chinchilli 1997, as used by Calama and Montero 2004, Raptis et al. 2021,
+  # Ciceu et al. 2020): b = D Z' (R + Z D Z')^-1 e, Z = df/db at b = 0, e = y - f(beta, 0)
+  J0 <- matrix(sapply(1:q, function(j) { h <- 1e-6; e <- rep(0, q); e[j] <- h; (f(e) - f(-e)) / (2 * h) }), ncol = q)
+  w <- if (is.null(m$modelStruct$varStruct)) rep(1, nrow(nd)) else nd$D_cm^(2 * pw(m))
+  u1 <- drop(D %*% t(J0) %*% solve(s2 * diag(w, nrow(nd)) + J0 %*% D %*% t(J0), nd$H_m - f(rep(0, q))))
+  p1 <- b; p1[re] <- p1[re] + u1
   u <- rep(0, q); Di <- solve(D)
   for (it in 1:200) {
-    r <- nd$H_m - f(u); J <- sapply(1:q, function(j) { h <- 1e-6 * max(1, abs(u[j])); e <- rep(0, q); e[j] <- h; (f(u + e) - f(u - e)) / (2 * h) })
-    J <- matrix(J, ncol = q)
+    r <- (nd$H_m - f(u)) / sqrt(w); J <- sapply(1:q, function(j) { h <- 1e-6 * max(1, abs(u[j])); e <- rep(0, q); e[j] <- h; (f(u + e) - f(u - e)) / (2 * h) })
+    J <- matrix(J, ncol = q) / sqrt(w)
     du <- solve(t(J) %*% J / s2 + Di, t(J) %*% r / s2 - Di %*% u)
     u <- u + drop(du); if (max(abs(du)) < 1e-12) break
   }
   p <- b; p[re] <- p[re] + u
-  list(u = unname(u), pred = unname(cr(c(15, 30, 45), p["a"], p["b"], p["c"])))
+  list(u = unname(u), pred = unname(cr(c(15, 30, 45), p["a"], p["b"], p["c"])),
+       u1 = unname(u1), pred1 = unname(cr(c(15, 30, 45), p1["a"], p1["b"], p1["c"])))
 }
 
 res <- list(
@@ -80,7 +87,7 @@ res <- list(
   calib_lme = list(trees = nd$agac, L2 = cal_lme(L2, nd), L4 = cal_lme(L4, nd)),
   nlme = list(N1 = out_nlme(N1), N2 = out_nlme(N2), N3 = out_nlme(N3), N4 = out_nlme(N4), N1r = out_nlme(N1r)),
   nlrt = list(L = nlrt$L.Ratio[2], p = nlrt$`p-value`[2], df = nlrt$df),
-  calib_nlme = list(trees = nd$agac, N1 = cal_nlme(N1, nd, "a"), N3 = cal_nlme(N3, nd, c("a", "b")))
+  calib_nlme = list(trees = nd$agac, N1 = cal_nlme(N1, nd, "a"), N3 = cal_nlme(N3, nd, c("a", "b")), N4 = cal_nlme(N4, nd, "a"))
 )
 writeLines(toJSON(res, digits = NA, auto_unbox = TRUE, pretty = TRUE), "tests/ref/mixed_sm03.json")
 cat("written tests/ref/mixed_sm03.json\n")
