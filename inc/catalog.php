@@ -84,7 +84,7 @@ function site_catalog(): array {
         ['SM-01', 'live', 'Boy–çap modelleri', 'Height–diameter models', 'boy-cap.php'],
         ['SM-02', 'live', 'Doğrusal olmayan regresyon', 'Nonlinear regression', 'dogrusal-olmayan-regresyon.php'],
         ['SM-03', 'live', 'Karma etkili modeller', 'Mixed-effects models', 'karma-modeller.php'],
-        ['SM-04', 'planned', 'Eşanlı ve uyumlu sistemler', 'Simultaneous and compatible systems'],
+        ['SM-04', 'live', 'Eşanlı ve uyumlu sistemler', 'Simultaneous and compatible systems', 'denklem-sistemleri.php'],
         ['SM-05', 'planned', 'Ölüm ve sağkalım modelleri', 'Mortality and survival models'],
         ['SM-06', 'live', 'Model değerlendirme', 'Model evaluation', 'model-degerlendirme.php'],
         ['SM-07', 'out', 'Belirsizlik nicelemesi', 'Uncertainty quantification'],

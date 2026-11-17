@@ -10,6 +10,7 @@ import '../biomass/calc.js';
 import '../volume/calc.js';
 import '../nlsreg/calc.js';
 import '../mixed/calc.js';
+import '../eqsys/calc.js';
 import '../tree/bark.js';
 import '../structure/ccf.js';
 
@@ -23,6 +24,7 @@ export const TOOLS = [
   { tool: 'volume', id: 'SV-04', page: 'hacim-denklemleri.php', name: { tr: 'Hacim Denklemleri', en: 'Volume Equations' } },
   { tool: 'nls', id: 'SM-02', page: 'dogrusal-olmayan-regresyon.php', name: { tr: 'Doğrusal Olmayan Regresyon', en: 'Nonlinear Regression' } },
   { tool: 'mixed', id: 'SM-03', page: 'karma-modeller.php', name: { tr: 'Karma Etkili Modeller', en: 'Mixed-Effects Models' } },
+  { tool: 'eqsys', id: 'SM-04', page: 'denklem-sistemleri.php', name: { tr: 'Denklem Sistemleri', en: 'Systems of Equations' } },
   { tool: 'ccf', id: 'SS-02', page: 'mescere-yapisi.php', name: { tr: 'Meşcere Yapısı: CCF', en: 'Stand Structure: CCF' } },
   { tool: 'bark', id: 'TM-03', page: 'agac-olcumu.php', name: { tr: 'Ağaç Ölçümü: kabuk', en: 'Tree Measurement: bark' } },
 ];

@@ -15,7 +15,7 @@ function guide_cards(bool $tr): array {
          'ids' => ['ornek-alan', 'cap-dagilimi', 'mescere-yapisi', 'ornekleme']],
         ['id' => 'model', 'title' => $tr ? 'Model uydurmak ya da karşılaştırmak istiyorum' : 'I want to fit or compare models',
          'text' => $tr ? 'Boy–çap, büyüme ve bonitet modelleri; hazır biçim ya da kendi formülünüzle doğrusal olmayan regresyon; başarı ölçütleri ve modellerin sıralanması.' : 'Height–diameter, growth and site index models; nonlinear regression with a ready-made form or your own formula; goodness-of-fit criteria and ranking the models.',
-         'ids' => ['boy-cap', 'buyume-islevi', 'dogrusal-olmayan-regresyon', 'karma-modeller', 'bonitet', 'model-degerlendirme', 'nispi-siralama']],
+         'ids' => ['boy-cap', 'buyume-islevi', 'dogrusal-olmayan-regresyon', 'karma-modeller', 'denklem-sistemleri', 'bonitet', 'model-degerlendirme', 'nispi-siralama']],
         ['id' => 'katsayi', 'title' => $tr ? 'Kaynaktan katsayı setim var' : 'I have a coefficient set from a source',
          'text' => $tr ? 'Setinizi kaynağıyla girin, kütüphanede saklayın ve araçlarda kullanın; site hazır katsayı vermez.' : 'Enter your set with its source, keep it in the library and use it in the tools; the site ships no coefficients.',
          'ids' => ['katsayi-kutuphanesi', 'bonitet', 'govde-profili', 'biyokutle-karbon']],

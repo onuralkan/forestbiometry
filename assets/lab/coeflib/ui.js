@@ -8,12 +8,13 @@ import { mountCoefEditor, metaProblems, problemText } from '../core/coef-ui.js';
 import { download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX } from '../core/export.js';
 import { registerStoredForms } from '../nlsreg/calc.js';
 import { registerStoredForms as registerMixedForms } from '../mixed/calc.js';
+import { registerStoredForms as registerSysForms } from '../eqsys/calc.js';
 import { EXTRA as TAPER_EXTRA } from '../taper/coef-extra.js';
 import { EXTRA as SI_EXTRA } from '../siteindex/coef-extra.js';
 import { EXTRA as BIOMASS_EXTRA } from '../biomass/coef-extra.js';
 
 const BASE = './', $ = id => document.getElementById(id);
-const EXTRAS = { taper: TAPER_EXTRA, siteindex: SI_EXTRA, growth: [], biomass: BIOMASS_EXTRA, volume: [], nls: [], mixed: [], bark: [], ccf: [] };
+const EXTRAS = { taper: TAPER_EXTRA, siteindex: SI_EXTRA, growth: [], biomass: BIOMASS_EXTRA, volume: [], nls: [], mixed: [], eqsys: [], bark: [], ccf: [] };
 const extraCheck = (tool, s) => metaProblems(EXTRAS[tool] || [], s);
 const probs = s => L.problemsOf(s, extraCheck);
 const ptext = q => { const own = 'p.' + q.code, t = T(own, q); return t !== own ? t : problemText(q); };
@@ -21,7 +22,7 @@ const tname = t => { const i = L.toolInfo(t); return i ? i.name[lang] || i.name.
 
 let sets = [], F = { tool: '', q: '', origin: '', problems: false }, open = new Set(), plan = null, editor = null, edTool = L.TOOLS[0].tool;
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
-async function refresh() { sets = await listCoefs(); registerStoredForms(sets); registerMixedForms(sets); render(); }
+async function refresh() { sets = await listCoefs(); registerStoredForms(sets); registerMixedForms(sets); registerSysForms(sets); render(); }
 
 function render() {
   const dupGroups = L.duplicates(sets), dupOf = new Map(dupGroups.flatMap(g => g.map(id => [id, g.filter(x => x !== id)])));
@@ -95,7 +96,7 @@ function bind() {
   $('b-restore').addEventListener('change', async e => {
     const file = e.target.files && e.target.files[0]; if (!file) return;
     let obj = null; try { obj = JSON.parse(await file.text()); } catch (err) { obj = null; }
-    { const list = obj && Array.isArray(obj.sets) ? obj.sets : obj ? [obj] : []; registerStoredForms(list); registerMixedForms(list); }
+    { const list = obj && Array.isArray(obj.sets) ? obj.sets : obj ? [obj] : []; registerStoredForms(list); registerMixedForms(list); registerSysForms(list); }
     plan = L.planRestore(sets, obj, probs); status(''); render();
   });
   $('r-apply') && $('r-apply').addEventListener('click', async () => {

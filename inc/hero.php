@@ -265,6 +265,12 @@ function hero_mixed(): string {
     $p = []; for ($i = 0; $i <= 40; $i++) { $u = $i / 40; $p[] = [$l + 4 + $u * 262, $Y - 4 - 92 * (1 - exp(-2.6 * $u))]; }
     return $o . '<path class="hz-line hz-c1" stroke-width="3" d="' . hero_path($p) . '"/><text class="hz-unit" x="' . ($W - 8) . '" y="18" text-anchor="end">β + bᵢ</text>';
 }
+/** Systems of equations: two curves sharing a height curve (illustration). */
+function hero_eqsys(): string {
+    $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $p = []; $q = [];
+    for ($i = 0; $i <= 40; $i++) { $u = $i / 40; $h = 1 - exp(-3 * $u); $p[] = [$l + 4 + $u * 262, $Y - 4 - 70 * $h]; $q[] = [$l + 4 + $u * 262, $Y - 4 - 100 * pow($u, 1.6) * $h]; }
+    return $o . '<path class="hz-line hz-c1" d="' . hero_path($p) . '"/><path class="hz-line hz-c2" d="' . hero_path($q) . '"/><text class="hz-unit" x="' . ($W - 8) . '" y="18" text-anchor="end">Σ̂ ⊗ I</text>';
+}
 /** Drawing and short caption of each live tool's card (keyed by the tool's page; tools index). */
 function tool_card_data(bool $tr): array {
     return [
@@ -287,6 +293,7 @@ function tool_card_data(bool $tr): array {
         'hacim-denklemleri.php' => ['hero_volume', $tr ? 'Sabit biçim sayısı, birleşik değişken, logaritmik ve yerel denklemler' : 'Constant form factor, combined variable, logarithmic and local equations'],
         'dogrusal-olmayan-regresyon.php' => ['hero_nlreg', $tr ? 'Hazır biçimler ya da serbest formül; ağırlık, aralıklar, AIC' : 'Ready-made forms or a free formula; weights, intervals, AIC'],
         'karma-modeller.php' => ['hero_mixed', $tr ? 'Doğrusal ve doğrusal olmayan; ML/REML, yeni alan kalibrasyonu' : 'Linear and nonlinear; ML/REML, calibration of a new plot'],
+        'denklem-sistemleri.php' => ['hero_eqsys', $tr ? 'Kendi formülleriniz; ortak katsayılar, OLS, SUR, yinelemeli SUR' : 'Your own formulas; shared coefficients, OLS, SUR, iterated SUR'],
         'tomruk-olcumu.php' => ['hero_logscale', $tr ? 'Scribner, Doyle, International; Smalian, Huber, Newton' : 'Scribner, Doyle, International; Smalian, Huber, Newton'],
         'biyokutle-karbon.php' => ['hero_biomass', $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients'],
         'buyume-islevi.php' => ['hero_growth', $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination'],
@@ -343,7 +350,6 @@ function soon_bars(array $v, string $cls = 'hz-bar', float $x0 = 34, float $w = 
 function soon_figure(string $kind): string {
     $ax = hero_axes(300, 150, 22, 20); $r = hero_rng(crc32($kind) % 100000 + 7);
     switch ($kind) {
-        case 'system':   { $o = $ax; foreach ([[.35, 0], [.65, 1], [1, 2]] as [$a, $k]) $o .= soon_curve(function ($u) use ($a) { return $a * 100 * pow($u, 1.6); }, 22, 288, 130, 'hz-line hz-s' . $k); return $o; }
         case 'survival': { $p = [[22, 20]]; $s = 110; for ($k = 0; $k < 10; $k++) { $x = 22 + ($k + 1) * 26.6; $p[] = [$x, 130 - $s]; $s *= .82; $p[] = [$x, 130 - $s]; } return $ax . '<path class="hz-line hz-c1" d="' . hero_path($p) . '"/>'; }
     }
     return '';
@@ -352,7 +358,6 @@ function soon_figure(string $kind): string {
  * (17 Nov 2026, user decision) and tools already live have no entry. */
 function soon_card_data(bool $tr): array {
     $d = [
-        'SM-04' => ['system', 'Eşanlı ve toplamsal denklem sistemleri', 'Simultaneous and additive equation systems'],
         'SM-05' => ['survival', 'Ölüm ve sağkalım modelleri', 'Mortality and survival models'],
     ];
     return array_map(function ($v) use ($tr) { return [$v[0], $tr ? $v[1] : $v[2]]; }, $d);
