@@ -73,7 +73,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 |---|---|---|---|---|
 | SV-01 | Seksiyon hacmi (Huber, Smalian, Newton, Hohenadl) | yayında | `seksiyon-hacmi.php` | Huber/Smalian/Newton tanım istisnası [D]; Hohenadl Heger (1965) [B] |
 | SV-02 | Gövde profili denklemleri (Max ve Burkhart, Kozak, değişken üslü) | yayında | `govde-profili.php` | TOOLS_SPEC TP01–TP02. SV-02/a1 (16 Kasım 2026): Max ve Burkhart (1976) Model 4 çekirdeği [B] (`assets/lab/taper/calc.js`). SV-02/a2 (16 Kasım 2026): Kozak (2004) Model 02 [B]. SV-02/a3 (16 Kasım 2026): gövde ölçümlerinden uydurma (TP02). Sayfa (TP04) 16 Kasım 2026, 1.0.0-beta.1; tepe çapına kadar kullanılabilir hacim de sayfada (SV-03'ün temeli) |
-| SV-03 | Kullanılabilir hacim (profil integrali, tepe çapı ve tomruk boyu sınırları) | planlı | – | TP01–TP03 |
+| SV-03 | Kullanılabilir hacim (profil integrali, tepe çapı ve tomruk boyu sınırları) | yayında | `govde-profili.php` | TP01–TP03. Tepe çapı sınırı SV-02 sayfasıyla; SV-03/a1 (17 Kasım 2026, 1.0.0-beta.3): tomruk boyu sınırı, Kershaw ve ark. 2016 §6.4.1, §7.4.1, §7.4.3 [B] |
 | SV-04 | Hacim denklemleri | planlı | – | TOOLS_SPEC SV04 (isteğe bağlı); katsayılar kullanıcıdan |
 | SV-05 | Tomruk ölçüm kuralları (Doyle, Scribner, International ¼″, kübik) | planlı, düşük öncelik | – | ABD'ye özgü; P4 |
 | SV-06 | Ürün bölme (sortiman) eniyileme | yayında | `govde-profili.php` | TP03. SV-06/a1 (16 Kasım 2026): öncelik sırası ve dinamik programlama çekirdeği (`assets/lab/taper/bucking.js`); Grondin (1998) ve Bennemann ve ark. (2025) [B]; Pnevmaticos ve Mann (1972) aktarılan [D]. Sayfa: Gövde Profili'nde ürün bölme bölümü (`govde-profili.php`, 1.0.0-beta.2; 16 Kasım 2026); yayına alındı (16 Kasım 2026, kullanıcı kararı) |
@@ -196,7 +196,7 @@ aşama kabul ölçütleri sağlanmadan sonrakine geçilmez.
 
 17 Kasım 2026 kullanıcı kararıyla (P8) yol haritası daraltıldı. Yayında olmayan ve plandan çıkarılmayan araçlar:
 
-1. **Gövde hacmi:** SV-03 (kullanılabilir hacim), SV-04 (hacim denklemleri), SV-05 (tomruk ölçüm kuralları, düşük öncelik).
+1. **Gövde hacmi:** SV-04 (hacim denklemleri), SV-05 (tomruk ölçüm kuralları, düşük öncelik). SV-03 yayında (17 Kasım 2026).
 2. **İstatistiksel modelleme:** SM-02 (doğrusal olmayan regresyon), SM-03 (karma etkili modeller), SM-04 (eşanlı ve
    uyumlu sistemler; toplamsal biyokütle alt kapsamı BC-02/a1'de yayında), SM-05 (ölüm ve sağkalım).
 3. **Biyokütle:** BC-02/a2 (doğrusal olmayan toplamsal sistemler; Parresol 2001 bekleniyor).

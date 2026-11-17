@@ -1070,6 +1070,16 @@ Kaynak: Kozak, A. 2004. My last words on taper equations. *The Forestry Chronicl
 - **Sonuçlar:** ağaç × set tablosu (toplam, tepe çapı yüksekliği, kullanılabilir hacim, d(1.3), notlar: geçerlilik aralığı, tanımsız bölge, tepe); seçilen ağacın profil grafiği (301 noktalı ızgara; kabuklu düz, kabuksuz kesikli çizgi) ve profil tablosu; Excel (Bilgi: araç, sürüm, tarih, dil, ayarlar, setler ve kaynakları; Ağaçlar; Profil), CSV, JSON.
 - **Doğrulama:** `tests/taper/e2e.mjs` 21/21 (kaynak ve birleştirilmiş modda): örnek veriyle uydurma (ondalık virgül algısı, sütun tahmini, katsayılar Node'daki motorla 1e−6, dışarıda kalan ağaç, sınıf ve hacim tabloları, zayıf parametre uyarısı), kaynaksız kayıt reddi, tek ağaç toplam/kullanılabilir hacim ve profil tablosu motorla aynı, Excel sayfaları ve CSV, yapıştırılan ağaç tablosu (geçersiz ağaç notuyla), oturumun geri yüklenmesi, İngilizce, telefon ve koyu tema, sayfa hatası yok.
 
+### SV-03: tomruk boyu sınırı (17 Kasım 2026; `logCount`, `logLimit`; Gövde Profili 1.0.0-beta.3)
+Kaynak **[B]**: Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest Mensuration*, 5. baskı. Wiley (kullanıcının ayırdığı s. 160–200, 17 Kasım 2026):
+- §6.4.1 (s. 168–169), çözümlü örnek, adım 3: "Subtracting 1 ft for the stump and allowing 0.3 ft for trim, then number of 16-ft logs are determined: L = ((72 − 17.3)/16.3) + 1 = 3.3 + 1 = 4 logs". Yani kesimden tepe sınırına kadarki uzunluk, tomruk boyu + kesim payına bölünür ve yalnızca tam tomruklar sayılır.
+- §7.4.1 (s. 195): kesim payı ("trim allowance"), her tomrukla kesilen ek uzunluk, 3–6 in.
+- §7.4.3 (s. 198): kullanılabilir tomruğun en kısa boyu vardır (ör. 8 ft'ten kısa tomruk ıskartadır). Tablo 6.14 notu: en kısa boydan kısa tepe parçaları kesir olarak ölçülebilir (araçta "kalan kısa parça sayılır" seçeneği).
+- §5.3 (tepe çapı sınırı) ayrıca okunmadı; tepe çapı sınırı SV-02 sayfasında zaten vardı (profilin tepe çapına en son indiği yükseklik).
+
+Uygulama: n = ⌊(h_üst − h_kesim)/(L + t)⌋ (kitabın ((h_üst − h_kesim − (L + t))/(L + t)) + 1 biçimiyle aynı tam kısım; tam katlar 1e−9 göreli payla tam sayılır). h_üst tepe çapının yüksekliği, tepe çapı girilmemişse ağacın tepesidir. i. tomruk b_i = h_kesim + i(L + t)'den b_i + L'ye, kesim payı b_i + L'den b_i + L + t'ye. Kalan r = h_üst − h_kesim − n(L + t): "sayılmaz" (varsayılan; kitabın örneği) ya da "sayılır" (r − t > 0 ve en kısa tomruk girildiyse r − t ≥ en kısa); L < en kısa ise tomruk çıkmaz. Hacimler seçili profil setinin integrali (§17); tomruklar + kısa parça + kesim payları + kalan = kesimden h_üst'e kullanılabilir hacim. Kitaptaki değerler (16 ft, 0,3 ft, 1 ft, 8 ft) yalnızca örnektir; araçta varsayılan yoktur, uzunluklar metrik ve kullanıcıdan (K1). Kusur düşümü (§7.4.1) ve ölçme kuralları (board-foot, SV-05) kapsam dışı.
+Test: `node tests/taper/test_sv03.mjs` (8; kitabın örneği 4 tomruk; `tests/ref/make_taper_sv03.py` yalnız standart kütüphane, kitabın biçimiyle tomruk sayısı ve Max–Burkhart profilinde Simpson hacimleri, 42 ağaç; denge), tarayıcı `tests/taper/e2e.mjs` (39).
+
 ## 18. Büyüme işlevi uydurma / Growth function fitter (`assets/lab/growth/calc.js`; PLATFORM_PLAN SQ-03)
 
 ### SQ-03/a1: biçimler, uydurma ve türetilen büyüklükler (16 Kasım 2026)
