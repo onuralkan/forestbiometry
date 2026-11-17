@@ -1197,3 +1197,19 @@ Kaynaklar (17 Kasım 2026, kullanıcının yüklediği iki kitap; TM kararı: ki
 - **Uygulanmayanlar:** eğik ağacın gövde uzunluğu (Graves §76 trigonometriyle hesaplanacağını söyler ama formül vermez); alet tabloları ve alet kurulumları (Faustmann, Christen, Klaussner, Weise…); yaprak kütlesinde tepe seçimi gibi uygulama öğütleri yalnızca kılavuza yazılır.
 - **Doğrulama:** `tests/ref/make_height_tm01.py` (bilinen boylu ağaç ve gözlemci geometrisinden atan2 ile açılar, yüzde okumalar, göze ve gövde noktasına uzaklıklar; Brandis biçimi mpmath 50 basamak). `tests/tree/test_tm01.mjs` 696/696: 200 durumda derece, yüzde, dibe uzaklık ve gövde noktasına uzaklıkla boy en kötü 9.6e−16 göreli; Brandis biçimiyle aynı; Graves'in iki sırık örneği 45; gölge, yatay uzaklık (3-4-5), 45° = %100, sıralama, aralık ve birim hataları.
 
+### TM-02/a1: çap ve göğüs yüzeyi (17 Kasım 2026; `tree/diameter.js`)
+- **Çevre ↔ çap** d = c/π; **göğüs yüzeyi** g = π/4·d² (d m'ye çevrilerek, g m²) (Hamilton V §8 daire; Graves §43 çap şeridi).
+- **Birden çok okuma:** dik iki çap ya da birden çok çap aritmetik ortalanır (Graves §114, §143); seçenek olarak iki çap elipsin eksenleri sayılır, alan π·a·b = π/4·d₁·d₂, eşdeğer çap √(d₁d₂) (Hamilton V §8 elips). Çevre okuması önce çapa çevrilir.
+- **Yuvarlama:** yok / tam santimetreye aşağı (Hamilton II §2, sınıflama şeridi; sınırdaki değer üst sınıfta kalır) / milimetre. Birimler: cm, mm, m, inç (1 in = 2.54 cm, Hamilton V §9); hesap ve çıktı metrik (P5).
+- **Ağaç listesi:** N, ΣG, aritmetik ortalama çap ve ortalama göğüs yüzeyli ağacın çapı (Graves §127: B̄ = Σbᵢnᵢ/N, B̄'nin çapı).
+- **Ölçme kuralları** (Hamilton II §2 a: 1.3 m, şerit gergin ve gövdeye dik, eğimde üst taraf, eğik ağaçta alt taraf, sürülmüş zeminde kök boğazı ya da zemin hangisi yüksekse, şişkinlikte altında en ince yer, 1.3 m altında çatal: her kol ayrı ağaç, 1.3 m'de çatal: tek ağaç, çatalın altında; Graves §42 kumpas gövdeye dik, şişkinlikte üstte ya da altta ya da ikisinin ortalaması; şerit kumpastan genelde büyük ölçer) arayüzde ve kılavuzda yazılır; hesap değildir.
+- **Doğrulama:** `tests/ref/make_tree_tm02_06.py` (40 rastgele ağaç listesi, mpmath 40 basamak); `tests/tree/test_tm02_06.mjs`.
+
+### TM-06/a1: biçim sayısı, biçim üssü, biçim bölümü (17 Kasım 2026; `tree/form.js`)
+- **Biçim sayısı** F = V/(B·H) (Graves §91): göğüs yüksekliği (B 1.3 m'de), mutlak (B dipte), göğüs yüksekliği üstü mutlak (§95: 1.3 m üstündeki hacim, B 1.3 m'de, H − 1.3), normal (§96 Pressler: B H/20'de). Hangi hacim verilirse (kullanılabilir, gövde, ağaç) o biçim sayısıdır. V = B·H·F (§92); biçim yüksekliği F·H (§98). F > 1 uyarılır.
+- **Biçim üssü** (§97): y² = p·xʳ (x tepeden); r = 2(log y₁ − log y₂)/(log x₁ − log x₂); r = 0 silindir, 1 paraboloit, 2 koni, 3 neiloit; mutlak biçim sayısı 1/(r + 1); göğüs yüksekliği biçim sayısı (1/(r + 1))·(H/(H − 1.3))ʳ (Graves 4½ ft yazar).
+  - **Kitaptaki örnekte aritmetik hata:** 18 ve 15 inç, tepeden 61 ve 45 ft için kitap log 1.25 = 0.086910 yazıp r = 1.35 bulur. Doğrusu log 1.25 = 0.096910 ve r = 1.199. Basılı sayfa görüntüden doğrulandı (Internet Archive taraması s. 184, Drive'daki PDF ile bayt bayt aynı dosya). Araç formülü uygular; test iki değeri de belgeler.
+- **Biçim bölümü** (§100): q = d/D (d gövdenin ortasında, D göğüs yüksekliğinde); F = q − c, türe özgü c kullanıcıdan (kitaptaki Avrupa türleri değerleri gömülmez, K1).
+- **Uygulanmayanlar:** §99'daki yaklaşık yöntemler (Philipp, Strzelecki, Nossek, Schaal) ve §83 Pressler formülü (okunan kopyada basılı formül okunaklı değil).
+- **Doğrulama:** `tests/ref/make_tree_tm02_06.py` (60 dönel cisim d² = D²(x/H)ʳ, rastgele r ve H, hacim scipy quad, dört biçim sayısı ve iki çaptan r); `tests/tree/test_tm02_06.mjs` 297/297: dört biçim sayısı, 1/(r + 1), göğüs yüksekliği formülü, iki çaptan üs (1e−11), V = BHF, cisim adları, Graves örneği ve hatası, biçim bölümü, çap/göğüs yüzeyi/birim/yuvarlama, 40 ağaç listesi (1e−13).
+
