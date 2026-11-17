@@ -131,6 +131,8 @@ DS-05 (zarar değerlendirmesi) için kaynak, aracın kapsamı belirlenince seçi
 | ☐ | Kaynak | Araç | Yerine olur [A] |
 |---|---|---|---|
 | ☐ | Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest Mensuration*, 5. baskı. Wiley. | TM-01…06 | van Laar ve Akça 2007; Avery ve Burkhart 2002 |
+| ☑ | Hamilton, G.J. 1975. *Forest Mensuration Handbook.* Forestry Commission Booklet 39. HMSO. (17 Kasım 2026 yüklendi; METHODS §23) | TM | — |
+| ☑ | Graves, H.S. 1906. *Forest Mensuration.* Wiley. (17 Kasım 2026 yüklendi; kamu malı; METHODS §23) | TM | — |
 | ☐ | C — van Laar, A., Akça, A. 2007. *Forest Mensuration*, 2. baskı. Springer. | TM | Kershaw ve ark. 2016 |
 | ☐ | C — Avery, T.E., Burkhart, H.E. 2002. *Forest Measurements*, 5. baskı. McGraw-Hill. (SV-05 tomruk kuralları) | TM, SV-05 | Kershaw ve ark. 2016 |
 | ☐ | C — Kalıpsız, A. *Dendrometri.* İÜ Orman Fakültesi (elindeki baskı). Türkçe terimler için. | TM | — |
