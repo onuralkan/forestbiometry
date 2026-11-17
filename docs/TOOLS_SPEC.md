@@ -45,7 +45,7 @@ Bu belge `docs/DIST_SPEC.md` ile aynı biçimdedir: önce ortak kurallar ve ara�
 - Birimler: çap cm, boy ve uzunluk m, alan m² (ekranda ha dönüşümü açıkça), hacim m³, kütle kg (ağaç) ve Mg/ha (meşcere), karbon Mg C/ha, CO₂ Mg CO₂/ha. Dönüşümler ekranda yazılır.
 - Kabuklu/kabuksuz ayrımı her çap ve hacim değerinde bir alanla taşınır (`bark: 'ob' | 'ib'`). İkisi hiçbir yerde sessizce karışmaz.
 - Ekstrapolasyon: katsayı setinin geçerlilik aralığı (ör. denklemin uydurulduğu çap ve boy aralığı) girildiyse, dışındaki ağaçlar hesaplanır ama **uyarıyla** işaretlenir ve sayıları raporlanır.
-- Kılavuz: her araç için `inc/guide/tr.php` ve `en.php` bölümü (formül tekrarlanmaz), `tests/site/test_guide.mjs` kapsamına girer.
+- Kılavuz: her araç için `inc/guide/tr/<araç>.php` ve `inc/guide/en/<araç>.php` dosyası (17 Kasım 2026'dan beri bölüm başına dosya; formül tekrarlanmaz) ve `inc/guide/cards.php`'de en az bir görev kartı; `tests/site/test_guide.mjs` kapsamına girer.
 - Atıf: `site_tools()` satırındaki `v` ile aracın `TOOL.version`'ı aynıdır (`tests/site/test_cite.mjs`).
 - Test: her bilimsel hesap için `tests/ref/make_<araç>_<aşama>.py` (SciPy/NumPy; JS'deki formülün kopyası değil, bağımsız yol: sayısal integral, genel optimizasyon, kaba kuvvet arama…) ve `tests/<araç>/test_<aşama>.mjs`; arayüz için `tests/<araç>/e2e.mjs`. Yeni testler `.github/workflows/deploy.yml`'e eklenir.
 

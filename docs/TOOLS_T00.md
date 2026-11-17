@@ -63,7 +63,7 @@ Dikkat edilecek iki nokta:
 | `tests/site/test_cite.mjs` | Araç sayısı sabit (`rows.length === 7`); sürüm `assets/lab/<lab>/calc.js` içindeki `export const TOOL = { id: '…', version: '…' }` satırından okunuyor (yalnızca `dist` istisna). Yeni araçlar `TOOL`'u `calc.js`'te bu biçimde tanımlamalı |
 | `tests/site/e2e.mjs` | Kenar çubuğu ve ana sayfa kontrolleri; kategori sayısı varsayımları kontrol edilmeli |
 | `.github/workflows/deploy.yml` | Testler tek tek yazılı; her yeni test dosyası eklenmeli |
-| `inc/guide/tr.php`, `en.php` | Her araç için bölüm (kimlik = dosya adı); kılavuzsuz araç yayına çıkmaz |
+| `inc/guide/tr/<araç>.php`, `inc/guide/en/<araç>.php` (17 Kasım 2026'dan beri; önce `tr.php`, `en.php`) | Her araç için bölüm dosyası (kimlik = dosya adı); kılavuzsuz araç yayına çıkmaz |
 
 ## 5. TOOLS_SPEC ile çelişen ya da düzeltilmesi gereken noktalar
 
