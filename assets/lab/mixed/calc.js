@@ -17,6 +17,8 @@
 // AIC = −2ℓ + 2k, BIC = −2ℓ + k·ln(N) (ML) or ln(N − p) (REML, as nlme); k = fixed effects + covariance parameters +
 // variance parameters + 1 (σ). Likelihood-ratio test 2(ℓ1 − ℓ0) against χ² with the difference in k (ML fits only).
 import { gammaQ } from '../core/stats.js';
+import { parse as parseExpr, evaluate as evalExpr, evalGrad as gradExpr, toText as exprText } from '../core/expr.js';
+import { registerForm, form as coefForm } from '../core/coef.js';
 
 export const TOOL = { id: 'karma-modeller', version: '1.0.0-beta.1' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
@@ -267,4 +269,66 @@ export function calibrateNonlinear(model, fit, obs, { iterate = false } = {}) {
 export function lrt(f0, f1) {
   const L = 2 * (f1.ll - f0.ll), df = f1.k - f0.k;
   return { L, df, p: df > 0 && L >= 0 ? gammaQ(df / 2, L / 2) : null };
+}
+
+/* ---------- building models from a table (no DOM) ---------- */
+export const TRANSFORMS = { x: { f: v => v, text: n => n }, ln: { f: v => Math.log(v), text: n => `ln(${n})` }, sq: { f: v => v * v, text: n => `${n}^2` } };
+/**
+ * Groups for a linear mixed model. rows: [{ row, g (group id), y, vals: { name: number } }]; terms: [{ name, tf }]
+ * (fixed effects besides the intercept); random: { intercept: bool, terms: [indices into terms] }; vcol: name | null.
+ * Rows with a missing or invalid value (ln of a non-positive number, non-positive variance covariate) are dropped.
+ * → { groups, dropped: [{ row, why }], names: [fixed names], rnames: [random names], text }
+ */
+export function buildLinear(rows, terms, random, vcol = null) {
+  const groups = new Map(), dropped = [];
+  for (const r of rows) {
+    const x = terms.map(t => TRANSFORMS[t.tf].f(r.vals[t.name]));
+    const why = !fin(r.y) ? 'y' : r.g == null || r.g === '' ? 'group' : x.some(v => !fin(v)) ? 'x' : vcol && !(fin(r.vals[vcol]) && r.vals[vcol] > 0) ? 'v' : null;
+    if (why) { dropped.push({ row: r.row, why }); continue; }
+    const X = [1, ...x], Z = [...(random.intercept ? [1] : []), ...random.terms.map(j => x[j])];
+    if (!groups.has(r.g)) groups.set(r.g, { id: r.g, y: [], X: [], Z: [], v: [], rows: [] });
+    const g = groups.get(r.g); g.y.push(r.y); g.X.push(X); g.Z.push(Z); g.v.push(vcol ? r.vals[vcol] : 1); g.rows.push(r.row);
+  }
+  const names = ['b0', ...terms.map((_, j) => 'b' + (j + 1))];
+  const rnames = [...(random.intercept ? ['b0'] : []), ...random.terms.map(j => 'b' + (j + 1))];
+  const text = names.map((n, j) => j === 0 ? n : `${n}*${TRANSFORMS[terms[j - 1].tf].text(terms[j - 1].name)}`).join(' + ');
+  return { groups: [...groups.values()], dropped, names, rnames, text };
+}
+/**
+ * A nonlinear model from a formula (core/expr.js): vars are data names, every other name a coefficient.
+ * → { ok, model: { params, f, grad, vars, text }, … } | { ok: false, code }
+ */
+export function nonlinearModel(expr, vars) {
+  const r = parseExpr(expr); if (!r.ok) return { ok: false, code: 'parse', parse: r };
+  const params = r.names.filter(n => !vars.includes(n)), used = r.names.filter(n => vars.includes(n));
+  if (!params.length) return { ok: false, code: 'params.none' };
+  if (!used.length) return { ok: false, code: 'vars.none' };
+  const env = (p, x) => { const e = {}; params.forEach((n, j) => { e[n] = p[j]; }); used.forEach((n, j) => { e[n] = x[j]; }); return e; };
+  return { ok: true, model: { params, vars: used, text: exprText(r.ast), f: (p, x) => evalExpr(r.ast, env(p, x)), grad: (p, x) => gradExpr(r.ast, env(p, x), params).d } };
+}
+/** Groups for a nonlinear mixed model: x = values of the model's variables. */
+export function buildNonlinear(rows, vars, vcol = null) {
+  const groups = new Map(), dropped = [];
+  for (const r of rows) {
+    const x = vars.map(v => r.vals[v]);
+    const why = !fin(r.y) ? 'y' : r.g == null || r.g === '' ? 'group' : x.some(v => !fin(v)) ? 'x' : vcol && !(fin(r.vals[vcol]) && r.vals[vcol] > 0) ? 'v' : null;
+    if (why) { dropped.push({ row: r.row, why }); continue; }
+    if (!groups.has(r.g)) groups.set(r.g, { id: r.g, y: [], x: [], v: [], rows: [] });
+    const g = groups.get(r.g); g.y.push(r.y); g.x.push(x); g.v.push(vcol ? r.vals[vcol] : 1); g.rows.push(r.row);
+  }
+  return { groups: [...groups.values()], dropped };
+}
+/** Registered library form of a fitted mixed model (fixed part as a formula): 'mixed.<FNV-1a of text|vars|params>'. */
+export function ensureForm(text, vars, params) {
+  let h = 0x811c9dc5; const s = text + '|' + vars.join(',') + '|' + params.join(',');
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  const id = 'mixed.' + h.toString(16).padStart(8, '0');
+  if (!coefForm(id)) { try { registerForm({ id, tool: 'mixed', params: params.map(key => ({ key })), inputs: Object.fromEntries(vars.map(v => [v, { unit: '-' }])), output: { name: 'y', unit: '-' }, formula: { tr: 'y = ' + text, en: 'y = ' + text }, transform: 'none' }); } catch (e) { /* registered meanwhile */ } }
+  return id;
+}
+/** Registers the forms of stored mixed-model sets (fit.expr, fit.vars) so the library can check them. */
+export function registerStoredForms(sets) {
+  for (const s of sets || []) if (s && typeof s.form === 'string' && s.form.startsWith('mixed.') && !coefForm(s.form) && s.fit && typeof s.fit.expr === 'string' && Array.isArray(s.fit.vars)) {
+    const m = nonlinearModel(s.fit.expr, s.fit.vars); if (m.ok) ensureForm(m.model.text, m.model.vars, m.model.params);
+  }
 }
