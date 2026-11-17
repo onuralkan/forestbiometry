@@ -142,7 +142,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | Kimlik | Araç | Durum | Sayfa | Not |
 |---|---|---|---|---|
 | SM-01 | Boy–çap modelleri | yayında | `boy-cap.php` | sabit etkili sürüm |
-| SM-02 | Doğrusal olmayan regresyon (NLS, ağırlıklı) | planlı | – | çekirdek var (`core/nls.js`) |
+| SM-02 | Doğrusal olmayan regresyon (NLS, ağırlıklı) | yayında | `dogrusal-olmayan-regresyon.php` | SM-02/a1 (17 Kasım 2026, 1.0.0-beta.1): hazır biçimler ve serbest formül (kullanıcı kararı; `core/expr.js`), ağırlıklı NLS, aralıklar, AIC ile karşılaştırma, kütüphaneye kayıt; Parresol 2001 [B] |
 | SM-03 | Karma etkili modeller | planlı | – | boy–çapın karma etkili aşaması |
 | SM-04 | Eşanlı ve uyumlu sistemler (SUR, toplamsal biyokütle) | planlı | – | SUR çap dağılımı meşcere modellerinde var |
 | SM-05 | Ölüm ve sağkalım modelleri | planlı | – | |
@@ -197,7 +197,7 @@ aşama kabul ölçütleri sağlanmadan sonrakine geçilmez.
 17 Kasım 2026 kullanıcı kararıyla (P8) yol haritası daraltıldı. Yayında olmayan ve plandan çıkarılmayan araçlar:
 
 1. **Gövde hacmi:** SV-03, SV-04 ve SV-05 yapıldı (17 Kasım 2026); SV modülünde planlı araç kalmadı.
-2. **İstatistiksel modelleme:** SM-02 (doğrusal olmayan regresyon), SM-03 (karma etkili modeller), SM-04 (eşanlı ve
+2. **İstatistiksel modelleme:** SM-02 yapıldı (17 Kasım 2026); SM-03 (karma etkili modeller), SM-04 (eşanlı ve
    uyumlu sistemler; toplamsal biyokütle alt kapsamı BC-02/a1'de yayında), SM-05 (ölüm ve sağkalım).
 3. **Biyokütle:** BC-02/a2 yapıldı (17 Kasım 2026); BC modülünde planlı araç kalmadı.
 
