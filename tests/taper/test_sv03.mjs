@@ -1,7 +1,7 @@
 // SV-03: log-length limit of the merchantable stem (assets/lab/taper/calc.js logCount, logLimit).
 //   node tests/taper/test_sv03.mjs
 // Reference: tests/ref/taper_sv03.json (make_taper_sv03.py, standard library, written apart: the book's form of the log
-// count, Simpson volumes on the Max and Burkhart 1976 Model 4 profile). Rule: Husch, Beers, Kershaw, Ducey 2016 §6.4.1,
+// count, Simpson volumes on the Max and Burkhart 1976 Model 4 profile). Rule: Kershaw, Ducey, Beers, Husch 2016 §6.4.1,
 // §7.4.1, §7.4.3 [B]; the worked example of the book (72 ft, 1 ft stump, 16-ft logs, 0.3 ft trim → 4 logs).
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

@@ -219,7 +219,7 @@ export function merchantable(set, D, H, { stump = 0, dTop = null } = {}) {
 }
 
 /**
- * SV-03 (17 Nov 2026): log-length limit of the merchantable stem. Source [B]: Husch, Beers, Kershaw, Ducey 2016,
+ * SV-03 (17 Nov 2026): log-length limit of the merchantable stem. Source [B]: Kershaw, Ducey, Beers, Husch 2016,
  * Forest Mensuration, 5th ed., Wiley: §6.4.1 (p. 168–169, worked example, step 3: "Subtracting 1 ft for the stump and
  * allowing 0.3 ft for trim, then number of 16-ft logs are determined: L = ((72 − 17.3)/16.3) + 1 = 3.3 + 1 = 4 logs",
  * i.e. the merchantable length from the stump to the top limit, divided by log length + trim, whole logs only);

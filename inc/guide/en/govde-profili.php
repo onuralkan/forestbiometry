@@ -13,7 +13,7 @@
 <li><b>One tree</b> (dbh and height) or a <b>Tree table</b>; cut height, optional top diameter and the profile table step.</li>
 <li>Per tree: total volume (cut to tip), the height of the top diameter and the merchantable volume, d(1.3) and notes (outside the valid range, regions without a diameter). The stem profile chart and profile table of the chosen tree.</li>
 <li>Downloads: Excel (Info, Trees, Profile), CSV and JSON.</li>
-<li><b>Log-length limit</b> (optional): log length, trim allowance per log, optional minimum log length and whether a short top piece counts. The length from the cut to the top limit (the height of the top diameter; the tip without a top diameter) is divided by log length + trim and whole logs are counted (Husch, Beers, Kershaw and Ducey 2016, §6.4.1, §7.4.1, §7.4.3). Results: number and volume of logs, trim and the rest (they add up to the merchantable volume); the log list of the chosen tree (ends, length, small-end diameter, volume). The values are yours; the book's example values are not defaults.</li>
+<li><b>Log-length limit</b> (optional): log length, trim allowance per log, optional minimum log length and whether a short top piece counts. The length from the cut to the top limit (the height of the top diameter; the tip without a top diameter) is divided by log length + trim and whole logs are counted (Kershaw, Ducey, Beers and Husch 2016, §6.4.1, §7.4.1, §7.4.3). Results: number and volume of logs, trim and the rest (they add up to the merchantable volume); the log list of the chosen tree (ends, length, small-end diameter, volume). The values are yours; the book's example values are not defaults.</li>
 </ul>
 <h3>Product bucking (assortments)</h3>
 <ul>

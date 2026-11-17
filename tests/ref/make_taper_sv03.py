@@ -1,6 +1,6 @@
 """Reference for SV-03, the log-length limit of the merchantable stem: python3 tests/ref/make_taper_sv03.py
 
-Written apart from assets/lab/taper/calc.js, standard library only. Rule from Husch, Beers, Kershaw, Ducey 2016,
+Written apart from assets/lab/taper/calc.js, standard library only. Rule from Kershaw, Ducey, Beers, Husch 2016,
 Forest Mensuration 5th ed., §6.4.1 step 3 (p. 168-169): whole logs n = integer part of
 ((hTop - stump - (L + trim)) / (L + trim)) + 1, written here in that form (the JavaScript uses the equivalent
 floor((hTop - stump) / (L + trim))); trim allowance §7.4.1; minimum log length §7.4.3. Volumes from the Max and

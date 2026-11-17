@@ -12,7 +12,7 @@
 <ul>
 <li><b>Tek ağaç</b> (göğüs çapı ve boy) ya da <b>Ağaç tablosu</b>; kesim yüksekliği, isteğe bağlı tepe çapı ve profil tablosu adımı.</li>
 <li>Ağaç başına toplam hacim (kesimden tepeye), tepe çapının yüksekliği ve kullanılabilir hacim, d(1.3) ve notlar (geçerlilik aralığı dışı, çap tanımsız bölgeler). Seçilen ağacın gövde profili grafiği ve profil tablosu.</li>
-<li><b>Tomruk boyu sınırı</b> (isteğe bağlı): tomruk boyu, tomruk başına kesim payı, isteğe bağlı en kısa tomruk ve kalan kısa parçanın sayılıp sayılmayacağı. Kesimden tepe sınırına (tepe çapı yüksekliği; tepe çapı yoksa tepe) kadar uzunluk tomruk boyu + kesim payına bölünür ve tam tomruklar sayılır (Husch, Beers, Kershaw ve Ducey 2016, §6.4.1, §7.4.1, §7.4.3). Sonuçta tomruk sayısı ve hacmi, kesim payları ve kalan hacim (toplamları kullanılabilir hacme eşit); seçilen ağacın tomruk listesi (uçlar, boy, ince uç çapı, hacim). Değerler sizin; kitaptaki örnek değerler varsayılan değildir.</li>
+<li><b>Tomruk boyu sınırı</b> (isteğe bağlı): tomruk boyu, tomruk başına kesim payı, isteğe bağlı en kısa tomruk ve kalan kısa parçanın sayılıp sayılmayacağı. Kesimden tepe sınırına (tepe çapı yüksekliği; tepe çapı yoksa tepe) kadar uzunluk tomruk boyu + kesim payına bölünür ve tam tomruklar sayılır (Kershaw, Ducey, Beers ve Husch 2016, §6.4.1, §7.4.1, §7.4.3). Sonuçta tomruk sayısı ve hacmi, kesim payları ve kalan hacim (toplamları kullanılabilir hacme eşit); seçilen ağacın tomruk listesi (uçlar, boy, ince uç çapı, hacim). Değerler sizin; kitaptaki örnek değerler varsayılan değildir.</li>
 <li>İndirme: Excel (Bilgi, Ağaçlar, Profil), CSV ve JSON.</li>
 </ul>
 <h3>Ürün bölme (sortiman)</h3>
