@@ -3,7 +3,7 @@
 // (extracted from docs/METHODS.md and docs/KAYNAK_LISTESI.md; no detail added that those documents do not give).
 require __DIR__ . '/inc/site.php';
 $tr = site_ctx()['tr'];
-$refs = json_decode((string) @file_get_contents(__DIR__ . '/inc/kaynakca.json'), true) ?: [];
+$refs = json_decode((string) @file_get_contents(__DIR__ . '/inc/kaynakca.json'), true) ?: [];   // docs/kaynakca.json without the sources of archived (removed) tools
 site_top([
     'title' => $tr ? 'Kaynakça' : 'References',
     'desc'  => $tr ? 'forestbiometry.online araçlarının yöntemlerinde ve testlerinde kullanılan bütün kaynaklar (APA 7).' : 'Every source used in the methods and tests of the forestbiometry.online tools (APA 7).',
@@ -26,9 +26,11 @@ function apa(array $r, bool $tr): string {
         if ($tr) $ed = ' (' . h($e) . (ctype_digit($e) ? '. baskı' : '') . ')';
         else { $n = (int) $e; $suf = ctype_digit($e) ? (in_array($n % 100, [11, 12, 13], true) ? 'th' : ([1 => 'st', 2 => 'nd', 3 => 'rd'][$n % 10] ?? 'th')) : ''; $ed = ' (' . h($e) . $suf . ' ed.)'; }
     }
-    $title = (string) ($r['title'] ?? '');
+    $title = trim((string) ($r['title'] ?? ''));
     $type = $r['type'] ?? 'other';
-    if ($type === 'article') {
+    if ($title === '') {
+        foreach (['container', 'publisher'] as $k) if (!empty($r[$k])) $o .= '<i>' . h($r[$k]) . '</i>' . (!empty($r['volume']) && $k === 'container' ? ', <i>' . h($r['volume']) . '</i>' : '') . '. ';
+    } elseif ($type === 'article') {
         $o .= h(apa_end($title)) . ' ';
         if (!empty($r['container'])) {
             $o .= '<i>' . h($r['container']) . '</i>';
@@ -63,7 +65,7 @@ $label = ['B' => $tr ? 'okundu, uygulandı' : 'read, applied', 'A' => $tr ? 'iki
     <ol class="refs" id="refs">
       <?php foreach ($refs as $r): ?>
       <li id="ref-<?= h($r['key'] ?? '') ?>"><?= apa($r, $tr) ?>
-        <span class="muted small"> — <?= h(implode(', ', $r['tools'] ?? [])) ?><?= !empty($r['status']) ? ' · ' . h($r['status']) . ' (' . h($label[$r['status']] ?? $r['status']) . ')' : '' ?><?= !empty($r['note']) ? ' · ' . h($r['note']) : '' ?></span></li>
+        <span class="muted small"> — <?= h(implode('; ', array_unique(array_map(function ($t) { return trim(preg_replace('/\s*\(.*?\)/u', '', $t)); }, $r['tools'] ?? [])))) ?><?= !empty($r['status']) ? ' · ' . h($r['status']) . ' (' . h($label[$r['status']] ?? $r['status']) . ')' : '' ?><?= !empty($r['note']) && stripos($r['note'], 'incomplete') === 0 ? ' · ' . ($tr ? 'künye kaynak belgelerde eksik' : 'citation incomplete in the source documents') : '' ?></span></li>
       <?php endforeach; ?>
     </ol>
   </section>

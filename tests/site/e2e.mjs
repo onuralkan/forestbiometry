@@ -40,6 +40,12 @@ const orcidLink = await page.locator('dl.kv a[href^="https://orcid.org/"]').eval
 ok(orcid === 0 || /^https:\/\/orcid\.org\/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(orcidLink[0] || ''), 'About: ORCID hidden or well-formed');
 ok((await page.locator('.b-nav a[aria-current]').textContent()) === 'Hakkında', 'current page marked in the navigation');
 await shot('site-2-hakkinda');
+// 2b. References page (APA 7), linked next to About
+await page.click('.b-nav a[href="kaynakca.php"]');
+{ const n = await page.locator('ol.refs > li').count(), first = await page.locator('ol.refs > li').first().textContent();
+  ok(n >= 100 && (await page.locator('.b-nav a[aria-current]').textContent()) === 'Kaynakça' && /\(\d{4}|n\.d\.\)/.test(first) && (await page.locator('#refs-n').textContent()).startsWith(String(n)), `References: ${n} sources in APA style, nav item current`);
+  ok((await page.locator('ol.refs a[href^="https://doi.org/"]').count()) > 0 && (await page.locator('#side a[href="kaynakca.php"]').count()) === 1 && (await page.locator('footer a[href="kaynakca.php"]').count()) === 1, 'References: DOI links; linked from the side menu and the footer'); }
+await page.click('.b-nav a[href="hakkinda.php"]');
 
 // 3. language switch keeps the page; footer names the author
 await page.click('#langlink'); await page.waitForURL(/lang=en/);
@@ -162,7 +168,7 @@ await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide
 // module loading: every script and style of every page carries a version tag (import map from inc/site.php), so that
 // versioned files can be cached for long; a module missing from the graph would be requested without a tag
 { const site = (await import('node:fs')).readFileSync(new URL('../../inc/site.php', import.meta.url), 'utf8');
-  const files = ['', 'kilavuz.php', 'hakkinda.php', ...[...site.matchAll(/'file' => '([a-z-]+\.php)', 'v' =>/g)].map(m => m[1])];
+  const files = ['', 'kilavuz.php', 'hakkinda.php', 'kaynakca.php', ...[...site.matchAll(/'file' => '([a-z-]+\.php)', 'v' =>/g)].map(m => m[1])];
   const q = await browser.newPage(); q.on('pageerror', e => errors.push(e.message));
   for (const f of files) { const un = []; let mods = 0; const h = r => { const u = r.url(); if (/\.(m?js|css)(\?|$)/.test(u)) { mods++; if (!/[?&]v=/.test(u)) un.push(u.replace(BASE, '')); } };
     q.on('request', h); await q.goto(BASE + '/' + f, { waitUntil: 'networkidle' }); q.off('request', h);

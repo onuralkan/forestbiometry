@@ -3641,7 +3641,7 @@ const tr = {
   'w.prs.ident': p => `çözüm zayıf belirlenmiş (koşul sayısı ${p.cond}); küçük girdi değişiklikleri parametreleri çok değiştirebilir`,
   'ex.h': 'Dışa aktar (bütün örnek alan ve dönemler)', 'ex.xlsx': 'Excel raporu', 'ex.fits': 'Fit işlemleri (CSV)', 'ex.params': 'Parametreler (CSV)', 'ex.rxlsx': 'Excel raporu', 'ex.rcsv': 'Sonuçlar (CSV)',
   'ex.note': 'Sayılar tam duyarlıkla ve ondalık noktayla yazılır; CSV alan ayırıcısı virgüldür. Türkçe bölge ayarlı Excel CSV dosyasını tek sütunda açabilir; o durumda Excel raporunu kullanın.', 'ex.fail': 'Excel kitaplığı yüklenemedi.',
-  'sheet.info': 'Bilgi', 'sheet.fits': 'Fit işlemleri', 'sheet.params': 'Parametreler', 'sheet.units': 'Ornek alanlar', 'sheet.rec': 'Geri kazanim',
+  'sheet.info': 'Bilgi', 'sheet.fits': 'Fit islemleri', 'sheet.params': 'Parametreler', 'sheet.units': 'Ornek alanlar', 'sheet.rec': 'Geri kazanim',
   'x.k': 'Ayar', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.src': 'Veri', 'x.dcol': 'Çap sütunu (birim)', 'x.pcol': 'Örnek alan sütunu', 'x.percol': 'Dönem sütunu', 'x.filter': 'Süzgeç',
   'x.mode': 'Analiz birimi', 'x.dec': 'Ondalık ayırıcı', 'x.loc': 'Weibull konumu a (hesaplananlar)', 'x.bounds': 'Kullanıcının sabitlediği sınırlar', 'x.methods': 'Seçilen yöntemler (seçenekler)',
   'x.acc': 'Okunan / okunamayan / sıfırdan büyük olmayan çap', 'x.badrows': 'Analize girmeyen kaynak satırları', 'x.in': p => `Girdi: ${p.k}`,
