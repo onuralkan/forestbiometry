@@ -89,8 +89,8 @@ ikisi birlikte koşul 3'ü karşılar. "Yeni sayılır": kaynak zaten görece ye
 
 | ☐ | Kaynak | Araç | Yerine olur [A] |
 |---|---|---|---|
-| ☐ | Mehtätalo, L., Lappi, J. 2020. *Biometry for Forestry and Environmental Data.* Chapman & Hall/CRC. (`lmfor` bu kitabın paketi) | SM-02, SM-03 | yeni |
-| ☐ | Pinheiro, J.C., Bates, D.M. 2000. *Mixed-Effects Models in S and S-PLUS.* Springer. | SM-03 | Mehtätalo ve Lappi 2020 |
+| ☐ | Mehtätalo, L., Lappi, J. 2020. *Biometry for Forestry and Environmental Data.* Chapman & Hall/CRC. (`lmfor` bu kitabın paketi; 17 Kasım 2026: yüklenen dosya yalnız içindekiler ve kaynakça, bölüm metni yok; SM-03 için gerekmedi) | SM-02, SM-03 | yeni |
+| ☑ | Pinheiro, J.C., Bates, D.M. 2000. *Mixed-Effects Models in S and S-PLUS.* Springer. (17 Kasım 2026: kullanıcı yükledi, altı parça; §2.2, §2.4.1, §5.2, §7.2 okundu; METHODS §27 [B]) | SM-03 | Mehtätalo ve Lappi 2020 |
 | ☐ | Bates, D.M., Watts, D.G. 1988. *Nonlinear Regression Analysis and Its Applications.* Wiley. | SM-02 | Mehtätalo ve Lappi 2020 |
 | ☐ | Efron, B., Tibshirani, R.J. 1993. *An Introduction to the Bootstrap.* Chapman & Hall. | SM-07 | Davison ve Hinkley 1997 (`boot` paketinin kitabı) |
 
@@ -203,3 +203,5 @@ Software* 64(4), **açık**), `lmomco`, `ForestFit`; uyum testleri ve AIC `stats
 - Johnson 1949 (Johnson SB; `ForestFit`), Burk ve Newberry 1984 (moment geri kazanımı), Knoebel ve Burkhart 1991,
   Cohen 1965, Anderson ve Darling 1954, Massey 1951, Akaike 1974, Hyndman ve Fan 1996 (R `quantile` type 7 belgesi
   yeter), Näslund 1936 (`lmfor` [B] ile karşılandı), Assmann 1970 (üst boy tanımı; ders kitabı).
+
+**SM-03 ek kaynaklar (17 Kasım 2026, kullanıcı yükledi):** ☑ Lindstrom, M.J., Bates, D.M. 1990. *Biometrics* 46: 673–687 [B]; ☑ Raptis, D.I., Kazana, V., Kazaklis, A., Stamatiou, C. 2021. Mixed-effects height–diameter models for black pine (*Pinus nigra* Arn.) forest management. *Trees* 35: 1167–1183 (kalibrasyon [A]); ☑ Ciceu, A., Garcia-Duro, J., Seceleanu, I., Badea, O. 2020. A generalized nonlinear mixed-effects height–diameter model for Norway spruce in mixed-uneven aged stands. *For. Ecol. Manage.* 477: 118507 (kalibrasyon [A]); Bates, D., Mächler, M., Bolker, B., Walker, S. 2015. lme4. *J. Stat. Softw.* 67(1) (yüklendi; uygulamada kullanılmadı).
