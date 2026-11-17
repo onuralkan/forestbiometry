@@ -1307,3 +1307,23 @@ Kaynaklar: van Laar ve Akça 2007, 4.1.7 Tree crown and foliage (s. 80–82) [B]
 ### Ağaç Ölçümü sayfası, 1.0.0-beta.4: "Tepe" sekmesi (17 Kasım 2026; TM-04; tek "Ağaç Ölçümü" sayfasında, PLATFORM_PLAN TM kararı 2)
 Tepe izdüşümü (yarıçaplar ya da iki çap), tepe uzunluğu ve oranı (isteğe bağlı göğüs çapıyla tepe çapı / göğüs çapı), üç biçim için tepe yüzeyi ve hacmi, örnek alanda tepe örtüsü; Excel "Tepe", JSON kayda `crown`. Yöntem kümesi değiştiği için 1.0.0-beta.4 (K4).
 - **Doğrulama:** `tests/tree/e2e.mjs` 53/53 (kaynak ve birleştirilmiş): karışık ayırıcılı yarıçaplar, az yarıçap uyarısı, daire ve elips, tepe oranı %62.5, üç biçim motorla aynı, örtü 1.433 ve okunamayan değer, Excel "Tepe"; kılavuz 313.
+
+## 24. Hacim denklemleri / Volume equations (`assets/lab/volume/calc.js`; PLATFORM_PLAN SV-04, TOOLS_SPEC SV04; 17 Kasım 2026, 1.0.0-beta.1)
+Kullanıcı kararları (17 Kasım 2026): ayrı sayfa (`hacim-denklemleri.php`); biçimler birleşik değişken, logaritmik, sabit biçim sayısı ve yerel; başarı değerlendirmesi Model Başarısı'na aktarımla.
+
+Kaynak **[B]**: Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest Mensuration*, 5. baskı. Wiley, §6.2 (s. 156–159; kullanıcının yüklediği 2. parça, sayfa görüntülerinden doğrulandı):
+- §6.2.1 standart işlevler: (6.22) sabit biçim sayısı V = b₁D²H; (6.23) birleşik değişken V = b₀ + b₁D²H; (6.24) V = b₁D^b₂H^b₃ ve logaritmik dönüşümü (6.25). **Kitap (6.25)'in sol tarafını "V =" basmış;** (6.24)'ün logaritmik dönüşümü ln V = ln b₁ + b₂ ln D + b₃ ln H'dir (dipnot: 10 tabanlı logaritma da kullanılabilir; araç doğal logaritma kullanır). Araçta (6.24) yalnızca bu logaritmik biçimiyle uydurulur (doğrusal olmayan uydurma yok).
+- §6.2.2 yerel işlevler: (6.29) V = b₀D^b₁ ve doğrusallaştırılmış ln V = ln b₀ + b₁ ln D; Prodan'dan aktarılan V = b₀ + b₁D².
+- D göğüs çapı (cm), H toplam boy (m), V hacim (m³); katsayılar bu birimlere bağlıdır ve sette yazılır.
+
+Uygulama:
+- Bütün biçimler doğrusal en küçük kareler (logaritmik biçimler ln ölçeğinde); standart hatalar s²(XᵀWX)⁻¹, s² = Σw·e²/(n − p).
+- **Ağırlık** (yalnız hacim ölçeğindeki biçimler; kullanıcı seçer): σ²_t ∝ X_t^k, X = D²H (6.22, 6.23) ya da D² (yerel); k verilir ya da en küçük kareler artıklarından ln e² = a₁ + k ln X regresyonunun eğimi (Parresol 1999 Denklem 12, 15 [B], BC-02/a1 ile aynı). Ağırlıklı biçimde s ağırlıklı artıkların standart hatasıdır.
+- **Geri dönüşüm** (logaritmik biçimler): yok ya da Baskerville exp(s²/2), s ln ölçeğindeki artık standart hatası ([A], §22). Kayıtta `transform: { kind: 'log', correction: 'baskerville', value: s }`; `core/coef.js` `correctionFactor` aynı etkeni verir.
+- **Başarı ölçütleri** hacim ölçeğinde, Model Başarısı aracının kendi `metrics` işleviyle (§7; e = tahmin − gözlenen; yanlılık, MAE, RMSE, R² = 1 − SSE/SST). Gözlenen ve tahmin edilen hacimler `handoff:model-degerlendirme` anahtarıyla Model Başarısı'na aktarılır (rol: eğitim; o sayfa bir kez okur ve siler).
+- Veri: tablo (D, H, V ve hacmin kabuk tarafı) ya da Seksiyon Hacmi'nin aktardığı hacimler (BC03 `forest-derived/1`, etkin paketin D ve H'siyle satır satır; kabuklu ya da kabuksuz). Değeri eksik/geçersiz ağaçlar satırlarıyla dışarıda.
+- Kayıt: `model-coef/1`, `tool: 'volume'`, biçimler `volume.cf`, `volume.cv`, `volume.ln`, `volume.loc`, `volume.locln`; `origin: 'fitted'`, kaynak açıklaması zorunlu, geçerlilik aralığı örneğin D (ve H) aralığı, `fit` içinde yöntem, n, katsayılar, standart hatalar, kovaryans, ağırlık ve ölçütler; hacmin kabuk tarafı `meta.bark`.
+- Kapsam dışı: biçim (form) değişkenli denklemler (6.27, 6.28), Honer (6.26), üst çap sınırlı hacim oranları (§6.2.3), doğrusal olmayan uydurma, karma etkili modeller.
+
+Test: `node tests/volume/test_sv04.mjs` (23; `tests/ref/make_volume_sv04.py` yalnız standart kütüphane, ayrı yazılmış: beş biçim, ağırlıksız/kestirilen k/verilen k, Baskerville; katsayılar, standart hatalar, s, k, etken ve ölçütler), tarayıcı `node tests/volume/e2e.mjs` (21; ekrandaki değerler motorla aynı, kayıt, Model Başarısı'na aktarım, Seksiyon Hacmi hacimleri, telefon).
+
