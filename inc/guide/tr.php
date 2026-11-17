@@ -453,3 +453,23 @@
 <li><b>Yazdır / PDF olarak kaydet</b> yalnızca raporu A4 sayfalara dizer; <b>HTML indir</b> stilleri ve grafikleri içinde taşıyan tek bir dosya verir.</li>
 </ul>
 </section>
+
+<section class="card guide-sec">
+<?= $sec('agac-olcumu', 'Ağaç Ölçümü') ?>
+<p>Tek ağaç ölçümlerinden boy, çap ve göğüs yüzeyi ile biçim sayısını hesaplar. Formüller iki ölçme kitabından alınmıştır: Hamilton (1975) <i>Forest Mensuration Handbook</i> ve Graves (1906) <i>Forest Mensuration</i>. Üç sekme vardır; sonuçlar alanlar değiştikçe güncellenir.</p>
+<p><b>Yapmadıkları:</b> eğik ağacın gövde uzunluğu (kaynakta formül yok); kabuk, tepe tacı ve yaş/artım (ayrı araçlar, kaynakları bekleniyor); türe özgü biçim sayısı tabloları ya da biçim bölümü sabitleri (site hazır değer vermez).</p>
+<h3>Boy</h3>
+<ul>
+<li><b>Tanjant</b>: yatay uzaklık ve tepeye ve dibe açılar, derece ya da yüzde. Açılar yataydan ölçülür; dip gözün altındaysa dibe açı eksi girilir. Uzaklık eğimli zeminde ölçüldüyse kutuyu işaretleyip zeminin eğimini girin, yatay uzaklığa çevrilir.</li>
+<li><b>Mesafe ölçer</b>: gözden dibe (ya da gövdedeki bir noktaya) bakış doğrusu boyunca uzaklık; yatay uzaklık bu uzaklık ve o noktaya açıdan bulunur (Hamilton Şekil 19).</li>
+<li><b>Gölge</b> ve <b>iki sırık</b> yöntemleri (Graves): benzer üçgenler.</li>
+<li>Birden çok satır girerseniz ortalama boy ve okumaların açıklığı verilir (Hamilton: iki üç okuma alıp ortalayın). Uzaklık boydan kısaysa ya da tepeye bakış çok dikse not düşülür.</li>
+</ul>
+<h3>Çap, göğüs yüzeyi ve biçim sayısı</h3>
+<ul>
+<li><b>Tek gövde</b>: bir ya da birkaç okuma, çap ya da çevre, cm, mm, m ya da inç. Birden çok çap aritmetik ortalanır ya da iki çap bir elipsin eksenleri sayılır. Yuvarlama: yok, milimetreye ya da tam santimetreye aşağı (Hamilton). Göğüs çapı ölçme kuralları sekmede yazılıdır.</li>
+<li><b>Ağaç listesi</b>: tablo ya da yapıştırma; çap ya da çevre sütunu, isteğe bağlı ağaç sayısı sütunu. Ağaç sayısı, toplam ve ortalama göğüs yüzeyi, aritmetik ortalama çap ve ortalama göğüs yüzeyli ağacın çapı (Graves).</li>
+<li><b>Biçim sayısı</b> F = V/(B·H): göğüs yüksekliği, mutlak, 1.3 m üstü mutlak ve normal; biçim yüksekliği F·H. <b>Biçim üssü</b>: iki çap ve tepeye uzaklıklarından r, cismin adı, 1/(r + 1) ve boy girilirse göğüs yüksekliği biçim sayısı. <b>Biçim bölümü</b> q = d/D; türe özgü sabit c girilirse F = q − c.</li>
+<li>İndirme: Excel (Bilgi, Boy, Gövde, Ağaç listesi, Biçim) ve JSON çalışma kaydı.</li>
+</ul>
+</section>

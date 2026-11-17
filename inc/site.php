@@ -96,6 +96,9 @@ function site_tools(?bool $tr = null): array {
         ['n' => 17, 'cat' => 'DI', 'icon' => 'report', 'short' => $tr ? 'Rapor Üretici' : 'Report Generator', 'file' => 'rapor.php', 'v' => '1.0.0-beta.1', 'lab' => 'report', 'title' => $tr ? 'Rapor Üretici' : 'Report Generator',
          'desc' => $tr ? 'Bir veri paketini ve araçların çalışma kayıtlarını tek raporda toplayın: başlık ve notlar, paket özeti, grafikler, kayıtların ayarları ve sonuç tabloları, kaynaklar ve atıflar, tekrarlanabilirlik eki; yazdırın, PDF olarak ya da HTML dosyası olarak kaydedin.'
                        : 'Gather a data package and the tools\' run records in one report: title and notes, package summary, charts, the records\' settings and result tables, references and citations, a reproducibility appendix; print it, save it as PDF or as an HTML file.'],
+        ['n' => 18, 'cat' => 'TM', 'icon' => 'measure', 'short' => $tr ? 'Ağaç Ölçümü' : 'Tree Measurement', 'file' => 'agac-olcumu.php', 'v' => '1.0.0-beta.1', 'lab' => 'tree', 'title' => $tr ? 'Ağaç Ölçümü' : 'Tree Measurement',
+         'desc' => $tr ? 'Eğim ölçer ya da mesafe ölçer okumalarından ağaç boyu (tanjant, bakış doğrusu uzaklığı, gölge ve iki sırık yöntemleri); çap ya da çevreden göğüs yüzeyi, dik iki çap ya da elips, ağaç listesinde ortalama göğüs yüzeyli ağacın çapı; göğüs yüksekliği, mutlak ve normal biçim sayısı, biçim üssü ve biçim bölümü.'
+                       : 'Tree height from clinometer or rangefinder readings (tangent, line-of-sight distance, shadow and two-pole methods); basal area from a diameter or girth, two diameters at right angles or an ellipse, the diameter of the tree of mean basal area in a tree list; breast-height, absolute and normal form factors, form exponent and form quotient.'],
     ];
 }
 
@@ -118,6 +121,7 @@ function site_icon(string $name, string $cls = 'ico'): string {
         'secvol' => 'M12 2C9.89 2 3 2.29 3 6V18C3 21.71 9.89 22 12 22C14.11 22 21 21.71 21 18V6C21 2.29 14.11 2 12 2M12 10C13.38 10 16.8 9.87 19 8.75V15.25C16.8 14.13 13.38 14 12 14S7.2 14.13 5 15.25V8.75C7.2 9.87 10.62 10 12 10M12 4C15.87 4 19 4.89 19 6C19 7.11 15.87 8 12 8C8.13 8 5 7.11 5 6C5 4.89 8.13 4 12 4M12 20C8.13 20 5 19.11 5 18C5 16.9 8.13 16 12 16C15.87 16 19 16.9 19 18C19 19.11 15.87 20 12 20Z', // mdiCylinder
         'growth' => 'M3.5,18.5L9.5,12.5L13.5,16.5L22,6.92L20.59,5.5L13.5,13.5L9.5,9.5L2,17L3.5,18.5Z', // mdiChartLineVariant
         'library' => 'M9 3V18H12V3H9M12 5L16 18L19 17L15 4L12 5M5 5V18H8V5H5M3 19V21H21V19H3Z', // mdiBookshelf
+        'measure' => 'M9,5A7,7 0 0,1 16,12H17V15H16V19H9A7,7 0 0,1 2,12A7,7 0 0,1 9,5M9,8A4,4 0 0,0 5,12A4,4 0 0,0 9,16A4,4 0 0,0 13,12A4,4 0 0,0 9,8M17,17H22V19L22,21H20V19H17V17Z', // mdiTapeMeasure
         'database' => 'M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z', // mdiDatabase
         'dashboard' => 'M13,3V9H21V3M13,21H21V11H13M3,21H11V15H3M3,13H11V3H3V13Z', // mdiViewDashboard
         'report' => 'M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M15,18H9V16H15V18M15,14H9V12H15V14M13,9V3.5L18.5,9H13Z', // mdiFileDocument
