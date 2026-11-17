@@ -78,10 +78,10 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 
 | Kimlik | Araç | Durum | Not ve kaynak |
 |---|---|---|---|
-| BC-01 | Allometrik biyokütle | yolda | TOOLS_SPEC BC01–BC02. BC-01/a1 = BC01 (16 Kasım 2026): çekirdek `assets/lab/biomass/calc.js`; biçimler tanım istisnası [D] (kullanıcı kararı); Baskerville düzeltmesi ln ölçeğinde [A] (Chave ve ark. 2014, Baia ve ark. 2025); log₁₀'da Sprugel 1983 bekleniyor; Snowdon ve kullanıcı etkeni değer olarak. Sayfa BC02 ile |
+| BC-01 | Allometrik biyokütle | yayında | TOOLS_SPEC BC01–BC02. BC-01/a1 = BC01 (16 Kasım 2026): çekirdek `assets/lab/biomass/calc.js`; biçimler tanım istisnası [D] (kullanıcı kararı); Baskerville düzeltmesi ln ölçeğinde [A] (Chave ve ark. 2014, Baia ve ark. 2025); log₁₀'da Sprugel 1983 bekleniyor; Snowdon ve kullanıcı etkeni değer olarak. Sayfa `biyokutle-karbon.php` BC02 ile (17 Kasım 2026, 1.0.0-beta.1) |
 | BC-02 | Biyokütle bileşenleri (gövde, dal, yaprak, kök; toplamsal sistemler) | planlı | Toplamsal sistemler SM-04 ile |
-| BC-03 | Biyokütle dönüşüm etkeni (BEF) | yolda | TOOLS_SPEC BC03; etkenler kullanıcıdan. BC01'de hacimden dönüşüm çekirdeği: IPCC 2006 Cilt 4 Bölüm 2 Denklem 2.8b [B] |
-| BC-04 | Karbon stoku ve CO₂ eşdeğeri | yolda | K9: CO₂ = C × 44/12 (IPCC 2006 §2.2.3 [B]), karbon oranı kullanıcıdan. BC01'de çekirdek |
+| BC-03 | Biyokütle dönüşüm etkeni (BEF) | yayında | TOOLS_SPEC BC03; etkenler kullanıcıdan. BC01'de hacimden dönüşüm çekirdeği: IPCC 2006 Cilt 4 Bölüm 2 Denklem 2.8b [B] |
+| BC-04 | Karbon stoku ve CO₂ eşdeğeri | yayında | K9: CO₂ = C × 44/12 (IPCC 2006 §2.2.3 [B]), karbon oranı kullanıcıdan. BC01'de çekirdek |
 | BC-05 | IPCC karbon hesabı (katman 1–3) | planlı | IPCC 2006 Cilt 4: kullanıcıdan PDF; varsayılan değer gömülmez (P2) |
 | BC-06 | Karbon belirsizliği (Monte Carlo) | planlı | TOOLS_SPEC BC04 |
 
