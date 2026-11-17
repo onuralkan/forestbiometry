@@ -22,5 +22,6 @@
 <li><b>Veri sorunları</b>: satır numaralı hatalar ve uyarılar. Hatalı ağaçlar hesaplanmaz; bir noktası okunamayan ağacın tamamı dışarıda kalır, çünkü eksik nokta hacmi sessizce küçültürdü.</li>
 </ul>
 <h3>İndirme</h3>
+<p><b>Biyokütle ve Karbon aracına aktar</b>: onaylanmış veri bağlıysa seçilen yöntemin ağaç hacimleri (kabuklu ve kabuksuz) bu tarayıcıda paketin parmak iziyle ayrı bir kayıt olarak yazılır; paket değişmez. Ağaçlar örnek alan × ağaç × dönemle eşleşir; pakette birden çok ağaçla eşleşen anahtarlar yazılmaz.</p>
 <p><b>Excel raporu</b> (Bilgi, Ağaçlar, Örnek alanlar, Kalite, Yöntem farkı, Seksiyonlar, Sorunlar), ağaç hacimleri CSV ve sonuç kayıtları JSON.</p>
 </section>

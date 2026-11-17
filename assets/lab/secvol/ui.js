@@ -7,6 +7,8 @@ import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
+import { sha256JSON } from '../core/record.js';
+import { stemVolumeRecord, storeKey, KIND_VOLUME } from '../core/derived.js';
 import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { readStems, keyOf } from '../core/stems.js';
@@ -219,6 +221,7 @@ function renderStep3() {
   h += `<details class="card more" id="tdetail"${S.detailOpen ? ' open' : ''}><summary>${T('d.h')}</summary><div id="tdbody"></div></details>`;
   h += `<details class="card more" id="probs"><summary>${T('pr.h', { e: nE, w: nW })}</summary>${probs.length ? `<div class="tscroll"><table class="grid" id="prtab"><thead><tr><th>${T('pr.row')}</th><th>${T('pr.tree')}</th><th>${T('pr.sev')}</th><th>${T('pr.msg')}</th></tr></thead><tbody>
     ${probs.slice(0, 300).map(p => `<tr data-code="${esc(p.code)}"><td class="rn">${p.row ?? '–'}</td><td>${esc([p.plot, p.tree].filter(x => x != null).join(' / ') || '–')}</td><td>${T('sev.' + p.severity)}</td><td>${esc(T('c.' + p.code, p))}</td></tr>`).join('')}</tbody></table></div>${probs.length > 300 ? `<p class="small">${T('pr.more', { n: probs.length - 300 })}</p>` : ''}` : ''}</details>`;
+  h += handoffCard();
   h += `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('ex.json')}</button>${recordOption()}</div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
@@ -229,7 +232,29 @@ function renderStep3() {
   $('x-json').addEventListener('click', () => downloadRecord(fname('seksiyon-hacmi', 'stem-volume') + '.json', { tool: V.TOOL, created: R.created, source: S.imp ? S.imp.name : null, settings: settingsRecord(), problems: R.st.problems, results: R.res, plots: R.plots, quality: R.quality, comparison: R.comp },
     V.TOOL, [['stems', S.imp], ...(S.useDs && approved ? [['dataset', { kind: 'dataset', dataset: approved }]] : [])], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', exportXLSX);
+  $('ho-send') && $('ho-send').addEventListener('click', handoff);
   drawDetail();
+}
+/* ---------------- hand-off to Biomass & Carbon (BC03) ---------------- */
+// Per-tree volumes of one method are written to the browser store for the linked approved package (core/derived.js);
+// the package itself is not changed. Only with the approved data linked, because trees are matched to its rows.
+function handoffCard() {
+  let h = `<div class="card" id="handoff"><h2>${T('ho.h')}</h2><p class="muted small">${T('ho.sub')}</p>`;
+  if (!(S.useDs && approved)) return h + `<p class="note small" id="ho-need">${T('ho.need')}</p></div>`;
+  const m = R.methods.includes(S.hoMethod) ? S.hoMethod : R.ref;
+  h += `<div class="lims">${R.methods.length > 1 ? `<label>${T('ho.method')} <select id="ho-m">${R.methods.map(x => `<option value="${x}"${x === m ? ' selected' : ''}>${esc(mName(x))}</option>`).join('')}</select></label>` : `<span class="small">${T('ho.method')}: <b>${esc(mName(m))}</b></span>`}
+    <button type="button" class="btn ghost" id="ho-send">${T('ho.send')}</button></div><p class="small" id="ho-msg"></p></div>`;
+  return h;
+}
+function hoSettings(m) { const x = settingsRecord(); return { method: m, layout: x.layout, top: x.top, includeStump: x.includeStump, dTop: x.dTop, combine: x.combine, barkDefault: x.barkDefault, thresholds: x.thresholds }; }
+async function handoff() {
+  const sel = $('ho-m'), m = sel ? sel.value : R.ref; S.hoMethod = m; save();
+  const sha = await sha256JSON(approved);
+  const rec = stemVolumeRecord({ dataset: approved, sha256: sha, results: R.res[m], tool: V.TOOL, created: R.created, settings: hoSettings(m) });
+  await put(storeKey(KIND_VOLUME, sha), rec);
+  const ok = rec.trees.filter(t => t.status === 'ok').length;
+  $('ho-msg').className = 'note ok small';
+  $('ho-msg').textContent = T('ho.done', { n: rec.trees.length, ok, um: rec.unmatched.length, amb: rec.ambiguous.length, m: mName(m) });
 }
 function drawDetail() {
   const body = $('tdbody'); if (!body) return;

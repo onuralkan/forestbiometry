@@ -6,12 +6,13 @@
 <ul>
 <li>Data: a <b>Tree table</b> (plot, diameter at breast height and plot size required; tree, species, height, period optional) or the active approved data package. The simulated table is for trying out only; it carries no coefficients.</li>
 <li><b>Allometric equations</b>: enter the components (e.g. stem, branches, foliage) and the carbon fraction of each (CF, 0–1). In the <b>Species → coefficient set</b> table choose a set for every species and component; "Apply this column to every species" does it explicitly. If an optional separate total equation is chosen, its difference from the component sum is written. Sets come from the editor on the page or from the Coefficient Library; ln and log₁₀ forms are separate, and the Baskerville correction is not applied to a log₁₀ equation (source awaited).</li>
-<li><b>Conversion from volume</b>: a volume column per tree (m³), the bark side of the volume and of the factors (different sides compute nothing), D and BEF or BCEF, R (below-ground / above-ground), CF and the source of the factors (required). The volume definition must be the one the factors were defined for.</li>
+<li><b>Conversion from volume</b>: volumes come from a column per tree (m³) or from the <b>volumes sent by the Stem Section Volume tool</b>. To send them, link the approved data in Stem Section Volume and use "Send the volumes" in the results; they are read only for the same data package (same fingerprint), taken unrounded, and the package is not changed. Needed: the bark side of the volume and of the factors (different sides compute nothing), D and BEF or BCEF, R (below-ground / above-ground), CF and the source of the factors (required). The volume definition must be the one the factors were defined for.</li>
 </ul>
 <h3>Results</h3>
 <ul>
+<li>With <b>Both</b>, the same trees are computed by both routes; each approach is in its own row and they are not averaged.</li>
 <li>Species without a set, trees without height and trees without volume with their row numbers; the number of trees computed with an estimated height or outside the validity range.</li>
 <li>Per plot × period: components, total, C and CO₂ (Mg/ha). A unit with a tree that could not be computed gets no total (–). Plot × period without records count as "not measured" or "empty".</li>
-<li>Downloads: Excel (Info sheet with the sources of the sets and the rules, Units, Trees), trees as CSV and the JSON run record.</li>
+<li>Downloads: Excel (Info sheet with the sources of the sets and factors, the volume source and the rules; Units, Trees; comparison sheets for both approaches), trees as CSV and the JSON run record.</li>
 </ul>
 </section>

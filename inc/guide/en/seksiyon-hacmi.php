@@ -22,5 +22,6 @@
 <li><b>Data problems</b>: errors and warnings with row numbers. Trees with errors are not computed; a tree with one unreadable point is left out entirely, because a missing point would silently reduce its volume.</li>
 </ul>
 <h3>Downloads</h3>
+<p><b>Send to Biomass &amp; Carbon</b>: with the approved data linked, the tree volumes of the chosen method (over and under bark) are written in this browser as a separate record under the package fingerprint; the package is not changed. Trees are matched on plot × tree × period; keys held by more than one package tree are not written.</p>
 <p><b>Excel report</b> (Info, Trees, Plots, Quality, Method differences, Sections, Problems), tree volumes as CSV and result records as JSON.</p>
 </section>

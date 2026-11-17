@@ -16,7 +16,7 @@
 import { registerForm, form, validateCoef, correctionFactor, outsideValid } from '../core/coef.js';
 import { buildUnits } from '../stand/calc.js';
 
-export const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.1' };
+export const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.2' };
 export const CO2_PER_C = 44 / 12;
 /** Scales on which the Baskerville correction is applied: ln ([A], METHODS §22); log10 waits for its source. */
 export const BASKERVILLE_SCALES = ['log'];
@@ -216,4 +216,25 @@ export function computeVolume(ds, volumeOf, cfg) {
   const A = standTotals(ds, per('agb'), ec), Bg = standTotals(ds, per('bgb'), ec), T = standTotals(ds, per('total'), ec), Cc = standTotals(ds, per('C'), ec);
   const units = T.map((u, i) => ({ plot_id: u.plot_id, period: u.period, state: u.state, area: u.area, n: u.n, nMissing: u.nMissing, AGB: A[i].perHa, BGB: Bg[i].perHa, B: u.perHa, C: Cc[i].perHa, CO2: Cc[i].perHa == null ? null : Cc[i].perHa * CO2_PER_C }));
   return { trees, units, missing: trees.filter(x => x.status === 'novolume').map(x => x.row) };
+}
+
+/**
+ * BC03: the two approaches over the same package, kept in separate rows (never averaged or mixed). allo: computeAllometric
+ * result; vol: computeVolume result, both over the same ds (same tree order). Per tree B and C in kg, per unit Mg/ha.
+ * → { units: [{ approach, plot_id, period, n, B, C, CO2 }], trees: [{ approach, row, t, status, B, C }] }
+ */
+export function bothApproaches(allo, vol) {
+  const units = [];
+  allo.units.forEach((u, i) => {
+    const v = vol.units[i];
+    units.push({ approach: 'allometric', plot_id: u.plot_id, period: u.period, n: u.n, B: u.B, C: u.C, CO2: u.CO2 });
+    units.push({ approach: 'volume', plot_id: v.plot_id, period: v.period, n: v.n, B: v.B, C: v.C, CO2: v.CO2 });
+  });
+  const trees = [];
+  allo.trees.forEach((a, i) => {
+    const v = vol.trees[i];
+    trees.push({ approach: 'allometric', row: a.row, t: a.t, status: a.sum != null ? 'ok' : 'incomplete', B: a.sum, C: a.C });
+    trees.push({ approach: 'volume', row: v.row, t: v.t, status: v.status, B: v.total, C: v.C });
+  });
+  return { units, trees };
 }
