@@ -85,7 +85,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | BC-03 | Biyokütle dönüşüm etkeni (BEF) | yayında | TOOLS_SPEC BC03; etkenler kullanıcıdan. BC01'de hacimden dönüşüm çekirdeği: IPCC 2006 Cilt 4 Bölüm 2 Denklem 2.8b [B]. BC-03/a1 = BC03 (17 Kasım 2026, 1.0.0-beta.2): hacimler Seksiyon Hacmi'nden `forest-derived/1` kaydıyla (paket değişmez), iki yaklaşım ayrı satırlarda |
 | BC-04 | Karbon stoku ve CO₂ eşdeğeri | yayında | K9: CO₂ = C × 44/12 (IPCC 2006 §2.2.3 [B]), karbon oranı kullanıcıdan. BC01'de çekirdek |
 | BC-05 | IPCC karbon hesabı (katman 1–3) | planlı | IPCC 2006 Cilt 4: kullanıcıdan PDF; varsayılan değer gömülmez (P2) |
-| BC-06 | Karbon belirsizliği (Monte Carlo) | yolda | TOOLS_SPEC BC04. BC-06/a1 = BC04 (17 Kasım 2026, 1.0.0-beta.3): katsayı kovaryansı ve artık standart hatası kaynaktan; şema Réjou-Méchain ve ark. 2017 [B], log-normal artık Chave ve ark. 2004 [B]; yayın kullanıcı kararıyla |
+| BC-06 | Karbon belirsizliği (Monte Carlo) | yayında | TOOLS_SPEC BC04. BC-06/a1 = BC04 (17 Kasım 2026, 1.0.0-beta.3): katsayı kovaryansı ve artık standart hatası kaynaktan; şema Réjou-Méchain ve ark. 2017 [B], log-normal artık Chave ve ark. 2004 [B]; yayına alındı (17 Kasım 2026, kullanıcı kararı) |
 
 ### SS — Meşcere yapısı ve sıklığı
 
