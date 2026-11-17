@@ -13,6 +13,7 @@ const XLSX = require(path.join(ROOT, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const Ht = await import('../../assets/lab/tree/height.js');
 const Dm = await import('../../assets/lab/tree/diameter.js');
 const Fm = await import('../../assets/lab/tree/form.js');
+const Ag = await import('../../assets/lab/tree/age.js');
 const { TOOL } = await import('../../assets/lab/tree/calc.js');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/agac-olcumu.php';
 let pass = 0, fail = 0;
@@ -25,7 +26,7 @@ page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if 
 const type = async (sel, v) => { await page.fill(sel, v); await page.press(sel, 'Tab'); };
 
 await page.goto(URL + '?lang=tr'); await page.waitForSelector('#htab');
-ok((await page.locator('.b-ids').textContent()).trim() === 'TM-01 · TM-02 · TM-06' && (await page.locator('.b-ver').textContent()).includes(TOOL.version), 'tool ids TM-01 · TM-02 · TM-06 and version');
+ok((await page.locator('.b-ids').textContent()).trim() === 'TM-01 · TM-02 · TM-05 · TM-06' && (await page.locator('.b-ver').textContent()).includes(TOOL.version), 'tool ids TM-01 · TM-02 · TM-05 · TM-06 and version');
 
 // height: tangent, two readings, one with a decimal comma; percent; ground slope; rangefinder; similar triangles
 await type('[data-hrow="0"][data-k="D"]', '25'); await type('[data-hrow="0"][data-k="top"]', '40'); await type('[data-hrow="0"][data-k="base"]', '-5');
@@ -75,18 +76,40 @@ ok((await page.textContent('#exres')).includes('r = 1.1987') && (await page.text
 await type('#f-dMid', '21'); await type('#f-D', '30'); ok((await page.textContent('#qres')).includes('q = 0.7') && !(await page.textContent('#qres')).includes('F ='), 'form quotient without a constant: no F');
 await type('#f-c', '0.2'); ok((await page.textContent('#qres')).includes('F = q − c = 0.5'), 'F = q − c with the constant typed');
 
+// age and increment (TM-05): tree age, economic age, increment core with Pressler, stand mean ages, growth percent
+await page.click('#tab-a'); await page.waitForSelector('#a-rings');
+await type('#a-rings', '53'); await type('#a-toH', '5'); ok((await page.textContent('#ageres')).includes('Yaş 58 yıl'), 'tree age: 53 rings + 5 years = 58');
+await type('#a-ringsOut', '70'); await type('#a-coreAge', '14'); ok((await page.textContent('#econres')).includes('84'), 'economic age: Graves example 84');
+await type('#a-rings', '5,5'); ok((await page.textContent('#ageres')).includes('tam sayı'), 'a ring count that is not a whole number refused');
+const W = [2.1, 1.8, 2.4, 2.0, 1.6, 1.9, 2.2, 2.5, 2.3, 2.0, 2.6, 3.1, 3.4, 3.0, 2.8, 3.3, 3.6, 4.0, 3.8, 4.2];
+await type('#a-cD', '11.6'); await type('#a-cBark', '0.6'); await type('#a-cToBh', '6'); await page.uncheck('#a-cPith');
+await page.fill('#a-cW', W.slice(0, 10).join(' ') + '\n' + W.slice(10).map(x => String(x).replace('.', ',')).join(';')); await page.press('#a-cW', 'Tab');
+const cs = Ag.coreSeries({ widths: W, D: 11.6, doubleBark: 0.6, yearsToBh: 6, reachesPith: false }), pr10 = Ag.presslerDiameter(cs.dib, cs.series[10].d, 10);
+ok((await page.textContent('#coreres')).includes(`20 halka; yaş 26 yıl; kabuksuz çap 11 cm`) && (await page.textContent('#app')).includes('öze ulaşmıyor') && !(await page.textContent('#app')).includes('yarıçaptan'), 'increment core: 20 rings (spaces, new line, ; and decimal commas), age 26, inside-bark 11 cm, no-pith warning');
+const rowsC = await page.$$eval('#coretab tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
+ok(rowsC.length === 3 && rowsC.every(r => !r[2].startsWith('-')) && rowsC.every((r, k) => Math.abs(Number(r[2]) - cs.decades[k].d) < 0.006 && Number(r[1]) === cs.decades[k].age), 'decade table (0, 10, 20 years ago) = engine');
+ok((await page.textContent('#presres')).includes(String(Number(pr10.toFixed(2)))), `Pressler growth percent over 10 years ${pr10.toFixed(2)} % = engine`);
+await type('[data-grow="0"][data-k="a"]', '60'); await type('[data-grow="0"][data-k="n"]', '120'); await type('[data-grow="0"][data-k="b"]', '4.2'); await type('[data-grow="0"][data-k="v"]', '38');
+await page.click('#a-gadd'); await type('[data-grow="1"][data-k="a"]', '85'); await type('[data-grow="1"][data-k="n"]', '40'); await type('[data-grow="1"][data-k="b"]', '6.1'); await type('[data-grow="1"][data-k="v"]', '71');
+const G = [{ a: 60, n: 120, b: 4.2, v: 38 }, { a: 85, n: 40, b: 6.1, v: 71 }], sres = await page.$$eval('#standres tr', rs => rs.map(r => r.children[1].textContent.trim()));
+ok(['arithmetic', 'number', 'basal', 'volume'].every((m, k) => Math.abs(Number(sres[k]) - Ag.standAge(G, m).A) < 0.051), `stand mean ages (arithmetic, number, basal, volume) = engine: ${sres.join(', ')}`);
+await type('#a-gNow', '0.84'); await type('#a-gThen', '0.61'); await type('#a-gYears', '10');
+const gp = await page.$$eval('#gpres tr', rs => rs.map(r => Number(r.children[1].textContent.replace('%', '').trim())));
+ok(['past', 'present', 'mean'].every((pp, k) => Math.abs(gp[k] - Ag.growthPercent({ now: 0.84, then: 0.61, n: 10, principal: pp }).p) < 0.0006), 'growth percent with three principals = engine');
+if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-age.png'), fullPage: true });
+
 // downloads: Excel sheets, JSON run record with the tree list fingerprint
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 const wb = XLSX.read(await readFile(await dx.path()), { type: 'buffer' });
-ok(['Bilgi', 'Boy', 'Gövde', 'Ağaç listesi', 'Biçim'].every(n => wb.SheetNames.includes(n)) && XLSX.utils.sheet_to_json(wb.Sheets['Ağaç listesi'], { header: 1 }).length === ds.length + 6, 'Excel: Info, Height, Stem, Tree list, Form');
+ok(['Bilgi', 'Boy', 'Gövde', 'Ağaç listesi', 'Biçim', 'Yaş ve artım', 'Burgu'].every(n => wb.SheetNames.includes(n)) && XLSX.utils.sheet_to_json(wb.Sheets['Burgu'], { header: 1 }).filter(r => typeof r[0] === 'number' && typeof r[2] === 'number').length >= 21 && XLSX.utils.sheet_to_json(wb.Sheets['Ağaç listesi'], { header: 1 }).length === ds.length + 6, 'Excel: Info, Height, Stem, Tree list, Form, Age and increment, Core (every year)');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const J = JSON.parse(await readFile(await dj.path(), 'utf8')), txt = JSON.stringify(J);
 ok(txt.includes(createHash('sha256').update(csv).digest('hex')) && txt.includes(TOOL.version) && txt.includes('Hamilton'), 'JSON run record: tool version, sources and the SHA-256 of the tree list file');
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-form.png'), fullPage: true });
 
 // session, English, phone
-await page.waitForTimeout(400); await page.reload(); await page.waitForSelector('#f-V'); ok((await page.textContent('#status')).includes('geri yüklendi') && await page.inputValue('#f-c') === '0.2', 'session restored on the same tab');
-await page.goto(URL + '?lang=en'); await page.waitForSelector('#f-V'); ok((await page.textContent('#app')).includes('Form exponent') && (await page.textContent('#app')).includes('Height'), 'English page');
+await page.waitForTimeout(400); await page.reload(); await page.waitForSelector('#a-cW'); ok((await page.textContent('#status')).includes('geri yüklendi') && (await page.inputValue('#a-cW')).includes('4,2'), 'session restored on the same tab');
+await page.goto(URL + '?lang=en'); await page.waitForSelector('#a-cW'); ok((await page.textContent('#app')).includes('Increment core') && (await page.textContent('#app')).includes('Height'), 'English page');
 const ph = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' }); ph.on('pageerror', e => errors.push(e.message));
 await ph.goto(URL + '?lang=tr'); await ph.waitForSelector('#app .tabs'); ok(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'phone: no horizontal scroll');
 if (SHOTS) await ph.screenshot({ path: path.join(SHOTS, 'tree-phone.png'), fullPage: true });

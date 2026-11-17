@@ -3,6 +3,7 @@
 import * as Ht from './height.js';
 import * as Dm from './diameter.js';
 import * as Fm from './form.js';
+import * as Ag from './age.js';
 import { TOOL } from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
@@ -27,7 +28,8 @@ function blank() {
   return { v: 1, tab: 'h',
     h: { method: 'tangent', unit: 'deg', ground: false, slope: '', rows: [blankH()] },
     d: { mean: 'arithmetic', round: 'none', rows: [{ kind: 'diameter', value: '', unit: 'cm' }], imp: null, src: null, col: null, ncol: null, kind: 'diameter', unit: 'cm', decimal: null, decimalChosen: false },
-    f: { V: '', d: '', H: '', kind: 'breast', d1: '', x1: '', d2: '', x2: '', exH: '', dMid: '', D: '', c: '' } };
+    f: { V: '', d: '', H: '', kind: 'breast', d1: '', x1: '', d2: '', x2: '', exH: '', dMid: '', D: '', c: '' },
+    a: { rings: '', toH: '', ringsOut: '', coreAge: '', gD: '', gMai: '', cD: '', cBark: '', cToBh: '', cPith: true, cW: '', cN: '10', groups: [{ a: '', n: '', b: '', v: '' }], gNow: '', gThen: '', gYears: '', mTotal: '', mAge: '' } };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -185,17 +187,71 @@ function bindForm() {
   for (const k of Object.keys(S.f)) { const el = $('f-' + k); if (el) el.addEventListener('change', e => { S.f[k] = e.target.value; re(); }); }
 }
 
+/* ---------------- age and increment (TM-05) ---------------- */
+/** Ring widths typed or pasted: separated by spaces, new lines, ';' or tabs; a comma inside a number is its decimal mark. */
+const widthsOf = t => String(t || '').split(/[\s;]+/).filter(Boolean).map(x => nv(x));
+function ageResults() {
+  const A = S.a, any = ks => ks.some(k => String(A[k]).trim() !== ''), int = v => { const x = num(v); return Number.isInteger(x) ? x : NaN; };
+  const ws = widthsOf(A.cW), core = any(['cD', 'cW']) ? Ag.coreSeries({ widths: ws, D: nv(A.cD), doubleBark: num(A.cBark) ?? 0, yearsToBh: num(A.cToBh) ?? 0, reachesPith: A.cPith }) : null;
+  const n = int(A.cN);
+  let pr = null;
+  if (core && core.status === 'ok' && Number.isInteger(n) && n > 0 && n <= core.rings) { const then = core.series[n].d; pr = { n, d: then, p: Ag.presslerDiameter(core.dib, then, n), pai: Ag.periodicAnnual(core.dib, then, n) }; }
+  const groups = A.groups.filter(g => Object.values(g).some(v => String(v).trim() !== '')).map(g => ({ a: nv(g.a), n: num(g.n), b: num(g.b), v: num(g.v) }));
+  return {
+    tree: any(['rings', 'toH']) ? Ag.treeAge({ rings: int(A.rings), yearsToHeight: num(A.toH) ?? 0 }) : null,
+    econ: any(['ringsOut', 'coreAge']) ? Ag.economicAge({ ringsOutside: int(A.ringsOut), coreAge: nv(A.coreAge) }) : null,
+    nog: any(['gD', 'gMai']) ? Ag.ageFromGrowth({ D: nv(A.gD), mai: nv(A.gMai) }) : null,
+    core, pr, groups,
+    stand: groups.length ? ['arithmetic', 'number', 'basal', 'volume'].map(m => Ag.standAge(groups, m)) : null,
+    gp: any(['gNow', 'gThen', 'gYears']) ? ['past', 'present', 'mean'].map(pp => Ag.growthPercent({ now: nv(A.gNow), then: nv(A.gThen), n: nv(A.gYears), principal: pp })) : null,
+    mai: any(['mTotal', 'mAge']) ? Ag.meanAnnual(nv(A.mTotal), nv(A.mAge)) : null,
+  };
+}
+function ageHTML() {
+  const A = S.a, R = ageResults(), inp = (k, size = 7) => `<label>${T('a.' + k)} <input type="text" inputmode="decimal" size="${size}" id="a-${k}" value="${esc(A[k])}"></label>`;
+  const err = r => `<p class="note err small">${esc((r.problems || []).map(ptext).join('; '))}</p>`;
+  const line = (r, txt) => !r ? '' : r.status === 'ok' ? `<p><b>${esc(txt)}</b></p>` : err(r);
+  let x = `<div class="card"><h2>${T('a.age.h')}</h2><p class="muted small">${T('a.age.sub')}</p><div class="lims">${inp('rings')}${inp('toH')}</div><div id="ageres">${line(R.tree, R.tree && T('a.age.res', { age: f(R.tree.age, 1) }))}</div>
+    <h3>${T('a.econ.h')}</h3><div class="lims">${inp('ringsOut')}${inp('coreAge')}</div><div id="econres">${line(R.econ, R.econ && T('a.econ.res', { age: f(R.econ.age, 1) }))}</div>
+    <h3>${T('a.nog.h')}</h3><div class="lims">${inp('gD')}${inp('gMai')}</div><div id="nogres">${line(R.nog, R.nog && T('a.age.res', { age: f(R.nog.age, 1) }))}</div>
+    <p class="muted small">${T('a.age.note')}</p></div>`;
+  x += `<div class="card"><h2>${T('a.core.h')}</h2><p class="muted small">${T('a.core.sub')}</p><div class="lims">${inp('cD')}${inp('cBark')}${inp('cToBh')}<label><input type="checkbox" id="a-cPith"${A.cPith ? ' checked' : ''}> ${T('a.cPith')}</label></div>
+    <label class="field"><span>${T('a.cW')}</span><textarea id="a-cW" rows="3" spellcheck="false">${esc(A.cW)}</textarea></label>`;
+  const C = R.core;
+  if (C && C.status === 'ok') {
+    x += `<p id="coreres"><b>${esc(T('a.core.res', { rings: C.rings, age: f(C.ageNow, 0), dib: f(C.dib, 2), rad: f(C.radius, 2) }))}</b></p>${C.warnings.length ? `<p class="note warn small">${esc(C.warnings.map(wtext).join('; '))}</p>` : ''}
+      <div class="lims">${inp('cN', 4)}</div>${R.pr ? `<p id="presres">${esc(T('a.pres.res', { n: R.pr.n, d: f(R.pr.d, 2), pai: f(R.pr.pai, 3), p: f(R.pr.p, 2) }))}</p>` : ''}
+      <div class="tscroll"><table class="grid" id="coretab"><thead><tr><th>${T('a.c.ago')}</th><th>${T('a.c.age')}</th><th>${T('a.c.d')}</th><th>${T('a.c.g')}</th></tr></thead><tbody>${C.decades.map(r => `<tr><td class="num">${r.yearsAgo}</td><td class="num">${f(r.age, 0)}</td><td class="num">${r.d >= 0 ? f(r.d, 2) : '–'}</td><td class="num">${r.d >= 0 ? f(Dm.basalArea(r.d), 5) : '–'}</td></tr>`).join('')}</tbody></table></div><p class="muted small">${T('a.core.note')}</p>`;
+  } else if (C) x += `<div id="coreres">${err(C)}</div>`;
+  x += `</div><div class="card"><h2>${T('a.stand.h')}</h2><p class="muted small">${T('a.stand.sub')}</p><div class="tscroll"><table class="grid" id="sgtab"><thead><tr><th>#</th>${['a', 'n', 'b', 'v'].map(k => `<th>${T('a.g.' + k)}</th>`).join('')}<th></th></tr></thead><tbody>
+    ${A.groups.map((g, i) => `<tr><td>${i + 1}</td>${['a', 'n', 'b', 'v'].map(k => `<td><input type="text" inputmode="decimal" size="7" data-grow="${i}" data-k="${k}" value="${esc(g[k])}" aria-label="${esc(T('a.g.' + k))} ${i + 1}"></td>`).join('')}<td>${A.groups.length > 1 ? `<button type="button" class="btn ghost small" data-gdel="${i}">${T('del')}</button>` : ''}</td></tr>`).join('')}
+    </tbody></table></div><div class="exports"><button type="button" class="btn ghost small" id="a-gadd">${T('add')}</button></div>`;
+  if (R.stand) x += `<table class="grid" id="standres"><tbody>${R.stand.map((r, k) => `<tr><td>${T('a.m.' + ['arithmetic', 'number', 'basal', 'volume'][k])}</td><td class="num">${r.status === 'ok' ? f(r.A, 1) : '–'}</td><td class="small">${r.status === 'ok' ? (r.skipped ? esc(T('a.skipped', { n: r.skipped })) : '') : esc(T('a.need.' + ['arithmetic', 'number', 'basal', 'volume'][k]))}</td></tr>`).join('')}</tbody></table>`;
+  x += `</div><div class="card"><h2>${T('a.gp.h')}</h2><p class="muted small">${T('a.gp.sub')}</p><div class="lims">${inp('gNow')}${inp('gThen')}${inp('gYears', 4)}</div>`;
+  if (R.gp) x += R.gp[0].status === 'ok' ? `<table class="grid" id="gpres"><tbody>${['past', 'present', 'mean'].map((pp, k) => `<tr><td>${T('a.p.' + pp)}</td><td class="num">${f(R.gp[k].p, 3)} %</td></tr>`).join('')}</tbody></table>${R.gp[0].warnings.length ? `<p class="note warn small">${esc(R.gp[0].warnings.map(wtext).join('; '))}</p>` : ''}` : err(R.gp[0]);
+  x += `<h3>${T('a.mai.h')}</h3><div class="lims">${inp('mTotal')}${inp('mAge')}</div>${R.mai != null ? `<p id="maires"><b>${esc(T('a.mai.res', { m: f(R.mai, 4) }))}</b></p>` : ''}</div>`;
+  return x;
+}
+function bindAge() {
+  const A = S.a;
+  for (const k of Object.keys(A)) { const el = $('a-' + k); if (el && k !== 'cPith') el.addEventListener('change', e => { A[k] = e.target.value; re(); }); }
+  $('a-cPith').addEventListener('change', e => { A.cPith = e.target.checked; re(); });
+  document.querySelectorAll('[data-grow]').forEach(x => x.addEventListener('change', () => { A.groups[+x.dataset.grow][x.dataset.k] = x.value; re(); }));
+  document.querySelectorAll('[data-gdel]').forEach(x => x.addEventListener('click', () => { A.groups.splice(+x.dataset.gdel, 1); re(); }));
+  $('a-gadd').addEventListener('click', () => { A.groups.push({ a: '', n: '', b: '', v: '' }); re(); });
+}
+
 /* ---------------- page ---------------- */
 function re() { save(); render(); }
 function render() {
-  const tabs = ['h', 'd', 'f'];
+  const tabs = ['h', 'd', 'f', 'a'];
   let x = `<div class="tabs" role="tablist" aria-label="${esc(T('tab.label'))}">${tabs.map(t => `<button type="button" role="tab" id="tab-${t}" aria-selected="${S.tab === t}" aria-controls="panel">${T('tab.' + t)}</button>`).join('')}</div><div id="panel" role="tabpanel" aria-labelledby="tab-${S.tab}">`;
-  x += S.tab === 'h' ? heightHTML() : S.tab === 'd' ? diameterHTML() : formHTML();
+  x += S.tab === 'h' ? heightHTML() : S.tab === 'd' ? diameterHTML() : S.tab === 'f' ? formHTML() : ageHTML();
   x += `</div><div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.excel')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}
     <button type="button" class="btn ghost" id="reset">${T('reset')}</button></div><p class="muted small">${esc(T('src'))}</p></div>`;
   $('app').innerHTML = x;
   tabs.forEach(t => $('tab-' + t).addEventListener('click', () => { S.tab = t; re(); }));
-  ({ h: bindHeight, d: bindDiameter, f: bindForm })[S.tab]();
+  ({ h: bindHeight, d: bindDiameter, f: bindForm, a: bindAge })[S.tab]();
   $('reset').addEventListener('click', async () => { S = blank(); status(''); await del(KEY); render(); });
   $('x-json').addEventListener('click', () => downloadRecord(fname('json'), payload(), TOOL, S.d.imp && S.d.src ? [['tree-list', S.d.imp]] : [], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', excel);
@@ -209,6 +265,8 @@ function payload() {
     diameter: { settings: { mean: S.d.mean, round: S.d.round }, readings: S.d.rows, stem: strip(st),
       list: L ? { column: S.d.src.headers[S.d.col], count: S.d.ncol == null ? null : S.d.src.headers[S.d.ncol], kind: S.d.kind, unit: S.d.unit, decimal: S.d.decimal, summary: L.sum, unreadRows: L.bad } : null },
     form: { inputs: S.f, formFactor: strip(R.ff), exponent: strip(R.ex), breastFromExponent: R.ex && R.ex.status === 'ok' && num(S.f.exH) > Fm.BH ? Fm.breastFormFactorFromExponent(R.ex.r, num(S.f.exH)) : null, quotient: strip(R.q) },
+    age: (() => { const R = ageResults(); return { inputs: S.a, tree: strip(R.tree), economic: strip(R.econ), noRings: strip(R.nog), core: R.core && R.core.status === 'ok' ? { ...strip(R.core), pressler: R.pr } : strip(R.core),
+      stand: R.stand && R.stand.map(strip), growthPercent: R.gp && R.gp.map(strip), meanAnnual: R.mai }; })(),
     sources: [T('src')] };
 }
 async function excel() {
@@ -222,6 +280,13 @@ async function excel() {
   sheets.push({ name: T('x.f'), rows: [['quantity', 'value'], ['V_m3', num(S.f.V)], ['d_cm', num(S.f.d)], ['H_m', num(S.f.H)], ['kind', S.f.kind], ['F', R.ff && R.ff.status === 'ok' ? R.ff.F : null], ['form_height_m', R.ff && R.ff.status === 'ok' ? R.ff.formHeight : null],
     ['d1', num(S.f.d1)], ['x1_m', num(S.f.x1)], ['d2', num(S.f.d2)], ['x2_m', num(S.f.x2)], ['r', R.ex && R.ex.status === 'ok' ? R.ex.r : null], ['F_absolute_from_r', R.ex && R.ex.status === 'ok' ? R.ex.absoluteF : null], ['F_breast_from_r', P.form.breastFromExponent],
     ['d_mid_cm', num(S.f.dMid)], ['D_cm', num(S.f.D)], ['q', R.q && R.q.status === 'ok' ? R.q.q : null], ['c', num(S.f.c)], ['F_q_minus_c', R.q && R.q.status === 'ok' ? R.q.F : null]] });
+  const AR = ageResults(), ok = r => r && r.status === 'ok';
+  sheets.push({ name: T('x.a'), rows: [['quantity', 'value'], ['rings', num(S.a.rings)], ['years_to_height', num(S.a.toH)], ['tree_age', ok(AR.tree) ? AR.tree.age : null], ['rings_outside_core', num(S.a.ringsOut)], ['core_age', num(S.a.coreAge)], ['economic_age', ok(AR.econ) ? AR.econ.age : null],
+    ['D_no_rings', num(S.a.gD)], ['mean_annual_diameter_growth', num(S.a.gMai)], ['age_from_growth', ok(AR.nog) ? AR.nog.age : null], [],
+    ['stand_age_method', 'A'], ...(AR.stand || []).map((r, k) => [['arithmetic', 'number', 'basal', 'volume'][k], ok(r) ? r.A : null]), [],
+    ['V_now', num(S.a.gNow)], ['v_then', num(S.a.gThen)], ['years', num(S.a.gYears)], ...(AR.gp || []).map((r, k) => ['growth_percent_' + ['past', 'present', 'mean'][k], ok(r) ? r.p : null]), ['mean_annual_growth', AR.mai]] });
+  if (ok(AR.core)) sheets.push({ name: T('x.core'), rows: [['D_cm', num(S.a.cD)], ['double_bark_cm', num(S.a.cBark) ?? 0], ['years_to_bh', num(S.a.cToBh) ?? 0], ['reaches_pith', S.a.cPith], ['rings', AR.core.rings], ['age_now', AR.core.ageNow],
+    ['pressler_n', AR.pr ? AR.pr.n : null], ['pressler_percent', AR.pr ? AR.pr.p : null], [], ['years_ago', 'age', 'd_ub_cm', 'g_m2', 'ring_width_mm'], ...AR.core.series.map((r, k) => [r.yearsAgo, r.age, r.d >= 0 ? r.d : null, r.d >= 0 ? Dm.basalArea(r.d) : null, k ? widthsOf(S.a.cW)[k - 1] : null])] });
   download(fname('xlsx'), xlsxBlob(XLSX, sheets), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 }
 
@@ -231,7 +296,7 @@ async function excel() {
     const saved = await get(KEY);
     if (saved && saved.v === 1) {
       const b = blank();
-      S = { ...b, ...saved, h: { ...b.h, ...(saved.h || {}) }, d: { ...b.d, ...(saved.d || {}) }, f: { ...b.f, ...(saved.f || {}) } };
+      S = { ...b, ...saved, h: { ...b.h, ...(saved.h || {}) }, d: { ...b.d, ...(saved.d || {}) }, f: { ...b.f, ...(saved.f || {}) }, a: { ...b.a, ...(saved.a || {}) } };
       if (S.d.imp && S.d.imp.buf) S.d.src = await readImport(S.d.imp, BASE).catch(() => null);
       status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) }));
     }

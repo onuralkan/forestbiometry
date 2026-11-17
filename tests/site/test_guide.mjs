@@ -17,6 +17,7 @@ const tools = [...site.matchAll(/'file' => '([a-z-]+)\.php', 'v' =>/g)].map(m =>
 ok(tools.length >= 7 && tools.length === (site.match(/'file' => '[a-z0-9-]+\.php'/g) || []).length, `tools read from site_tools(): ${tools.length}`);
 ok(ids(G.tr).join() === ids(G.en).join(), 'same sections in the same order in both languages: ' + ids(G.tr));
 ok(['genel', 'is-akisi', ...tools].every(id => ids(G.tr).includes(id)), 'a section for the general part, the workflow and every tool');
+for (const [k, g] of Object.entries(G)) { const parts = g.split('<section ').slice(1); ok(parts.every(x => (x.match(/<\/section>/g) || []).length === 1), `${k}: every section closes before the next one opens (sections are not nested)`); }
 const subs = s => s.split(/<section /).slice(1).map(x => (x.match(/<h3>/g) || []).length);
 ok(subs(G.tr).join() === subs(G.en).join(), 'same number of subsections per section: ' + subs(G.tr) + ' / ' + subs(G.en));
 const doi = (site.match(/const SITE_DOI = '([^']+)'/) || [])[1];
@@ -45,7 +46,7 @@ const L = {
   'assets/lab/taper/i18n.js': [['Katsayı seti gir', 'Enter a coefficient set'], ['Gövde ölçümlerinden uydur', 'Fit to stem measurements'], ['Uydurma ölçeği', 'Fitting scale'], ['Kullanılacak profil setleri', 'Profile sets to use'], ['Tek ağaç', 'One tree'], ['Ağaç tablosu', 'Tree table'], ['Kabuk', 'Bark']],
   'assets/lab/structure/i18n.js': [['Kenar etkisi', 'Edge effect'], ['Örnek alan geometrisi', 'Plot geometry'], ['Bütün sütunlar', 'All columns'], ['Ağaç tablosu', 'Tree table']],
   'assets/lab/coeflib/i18n.js': [['Yedek indir (JSON)', 'Download a backup (JSON)'], ['Yedekten geri yükle', 'Restore from a backup'], ['Geri yükleme önizlemesi', 'Restore preview'], ['Uygula', 'Apply'], ['Set düzenleyici', 'Set editor'], ['yalnızca sorunlular', 'only sets with problems'], ['Ayrıntı', 'Details'], ['Kopyala', 'Copy']],
-  'assets/lab/tree/i18n.js': [['Ağaç listesi', 'Tree list'], ['Tek gövde', 'One stem'], ['Biçim üssü', 'Form exponent'], ['Gölge', 'Shadow'], ['Mesafe ölçer', 'Rangefinder']],
+  'assets/lab/tree/i18n.js': [['Ağaç listesi', 'Tree list'], ['Tek gövde', 'One stem'], ['Biçim üssü', 'Form exponent'], ['Gölge', 'Shadow'], ['Mesafe ölçer', 'Rangefinder'], ['Burgu örneği', 'Increment core'], ['Yaş ve artım', 'Age and increment'], ['Meşcerenin ortalama yaşı', 'Mean age of a stand']],
   'assets/lab/rank/i18n.js': [['Radar grafiği', 'Radar chart'], ['Sıralamaya kat', 'Use in ranking'], ['İyi olan', 'Better is']],
 };
 for (const [file, pairs] of Object.entries(L)) {
