@@ -40,7 +40,15 @@ nd <- subset(d, alan == "3")[1:3, ]
 
 # ---------- nonlinear mixed models: H = 1.3 + a (1 − exp(−b D))^c ----------
 cr <- function(D, a, b, c) 1.3 + a * (1 - exp(-b * D))^c
-nctl <- nlmeControl(maxIter = 500, msMaxIter = 500, pnlsMaxIter = 50, tolerance = 1e-8, pnlsTol = 1e-8, msTol = 1e-10)
+nctl <- nlmeControl(maxIter = 500, msMaxIter = 500, pnlsMaxIter = 50, tolerance = 1e-7, pnlsTol = 1e-6, msTol = 1e-10, minScale = 1e-10)
+# a model that fails with these settings is tried once more with the package defaults; if that fails too, the error is
+# written to the JSON and the other models go on
+fitN <- function(expr) {
+  m <- tryCatch(eval(expr), error = function(e) e)
+  if (inherits(m, "error")) { nctl0 <- nctl; nctl <<- nlmeControl(); m <- tryCatch(eval(expr), error = function(e) e); nctl <<- nctl0
+    if (!inherits(m, "error")) attr(m, "control") <- "defaults" }
+  m
+}
 st <- c(a = 28, b = 0.045, c = 1.2)
 out_nlme <- function(m) list(
   method = m$method, fixef = unname(fixef(m)), fixnames = names(fixef(m)), se = unname(sqrt(diag(vcov(m)))),
@@ -49,12 +57,15 @@ out_nlme <- function(m) list(
   ranef = lapply(split(as.data.frame(ranef(m)), seq_len(nrow(ranef(m)))), function(r) unname(unlist(r))),
   ranefGroups = rownames(ranef(m)),
   fitted0 = unname(fitted(m, level = 0))[1:10], fitted1 = unname(fitted(m, level = 1))[1:10])
-N1  <- nlme(H_m ~ cr(D_cm, a, b, c), fixed = a + b + c ~ 1, random = a ~ 1 | alan, data = d, start = st, method = "ML", control = nctl)
-N2  <- nlme(H_m ~ cr(D_cm, a, b, c), fixed = a + b + c ~ 1, random = pdDiag(a + b ~ 1), groups = ~ alan, data = d, start = st, method = "ML", control = nctl)
-N3  <- nlme(H_m ~ cr(D_cm, a, b, c), fixed = a + b + c ~ 1, random = pdSymm(a + b ~ 1), groups = ~ alan, data = d, start = st, method = "ML", control = nctl)
-N4  <- update(N1, weights = varPower(form = ~ D_cm))
-N1r <- update(N1, method = "REML")
-nlrt <- anova(N1, N3)
+N1  <- fitN(quote(nlme(H_m ~ cr(D_cm, a, b, c), fixed = a + b + c ~ 1, random = a ~ 1 | alan, data = d, start = st, method = "ML", control = nctl)))
+st1 <- if (inherits(N1, "error")) st else fixef(N1)
+N2  <- fitN(quote(nlme(H_m ~ cr(D_cm, a, b, c), fixed = a + b + c ~ 1, random = pdDiag(a + b ~ 1), groups = ~ alan, data = d, start = st1, method = "ML", control = nctl)))
+N3  <- fitN(quote(nlme(H_m ~ cr(D_cm, a, b, c), fixed = a + b + c ~ 1, random = pdSymm(a + b ~ 1), groups = ~ alan, data = d, start = st1, method = "ML", control = nctl)))
+N4  <- fitN(quote(nlme(H_m ~ cr(D_cm, a, b, c), fixed = a + b + c ~ 1, random = a ~ 1 | alan, weights = varPower(form = ~ D_cm), data = d, start = st1, method = "ML", control = nctl)))
+N1r <- fitN(quote(nlme(H_m ~ cr(D_cm, a, b, c), fixed = a + b + c ~ 1, random = a ~ 1 | alan, data = d, start = st1, method = "REML", control = nctl)))
+ok <- function(m) !inherits(m, "error")
+outN <- function(m) if (ok(m)) c(out_nlme(m), list(control = if (is.null(attr(m, "control"))) "script" else attr(m, "control"))) else list(error = conditionMessage(m))
+nlrt <- if (ok(N1) && ok(N3)) { a <- anova(N1, N3); list(L = a$L.Ratio[2], p = a$`p-value`[2], df = a$df) } else NULL
 
 # calibration of the new plot under N1 and N3: random effects maximizing the conditional density (penalized least
 # squares, Gauss–Newton with a numeric Jacobian; written here, not from the package), and the one-step approximation
@@ -85,9 +96,10 @@ res <- list(
   lme = list(L1 = out_lme(L1), L2 = out_lme(L2), L3 = out_lme(L3), L4 = out_lme(L4), L1m = out_lme(L1m), L2m = out_lme(L2m), L4m = out_lme(L4m)),
   lrt = list(L = lrt$L.Ratio[2], p = lrt$`p-value`[2], df = lrt$df),
   calib_lme = list(trees = nd$agac, L2 = cal_lme(L2, nd), L4 = cal_lme(L4, nd)),
-  nlme = list(N1 = out_nlme(N1), N2 = out_nlme(N2), N3 = out_nlme(N3), N4 = out_nlme(N4), N1r = out_nlme(N1r)),
-  nlrt = list(L = nlrt$L.Ratio[2], p = nlrt$`p-value`[2], df = nlrt$df),
-  calib_nlme = list(trees = nd$agac, N1 = cal_nlme(N1, nd, "a"), N3 = cal_nlme(N3, nd, c("a", "b")), N4 = cal_nlme(N4, nd, "a"))
+  nlme = list(N1 = outN(N1), N2 = outN(N2), N3 = outN(N3), N4 = outN(N4), N1r = outN(N1r)),
+  nlrt = nlrt,
+  calib_nlme = list(trees = nd$agac, N1 = if (ok(N1)) cal_nlme(N1, nd, "a"), N3 = if (ok(N3)) cal_nlme(N3, nd, c("a", "b")), N4 = if (ok(N4)) cal_nlme(N4, nd, "a"))
 )
-writeLines(toJSON(res, digits = NA, auto_unbox = TRUE, pretty = TRUE), "tests/ref/mixed_sm03.json")
+writeLines(toJSON(res, digits = NA, auto_unbox = TRUE, pretty = TRUE, null = "null"), "tests/ref/mixed_sm03.json")
 cat("written tests/ref/mixed_sm03.json\n")
+for (k in names(res$nlme)) if (!is.null(res$nlme[[k]]$error)) cat("nlme", k, "failed:", res$nlme[[k]]$error, "\n")
