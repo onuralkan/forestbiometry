@@ -43,6 +43,7 @@ committed, so the tests run without Python.
 - `node tests/biomass/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Biomass and Carbon: table import, components and carbon fractions, species → set mapping, unmapped species and missing heights with row numbers, values against the engine, Excel/CSV/JSON, conversion from volume (bark sides, missing volume), the Coefficient Library listing the sets, English, phone.
 - `node tests/volume/test_sv04.mjs`: Volume Equations (SV-04) against `tests/ref/volume_sv04.json` from `python3 tests/ref/make_volume_sv04.py` (standard library; five forms of Kershaw et al. 2016 §6.2, weights, Baskerville).
 - `node tests/volume/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for hacim-denklemleri.php (values against calc.js, saving a set, hand-off to Model Evaluation, sent Stem Section Volume volumes, English, phone).
+- `node tests/taper/test_sv03.mjs`: SV-03 log-length limit of the merchantable stem against `tests/ref/taper_sv03.json` from `python3 tests/ref/make_taper_sv03.py` (standard library; the book's form of the log count, Simpson volumes on the Max–Burkhart profile) and the worked example of Kershaw et al. 2016 §6.4.1 (4 logs).
 - `node tests/taper/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Stem Taper (fit with the sample, one tree,
   tree table, downloads, English, phone).
 - `node tests/site/e2e_boot.mjs http://127.0.0.1:8092`: tool pages must not stay blank when IndexedDB stalls (open or
