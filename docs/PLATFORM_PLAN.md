@@ -54,14 +54,16 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 
 ### TM — Ağaç ölçümü
 
+Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi kitabı (Kershaw ve ark. 2016, van Laar ve Akça 2007 ya da Türkçe bir ölçme bilgisi kitabı) Drive'a eklendikten sonra başlanır; tanım formülleri de ondan okunup [B] işaretlenir, tanım istisnası kullanılmaz. (2) TM-01, TM-02, TM-04 ve TM-06 tek "Ağaç Ölçümü" sayfasında; TM-03 (kabuk, katsayı seti ister) ve TM-05 (halka ve burgu verisi) ayrı sayfalar. (3) TM modülünü `claude/nifty-hamilton-oi0q51` oturumu yürütür; öteki oturumlar TM'ye dokunmaz.
+
 | Kimlik | Araç | Durum | Not ve kaynak |
 |---|---|---|---|
-| TM-01 | Boy hesaplayıcı (eğim ölçer, tanjant, sinüs, eğim düzeltmesi) | planlı | Ölçme bilgisi kaynağı (ders kitabı) |
-| TM-02 | Çap ve göğüs yüzeyi (çevre ↔ çap, düzensiz gövde) | planlı | |
+| TM-01 | Boy hesaplayıcı (eğim ölçer, tanjant, sinüs, eğim düzeltmesi) | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). TM-01/a1 (17 Kasım 2026): boy çekirdeği `assets/lab/tree/height.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23). Sayfa "Ağaç Ölçümü" TM-02, TM-04, TM-06 ile birlikte |
+| TM-02 | Çap ve göğüs yüzeyi (çevre ↔ çap, düzensiz gövde) | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). TM-02/a1 (17 Kasım 2026): `assets/lab/tree/diameter.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23) |
 | TM-03 | Kabuk kalınlığı ve kabuksuz çap | planlı | Katsayılar kullanıcıdan (K1) |
 | TM-04 | Tepe tacı ölçüleri | planlı | |
 | TM-05 | Ağaç yaşı ve çap artımı (halka ve burgu verisi) | planlı | |
-| TM-06 | Biçim sayısı ve biçim bölümü | planlı | Seksiyon Hacmi biçim sayısını ve Hohenadl biçim bölümlerini (Heger 1965 [B]) zaten veriyor. |
+| TM-06 | Biçim sayısı ve biçim bölümü | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). Seksiyon Hacmi biçim sayısını ve Hohenadl biçim bölümlerini (Heger 1965 [B]) zaten veriyor. TM-06/a1 (17 Kasım 2026): `assets/lab/tree/form.js`; Graves 1906 [B] bölüm XIII (METHODS §23; kitaptaki biçim üssü örneğinde aritmetik hata bulundu) |
 
 ### SV — Gövde hacmi ve profili
 

@@ -164,6 +164,11 @@ function hero_taper(): string {
     foreach ([[0, '0'], [0.5, 'h'], [1, 'H']] as [$x, $t]) $o .= '<text class="hz-tick" x="' . round($l + $x * $L, 1) . '" y="' . ($H - 6) . '" text-anchor="middle">' . $t . '</text>';
     return $o;
 }
+/** Tree measurement: a tree, the observer's lines of sight to its top and base, and the breast-height diameter. */
+function hero_tree(): string {
+    return soon_tree(210, 130, 112, 30) . '<path class="hz-ref" d="M48 104L210 18M48 104L210 130"/><circle class="hz-dot hz-s1" cx="48" cy="104" r="4"/>'
+        . '<path class="hz-axis" d="M238 18V130"/><path class="hz-k0" d="M201 112H219" stroke-width="3"/><text class="hz-tick" x="246" y="78">H</text><text class="hz-tick" x="222" y="110">d</text>';
+}
 /** Growth function: a sigmoid growth curve through observations, with its inflection point. */
 function hero_growth(): string {
     $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $px = 2.4; $r = hero_rng(20261117);
@@ -252,6 +257,7 @@ function tool_card_data(bool $tr): array {
         'govde-profili.php' => ['hero_taper', $tr ? 'Max–Burkhart ve Kozak; kullanılabilir hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking'],
         'biyokutle-karbon.php' => ['hero_biomass', $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients'],
         'buyume-islevi.php' => ['hero_growth', $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination'],
+        'agac-olcumu.php' => ['hero_tree', $tr ? 'Eğim ölçerle boy, çap ve göğüs yüzeyi, biçim sayısı' : 'Height with a clinometer, diameter and basal area, form factor'],
     ];
 }
 /** One tool card of the tools index: icon, short name, drawing, short caption; the full description as a tooltip. */
