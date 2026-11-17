@@ -9,7 +9,7 @@ function guide_cards(bool $tr): array {
          'ids' => ['veri-denetcisi', 'veri-yoneticisi', 'pano', 'rapor']],
         ['id' => 'agac', 'title' => $tr ? 'Tek ağaç ölçtüm' : 'I measured single trees',
          'text' => $tr ? 'Boy, çap, biçim, yaş; seksiyonlardan ya da profil denklemiyle hacim; biyokütle ve karbon.' : 'Height, diameter, form, age; volume from sections or a taper equation; biomass and carbon.',
-         'ids' => ['agac-olcumu', 'seksiyon-hacmi', 'govde-profili', 'hacim-denklemleri', 'biyokutle-karbon']],
+         'ids' => ['agac-olcumu', 'seksiyon-hacmi', 'govde-profili', 'hacim-denklemleri', 'tomruk-olcumu', 'biyokutle-karbon']],
         ['id' => 'mescere', 'title' => $tr ? 'Örnek alan ve meşcereyi özetlemek istiyorum' : 'I want to summarise plots and stands',
          'text' => $tr ? 'Hektarda ağaç sayısı ve göğüs yüzeyi, çap dağılımı, yapı ve rekabet; kaç örnek alan gerektiği.' : 'Trees and basal area per hectare, diameter distribution, structure and competition; how many plots are needed.',
          'ids' => ['ornek-alan', 'cap-dagilimi', 'mescere-yapisi', 'ornekleme']],

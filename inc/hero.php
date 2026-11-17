@@ -243,6 +243,13 @@ function hero_volume(): string {
     $o .= '<path class="hz-line hz-c1" d="M' . ($l + 10) . ' ' . ($Y - 6) . 'L' . ($l + 260) . ' ' . ($Y - 106) . '"/>';
     return $o . '<text class="hz-unit" x="' . ($W - 8) . '" y="' . ($H - 4) . '" text-anchor="end">D²H</text><text class="hz-unit" x="' . ($l + 6) . '" y="18">V</text>';
 }
+/** Log scaling: a log with its small end, segments and board-foot figures (illustration). */
+function hero_logscale(): string {
+    $o = '<rect class="hz-k0" x="30" y="52" width="230" height="46" rx="4"/><ellipse class="hz-wood" cx="260" cy="75" rx="10" ry="23"/>';
+    foreach ([95, 160, 225] as $x) $o .= '<path class="hz-axis" d="M' . $x . ' 50V100"/>';
+    foreach ([[62, '16'], [128, '16'], [192, '16']] as [$x, $t]) $o .= '<text class="hz-unit" x="' . $x . '" y="118" text-anchor="middle">' . $t . ' ft</text>';
+    return $o . '<text class="hz-unit" x="260" y="36" text-anchor="middle">D</text><text class="hz-unit" x="150" y="140" text-anchor="middle">board feet · m³</text>';
+}
 /** Drawing and short caption of each live tool's card (keyed by the tool's page; tools index). */
 function tool_card_data(bool $tr): array {
     return [
@@ -263,6 +270,7 @@ function tool_card_data(bool $tr): array {
         'mescere-yapisi.php' => ['hero_map', $tr ? 'Çap yapısı, sıklık, mekânsal desen ve rekabet' : 'Diameter structure, density, spatial pattern, competition'],
         'govde-profili.php' => ['hero_taper', $tr ? 'Max–Burkhart ve Kozak; kullanılabilir hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking'],
         'hacim-denklemleri.php' => ['hero_volume', $tr ? 'Sabit biçim sayısı, birleşik değişken, logaritmik ve yerel denklemler' : 'Constant form factor, combined variable, logarithmic and local equations'],
+        'tomruk-olcumu.php' => ['hero_logscale', $tr ? 'Scribner, Doyle, International; Smalian, Huber, Newton' : 'Scribner, Doyle, International; Smalian, Huber, Newton'],
         'biyokutle-karbon.php' => ['hero_biomass', $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients'],
         'buyume-islevi.php' => ['hero_growth', $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination'],
         'agac-olcumu.php' => ['hero_tree', $tr ? 'Eğim ölçerle boy, çap ve göğüs yüzeyi, kabuk, tepe, biçim sayısı' : 'Height with a clinometer, diameter and basal area, bark, crown, form factor'],
@@ -318,7 +326,6 @@ function soon_bars(array $v, string $cls = 'hz-bar', float $x0 = 34, float $w = 
 function soon_figure(string $kind): string {
     $ax = hero_axes(300, 150, 22, 20); $r = hero_rng(crc32($kind) % 100000 + 7);
     switch ($kind) {
-        case 'logs':     return '<rect class="hz-k0" x="40" y="58" width="200" height="34" rx="4"/><ellipse class="hz-wood" cx="240" cy="75" rx="10" ry="17"/><ellipse class="hz-ringl" cx="240" cy="75" rx="10" ry="17"/><path class="hz-tape" d="M40 110H240M40 105v10M240 105v10"/><text class="hz-tick" x="140" y="128" text-anchor="middle">L</text>';
         case 'nlreg':    return $ax . soon_pts(31, 34, function ($u) { return 100 * (1 - exp(-3 * $u)); }) . soon_curve(function ($u) { return 100 * (1 - exp(-3 * $u)); });
         case 'mixed':    { $o = $ax; foreach ([[.8, 0], [1, 1], [1.2, 2], [.9, 3]] as [$a, $k]) $o .= soon_curve(function ($u) use ($a) { return $a * 95 * (1 - exp(-2.5 * $u)); }, 22, 288, 130, 'hz-line hz-s' . $k); return $o; }
         case 'system':   { $o = $ax; foreach ([[.35, 0], [.65, 1], [1, 2]] as [$a, $k]) $o .= soon_curve(function ($u) use ($a) { return $a * 100 * pow($u, 1.6); }, 22, 288, 130, 'hz-line hz-s' . $k); return $o; }
@@ -330,7 +337,6 @@ function soon_figure(string $kind): string {
  * (17 Nov 2026, user decision) and tools already live have no entry. */
 function soon_card_data(bool $tr): array {
     $d = [
-        'SV-05' => ['logs', 'Tomruk hacmi ölçüm kuralları', 'Log volume scaling rules'],
         'SM-02' => ['nlreg', 'Genel doğrusal olmayan regresyon', 'General nonlinear regression'],
         'SM-03' => ['mixed', 'Karma etkili modeller (örnek alan etkisi)', 'Mixed-effects models (plot effects)'],
         'SM-04' => ['system', 'Eşanlı ve toplamsal denklem sistemleri', 'Simultaneous and additive equation systems'],

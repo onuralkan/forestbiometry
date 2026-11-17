@@ -45,7 +45,7 @@ function site_catalog(): array {
         ['SV-02', 'live', 'Gövde profili denklemleri', 'Taper models', 'govde-profili.php'],
         ['SV-03', 'live', 'Kullanılabilir hacim', 'Merchantable volume', 'govde-profili.php'],
         ['SV-04', 'live', 'Hacim denklemleri', 'Volume equations', 'hacim-denklemleri.php'],
-        ['SV-05', 'planned', 'Tomruk ölçüm kuralları', 'Log scaling rules'],
+        ['SV-05', 'live', 'Tomruk ölçüm kuralları', 'Log scaling rules', 'tomruk-olcumu.php'],
         ['SV-06', 'live', 'Ürün bölme (sortiman) eniyileme', 'Log bucking optimizer', 'govde-profili.php'],
         ['BC-01', 'live', 'Allometrik biyokütle', 'Allometric biomass', 'biyokutle-karbon.php'],
         ['BC-02', 'live', 'Biyokütle bileşenleri', 'Biomass components', 'biyokutle-karbon.php'],
