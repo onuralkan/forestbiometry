@@ -1,0 +1,3083 @@
+[
+  {
+    "key": "acklam2003",
+    "type": "web",
+    "authors": [
+      "Acklam, P. J."
+    ],
+    "year": "n.d.",
+    "title": "An algorithm for computing the inverse normal cumulative distribution function",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §3 (Φ⁻¹)"
+    ],
+    "note": "unpublished web note; year given only as 'about 2003' (2003 civarı); no URL given"
+  },
+  {
+    "key": "akaike1974",
+    "type": "article",
+    "authors": [
+      "Akaike, H."
+    ],
+    "year": "1974",
+    "title": "A new look at the statistical model identification",
+    "container": "IEEE Transactions on Automatic Control",
+    "edition": null,
+    "volume": "19",
+    "issue": null,
+    "pages": "716–723",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §2"
+    ],
+    "note": null
+  },
+  {
+    "key": "anderson1954",
+    "type": "article",
+    "authors": [
+      "Anderson, T. W.",
+      "Darling, D. A."
+    ],
+    "year": "1954",
+    "title": "A test of goodness of fit",
+    "container": "J. Am. Stat. Assoc.",
+    "edition": null,
+    "volume": "49",
+    "issue": null,
+    "pages": "765–769",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §8 (legacy Weibull)",
+      "METHODS §12 (AD A²)"
+    ],
+    "note": null
+  },
+  {
+    "key": "assmann1970",
+    "type": "book",
+    "authors": [
+      "Assmann, E."
+    ],
+    "year": "1970",
+    "title": "The Principles of Forest Yield Study",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Pergamon",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §1 (archived stand page)"
+    ],
+    "note": "top-height definition (100 thickest trees/ha); archived section"
+  },
+  {
+    "key": "avery2002",
+    "type": "book",
+    "authors": [
+      "Avery, T. E.",
+      "Burkhart, H. E."
+    ],
+    "year": "2002",
+    "title": "Forest Measurements",
+    "container": null,
+    "edition": "5",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "McGraw-Hill",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §14 SV01 (Huber, Smalian, Newton; textbook-definition exception)"
+    ],
+    "note": "details from TOOLS_SPEC §9 and KAYNAK_LISTESI (publisher)"
+  },
+  {
+    "key": "baia2025",
+    "type": "article",
+    "authors": [
+      "Baia, A. L. P.",
+      "Nascimento, H. E. M.",
+      "Guedes, M.",
+      "Hilário, R.",
+      "Toledo, J. J."
+    ],
+    "year": "2025",
+    "title": "Tree height-diameter allometry and implications for biomass estimates in Northeastern Amazonian forests",
+    "container": "PeerJ",
+    "edition": null,
+    "volume": "13",
+    "issue": null,
+    "pages": "e18974",
+    "publisher": null,
+    "doi": "10.7717/peerj.18974",
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §22 BC-01 (Baskerville [A])"
+    ],
+    "note": "marked '[okundu]' (read) as secondary source for Baskerville 1972; pages field holds article number"
+  },
+  {
+    "key": "bailey1973",
+    "type": "article",
+    "authors": [
+      "Bailey, R. L.",
+      "Dell, T. R."
+    ],
+    "year": "1973",
+    "title": "Quantifying diameter distributions with the Weibull function",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "19",
+    "issue": null,
+    "pages": "97–104",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §2 (archived)",
+      "METHODS §8 (legacy Weibull)"
+    ],
+    "note": null
+  },
+  {
+    "key": "bailey1974",
+    "type": "article",
+    "authors": [
+      "Bailey, R. L.",
+      "Clutter, J. L."
+    ],
+    "year": "1974",
+    "title": "Base-age invariant polymorphic site curves",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "20",
+    "issue": null,
+    "pages": "155–159",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §15 SI01"
+    ],
+    "note": "via Hernández-Cuevas et al. 2018"
+  },
+  {
+    "key": "baskerville1972",
+    "type": "article",
+    "authors": [
+      "Baskerville, G. L."
+    ],
+    "year": "1972",
+    "title": "Use of logarithmic regression in the estimation of plant biomass",
+    "container": "Canadian Journal of Forest Research",
+    "edition": null,
+    "volume": "2",
+    "issue": null,
+    "pages": "49–53",
+    "publisher": null,
+    "doi": "10.1139/x72-009",
+    "url": null,
+    "version": null,
+    "status": "A",
+    "tools": [
+      "METHODS §13 (correctionFactor)",
+      "METHODS §17 SV-02/a2 note",
+      "METHODS §22 BC-01",
+      "METHODS §23 TM-03",
+      "METHODS §24 SV-04"
+    ],
+    "note": "via Chave et al. 2014 and Baia et al. 2025; §13 originally [D]"
+  },
+  {
+    "key": "becking1953",
+    "type": "other",
+    "authors": [
+      "Becking"
+    ],
+    "year": "1953",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §16 SS01 (relative spacing, definition exception)"
+    ],
+    "note": "incomplete: 'Becking (1953)'; could not be read"
+  },
+  {
+    "key": "bennemann2025",
+    "type": "article",
+    "authors": [
+      "Bennemann, C.",
+      "Lussier, J.-M.",
+      "Labelle, E. R."
+    ],
+    "year": "2025",
+    "title": "An open-source tree bucking optimizer based on dynamic programming",
+    "container": "Forests",
+    "edition": null,
+    "volume": "16",
+    "issue": null,
+    "pages": "780",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §19 SV-06"
+    ],
+    "note": "BuckR; pages field holds article number 780"
+  },
+  {
+    "key": "binoti2012",
+    "type": "article",
+    "authors": [
+      "Binoti, D. H. B."
+    ],
+    "year": "2012",
+    "title": "Probability density functions for description of diameter distribution in thinned stands of Tectona grandis",
+    "container": "CERNE",
+    "edition": null,
+    "volume": "18",
+    "issue": "2",
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.scielo.br/j/cerne/a/M55XHDVw4LKSjns7m5jFNjQ/?lang=en",
+    "version": null,
+    "status": null,
+    "tools": [
+      "DIST_SPEC [R5] (§1 background)"
+    ],
+    "note": "'ve arkadaşları' (et al.), co-authors not listed; second URL https://cerne.ufla.br/site/index.php/CERNE/article/view/814; background only, not cited in METHODS"
+  },
+  {
+    "key": "biomass_agbmontecarlo",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "BIOMASS — AGBmonteCarlo (source code and help page)",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §22 BC04"
+    ],
+    "note": "read via rdrr.io copy 17 Nov 2026; METHODS: version number could not be read; KAYNAK_LISTESI lists BIOMASS 2.2; no marker"
+  },
+  {
+    "key": "bruce1950",
+    "type": "other",
+    "authors": [
+      "Bruce",
+      "Schumacher"
+    ],
+    "year": "1950",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §25 SV-05 (Scribner regression, Eq. 7.3)"
+    ],
+    "note": "incomplete: via Kershaw et al. 2016 §7.3; no marker"
+  },
+  {
+    "key": "burk1984",
+    "type": "article",
+    "authors": [
+      "Burk, T. E.",
+      "Newberry, J. D."
+    ],
+    "year": "1984",
+    "title": null,
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "30",
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §2 (Dq–moment relation)"
+    ],
+    "note": "incomplete: no title or pages given"
+  },
+  {
+    "key": "carus2017",
+    "type": "other",
+    "authors": [
+      "Carus",
+      "Çatal"
+    ],
+    "year": "2017",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §10 (naming note only)"
+    ],
+    "note": "incomplete: 'Carus ve Çatal 2017'; no initials, title or venue; its table could not be read"
+  },
+  {
+    "key": "chapman1961",
+    "type": "other",
+    "authors": [
+      "Chapman"
+    ],
+    "year": "1961",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §18 SQ-03 (Chapman–Richards)"
+    ],
+    "note": "incomplete: 'Chapman 1961'; §10 says the 'Chapman' citation was not verified"
+  },
+  {
+    "key": "chave2004",
+    "type": "article",
+    "authors": [
+      "Chave, J.",
+      "Condit, R.",
+      "Aguilar, S.",
+      "Hernandez, A.",
+      "Lao, S.",
+      "Perez, R."
+    ],
+    "year": "2004",
+    "title": "Error propagation and scaling for tropical forest biomass estimates",
+    "container": "Philosophical Transactions of the Royal Society B",
+    "edition": null,
+    "volume": "359",
+    "issue": null,
+    "pages": "409–420",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §22 BC04 (§2(a), p. 410)"
+    ],
+    "note": "title from KAYNAK_LISTESI"
+  },
+  {
+    "key": "chave2014",
+    "type": "article",
+    "authors": [
+      "Chave, J.",
+      "Réjou-Méchain, M.",
+      "Búrquez, A."
+    ],
+    "year": "2014",
+    "title": "Improved allometric models to estimate the aboveground biomass of tropical trees",
+    "container": "Global Change Biology",
+    "edition": null,
+    "volume": "20",
+    "issue": null,
+    "pages": "3177–3190",
+    "publisher": null,
+    "doi": "10.1111/gcb.12629",
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §22 BC-01 (Baskerville [A], pp. 3180–3181, Eq. 2)"
+    ],
+    "note": "'ve ark.' (et al.); marked '[okundu]' (read) as secondary source for Baskerville 1972"
+  },
+  {
+    "key": "ciceu2020",
+    "type": "article",
+    "authors": [
+      "Ciceu, A.",
+      "Garcia-Duro, J.",
+      "Seceleanu, I.",
+      "Badea, O."
+    ],
+    "year": "2020",
+    "title": "A generalized nonlinear mixed-effects height–diameter model for Norway spruce in mixed-uneven aged stands",
+    "container": "Forest Ecology and Management",
+    "edition": null,
+    "volume": "477",
+    "issue": null,
+    "pages": "118507",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "A",
+    "tools": [
+      "METHODS §27 SM-03 (calibration)"
+    ],
+    "note": "secondary source for Vonesh & Chinchilli 1997 [A]; authors and title from KAYNAK_LISTESI; pages field holds article number"
+  },
+  {
+    "key": "clark1906",
+    "type": "other",
+    "authors": [
+      "Clark"
+    ],
+    "year": "1906",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §25 SV-05 (International ⅛-inch, Eq. 7.7–7.10)"
+    ],
+    "note": "incomplete: via Kershaw et al. 2016 §7.3; no marker"
+  },
+  {
+    "key": "clark1954",
+    "type": "article",
+    "authors": [
+      "Clark, P. J.",
+      "Evans, F. C."
+    ],
+    "year": "1954",
+    "title": "Distance to nearest neighbor as a measure of spatial relationships in populations",
+    "container": "Ecology",
+    "edition": null,
+    "volume": "35",
+    "issue": null,
+    "pages": "445–453",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §16 SS02 (Clark–Evans R)"
+    ],
+    "note": "title from TOOLS_SPEC §9 / KAYNAK_LISTESI"
+  },
+  {
+    "key": "cochran1963",
+    "type": "book",
+    "authors": [
+      "Cochran, W. G."
+    ],
+    "year": "1963",
+    "title": "Sampling Techniques",
+    "container": null,
+    "edition": "2",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Wiley",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §11 (sampling planner)"
+    ],
+    "note": "verified in the reference list of Israel 1992"
+  },
+  {
+    "key": "cochran1977",
+    "type": "book",
+    "authors": [
+      "Cochran, W. G."
+    ],
+    "year": "1977",
+    "title": "Sampling Techniques",
+    "container": null,
+    "edition": "3",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Wiley, New York",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §6 (design-based estimate)",
+      "METHODS §11"
+    ],
+    "note": null
+  },
+  {
+    "key": "cohen1965",
+    "type": "article",
+    "authors": [
+      "Cohen, A. C."
+    ],
+    "year": "1965",
+    "title": "Maximum likelihood estimation in the Weibull distribution based on complete and on censored samples",
+    "container": "Technometrics",
+    "edition": null,
+    "volume": "7",
+    "issue": null,
+    "pages": "579–588",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §8 (legacy Weibull)"
+    ],
+    "note": null
+  },
+  {
+    "key": "contreras2011",
+    "type": "article",
+    "authors": [
+      "Contreras, M. A.",
+      "Affleck, D.",
+      "Chung, W."
+    ],
+    "year": "2011",
+    "title": "Evaluating tree competition indices as predictors of basal area increment in western Montana forests",
+    "container": "Forest Ecology and Management",
+    "edition": null,
+    "volume": "262",
+    "issue": null,
+    "pages": "1939–1949",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §16 SS-07/a1 (Table 1, CI8)"
+    ],
+    "note": null
+  },
+  {
+    "key": "curtis1967",
+    "type": "article",
+    "authors": [
+      "Curtis, R. O."
+    ],
+    "year": "1967",
+    "title": "Height–diameter and height–diameter–age equations for second-growth Douglas-fir",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "13",
+    "issue": null,
+    "pages": "365–375",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §10 (height–diameter)"
+    ],
+    "note": null
+  },
+  {
+    "key": "curtis1982",
+    "type": "article",
+    "authors": [
+      "Curtis, R. O."
+    ],
+    "year": "1982",
+    "title": "A simple index of stand density for Douglas-fir",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "28",
+    "issue": "1",
+    "pages": "92–94",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §16 SS01 (relative density)"
+    ],
+    "note": "USDA Treesearch 7202"
+  },
+  {
+    "key": "donnelly1978",
+    "type": "chapter",
+    "authors": [
+      "Donnelly, K. P."
+    ],
+    "year": "1978",
+    "title": "Simulations to determine the variance and edge effect of total nearest-neighbour distance",
+    "container": "Simulation Studies in Archaeology",
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Cambridge University Press",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §16 SS02 (Donnelly edge correction, temporary exception)"
+    ],
+    "note": "ed. Hodder, I.; details from TOOLS_SPEC §9 / KAYNAK_LISTESI; METHODS gives only 'Donnelly (1978)', constants 0.0514 and 0.041"
+  },
+  {
+    "key": "draper1981",
+    "type": "other",
+    "authors": [
+      "Draper",
+      "Smith"
+    ],
+    "year": "1981",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §18 SQ-03 (Gompertz)"
+    ],
+    "note": "incomplete: 'Draper ve Smith 1981', original cited by Fekedulegn et al. 1999; no marker"
+  },
+  {
+    "key": "dubey1967",
+    "type": "article",
+    "authors": [
+      "Dubey, S. D."
+    ],
+    "year": "1967",
+    "title": "Some percentile estimators for Weibull parameters",
+    "container": "Technometrics",
+    "edition": null,
+    "volume": "9",
+    "issue": "1",
+    "pages": "119–129",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §2",
+      "METHODS §12 P05 (weibull.pct default pair 0.24/0.93)"
+    ],
+    "note": null
+  },
+  {
+    "key": "dykstra1984",
+    "type": "other",
+    "authors": [
+      "Dykstra"
+    ],
+    "year": "1984",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §19 SV-06"
+    ],
+    "note": "incomplete: 'Dykstra 1984 denk. 10.6', cited via Bennemann et al. 2025; no marker"
+  },
+  {
+    "key": "fao_rapid",
+    "type": "report",
+    "authors": [
+      "FAO"
+    ],
+    "year": "n.d.",
+    "title": "Assessing the status of logged-over production forests: the development of a rapid appraisal technique",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "fao.org/4/ac838e",
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §11"
+    ],
+    "note": "no year given; URL as given in METHODS (no scheme)"
+  },
+  {
+    "key": "fekedulegn1999",
+    "type": "article",
+    "authors": [
+      "Fekedulegn, D.",
+      "Mac Siurtain, M. P.",
+      "Colbert, J. J."
+    ],
+    "year": "1999",
+    "title": "Parameter estimation of nonlinear growth models in forestry",
+    "container": "Silva Fennica",
+    "edition": null,
+    "volume": "33",
+    "issue": "4",
+    "pages": "327–336",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "A",
+    "tools": [
+      "METHODS §18 SQ-03 (Table 1, Tables 9 and 11)",
+      "METHODS §26 SM-02"
+    ],
+    "note": "secondary source for Gompertz, logistic, monomolecular, Weibull [A]; worked example used in tests (CC BY-SA 4.0)"
+  },
+  {
+    "key": "fitdistrplus_vignette",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "fitdistrplus vignette",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://lbbe-software.github.io/fitdistrplus/articles/fitdistrplus_vignette.html",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P18 (QME, MGE)",
+      "DIST_SPEC [R8]"
+    ],
+    "note": "developer documentation; KAYNAK_LISTESI separately names the package paper Delignette-Muller, M.L., Dutang, C. 2015, J. Statistical Software 64(4)"
+  },
+  {
+    "key": "fonseca2009",
+    "type": "article",
+    "authors": [
+      "Fonseca, T. F.",
+      "Marques, C. P.",
+      "Parresol, B. R."
+    ],
+    "year": "2009",
+    "title": "Describing maritime pine diameter distributions with Johnson's SB distribution using a new all-parameter recovery approach",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "55",
+    "issue": "4",
+    "pages": "367–373",
+    "publisher": null,
+    "doi": null,
+    "url": "https://capsis.cirad.fr/capsis/_media/help/describing_maritime_pine_with_sb_distribution.pdf",
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §12 P19 (Eq. 1–11, App. A1–A16)",
+      "DIST_SPEC [R17]"
+    ],
+    "note": null
+  },
+  {
+    "key": "forestfit_fitjsb",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "ForestFit — fitJSB",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://search.r-project.org/CRAN/refmans/ForestFit/html/fitJSB.html",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P08",
+      "DIST_SPEC [R7]"
+    ],
+    "note": "official package documentation"
+  },
+  {
+    "key": "forestfit_fitweibull",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "ForestFit — fitWeibull",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html",
+    "version": null,
+    "status": null,
+    "tools": [
+      "DIST_SPEC [R6] (§3.5 Weibull method inventory)"
+    ],
+    "note": "official package documentation; not cited in METHODS; no status marker"
+  },
+  {
+    "key": "forestsas_dominance",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "forestSAS — dominance",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §16 SS02 (U; numerical check tests/ref/ss02_check.R)"
+    ],
+    "note": "R package documentation; W default 360°/(k+1) per METHODS; no version or marker given"
+  },
+  {
+    "key": "gallant1973",
+    "type": "other",
+    "authors": [
+      "Gallant",
+      "Fuller"
+    ],
+    "year": "1973",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §17 SV-02/a1 (reparameterization)"
+    ],
+    "note": "incomplete: 'Gallant ve Fuller 1973', cited via Max & Burkhart 1976; no marker"
+  },
+  {
+    "key": "gorgoso2024",
+    "type": "article",
+    "authors": [
+      "Gorgoso-Varela, J. J.",
+      "Adedapo, S. M.",
+      "Ogana, F. N."
+    ],
+    "year": "2024",
+    "title": "A comparison of probability density functions fitted by moments and maximum likelihood estimation methods used for diameter distribution estimation",
+    "container": "Forests",
+    "edition": null,
+    "volume": "15",
+    "issue": "3",
+    "pages": "425",
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.mdpi.com/1999-4907/15/3/425",
+    "version": null,
+    "status": null,
+    "tools": [
+      "DIST_SPEC [R3] (§1 background)"
+    ],
+    "note": "background for distribution/method choice only; not cited in METHODS; no status marker; pages field holds article number"
+  },
+  {
+    "key": "gove1998",
+    "type": "other",
+    "authors": [
+      "Gove",
+      "Patil"
+    ],
+    "year": "1998",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P19 (m₃ via basal-area-weighted mean diameter)",
+      "DIST_SPEC P23 note"
+    ],
+    "note": "incomplete: cited by Fonseca et al. 2009 (and by Kangas & Maltamo 2000 per DIST_SPEC); not read; no marker in METHODS, DIST_SPEC says 'okunmadı'"
+  },
+  {
+    "key": "graves1906",
+    "type": "book",
+    "authors": [
+      "Graves, H. S."
+    ],
+    "year": "1906",
+    "title": "Forest Mensuration",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "John Wiley & Sons, New York",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §23 TM-01, TM-02, TM-03, TM-05, TM-06"
+    ],
+    "note": "public domain; Internet Archive scan 'forestmensuratio00grav'"
+  },
+  {
+    "key": "gregoire1995",
+    "type": "other",
+    "authors": [
+      "Gregoire",
+      "Valentine"
+    ],
+    "year": "1995",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §23 TM-04 (quadratic mean crown radius)"
+    ],
+    "note": "incomplete: via Kershaw et al. 2016 §5.5.2; original not read; no marker"
+  },
+  {
+    "key": "grondin1998",
+    "type": "article",
+    "authors": [
+      "Grondin, F."
+    ],
+    "year": "1998",
+    "title": "Improvements of the dynamic programming algorithm for tree bucking",
+    "container": "Wood and Fiber Science",
+    "edition": null,
+    "volume": "30",
+    "issue": "1",
+    "pages": "91–104",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §19 SV-06 (recursion 3)"
+    ],
+    "note": null
+  },
+  {
+    "key": "grosenbaugh1952a",
+    "type": "other",
+    "authors": [
+      "Grosenbaugh"
+    ],
+    "year": "1952",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §25 SV-05 (International ¼-inch equation)"
+    ],
+    "note": "incomplete: 'Grosenbaugh 1952a', via Kershaw et al. 2016 §7.3; no marker; not identifiable with KAYNAK_LISTESI's 'Grosenbaugh 1952 Plotless timber estimates'"
+  },
+  {
+    "key": "growthmodels",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "growthmodels",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": "1.3.1",
+    "status": null,
+    "tools": [
+      "METHODS §18 SQ-03 (second source for [A] forms)"
+    ],
+    "note": "R package documentation; no [P] marker given; Gompertz page writes exp(−k^t) (probable typo)"
+  },
+  {
+    "key": "hafley1977",
+    "type": "article",
+    "authors": [
+      "Hafley, W. L.",
+      "Schreuder, H. T."
+    ],
+    "year": "1977",
+    "title": "Statistical distributions for fitting diameter and height data in even-aged stands",
+    "container": "Canadian Journal of Forest Research",
+    "edition": null,
+    "volume": "7",
+    "issue": null,
+    "pages": "481–487",
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.u-cursos.cl/forestal/2010/1/MF004/1/material_docente/bajar?id_material=483164",
+    "version": null,
+    "status": null,
+    "tools": [
+      "DIST_SPEC [R4] (§1 background)"
+    ],
+    "note": "background only; not cited in METHODS; no status marker"
+  },
+  {
+    "key": "hamilton1975",
+    "type": "book",
+    "authors": [
+      "Hamilton, G. J."
+    ],
+    "year": "1975",
+    "title": "Forest Mensuration Handbook",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "HMSO, London",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §23 TM-01, TM-02, TM-03, TM-04"
+    ],
+    "note": "Forestry Commission Booklet 39; METHODS adds '(3. baskı 1988)' (3rd edition 1988)"
+  },
+  {
+    "key": "hart1928",
+    "type": "other",
+    "authors": [
+      "Hart"
+    ],
+    "year": "1928",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §16 SS01 (relative spacing, definition exception)"
+    ],
+    "note": "incomplete: 'Hart (1928)'; could not be read"
+  },
+  {
+    "key": "heger1965",
+    "type": "article",
+    "authors": [
+      "Heger, L."
+    ],
+    "year": "1965",
+    "title": "A trial of Hohenadl's method of stem form and stem volume estimation",
+    "container": "The Forestry Chronicle",
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": "466–475",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §14 SV01 (Hohenadl)",
+      "METHODS §14 audit fixes (Fig. 1 test)"
+    ],
+    "note": "issue given only as 'December 1965'; volume not given"
+  },
+  {
+    "key": "hegyi1974",
+    "type": "chapter",
+    "authors": [
+      "Hegyi, F."
+    ],
+    "year": "1974",
+    "title": "A simulation model for managing jack-pine stands",
+    "container": "Growth Models for Tree and Stand Simulation",
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Royal College of Forestry, Stockholm",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "A",
+    "tools": [
+      "METHODS §16 SS-07/a1 (Hegyi index)"
+    ],
+    "note": "via Contreras et al. 2011 and siplab 1.6 [P]; original citation [İ]; ed. Fries, J.; details from TOOLS_SPEC §9"
+  },
+  {
+    "key": "henningsen2007",
+    "type": "article",
+    "authors": [
+      "Henningsen, A.",
+      "Hamann, J. D."
+    ],
+    "year": "2007",
+    "title": "systemfit: a package for estimating systems of simultaneous equations in R",
+    "container": "Journal of Statistical Software",
+    "edition": null,
+    "volume": "23",
+    "issue": "4",
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §28 SM-04"
+    ],
+    "note": "read as the open-access CRAN vignette of systemfit 1.1-30"
+  },
+  {
+    "key": "hernandezcuevas2018",
+    "type": "article",
+    "authors": [
+      "Hernández-Cuevas, M.",
+      "Santiago-García, W.",
+      "De los Santos-Posadas, H. M.",
+      "Martínez-Antúnez, P.",
+      "Ruiz-Aquino, F."
+    ],
+    "year": "2018",
+    "title": "Modelos de crecimiento en altura dominante e índices de sitio para Pinus ayacahuite Ehren.",
+    "container": "Agrociencia",
+    "edition": null,
+    "volume": "52",
+    "issue": null,
+    "pages": "437–453",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §15 SI01 (Cuadro 2, 3)",
+      "METHODS §18 SQ-03 (cr, schu)",
+      "METHODS §26 SM-02"
+    ],
+    "note": null
+  },
+  {
+    "key": "huang1992",
+    "type": "article",
+    "authors": [
+      "Huang, S.",
+      "Titus, S. J.",
+      "Wiens, D. P."
+    ],
+    "year": "1992",
+    "title": "Comparison of nonlinear height–diameter functions for major Alberta tree species",
+    "container": "Canadian Journal of Forest Research",
+    "edition": null,
+    "volume": "22",
+    "issue": null,
+    "pages": "1297–1304",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §10"
+    ],
+    "note": null
+  },
+  {
+    "key": "hui1998",
+    "type": "other",
+    "authors": [
+      "Hui"
+    ],
+    "year": "1998",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §16 SS02 (U, temporary exception)"
+    ],
+    "note": "incomplete: 'Hui ve ark. 1998' (et al.); source not in hand"
+  },
+  {
+    "key": "huigadow",
+    "type": "other",
+    "authors": [
+      "Hui",
+      "Gadow"
+    ],
+    "year": "n.d.",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §16 SS02 (W option 360°/(k+1))"
+    ],
+    "note": "incomplete: 'Hui ve Gadow' later definition; no year, not read"
+  },
+  {
+    "key": "hyndman1996",
+    "type": "article",
+    "authors": [
+      "Hyndman, R. J.",
+      "Fan, Y."
+    ],
+    "year": "1996",
+    "title": "Sample quantiles in statistical packages",
+    "container": "The American Statistician",
+    "edition": null,
+    "volume": "50",
+    "issue": "4",
+    "pages": "361–365",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P05, P06, P08 (type 7 quantiles)"
+    ],
+    "note": "definition verified numerically against numpy"
+  },
+  {
+    "key": "ipcc2006",
+    "type": "report",
+    "authors": [
+      "IPCC"
+    ],
+    "year": "2006",
+    "title": "2006 IPCC Guidelines for National Greenhouse Gas Inventories",
+    "container": null,
+    "edition": null,
+    "volume": "4",
+    "issue": null,
+    "pages": null,
+    "publisher": "IGES, Japan",
+    "doi": null,
+    "url": "ipcc-nggip.iges.or.jp",
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §22 BC-01 (Eq. 2.8, §2.2.3)",
+      "METHODS §22 BC02/BC03"
+    ],
+    "note": "Volume 4 (AFOLU), Chapter 2 (Generic Methodologies Applicable to Multiple Land-Use Categories); conflict: TOOLS_SPEC §9 cites Volume 4 Chapter 4 (Forest Land); URL as given in KAYNAK_LISTESI (no scheme)"
+  },
+  {
+    "key": "israel1992",
+    "type": "report",
+    "authors": [
+      "Israel, G. D."
+    ],
+    "year": "1992",
+    "title": "Determining Sample Size",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "University of Florida IFAS Extension",
+    "doi": "10.32473/EDIS-PD006-1992",
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §11 (Eq. 3, Eq. 7)"
+    ],
+    "note": "revised 2009; publication PEOD6"
+  },
+  {
+    "key": "johnson1949",
+    "type": "article",
+    "authors": [
+      "Johnson, N. L."
+    ],
+    "year": "1949",
+    "title": "Systems of frequency curves generated by methods of translation",
+    "container": "Biometrika",
+    "edition": null,
+    "volume": "36",
+    "issue": null,
+    "pages": "149–176",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §2 (Johnson SB)"
+    ],
+    "note": null
+  },
+  {
+    "key": "kangas2000",
+    "type": "article",
+    "authors": [
+      "Kangas, A.",
+      "Maltamo, M."
+    ],
+    "year": "2000",
+    "title": "Percentile based basal area diameter distribution models for Scots pine, Norway spruce and birch species",
+    "container": "Silva Fennica",
+    "edition": null,
+    "volume": "34",
+    "issue": "4",
+    "pages": "371–380",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §12 P23 (Sections 2.2–2.3, Eq. 1)",
+      "DIST_SPEC [R23]"
+    ],
+    "note": null
+  },
+  {
+    "key": "kershaw2016",
+    "type": "book",
+    "authors": [
+      "Kershaw, J. A.",
+      "Ducey, M. J.",
+      "Beers, T. W.",
+      "Husch, B."
+    ],
+    "year": "2016",
+    "title": "Forest Mensuration",
+    "container": null,
+    "edition": "5",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Wiley",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §14 SV01",
+      "METHODS §16 SS-02 (CCF, §8.9.4)",
+      "METHODS §17 SV-03 (§6.4.1, §7.4.1, §7.4.3)",
+      "METHODS §23 TM-04 (§5.5, §8.6.1, App. A.2)",
+      "METHODS §24 SV-04 (§6.2)",
+      "METHODS §25 SV-05 (§7.3, §7.4.1, Table 6.1)"
+    ],
+    "note": "conflict: publisher 'Wiley' (§17, §24, §25, KAYNAK_LISTESI) vs 'Wiley-Blackwell' (§23); §14 lists it as [D] textbook-definition exception"
+  },
+  {
+    "key": "knoebel1991",
+    "type": "article",
+    "authors": [
+      "Knoebel, B. R.",
+      "Burkhart, H. E."
+    ],
+    "year": "1991",
+    "title": "A bivariate distribution approach to modeling forest diameter distributions at two points in time",
+    "container": "Biometrics",
+    "edition": null,
+    "volume": "47",
+    "issue": null,
+    "pages": "241–253",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P08 (johnsonsb.kb, 50/95 percentile pair)"
+    ],
+    "note": null
+  },
+  {
+    "key": "kozak2004",
+    "type": "article",
+    "authors": [
+      "Kozak, A."
+    ],
+    "year": "2004",
+    "title": "My last words on taper equations",
+    "container": "The Forestry Chronicle",
+    "edition": null,
+    "volume": "80",
+    "issue": null,
+    "pages": "507–515",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §17 SV-02/a2 (Model 02)",
+      "METHODS §17 SV-02/a3",
+      "METHODS §19 SV-06 tests"
+    ],
+    "note": null
+  },
+  {
+    "key": "krajicek1961",
+    "type": "article",
+    "authors": [
+      "Krajicek, J. E.",
+      "Brinkman, K. A.",
+      "Gingrich, S. F."
+    ],
+    "year": "1961",
+    "title": "Crown competition — a measure of density",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "7",
+    "issue": null,
+    "pages": "35–42",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §16 SS-02 (CCF)",
+      "METHODS §23 TM-04 (CCF note)"
+    ],
+    "note": "via Kershaw et al. 2016 and van Laar & Akça 2007; METHODS: original not found, not read, no marker; full citation only in KAYNAK_LISTESI (written from memory)"
+  },
+  {
+    "key": "krenn1944",
+    "type": "other",
+    "authors": [
+      "Krenn",
+      "Prodan"
+    ],
+    "year": "1944",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §14 SV01 (Hohenadl, via Heger 1965)"
+    ],
+    "note": "incomplete: 'Krenn ve Prodan 1944', cited by Heger 1965; no marker"
+  },
+  {
+    "key": "lanczos1964",
+    "type": "article",
+    "authors": [
+      "Lanczos, C."
+    ],
+    "year": "1964",
+    "title": "A precision approximation of the gamma function",
+    "container": "SIAM J. Numer. Anal. Ser. B",
+    "edition": null,
+    "volume": "1",
+    "issue": null,
+    "pages": "86–96",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §3 (ln Γ)"
+    ],
+    "note": null
+  },
+  {
+    "key": "lindstrom1990",
+    "type": "article",
+    "authors": [
+      "Lindstrom, M. J.",
+      "Bates, D. M."
+    ],
+    "year": "1990",
+    "title": "Nonlinear mixed effects models for repeated measures data",
+    "container": "Biometrics",
+    "edition": null,
+    "volume": "46",
+    "issue": null,
+    "pages": "673–687",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §27 SM-03"
+    ],
+    "note": null
+  },
+  {
+    "key": "lmomco_pargam",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "lmomco — pargam",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://search.r-project.org/CRAN/refmans/lmomco/html/pargam.html",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P03, P18",
+      "DIST_SPEC [R13]"
+    ],
+    "note": "official package documentation; not read and not used in P18 (exact equation used instead)"
+  },
+  {
+    "key": "machler2012",
+    "type": "other",
+    "authors": [
+      "Mächler"
+    ],
+    "year": "2012",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P11 (ln(1 − eˣ))"
+    ],
+    "note": "incomplete: 'Mächler (2012)'; no initials, title or venue"
+  },
+  {
+    "key": "marquardt1963",
+    "type": "article",
+    "authors": [
+      "Marquardt, D. W."
+    ],
+    "year": "1963",
+    "title": "An algorithm for least-squares estimation of nonlinear parameters",
+    "container": "J. SIAM",
+    "edition": null,
+    "volume": "11",
+    "issue": null,
+    "pages": "431–441",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §10 (Levenberg–Marquardt)"
+    ],
+    "note": null
+  },
+  {
+    "key": "massey1951",
+    "type": "article",
+    "authors": [
+      "Massey, F. J."
+    ],
+    "year": "1951",
+    "title": "The Kolmogorov–Smirnov test for goodness of fit",
+    "container": "Journal of the American Statistical Association",
+    "edition": null,
+    "volume": "46",
+    "issue": null,
+    "pages": "68–78",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §2"
+    ],
+    "note": null
+  },
+  {
+    "key": "max1976",
+    "type": "article",
+    "authors": [
+      "Max, T. A.",
+      "Burkhart, H. E."
+    ],
+    "year": "1976",
+    "title": "Segmented polynomial regression applied to taper equations",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "22",
+    "issue": null,
+    "pages": "283–289",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §17 SV-02/a1 (Model 4, Table 3 in tests)",
+      "METHODS §17 SV-02/a3",
+      "METHODS §19 SV-06 tests"
+    ],
+    "note": null
+  },
+  {
+    "key": "mehtatalo2015",
+    "type": "article",
+    "authors": [
+      "Mehtätalo, L.",
+      "de-Miguel, S.",
+      "Gregoire, T. G."
+    ],
+    "year": "2015",
+    "title": "Modeling height–diameter curves for prediction",
+    "container": "Canadian Journal of Forest Research",
+    "edition": null,
+    "volume": "45",
+    "issue": "7",
+    "pages": "826–837",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §10"
+    ],
+    "note": "title appears as '...for height prediction' in the lmfor help page reference list"
+  },
+  {
+    "key": "lmfor",
+    "type": "software",
+    "authors": [
+      "Mehtätalo, L."
+    ],
+    "year": "n.d.",
+    "title": "lmfor: Functions for Forest Biometrics (HDmodels help page)",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §10 (model forms)"
+    ],
+    "note": "R package help page read on CRAN (search.r-project.org) 9 Nov 2026; METHODS gives no version; KAYNAK_LISTESI lists lmfor 1.7"
+  },
+  {
+    "key": "meyer1942",
+    "type": "other",
+    "authors": [
+      "Meyer"
+    ],
+    "year": "1942",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §23 TM-03 (bark ratio k)"
+    ],
+    "note": "incomplete: read via van Laar & Akça 2007; original not read; no marker"
+  },
+  {
+    "key": "michailoff1943",
+    "type": "article",
+    "authors": [
+      "Michailoff, I."
+    ],
+    "year": "1943",
+    "title": "Zahlenmässiges Verfahren für die Ausführung der Bestandeshöhenkurven",
+    "container": "Forstwissenschaftliches Centralblatt und Tharandter Forstliches Jahrbuch",
+    "edition": null,
+    "volume": "6",
+    "issue": null,
+    "pages": "273–279",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §10 (height–diameter)"
+    ],
+    "note": null
+  },
+  {
+    "key": "minka2002",
+    "type": "report",
+    "authors": [
+      "Minka, T. P."
+    ],
+    "year": "2002",
+    "title": "Estimating a gamma distribution",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P03 (solver start value only)"
+    ],
+    "note": "technical note"
+  },
+  {
+    "key": "orientalbeech",
+    "type": "article",
+    "authors": [],
+    "year": "n.d.",
+    "title": "Mixed-effects modeling for tree height prediction models of Oriental beech in the Hyrcanian forests",
+    "container": "Journal of Forestry Research",
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": "10.1007/s11676-017-0551-z",
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §10"
+    ],
+    "note": "incomplete: no authors or year given; secondary source whose reference list was used to verify the [İ] citations in §10; no status marker"
+  },
+  {
+    "key": "naslund1936",
+    "type": "article",
+    "authors": [
+      "Näslund, M."
+    ],
+    "year": "1936",
+    "title": "Skogsförsöksanstaltens gallringsförsök i tallskog",
+    "container": "Meddelanden från Statens Skogsförsöksanstalt",
+    "edition": null,
+    "volume": "29",
+    "issue": null,
+    "pages": "1–169",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §1 (archived)",
+      "METHODS §10 (height–diameter)",
+      "METHODS §21 DI-04"
+    ],
+    "note": "§1 marks [D] without pages; §10 [İ] with pages 1–169"
+  },
+  {
+    "key": "nielsen1999",
+    "type": "report",
+    "authors": [
+      "Nielsen, H. B."
+    ],
+    "year": "1999",
+    "title": "Damping parameter in Marquardt's method",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "DTU",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §10 (LM damping update)"
+    ],
+    "note": "report IMM-REP-1999-05"
+  },
+  {
+    "key": "fips1804",
+    "type": "report",
+    "authors": [
+      "NIST"
+    ],
+    "year": "2015",
+    "title": "Secure Hash Standard (SHS)",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §20 DI-07"
+    ],
+    "note": "FIPS PUB 180-4; standard"
+  },
+  {
+    "key": "nist_normal",
+    "type": "web",
+    "authors": [
+      "NIST"
+    ],
+    "year": "n.d.",
+    "title": "Normal Distribution",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P02",
+      "DIST_SPEC [R10]"
+    ],
+    "note": "DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+  },
+  {
+    "key": "nist_lognormal",
+    "type": "web",
+    "authors": [
+      "NIST"
+    ],
+    "year": "n.d.",
+    "title": "Lognormal Distribution",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P02",
+      "DIST_SPEC [R11]"
+    ],
+    "note": "DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+  },
+  {
+    "key": "nist_gamma",
+    "type": "web",
+    "authors": [
+      "NIST"
+    ],
+    "year": "n.d.",
+    "title": "Gamma Distribution",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P03",
+      "DIST_SPEC [R12]"
+    ],
+    "note": "DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+  },
+  {
+    "key": "nist_beta",
+    "type": "web",
+    "authors": [
+      "NIST"
+    ],
+    "year": "n.d.",
+    "title": "Beta Distribution",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366h.htm",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P04",
+      "DIST_SPEC [R14]"
+    ],
+    "note": "DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+  },
+  {
+    "key": "nist_exponential",
+    "type": "web",
+    "authors": [
+      "NIST"
+    ],
+    "year": "n.d.",
+    "title": "Exponential Distribution",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3667.htm",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P10",
+      "DIST_SPEC [R15]"
+    ],
+    "note": "DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+  },
+  {
+    "key": "nist_gumbel",
+    "type": "web",
+    "authors": [
+      "NIST"
+    ],
+    "year": "n.d.",
+    "title": "Extreme Value Type I / Gumbel",
+    "container": "NIST/SEMATECH e-Handbook",
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P20",
+      "DIST_SPEC [R19]"
+    ],
+    "note": "DIST_SPEC: technical handbook page, accessed 10 Nov 2026; METHODS names it 'NIST/SEMATECH e-Handbook, Extreme Value Type I (Gumbel)'"
+  },
+  {
+    "key": "nlme",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "nlme",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": "3.1-168",
+    "status": "P",
+    "tools": [
+      "METHODS §27 SM-03 (tests/ref/sm03_mixed.R)"
+    ],
+    "note": "R package (R 4.5.2), run by the user 17 Nov 2026"
+  },
+  {
+    "key": "oestlin1963",
+    "type": "other",
+    "authors": [
+      "Oestlin"
+    ],
+    "year": "1963",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §23 TM-03 (ln bark form)"
+    ],
+    "note": "incomplete: via van Laar & Akça 2007; original not read; no marker"
+  },
+  {
+    "key": "okabe2008",
+    "type": "web",
+    "authors": [
+      "Okabe, M.",
+      "Ito, K."
+    ],
+    "year": "2008",
+    "title": "Color Universal Design (CUD): How to make figures and presentations that are friendly to colorblind people",
+    "container": "J*Fly",
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §5 (colour palette)"
+    ],
+    "note": "J*Fly web page; no URL given"
+  },
+  {
+    "key": "parresol1999",
+    "type": "article",
+    "authors": [
+      "Parresol, B. R."
+    ],
+    "year": "1999",
+    "title": "Assessing tree and stand biomass: a review with examples and critical comparisons",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "45",
+    "issue": null,
+    "pages": "573–593",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §22 BC-02/a1 (Eq. 11–16, 23, 31–35; Tables 1, 2, 4)",
+      "METHODS §24 SV-04 (weights, Eq. 12, 15)"
+    ],
+    "note": null
+  },
+  {
+    "key": "parresol2001",
+    "type": "article",
+    "authors": [
+      "Parresol, B. R."
+    ],
+    "year": "2001",
+    "title": "Additivity of nonlinear biomass equations",
+    "container": "Canadian Journal of Forest Research",
+    "edition": null,
+    "volume": "31",
+    "issue": null,
+    "pages": "865–878",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §22 BC-02/a2 (Eq. 1–33, Tables 1–4)",
+      "METHODS §26 SM-02",
+      "METHODS §28 SM-04 (Eq. 20–26)"
+    ],
+    "note": null
+  },
+  {
+    "key": "parresol2003",
+    "type": "report",
+    "authors": [
+      "Parresol, B. R."
+    ],
+    "year": "2003",
+    "title": "Recovering parameters of Johnson's SB distribution",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "USDA Forest Service, Southern Research Station",
+    "doi": null,
+    "url": "https://www.srs.fs.usda.gov/pubs/rp/rp_srs031.pdf",
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §12 P09 (Eq. 9–16)",
+      "METHODS §12 P16",
+      "DIST_SPEC [R2]"
+    ],
+    "note": "Research Paper SRS–31"
+  },
+  {
+    "key": "parresol2009",
+    "type": "other",
+    "authors": [
+      "Parresol"
+    ],
+    "year": "2009",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P19"
+    ],
+    "note": "incomplete: 'Parresol ve ark. (2009, SAS programs and constraint design)', cited by Fonseca et al. 2009; not read"
+  },
+  {
+    "key": "pinheiro2000",
+    "type": "book",
+    "authors": [
+      "Pinheiro, J. C.",
+      "Bates, D. M."
+    ],
+    "year": "2000",
+    "title": "Mixed-Effects Models in S and S-PLUS",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Springer",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §27 SM-03 (§2.2, §2.4.1, §5.2, §7.2)"
+    ],
+    "note": null
+  },
+  {
+    "key": "pnevmaticos1972",
+    "type": "article",
+    "authors": [
+      "Pnevmaticos, S. M.",
+      "Mann, S. H."
+    ],
+    "year": "1972",
+    "title": "Dynamic programming in tree bucking",
+    "container": "Forest Products Journal",
+    "edition": null,
+    "volume": "22",
+    "issue": "2",
+    "pages": "26–30",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §19 SV-06"
+    ],
+    "note": "not read; cited via Grondin 1998 and Bennemann et al. 2025"
+  },
+  {
+    "key": "pommerening2002",
+    "type": "article",
+    "authors": [
+      "Pommerening, A."
+    ],
+    "year": "2002",
+    "title": "Approaches to quantifying forest structures",
+    "container": "Forestry",
+    "edition": null,
+    "volume": "75",
+    "issue": null,
+    "pages": "305–324",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §16 SS02 (W, M, T)"
+    ],
+    "note": "title from TOOLS_SPEC §9 / KAYNAK_LISTESI"
+  },
+  {
+    "key": "poudel2013",
+    "type": "article",
+    "authors": [
+      "Poudel, K. P.",
+      "Cao, Q. V."
+    ],
+    "year": "2013",
+    "title": "Evaluation of methods to predict Weibull parameters for characterizing diameter distributions",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "59",
+    "issue": "2",
+    "pages": "243–252",
+    "publisher": null,
+    "doi": "10.5849/forsci.12-001",
+    "url": "https://academic.oup.com/forestscience/article-abstract/59/2/243/4583693",
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §9 (relative ranking, Eq. 10, Fig. 2)",
+      "METHODS §12 P06, P07, P12, P13, P16, P17",
+      "DIST_SPEC [R1]"
+    ],
+    "note": "Table 2 footnote b/c naming corrected"
+  },
+  {
+    "key": "press_nr",
+    "type": "book",
+    "authors": [
+      "Press, W. H."
+    ],
+    "year": "n.d.",
+    "title": "Numerical Recipes",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Cambridge University Press",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §3 (erfcc, gser/gcf)",
+      "METHODS §10 (betacf)"
+    ],
+    "note": "incomplete: 'Press, W.H. ve ark.' (et al.); no year or edition given"
+  },
+  {
+    "key": "prodan_vol",
+    "type": "other",
+    "authors": [
+      "Prodan"
+    ],
+    "year": "n.d.",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §24 SV-04 (local function V = b₀ + b₁D²)"
+    ],
+    "note": "incomplete: cited via Kershaw et al. 2016 §6.2.2; no year, no marker"
+  },
+  {
+    "key": "raptis2021",
+    "type": "article",
+    "authors": [
+      "Raptis, D. I.",
+      "Kazana, V.",
+      "Kazaklis, A.",
+      "Stamatiou, C."
+    ],
+    "year": "2021",
+    "title": "Mixed-effects height–diameter models for black pine (Pinus nigra Arn.) forest management",
+    "container": "Trees",
+    "edition": null,
+    "volume": "35",
+    "issue": null,
+    "pages": "1167–1183",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "A",
+    "tools": [
+      "METHODS §27 SM-03 (calibration)"
+    ],
+    "note": "secondary source for Vonesh & Chinchilli 1997 [A]; authors and title from KAYNAK_LISTESI (METHODS: 'Raptis, D.I. ve ark.')"
+  },
+  {
+    "key": "reineke1933",
+    "type": "article",
+    "authors": [
+      "Reineke, L. H."
+    ],
+    "year": "1933",
+    "title": "Perfecting a stand-density index for even-aged forests",
+    "container": "Journal of Agricultural Research",
+    "edition": null,
+    "volume": "46",
+    "issue": "7",
+    "pages": "627–638",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §1 (archived)",
+      "METHODS §16 SS01 (SDI)"
+    ],
+    "note": "§1 marks [İ], §16 [B] (USDA Treesearch 60134); issue 7 given only in §16"
+  },
+  {
+    "key": "rejoumechain2017",
+    "type": "article",
+    "authors": [
+      "Réjou-Méchain, M.",
+      "Tanguy, A.",
+      "Piponiot, C.",
+      "Chave, J.",
+      "Hérault, B."
+    ],
+    "year": "2017",
+    "title": "BIOMASS: an R package for estimating above-ground biomass and its uncertainty in tropical forests",
+    "container": "Methods in Ecology and Evolution",
+    "edition": null,
+    "volume": "8",
+    "issue": null,
+    "pages": "1163–1167",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §22 BC04 (Monte Carlo, 'Final propagation' p. 1166)"
+    ],
+    "note": "title from KAYNAK_LISTESI"
+  },
+  {
+    "key": "reynolds1988",
+    "type": "article",
+    "authors": [
+      "Reynolds, M. R., Jr.",
+      "Burk, T. E.",
+      "Huang, W.-C."
+    ],
+    "year": "1988",
+    "title": "Goodness-of-fit tests and model selection procedures for diameter distribution models",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "34",
+    "issue": null,
+    "pages": "373–399",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §2 (error index)"
+    ],
+    "note": null
+  },
+  {
+    "key": "richards1959",
+    "type": "article",
+    "authors": [
+      "Richards, F. J."
+    ],
+    "year": "1959",
+    "title": "A flexible growth function for empirical use",
+    "container": "Journal of Experimental Botany",
+    "edition": null,
+    "volume": "10",
+    "issue": null,
+    "pages": "290–300",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §4 (drawings)",
+      "METHODS §10 (Chapman–Richards h–d)",
+      "METHODS §15 SI01",
+      "METHODS §18 SQ-03"
+    ],
+    "note": "§4 and §15 mark [D] ('J. Exp. Bot.'); §10 and §18 [İ]; §15 cites it via Hernández-Cuevas et al. 2018"
+  },
+  {
+    "key": "rohle1985",
+    "type": "other",
+    "authors": [
+      "Röhle"
+    ],
+    "year": "1985",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §23 TM-04 (number of radii)"
+    ],
+    "note": "incomplete: 'Röhle ve ark. (1985)' (et al.); via van Laar & Akça 2007; no marker"
+  },
+  {
+    "key": "rfc8785",
+    "type": "report",
+    "authors": [
+      "Rundgren, A.",
+      "Jordan, B.",
+      "Erdtman, S."
+    ],
+    "year": "2020",
+    "title": "JSON Canonicalization Scheme (JCS)",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "IETF",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §20 DI-07"
+    ],
+    "note": "RFC 8785; standard"
+  },
+  {
+    "key": "schreuder1993",
+    "type": "other",
+    "authors": [
+      "Schreuder"
+    ],
+    "year": "1993",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §23 TM-04"
+    ],
+    "note": "incomplete: 'Schreuder ve ark. (1993)' (et al.); read via Kershaw et al. or van Laar & Akça; no marker"
+  },
+  {
+    "key": "schumacher1939",
+    "type": "article",
+    "authors": [
+      "Schumacher, F. X."
+    ],
+    "year": "1939",
+    "title": "A new growth curve and its application to timber-yield studies",
+    "container": "Journal of Forestry",
+    "edition": null,
+    "volume": "37",
+    "issue": null,
+    "pages": "819–820",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §15 SI01",
+      "METHODS §18 SQ-03"
+    ],
+    "note": "via Hernández-Cuevas et al. 2018"
+  },
+  {
+    "key": "scipy_fisk",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "SciPy — scipy.stats.fisk",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P10",
+      "DIST_SPEC [R16]"
+    ],
+    "note": "official documentation; log-logistic parameterization"
+  },
+  {
+    "key": "scipy_gengamma",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "SciPy — scipy.stats.gengamma",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gengamma.html",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P20",
+      "DIST_SPEC [R18]"
+    ],
+    "note": "official documentation"
+  },
+  {
+    "key": "scipy_goodness_of_fit",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "SciPy — scipy.stats.goodness_of_fit",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html",
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §12 P14 (bootstrap)",
+      "METHODS §12 P15",
+      "DIST_SPEC [R9]"
+    ],
+    "note": "official documentation"
+  },
+  {
+    "key": "siplab_kernel",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "siplab — kernel",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": "1.6",
+    "status": "P",
+    "tools": [
+      "METHODS §16 SS-07/a1 (Hegyi, second source; pairwise in tests/ref/ss02_check.R)"
+    ],
+    "note": "R package documentation; KAYNAK_LISTESI names García, O. 2014 as the package publication"
+  },
+  {
+    "key": "snowdon1991",
+    "type": "article",
+    "authors": [
+      "Snowdon, P."
+    ],
+    "year": "1991",
+    "title": "A ratio estimator for bias correction in logarithmic regressions",
+    "container": "Canadian Journal of Forest Research",
+    "edition": null,
+    "volume": "21",
+    "issue": null,
+    "pages": "720–724",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §13",
+      "METHODS §22 BC-01",
+      "METHODS §23 TM-03"
+    ],
+    "note": "METHODS gives only 'Snowdon (1991)'; full details from TOOLS_SPEC §9 (written from memory, [D])"
+  },
+  {
+    "key": "spatstat_clarkevans",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "spatstat — clarkevans(correction = \"Donnelly\")",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §16 SS02 (numerical check tests/ref/ss02_check.R)"
+    ],
+    "note": "R package used as numerical check; no version or marker given"
+  },
+  {
+    "key": "sprugel1983",
+    "type": "article",
+    "authors": [
+      "Sprugel, D. G."
+    ],
+    "year": "1983",
+    "title": "Correcting for bias in log-transformed allometric equations",
+    "container": "Ecology",
+    "edition": null,
+    "volume": "64",
+    "issue": null,
+    "pages": "209–210",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §13 (log10 SEE·ln 10)",
+      "METHODS §22 (not applied)"
+    ],
+    "note": null
+  },
+  {
+    "key": "stoffels1953",
+    "type": "article",
+    "authors": [
+      "Stoffels, A.",
+      "van Soest, J."
+    ],
+    "year": "1953",
+    "title": "The main problems in sample plots",
+    "container": "Nederlands Bosbouwtijdschrift",
+    "edition": null,
+    "volume": "25",
+    "issue": null,
+    "pages": "190–199",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §10 (power h–d)"
+    ],
+    "note": null
+  },
+  {
+    "key": "systemfit",
+    "type": "software",
+    "authors": [],
+    "year": "n.d.",
+    "title": "systemfit",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": "1.1-30",
+    "status": "P",
+    "tools": [
+      "METHODS §28 SM-04 (tests/ref/sm04_systems.R)"
+    ],
+    "note": "R package (R 4.5.2), run by the user 17 Nov 2026"
+  },
+  {
+    "key": "vanlaar2007",
+    "type": "book",
+    "authors": [
+      "van Laar, A.",
+      "Akça, A."
+    ],
+    "year": "2007",
+    "title": "Forest Mensuration",
+    "container": null,
+    "edition": "2",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Springer",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §1",
+      "METHODS §16 SS-02 (CCF)",
+      "METHODS §23 TM-03",
+      "METHODS §23 TM-04",
+      "METHODS §23 TM-05"
+    ],
+    "note": "§1 marks it [D]; §16/§23 [B] (read up to PDF p. 163; chapter 9 not read); pp. 80–82, 156–157 cited"
+  },
+  {
+    "key": "vonesh1997",
+    "type": "other",
+    "authors": [
+      "Vonesh",
+      "Chinchilli"
+    ],
+    "year": "1997",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "A",
+    "tools": [
+      "METHODS §27 SM-03 (calibration)"
+    ],
+    "note": "incomplete: approximate Bayes estimator; via Raptis et al. 2021 and Ciceu et al. 2020"
+  },
+  {
+    "key": "west2009",
+    "type": "book",
+    "authors": [
+      "West, P. W."
+    ],
+    "year": "2009",
+    "title": "Tree and Forest Measurement",
+    "container": null,
+    "edition": "2",
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §14 SV01 (textbook-definition exception)"
+    ],
+    "note": "details from TOOLS_SPEC §9"
+  },
+  {
+    "key": "wilson1931",
+    "type": "article",
+    "authors": [
+      "Wilson, E. B.",
+      "Hilferty, M. M."
+    ],
+    "year": "1931",
+    "title": "The distribution of chi-square",
+    "container": "PNAS",
+    "edition": null,
+    "volume": "17",
+    "issue": null,
+    "pages": "684–688",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §3 (gamma inverse start)"
+    ],
+    "note": null
+  },
+  {
+    "key": "yang1978",
+    "type": "article",
+    "authors": [
+      "Yang, R. C.",
+      "Kozak, A.",
+      "Smith, J. H. G."
+    ],
+    "year": "1978",
+    "title": "The potential of Weibull-type functions as flexible growth curves",
+    "container": "Canadian Journal of Forest Research",
+    "edition": null,
+    "volume": "8",
+    "issue": null,
+    "pages": "424–431",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "İ",
+    "tools": [
+      "METHODS §10 (Weibull h–d)"
+    ],
+    "note": null
+  },
+  {
+    "key": "zarnoch1985",
+    "type": "article",
+    "authors": [
+      "Zarnoch, S. J.",
+      "Dell, T. R."
+    ],
+    "year": "1985",
+    "title": "An evaluation of percentile and maximum likelihood estimators of Weibull parameters",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "31",
+    "issue": "1",
+    "pages": "260–268",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §2"
+    ],
+    "note": "[B] for the abstract only ('özet')"
+  },
+  {
+    "key": "zeide1993",
+    "type": "article",
+    "authors": [
+      "Zeide, B."
+    ],
+    "year": "1993",
+    "title": "Analysis of growth equations",
+    "container": "Forest Science",
+    "edition": null,
+    "volume": "39",
+    "issue": "3",
+    "pages": "594–616",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §18 SQ-03 (parameterization check; Korf not added)"
+    ],
+    "note": "read 16 Nov 2026; no marker given"
+  },
+  {
+    "key": "zhang2014",
+    "type": "article",
+    "authors": [
+      "Zhang, X.",
+      "Duan, A.",
+      "Zhang, J.",
+      "Xiang, C."
+    ],
+    "year": "2014",
+    "title": "Estimating tree height–diameter models with the Bayesian method",
+    "container": "The Scientific World Journal",
+    "edition": null,
+    "volume": "2014",
+    "issue": null,
+    "pages": "683691",
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §10 (Table 2)"
+    ],
+    "note": "pages field holds the article number 683691"
+  },
+  {
+    "key": "zohrer1973",
+    "type": "other",
+    "authors": [
+      "Zöhrer"
+    ],
+    "year": "1973",
+    "title": null,
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": null,
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": null,
+    "tools": [
+      "METHODS §23 TM-03 (1/k)"
+    ],
+    "note": "incomplete: 'Zöhrer ve ark. (1973)' (et al.); via van Laar & Akça 2007; no marker"
+  }
+]
