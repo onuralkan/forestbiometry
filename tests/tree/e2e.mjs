@@ -101,7 +101,7 @@ ok(['past', 'present', 'mean'].every((pp, k) => Math.abs(gp[k] - Ag.growthPercen
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-age.png'), fullPage: true });
 
 // bark (TM-03): one point by gauge, girths and from inside; sample trees (typed and pasted); applied by k, line and a set
-await page.click('#tab-b'); await page.waitForSelector('#b-dob');
+await page.click('#tab-b'); await page.waitForSelector('#b-dob'); await page.waitForSelector('#barkcoef #cf-form');
 ok(await page.locator('#barkcoef').isVisible() && (await page.locator('#cf-none').count()) === 1, 'bark tab: coefficient library shown, no built-in sets (K1)');
 await type('#b-dob', '32'); await page.fill('#b-reads', '4 5,5;6'); await page.press('#b-reads', 'Tab');
 const bp = Bk.measurePoint({ mode: 'gauge', dob: 32, readings: [4, 5.5, 6] });
