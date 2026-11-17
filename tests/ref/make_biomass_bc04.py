@@ -65,7 +65,7 @@ def q7(xs, p):
     return xs[lo] + (h - lo) * (xs[hi] - xs[lo])
 def summ(xs, level):
     n = len(xs); m = sum(xs) / n; sd = math.sqrt(sum((x - m) ** 2 for x in xs) / (n - 1)); a = (1 - level) / 2
-    return {"mean": m, "sd": sd, "lo": q7(xs, a), "hi": q7(xs, 1 - a)}
+    return {"mean": m, "median": q7(xs, 0.5), "sd": sd, "lo": q7(xs, a), "hi": q7(xs, 1 - a)}
 
 def run(B, seed, level):
     r = mulberry32(seed); z = lambda: ND.inv_cdf(r() + 2 ** -33)

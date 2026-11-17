@@ -311,7 +311,7 @@ const T = makeT({
     'mc.fixed': p => `${p.n} sette belirsizlik bilgisi yok; bu setler nokta değerinde tutuldu, aralıklar bu yüzden eksik kalır.`,
     'mc.neg': p => `Doğrusal biçimlerde ${p.n} çekilişte negatif kütle çıktı; ortalama yansız kalsın diye kesilmedi.`,
     'mc.point': 'Nokta', 'mc.mean': 'Ortalama', 'mc.sd': 'SS', 'mc.lo': 'Alt', 'mc.hi': 'Üst', 'mc.trees': 'Ağaç düzeyinde (ilk 200; tamamı Excel\'de)',
-    'mc.c.point': 'nokta', 'mc.c.mean': 'ortalama', 'mc.c.sd': 'SS', 'mc.c.cv': 'CV', 'mc.c.lo': 'alt', 'mc.c.hi': 'üst',
+    'mc.c.point': 'nokta', 'mc.c.mean': 'ortalama', 'mc.c.median': 'ortanca', 'mc.c.sd': 'SS', 'mc.c.cv': 'CV', 'mc.c.lo': 'alt', 'mc.c.hi': 'üst',
     'mc.assume': 'Varsayımlar: katsayı hataları çok değişkenli normal, artıklar normal; ağaçlar, bileşenler ve setler arasında bağımsızlık. Ölçüm hataları (çap, boy) ve karbon oranının belirsizliği dahil değil. Hesaplanamayan ağacı olan birimde aralık verilmez.',
     'x.mcu': 'Belirsizlik birimler', 'x.mct': 'Belirsizlik ağaçlar',
     'c.h': 'Bileşenler ve karbon oranları', 'c.sub': 'Her bileşen ayrı bir katsayı setiyle hesaplanır; karbon oranı (CF) bileşen başına sizden, 0 ile 1 arasında. CO₂ = C × 44/12.',
@@ -373,7 +373,7 @@ const T = makeT({
     'mc.fixed': p => `${p.n} set(s) give no uncertainty information; they were held at their point values, so the intervals are incomplete.`,
     'mc.neg': p => `Linear forms gave a negative mass in ${p.n} draws; they were not truncated, so that the mean stays unbiased.`,
     'mc.point': 'Point', 'mc.mean': 'Mean', 'mc.sd': 'SD', 'mc.lo': 'Lower', 'mc.hi': 'Upper', 'mc.trees': 'Tree level (first 200; all in Excel)',
-    'mc.c.point': 'point', 'mc.c.mean': 'mean', 'mc.c.sd': 'SD', 'mc.c.cv': 'CV', 'mc.c.lo': 'lower', 'mc.c.hi': 'upper',
+    'mc.c.point': 'point', 'mc.c.mean': 'mean', 'mc.c.median': 'median', 'mc.c.sd': 'SD', 'mc.c.cv': 'CV', 'mc.c.lo': 'lower', 'mc.c.hi': 'upper',
     'mc.assume': 'Assumptions: multivariate normal coefficient errors, normal residuals; independence between trees, components and sets. Measurement errors (diameter, height) and the uncertainty of the carbon fraction are not included. A unit with a tree that could not be computed gets no interval.',
     'x.mcu': 'Uncertainty units', 'x.mct': 'Uncertainty trees',
     'c.h': 'Components and carbon fractions', 'c.sub': 'Each component is computed with its own coefficient set; the carbon fraction (CF) of each component is yours, between 0 and 1. CO₂ = C × 44/12.',
@@ -412,7 +412,10 @@ const { correctionFactor } = __fb_r("core/coef.js");
 const { buildUnits } = __fb_r("stand/calc.js");
 const { formOf, CO2_PER_C } = __fb_r("biomass/calc.js");
 // Biomass and carbon, stage BC04 (TOOLS_SPEC §5, optional; PLATFORM_PLAN BC-06): Monte Carlo uncertainty of the
-// allometric approach, tree and plot × period level. No DOM. METHODS §22 (BC04).
+// allometric approach, tree and plot × period level. No DOM. METHODS §22 (BC04). Scheme: Réjou-Méchain et al. 2017
+// (Methods Ecol. Evol. 8: 1163–1167, "Final propagation") [B]; log-normal residual and its mean exp(σ²/2): Chave et
+// al. 2004 (Phil. Trans. R. Soc. B 359: 409–420, §2a) [B]. Coefficients drawn from N(θ̂, Σ) instead of posterior samples
+// (the source's covariance is the input; TOOLS_SPEC BC04 normal assumption, written into the result).
 //
 // Only what the source of a coefficient set gives is simulated (user decision, 17 Nov 2026: compute what is given and
 // label it): the covariance matrix of the coefficients (set.meta.cov) and the residual standard error on the scale of
@@ -464,12 +467,12 @@ function quantile7(sorted, p) {
   const n = sorted.length; if (!n) return null; const h = (n - 1) * p, lo = Math.floor(h), hi = Math.min(n - 1, lo + 1);
   return sorted[lo] + (h - lo) * (sorted[hi] - sorted[lo]);
 }
-/** mean, sd (n − 1), cv (sd / mean), lower and upper percentile of a sample. */
+/** mean, median, sd (n − 1), cv (sd / mean), lower and upper percentile (type 7) of a sample. */
 function summary(arr, level) {
   const n = arr.length; let s = 0; for (let i = 0; i < n; i++) s += arr[i];
   const mean = s / n; let v = 0; for (let i = 0; i < n; i++) v += (arr[i] - mean) ** 2;
   const sd = n > 1 ? Math.sqrt(v / (n - 1)) : 0, srt = Float64Array.from(arr).sort(), a = (1 - level) / 2;
-  return { mean, sd, cv: mean !== 0 ? sd / Math.abs(mean) : null, lo: quantile7(srt, a), hi: quantile7(srt, 1 - a) };
+  return { mean, median: quantile7(srt, 0.5), sd, cv: mean !== 0 ? sd / Math.abs(mean) : null, lo: quantile7(srt, a), hi: quantile7(srt, 1 - a) };
 }
 
 /**
@@ -940,12 +943,12 @@ function bindMC() {
   });
 }
 function mcUnitRows() {
-  const q = ['point', 'mean', 'sd', 'cv', 'lo', 'hi'], H = k => q.map(x => `${k} ${T('mc.c.' + x)}`);
+  const q = ['point', 'mean', 'median', 'sd', 'cv', 'lo', 'hi'], H = k => q.map(x => `${k} ${T('mc.c.' + x)}`);
   return [[T('u.plot'), T('u.period'), T('u.n'), ...H('B (Mg/ha)'), ...H('C (Mg/ha)'), ...H('CO₂ (Mg/ha)')], ...U.units.map(u => [u.plot_id, u.period ?? '', u.n, ...['B', 'C', 'CO2'].flatMap(k => q.map(x => u[k] ? u[k][x] : null))]), [], [mcSettingsText()], [T('mc.assume')],
     ...U.sets.map(x => [x.id, partsText(x.parts)])];
 }
 function mcTreeRows() {
-  const q = ['point', 'mean', 'sd', 'cv', 'lo', 'hi'], A = alloPart();
+  const q = ['point', 'mean', 'median', 'sd', 'cv', 'lo', 'hi'], A = alloPart();
   return [[T('g.row'), T('u.plot'), 'tree', T('m.sp'), ...q.map(x => `B (kg) ${T('mc.c.' + x)}`), ...q.map(x => `C (kg) ${T('mc.c.' + x)}`)],
     ...U.trees.map((t, i) => { const x = A.trees[i]; return [x.row, x.t.plot_id, x.t.tree_id ?? '', x.t.species ?? '', ...q.map(k => t ? t.B[k] ?? null : null), ...q.map(k => t ? t.C[k] ?? null : null)]; })];
 }

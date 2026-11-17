@@ -381,12 +381,12 @@ function bindMC() {
   });
 }
 function mcUnitRows() {
-  const q = ['point', 'mean', 'sd', 'cv', 'lo', 'hi'], H = k => q.map(x => `${k} ${T('mc.c.' + x)}`);
+  const q = ['point', 'mean', 'median', 'sd', 'cv', 'lo', 'hi'], H = k => q.map(x => `${k} ${T('mc.c.' + x)}`);
   return [[T('u.plot'), T('u.period'), T('u.n'), ...H('B (Mg/ha)'), ...H('C (Mg/ha)'), ...H('CO₂ (Mg/ha)')], ...U.units.map(u => [u.plot_id, u.period ?? '', u.n, ...['B', 'C', 'CO2'].flatMap(k => q.map(x => u[k] ? u[k][x] : null))]), [], [mcSettingsText()], [T('mc.assume')],
     ...U.sets.map(x => [x.id, partsText(x.parts)])];
 }
 function mcTreeRows() {
-  const q = ['point', 'mean', 'sd', 'cv', 'lo', 'hi'], A = alloPart();
+  const q = ['point', 'mean', 'median', 'sd', 'cv', 'lo', 'hi'], A = alloPart();
   return [[T('g.row'), T('u.plot'), 'tree', T('m.sp'), ...q.map(x => `B (kg) ${T('mc.c.' + x)}`), ...q.map(x => `C (kg) ${T('mc.c.' + x)}`)],
     ...U.trees.map((t, i) => { const x = A.trees[i]; return [x.row, x.t.plot_id, x.t.tree_id ?? '', x.t.species ?? '', ...q.map(k => t ? t.B[k] ?? null : null), ...q.map(k => t ? t.C[k] ?? null : null)]; })];
 }

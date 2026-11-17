@@ -1,5 +1,8 @@
 // Biomass and carbon, stage BC04 (TOOLS_SPEC §5, optional; PLATFORM_PLAN BC-06): Monte Carlo uncertainty of the
-// allometric approach, tree and plot × period level. No DOM. METHODS §22 (BC04).
+// allometric approach, tree and plot × period level. No DOM. METHODS §22 (BC04). Scheme: Réjou-Méchain et al. 2017
+// (Methods Ecol. Evol. 8: 1163–1167, "Final propagation") [B]; log-normal residual and its mean exp(σ²/2): Chave et
+// al. 2004 (Phil. Trans. R. Soc. B 359: 409–420, §2a) [B]. Coefficients drawn from N(θ̂, Σ) instead of posterior samples
+// (the source's covariance is the input; TOOLS_SPEC BC04 normal assumption, written into the result).
 //
 // Only what the source of a coefficient set gives is simulated (user decision, 17 Nov 2026: compute what is given and
 // label it): the covariance matrix of the coefficients (set.meta.cov) and the residual standard error on the scale of
@@ -51,12 +54,12 @@ export function quantile7(sorted, p) {
   const n = sorted.length; if (!n) return null; const h = (n - 1) * p, lo = Math.floor(h), hi = Math.min(n - 1, lo + 1);
   return sorted[lo] + (h - lo) * (sorted[hi] - sorted[lo]);
 }
-/** mean, sd (n − 1), cv (sd / mean), lower and upper percentile of a sample. */
+/** mean, median, sd (n − 1), cv (sd / mean), lower and upper percentile (type 7) of a sample. */
 export function summary(arr, level) {
   const n = arr.length; let s = 0; for (let i = 0; i < n; i++) s += arr[i];
   const mean = s / n; let v = 0; for (let i = 0; i < n; i++) v += (arr[i] - mean) ** 2;
   const sd = n > 1 ? Math.sqrt(v / (n - 1)) : 0, srt = Float64Array.from(arr).sort(), a = (1 - level) / 2;
-  return { mean, sd, cv: mean !== 0 ? sd / Math.abs(mean) : null, lo: quantile7(srt, a), hi: quantile7(srt, 1 - a) };
+  return { mean, median: quantile7(srt, 0.5), sd, cv: mean !== 0 ? sd / Math.abs(mean) : null, lo: quantile7(srt, a), hi: quantile7(srt, 1 - a) };
 }
 
 /**
