@@ -16,7 +16,7 @@ const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } }
 const site = await rd('inc/site.php');
 const tools = [...site.matchAll(/'file' => '([a-z-]+)\.php', 'v' =>/g)].map(m => m[1]);
 ok(tools.length >= 7 && tools.length === (site.match(/'file' => '[a-z0-9-]+\.php'/g) || []).length, `tools read from site_tools(): ${tools.length}`);
-const order = ['genel', 'is-akisi', ...tools];
+const order = ['genel', 'is-akisi', 'sorun-giderme', ...tools];
 const files = { tr: (await readdir(path.join(root, 'inc/guide/tr'))).sort(), en: (await readdir(path.join(root, 'inc/guide/en'))).sort() };
 ok(files.tr.join() === files.en.join(), 'the same section files in both languages');
 ok(order.every(id => files.tr.includes(id + '.php')) && files.tr.every(f => order.includes(f.replace(/\.php$/, ''))), 'a file for the general part, the workflow and every tool, and no other: ' + files.tr.filter(f => !order.includes(f.replace(/\.php$/, ''))));

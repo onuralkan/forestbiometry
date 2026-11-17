@@ -9,7 +9,7 @@ require __DIR__ . '/inc/guide/cards.php';
 $tr = site_ctx()['tr']; $L = $tr ? 'tr' : 'en';
 $tools = site_tools();
 $byId = []; foreach ($tools as $t) $byId[basename($t['file'], '.php')] = $t;
-$start = [['id' => 'genel', 't' => $tr ? 'Genel' : 'General'], ['id' => 'is-akisi', 't' => $tr ? 'Araçlar birlikte' : 'Tools together']];
+$start = [['id' => 'genel', 't' => $tr ? 'Genel' : 'General'], ['id' => 'is-akisi', 't' => $tr ? 'Araçlar birlikte' : 'Tools together'], ['id' => 'sorun-giderme', 't' => $tr ? 'Sorun giderme' : 'Troubleshooting']];
 $order = array_merge(array_column($start, 'id'), array_keys($byId));
 $titleOf = function (string $id) use ($start, $byId) { foreach ($start as $x) if ($x['id'] === $id) return $x['t']; return isset($byId[$id]) ? $byId[$id]['title'] : $id; };
 $k = isset($_GET['k']) && is_string($_GET['k']) ? $_GET['k'] : '';
@@ -62,6 +62,8 @@ foreach (site_modules() as $m) { $ids = array_keys(array_filter($byId, function 
 <?php endif; ?>
       <p class="guide-intro"><?= $tr ? 'İlk kez kullanıyorsanız <a href="' . h($href('genel')) . '">Genel</a> bölümüyle başlayın: veri girme, ondalık ayırıcı, birimler, indirmeler ve örnek veriler bütün araçlarda aynıdır.'
                                      : 'If this is your first time, start with <a href="' . h($href('genel')) . '">General</a>: entering data, the decimal separator, units, downloads and sample data work the same in every tool.' ?></p>
+      <p class="note"><?= $tr ? 'Sayfalar yüklenmiyor, boş ya da yarım görünüyorsa: <a href="' . h($href('sorun-giderme')) . '">Sorun giderme</a> (tarayıcıda QUIC\'i kapatma).'
+                                : 'Pages do not load, or look blank or half-loaded? See <a href="' . h($href('sorun-giderme')) . '">Troubleshooting</a> (turning QUIC off in the browser).' ?></p>
       <div class="gcards" role="list">
 <?php foreach (guide_cards($tr) as $c): $ids = array_values(array_filter($c['ids'], function ($id) use ($order) { return in_array($id, $order, true); })); if (!$ids) continue; ?>
         <section class="card gcard" role="listitem" data-card="<?= h($c['id']) ?>"><h2 class="b-h3"><?= h($c['title']) ?></h2><p class="muted small"><?= h($c['text']) ?></p>

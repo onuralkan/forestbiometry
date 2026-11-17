@@ -139,11 +139,12 @@ await cp.close();
 for (const l of ['tr', 'en']) {
   await page.goto(BASE + '/kilavuz.php?lang=' + l);
   const nav = await page.$$eval('.guide-toc .guide-grp a', as => as.map(a => new URL(a.href).searchParams.get('k')));
-  ok(nav.length === TOOL_IDS.length + 2 && nav[0] === 'genel' && nav[1] === 'is-akisi' && TOOL_IDS.every(id => nav.includes(id)), `guide (${l}): the section tree holds general, workflow and every tool: ` + nav);
+  ok(nav.length === TOOL_IDS.length + 3 && nav[0] === 'genel' && nav[1] === 'is-akisi' && nav[2] === 'sorun-giderme' && TOOL_IDS.every(id => nav.includes(id)), `guide (${l}): the section tree holds general, workflow and every tool: ` + nav);
   const cardLinks = await page.$$eval('.gcards a', as => as.map(a => new URL(a.href).searchParams.get('k')));
   ok(await page.locator('.gcard').count() >= 5 && TOOL_IDS.every(id => cardLinks.includes(id)), `guide (${l}): task cards on the start page reach every tool`);
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `guide (${l}): no horizontal scroll`);
-  for (const id of ['genel', ...TOOL_IDS]) {
+  ok(await page.locator('.guide-body p.note a[href="kilavuz.php?k=sorun-giderme"]').count() === 1, `guide (${l}): the start page points to troubleshooting (QUIC)`);
+  for (const id of ['genel', 'sorun-giderme', ...TOOL_IDS]) {
     const r = await page.request.get(`${BASE}/kilavuz.php?k=${id}&lang=${l}`), t = await r.text();
     ok(r.status() === 200 && t.includes(`<h2 id="${id}"`) && (t.match(/class="card guide-sec"/g) || []).length === 1 && t.includes(`rel="canonical" href="https://forestbiometry.online/kilavuz.php?k=${id}&amp;lang=${l}"`), `guide (${l}): page of ${id} holds only its section, with its own canonical address`);
   }
