@@ -62,7 +62,7 @@ await shot('site-3-telefon-koyu', phone);
 
 // 6. sidebar: categories, current tool, narrow mode remembered, drawer on phones; stem map labelled as illustration
 await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('#side .b-cat').count()) === N_CATS && N_CATS === 11 && (await page.locator('#side .b-live a').count()) === N_TOOLS, `sidebar: ${N_CATS} modules, ${N_TOOLS} tool pages`);
+ok((await page.locator('#side .b-cat').count()) === N_CATS && N_CATS === 8 && (await page.locator('#side .b-live a').count()) === N_TOOLS, `sidebar: ${N_CATS} modules, ${N_TOOLS} tool pages`);
 ok((await page.locator('.dir-group').count()) === N_CATS, `home directory grouped in ${N_CATS} modules`);
 { const g = page.locator('.dir-group[data-mod="SS"]'), b = g.locator('.dir-cat');
   ok((await page.locator('.dir-group.collapsed').count()) === N_CATS && !(await g.locator('.dir-cards').isVisible()), 'home: modules closed by default');
@@ -71,7 +71,8 @@ ok((await page.locator('.dir-group').count()) === N_CATS, `home directory groupe
   await page.click('#dir-open'); ok((await page.locator('.dir-group.collapsed').count()) === 0, 'home: open all');
   await page.click('#dir-close'); ok((await page.locator('.dir-group.collapsed').count()) === N_CATS, 'home: close all'); }
 { const pl = CATALOG.filter(c => !c.page && c.status !== 'out'), out = CATALOG.filter(c => c.status === 'out');
-  ok(CATALOG.length === 74 && out.length === 6, `catalogue: 74 tool ids, 6 out of scope (${out.map(c => c.id).join(', ')})`);
+  ok(CATALOG.length === 74 && out.length === 33 && pl.length === 7, `catalogue: 74 tool ids kept, 33 out of scope (6 earlier + 27 removed on 17 Nov 2026), 7 planned: ${pl.map(c => c.id).join(', ')}`);
+  ok(['GY', 'ML', 'DS'].every(m => !CATALOG.some(c => c.id.startsWith(m + '-') && c.status !== 'out')) && (await page.locator('#side .b-group[data-mod="GY"], #side .b-group[data-mod="ML"], #side .b-group[data-mod="DS"], .dir-group[data-mod="GY"]').count()) === 0, 'modules left without a tool (GY, ML, DS) are not listed');
   ok((await page.locator('#side .b-pl').count()) === pl.length && (await page.locator('#side .b-pl a').count()) === 0 && (await page.locator('.dir-cards .hz-card.soon').count()) === pl.length && (await page.locator('.dir-cards .hz-card.soon a, .dir-cards a.hz-card.soon').count()) === 0 && (await page.locator('.dir-cards .hz-card.soon .hz-badge').count()) === pl.length && (await page.locator('.dir-cards .hz-card.soon svg.hz-fig').evaluateAll(a => a.every(x => x.childElementCount > 0))), `${pl.length} planned tools greyed in the sidebar and the directory, without links`);
   const titles = await page.locator('#side .b-pl .b-planned').evaluateAll(a => a.map(x => x.getAttribute('title')));
   ok(!out.some(c => titles.some(t => t.startsWith(c.id + ' '))), 'out-of-scope tools are not shown');
@@ -85,7 +86,7 @@ ok((await page.locator('.dir-group').count()) === N_CATS, `home directory groupe
   ok(cards.length === 5 && cards.every(([h, n]) => TOOL_IDS.includes(h.replace('.php', '')) && n > 5), 'home showcase: 5 drawings linking to live tools');
   ok((await page.locator('.hz-cap').textContent()).includes('benzetim'), 'showcase labelled as illustrations (points simulated)');
   const st = await page.locator('.hz-stats b').allTextContents();
-  ok(+st[0] === CATALOG.filter(c => c.status === 'live').length && +st[1] === CATALOG.length, 'home figures from the catalogue (live, all)'); }
+  ok(+st[0] === CATALOG.filter(c => c.status === 'live').length && +st[1] === CATALOG.filter(c => c.status !== 'out').length && +st[2] === N_CATS, 'home figures from the catalogue (live, in the plan without the removed ids, modules)'); }
 // default language: English without ?lang and without a cookie, whatever the browser language (16 Nov 2026)
 { const c = await browser.newContext({ locale: 'tr-TR', extraHTTPHeaders: { 'Accept-Language': 'tr-TR,tr;q=0.9' } }), q = await c.newPage();
   await q.goto(BASE + '/'); ok(await q.getAttribute('html', 'lang') === 'en', 'default language is English even for a Turkish browser');

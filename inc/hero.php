@@ -310,100 +310,27 @@ function soon_bars(array $v, string $cls = 'hz-bar', float $x0 = 34, float $w = 
 function soon_figure(string $kind): string {
     $ax = hero_axes(300, 150, 22, 20); $r = hero_rng(crc32($kind) % 100000 + 7);
     switch ($kind) {
-        case 'height':   return soon_tree(200, 128, 108, 30) . '<path class="hz-ref" d="M40 128L200 20M40 128L200 128"/><circle class="hz-dot hz-s1" cx="40" cy="128" r="4"/><path class="hz-axis" d="M228 20V128"/>';
-        case 'dbh':      return '<circle class="hz-wood" cx="150" cy="75" r="52"/><circle class="hz-ringl" cx="150" cy="75" r="52"/><path class="hz-tape" d="M98 75H202"/><text class="hz-tick" x="150" y="68" text-anchor="middle">d</text>';
-        case 'bark':     return '<circle class="hz-k0" cx="150" cy="75" r="58"/><circle class="hz-wood" cx="150" cy="75" r="48"/><path class="hz-tape" d="M198 75H208"/>';
-        case 'crown':    return soon_tree(150, 132, 120, 62) . '<path class="hz-tape" d="M88 30H212M88 25v10M212 25v10"/>';
-        case 'rings':    { $o = '<circle class="hz-wood" cx="150" cy="75" r="60"/>'; for ($k = 1; $k <= 9; $k++) $o .= '<circle class="hz-ringl" cx="' . (150 + $k * .6) . '" cy="75" r="' . round(6.4 * $k * (1 + .04 * sin($k)), 1) . '"/>'; return $o . '<path class="hz-tape" d="M150 75H210"/>'; }
-        case 'form':     return '<path class="hz-ref" d="M20 52H280V98H20Z"/>' . '<path class="hz-k0" d="' . hero_path(array_merge(array_map(function ($i) { $x = $i / 40; return [20 + $x * 260, 75 - 23 * pow(1 - $x, .6)]; }, range(0, 40)), array_map(function ($i) { $x = 1 - $i / 40; return [20 + $x * 260, 75 + 23 * pow(1 - $x, .6)]; }, range(0, 40)))) . 'Z"/>';
         case 'merch':    return '<path class="hz-k0" d="' . hero_path(array_merge(array_map(function ($i) { $x = $i / 40; return [20 + $x * 260, 75 - 26 * pow(1 - $x, .6)]; }, range(0, 40)), array_map(function ($i) { $x = 1 - $i / 40; return [20 + $x * 260, 75 + 26 * pow(1 - $x, .6)]; }, range(0, 40)))) . 'Z"/><path class="hz-cut" d="M212 40V110"/><text class="hz-tick" x="212" y="128" text-anchor="middle">d_top</text>';
         case 'power':    return $ax . soon_pts(11, 30, function ($u) { return 100 * pow($u, 1.9); }) . soon_curve(function ($u) { return 100 * pow($u, 1.9); }, 22, 288, 130, 'hz-line hz-c2');
         case 'logs':     return '<rect class="hz-k0" x="40" y="58" width="200" height="34" rx="4"/><ellipse class="hz-wood" cx="240" cy="75" rx="10" ry="17"/><ellipse class="hz-ringl" cx="240" cy="75" rx="10" ry="17"/><path class="hz-tape" d="M40 110H240M40 105v10M240 105v10"/><text class="hz-tick" x="140" y="128" text-anchor="middle">L</text>';
-        case 'stack':    { $o = $ax; foreach ([[40, 30, 14], [52, 36, 18], [64, 40, 22], [74, 46, 26]] as $k => $v) { $y = 130; foreach ($v as $j => $h) { $o .= '<rect class="hz-st' . $j . '" x="' . (50 + $k * 60) . '" y="' . ($y - $h) . '" width="34" height="' . $h . '"/>'; $y -= $h; } } return $o; }
-        case 'convert':  return '<rect class="hz-box" x="30" y="45" width="70" height="60" rx="6"/><text class="hz-tick" x="65" y="80" text-anchor="middle">V</text><path class="hz-arrow" d="M108 75H186M178 68l8 7-8 7"/><rect class="hz-st0" x="196" y="35" width="70" height="80" rx="6"/><text class="hz-tick" x="231" y="80" text-anchor="middle">B</text><text class="hz-tick" x="147" y="66" text-anchor="middle">×BEF</text>';
-        case 'co2':      return $ax . '<rect class="hz-bar" x="70" y="95" width="50" height="35"/><rect class="hz-st1" x="170" y="2" width="50" height="128"/><text class="hz-tick" x="95" y="88" text-anchor="middle">C</text><text class="hz-tick" x="195" y="145" text-anchor="middle">CO₂</text>';
-        case 'tiers':    return soon_bars([30, 62, 100], 'hz-bar', 50, 60) . '<text class="hz-tick" x="80" y="145" text-anchor="middle">1</text><text class="hz-tick" x="160" y="145" text-anchor="middle">2</text><text class="hz-tick" x="240" y="145" text-anchor="middle">3</text>';
-        case 'band':     { $f = function ($u) { return 20 + 80 * $u; }; $up = []; $lo = []; for ($i = 0; $i <= 40; $i++) { $u = $i / 40; $up[] = [22 + $u * 266, 130 - $f($u) - 8 - 22 * $u]; $lo[] = [22 + $u * 266, 130 - $f($u) + 8 + 22 * $u]; } return $ax . '<path class="hz-bandf" d="' . hero_path(array_merge($up, array_reverse($lo))) . 'Z"/>' . soon_curve($f); }
-        case 'design':   { $o = '<path class="hz-plotr" d="M40 20L250 14L278 120L60 136Z"/>'; for ($i = 0; $i < 6; $i++) for ($j = 0; $j < 4; $j++) $o .= '<circle class="hz-tree hz-s3" cx="' . (74 + $i * 33 + $j * 5) . '" cy="' . (38 + $j * 26) . '" r="4.5"/>'; return $o; }
-        case 'angle':    { $o = '<circle class="hz-dot hz-s1" cx="150" cy="75" r="4"/>'; foreach ([[60, 40, 9, 1], [220, 30, 6, 0], [240, 110, 12, 1], [80, 120, 5, 0], [180, 125, 8, 1], [110, 20, 4, 0]] as $t) $o .= '<circle class="hz-tree ' . ($t[3] ? 'hz-s3' : 'hz-s0') . '" cx="' . $t[0] . '" cy="' . $t[1] . '" r="' . $t[2] . '"/>'; return $o . '<path class="hz-ref" d="M150 75L60 40M150 75L240 110M150 75L180 125"/>'; }
-        case 'edge':     return '<path class="hz-plotr" d="M10 10H190V140H10Z"/><circle class="hz-plot" cx="175" cy="75" r="50"/><path class="hz-cut" d="M190 10V140"/>' . '<text class="hz-tick" x="240" y="78" text-anchor="middle">×</text>';
-        case 'transect': { $o = '<path class="hz-tape" d="M20 75H280"/>'; foreach ([[50, 50, 30], [110, 95, -20], [170, 40, 55], [230, 85, 12], [90, 30, 70]] as $l) { $a = $l[2] * M_PI / 180; $o .= '<path class="hz-log" d="M' . round($l[0] - 34 * cos($a), 1) . ' ' . round($l[1] - 34 * sin($a), 1) . 'L' . round($l[0] + 34 * cos($a), 1) . ' ' . round($l[1] + 34 * sin($a), 1) . '"/>'; } return $o; }
-        case 'twophase': { $o = ''; for ($k = 0; $k < 60; $k++) $o .= '<circle class="hz-pt" cx="' . round(24 + $r() * 252, 1) . '" cy="' . round(14 + $r() * 122, 1) . '" r="2"/>'; for ($k = 0; $k < 8; $k++) $o .= '<circle class="hz-plot" cx="' . round(34 + $r() * 232, 1) . '" cy="' . round(24 + $r() * 102, 1) . '" r="9"/>'; return $o; }
-        case 'ci':       { $o = $ax; foreach ([70, 92, 58, 80] as $k => $h) { $x = 60 + $k * 60; $o .= '<rect class="hz-bar" x="' . ($x - 15) . '" y="' . (130 - $h) . '" width="30" height="' . $h . '"/><path class="hz-tape" d="M' . $x . ' ' . (130 - $h - 14) . 'V' . (130 - $h + 14) . 'M' . ($x - 6) . ' ' . (130 - $h - 14) . 'H' . ($x + 6) . 'M' . ($x - 6) . ' ' . (130 - $h + 14) . 'H' . ($x + 6) . '"/>'; } return $o; }
-        case 'paired':   { $o = $ax; for ($k = 0; $k < 9; $k++) { $x = 40 + $k * 28; $a = 40 + $r() * 50; $b = $a + 8 + $r() * 22; $o .= '<path class="hz-ref" d="M' . $x . ' ' . round(130 - $a, 1) . 'V' . round(130 - $b, 1) . '"/><circle class="hz-dot hz-s0" cx="' . $x . '" cy="' . round(130 - $a, 1) . '" r="3"/><circle class="hz-dot hz-s1" cx="' . $x . '" cy="' . round(130 - $b, 1) . '" r="3"/>'; } return $o; }
-        case 'table':    { $o = '<rect class="hz-box" x="20" y="12" width="260" height="126" rx="6"/><rect class="hz-hdr" x="28" y="20" width="244" height="14" rx="3"/>'; for ($i = 0; $i < 6; $i++) for ($j = 0; $j < 5; $j++) $o .= '<rect class="hz-cell" x="' . (28 + $j * 49) . '" y="' . (42 + $i * 15) . '" width="44" height="10" rx="2"/>'; return $o; }
-        case 'matrix':   { $o = ''; for ($i = 0; $i < 5; $i++) for ($j = 0; $j < 5; $j++) { $a = $i === $j ? .8 : ($i === $j + 1 ? .45 : 0); $o .= '<rect class="hz-heat" style="--a:' . $a . '" x="' . (90 + $j * 25) . '" y="' . (14 + $i * 25) . '" width="22" height="22" rx="3"/>'; } return $o; }
-        case 'grow':     { $o = '<circle class="hz-plot" cx="150" cy="75" r="62"/>'; foreach ([[120, 50, 8], [170, 60, 11], [140, 100, 6], [185, 105, 9], [105, 85, 7]] as $t) $o .= '<circle class="hz-ringl" cx="' . $t[0] . '" cy="' . $t[1] . '" r="' . ($t[2] + 6) . '"/><circle class="hz-tree hz-s3" cx="' . $t[0] . '" cy="' . $t[1] . '" r="' . $t[2] . '"/>'; return $o; }
-        case 'decay':    return $ax . soon_bars([100, 70, 50, 34, 24, 16, 11, 8]) . soon_curve(function ($u) { return 100 * exp(-2.6 * $u) + 8; }, 22, 288, 130, 'hz-line hz-c2');
-        case 'thin':     { $p = []; $n = 105; for ($t = 0; $t <= 10; $t++) { $x = 22 + $t * 26.6; $p[] = [$x, 130 - $n]; if (in_array($t, [3, 6, 8])) { $n *= .62; $p[] = [$x, 130 - $n]; } else $n *= .97; } return $ax . '<path class="hz-line hz-c1" d="' . hero_path($p) . '"/>'; }
-        case 'sdmd':     { $o = $ax; foreach ([1, .75, .5, .3] as $k => $f) $o .= '<path class="hz-ref" d="M' . (40) . ' ' . round(20 + (1 - $f) * 90, 1) . 'L280 ' . round(60 + (1 - $f) * 70, 1) . '"/>'; return $o . soon_curve(function ($u) { return 100 - 70 * $u; }, 40, 280, 130, 'hz-line hz-c2'); }
-        case 'selfthin': return $ax . soon_pts(21, 34, function ($u) { return 100 - 80 * $u; }, 12) . '<path class="hz-line hz-c2" d="M30 14L286 112"/>';
         case 'nlreg':    return $ax . soon_pts(31, 34, function ($u) { return 100 * (1 - exp(-3 * $u)); }) . soon_curve(function ($u) { return 100 * (1 - exp(-3 * $u)); });
         case 'mixed':    { $o = $ax; foreach ([[.8, 0], [1, 1], [1.2, 2], [.9, 3]] as [$a, $k]) $o .= soon_curve(function ($u) use ($a) { return $a * 95 * (1 - exp(-2.5 * $u)); }, 22, 288, 130, 'hz-line hz-s' . $k); return $o; }
         case 'system':   { $o = $ax; foreach ([[.35, 0], [.65, 1], [1, 2]] as [$a, $k]) $o .= soon_curve(function ($u) use ($a) { return $a * 100 * pow($u, 1.6); }, 22, 288, 130, 'hz-line hz-s' . $k); return $o; }
         case 'survival': { $p = [[22, 20]]; $s = 110; for ($k = 0; $k < 10; $k++) { $x = 22 + ($k + 1) * 26.6; $p[] = [$x, 130 - $s]; $s *= .82; $p[] = [$x, 130 - $s]; } return $ax . '<path class="hz-line hz-c1" d="' . hero_path($p) . '"/>'; }
-        case 'mltree':   { $o = ''; $n = [[150, 22], [90, 70], [210, 70], [60, 118], [120, 118], [190, 118], [240, 118]]; foreach ([[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]] as [$a, $b]) $o .= '<path class="hz-tape" d="M' . $n[$a][0] . ' ' . $n[$a][1] . 'L' . $n[$b][0] . ' ' . $n[$b][1] . '"/>'; foreach ($n as $k => $q) $o .= $k < 3 ? '<rect class="hz-box" x="' . ($q[0] - 22) . '" y="' . ($q[1] - 10) . '" width="44" height="20" rx="5"/>' : '<circle class="hz-tree ' . ($k % 2 ? 'hz-s3' : 'hz-s4') . '" cx="' . $q[0] . '" cy="' . $q[1] . '" r="9"/>'; return $o; }
-        case 'knn':      { $o = ''; $q = [150, 75]; $pts = []; for ($k = 0; $k < 26; $k++) $pts[] = [24 + $r() * 252, 14 + $r() * 122]; usort($pts, function ($a, $b) use ($q) { return hypot($a[0] - $q[0], $a[1] - $q[1]) <=> hypot($b[0] - $q[0], $b[1] - $q[1]); }); foreach (array_slice($pts, 0, 4) as $p) $o .= '<path class="hz-ref" d="M150 75L' . round($p[0], 1) . ' ' . round($p[1], 1) . '"/>'; foreach ($pts as $p) $o .= '<circle class="hz-pt" cx="' . round($p[0], 1) . '" cy="' . round($p[1], 1) . '" r="3"/>'; return $o . '<circle class="hz-dot hz-s1" cx="150" cy="75" r="5"/>'; }
-        case 'heat':     { $o = ''; for ($i = 0; $i < 6; $i++) for ($j = 0; $j < 10; $j++) { $a = .5 + .45 * sin($i * .9 + 1) * cos($j * .55); $o .= '<rect class="hz-heat" style="--a:' . round($a, 2) . '" x="' . (22 + $j * 26) . '" y="' . (12 + $i * 21) . '" width="24" height="19"/>'; } return $o; }
-        case 'blocks':   { $o = ''; for ($i = 0; $i < 4; $i++) for ($j = 0; $j < 6; $j++) $o .= '<rect class="' . (($i + $j) % 4 === 1 ? 'hz-st1' : 'hz-cell') . '" x="' . (36 + $j * 40) . '" y="' . (14 + $i * 31) . '" width="37" height="28" rx="3"/>'; return $o; }
-        case 'regions':  return '<path class="hz-heat" style="--a:.7" d="M30 20L120 14L130 70L40 80Z"/><path class="hz-heat" style="--a:.35" d="M120 14L230 22L210 76L130 70Z"/><path class="hz-heat" style="--a:.55" d="M230 22L280 40L270 120L210 76Z"/><path class="hz-heat" style="--a:.2" d="M40 80L130 70L150 136L50 130Z"/><path class="hz-heat" style="--a:.85" d="M130 70L210 76L270 120L150 136Z"/>';
-        case 'assisted': return $ax . soon_pts(41, 30, function ($u) { return 15 + 90 * $u; }, 10) . '<path class="hz-line hz-c2" d="M22 115L288 25"/>';
-        case 'value':    return $ax . soon_bars([40, 90, 64, 28], 'hz-st1') . '<text class="hz-tick" x="230" y="20" text-anchor="end">/ m³</text>';
-        case 'gantt':    { $o = ''; foreach ([[0, 80], [50, 60], [110, 90], [20, 50], [170, 70]] as $k => [$x, $w]) $o .= '<rect class="hz-st' . ($k % 3) . '" x="' . (30 + $x) . '" y="' . (20 + $k * 22) . '" width="' . $w . '" height="14" rx="3"/>'; return $o . '<path class="hz-axis" d="M30 132H280"/>'; }
-        case 'deadwood': return '<path class="hz-ground" d="M10 122H290"/>' . soon_tree(120, 122, 84, 24) . '<path class="hz-trunk" d="M226 122V58H234V122Z"/><path class="hz-log" d="M24 116L92 110"/><path class="hz-log" d="M150 117L206 112"/><path class="hz-log" d="M248 116L284 106"/>';
-        case 'damage':   { $o = ''; for ($k = 0; $k < 22; $k++) { $x = 30 + $r() * 240; $y = 20 + $r() * 110; $o .= '<circle class="hz-tree ' . ($x > 170 && $y < 90 ? 'hz-s4' : 'hz-s3') . '" cx="' . round($x, 1) . '" cy="' . round($y, 1) . '" r="6"/>'; } return '<path class="hz-dmg" d="M170 14H284V92H170Z"/>' . $o; }
-        case 'urban':    { $o = '<rect class="hz-cell" x="10" y="112" width="280" height="18"/><path class="hz-ref" d="M10 121H290"/>'; foreach ([45, 115, 185, 255] as $x) $o .= soon_tree($x, 110, 80, 22); return $o; }
     }
     return '';
 }
-/** Drawing kind and short caption of every planned or in-progress tool (keyed by catalogue id). */
+/** Drawing kind and short caption of every planned or in-progress tool (keyed by catalogue id). Ids removed from the plan
+ * (17 Nov 2026, user decision) and tools already live have no entry. */
 function soon_card_data(bool $tr): array {
     $d = [
-        'TM-01' => ['height', 'Eğim ölçerle boy: tanjant ve sinüs yöntemi, eğim düzeltmesi', 'Height with a clinometer: tangent and sine methods, slope correction'],
-        'TM-02' => ['dbh', 'Çevreden çap, göğüs yüzeyi, düzensiz gövde', 'Diameter from girth, basal area, irregular stems'],
-        'TM-03' => ['bark', 'Kabuk kalınlığı ve kabuksuz çap', 'Bark thickness and under-bark diameter'],
-        'TM-04' => ['crown', 'Tepe genişliği, tepe uzunluğu ve oranları', 'Crown width, crown length and ratios'],
-        'TM-05' => ['rings', 'Halka sayımından yaş ve çap artımı', 'Age and diameter increment from ring counts'],
-        'TM-06' => ['form', 'Biçim sayısı ve biçim bölümü', 'Form factor and form quotient'],
         'SV-03' => ['merch', 'Tepe çapına kadar kullanılabilir hacim', 'Merchantable volume to a top diameter'],
         'SV-04' => ['power', 'Kendi verinizle hacim denklemi uydurma', 'Fitting volume equations to your data'],
         'SV-05' => ['logs', 'Tomruk hacmi ölçüm kuralları', 'Log volume scaling rules'],
-        'BC-01' => ['power', 'Kendi katsayılarınızla ağaç biyokütlesi', 'Tree biomass with your coefficients'],
-        'BC-02' => ['stack', 'Gövde, dal, yaprak ve kök biyokütlesi', 'Stem, branch, foliage and root biomass'],
-        'BC-03' => ['convert', 'Hacimden biyokütleye: yoğunluk, BEF, kök oranı', 'From volume to biomass: density, BEF, root ratio'],
-        'BC-04' => ['co2', 'Karbon stoku ve CO₂ eşdeğeri (44/12)', 'Carbon stock and CO₂ equivalent (44/12)'],
-        'BC-05' => ['tiers', 'IPCC katman 1–3 karbon hesabı', 'IPCC tier 1–3 carbon accounting'],
-        'BC-06' => ['band', 'Karbon kestiriminin belirsizliği', 'Uncertainty of carbon estimates'],
-        'SI-02' => ['design', 'Rastgele, sistematik, tabakalı ve kümeli tasarımlar', 'Random, systematic, stratified and cluster designs'],
-        'SI-04' => ['angle', 'Açı sayımıyla göğüs yüzeyi (Bitterlich)', 'Basal area by angle count (Bitterlich)'],
-        'SI-05' => ['edge', 'Ayna ve walkthrough ile kenar etkisi düzeltmesi', 'Edge correction by mirage and walkthrough'],
-        'SI-06' => ['transect', 'Hat kesişimiyle kalın ölü odun', 'Coarse woody debris by line intersect'],
-        'SI-07' => ['twophase', 'İki aşamalı ve çift örnekleme', 'Two-phase and double sampling'],
-        'SI-08' => ['ci', 'Horvitz–Thompson, tabakalı ve GREG kestirimi', 'Horvitz–Thompson, stratified and GREG estimators'],
-        'SI-09' => ['paired', 'Tekrarlı envanterde büyüme, ölüm ve aralanma', 'Growth, mortality and removals in remeasurements'],
-        'GY-01' => ['table', 'Kendi modelinizden meşcere hasılat tablosu', 'Yield tables from your own model'],
-        'GY-02' => ['matrix', 'Çap sınıfı geçiş matrisi', 'Diameter-class transition matrix'],
-        'GY-03' => ['grow', 'Tek ağaç düzeyinde büyüme benzetimi', 'Individual-tree growth simulation'],
-        'GY-04' => ['decay', 'Ölüm ve aralanma modelleri', 'Mortality and ingrowth models'],
-        'GY-05' => ['thin', 'Aralama senaryolarının karşılaştırılması', 'Comparing thinning scenarios'],
-        'GY-06' => ['sdmd', 'Meşcere sıklığı yönetim diyagramı', 'Stand density management diagram'],
-        'GY-07' => ['selfthin', 'Kendiliğinden seyrelme doğrusu', 'Self-thinning line'],
         'SM-02' => ['nlreg', 'Genel doğrusal olmayan regresyon', 'General nonlinear regression'],
         'SM-03' => ['mixed', 'Karma etkili modeller (örnek alan etkisi)', 'Mixed-effects models (plot effects)'],
         'SM-04' => ['system', 'Eşanlı ve toplamsal denklem sistemleri', 'Simultaneous and additive equation systems'],
         'SM-05' => ['survival', 'Ölüm ve sağkalım modelleri', 'Mortality and survival models'],
-        'SM-07' => ['band', 'Model ve tahmin belirsizliği', 'Model and prediction uncertainty'],
-        'ML-01' => ['mltree', 'Makine öğrenmesiyle regresyon ve sınıflama', 'Regression and classification with machine learning'],
-        'ML-04' => ['knn', 'En yakın komşu ile atama', 'Nearest-neighbour imputation'],
-        'ML-05' => ['heat', 'Mekânsal ara değerleme', 'Spatial interpolation'],
-        'ML-06' => ['blocks', 'Blok yapılı mekânsal çapraz doğrulama', 'Blocked spatial cross-validation'],
-        'ML-07' => ['regions', 'Küçük alan kestirimi', 'Small-area estimation'],
-        'ML-08' => ['assisted', 'Model destekli çıkarım', 'Model-assisted inference'],
-        'DS-01' => ['value', 'Ürün ve fiyatlarla odun değerleme', 'Timber valuation from products and prices'],
-        'DS-02' => ['gantt', 'Üretim planlama eniyilemesi', 'Harvest scheduling optimisation'],
-        'DS-04' => ['deadwood', 'Ölü odun hacmi ve habitat yapısı', 'Deadwood volume and habitat structure'],
-        'DS-05' => ['damage', 'Rüzgâr, yangın ve böcek zararı', 'Wind, fire and insect damage'],
-        'DS-06' => ['urban', 'Kent ağaçları envanteri', 'Urban tree inventory'],
     ];
     return array_map(function ($v) use ($tr) { return [$v[0], $tr ? $v[1] : $v[2]]; }, $d);
 }

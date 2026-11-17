@@ -9,7 +9,7 @@ site_top([
 ]);
 $tools = site_tools();
 ?>
-  <?php $cat = site_catalog(); $nLive = count(array_filter($cat, function ($c) { return $c['status'] === 'live'; })); $nAll = count($cat); ?>
+  <?php $cat = site_catalog(); $nLive = count(array_filter($cat, function ($c) { return $c['status'] === 'live'; })); $nAll = count(array_filter($cat, function ($c) { return $c['status'] !== 'out'; })); $nMod = count(site_modules()); ?>
   <section class="hero" aria-labelledby="hero-h">
     <div class="hz-glow" aria-hidden="true"></div>
     <div class="hero-text">
@@ -22,7 +22,7 @@ $tools = site_tools();
       <ul class="hz-stats">
         <li><b><?= $nLive ?></b><span><?= $tr ? 'araç yayında' : 'tools live' ?></span></li>
         <li><b><?= $nAll ?></b><span><?= $tr ? 'araçlık plan' : 'tools in the plan' ?></span></li>
-        <li><b><?= count(site_modules()) ?></b><span><?= $tr ? 'modül' : 'modules' ?></span></li>
+        <li><b><?= $nMod ?></b><span><?= $tr ? 'modül' : 'modules' ?></span></li>
         <li><b>0</b><span><?= $tr ? 'sunucuya giden ölçüm' : 'measurements sent to a server' ?></span></li>
       </ul>
     </div>
@@ -39,7 +39,7 @@ $tools = site_tools();
 
   <section class="dir" aria-labelledby="h-tools">
     <h2 id="h-tools" class="b-h2"><?= $tr ? 'Araçlar' : 'Tools' ?></h2>
-    <p class="muted dir-note"><?= $tr ? 'Araçlar on bir modülde toplanır; her kart bir araca götürür, kartlardaki çizimler aracın çıktı türünü gösteren temsilî çizimlerdir (veri değildir). Modüller başlıklarına tıklayınca açılır. Soluk kartlar henüz yayında olmayan araçlardır: "Yolda" olanlar geliştiriliyor, "Yakında" olanlar planlı. Planın tamamı ve kimlikleri: proje deposundaki docs/PLATFORM_PLAN.md.' : 'Tools are grouped in eleven modules; each card opens a tool, its drawing illustrates the kind of output (it is not data). Modules open when you click their heading. Faded cards are tools not yet live: "In progress" ones are being built, "Soon" ones are planned. The full plan and the tool ids: docs/PLATFORM_PLAN.md in the project repository.' ?></p>
+    <p class="muted dir-note"><?= $tr ? 'Araçlar ' . $nMod . ' modülde toplanır; her kart bir araca götürür, kartlardaki çizimler aracın çıktı türünü gösteren temsilî çizimlerdir (veri değildir). Modüller başlıklarına tıklayınca açılır. Soluk kartlar henüz yayında olmayan araçlardır: "Yolda" olanlar geliştiriliyor, "Yakında" olanlar planlı. Planın tamamı ve kimlikleri: proje deposundaki docs/PLATFORM_PLAN.md.' : 'Tools are grouped in ' . $nMod . ' modules; each card opens a tool, its drawing illustrates the kind of output (it is not data). Modules open when you click their heading. Faded cards are tools not yet live: "In progress" ones are being built, "Soon" ones are planned. The full plan and the tool ids: docs/PLATFORM_PLAN.md in the project repository.' ?></p>
     <p class="dir-all"><button type="button" class="btn ghost small" id="dir-open"><?= $tr ? 'Tümünü aç' : 'Open all' ?></button> <button type="button" class="btn ghost small" id="dir-close"><?= $tr ? 'Tümünü kapat' : 'Close all' ?></button></p>
     <?php $catalog = site_catalog(); foreach (site_modules() as $mod): $it = site_module_items($mod['id'], $tools, $catalog); $nl = count($it['home']); $np = count($it['planned']); ?>
     <div class="dir-group" id="mod-<?= $mod['id'] ?>" data-mod="<?= $mod['id'] ?>">
