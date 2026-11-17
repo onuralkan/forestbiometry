@@ -2,7 +2,8 @@
 
 Kullanıcının 12 Kasım 2026'da yüklediği "Forest Biometry Online — Platform Revision Plan" belgesinin, projenin
 bağlayıcı kurallarına (CLAUDE.md, docs/PROJECT.md, TOOLS_SPEC K1–K9) göre düzenlenmiş hâli. Sitenin kenar çubuğu ve
-araçlar dizini bu katalogdan çizilir (`inc/catalog.php`); bu belge ile o dosya birlikte güncellenir.
+araçlar dizini bu katalogdan çizilir (`inc/catalog.php`); bu belge ile o dosya birlikte güncellenir. 17 Kasım 2026'da
+27 planlı araç plandan çıkarıldı (P8).
 
 ## 1. Vizyon ve ilkeler
 
@@ -28,6 +29,7 @@ raporlayan, yöntemleri şeffaf, kaynaklı ve tekrarlanabilir açık kaynaklı b
 | P5 | **Birimler:** platform metriktir; gerekirse girişte birim dönüştürme yapılır, hesap ve çıktı metrik kalır. |
 | P6 | **Sayfa adresleri değişmez** (DOI'li atıflar ve kılavuz bağlantıları). Yeni araçlar Türkçe sayfa adı ve İngilizce kod klasörüyle eklenir (K2). Plandaki uzun İngilizce yollar yalnızca belge kimliğidir. |
 | P7 | **Çıktılar:** Excel, CSV, JSON (yöntem bilgileriyle) ve SVG grafik. PDF rapor DI-05 aşamasında ayrıca değerlendirilir (derleme adımı ve sunucu olmadan). DI-05/a1 (16 Kasım 2026): rapor yazdırılabilir HTML'dir; PDF tarayıcının yazdırma penceresinden ("PDF olarak kaydet") alınır, PDF kütüphanesi eklenmedi. |
+| P8 | **Çıkarılanlar (17 Kasım 2026, kullanıcı kararı):** planlı 27 araç plandan ve siteden çıkarıldı: BC-05; SI-02, SI-04…SI-09; GY-01…GY-07; SM-07; ML-01, ML-04…ML-08; DS-01, DS-02, DS-04…DS-06. P4'teki altı kapsam dışı araçla birlikte 33 kimlik kapsam dışıdır. Kimlikler kalıcıdır (P3): katalogda `out` olarak tarihçe için durur, sitede (kenar çubuğu, araç dizini, ana sayfa sayaçları) gösterilmez, başka adla yeniden önerilmez. Aracı kalmayan GY, ML ve DS modülleri listelenmez; site 8 modül gösterir. Açık kalan planlılar: SV-03, SV-04, SV-05, SM-02…SM-05. |
 
 Plandaki "Açık kararlar" bu kararlarla kapandı: teknoloji mevcut PHP 7.4+ ve tarayıcı JS (derleme adımı yok); hesap
 yeri tarayıcı; veritabanı ve kullanıcı hesabı yok; lisans Apache-2.0 ve CC BY 4.0; başlangıç tür/yöre kapsamı yok (P2).
@@ -84,7 +86,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | BC-02 | Biyokütle bileşenleri (gövde, dal, yaprak, kök; toplamsal sistemler) | yayında | BC-02/a1 (17 Kasım 2026, 1.0.0-beta.4, yayında): doğrusal toplamsal sistem, kısıtlı (ağırlıklı) SUR, Parresol 1999 [B]; a2: doğrusal olmayan sistemler (Parresol 2001 bekleniyor). SM-04'ün biyokütle kısmı |
 | BC-03 | Biyokütle dönüşüm etkeni (BEF) | yayında | TOOLS_SPEC BC03; etkenler kullanıcıdan. BC01'de hacimden dönüşüm çekirdeği: IPCC 2006 Cilt 4 Bölüm 2 Denklem 2.8b [B]. BC-03/a1 = BC03 (17 Kasım 2026, 1.0.0-beta.2): hacimler Seksiyon Hacmi'nden `forest-derived/1` kaydıyla (paket değişmez), iki yaklaşım ayrı satırlarda |
 | BC-04 | Karbon stoku ve CO₂ eşdeğeri | yayında | K9: CO₂ = C × 44/12 (IPCC 2006 §2.2.3 [B]), karbon oranı kullanıcıdan. BC01'de çekirdek |
-| BC-05 | IPCC karbon hesabı (katman 1–3) | planlı | IPCC 2006 Cilt 4: kullanıcıdan PDF; varsayılan değer gömülmez (P2) |
+| BC-05 | IPCC karbon hesabı (katman 1–3) | çıkarıldı (P8) | IPCC 2006 Cilt 4: kullanıcıdan PDF; varsayılan değer gömülmez (P2) |
 | BC-06 | Karbon belirsizliği (Monte Carlo) | yayında | TOOLS_SPEC BC04. BC-06/a1 = BC04 (17 Kasım 2026, 1.0.0-beta.3): katsayı kovaryansı ve artık standart hatası kaynaktan; şema Réjou-Méchain ve ark. 2017 [B], log-normal artık Chave ve ark. 2004 [B]; yayına alındı (17 Kasım 2026, kullanıcı kararı) |
 
 ### SS — Meşcere yapısı ve sıklığı
@@ -113,26 +115,26 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
 |---|---|---|---|---|
 | SI-01 | Örnek büyüklüğü | yayında | `ornekleme.php` | Envanter Örnekleme Planlayıcısı |
-| SI-02 | Örnekleme tasarımı üretici (rastgele, sistematik, tabakalı, kümeli) | planlı | – | |
+| SI-02 | Örnekleme tasarımı üretici (rastgele, sistematik, tabakalı, kümeli) | çıkarıldı (P8) | – | |
 | SI-03 | Sabit alanlı örnek alan kestirimi | yayında | `ornek-alan.php` | genişletme etkenleri, hektar değerleri |
-| SI-04 | Açı sayımı (Bitterlich) | planlı | – | |
-| SI-05 | Kenar etkisi düzeltmesi (ayna, walkthrough) | planlı | – | |
-| SI-06 | Hat kesişim örneklemesi (kalın ölü odun) | planlı | – | |
-| SI-07 | İki aşamalı ve çift örnekleme | planlı | – | |
-| SI-08 | Tasarıma dayalı çıkarım (Horvitz–Thompson, tabakalı, GREG) | planlı | – | Örnek Alan aracının tasarıma dayalı orman kestirimi bunun bir kısmını karşılıyor |
-| SI-09 | Tekrarlı envanter çözümlemesi (büyüme, ölüm, aralanma) | planlı | – | |
+| SI-04 | Açı sayımı (Bitterlich) | çıkarıldı (P8) | – | |
+| SI-05 | Kenar etkisi düzeltmesi (ayna, walkthrough) | çıkarıldı (P8) | – | |
+| SI-06 | Hat kesişim örneklemesi (kalın ölü odun) | çıkarıldı (P8) | – | |
+| SI-07 | İki aşamalı ve çift örnekleme | çıkarıldı (P8) | – | |
+| SI-08 | Tasarıma dayalı çıkarım (Horvitz–Thompson, tabakalı, GREG) | çıkarıldı (P8) | – | Örnek Alan aracının tasarıma dayalı orman kestirimi bunun bir kısmını karşılıyor |
+| SI-09 | Tekrarlı envanter çözümlemesi (büyüme, ölüm, aralanma) | çıkarıldı (P8) | – | |
 
 ### GY — Büyüme ve hasılat
 
 | Kimlik | Araç | Durum | Not |
 |---|---|---|---|
-| GY-01 | Meşcere hasılat tablosu üretici | planlı | Hasılat tablosu gömülmez (K1); kullanıcının modelinden üretilir |
-| GY-02 | Çap sınıfı ve matris modeli | planlı | |
-| GY-03 | Tek ağaç büyüme benzetimi | planlı | |
-| GY-04 | Ölüm ve aralanma modelleri | planlı | |
-| GY-05 | Aralama senaryoları | planlı | |
-| GY-06 | Meşcere sıklığı yönetim diyagramı | planlı | |
-| GY-07 | Kendiliğinden seyrelme doğrusu | planlı | |
+| GY-01 | Meşcere hasılat tablosu üretici | çıkarıldı (P8) | Hasılat tablosu gömülmez (K1); kullanıcının modelinden üretilir |
+| GY-02 | Çap sınıfı ve matris modeli | çıkarıldı (P8) | |
+| GY-03 | Tek ağaç büyüme benzetimi | çıkarıldı (P8) | |
+| GY-04 | Ölüm ve aralanma modelleri | çıkarıldı (P8) | |
+| GY-05 | Aralama senaryoları | çıkarıldı (P8) | |
+| GY-06 | Meşcere sıklığı yönetim diyagramı | çıkarıldı (P8) | |
+| GY-07 | Kendiliğinden seyrelme doğrusu | çıkarıldı (P8) | |
 | GY-08 | İklime duyarlı büyüme projeksiyonu | kapsam dışı | P4 |
 
 ### SM — İstatistiksel modelleme
@@ -145,31 +147,31 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | SM-04 | Eşanlı ve uyumlu sistemler (SUR, toplamsal biyokütle) | planlı | – | SUR çap dağılımı meşcere modellerinde var |
 | SM-05 | Ölüm ve sağkalım modelleri | planlı | – | |
 | SM-06 | Model değerlendirme | yayında | `model-degerlendirme.php` | Nispi Sıralama (`nispi-siralama.php`) da bu modülde, modelleri sıralamak için |
-| SM-07 | Belirsizlik nicelemesi (bootstrap, Monte Carlo, Bayesçi) | planlı | – | bootstrap çap dağılımı ve bonitette var |
+| SM-07 | Belirsizlik nicelemesi (bootstrap, Monte Carlo, Bayesçi) | çıkarıldı (P8) | – | bootstrap çap dağılımı ve bonitette var |
 
 ### ML — Makine öğrenmesi ve mekânsal tahmin
 
 | Kimlik | Araç | Durum | Not |
 |---|---|---|---|
-| ML-01 | Makine öğrenmesi ile regresyon ve sınıflama | planlı | tarayıcıda |
+| ML-01 | Makine öğrenmesi ile regresyon ve sınıflama | çıkarıldı (P8) | tarayıcıda |
 | ML-02 | Derin öğrenmeyle tepe tacı ayırma | kapsam dışı | P4: büyük modeller, GPU, veri tarayıcıdan çıkmaz |
 | ML-03 | Nokta bulutu segmentasyonu | kapsam dışı | P4 |
-| ML-04 | k-NN atama | planlı | |
-| ML-05 | Mekânsal ara değerleme (kriging, Gauss süreçleri) | planlı | |
-| ML-06 | Mekânsal çapraz doğrulama | planlı | |
-| ML-07 | Küçük alan kestirimi | planlı | |
-| ML-08 | Model destekli çıkarım | planlı | |
+| ML-04 | k-NN atama | çıkarıldı (P8) | |
+| ML-05 | Mekânsal ara değerleme (kriging, Gauss süreçleri) | çıkarıldı (P8) | |
+| ML-06 | Mekânsal çapraz doğrulama | çıkarıldı (P8) | |
+| ML-07 | Küçük alan kestirimi | çıkarıldı (P8) | |
+| ML-08 | Model destekli çıkarım | çıkarıldı (P8) | |
 
 ### DS — Karar destek ve uygulamalar
 
 | Kimlik | Araç | Durum | Not |
 |---|---|---|---|
-| DS-01 | Odun değerleme | planlı | fiyatlar kullanıcıdan |
-| DS-02 | Üretim planlama eniyileme | planlı | doğrusal programlama tarayıcıda |
+| DS-01 | Odun değerleme | çıkarıldı (P8) | fiyatlar kullanıcıdan |
+| DS-02 | Üretim planlama eniyileme | çıkarıldı (P8) | doğrusal programlama tarayıcıda |
 | DS-03 | Karbon projesi MRV | kapsam dışı | P4: biyometriden çok mevzuat |
-| DS-04 | Ölü odun ve habitat yapısı | planlı | |
-| DS-05 | Zarar değerlendirmesi | planlı | |
-| DS-06 | Kent ağaçları envanteri | planlı | |
+| DS-04 | Ölü odun ve habitat yapısı | çıkarıldı (P8) | |
+| DS-05 | Zarar değerlendirmesi | çıkarıldı (P8) | |
+| DS-06 | Kent ağaçları envanteri | çıkarıldı (P8) | |
 
 ## 5. Eski aşama kodlarının kimliklere eşlemesi
 
@@ -192,14 +194,15 @@ Bundan sonraki aşamalar `<KİMLİK>/a<n>` ile adlandırılır.
 Plandaki dört evre, yayındaki araçlara göre güncellendi. Sıra kullanıcının gönderdiği promptlarla belirlenir; bir
 aşama kabul ölçütleri sağlanmadan sonrakine geçilmez.
 
-1. **Sürmekte olan:** SS-07 (rekabet), meşcere yapısı sayfası (SS-02, SS-04…SS-07), SS-05/SS-06 kaynak doğrulaması.
-2. **Ağaç ve gövde:** SV-02, SV-03, SV-06 (TP), BC-01…BC-04 (BC); TM-01…TM-06.
-3. **Örnekleme ve envanter:** SI-02, SI-04…SI-09; DI-02…DI-05.
-4. **Modelleme ve büyüme:** SM-02…SM-05, SM-07; SQ-03; GY-01…GY-07.
-5. **İleri çözümleme:** ML-01, ML-04…ML-08; DS-01, DS-02, DS-04…DS-06.
+17 Kasım 2026 kullanıcı kararıyla (P8) yol haritası daraltıldı. Yayında olmayan ve plandan çıkarılmayan araçlar:
 
-Bağımlılıklar: DI bütün modüllere girdi verir; katsayı kütüphanesi (DI-02) SV, BC, SQ, GY'ye; SM'deki uydurma araçları
-GY'ye ve SQ-03'e; SI kestiricileri ML-07, ML-08 ve DS'ye.
+1. **Gövde hacmi:** SV-03 (kullanılabilir hacim), SV-04 (hacim denklemleri), SV-05 (tomruk ölçüm kuralları, düşük öncelik).
+2. **İstatistiksel modelleme:** SM-02 (doğrusal olmayan regresyon), SM-03 (karma etkili modeller), SM-04 (eşanlı ve
+   uyumlu sistemler; toplamsal biyokütle alt kapsamı BC-02/a1'de yayında), SM-05 (ölüm ve sağkalım).
+3. **Biyokütle:** BC-02/a2 (doğrusal olmayan toplamsal sistemler; Parresol 2001 bekleniyor).
+
+Bağımlılıklar: DI bütün modüllere girdi verir; katsayı kütüphanesi (DI-02) SV, BC, SQ'ya; SM'deki uydurma araçları
+SQ-03'e ve boy–çapa.
 
 ## 7. Araç başına şartname
 

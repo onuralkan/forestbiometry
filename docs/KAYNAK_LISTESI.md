@@ -2,6 +2,8 @@
 
 ☑ = kullanıcının Google Drive klasöründe (`MODUL_KAYNAK`, 16 Kasım 2026: 26 farklı kaynak). Okunup METHODS'ta işaretlenenler: Clark ve Evans 1954 [B], Pommerening 2002 [B], Contreras ve ark. 2011 [B] (Hegyi [A]).
 
+**17 Kasım 2026 (kullanıcı kararı, PLATFORM_PLAN P8):** BC-05; SI-02, SI-04…SI-09; GY-01…GY-07; SM-07; ML-01, ML-04…ML-08; DS-01, DS-02, DS-04…DS-06 plandan çıkarıldı. Aşağıda yalnızca bu kimliklere bağlı kaynaklar artık istenmez; satırlar arşiv olarak duruyor, yeniden yüklenmesi gerekmez.
+
 Planlı modüller (`docs/PLATFORM_PLAN.md`) için kaynaklar, iki bölümde:
 
 1. **PDF gerekli:** denklem ya da yöntem birincil kaynaktan okunacak (yeterli paket yok, paket belgesi formülü
