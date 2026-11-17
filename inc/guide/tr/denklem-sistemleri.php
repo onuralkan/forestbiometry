@@ -12,6 +12,7 @@
 <h3>Sonuçlar</h3>
 <ul>
 <li>Katsayılar (tahmin, standart hata, t; hangi denklemlerde geçtiği, ortak olup olmadığı), denklem başına R², SSR ve σ̂, sistem için OLS R² ve McElroy R², log L, denklemler arası kalıntı korelasyonu, her denklem için gözlenen–tahmin grafiği.</li>
+<li><b>Ortak katsayıların testi</b>: sistem ortak katsayılar her denklemde ayrı olacak biçimde yeniden uydurulur ve olabilirlik oranı testi yapılır (iki uydurma da yinelemeli SUR, en çok olabilirlik); küçük p, ortak katsayı kısıtının veriyle uyuşmadığını gösterir.</li>
 <li><b>Yöntem karşılaştırması</b>: aynı sistem OLS, SUR ve yinelemeli SUR ile; katsayılar ve standart hataları yan yana.</li>
 <li><b>Setleri kaydet</b>: her denklem ayrı bir set olarak, ortak katsayıları ve kovaryansıyla, aynı sistem kimliğiyle kaydedilir. İndirme: Excel (Bilgi, Katsayılar, Denklemler, Gözlemler), CSV, JSON çalışma kaydı.</li>
 </ul>

@@ -30,6 +30,8 @@ const b = await nums('#coeftab [data-k^="b"]'), R = NL.compatible_SUR;
 ok(b.length === 6 && b.every((v, j) => Math.abs(v - R.coef[j]) <= 1e-3 * R.se[j] + 1e-9 * Math.abs(R.coef[j])), 'compatible system by SUR on the page = Python reference: ' + b.join(' '));
 ok((await page.textContent('#r-sum')).includes('80 gözlem, 2 denklem, 6 katsayı'), 'summary: 80 observations, 2 equations, 6 coefficients');
 ok((await page.locator('#cmptab tbody tr').count()) === 7, 'method comparison: six coefficients and log L');
+await page.click('#lrt-go'); await page.waitForSelector('#lrt-res', { timeout: 60000 });
+ok(/LR = [\d.]+, sd = 3/.test(await page.textContent('#lrt-res')) && (await page.textContent('#lrtcard')).includes('a → a_1, a_2'), 'likelihood-ratio test of the shared a, b, c: 3 df, renamed coefficients listed');
 await shot('sq-1');
 // a linear system: ln columns are not in the table, so use the formula with ln()
 await page.click('[data-go="2"]'); await page.waitForSelector('#ntab');

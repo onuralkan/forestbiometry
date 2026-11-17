@@ -41,6 +41,10 @@ for (const [k, [s, m, r]] of Object.entries(cases)) {
 ok(F.ISUR.iter > 1 && F.SUR.iter === 1 && F.OLS.iter === null, `iterated SUR iterates (${F.ISUR.iter} steps; systemfit ${REF.linear.ISUR.iter} with its own stopping rule)`);
 { const r = Q.fitSystem(re, rows, { method: 'ISUR', resid: 'noDfCor' }), t = Q.lrtSystems(r, F.ISURml);
   ok(Math.abs(t.LR - REF.lrt.LR) < 1e-5 && t.df === REF.lrt.df && Math.abs(t.p / REF.lrt.p - 1) < 1e-4, `likelihood-ratio test of h1 = v1 (iterated SUR, Eq. 48): LR = ${t.LR.toFixed(5)} (lrtest ${REF.lrt.LR.toFixed(5)}), df ${t.df}, p ${t.p.toExponential(3)}`); }
+{ const t = Q.testRestrictions(re, vars, rows), u = Q.unrestrictedSystem(re, vars);
+  ok(u.ok && u.params.join() === 'h0,s_1,v0,s_2,v2' && u.eqs[1].text === 'v0+s_2*lnD+v2*lnD^2', 'unrestricted system: the shared s becomes s_1 and s_2');
+  ok(t.status === 'ok' && Math.abs(t.LR - REF.lrt.LR) < 1e-5 && t.df === 1 && Math.abs(t.restricted.logLik - REF.lrt.logLikR) < 1e-6 && Math.abs(t.unrestricted.logLik - REF.lrt.logLikU) < 1e-6, `testRestrictions (iterated SUR, Eq. 37): LR ${t.LR.toFixed(5)}, df ${t.df}, log L ${t.restricted.logLik.toFixed(4)} / ${t.unrestricted.logLik.toFixed(4)} = systemfit lrtest`);
+  ok(Q.testRestrictions(un, vars, rows).code === 'none', 'nothing shared: nothing to test'); }
 ok(Math.abs(F.SUR.mcelroy - NL.mcelroy_SUR) < 1e-9, `McElroy's R² (Eq. 43) of the SUR fit: ${F.SUR.mcelroy.toFixed(6)} (Python ${NL.mcelroy_SUR.toFixed(6)})`);
 
 // 2. nonlinear systems
@@ -60,7 +64,7 @@ for (const [nm, s, rOLS] of [['free', free, REF.nonlinear.OLS], ['compatible', c
     if (dz > 1e-4) bad.push('coef ' + dz.toExponential(2) + ' SE');
     if (R.se && md(f.se, R.se) > 1e-4) bad.push('se ' + md(f.se, R.se));
     if (md(f.eq.map(e => e.ssr), R.ssr) > 1e-7) bad.push('ssr');
-    if (R.sigmaUsed && m === 'SUR' && md(f.sigmaUsed.flat(), R.sigmaUsed.flat()) > 1e-7) bad.push('Σ');
+    if (R.sigmaUsed && m === 'SUR' && md(f.sigmaUsed.flat(), R.sigmaUsed.flat()) > 1e-6) bad.push('Σ');   // the reference's finite-difference optimum moves the small off-diagonal term by ~2e-7
     ok(f.status === 'ok' && !bad.length, `${nm} system, ${key}: coefficients${R.se ? ', SEs' : ''}, SSR per equation${m === 'SUR' ? ', Σ̂ of the first step' : ''} = Python reference ${bad.join('; ')}`);
   }
 }

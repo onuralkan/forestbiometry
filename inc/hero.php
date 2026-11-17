@@ -352,7 +352,6 @@ function soon_bars(array $v, string $cls = 'hz-bar', float $x0 = 34, float $w = 
 function soon_figure(string $kind): string {
     $ax = hero_axes(300, 150, 22, 20); $r = hero_rng(crc32($kind) % 100000 + 7);
     switch ($kind) {
-        case 'survival': { $p = [[22, 20]]; $s = 110; for ($k = 0; $k < 10; $k++) { $x = 22 + ($k + 1) * 26.6; $p[] = [$x, 130 - $s]; $s *= .82; $p[] = [$x, 130 - $s]; } return $ax . '<path class="hz-line hz-c1" d="' . hero_path($p) . '"/>'; }
     }
     return '';
 }
@@ -360,7 +359,6 @@ function soon_figure(string $kind): string {
  * (17 Nov 2026, user decision) and tools already live have no entry. */
 function soon_card_data(bool $tr): array {
     $d = [
-        'SM-05' => ['survival', 'Ölüm ve sağkalım modelleri', 'Mortality and survival models'],
     ];
     return array_map(function ($v) use ($tr) { return [$v[0], $tr ? $v[1] : $v[2]]; }, $d);
 }

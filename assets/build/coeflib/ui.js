@@ -2072,7 +2072,7 @@ function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k 
 
 // ---- assets/lab/eqsys/calc.js
 __fb_m["eqsys/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "TOOL": () => TOOL, "compileSystem": () => compileSystem, "ensureForm": () => ensureForm, "fitSystem": () => fitSystem, "lrtSystems": () => lrtSystems, "registerStoredForms": () => registerStoredForms });
+__fb_x(__fb_e, { "TOOL": () => TOOL, "compileSystem": () => compileSystem, "ensureForm": () => ensureForm, "fitSystem": () => fitSystem, "lrtSystems": () => lrtSystems, "registerStoredForms": () => registerStoredForms, "testRestrictions": () => testRestrictions, "unrestrictedSystem": () => unrestrictedSystem });
 const { parse, evaluate, evalGrad, toText } = __fb_r("core/expr.js");
 const { gammaQ } = __fb_r("core/stats.js");
 const { registerForm, form: coefForm } = __fb_r("core/coef.js");
@@ -2139,24 +2139,42 @@ function fitSystem(sys, rows, opts = {}) {
   const jac = b => sys.eqs.map(e => use.map(r => { const g = evalGrad(e.ast, envOf(b, r), e.params).d, row = new Array(K).fill(0); e.params.forEach((p, l) => { row[idx.get(p)] = g[l]; }); return row; }));
   const resid = b => { const f = pred(b); return Y.map((y, i) => y.map((v, t) => v - f[i][t])); };
   const Rof = (U, Si) => { let s = 0; for (let t = 0; t < T; t++) for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) if (Si[i][j]) s += U[i][t] * Si[i][j] * U[j][t]; return Number.isFinite(s) ? s : Infinity; };
-  /** Gauss–Newton for the GLS objective with a fixed Σ⁻¹ (Parresol 2001 Eq. 24); a linear system converges in one step. */
+  /** Gauss–Newton for the GLS objective with a fixed Σ⁻¹ (Parresol 2001 Eq. 24), with Levenberg–Marquardt damping (tool
+   *  rule: steadier on ill-conditioned systems; the solution is the same); a linear system converges in one step. */
+  const normal = (b, U, Si) => {
+    const J = jac(b), A = Array.from({ length: K }, () => new Array(K).fill(0)), g = new Array(K).fill(0);
+    for (let t = 0; t < T; t++) for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) { const s = Si[i][j]; if (!s) continue; const zi = J[i][t], zj = J[j][t]; for (let a = 0; a < K; a++) { if (!zi[a]) continue; g[a] += zi[a] * s * U[j][t]; for (let c = 0; c < K; c++) A[a][c] += zi[a] * s * zj[c]; } }
+    return { A, g };
+  };
   const gls = (b0, Si) => {
-    let b = b0.slice(), U = resid(b), R = Rof(U, Si);
+    let b = b0.slice(), U = resid(b), R = Rof(U, Si), converged = false;
     if (!Number.isFinite(R)) return null;
-    for (let it = 0; it < 500; it++) {
-      const J = jac(b), A = Array.from({ length: K }, () => new Array(K).fill(0)), g = new Array(K).fill(0);
-      for (let t = 0; t < T; t++) for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) { const s = Si[i][j]; if (!s) continue; const zi = J[i][t], zj = J[j][t]; for (let a = 0; a < K; a++) { if (!zi[a]) continue; g[a] += zi[a] * s * U[j][t]; for (let c = 0; c < K; c++) A[a][c] += zi[a] * s * zj[c]; } }
-      const L = chol(A); if (!L) return null;
+    let { A, g } = normal(b, U, Si), lam = 0, it = 0;
+    for (; it < 300; it++) {
+      let step = null, next = null;
+      for (let k = 0; k < 60; k++) {
+        const M = A.map((r, a) => r.map((v, c) => a === c ? v * (1 + lam) + (lam ? 1e-300 : 0) : v)), L = chol(M);
+        if (L) { step = cholSolve(L, g); const bn = b.map((v, a) => v + step[a]), Un = resid(bn), Rn = Rof(Un, Si); if (Rn <= R) { next = { bn, Un, Rn }; break; } }
+        lam = lam ? lam * 4 : 1e-6;
+      }
+      if (!next) { converged = true; break; }   // no further decrease possible in floating point
+      const rel = Math.max(...step.map((v, a) => Math.abs(v) / (Math.abs(next.bn[a]) + 1e-12))), gn = lam === 0;
+      b = next.bn; U = next.Un; R = next.Rn; lam = lam / 3 < 1e-9 ? 0 : lam / 3;
+      ({ A, g } = normal(b, U, Si));
+      if (gn && rel < 1e-12) { converged = true; break; }   // an undamped (Gauss–Newton) step that no longer moves
+      if (!gn && rel < 1e-10) break;   // damped steps no longer move: finish with undamped steps below
+    }
+    // polish with undamped Gauss–Newton steps and step halving (accuracy of the final digits)
+    if (!converged) for (let k = 0; k < 60; k++) {
+      const L = chol(A); if (!L) break;
       const d = cholSolve(L, g); let l = 1, next = null;
       while (l > 1e-12) { const bn = b.map((v, a) => v + l * d[a]), Un = resid(bn), Rn = Rof(Un, Si); if (Rn <= R) { next = { bn, Un, Rn }; break; } l /= 2; }
-      if (!next) break;
+      if (!next) { converged = true; break; }
       const rel = Math.max(...d.map((v, a) => Math.abs(l * v) / (Math.abs(next.bn[a]) + 1e-12)));
-      b = next.bn; U = next.Un; R = next.Rn;
-      if (rel < 1e-13) break;
+      b = next.bn; U = next.Un; R = next.Rn; ({ A, g } = normal(b, U, Si));
+      if (rel < 1e-12) { converged = true; break; }
     }
-    const J = jac(b), A = Array.from({ length: K }, () => new Array(K).fill(0));
-    for (let t = 0; t < T; t++) for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) { const s = Si[i][j]; if (!s) continue; for (let a = 0; a < K; a++) for (let c = 0; c < K; c++) A[a][c] += J[i][t][a] * s * J[j][t][c]; }
-    return { b, U, A, R };
+    return { b, U, A, R, converged };
   };
   const Ki = sys.eqs.map(e => e.params.length);
   const sigmaOf = U => U.map((a, i) => U.map((c, j) => { const s = a.reduce((x, v, t) => x + v * c[t], 0); return rc === 'noDfCor' ? s / T : rc === 'max' ? s / (T - Math.max(Ki[i], Ki[j])) : s / Math.sqrt((T - Ki[i]) * (T - Ki[j])); }));
@@ -2164,7 +2182,7 @@ function fitSystem(sys, rows, opts = {}) {
   let b0 = P.map(p => fin(opts.start && opts.start[p]) ? opts.start[p] : 0);
   // first step: OLS (Ω = I), restricted if coefficients are shared
   const ols = gls(b0, I); if (!ols) return { status: 'bad', code: 'converge', dropped };
-  let fit = ols, Sig = null, iter = 0;
+  let fit = ols, Sig = null, iter = 0, isurDone = method !== 'ISUR';
   if (method === 'OLS') {
     // covariance: σ̂ per equation without cross-equation restrictions; one pooled σ̂² with them (§2.5; systemfit default)
     const restricted = sys.shared.length > 0, s = sigmaOf(ols.U);
@@ -2172,18 +2190,18 @@ function fitSystem(sys, rows, opts = {}) {
     const fitS = gls(ols.b, inv(Sig)); fit = { ...ols, A: fitS.A };
   } else {
     Sig = sigmaOf(ols.U);
-    for (iter = 1; iter <= (method === 'ISUR' ? 1000 : 1); iter++) {
+    for (iter = 1; iter <= (method === 'ISUR' ? 200 : 1); iter++) {
       const Si = inv(Sig); if (!Si) return { status: 'bad', code: 'sigma.singular', dropped };
       const f = gls(fit.b, Si); if (!f) return { status: 'bad', code: 'converge', dropped };
       const change = Math.sqrt(f.b.reduce((s, v, a) => s + (v - fit.b[a]) ** 2, 0) / f.b.reduce((s, v) => s + v * v, 0));
       fit = f;
       if (method !== 'ISUR') break;
       const Sn = sigmaOf(f.U);
-      if (change < 1e-12) break;
+      if (change < 1e-12) { isurDone = true; break; }
       Sig = Sn;
     }
   }
-  const vcov = inv(fit.A); if (!vcov) return { status: 'bad', code: 'singular', dropped };
+  const vcov = inv(fit.A); if (!vcov && !opts.noCov) return { status: 'bad', code: 'singular', dropped };
   const U = fit.U, f = pred(fit.b), residCov = sigmaOf(U);
   const eq = sys.eqs.map((e, i) => { const ssr = U[i].reduce((s, v) => s + v * v, 0), m = Y[i].reduce((s, v) => s + v, 0) / T, sst = Y[i].reduce((s, v) => s + (v - m) ** 2, 0); return { name: e.name, y: e.y, text: e.text, K: Ki[i], ssr, r2: 1 - ssr / sst, fitted: f[i], resid: U[i] }; });
   // McElroy's R² (Eq. 43) with the Σ̂ used for estimation
@@ -2193,8 +2211,8 @@ function fitSystem(sys, rows, opts = {}) {
   const olsR2 = 1 - eq.reduce((s, e) => s + e.ssr, 0) / Yc.reduce((s, y) => s + y.reduce((a, v) => a + v * v, 0), 0);
   // log-likelihood of the multivariate normal with Σ̂ = residuals/T (Eq. 37), as systemfit
   const S37 = U.map(a => U.map(c => a.reduce((x, v, t) => x + v * c[t], 0) / T)), ll = -G * T / 2 * Math.log(2 * Math.PI) - T / 2 * logdet(S37) - G * T / 2;
-  return { status: 'ok', method, resid: rc, names: P, coef: fit.b, se: vcov.map((r, i) => Math.sqrt(r[i])), vcov, sigmaUsed: Sig, residCov, iter: method === 'OLS' ? null : iter,
-    eq, mcelroy, olsR2, logLik: ll, df: method === 'OLS' ? K + 1 : K + G * (G + 1) / 2, T, G, K, dropped, rows: use.map(r => r.row) };
+  return { status: 'ok', method, resid: rc, names: P, coef: fit.b, se: vcov ? vcov.map((r, i) => Math.sqrt(r[i])) : null, vcov, sigmaUsed: Sig, residCov, iter: method === 'OLS' ? null : iter,
+    eq, mcelroy, olsR2, logLik: ll, converged: !!fit.converged && isurDone, df: method === 'OLS' ? K + 1 : K + G * (G + 1) / 2, T, G, K, dropped, rows: use.map(r => r.row) };
 }
 
 /** Likelihood-ratio test of a restricted against an unrestricted fit (Eq. 48): T(log|Σ̂_r| − log|Σ̂_u|), Σ̂ by Eq. 37. */
@@ -2217,6 +2235,41 @@ function registerStoredForms(sets) {
     const r = parse(s.fit.expr); if (!r.ok) continue;
     ensureForm(toText(r.ast), r.names.filter(n => s.fit.vars.includes(n)), r.names.filter(n => !s.fit.vars.includes(n)));
   }
+}
+
+/* ---------- testing the cross-equation restrictions ---------- */
+function renameAst(n, map) {
+  if (!n || typeof n !== 'object') return n;
+  if (n.k === 'name') return map[n.v] ? { k: 'name', v: map[n.v] } : n;
+  const o = { ...n }; if (n.a) o.a = renameAst(n.a, map); if (n.b) o.b = renameAst(n.b, map); return o;
+}
+/**
+ * The system without its cross-equation restrictions: every shared coefficient p becomes p_1, p_2, … (one per equation it
+ * occurs in). → compiled system (as compileSystem) with .renamed = { p: [new names] } | the input when nothing is shared.
+ */
+function unrestrictedSystem(sys, vars) {
+  if (!sys.shared.length) return sys;
+  const taken = new Set([...sys.params, ...vars]), renamed = {};
+  const eqs = sys.eqs.map((e, i) => {
+    const map = {};
+    for (const p of e.params) if (sys.shared.includes(p)) { let n = `${p}_${i + 1}`; while (taken.has(n)) n += '_'; taken.add(n); map[p] = n; (renamed[p] = renamed[p] || []).push(n); }
+    return { name: e.name, y: e.y, expr: toText(renameAst(e.ast, map)) };
+  });
+  const u = compileSystem(eqs, vars); if (u.ok) u.renamed = renamed;
+  return u;
+}
+/**
+ * Likelihood-ratio test of the shared coefficients (Henningsen and Hamann 2007 Eq. 48): both systems by iterated SUR with
+ * the residual covariance of Eq. 37 (maximum likelihood, §2.4), the unrestricted one started from the restricted estimates.
+ * → { LR, df, p, restricted, unrestricted (its se and vcov null when not invertible) } | { status: 'bad', code }
+ */
+function testRestrictions(sys, vars, rows, start = {}) {
+  const u = unrestrictedSystem(sys, vars); if (!u.ok || u === sys) return { status: 'bad', code: 'none' };
+  const r = fitSystem(sys, rows, { method: 'ISUR', resid: 'noDfCor', start }); if (r.status !== 'ok') return { status: 'bad', code: r.code };
+  const s0 = { ...start }; sys.params.forEach((p, j) => { s0[p] = r.coef[j]; for (const n of (u.renamed[p] || [])) s0[n] = r.coef[j]; });
+  // only the likelihood is needed: the unrestricted system may be close to unidentifiable (its covariance not invertible)
+  const f = fitSystem(u, rows, { method: 'ISUR', resid: 'noDfCor', start: s0, noCov: true }); if (f.status !== 'ok') return { status: 'bad', code: f.code };
+  return { status: 'ok', ...lrtSystems(r, f), restricted: r, unrestricted: f, renamed: u.renamed };
 }
 };
 

@@ -12,6 +12,7 @@
 <h3>Results</h3>
 <ul>
 <li>Coefficients (estimate, standard error, t; the equations they occur in and whether they are shared), R², SSR and σ̂ per equation, the system's OLS R² and McElroy R², log L, residual correlation between equations, an observed–predicted chart for every equation.</li>
+<li><b>Test of the shared coefficients</b>: the system is fitted again with the shared coefficients separate in every equation and a likelihood-ratio test is made (both fits by iterated SUR, maximum likelihood); a small p says the shared-coefficient restriction does not agree with the data.</li>
 <li><b>Method comparison</b>: the same system by OLS, SUR and iterated SUR; coefficients and standard errors side by side.</li>
 <li><b>Save the sets</b>: every equation is saved as its own set, with its shared coefficients and covariance, under the same system id. Downloads: Excel (Info, Coefficients, Equations, Observations), CSV, JSON run record.</li>
 </ul>

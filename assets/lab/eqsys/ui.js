@@ -123,7 +123,7 @@ function compute() {
   const start = Object.fromEntries(d.sys.params.map(p => [p, String(S.starts[p] ?? '').trim() === '' ? 0 : num(S.starts[p])]));
   const run = m => Q.fitSystem(d.sys, rows, { method: m, resid: S.resid, start });
   const fits = Object.fromEntries(['OLS', 'SUR', 'ISUR'].map(m => [m, run(m)]));
-  R = { created: new Date().toISOString(), data: S.tbl.imp ? S.tbl.imp.name : '', sys: d.sys, vars: d.vars, method: S.method, resid: S.resid, fit: fits[S.method], fits,
+  R = { created: new Date().toISOString(), data: S.tbl.imp ? S.tbl.imp.name : '', sys: d.sys, vars: d.vars, rows, start, method: S.method, resid: S.resid, fit: fits[S.method], fits,
     eqs: S.eqs.map((e, i) => ({ label: eqLabel(i), y: colName(e.y), ycol: e.y, text: d.sys.eqs[i].text, vars: d.sys.eqs[i].vars, params: d.sys.eqs[i].params })) };
 }
 const rowsText = rows => { const r = rows.filter(x => x != null); return r.length > 25 ? r.slice(0, 25).join(', ') + ' …' : r.join(', '); };
@@ -133,7 +133,7 @@ function renderStep3() {
   let h = `<div class="card"><h2>${esc(T('m.' + R.method))}</h2>`;
   if (x.status !== 'ok') { h += `<p class="note err" id="r-bad">${esc(T('r.bad', { why: T('e.' + x.code) }))}</p></div>`; }
   else {
-    h += `<p class="small" id="r-sum">${esc(T('r.sum', { method: R.method, T: x.T, G: x.G, K: x.K, it: R.method === 'ISUR' ? x.iter : 0 }))}</p>${x.dropped.length ? `<p class="note warn small" id="r-drop">${esc(T('r.drop', { n: x.dropped.length, rows: rowsText(x.dropped.map(d => d.row)) }))}</p>` : ''}
+    h += `<p class="small" id="r-sum">${esc(T('r.sum', { method: R.method, T: x.T, G: x.G, K: x.K, it: R.method === 'ISUR' ? x.iter : 0 }))}</p>${!x.converged ? `<p class="note warn small" id="r-noconv">${T('r.noconv')}</p>` : ''}${x.dropped.length ? `<p class="note warn small" id="r-drop">${esc(T('r.drop', { n: x.dropped.length, rows: rowsText(x.dropped.map(d => d.row)) }))}</p>` : ''}
       <ul class="small">${R.eqs.map(e => `<li>${esc(e.label)}: ${esc(e.y)} = ${esc(e.text)}</li>`).join('')}</ul>
       <h3>${T('r.coef')}</h3><div class="tscroll"><table class="grid" id="coeftab"><thead><tr><th>${T('r.name')}</th><th>${T('r.eqs')}</th><th>${T('r.est')}</th><th>${T('r.se')}</th><th>${T('r.t')}</th></tr></thead><tbody>
       ${x.names.map((n, j) => `<tr><th><code>${esc(n)}</code></th><td class="small">${sys.eqs.map((e, i) => e.params.includes(n) ? i + 1 : null).filter(Boolean).join(', ')}${sys.shared.includes(n) ? ' (' + T('n.shared') + ')' : ''}</td><td class="num" data-k="b${j}">${sig(x.coef[j])}</td><td class="num">${sig(x.se[j])}</td><td class="num">${f(x.coef[j] / x.se[j], 3)}</td></tr>`).join('')}</tbody></table></div>
@@ -143,6 +143,7 @@ function renderStep3() {
       <p class="small">${T('r.corr')}: ${x.eq.map((_, i) => x.eq.slice(i + 1).map((__, k) => { const j = i + 1 + k; return `${i + 1}–${j + 1} ${f(x.residCov[i][j] / Math.sqrt(x.residCov[i][i] * x.residCov[j][j]), 3)}`; }).join(', ')).filter(Boolean).join(', ')}</p>
       <p class="muted small">${T('r.note')}</p>
       <div class="charts2">${x.eq.map((e, i) => `<figure class="chartbox">${scatterChart({ title: T('ch.obs', { e: `${R.eqs[i].label} (${R.eqs[i].y})` }), points: e.fitted.map((p, t) => [p + e.resid[t], p]), xLabel: T('ch.xo'), yLabel: T('ch.yo'), equal: true, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure>`).join('')}</div></div>
+      ${sys.shared.length ? `<div class="card" id="lrtcard"><h2>${T('lrt.h')}</h2><p class="muted small">${T('lrt.sub')}</p><button type="button" class="btn ghost" id="lrt-go">${T('lrt.go')}</button><div id="lrt-out"></div></div>` : ''}
       <div class="card"><h2>${T('r.cmp')}</h2><div class="tscroll"><table class="grid" id="cmptab"><thead><tr><th>${T('r.name')}</th>${['OLS', 'SUR', 'ISUR'].map(m => `<th>${m}</th>`).join('')}</tr></thead><tbody>
       ${x.names.map((n, j) => `<tr><th><code>${esc(n)}</code></th>${['OLS', 'SUR', 'ISUR'].map(m => { const g = R.fits[m]; return `<td class="num">${g.status === 'ok' ? `${sig(g.coef[j])} (${sig(g.se[j])})` : '–'}</td>`; }).join('')}</tr>`).join('')}
       <tr><th>log L</th>${['OLS', 'SUR', 'ISUR'].map(m => `<td class="num">${R.fits[m].status === 'ok' ? f(R.fits[m].logLik, 4) : '–'}</td>`).join('')}</tr></tbody></table></div><p class="muted small">${T('r.cmpnote')}</p></div>
@@ -160,6 +161,12 @@ function renderStep3() {
     $('sv-sp').addEventListener('change', e => { S.sp = e.target.value.trim(); save(); });
     $('sv-cit').addEventListener('change', e => { S.cit = e.target.value; save(); });
     $('sv-save').addEventListener('click', saveSets);
+    $('lrt-go') && $('lrt-go').addEventListener('click', () => {
+      const t = Q.testRestrictions(R.sys, R.vars, R.rows, R.start), out = $('lrt-out');
+      if (t.status !== 'ok') { out.innerHTML = `<p class="note err small" id="lrt-bad">${esc(T('lrt.bad', { why: T('e.' + t.code) }))}</p>`; return; }
+      out.innerHTML = `<p class="note small" id="lrt-res">${esc(T('lrt.res', { L: f(t.LR, 4), df: t.df, p: t.p == null ? '–' : t.p < 1e-4 ? '< 0.0001' : f(t.p, 4), lr: f(t.restricted.logLik, 4), lu: f(t.unrestricted.logLik, 4) }))}</p>
+        ${t.restricted.converged && t.unrestricted.converged ? '' : `<p class="note warn small">${T('r.noconv')}</p>`}<p class="muted small">${esc(T('lrt.names', { n: Object.entries(t.renamed).map(([k, v]) => `${k} → ${v.join(', ')}`).join('; ') }))}</p>`;
+    });
   }
   const name = ext => `${lang === 'tr' ? 'denklem-sistemleri' : 'equation-systems'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), obsTable(), lang));

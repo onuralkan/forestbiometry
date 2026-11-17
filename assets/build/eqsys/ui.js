@@ -1629,7 +1629,7 @@ function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k 
 
 // ---- assets/lab/eqsys/calc.js
 __fb_m["eqsys/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "TOOL": () => TOOL, "compileSystem": () => compileSystem, "ensureForm": () => ensureForm, "fitSystem": () => fitSystem, "lrtSystems": () => lrtSystems, "registerStoredForms": () => registerStoredForms });
+__fb_x(__fb_e, { "TOOL": () => TOOL, "compileSystem": () => compileSystem, "ensureForm": () => ensureForm, "fitSystem": () => fitSystem, "lrtSystems": () => lrtSystems, "registerStoredForms": () => registerStoredForms, "testRestrictions": () => testRestrictions, "unrestrictedSystem": () => unrestrictedSystem });
 const { parse, evaluate, evalGrad, toText } = __fb_r("core/expr.js");
 const { gammaQ } = __fb_r("core/stats.js");
 const { registerForm, form: coefForm } = __fb_r("core/coef.js");
@@ -1696,24 +1696,42 @@ function fitSystem(sys, rows, opts = {}) {
   const jac = b => sys.eqs.map(e => use.map(r => { const g = evalGrad(e.ast, envOf(b, r), e.params).d, row = new Array(K).fill(0); e.params.forEach((p, l) => { row[idx.get(p)] = g[l]; }); return row; }));
   const resid = b => { const f = pred(b); return Y.map((y, i) => y.map((v, t) => v - f[i][t])); };
   const Rof = (U, Si) => { let s = 0; for (let t = 0; t < T; t++) for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) if (Si[i][j]) s += U[i][t] * Si[i][j] * U[j][t]; return Number.isFinite(s) ? s : Infinity; };
-  /** Gauss–Newton for the GLS objective with a fixed Σ⁻¹ (Parresol 2001 Eq. 24); a linear system converges in one step. */
+  /** Gauss–Newton for the GLS objective with a fixed Σ⁻¹ (Parresol 2001 Eq. 24), with Levenberg–Marquardt damping (tool
+   *  rule: steadier on ill-conditioned systems; the solution is the same); a linear system converges in one step. */
+  const normal = (b, U, Si) => {
+    const J = jac(b), A = Array.from({ length: K }, () => new Array(K).fill(0)), g = new Array(K).fill(0);
+    for (let t = 0; t < T; t++) for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) { const s = Si[i][j]; if (!s) continue; const zi = J[i][t], zj = J[j][t]; for (let a = 0; a < K; a++) { if (!zi[a]) continue; g[a] += zi[a] * s * U[j][t]; for (let c = 0; c < K; c++) A[a][c] += zi[a] * s * zj[c]; } }
+    return { A, g };
+  };
   const gls = (b0, Si) => {
-    let b = b0.slice(), U = resid(b), R = Rof(U, Si);
+    let b = b0.slice(), U = resid(b), R = Rof(U, Si), converged = false;
     if (!Number.isFinite(R)) return null;
-    for (let it = 0; it < 500; it++) {
-      const J = jac(b), A = Array.from({ length: K }, () => new Array(K).fill(0)), g = new Array(K).fill(0);
-      for (let t = 0; t < T; t++) for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) { const s = Si[i][j]; if (!s) continue; const zi = J[i][t], zj = J[j][t]; for (let a = 0; a < K; a++) { if (!zi[a]) continue; g[a] += zi[a] * s * U[j][t]; for (let c = 0; c < K; c++) A[a][c] += zi[a] * s * zj[c]; } }
-      const L = chol(A); if (!L) return null;
+    let { A, g } = normal(b, U, Si), lam = 0, it = 0;
+    for (; it < 300; it++) {
+      let step = null, next = null;
+      for (let k = 0; k < 60; k++) {
+        const M = A.map((r, a) => r.map((v, c) => a === c ? v * (1 + lam) + (lam ? 1e-300 : 0) : v)), L = chol(M);
+        if (L) { step = cholSolve(L, g); const bn = b.map((v, a) => v + step[a]), Un = resid(bn), Rn = Rof(Un, Si); if (Rn <= R) { next = { bn, Un, Rn }; break; } }
+        lam = lam ? lam * 4 : 1e-6;
+      }
+      if (!next) { converged = true; break; }   // no further decrease possible in floating point
+      const rel = Math.max(...step.map((v, a) => Math.abs(v) / (Math.abs(next.bn[a]) + 1e-12))), gn = lam === 0;
+      b = next.bn; U = next.Un; R = next.Rn; lam = lam / 3 < 1e-9 ? 0 : lam / 3;
+      ({ A, g } = normal(b, U, Si));
+      if (gn && rel < 1e-12) { converged = true; break; }   // an undamped (Gauss–Newton) step that no longer moves
+      if (!gn && rel < 1e-10) break;   // damped steps no longer move: finish with undamped steps below
+    }
+    // polish with undamped Gauss–Newton steps and step halving (accuracy of the final digits)
+    if (!converged) for (let k = 0; k < 60; k++) {
+      const L = chol(A); if (!L) break;
       const d = cholSolve(L, g); let l = 1, next = null;
       while (l > 1e-12) { const bn = b.map((v, a) => v + l * d[a]), Un = resid(bn), Rn = Rof(Un, Si); if (Rn <= R) { next = { bn, Un, Rn }; break; } l /= 2; }
-      if (!next) break;
+      if (!next) { converged = true; break; }
       const rel = Math.max(...d.map((v, a) => Math.abs(l * v) / (Math.abs(next.bn[a]) + 1e-12)));
-      b = next.bn; U = next.Un; R = next.Rn;
-      if (rel < 1e-13) break;
+      b = next.bn; U = next.Un; R = next.Rn; ({ A, g } = normal(b, U, Si));
+      if (rel < 1e-12) { converged = true; break; }
     }
-    const J = jac(b), A = Array.from({ length: K }, () => new Array(K).fill(0));
-    for (let t = 0; t < T; t++) for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) { const s = Si[i][j]; if (!s) continue; for (let a = 0; a < K; a++) for (let c = 0; c < K; c++) A[a][c] += J[i][t][a] * s * J[j][t][c]; }
-    return { b, U, A, R };
+    return { b, U, A, R, converged };
   };
   const Ki = sys.eqs.map(e => e.params.length);
   const sigmaOf = U => U.map((a, i) => U.map((c, j) => { const s = a.reduce((x, v, t) => x + v * c[t], 0); return rc === 'noDfCor' ? s / T : rc === 'max' ? s / (T - Math.max(Ki[i], Ki[j])) : s / Math.sqrt((T - Ki[i]) * (T - Ki[j])); }));
@@ -1721,7 +1739,7 @@ function fitSystem(sys, rows, opts = {}) {
   let b0 = P.map(p => fin(opts.start && opts.start[p]) ? opts.start[p] : 0);
   // first step: OLS (Ω = I), restricted if coefficients are shared
   const ols = gls(b0, I); if (!ols) return { status: 'bad', code: 'converge', dropped };
-  let fit = ols, Sig = null, iter = 0;
+  let fit = ols, Sig = null, iter = 0, isurDone = method !== 'ISUR';
   if (method === 'OLS') {
     // covariance: σ̂ per equation without cross-equation restrictions; one pooled σ̂² with them (§2.5; systemfit default)
     const restricted = sys.shared.length > 0, s = sigmaOf(ols.U);
@@ -1729,18 +1747,18 @@ function fitSystem(sys, rows, opts = {}) {
     const fitS = gls(ols.b, inv(Sig)); fit = { ...ols, A: fitS.A };
   } else {
     Sig = sigmaOf(ols.U);
-    for (iter = 1; iter <= (method === 'ISUR' ? 1000 : 1); iter++) {
+    for (iter = 1; iter <= (method === 'ISUR' ? 200 : 1); iter++) {
       const Si = inv(Sig); if (!Si) return { status: 'bad', code: 'sigma.singular', dropped };
       const f = gls(fit.b, Si); if (!f) return { status: 'bad', code: 'converge', dropped };
       const change = Math.sqrt(f.b.reduce((s, v, a) => s + (v - fit.b[a]) ** 2, 0) / f.b.reduce((s, v) => s + v * v, 0));
       fit = f;
       if (method !== 'ISUR') break;
       const Sn = sigmaOf(f.U);
-      if (change < 1e-12) break;
+      if (change < 1e-12) { isurDone = true; break; }
       Sig = Sn;
     }
   }
-  const vcov = inv(fit.A); if (!vcov) return { status: 'bad', code: 'singular', dropped };
+  const vcov = inv(fit.A); if (!vcov && !opts.noCov) return { status: 'bad', code: 'singular', dropped };
   const U = fit.U, f = pred(fit.b), residCov = sigmaOf(U);
   const eq = sys.eqs.map((e, i) => { const ssr = U[i].reduce((s, v) => s + v * v, 0), m = Y[i].reduce((s, v) => s + v, 0) / T, sst = Y[i].reduce((s, v) => s + (v - m) ** 2, 0); return { name: e.name, y: e.y, text: e.text, K: Ki[i], ssr, r2: 1 - ssr / sst, fitted: f[i], resid: U[i] }; });
   // McElroy's R² (Eq. 43) with the Σ̂ used for estimation
@@ -1750,8 +1768,8 @@ function fitSystem(sys, rows, opts = {}) {
   const olsR2 = 1 - eq.reduce((s, e) => s + e.ssr, 0) / Yc.reduce((s, y) => s + y.reduce((a, v) => a + v * v, 0), 0);
   // log-likelihood of the multivariate normal with Σ̂ = residuals/T (Eq. 37), as systemfit
   const S37 = U.map(a => U.map(c => a.reduce((x, v, t) => x + v * c[t], 0) / T)), ll = -G * T / 2 * Math.log(2 * Math.PI) - T / 2 * logdet(S37) - G * T / 2;
-  return { status: 'ok', method, resid: rc, names: P, coef: fit.b, se: vcov.map((r, i) => Math.sqrt(r[i])), vcov, sigmaUsed: Sig, residCov, iter: method === 'OLS' ? null : iter,
-    eq, mcelroy, olsR2, logLik: ll, df: method === 'OLS' ? K + 1 : K + G * (G + 1) / 2, T, G, K, dropped, rows: use.map(r => r.row) };
+  return { status: 'ok', method, resid: rc, names: P, coef: fit.b, se: vcov ? vcov.map((r, i) => Math.sqrt(r[i])) : null, vcov, sigmaUsed: Sig, residCov, iter: method === 'OLS' ? null : iter,
+    eq, mcelroy, olsR2, logLik: ll, converged: !!fit.converged && isurDone, df: method === 'OLS' ? K + 1 : K + G * (G + 1) / 2, T, G, K, dropped, rows: use.map(r => r.row) };
 }
 
 /** Likelihood-ratio test of a restricted against an unrestricted fit (Eq. 48): T(log|Σ̂_r| − log|Σ̂_u|), Σ̂ by Eq. 37. */
@@ -1774,6 +1792,41 @@ function registerStoredForms(sets) {
     const r = parse(s.fit.expr); if (!r.ok) continue;
     ensureForm(toText(r.ast), r.names.filter(n => s.fit.vars.includes(n)), r.names.filter(n => !s.fit.vars.includes(n)));
   }
+}
+
+/* ---------- testing the cross-equation restrictions ---------- */
+function renameAst(n, map) {
+  if (!n || typeof n !== 'object') return n;
+  if (n.k === 'name') return map[n.v] ? { k: 'name', v: map[n.v] } : n;
+  const o = { ...n }; if (n.a) o.a = renameAst(n.a, map); if (n.b) o.b = renameAst(n.b, map); return o;
+}
+/**
+ * The system without its cross-equation restrictions: every shared coefficient p becomes p_1, p_2, … (one per equation it
+ * occurs in). → compiled system (as compileSystem) with .renamed = { p: [new names] } | the input when nothing is shared.
+ */
+function unrestrictedSystem(sys, vars) {
+  if (!sys.shared.length) return sys;
+  const taken = new Set([...sys.params, ...vars]), renamed = {};
+  const eqs = sys.eqs.map((e, i) => {
+    const map = {};
+    for (const p of e.params) if (sys.shared.includes(p)) { let n = `${p}_${i + 1}`; while (taken.has(n)) n += '_'; taken.add(n); map[p] = n; (renamed[p] = renamed[p] || []).push(n); }
+    return { name: e.name, y: e.y, expr: toText(renameAst(e.ast, map)) };
+  });
+  const u = compileSystem(eqs, vars); if (u.ok) u.renamed = renamed;
+  return u;
+}
+/**
+ * Likelihood-ratio test of the shared coefficients (Henningsen and Hamann 2007 Eq. 48): both systems by iterated SUR with
+ * the residual covariance of Eq. 37 (maximum likelihood, §2.4), the unrestricted one started from the restricted estimates.
+ * → { LR, df, p, restricted, unrestricted (its se and vcov null when not invertible) } | { status: 'bad', code }
+ */
+function testRestrictions(sys, vars, rows, start = {}) {
+  const u = unrestrictedSystem(sys, vars); if (!u.ok || u === sys) return { status: 'bad', code: 'none' };
+  const r = fitSystem(sys, rows, { method: 'ISUR', resid: 'noDfCor', start }); if (r.status !== 'ok') return { status: 'bad', code: r.code };
+  const s0 = { ...start }; sys.params.forEach((p, j) => { s0[p] = r.coef[j]; for (const n of (u.renamed[p] || [])) s0[n] = r.coef[j]; });
+  // only the likelihood is needed: the unrestricted system may be close to unidentifiable (its covariance not invertible)
+  const f = fitSystem(u, rows, { method: 'ISUR', resid: 'noDfCor', start: s0, noCov: true }); if (f.status !== 'ok') return { status: 'bad', code: f.code };
+  return { status: 'ok', ...lrtSystems(r, f), restricted: r, unrestricted: f, renamed: u.renamed };
 }
 };
 
@@ -1807,6 +1860,9 @@ const T = makeT({
     'r.eqh': 'Denklemler', 'r.eq': 'Denklem', 'r.r2': 'R²', 'r.ssr': 'SSR', 'r.s': 'σ̂', 'r.sys': p => `Sistem: OLS R² ${p.ols}, McElroy R² ${p.mc}; log L ${p.ll} (sd ${p.df}).`,
     'r.corr': 'Denklemler arası kalıntı korelasyonu', 'r.cmp': 'Yöntem karşılaştırması', 'r.cmpnote': 'Aynı sistem ve kalıntı kovaryansı seçimiyle üç yöntem; standart hatalar ayraç içinde.',
     'r.note': 'cov(b) = (XᵀΩ̂⁻¹X)⁻¹ (Denklem 8); OLS’de σ̂ denklem başına, katsayılar ortaksa tek σ̂² (systemfit’in öntanımı). R² denklem başına (Denklem 42); McElroy R² sistem için (Denklem 43); log L, Σ̂ = kalıntılar/T ile çok değişkenli normal olabilirlik (sd: OLS’de K + 1, SUR’da K + G(G + 1)/2).',
+    'lrt.h': 'Ortak katsayıların testi (olabilirlik oranı)', 'lrt.sub': 'Sistem, ortak katsayılar her denklemde ayrı olacak biçimde (ör. a yerine a_1 ve a_2) bir kez daha uydurulur; iki uydurma yinelemeli SUR ve T bölenli kalıntı kovaryansıyla (en çok olabilirlik) yapılır. LR = T(log|Σ̂_kısıtlı| − log|Σ̂_kısıtsız|), χ² dağılımı, serbestlik derecesi eklenen katsayı sayısı (Henningsen ve Hamann 2007, Denklem 48). Küçük p, ortak katsayı kısıtının veriyle uyuşmadığını gösterir.', 'lrt.go': 'Testi yap',
+    'r.noconv': 'Uyarı: kestirim yineleme sınırına ulaştı, tam yakınsamamış olabilir (başlangıç değerlerini ya da modeli gözden geçirin; katsayılar birbirinin yerine geçebiliyor olabilir).',
+    'lrt.res': p => `LR = ${p.L}, sd = ${p.df}, p = ${p.p}. log L: kısıtlı ${p.lr}, kısıtsız ${p.lu}.`, 'lrt.bad': p => `Test yapılamadı: ${p.why}.`, 'lrt.names': p => `Kısıtsız sistemdeki adlar: ${p.n}.`,
     'ch.obs': p => `${p.e}: gözlenen–tahmin`, 'ch.xo': 'Gözlenen', 'ch.yo': 'Tahmin',
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.sub': 'Her denklem ayrı bir set olarak, sistemin ortak katsayıları ve kovaryansıyla kaydedilir; setler aynı sistem kimliğini taşır.', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi kesim verimiz, 2026, n = 80', 'save.sp': 'Tür (isteğe bağlı)', 'save.unit': p => `${p.v} birimi`, 'save.btn': 'Setleri kaydet',
     'save.ok': p => `${p.n} set kaydedildi; Katsayı Kütüphanesi'nde görünür.`, 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.', 'save.unit.miss': 'Bütün birimleri yazın (birimsizse "-").',
@@ -1835,6 +1891,9 @@ const T = makeT({
     'r.eqh': 'Equations', 'r.eq': 'Equation', 'r.r2': 'R²', 'r.ssr': 'SSR', 'r.s': 'σ̂', 'r.sys': p => `System: OLS R² ${p.ols}, McElroy R² ${p.mc}; log L ${p.ll} (df ${p.df}).`,
     'r.corr': 'Residual correlation between equations', 'r.cmp': 'Method comparison', 'r.cmpnote': 'Three methods with the same system and residual covariance choice; standard errors in parentheses.',
     'r.note': 'cov(b) = (XᵀΩ̂⁻¹X)⁻¹ (Eq. 8); under OLS σ̂ per equation, or one pooled σ̂² when coefficients are shared (systemfit’s default). R² per equation (Eq. 42); McElroy R² for the system (Eq. 43); log L the multivariate normal likelihood with Σ̂ = residuals/T (df: K + 1 for OLS, K + G(G + 1)/2 for SUR).',
+    'lrt.h': 'Test of the shared coefficients (likelihood ratio)', 'lrt.sub': 'The system is fitted once more with the shared coefficients separate in every equation (e.g. a_1 and a_2 instead of a); both fits use iterated SUR with the residual covariance divided by T (maximum likelihood). LR = T(log|Σ̂_restricted| − log|Σ̂_unrestricted|), χ² distribution, degrees of freedom the number of added coefficients (Henningsen and Hamann 2007, Eq. 48). A small p says the shared-coefficient restriction does not agree with the data.', 'lrt.go': 'Run the test',
+    'r.noconv': 'Warning: the estimation reached its iteration limit and may not have fully converged (review the starting values or the model; coefficients may be standing in for one another).',
+    'lrt.res': p => `LR = ${p.L}, df = ${p.df}, p = ${p.p}. log L: restricted ${p.lr}, unrestricted ${p.lu}.`, 'lrt.bad': p => `The test could not be run: ${p.why}.`, 'lrt.names': p => `Names in the unrestricted system: ${p.n}.`,
     'ch.obs': p => `${p.e}: observed–predicted`, 'ch.xo': 'Observed', 'ch.yo': 'Predicted',
     'save.h': 'Save to the coefficient library', 'save.sub': 'Every equation is saved as its own set, with the system\'s shared coefficients and covariance; the sets carry the same system id.', 'save.cit': 'Source / description (required)', 'save.cit.ph': 'e.g. Our own felling data, 2026, n = 80', 'save.sp': 'Species (optional)', 'save.unit': p => `unit of ${p.v}`, 'save.btn': 'Save the sets',
     'save.ok': p => `${p.n} set(s) saved; they appear in the Coefficient Library.`, 'save.cit.miss': 'Fill in the source/description.', 'save.unit.miss': 'Write every unit ("-" if unitless).',
@@ -1984,7 +2043,7 @@ function compute() {
   const start = Object.fromEntries(d.sys.params.map(p => [p, String(S.starts[p] ?? '').trim() === '' ? 0 : num(S.starts[p])]));
   const run = m => Q.fitSystem(d.sys, rows, { method: m, resid: S.resid, start });
   const fits = Object.fromEntries(['OLS', 'SUR', 'ISUR'].map(m => [m, run(m)]));
-  R = { created: new Date().toISOString(), data: S.tbl.imp ? S.tbl.imp.name : '', sys: d.sys, vars: d.vars, method: S.method, resid: S.resid, fit: fits[S.method], fits,
+  R = { created: new Date().toISOString(), data: S.tbl.imp ? S.tbl.imp.name : '', sys: d.sys, vars: d.vars, rows, start, method: S.method, resid: S.resid, fit: fits[S.method], fits,
     eqs: S.eqs.map((e, i) => ({ label: eqLabel(i), y: colName(e.y), ycol: e.y, text: d.sys.eqs[i].text, vars: d.sys.eqs[i].vars, params: d.sys.eqs[i].params })) };
 }
 const rowsText = rows => { const r = rows.filter(x => x != null); return r.length > 25 ? r.slice(0, 25).join(', ') + ' …' : r.join(', '); };
@@ -1994,7 +2053,7 @@ function renderStep3() {
   let h = `<div class="card"><h2>${esc(T('m.' + R.method))}</h2>`;
   if (x.status !== 'ok') { h += `<p class="note err" id="r-bad">${esc(T('r.bad', { why: T('e.' + x.code) }))}</p></div>`; }
   else {
-    h += `<p class="small" id="r-sum">${esc(T('r.sum', { method: R.method, T: x.T, G: x.G, K: x.K, it: R.method === 'ISUR' ? x.iter : 0 }))}</p>${x.dropped.length ? `<p class="note warn small" id="r-drop">${esc(T('r.drop', { n: x.dropped.length, rows: rowsText(x.dropped.map(d => d.row)) }))}</p>` : ''}
+    h += `<p class="small" id="r-sum">${esc(T('r.sum', { method: R.method, T: x.T, G: x.G, K: x.K, it: R.method === 'ISUR' ? x.iter : 0 }))}</p>${!x.converged ? `<p class="note warn small" id="r-noconv">${T('r.noconv')}</p>` : ''}${x.dropped.length ? `<p class="note warn small" id="r-drop">${esc(T('r.drop', { n: x.dropped.length, rows: rowsText(x.dropped.map(d => d.row)) }))}</p>` : ''}
       <ul class="small">${R.eqs.map(e => `<li>${esc(e.label)}: ${esc(e.y)} = ${esc(e.text)}</li>`).join('')}</ul>
       <h3>${T('r.coef')}</h3><div class="tscroll"><table class="grid" id="coeftab"><thead><tr><th>${T('r.name')}</th><th>${T('r.eqs')}</th><th>${T('r.est')}</th><th>${T('r.se')}</th><th>${T('r.t')}</th></tr></thead><tbody>
       ${x.names.map((n, j) => `<tr><th><code>${esc(n)}</code></th><td class="small">${sys.eqs.map((e, i) => e.params.includes(n) ? i + 1 : null).filter(Boolean).join(', ')}${sys.shared.includes(n) ? ' (' + T('n.shared') + ')' : ''}</td><td class="num" data-k="b${j}">${sig(x.coef[j])}</td><td class="num">${sig(x.se[j])}</td><td class="num">${f(x.coef[j] / x.se[j], 3)}</td></tr>`).join('')}</tbody></table></div>
@@ -2004,6 +2063,7 @@ function renderStep3() {
       <p class="small">${T('r.corr')}: ${x.eq.map((_, i) => x.eq.slice(i + 1).map((__, k) => { const j = i + 1 + k; return `${i + 1}–${j + 1} ${f(x.residCov[i][j] / Math.sqrt(x.residCov[i][i] * x.residCov[j][j]), 3)}`; }).join(', ')).filter(Boolean).join(', ')}</p>
       <p class="muted small">${T('r.note')}</p>
       <div class="charts2">${x.eq.map((e, i) => `<figure class="chartbox">${scatterChart({ title: T('ch.obs', { e: `${R.eqs[i].label} (${R.eqs[i].y})` }), points: e.fitted.map((p, t) => [p + e.resid[t], p]), xLabel: T('ch.xo'), yLabel: T('ch.yo'), equal: true, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure>`).join('')}</div></div>
+      ${sys.shared.length ? `<div class="card" id="lrtcard"><h2>${T('lrt.h')}</h2><p class="muted small">${T('lrt.sub')}</p><button type="button" class="btn ghost" id="lrt-go">${T('lrt.go')}</button><div id="lrt-out"></div></div>` : ''}
       <div class="card"><h2>${T('r.cmp')}</h2><div class="tscroll"><table class="grid" id="cmptab"><thead><tr><th>${T('r.name')}</th>${['OLS', 'SUR', 'ISUR'].map(m => `<th>${m}</th>`).join('')}</tr></thead><tbody>
       ${x.names.map((n, j) => `<tr><th><code>${esc(n)}</code></th>${['OLS', 'SUR', 'ISUR'].map(m => { const g = R.fits[m]; return `<td class="num">${g.status === 'ok' ? `${sig(g.coef[j])} (${sig(g.se[j])})` : '–'}</td>`; }).join('')}</tr>`).join('')}
       <tr><th>log L</th>${['OLS', 'SUR', 'ISUR'].map(m => `<td class="num">${R.fits[m].status === 'ok' ? f(R.fits[m].logLik, 4) : '–'}</td>`).join('')}</tr></tbody></table></div><p class="muted small">${T('r.cmpnote')}</p></div>
@@ -2021,6 +2081,12 @@ function renderStep3() {
     $('sv-sp').addEventListener('change', e => { S.sp = e.target.value.trim(); save(); });
     $('sv-cit').addEventListener('change', e => { S.cit = e.target.value; save(); });
     $('sv-save').addEventListener('click', saveSets);
+    $('lrt-go') && $('lrt-go').addEventListener('click', () => {
+      const t = Q.testRestrictions(R.sys, R.vars, R.rows, R.start), out = $('lrt-out');
+      if (t.status !== 'ok') { out.innerHTML = `<p class="note err small" id="lrt-bad">${esc(T('lrt.bad', { why: T('e.' + t.code) }))}</p>`; return; }
+      out.innerHTML = `<p class="note small" id="lrt-res">${esc(T('lrt.res', { L: f(t.LR, 4), df: t.df, p: t.p == null ? '–' : t.p < 1e-4 ? '< 0.0001' : f(t.p, 4), lr: f(t.restricted.logLik, 4), lu: f(t.unrestricted.logLik, 4) }))}</p>
+        ${t.restricted.converged && t.unrestricted.converged ? '' : `<p class="note warn small">${T('r.noconv')}</p>`}<p class="muted small">${esc(T('lrt.names', { n: Object.entries(t.renamed).map(([k, v]) => `${k} → ${v.join(', ')}`).join('; ') }))}</p>`;
+    });
   }
   const name = ext => `${lang === 'tr' ? 'denklem-sistemleri' : 'equation-systems'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), obsTable(), lang));
