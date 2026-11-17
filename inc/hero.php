@@ -269,6 +269,8 @@ function hero_mixed(): string {
 function hero_eqsys(): string {
     $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $p = []; $q = [];
     for ($i = 0; $i <= 40; $i++) { $u = $i / 40; $h = 1 - exp(-3 * $u); $p[] = [$l + 4 + $u * 262, $Y - 4 - 70 * $h]; $q[] = [$l + 4 + $u * 262, $Y - 4 - 100 * pow($u, 1.6) * $h]; }
+    $r = hero_rng(20261119);
+    for ($k = 0; $k < 24; $k++) { $i = 2 + (int) floor($r() * 37); $c = $k % 2 ? $q[$i] : $p[$i]; $o .= '<circle class="hz-pt" style="--i:' . $k . '" cx="' . round($c[0], 1) . '" cy="' . round($c[1] + ($r() - .5) * 12, 1) . '" r="2.4"/>'; }
     return $o . '<path class="hz-line hz-c1" d="' . hero_path($p) . '"/><path class="hz-line hz-c2" d="' . hero_path($q) . '"/><text class="hz-unit" x="' . ($W - 8) . '" y="18" text-anchor="end">Σ̂ ⊗ I</text>';
 }
 /** Drawing and short caption of each live tool's card (keyed by the tool's page; tools index). */
