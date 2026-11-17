@@ -54,6 +54,8 @@ yazan yerlerde aşamaya geçmeden önce kaynak istenir.
 
 ### TM — Ağaç ölçümü
 
+Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi kitabı (Kershaw ve ark. 2016, van Laar ve Akça 2007 ya da Türkçe bir ölçme bilgisi kitabı) Drive'a eklendikten sonra başlanır; tanım formülleri de ondan okunup [B] işaretlenir, tanım istisnası kullanılmaz. (2) TM-01, TM-02, TM-04 ve TM-06 tek "Ağaç Ölçümü" sayfasında; TM-03 (kabuk, katsayı seti ister) ve TM-05 (halka ve burgu verisi) ayrı sayfalar. (3) TM modülünü `claude/nifty-hamilton-oi0q51` oturumu yürütür; öteki oturumlar TM'ye dokunmaz.
+
 | Kimlik | Araç | Durum | Not ve kaynak |
 |---|---|---|---|
 | TM-01 | Boy hesaplayıcı (eğim ölçer, tanjant, sinüs, eğim düzeltmesi) | planlı | Ölçme bilgisi kaynağı (ders kitabı) |
