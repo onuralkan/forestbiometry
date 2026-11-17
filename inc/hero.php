@@ -225,6 +225,12 @@ function hero_report(): string {
     return $o . '<path class="hz-axis" d="M130 100V130M170 100V130"/>';
 }
 
+/** Biomass and carbon: biomass by component per plot (stacked), with carbon beside it. */
+function hero_biomass(): string {
+    $o = hero_axes(300, 150, 22, 20);
+    foreach ([[60, 26, 12], [76, 32, 15], [52, 22, 10], [88, 38, 18]] as $k => $v) { $y = 130; foreach ($v as $j => $h) { $o .= '<rect class="hz-st' . $j . '" x="' . (40 + $k * 62) . '" y="' . ($y - $h) . '" width="34" height="' . $h . '"/>'; $y -= $h; } }
+    return $o . '<text class="hz-unit" x="' . 292 . '" y="146" text-anchor="end">Mg/ha</text>';
+}
 /** Drawing and short caption of each live tool's card (keyed by the tool's page; tools index). */
 function tool_card_data(bool $tr): array {
     return [
@@ -244,6 +250,7 @@ function tool_card_data(bool $tr): array {
         'bonitet.php' => ['hero_site', $tr ? 'Fark denklemleri, kendi katsayılarınız, bonitet sınıfları' : 'Difference equations with your coefficients, site classes'],
         'mescere-yapisi.php' => ['hero_map', $tr ? 'Çap yapısı, sıklık, mekânsal desen ve rekabet' : 'Diameter structure, density, spatial pattern, competition'],
         'govde-profili.php' => ['hero_taper', $tr ? 'Max–Burkhart ve Kozak; kullanılabilir hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking'],
+        'biyokutle-karbon.php' => ['hero_biomass', $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients'],
         'buyume-islevi.php' => ['hero_growth', $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination'],
     ];
 }

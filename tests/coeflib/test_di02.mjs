@@ -32,7 +32,7 @@ const f1 = L.filterSets(all, { q: 'GOVDE profili' });
 ok(f1.length === all.filter(s => s.tool === 'taper').length && f1.length > 0, 'search is case- and accent-insensitive and matches the tool name (gövde profili → taper sets)');
 ok(L.filterSets(all, { tool: 'growth' }).every(s => s.tool === 'growth') && L.filterSets(all, { tool: 'growth', q: 'isparta' }).length === formsFor('growth').length, 'tool filter and region search combine');
 ok(['ISPARTA', 'ısparta', 'İsparta'].every(q => L.filterSets(all, { q }).length === formsFor('growth').length), 'Turkish I/ı/İ/i are the same letter in a search');
-ok(L.filterSets(all, { q: 'abies bolu' }).length === formsFor('siteindex').length && L.filterSets(all, { q: 'abies istanbul' }).length === 0, 'all words must occur');
+ok(L.filterSets(all, { q: 'abies bolu' }).length === formsFor('siteindex').length + formsFor('biomass').length && L.filterSets(all, { q: 'abies istanbul' }).length === 0, 'all words must occur');
 ok(L.filterSets([...all, bad], { problems: true }).length === 1 && L.filterSets(all, { origin: 'fitted' }).length === 0, 'only sets with problems; origin filter');
 
 // duplicates and copies

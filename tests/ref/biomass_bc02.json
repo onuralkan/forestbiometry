@@ -1,0 +1,454 @@
+{
+ "note": "random test numbers, not species coefficients",
+ "plots": [
+  {
+   "plot_id": "P1",
+   "plot_area": 400.0
+  },
+  {
+   "plot_id": "P2",
+   "plot_area": 500.0
+  }
+ ],
+ "trees": [
+  {
+   "row": 2,
+   "plot_id": "P1",
+   "tree_id": "1",
+   "period": "2020",
+   "species": "A",
+   "dbh": 58.5,
+   "height": null,
+   "V": 0.8717
+  },
+  {
+   "row": 3,
+   "plot_id": "P1",
+   "tree_id": "2",
+   "period": "2020",
+   "species": "A",
+   "dbh": 25.9,
+   "height": 7.6,
+   "V": 2.2308
+  },
+  {
+   "row": 4,
+   "plot_id": "P1",
+   "tree_id": "3",
+   "period": "2020",
+   "species": "B",
+   "dbh": 23.3,
+   "height": 18.5,
+   "V": 0.3135
+  },
+  {
+   "row": 5,
+   "plot_id": "P1",
+   "tree_id": "4",
+   "period": "2020",
+   "species": "C",
+   "dbh": 46.2,
+   "height": 18.2,
+   "V": 0.3388
+  },
+  {
+   "row": 6,
+   "plot_id": "P1",
+   "tree_id": "5",
+   "period": "2020",
+   "species": "C",
+   "dbh": 38.5,
+   "height": 30.9,
+   "V": 1.364
+  },
+  {
+   "row": 7,
+   "plot_id": "P1",
+   "tree_id": "1",
+   "period": "2025",
+   "species": "C",
+   "dbh": 20.2,
+   "height": 27.7,
+   "V": 0.4302
+  },
+  {
+   "row": 8,
+   "plot_id": "P1",
+   "tree_id": "2",
+   "period": "2025",
+   "species": "C",
+   "dbh": 43.8,
+   "height": 23.1,
+   "V": 1.3454
+  },
+  {
+   "row": 9,
+   "plot_id": "P1",
+   "tree_id": "3",
+   "period": "2025",
+   "species": "A",
+   "dbh": 11.7,
+   "height": 8.0,
+   "V": 0.3137
+  },
+  {
+   "row": 10,
+   "plot_id": "P1",
+   "tree_id": "4",
+   "period": "2025",
+   "species": "C",
+   "dbh": 17.1,
+   "height": 9.1,
+   "V": 1.4171
+  },
+  {
+   "row": 11,
+   "plot_id": "P1",
+   "tree_id": "5",
+   "period": "2025",
+   "species": "C",
+   "dbh": 43.9,
+   "height": 13.9,
+   "V": 0.2067
+  },
+  {
+   "row": 12,
+   "plot_id": "P2",
+   "tree_id": "1",
+   "period": "2020",
+   "species": "B",
+   "dbh": 41.0,
+   "height": 9.7,
+   "V": 1.2269
+  },
+  {
+   "row": 13,
+   "plot_id": "P2",
+   "tree_id": "2",
+   "period": "2020",
+   "species": "A",
+   "dbh": 45.9,
+   "height": 16.2,
+   "V": 1.5097
+  },
+  {
+   "row": 14,
+   "plot_id": "P2",
+   "tree_id": "3",
+   "period": "2020",
+   "species": "B",
+   "dbh": 33.4,
+   "height": 14.9,
+   "V": 1.3874
+  },
+  {
+   "row": 15,
+   "plot_id": "P2",
+   "tree_id": "4",
+   "period": "2020",
+   "species": "A",
+   "dbh": 50.9,
+   "height": 15.6,
+   "V": 1.8974
+  },
+  {
+   "row": 16,
+   "plot_id": "P2",
+   "tree_id": "5",
+   "period": "2020",
+   "species": "B",
+   "dbh": 42.7,
+   "height": 17.0,
+   "V": 1.8579
+  },
+  {
+   "row": 17,
+   "plot_id": "P2",
+   "tree_id": "1",
+   "period": "2025",
+   "species": "B",
+   "dbh": 21.5,
+   "height": 27.0,
+   "V": 1.416
+  },
+  {
+   "row": 18,
+   "plot_id": "P2",
+   "tree_id": "2",
+   "period": "2025",
+   "species": "C",
+   "dbh": 16.9,
+   "height": 21.2,
+   "V": 1.2797
+  },
+  {
+   "row": 19,
+   "plot_id": "P2",
+   "tree_id": "3",
+   "period": "2025",
+   "species": "A",
+   "dbh": 23.1,
+   "height": 14.6,
+   "V": 1.8738
+  },
+  {
+   "row": 20,
+   "plot_id": "P2",
+   "tree_id": "4",
+   "period": "2025",
+   "species": "A",
+   "dbh": 17.8,
+   "height": 18.7,
+   "V": 0.7254
+  },
+  {
+   "row": 21,
+   "plot_id": "P2",
+   "tree_id": "5",
+   "period": "2025",
+   "species": "C",
+   "dbh": 10.5,
+   "height": 16.9,
+   "V": null
+  }
+ ],
+ "sets": {
+  "A.stem": {
+   "form": "pow.d",
+   "params": {
+    "a": 0.14133740640692266,
+    "b": 2.3849671140080346
+   },
+   "transform": null
+  },
+  "A.branch": {
+   "form": "log.dh",
+   "params": {
+    "a": -4.284221787042789,
+    "b": 2.1406167411747905,
+    "c": 0.6482708293248676
+   },
+   "transform": {
+    "kind": "log",
+    "correction": "snowdon",
+    "value": 1.03
+   }
+  },
+  "B.stem": {
+   "form": "pow.dh",
+   "params": {
+    "a": 0.04980677097399333,
+    "b": 1.9475376071484307,
+    "c": 0.788022418504688
+   },
+   "transform": null
+  },
+  "B.branch": {
+   "form": "pow.d",
+   "params": {
+    "a": 0.007846481816140593,
+    "b": 2.520163155295582
+   },
+   "transform": null
+  }
+ },
+ "CF": {
+  "stem": 0.5,
+  "branch": 0.48
+ },
+ "per_tree": [
+  {
+   "row": 2,
+   "stem": 2316.6783683386234,
+   "branch": null
+  },
+  {
+   "row": 3,
+   "stem": 331.8414077998983,
+   "branch": 56.04827316017208
+  },
+  {
+   "row": 4,
+   "stem": 228.46790298824857,
+   "branch": 21.909627049734713
+  },
+  {
+   "row": 5,
+   "stem": null,
+   "branch": null
+  },
+  {
+   "row": 6,
+   "stem": null,
+   "branch": null
+  },
+  {
+   "row": 7,
+   "stem": null,
+   "branch": null
+  },
+  {
+   "row": 8,
+   "stem": null,
+   "branch": null
+  },
+  {
+   "row": 9,
+   "stem": 49.87067764855133,
+   "branch": 10.574181888264947
+  },
+  {
+   "row": 10,
+   "stem": null,
+   "branch": null
+  },
+  {
+   "row": 11,
+   "stem": null,
+   "branch": null
+  },
+  {
+   "row": 12,
+   "stem": 412.8990166617287,
+   "branch": 91.02347798778808
+  },
+  {
+   "row": 13,
+   "stem": 1299.049566258962,
+   "branch": 311.6166828876896
+  },
+  {
+   "row": 14,
+   "stem": 388.4534789840814,
+   "branch": 54.29560494879655
+  },
+  {
+   "row": 15,
+   "stem": 1662.3516597401076,
+   "branch": 379.419697574285
+  },
+  {
+   "row": 16,
+   "stem": 695.3914139224619,
+   "branch": 100.83684074935901
+  },
+  {
+   "row": 17,
+   "stem": 263.15348870272305,
+   "branch": 17.89111000450907
+  },
+  {
+   "row": 18,
+   "stem": null,
+   "branch": null
+  },
+  {
+   "row": 19,
+   "stem": 252.59621922779533,
+   "branch": 66.9899983991117
+  },
+  {
+   "row": 20,
+   "stem": 135.66496333723217,
+   "branch": 45.01851310793112
+  },
+  {
+   "row": 21,
+   "stem": null,
+   "branch": null
+  }
+ ],
+ "units": [
+  {
+   "plot_id": "P1",
+   "period": "2020",
+   "n": 5,
+   "stem": null,
+   "branch": null,
+   "B": null,
+   "C": null,
+   "CO2": null
+  },
+  {
+   "plot_id": "P1",
+   "period": "2025",
+   "n": 5,
+   "stem": null,
+   "branch": null,
+   "B": null,
+   "C": null,
+   "CO2": null
+  },
+  {
+   "plot_id": "P2",
+   "period": "2020",
+   "n": 5,
+   "stem": 89.16290271134683,
+   "branch": 18.743846082958363,
+   "B": 107.90674879430522,
+   "C": 53.57849747549343,
+   "CO2": 196.45449074347593
+  },
+  {
+   "plot_id": "P2",
+   "period": "2025",
+   "n": 5,
+   "stem": null,
+   "branch": null,
+   "B": null,
+   "C": null,
+   "CO2": null
+  }
+ ],
+ "volume": {
+  "factors": {
+   "mode": "bef",
+   "bark": "ob",
+   "D": 0.52,
+   "BEF": 1.3,
+   "R": 0.24
+  },
+  "CF": 0.49,
+  "units": [
+   {
+    "plot_id": "P1",
+    "period": "2020",
+    "B": 107.2695728,
+    "C": 52.562090672000004,
+    "CO2": 192.72766579733334
+   },
+   {
+    "plot_id": "P1",
+    "period": "2025",
+    "B": 77.8117236,
+    "C": 38.127744564,
+    "CO2": 139.80173006799998
+   },
+   {
+    "plot_id": "P2",
+    "period": "2020",
+    "B": 132.09488864000002,
+    "C": 64.72649543360001,
+    "CO2": 237.33048325653337
+   },
+   {
+    "plot_id": "P2",
+    "period": "2025",
+    "B": null,
+    "C": null,
+    "CO2": null
+   }
+  ]
+ },
+ "unmapped_rows": [
+  5,
+  6,
+  7,
+  8,
+  10,
+  11,
+  18,
+  21
+ ],
+ "noheight_row": 2
+}
