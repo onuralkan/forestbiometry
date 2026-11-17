@@ -205,3 +205,5 @@ Software* 64(4), **açık**), `lmomco`, `ForestFit`; uyum testleri ve AIC `stats
   yeter), Näslund 1936 (`lmfor` [B] ile karşılandı), Assmann 1970 (üst boy tanımı; ders kitabı).
 
 **SM-03 ek kaynaklar (17 Kasım 2026, kullanıcı yükledi):** ☑ Lindstrom, M.J., Bates, D.M. 1990. *Biometrics* 46: 673–687 [B]; ☑ Raptis, D.I., Kazana, V., Kazaklis, A., Stamatiou, C. 2021. Mixed-effects height–diameter models for black pine (*Pinus nigra* Arn.) forest management. *Trees* 35: 1167–1183 (kalibrasyon [A]); ☑ Ciceu, A., Garcia-Duro, J., Seceleanu, I., Badea, O. 2020. A generalized nonlinear mixed-effects height–diameter model for Norway spruce in mixed-uneven aged stands. *For. Ecol. Manage.* 477: 118507 (kalibrasyon [A]); Bates, D., Mächler, M., Bolker, B., Walker, S. 2015. lme4. *J. Stat. Softw.* 67(1) (yüklendi; uygulamada kullanılmadı).
+
+**SM-04 (17 Kasım 2026):** ☑ Henningsen, A., Hamann, J.D. 2007. systemfit: a package for estimating systems of simultaneous equations in R. *J. Statistical Software* 23(4) (CRAN vinyeti, açık erişim; okundu, METHODS §28 [B]); sayısal referans systemfit 1.1-30 [P].

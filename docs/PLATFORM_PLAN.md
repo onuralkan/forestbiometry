@@ -144,7 +144,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | SM-01 | Boy–çap modelleri | yayında | `boy-cap.php` | sabit etkili sürüm |
 | SM-02 | Doğrusal olmayan regresyon (NLS, ağırlıklı) | yayında | `dogrusal-olmayan-regresyon.php` | SM-02/a1 (17 Kasım 2026, 1.0.0-beta.1): hazır biçimler ve serbest formül (kullanıcı kararı; `core/expr.js`), ağırlıklı NLS, aralıklar, AIC ile karşılaştırma, kütüphaneye kayıt; Parresol 2001 [B] |
 | SM-03 | Karma etkili modeller | yayında | `karma-modeller.php` | SM-03/a1 (17 Kasım 2026, 1.0.0-beta.1): doğrusal ve doğrusal olmayan karma modeller (Pinheiro ve Bates 2000, Lindstrom ve Bates 1990 [B]), ML/REML, köşegen/genel kovaryans, varPower, AIC/BIC/LRT, yeni grup kalibrasyonu [A], kütüphaneye kayıt; nlme 3.1-168 ile doğrulandı [P] |
-| SM-04 | Eşanlı ve uyumlu sistemler (SUR, toplamsal biyokütle) | planlı | – | SUR çap dağılımı meşcere modellerinde var |
+| SM-04 | Eşanlı ve uyumlu sistemler (SUR, toplamsal biyokütle) | yayında | `denklem-sistemleri.php` | SM-04/a1 (17 Kasım 2026, 1.0.0-beta.1): kullanıcının formülleriyle doğrusal ve doğrusal olmayan SUR, yinelemeli SUR, ortak katsayılarla uyumlu sistemler (Henningsen ve Hamann 2007, Parresol 2001 [B]); systemfit 1.1-30 ile doğrulandı [P]; 2SLS/3SLS kapsam dışı |
 | SM-05 | Ölüm ve sağkalım modelleri | planlı | – | |
 | SM-06 | Model değerlendirme | yayında | `model-degerlendirme.php` | Nispi Sıralama (`nispi-siralama.php`) da bu modülde, modelleri sıralamak için |
 | SM-07 | Belirsizlik nicelemesi (bootstrap, Monte Carlo, Bayesçi) | çıkarıldı (P8) | – | bootstrap çap dağılımı ve bonitette var |
@@ -197,8 +197,7 @@ aşama kabul ölçütleri sağlanmadan sonrakine geçilmez.
 17 Kasım 2026 kullanıcı kararıyla (P8) yol haritası daraltıldı. Yayında olmayan ve plandan çıkarılmayan araçlar:
 
 1. **Gövde hacmi:** SV-03, SV-04 ve SV-05 yapıldı (17 Kasım 2026); SV modülünde planlı araç kalmadı.
-2. **İstatistiksel modelleme:** SM-02 ve SM-03 yapıldı (17 Kasım 2026); SM-04 (eşanlı ve
-   uyumlu sistemler; toplamsal biyokütle alt kapsamı BC-02/a1'de yayında), SM-05 (ölüm ve sağkalım).
+2. **İstatistiksel modelleme:** SM-02, SM-03 ve SM-04 yapıldı (17 Kasım 2026); SM-05 (ölüm ve sağkalım).
 3. **Biyokütle:** BC-02/a2 yapıldı (17 Kasım 2026); BC modülünde planlı araç kalmadı.
 
 Bağımlılıklar: DI bütün modüllere girdi verir; katsayı kütüphanesi (DI-02) SV, BC, SQ'ya; SM'deki uydurma araçları
