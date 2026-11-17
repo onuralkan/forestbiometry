@@ -58,12 +58,12 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 
 | Kimlik | Araç | Durum | Not ve kaynak |
 |---|---|---|---|
-| TM-01 | Boy hesaplayıcı (eğim ölçer, tanjant, sinüs, eğim düzeltmesi) | yolda | TM-01/a1 (17 Kasım 2026): boy çekirdeği `assets/lab/tree/height.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23). Sayfa "Ağaç Ölçümü" TM-02, TM-04, TM-06 ile birlikte |
-| TM-02 | Çap ve göğüs yüzeyi (çevre ↔ çap, düzensiz gövde) | yolda | TM-02/a1 (17 Kasım 2026): `assets/lab/tree/diameter.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23) |
+| TM-01 | Boy hesaplayıcı (eğim ölçer, tanjant, sinüs, eğim düzeltmesi) | yolda | Sayfa `agac-olcumu.php` hazır, yayına alma kullanıcı kararı bekliyor. TM-01/a1 (17 Kasım 2026): boy çekirdeği `assets/lab/tree/height.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23). Sayfa "Ağaç Ölçümü" TM-02, TM-04, TM-06 ile birlikte |
+| TM-02 | Çap ve göğüs yüzeyi (çevre ↔ çap, düzensiz gövde) | yolda | Sayfa `agac-olcumu.php` hazır, yayına alma kullanıcı kararı bekliyor. TM-02/a1 (17 Kasım 2026): `assets/lab/tree/diameter.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23) |
 | TM-03 | Kabuk kalınlığı ve kabuksuz çap | planlı | Katsayılar kullanıcıdan (K1) |
 | TM-04 | Tepe tacı ölçüleri | planlı | |
 | TM-05 | Ağaç yaşı ve çap artımı (halka ve burgu verisi) | planlı | |
-| TM-06 | Biçim sayısı ve biçim bölümü | yolda | Seksiyon Hacmi biçim sayısını ve Hohenadl biçim bölümlerini (Heger 1965 [B]) zaten veriyor. TM-06/a1 (17 Kasım 2026): `assets/lab/tree/form.js`; Graves 1906 [B] bölüm XIII (METHODS §23; kitaptaki biçim üssü örneğinde aritmetik hata bulundu) |
+| TM-06 | Biçim sayısı ve biçim bölümü | yolda | Sayfa `agac-olcumu.php` hazır, yayına alma kullanıcı kararı bekliyor. Seksiyon Hacmi biçim sayısını ve Hohenadl biçim bölümlerini (Heger 1965 [B]) zaten veriyor. TM-06/a1 (17 Kasım 2026): `assets/lab/tree/form.js`; Graves 1906 [B] bölüm XIII (METHODS §23; kitaptaki biçim üssü örneğinde aritmetik hata bulundu) |
 
 ### SV — Gövde hacmi ve profili
 
