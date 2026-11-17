@@ -63,8 +63,8 @@ ikisi birlikte koşul 3'ü karşılar. "Yeni sayılır": kaynak zaten görece ye
 
 | ☐ | Kaynak | Araç | Yerine olur [A] |
 |---|---|---|---|
-| ☐ | Parresol, B.R. 1999. Assessing tree and stand biomass: a review with examples and critical comparisons. *Forest Science* 45: 573–593. | BC-01/02 | yeni sayılır |
-| ☐ | Parresol, B.R. 2001. Additivity of nonlinear biomass equations. *Canadian Journal of Forest Research* 31: 865–878. | BC-02, SM-04 | yeni sayılır |
+| ☑ | Parresol, B.R. 1999. Assessing tree and stand biomass: a review with examples and critical comparisons. *Forest Science* 45: 573–593. (17 Kasım 2026: kullanıcı yükledi, okundu; METHODS §22 BC-02/a1 [B]; Tablo 4 sayısal referans) | BC-01/02 | yeni sayılır |
+| ☐ | Parresol, B.R. 2001. Additivity of nonlinear biomass equations. *Canadian Journal of Forest Research* 31: 865–878. (17 Kasım 2026: klasörde yok; BC-02/a2 için gerekli) | BC-02, SM-04 | yeni sayılır |
 | ☐ | Somogyi, Z. ve ark. 2007. Indirect methods of large-scale forest biomass estimation. *European Journal of Forest Research* 126: 197–207. | BC-03 | yeni sayılır |
 | ☐ | Lehtonen, A. ve ark. 2004. Biomass expansion factors (BEFs)… *Forest Ecology and Management* 188: 211–224. | BC-03 | yeni sayılır |
 | ☐ | **Açık** — IPCC 2019. *2019 Refinement…*, Cilt 4, Bölüm 4. | BC-03…05 | gerekmez |
