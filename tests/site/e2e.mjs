@@ -135,17 +135,27 @@ await cpg.goto(BASE + '/hakkinda.php?lang=en');
 ok((await cpg.locator('#cite-inline').textContent()).startsWith('Alkan, O. (2026). Forest Biometrics Tools [Web application].'), 'About: platform citation shown');
 await cp.close();
 
-// user guide: both languages, every section, linked from the menu and from each tool's header
+// user guide: start page with task cards and a section tree; one page per section in both languages; old #links
 for (const l of ['tr', 'en']) {
   await page.goto(BASE + '/kilavuz.php?lang=' + l);
-  const ids = await page.evaluate(() => [...document.querySelectorAll('.guide-sec h2[id]')].map(h => h.id)), toc = await page.locator('.guide-toc a').count();
-  ok(ids.join() === ['genel', 'is-akisi', ...TOOL_IDS].join() && toc === ids.length, `guide (${l}): general, workflow and one section per tool in site_tools() order, with a table of contents: ` + ids);
+  const nav = await page.$$eval('.guide-toc .guide-grp a', as => as.map(a => new URL(a.href).searchParams.get('k')));
+  ok(nav.length === TOOL_IDS.length + 2 && nav[0] === 'genel' && nav[1] === 'is-akisi' && TOOL_IDS.every(id => nav.includes(id)), `guide (${l}): the section tree holds general, workflow and every tool: ` + nav);
+  const cardLinks = await page.$$eval('.gcards a', as => as.map(a => new URL(a.href).searchParams.get('k')));
+  ok(await page.locator('.gcard').count() >= 5 && TOOL_IDS.every(id => cardLinks.includes(id)), `guide (${l}): task cards on the start page reach every tool`);
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `guide (${l}): no horizontal scroll`);
+  for (const id of ['genel', ...TOOL_IDS]) {
+    const r = await page.request.get(`${BASE}/kilavuz.php?k=${id}&lang=${l}`), t = await r.text();
+    ok(r.status() === 200 && t.includes(`<h2 id="${id}"`) && (t.match(/class="card guide-sec"/g) || []).length === 1 && t.includes(`rel="canonical" href="https://forestbiometry.online/kilavuz.php?k=${id}&amp;lang=${l}"`), `guide (${l}): page of ${id} holds only its section, with its own canonical address`);
+  }
 }
+await page.goto(BASE + '/kilavuz.php?k=nope&lang=tr'); ok(await page.locator('#guide-unknown').count() === 1 && await page.locator('.gcard').count() >= 5, 'unknown section: a note and the start page');
+await page.goto(BASE + '/kilavuz.php?lang=tr'); await page.fill('#guide-find', 'GOVDE'); ok(await page.locator('.guide-toc li:not([hidden]) a').count() >= 1 && (await page.locator('.guide-toc li:not([hidden]) a').allTextContents()).every(t => /gövde/i.test(t)), 'section search ignores case and Turkish letters');
 ok((await page.locator('.b-nav a[href="kilavuz.php"]').count()) === 1 && (await page.locator('.b-side-foot a[href="kilavuz.php"]').count()) === 1, 'guide in the top menu and the sidebar');
-await page.goto(BASE + '/boy-cap.php?lang=tr'); await page.click('.b-head .b-guide'); await page.waitForURL(/kilavuz\.php#boy-cap$/);
-ok(Math.abs(await page.evaluate(() => document.getElementById('boy-cap').getBoundingClientRect().top)) < 120, 'tool header link opens the tool\'s section of the guide');
-await page.goto(BASE + '/kilavuz.php?lang=tr'); await page.click('.guide-sec a.guide-open[href="ornekleme.php"]'); ok(page.url().includes('/ornekleme.php'), 'the guide links back to each tool');
+await page.goto(BASE + '/boy-cap.php?lang=tr'); await page.click('.b-head .b-guide'); await page.waitForURL(/kilavuz\.php\?k=boy-cap$/);
+ok(await page.locator('h2#boy-cap').count() === 1 && await page.locator('.guide-toc a[aria-current="page"]').getAttribute('href') === 'kilavuz.php?k=boy-cap', 'tool header link opens the tool\'s guide page, marked in the tree');
+await page.goto(BASE + '/kilavuz.php?lang=tr#ornekleme'); await page.waitForURL(/k=ornekleme/); ok(await page.locator('h2#ornekleme').count() === 1, 'an old link kilavuz.php#id is sent on to its page');
+await page.click('.guide-sec a.guide-open[href="ornekleme.php"]'); ok(page.url().includes('/ornekleme.php'), 'the guide links back to each tool');
+await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide-pager a[rel="next"]'); await page.waitForURL(/k=is-akisi/); ok(true, 'next-section link');
 
 // module loading: every script and style of every page carries a version tag (import map from inc/site.php), so that
 // versioned files can be cached for long; a module missing from the graph would be requested without a tag

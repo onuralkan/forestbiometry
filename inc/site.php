@@ -168,10 +168,10 @@ function site_top(array $o = []): void {
 <title><?= h($pageTitle) ?></title>
 <meta name="description" content="<?= h($o['desc'] ?? '') ?>">
 <?php if (!empty($o['robots'])): ?><meta name="robots" content="<?= h($o['robots']) ?>">
-<?php else: $pg = $here === 'index.php' ? '' : $here; ?><link rel="canonical" href="<?= h(SITE_BASE . $pg . '?lang=' . $c['L']) ?>">
-<link rel="alternate" hreflang="tr" href="<?= h(SITE_BASE . $pg . '?lang=tr') ?>">
-<link rel="alternate" hreflang="en" href="<?= h(SITE_BASE . $pg . '?lang=en') ?>">
-<link rel="alternate" hreflang="x-default" href="<?= h(SITE_BASE . $pg) ?>">
+<?php else: $pg = ($here === 'index.php' ? '' : $here) . '?' . (!empty($o['query']) ? $o['query'] . '&' : ''); /* 'query': page-defining parameters (e.g. the guide's k=…) */ ?><link rel="canonical" href="<?= h(SITE_BASE . $pg . 'lang=' . $c['L']) ?>">
+<link rel="alternate" hreflang="tr" href="<?= h(SITE_BASE . $pg . 'lang=tr') ?>">
+<link rel="alternate" hreflang="en" href="<?= h(SITE_BASE . $pg . 'lang=en') ?>">
+<link rel="alternate" hreflang="x-default" href="<?= h(SITE_BASE . rtrim(rtrim($pg, '?'), '&')) ?>">
 <?php endif; ?><meta name="author" content="<?= h(SITE_AUTHOR['name']) ?>">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
@@ -231,7 +231,7 @@ function site_top(array $o = []): void {
   <header class="b-head<?= $cur ? ' has-ico' : '' ?>">
     <?php if ($cur): ?><span class="b-headico" aria-hidden="true"><?= site_icon($cur['icon']) ?></span><?php endif; ?>
     <div>
-    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?php if ($cur): $ids = array_column(array_filter(site_catalog(), function ($c) use ($cur) { return $c['page'] === $cur['file']; }), 'id'); $mt = array_column(site_modules(), 'title', 'id'); if ($ids): ?><span class="b-ids" title="<?= $c['tr'] ? 'Araç kimlikleri (docs/PLATFORM_PLAN.md)' : 'Tool ids (docs/PLATFORM_PLAN.md)' ?>"><?= h(implode(' · ', $ids)) ?></span> · <?php endif; ?><?= h($mt[$cur['cat']] ?? '') ?> · <?php endif; ?><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= $c['tr'] ? 'sürüm' : 'version' ?> <?= h($cur['v']) ?></span> · <a class="b-guide" href="kilavuz.php#<?= h(basename($cur['file'], '.php')) ?>"><?= $c['tr'] ? 'Kılavuz' : 'Guide' ?></a><?php endif; ?></p><?php endif; ?>
+    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?php if ($cur): $ids = array_column(array_filter(site_catalog(), function ($c) use ($cur) { return $c['page'] === $cur['file']; }), 'id'); $mt = array_column(site_modules(), 'title', 'id'); if ($ids): ?><span class="b-ids" title="<?= $c['tr'] ? 'Araç kimlikleri (docs/PLATFORM_PLAN.md)' : 'Tool ids (docs/PLATFORM_PLAN.md)' ?>"><?= h(implode(' · ', $ids)) ?></span> · <?php endif; ?><?= h($mt[$cur['cat']] ?? '') ?> · <?php endif; ?><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= $c['tr'] ? 'sürüm' : 'version' ?> <?= h($cur['v']) ?></span> · <a class="b-guide" href="kilavuz.php?k=<?= h(basename($cur['file'], '.php')) ?>"><?= $c['tr'] ? 'Kılavuz' : 'Guide' ?></a><?php endif; ?></p><?php endif; ?>
     <h1><?= h($o['title'] ?? $c['site']) ?></h1>
     <?php if (!empty($o['lede'])): ?><p class="b-lede"><?= h($o['lede']) ?></p><?php endif; ?>
     </div>

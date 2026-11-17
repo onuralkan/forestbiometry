@@ -1,9 +1,11 @@
-// User guide (kilavuz.php, inc/guide/{tr,en}.php): structure and agreement with the tools.
+// User guide (kilavuz.php, inc/guide/{tr,en}/<id>.php): structure and agreement with the tools.
 //   node tests/site/test_guide.mjs
-// Every tool has a section in both languages (same ids, same order, same number of subsections); interface labels the
-// guide names (buttons, tabs, options) are present in the tools' own interface strings, so a renamed label breaks the
-// test instead of leaving the guide wrong; the DOI is the site's.
-import { readFile } from 'node:fs/promises';
+// One file per section and language; the sections in kilavuz.php's order (general, workflow, then site_tools()) are read
+// and joined, so the checks below see the whole guide. Every tool has a section in both languages (same ids, same
+// number of subsections); every section opens and closes once; interface labels the guide names (buttons, tabs,
+// options) are present in the tools' own interface strings, so a renamed label breaks the test instead of leaving the
+// guide wrong; the DOI is the site's; every tool is on at least one task card of the start page.
+import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -11,18 +13,31 @@ const rd = f => readFile(path.join(root, f), 'utf8');
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 
-const G = { tr: await rd('inc/guide/tr.php'), en: await rd('inc/guide/en.php') }, site = await rd('inc/site.php');
-const ids = s => [...s.matchAll(/\$sec\('([a-z-]+)'/g)].map(m => m[1]);
+const site = await rd('inc/site.php');
 const tools = [...site.matchAll(/'file' => '([a-z-]+)\.php', 'v' =>/g)].map(m => m[1]);
 ok(tools.length >= 7 && tools.length === (site.match(/'file' => '[a-z0-9-]+\.php'/g) || []).length, `tools read from site_tools(): ${tools.length}`);
-ok(ids(G.tr).join() === ids(G.en).join(), 'same sections in the same order in both languages: ' + ids(G.tr));
-ok(['genel', 'is-akisi', ...tools].every(id => ids(G.tr).includes(id)), 'a section for the general part, the workflow and every tool');
-for (const [k, g] of Object.entries(G)) { const parts = g.split('<section ').slice(1); ok(parts.every(x => (x.match(/<\/section>/g) || []).length === 1), `${k}: every section closes before the next one opens (sections are not nested)`); }
+const order = ['genel', 'is-akisi', ...tools];
+const files = { tr: (await readdir(path.join(root, 'inc/guide/tr'))).sort(), en: (await readdir(path.join(root, 'inc/guide/en'))).sort() };
+ok(files.tr.join() === files.en.join(), 'the same section files in both languages');
+ok(order.every(id => files.tr.includes(id + '.php')) && files.tr.every(f => order.includes(f.replace(/\.php$/, ''))), 'a file for the general part, the workflow and every tool, and no other: ' + files.tr.filter(f => !order.includes(f.replace(/\.php$/, ''))));
+const G = { tr: '', en: '' };
+for (const l of ['tr', 'en']) for (const id of order) {
+  if (!files[l].includes(id + '.php')) continue;
+  const t = await rd(`inc/guide/${l}/${id}.php`);
+  ok(t.startsWith('<section class="card guide-sec">\n<?= $sec(\'' + id + "'") && t.trimEnd().endsWith('</section>'), `${l}/${id}.php: one section whose heading id is the file name`);
+  G[l] += t + '\n';
+}
+const ids = s => [...s.matchAll(/\$sec\('([a-z-]+)'/g)].map(m => m[1]);
+ok(ids(G.tr).join() === ids(G.en).join() && ids(G.tr).join() === order.join(), 'same sections in the same order in both languages: ' + ids(G.tr));
 const subs = s => s.split(/<section /).slice(1).map(x => (x.match(/<h3>/g) || []).length);
+for (const [k, g] of Object.entries(G)) { const parts = g.split('<section ').slice(1); ok(parts.every(x => (x.match(/<\/section>/g) || []).length === 1), `${k}: every section closes before the next one opens (sections are not nested)`); }
 ok(subs(G.tr).join() === subs(G.en).join(), 'same number of subsections per section: ' + subs(G.tr) + ' / ' + subs(G.en));
 const doi = (site.match(/const SITE_DOI = '([^']+)'/) || [])[1];
 ok(doi && G.tr.includes(doi) && G.en.includes(doi), 'the DOI in the guide is the site\'s');
-ok(/href="kilavuz\.php#<\?= h\(basename\(\$cur\['file'\], '\.php'\)\) \?>"/.test(site), 'every tool header links to its own section');
+ok(/href="kilavuz\.php\?k=<\?= h\(basename\(\$cur\['file'\], '\.php'\)\) \?>"/.test(site), 'every tool header links to its own guide page');
+const cards = await rd('inc/guide/cards.php'), onCards = new Set([...cards.matchAll(/'ids' => \[([^\]]*)\]/g)].flatMap(m => [...m[1].matchAll(/'([a-z-]+)'/g)].map(x => x[1])));
+ok(tools.every(t => onCards.has(t)), 'every tool is on at least one task card: missing ' + tools.filter(t => !onCards.has(t)));
+ok([...onCards].every(id => order.includes(id)), 'task cards name only guide sections that exist');
 
 // labels named in the guide must exist in the tool's interface strings (TR guide ↔ TR strings, EN ↔ EN)
 const L = {
