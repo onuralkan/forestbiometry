@@ -111,6 +111,16 @@ Veri Denetçisi'nde onaylanan veri, tarayıcının IndexedDB deposunda (`forestb
 ```
 Boş örnek alanlar `plots` içinde `n_records: 0` ile yer alır. İsteğe bağlı ağaç alanı `age` (yıl; Veri Denetçisi eşler (12 Kasım 2026); Örnek Alan ve Meşcere aracının doğrudan tablo yüklemesi de doldurur). İsteğe bağlı ağaç alanı `height_source: 'measured'|'estimated'` (yoksa ölçülmüş sayılır); tüketen araçlar tahmini boyları ayrı tutar. Modül 5'in ilk sürümü tahminleri yalnızca dışa aktarmada ayrı sütuna yazar; onaylanmış veri paketine yazma (yeni sürüm numarasıyla) henüz yok. Onay ancak **hata sayısı 0** iken verilir; açık uyarılar `warnings` içinde kalır. Şema değişirse sürüm numarası artar (`forest-dataset/2`) ve okuyucu araçlar eski sürümü reddeder veya çevirir.
 
+**Türetilen değerlerin araçlar arası aktarımı (`forest-derived/1`; BC03, 17 Kasım 2026, kullanıcı kararı: ayrı kayıt, paket değişmez):** bir aracın onaylı paket için hesapladığı ağaç değerleri paketin içine yazılmaz (paketin parmak izi ve DI-03 kuralı korunur); tarayıcı deposunda **`derived:<tür>:<paket SHA-256>`** anahtarında ayrı bir kayıt olarak tutulur. `forest-dataset/1` değişmedi; bu kaydı tanımayan araçlar etkilenmez. İlk tür `stem-volume` (Seksiyon Hacmi yazar, Biyokütle ve Karbon okur):
+```
+{ schema: 'forest-derived/1', kind: 'stem-volume', created, tool: {id, version},
+  dataset: {schema: 'forest-dataset/1', sha256, trees}, units: {volume: 'm3'},
+  settings: {method, layout, top, includeStump, dTop, combine, barkDefault, thresholds},
+  trees: [{row, plot_id, tree_id, period, status, v_ob, v_ib, label}],
+  unmatched: [{plot_id, tree_id, period}], ambiguous: [{plot_id, tree_id, period, rows}] }
+```
+Okuyucu (`core/derived.js` `readDerived`) sürüm tablosundaki her sürümü güncel biçime çevirir, bilinmeyen sürümü reddeder; parmak izi kullanılan paketinkiyle aynı değilse kayıt kullanılmaz. Biçim değişirse `forest-derived/2` ve okuyucuya çevirici eklenir.
+
 **Envanter Verisi Yöneticisi (DI-03, 16 Kasım 2026, kullanıcı kararı: çoklu paket + etkin paket, yalnızca üst bilgi düzenlenir):** onaylanan her paket ayrıca `project:<id>` anahtarında proje olarak tutulur: `{ schema: 'forest-project/1', id, name, description, location, year, notes, origin: 'checker'|'import'|'legacy'|'copy', added, modified, sha256 (paketin kanonik SHA-256'sı, METHODS §20), dataset }`; `project:active` etkin projenin kimliğidir ve **etkin paket `dataset:approved`'a yazılır**, böylece araçlar değişmeden etkin paketi okur. Veri Denetçisi onayda `registerApproved()` çağırır (aynı parmak izli paket ikinci kez eklenmez); DI-03 öncesi `dataset:approved` yöneticinin ilk açılışında "önceki onay" olarak benimsenir. Paket içeriği yöneticide değiştirilmez (düzeltme Denetçi'de, günlükle). Yedek: `{ schema: 'forest-project-library/1', created, projects }`. Araçlar dizinindeki "Etkinliği kaldır" yalnızca `project:active` ve `dataset:approved`'ı siler. Kod: `assets/lab/core/projects.js`, sayfa `veri-yoneticisi.php` (`assets/lab/projects/`).
 
 Oturum (`session:veri-denetcisi`) aynı depoda tutulur; dil değiştirmek sayfayı yeniden yükler ve oturum geri gelir.
