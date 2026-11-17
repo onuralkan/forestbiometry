@@ -59,6 +59,7 @@ jobs:
           node tests/tree/test_tm02_06.mjs
           node tests/tree/test_tm05.mjs
           node tests/tree/test_tm03.mjs
+          node tests/tree/test_tm04.mjs
           node tests/coeflib/test_di02.mjs
           node tests/record/test_di07.mjs
           node tests/projects/test_di03.mjs

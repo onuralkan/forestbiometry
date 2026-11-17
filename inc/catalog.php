@@ -39,7 +39,7 @@ function site_catalog(): array {
         ['TM-01', 'live', 'Boy hesaplayıcı', 'Height calculator', 'agac-olcumu.php'],
         ['TM-02', 'live', 'Çap ve göğüs yüzeyi', 'DBH and basal area', 'agac-olcumu.php'],
         ['TM-03', 'live', 'Kabuk kalınlığı ve kabuksuz çap', 'Bark thickness and under-bark diameter', 'agac-olcumu.php'],
-        ['TM-04', 'planned', 'Tepe tacı ölçüleri', 'Crown metrics'],
+        ['TM-04', 'live', 'Tepe tacı ölçüleri', 'Crown metrics', 'agac-olcumu.php'],
         ['TM-05', 'live', 'Ağaç yaşı ve çap artımı', 'Tree age and radial increment', 'agac-olcumu.php'],
         ['TM-06', 'live', 'Biçim sayısı ve biçim bölümü', 'Form factor and form quotient', 'agac-olcumu.php'],
         ['SV-01', 'live', 'Seksiyon hacmi', 'Sectional volume', 'seksiyon-hacmi.php'],

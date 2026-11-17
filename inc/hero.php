@@ -257,7 +257,7 @@ function tool_card_data(bool $tr): array {
         'govde-profili.php' => ['hero_taper', $tr ? 'Max–Burkhart ve Kozak; kullanılabilir hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking'],
         'biyokutle-karbon.php' => ['hero_biomass', $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients'],
         'buyume-islevi.php' => ['hero_growth', $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination'],
-        'agac-olcumu.php' => ['hero_tree', $tr ? 'Eğim ölçerle boy, çap ve göğüs yüzeyi, kabuk, biçim sayısı' : 'Height with a clinometer, diameter and basal area, bark, form factor'],
+        'agac-olcumu.php' => ['hero_tree', $tr ? 'Eğim ölçerle boy, çap ve göğüs yüzeyi, kabuk, tepe, biçim sayısı' : 'Height with a clinometer, diameter and basal area, bark, crown, form factor'],
     ];
 }
 /** One tool card of the tools index: icon, short name, drawing, short caption; the full description as a tooltip. */

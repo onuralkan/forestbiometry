@@ -1,11 +1,12 @@
-// Tree measurement page (agac-olcumu.php; TM-01 height, TM-02 diameter and basal area, TM-03 bark, TM-05 age and
-// increment, TM-06 form factors). All arithmetic lives in height.js, diameter.js, bark.js, form.js and age.js; results
-// update as the fields change.
+// Tree measurement page (agac-olcumu.php; TM-01 height, TM-02 diameter and basal area, TM-03 bark, TM-04 crown, TM-05
+// age and increment, TM-06 form factors). All arithmetic lives in height.js, diameter.js, bark.js, crown.js, form.js and
+// age.js; results update as the fields change.
 import * as Ht from './height.js';
 import * as Dm from './diameter.js';
 import * as Fm from './form.js';
 import * as Ag from './age.js';
 import * as Bk from './bark.js';
+import * as Cr from './crown.js';
 import { listCoefs } from '../core/coef.js';
 import { mountCoefEditor } from '../core/coef-ui.js';
 import { TOOL } from './calc.js';
@@ -34,6 +35,7 @@ function blank() {
     d: { mean: 'arithmetic', round: 'none', rows: [{ kind: 'diameter', value: '', unit: 'cm' }], imp: null, src: null, col: null, ncol: null, kind: 'diameter', unit: 'cm', decimal: null, decimalChosen: false },
     f: { V: '', d: '', H: '', kind: 'breast', d1: '', x1: '', d2: '', x2: '', exH: '', dMid: '', D: '', c: '' },
     b: { mode: 'gauge', dob: '', dub: '', cob: '', cub: '', reads: '', L: '', pairs: [{ dob: '', dub: '' }, { dob: '', dub: '' }, { dob: '', dub: '' }], method: 'k', k: '', setId: '', one: '' },
+    c: { mode: 'radii', radii: '', d1: '', d2: '', H: '', base: '', dbh: '', widths: '', plot: '' },
     a: { rings: '', toH: '', ringsOut: '', coreAge: '', gD: '', gMai: '', cD: '', cBark: '', cToBh: '', cPith: true, cW: '', cN: '10', groups: [{ a: '', n: '', b: '', v: '' }], gNow: '', gThen: '', gYears: '', mTotal: '', mAge: '' } };
 }
 let saveT = null;
@@ -330,18 +332,56 @@ function coefBox() {
   mountCoefEditor(box, { tool: 'bark', onChange: list => { const changed = list.length !== barkSets.length || list.some((s, i) => !barkSets[i] || barkSets[i].id !== s.id || barkSets[i].modified !== s.modified); barkSets = list; if (changed) render(); } }).refresh();
 }
 
+/* ---------------- crown (TM-04) ---------------- */
+const ctext = q => T('cp.' + q.code, q);
+function crownResults() {
+  const C = S.c, any = ks => ks.some(k => String(C[k]).trim() !== '');
+  const proj = C.mode === 'radii' ? (any(['radii']) ? Cr.crownFromRadii(widthsOf(C.radii)) : null) : (any(['d1', 'd2']) ? Cr.crownFromDiameters(nv(C.d1), nv(C.d2)) : null);
+  const W = proj && proj.status === 'ok' ? proj.width : null;
+  const len = any(['H', 'base']) ? Cr.crownLength({ H: nv(C.H), base: nv(C.base), dbh: num(C.dbh), width: W }) : null;
+  const solids = W != null && len && len.status === 'ok' ? Cr.SHAPES.map(sh => Cr.crownSolid(sh, W, len.L)) : null;
+  const cover = any(['widths', 'plot']) ? Cr.crownCover(widthsOf(C.widths), nv(C.plot)) : null;
+  return { proj, W, len, solids, cover };
+}
+function crownHTML() {
+  const C = S.c, R = crownResults(), inp = (k, size = 7) => `<label>${T('c.' + k)} <input type="text" inputmode="decimal" size="${size}" id="c-${k}" value="${esc(C[k])}"></label>`;
+  const err = r => `<p class="note err small">${esc(r.problems.map(ctext).join('; '))}</p>`;
+  let x = `<div class="card"><h2>${T('c.proj.h')}</h2><div class="radios col"><span class="small"><b>${T('c.mode')}</b></span>${['radii', 'diam'].map(m => `<label><input type="radio" name="c-mode" value="${m}"${C.mode === m ? ' checked' : ''}> ${T('c.mode.' + m)}</label>`).join('')}</div>`;
+  x += C.mode === 'radii' ? `<label class="field"><span>${T('c.radii')}</span><textarea id="c-radii" rows="2" spellcheck="false">${esc(C.radii)}</textarea></label>` : `<div class="lims">${inp('d1')}${inp('d2')}</div>`;
+  const P = R.proj;
+  if (P) x += P.status !== 'ok' ? `<div id="cres">${err(P)}</div>` : C.mode === 'radii'
+    ? `<div id="cres"><p><b>${esc(T('c.res.radii', { n: P.n, r: f(P.rMean, 3), w: f(P.width, 3), rq: f(P.rq, 3), a: f(P.area, 3), min: f(P.min, 2), max: f(P.max, 2) }))}</b></p>${P.warnings.length ? `<p class="note warn small">${esc(T('cw.radii.few', P.warnings[0]))}</p>` : ''}</div>`
+    : `<div id="cres"><p><b>${esc(T('c.res.diam', { w: f(P.width, 3), ac: f(P.areaCircle, 3), ae: f(P.areaEllipse, 3) }))}</b></p></div>`;
+  x += `<p class="muted small">${T('c.proj.note')}</p></div>`;
+  x += `<div class="card"><h2>${T('c.len.h')}</h2><div class="lims">${inp('H')}${inp('base')}${inp('dbh')}</div>`;
+  if (R.len) x += R.len.status === 'ok' ? `<p id="clen"><b>${esc(T('c.res.len', { L: f(R.len.L, 2), cr: f(R.len.ratio, 1) }))}</b>${R.len.cwd != null ? ` ${esc(T('c.res.cwd', { q: f(R.len.cwd, 2) }))}` : ''}</p>` : `<div id="clen">${err(R.len)}</div>`;
+  x += `<p class="muted small">${T('c.len.note')}</p></div>`;
+  x += `<div class="card"><h2>${T('c.sol.h')}</h2><p class="muted small">${T('c.sol.sub')}</p>`;
+  if (R.solids) x += `<div class="tscroll"><table class="grid" id="csol"><thead><tr><th>${T('c.sol.shape')}</th><th>${T('c.sol.S')}</th><th>${T('c.sol.V')}</th></tr></thead><tbody>${R.solids.map(q => `<tr><td>${T('c.shape.' + q.shape)}</td><td class="num">${f(q.S, 3)}</td><td class="num">${f(q.V, 3)}</td></tr>`).join('')}</tbody></table></div>`;
+  else x += `<p class="note small" id="csol">${T('c.sol.need')}</p>`;
+  x += `<p class="muted small">${T('c.sol.note')}</p></div>`;
+  x += `<div class="card"><h2>${T('c.cov.h')}</h2><p class="muted small">${T('c.cov.sub')}</p><label class="field"><span>${T('c.widths')}</span><textarea id="c-widths" rows="2" spellcheck="false">${esc(C.widths)}</textarea></label><div class="lims">${inp('plot')}</div>`;
+  if (R.cover) x += R.cover.status === 'ok' ? `<p id="ccov"><b>${esc(T('c.res.cov', { n: R.cover.n, t: f(R.cover.total, 2), c: f(R.cover.cover, 3), ha: f(R.cover.perHa, 0) }))}</b></p>${R.cover.bad.length ? `<p class="note warn small">${esc(T('cw.bad', { rows: R.cover.bad.join(', ') }))}</p>` : ''}${R.cover.warnings.length ? `<p class="note small">${T('cw.cover.overlap')}</p>` : ''}` : `<div id="ccov">${err(R.cover)}</div>`;
+  return x + `</div>`;
+}
+function bindCrown() {
+  const C = S.c;
+  document.querySelectorAll('input[name="c-mode"]').forEach(x => x.addEventListener('change', () => { C.mode = x.value; re(); }));
+  for (const k of ['radii', 'd1', 'd2', 'H', 'base', 'dbh', 'widths', 'plot']) { const el = $('c-' + k); if (el) el.addEventListener('change', e => { C[k] = e.target.value; re(); }); }
+}
+
 /* ---------------- page ---------------- */
 function re() { save(); render(); }
 function render() {
-  const tabs = ['h', 'd', 'b', 'f', 'a'];
+  const tabs = ['h', 'd', 'b', 'c', 'f', 'a'];
   let x = `<div class="tabs" role="tablist" aria-label="${esc(T('tab.label'))}">${tabs.map(t => `<button type="button" role="tab" id="tab-${t}" aria-selected="${S.tab === t}" aria-controls="panel">${T('tab.' + t)}</button>`).join('')}</div><div id="panel" role="tabpanel" aria-labelledby="tab-${S.tab}">`;
-  x += S.tab === 'h' ? heightHTML() : S.tab === 'd' ? diameterHTML() : S.tab === 'b' ? barkHTML() : S.tab === 'f' ? formHTML() : ageHTML();
+  x += S.tab === 'h' ? heightHTML() : S.tab === 'd' ? diameterHTML() : S.tab === 'b' ? barkHTML() : S.tab === 'c' ? crownHTML() : S.tab === 'f' ? formHTML() : ageHTML();
   x += `</div>`;
   $('app').innerHTML = x;
   $('foot').innerHTML = `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.excel')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}
     <button type="button" class="btn ghost" id="reset">${T('reset')}</button></div><p class="muted small">${esc(T('src'))}</p></div>`;
   tabs.forEach(t => $('tab-' + t).addEventListener('click', () => { S.tab = t; re(); }));
-  ({ h: bindHeight, d: bindDiameter, b: bindBark, f: bindForm, a: bindAge })[S.tab]();
+  ({ h: bindHeight, d: bindDiameter, b: bindBark, c: bindCrown, f: bindForm, a: bindAge })[S.tab]();
   coefBox();
   $('reset').addEventListener('click', async () => { S = blank(); status(''); await del(KEY); render(); });
   $('x-json').addEventListener('click', () => downloadRecord(fname('json'), payload(), TOOL, S.d.imp && S.d.src ? [['tree-list', S.d.imp]] : [], m => status(m, 'err')));
@@ -361,6 +401,7 @@ function payload() {
     bark: (() => { const P = barkPoint(), F = barkFit(), A = barkApplied(), m = A.m;
       return { inputs: S.b, point: strip(P), sample: F, method: m.kind ? (m.kind === 'set' ? { kind: 'set', set: m.set } : m) : null,
         one: strip(A.one), list: A.list ? { N: A.list.N, Gob: A.list.Gob, Gub: A.list.Gub, Gbark: A.list.Gbark, pct: A.list.pct, skippedRows: A.list.skipped } : null }; })(),
+    crown: (() => { const R = crownResults(); return { inputs: S.c, projection: strip(R.proj), length: strip(R.len), solids: R.solids, cover: strip(R.cover) }; })(),
     sources: [T('src')] };
 }
 async function excel() {
@@ -380,6 +421,13 @@ async function excel() {
     if (A.list) rows.push([], ['N', A.list.N], ['G_ob_m2', A.list.Gob], ['G_ub_m2', A.list.Gub], ['bark_area_m2', A.list.Gbark], ['bark_percent_of_G', A.list.pct], [], ['row', 'n', 'd_ob_cm', 'd_ub_cm', 'bark_single_mm', 'status', 'notes'],
       ...A.list.rows.map(r => [r.row, r.n, r.dob ?? null, r.status === 'ok' ? r.dub : null, r.status === 'ok' ? r.B1 : null, r.status, [...r.problems.map(btext), ...r.warnings.map(bwtext)].join('; ') || null]));
     sheets.push({ name: T('x.b'), rows }); }
+  { const R = crownResults(), ok2 = r => r && r.status === 'ok', P = R.proj;
+    const rows = [['quantity', 'value'], ['mode', S.c.mode], ['radii_m', S.c.mode === 'radii' ? S.c.radii : null], ['n_radii', ok2(P) && S.c.mode === 'radii' ? P.n : null], ['mean_radius_m', ok2(P) && S.c.mode === 'radii' ? P.rMean : null], ['quadratic_mean_radius_m', ok2(P) && S.c.mode === 'radii' ? P.rq : null],
+      ['diameter_1_m', num(S.c.d1)], ['diameter_2_m', num(S.c.d2)], ['crown_width_m', R.W], ['crown_area_m2', ok2(P) ? (S.c.mode === 'radii' ? P.area : P.areaCircle) : null], ['crown_area_ellipse_m2', ok2(P) && S.c.mode !== 'radii' ? P.areaEllipse : null], [],
+      ['H_m', num(S.c.H)], ['crown_base_m', num(S.c.base)], ['crown_length_m', ok2(R.len) ? R.len.L : null], ['crown_ratio_percent', ok2(R.len) ? R.len.ratio : null], ['dbh_cm', num(S.c.dbh)], ['crown_diameter_per_dbh', ok2(R.len) ? R.len.cwd : null], [],
+      ['shape', 'lateral_surface_m2', 'volume_m3'], ...(R.solids || []).map(q => [q.shape, q.S, q.V]), [],
+      ['plot_area_m2', num(S.c.plot)], ['crown_widths_m', S.c.widths || null], ['trees', ok2(R.cover) ? R.cover.n : null], ['crown_area_total_m2', ok2(R.cover) ? R.cover.total : null], ['crown_cover_ha_per_ha', ok2(R.cover) ? R.cover.cover : null], ['crown_cover_m2_per_ha', ok2(R.cover) ? R.cover.perHa : null]];
+    sheets.push({ name: T('x.c'), rows }); }
   sheets.push({ name: T('x.f'), rows: [['quantity', 'value'], ['V_m3', num(S.f.V)], ['d_cm', num(S.f.d)], ['H_m', num(S.f.H)], ['kind', S.f.kind], ['F', R.ff && R.ff.status === 'ok' ? R.ff.F : null], ['form_height_m', R.ff && R.ff.status === 'ok' ? R.ff.formHeight : null],
     ['d1', num(S.f.d1)], ['x1_m', num(S.f.x1)], ['d2', num(S.f.d2)], ['x2_m', num(S.f.x2)], ['r', R.ex && R.ex.status === 'ok' ? R.ex.r : null], ['F_absolute_from_r', R.ex && R.ex.status === 'ok' ? R.ex.absoluteF : null], ['F_breast_from_r', P.form.breastFromExponent],
     ['d_mid_cm', num(S.f.dMid)], ['D_cm', num(S.f.D)], ['q', R.q && R.q.status === 'ok' ? R.q.q : null], ['c', num(S.f.c)], ['F_q_minus_c', R.q && R.q.status === 'ok' ? R.q.F : null]] });
@@ -399,7 +447,7 @@ async function excel() {
     const saved = await get(KEY);
     if (saved && saved.v === 1) {
       const b = blank();
-      S = { ...b, ...saved, h: { ...b.h, ...(saved.h || {}) }, d: { ...b.d, ...(saved.d || {}) }, f: { ...b.f, ...(saved.f || {}) }, a: { ...b.a, ...(saved.a || {}) }, b: { ...b.b, ...(saved.b || {}) } };
+      S = { ...b, ...saved, h: { ...b.h, ...(saved.h || {}) }, d: { ...b.d, ...(saved.d || {}) }, f: { ...b.f, ...(saved.f || {}) }, a: { ...b.a, ...(saved.a || {}) }, b: { ...b.b, ...(saved.b || {}) }, c: { ...b.c, ...(saved.c || {}) } };
       if (S.d.imp && S.d.imp.buf) S.d.src = await readImport(S.d.imp, BASE).catch(() => null);
       status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) }));
     }

@@ -1,4 +1,4 @@
-// Browser test for the Tree Measurement page (agac-olcumu.php; TM-01, TM-02, TM-03, TM-05, TM-06).
+// Browser test for the Tree Measurement page (agac-olcumu.php; TM-01 to TM-06).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/tree/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 // Values on screen are compared with the engines (assets/lab/tree/*.js) run in Node on the same inputs.
 import { createRequire } from 'node:module';
@@ -15,6 +15,7 @@ const Dm = await import('../../assets/lab/tree/diameter.js');
 const Fm = await import('../../assets/lab/tree/form.js');
 const Ag = await import('../../assets/lab/tree/age.js');
 const Bk = await import('../../assets/lab/tree/bark.js');
+const Cr = await import('../../assets/lab/tree/crown.js');
 const { TOOL } = await import('../../assets/lab/tree/calc.js');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/agac-olcumu.php';
 let pass = 0, fail = 0;
@@ -27,7 +28,7 @@ page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if 
 const type = async (sel, v) => { await page.fill(sel, v); await page.press(sel, 'Tab'); };
 
 await page.goto(URL + '?lang=tr'); await page.waitForSelector('#htab');
-ok((await page.locator('.b-ids').textContent()).trim() === 'TM-01 · TM-02 · TM-03 · TM-05 · TM-06' && (await page.locator('.b-ver').textContent()).includes(TOOL.version), 'tool ids TM-01 · TM-02 · TM-03 · TM-05 · TM-06 and version');
+ok((await page.locator('.b-ids').textContent()).trim() === 'TM-01 · TM-02 · TM-03 · TM-04 · TM-05 · TM-06' && (await page.locator('.b-ver').textContent()).includes(TOOL.version), 'tool ids TM-01 to TM-06 and version');
 
 // height: tangent, two readings, one with a decimal comma; percent; ground slope; rangefinder; similar triangles
 await type('[data-hrow="0"][data-k="D"]', '25'); await type('[data-hrow="0"][data-k="top"]', '40'); await type('[data-hrow="0"][data-k="base"]', '-5');
@@ -132,10 +133,30 @@ const lset = Bk.applyBark({ kind: 'set', set: { ...(await import('../../assets/l
 ok((await page.textContent('#bapres')).includes(`kabuksuz ${fx(lset.dub, 2)} cm`) && lset.dub !== lo.dub, `ln 2B set (no correction) from the library: ${lset.dub.toFixed(2)} cm = engine`);
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-bark.png'), fullPage: true });
 
+// crown (TM-04): radii and two diameters, crown length and ratio, solids, crown cover
+await page.click('#tab-c'); await page.waitForSelector('#c-radii');
+ok(await page.locator('#barkcoef').isHidden(), 'crown tab: the bark coefficient library is hidden');
+await page.fill('#c-radii', '2,5 3.1\n2;2.8 3,4 2.2'); await page.press('#c-radii', 'Tab');
+const cr = Cr.crownFromRadii([2.5, 3.1, 2, 2.8, 3.4, 2.2]), ct = await page.textContent('#cres');
+ok(ct.includes('6 yarıçap') && ct.includes(`tepe çapı ${fx(cr.width, 3)} m`) && ct.includes(`${fx(cr.area, 3)} m²`), `six radii (mixed separators and decimal commas): width ${cr.width.toFixed(3)} m, area ${cr.area.toFixed(3)} m² (quadratic mean) = engine`);
+await page.fill('#c-radii', '2 3'); await page.press('#c-radii', 'Tab'); ok((await page.textContent('#cres')).includes('en az 4 yönden'), 'two radii: warning (at least 4 directions)');
+await page.check('input[name="c-mode"][value="diam"]'); await type('#c-d1', '6,4'); await type('#c-d2', '5');
+const cd = Cr.crownFromDiameters(6.4, 5);
+ok((await page.textContent('#cres')).includes(`${fx(cd.areaCircle, 3)} m²`) && (await page.textContent('#cres')).includes(`${fx(cd.areaEllipse, 3)} m²`), 'two diameters: circle and ellipse areas = engine');
+await type('#c-H', '24'); await type('#c-base', '9'); await type('#c-dbh', '32');
+ok((await page.textContent('#clen')).includes('Tepe uzunluğu 15 m; tepe oranı %62.5') && (await page.textContent('#clen')).includes(fx(5.7 / 0.32, 2)), 'crown length 15 m, ratio 62.5 %, crown diameter / dbh');
+const sol = await page.$$eval('#csol tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
+ok(sol.length === 3 && Cr.SHAPES.every((sh, k) => { const q = Cr.crownSolid(sh, 5.7, 15); return Math.abs(Number(sol[k][1]) - q.S) < 0.0006 && Math.abs(Number(sol[k][2]) - q.V) < 0.0006; }), 'cone, paraboloid, cylinder: surface and volume = engine');
+await page.fill('#c-widths', '4 5,5 6\n3 x'); await page.press('#c-widths', 'Tab'); await type('#c-plot', '50');
+const cc = Cr.crownCover([4, 5.5, 6, 3, NaN], 50);
+ok((await page.textContent('#ccov')).includes(`tepe örtüsü ${fx(cc.cover, 3)}`) && (await page.textContent('#panel')).includes('sıra: 5') && (await page.textContent('#panel')).includes("1'den büyük"), `crown cover ${cc.cover.toFixed(3)} (overlap note), unreadable value reported`);
+if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-crown.png'), fullPage: true });
+await page.click('#tab-b'); await page.waitForSelector('#b-mode', { state: 'attached' }).catch(() => {});
+
 // downloads: Excel sheets, JSON run record with the tree list fingerprint
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 const wb = XLSX.read(await readFile(await dx.path()), { type: 'buffer' });
-ok(['Bilgi', 'Boy', 'Gövde', 'Ağaç listesi', 'Kabuk', 'Biçim', 'Yaş ve artım', 'Burgu'].every(n => wb.SheetNames.includes(n)) && XLSX.utils.sheet_to_json(wb.Sheets['Kabuk'], { header: 1 }).filter(r => r[5] === 'ok').length === BL.N && XLSX.utils.sheet_to_json(wb.Sheets['Burgu'], { header: 1 }).filter(r => typeof r[0] === 'number' && typeof r[2] === 'number').length >= 21 && XLSX.utils.sheet_to_json(wb.Sheets['Ağaç listesi'], { header: 1 }).length === ds.length + 6, 'Excel: Info, Height, Stem, Tree list, Bark (every tree of the list), Form, Age and increment, Core (every year)');
+ok(['Bilgi', 'Boy', 'Gövde', 'Ağaç listesi', 'Kabuk', 'Tepe', 'Biçim', 'Yaş ve artım', 'Burgu'].every(n => wb.SheetNames.includes(n)) && XLSX.utils.sheet_to_json(wb.Sheets['Kabuk'], { header: 1 }).filter(r => r[5] === 'ok').length === BL.N && XLSX.utils.sheet_to_json(wb.Sheets['Tepe'], { header: 1 }).some(r => r[0] === 'crown_ratio_percent' && r[1] === 62.5) && XLSX.utils.sheet_to_json(wb.Sheets['Burgu'], { header: 1 }).filter(r => typeof r[0] === 'number' && typeof r[2] === 'number').length >= 21 && XLSX.utils.sheet_to_json(wb.Sheets['Ağaç listesi'], { header: 1 }).length === ds.length + 6, 'Excel: Info, Height, Stem, Tree list, Bark (every tree of the list), Crown, Form, Age and increment, Core (every year)');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const J = JSON.parse(await readFile(await dj.path(), 'utf8')), txt = JSON.stringify(J);
 ok(txt.includes(createHash('sha256').update(csv).digest('hex')) && txt.includes(TOOL.version) && txt.includes('Hamilton'), 'JSON run record: tool version, sources and the SHA-256 of the tree list file');

@@ -61,7 +61,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | TM-01 | Boy hesaplayıcı (eğim ölçer, tanjant, sinüs, eğim düzeltmesi) | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). TM-01/a1 (17 Kasım 2026): boy çekirdeği `assets/lab/tree/height.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23). Sayfa "Ağaç Ölçümü" TM-02, TM-04, TM-06 ile birlikte |
 | TM-02 | Çap ve göğüs yüzeyi (çevre ↔ çap, düzensiz gövde) | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). TM-02/a1 (17 Kasım 2026): `assets/lab/tree/diameter.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23) |
 | TM-03 | Kabuk kalınlığı ve kabuksuz çap | yayında | TM-03/a1 (17 Kasım 2026): `assets/lab/tree/bark.js`; Hamilton 1975, Graves 1906, van Laar ve Akça 2007 4.1.6 [B] (METHODS §23). Ağaç Ölçümü sayfasında "Kabuk" sekmesi (kullanıcı kararı: ayrı sayfa yerine sekme; 1.0.0-beta.3); katsayılar kullanıcıdan (K1), katsayı kütüphanesinde araç `bark` |
-| TM-04 | Tepe tacı ölçüleri | planlı | |
+| TM-04 | Tepe tacı ölçüleri | yayında | TM-04/a1 (17 Kasım 2026): `assets/lab/tree/crown.js`; van Laar ve Akça 2007 4.1.7, Kershaw ve ark. 2016 §5.5 ve §8.6.1, Hamilton 1975 §8 [B] (METHODS §23). Ağaç Ölçümü sayfasında "Tepe" sekmesi (1.0.0-beta.4) |
 | TM-05 | Ağaç yaşı ve çap artımı (halka ve burgu verisi) | yayında | TM-05/a1 (17 Kasım 2026): `assets/lab/tree/age.js`; Graves 1906 bölüm XV–XVI ve van Laar ve Akça 2007 4.1.1 [B] (METHODS §23). Ağaç Ölçümü sayfasında "Yaş ve artım" sekmesi (kullanıcı kararı; 1.0.0-beta.2), yayına alındı (17 Kasım 2026, kullanıcı kararı) |
 | TM-06 | Biçim sayısı ve biçim bölümü | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). Seksiyon Hacmi biçim sayısını ve Hohenadl biçim bölümlerini (Heger 1965 [B]) zaten veriyor. TM-06/a1 (17 Kasım 2026): `assets/lab/tree/form.js`; Graves 1906 [B] bölüm XIII (METHODS §23; kitaptaki biçim üssü örneğinde aritmetik hata bulundu) |
 
@@ -92,7 +92,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
 |---|---|---|---|---|
 | SS-01 | Meşcere özeti (N/ha, G/ha, Dq, üst boy) | yayında | `ornek-alan.php` | Örnek Alan ve Meşcere |
-| SS-02 | Meşcere sıklık endeksleri (Reineke SDI, göreli sıklık, CCF, Curtis RD) | yayında | `mescere-yapisi.php` | SDI ve RD hazır (Reineke 1933, Curtis 1982 [B]); göreli aralık tanım istisnası; CCF için Krajicek ve ark. (1961): kullanıcıdan PDF |
+| SS-02 | Meşcere sıklık endeksleri (Reineke SDI, göreli sıklık, CCF, Curtis RD) | yayında | `mescere-yapisi.php` | SDI ve RD hazır (Reineke 1933, Curtis 1982 [B]); göreli aralık tanım istisnası; CCF için Krajicek ve ark. (1961): özgün makale bulunamadı; Kershaw ve ark. 2016 §8.9.4 ve van Laar ve Akça 2007 (s. 156–157) okundu [B], ölçek farkı (yüzde / oran) METHODS §23'te; uygulanacak |
 | SS-03 | Çap dağılımı (Weibull, gamma, Johnson SB…; geri kazanım) | yayında | `cap-dagilimi.php` | Çap Dağılımı Laboratuvarı 2.2.0 |
 | SS-04 | Çeşitlilik endeksleri (Shannon, Simpson, tür zenginliği) | yayında | `mescere-yapisi.php` | İstatistiksel tanım |
 | SS-05 | Yapısal çeşitlilik endeksleri (Gini, karışım, farklılaşma) | yayında | `mescere-yapisi.php` | Gini tanım; M, T, U Pommerening (2002): yüklendi, doğrulama bekliyor |
