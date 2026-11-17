@@ -250,6 +250,14 @@ function hero_logscale(): string {
     foreach ([[62, '16'], [128, '16'], [192, '16']] as [$x, $t]) $o .= '<text class="hz-unit" x="' . $x . '" y="118" text-anchor="middle">' . $t . ' ft</text>';
     return $o . '<text class="hz-unit" x="260" y="36" text-anchor="middle">D</text><text class="hz-unit" x="150" y="140" text-anchor="middle">board feet · m³</text>';
 }
+/** Nonlinear regression: points around a saturating curve, with a dashed second model (illustration; points simulated). */
+function hero_nlreg(): string {
+    $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $r = hero_rng(20261118);
+    $f = function ($u) { return 100 * pow(1 - exp(-3.2 * $u), 1.3); }; $g = function ($u) { return 104 / (1 + 9 * exp(-6 * $u)); };
+    for ($k = 0; $k < 34; $k++) { $u = 0.04 + $r() * 0.94; $e = ($r() + $r() + $r() - 1.5) * 9; $o .= '<circle class="hz-pt" style="--i:' . $k . '" cx="' . round($l + 4 + $u * 262, 1) . '" cy="' . round($Y - 4 - $f($u) - $e, 1) . '" r="2.6"/>'; }
+    $p = []; $q = []; for ($k = 0; $k <= 40; $k++) { $u = $k / 40; $p[] = [$l + 4 + $u * 262, $Y - 4 - $f($u)]; $q[] = [$l + 4 + $u * 262, $Y - 4 - $g($u)]; }
+    return $o . '<path class="hz-line hz-c1" d="' . hero_path($p) . '"/><path class="hz-line hz-c2" stroke-dasharray="5 4" d="' . hero_path($q) . '"/><text class="hz-unit" x="' . ($W - 8) . '" y="18" text-anchor="end">y = f(x, b)</text>';
+}
 /** Drawing and short caption of each live tool's card (keyed by the tool's page; tools index). */
 function tool_card_data(bool $tr): array {
     return [
@@ -270,6 +278,7 @@ function tool_card_data(bool $tr): array {
         'mescere-yapisi.php' => ['hero_map', $tr ? 'Çap yapısı, sıklık, mekânsal desen ve rekabet' : 'Diameter structure, density, spatial pattern, competition'],
         'govde-profili.php' => ['hero_taper', $tr ? 'Max–Burkhart ve Kozak; kullanılabilir hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking'],
         'hacim-denklemleri.php' => ['hero_volume', $tr ? 'Sabit biçim sayısı, birleşik değişken, logaritmik ve yerel denklemler' : 'Constant form factor, combined variable, logarithmic and local equations'],
+        'dogrusal-olmayan-regresyon.php' => ['hero_nlreg', $tr ? 'Hazır biçimler ya da serbest formül; ağırlık, aralıklar, AIC' : 'Ready-made forms or a free formula; weights, intervals, AIC'],
         'tomruk-olcumu.php' => ['hero_logscale', $tr ? 'Scribner, Doyle, International; Smalian, Huber, Newton' : 'Scribner, Doyle, International; Smalian, Huber, Newton'],
         'biyokutle-karbon.php' => ['hero_biomass', $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients'],
         'buyume-islevi.php' => ['hero_growth', $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination'],
@@ -326,7 +335,6 @@ function soon_bars(array $v, string $cls = 'hz-bar', float $x0 = 34, float $w = 
 function soon_figure(string $kind): string {
     $ax = hero_axes(300, 150, 22, 20); $r = hero_rng(crc32($kind) % 100000 + 7);
     switch ($kind) {
-        case 'nlreg':    return $ax . soon_pts(31, 34, function ($u) { return 100 * (1 - exp(-3 * $u)); }) . soon_curve(function ($u) { return 100 * (1 - exp(-3 * $u)); });
         case 'mixed':    { $o = $ax; foreach ([[.8, 0], [1, 1], [1.2, 2], [.9, 3]] as [$a, $k]) $o .= soon_curve(function ($u) use ($a) { return $a * 95 * (1 - exp(-2.5 * $u)); }, 22, 288, 130, 'hz-line hz-s' . $k); return $o; }
         case 'system':   { $o = $ax; foreach ([[.35, 0], [.65, 1], [1, 2]] as [$a, $k]) $o .= soon_curve(function ($u) use ($a) { return $a * 100 * pow($u, 1.6); }, 22, 288, 130, 'hz-line hz-s' . $k); return $o; }
         case 'survival': { $p = [[22, 20]]; $s = 110; for ($k = 0; $k < 10; $k++) { $x = 22 + ($k + 1) * 26.6; $p[] = [$x, 130 - $s]; $s *= .82; $p[] = [$x, 130 - $s]; } return $ax . '<path class="hz-line hz-c1" d="' . hero_path($p) . '"/>'; }
@@ -337,7 +345,6 @@ function soon_figure(string $kind): string {
  * (17 Nov 2026, user decision) and tools already live have no entry. */
 function soon_card_data(bool $tr): array {
     $d = [
-        'SM-02' => ['nlreg', 'Genel doğrusal olmayan regresyon', 'General nonlinear regression'],
         'SM-03' => ['mixed', 'Karma etkili modeller (örnek alan etkisi)', 'Mixed-effects models (plot effects)'],
         'SM-04' => ['system', 'Eşanlı ve toplamsal denklem sistemleri', 'Simultaneous and additive equation systems'],
         'SM-05' => ['survival', 'Ölüm ve sağkalım modelleri', 'Mortality and survival models'],

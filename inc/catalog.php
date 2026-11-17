@@ -82,7 +82,7 @@ function site_catalog(): array {
         ['GY-07', 'out', 'Kendiliğinden seyrelme doğrusu', 'Self-thinning line'],
         ['GY-08', 'out', 'İklime duyarlı büyüme projeksiyonu', 'Climate-sensitive growth projection'],
         ['SM-01', 'live', 'Boy–çap modelleri', 'Height–diameter models', 'boy-cap.php'],
-        ['SM-02', 'planned', 'Doğrusal olmayan regresyon', 'Nonlinear regression'],
+        ['SM-02', 'live', 'Doğrusal olmayan regresyon', 'Nonlinear regression', 'dogrusal-olmayan-regresyon.php'],
         ['SM-03', 'planned', 'Karma etkili modeller', 'Mixed-effects models'],
         ['SM-04', 'planned', 'Eşanlı ve uyumlu sistemler', 'Simultaneous and compatible systems'],
         ['SM-05', 'planned', 'Ölüm ve sağkalım modelleri', 'Mortality and survival models'],

@@ -8,6 +8,7 @@ import '../growth/calc.js';
 import '../siteindex/calc.js';
 import '../biomass/calc.js';
 import '../volume/calc.js';
+import '../nlsreg/calc.js';
 import '../tree/bark.js';
 import '../structure/ccf.js';
 
@@ -19,6 +20,7 @@ export const TOOLS = [
   { tool: 'taper', id: 'SV-02', page: 'govde-profili.php', name: { tr: 'Gövde Profili', en: 'Stem Taper' } },
   { tool: 'biomass', id: 'BC-01', page: 'biyokutle-karbon.php', name: { tr: 'Biyokütle ve Karbon', en: 'Biomass and Carbon' } },
   { tool: 'volume', id: 'SV-04', page: 'hacim-denklemleri.php', name: { tr: 'Hacim Denklemleri', en: 'Volume Equations' } },
+  { tool: 'nls', id: 'SM-02', page: 'dogrusal-olmayan-regresyon.php', name: { tr: 'Doğrusal Olmayan Regresyon', en: 'Nonlinear Regression' } },
   { tool: 'ccf', id: 'SS-02', page: 'mescere-yapisi.php', name: { tr: 'Meşcere Yapısı: CCF', en: 'Stand Structure: CCF' } },
   { tool: 'bark', id: 'TM-03', page: 'agac-olcumu.php', name: { tr: 'Ağaç Ölçümü: kabuk', en: 'Tree Measurement: bark' } },
 ];
