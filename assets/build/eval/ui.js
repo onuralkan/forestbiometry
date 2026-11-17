@@ -1179,6 +1179,7 @@ const tr = {
   'sample': 'Örnek dosyayı yükle', 'sample.note': 'Örnek dosya uydurmadır (gerçek ölçüm veya model değildir); bilerek boş ve okunamayan hücreler içerir.',
   'next': 'Devam', 'back': 'Geri', 'calc': 'Hesapla', 'reset': 'Oturumu sıfırla', 'need.data': 'Önce bir tablo yükleyin.',
   'restored': p => `Önceki oturum geri yüklendi (${p.when}).`,
+  'handoff': p => `Başka bir araçtan aktarılan tablo yüklendi: ${p.name}. Gözlenen ve model sütunları seçili.`,
   'obs.h': 'Gözlenen değer', 'obs.col': 'Gözlenen değer sütunu', 'none': '— yok —',
   'mod.h': 'Tahmin sütunları (modeller)', 'mod.sub': 'Bir veya daha fazla sütun seçin. Her model için adı ve tahminlerin nereden geldiğini siz belirtin; araç dış doğrulama olduğunu varsaymaz.',
   'mod.name': 'Ad', 'mod.role': 'Tahminlerin kaynağı',
@@ -1227,6 +1228,7 @@ const en = {
   'sample': 'Load the sample file', 'sample.note': 'The sample file is made up (not real measurements or models); it contains deliberate empty and unreadable cells.',
   'next': 'Continue', 'back': 'Back', 'calc': 'Calculate', 'reset': 'Reset session', 'need.data': 'Load a table first.',
   'restored': p => `Previous session restored (${p.when}).`,
+  'handoff': p => `Table handed over by another tool loaded: ${p.name}. The observed and model columns are chosen.`,
   'obs.h': 'Observed value', 'obs.col': 'Observed value column', 'none': '— none —',
   'mod.h': 'Prediction columns (models)', 'mod.sub': 'Choose one or more columns. Give each model a name and state where its predictions come from; the tool does not assume external validation.',
   'mod.name': 'Name', 'mod.role': 'Source of predictions',
@@ -1580,6 +1582,15 @@ function render() {
     const a = await get('dataset:approved'); if (a && a.schema === 'forest-dataset/1' && Array.isArray(a.trees)) approved = a;
     const saved = await get(KEY);
     if (saved && saved.v === 1) { S = { ...blank(), ...saved }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
+    // a table handed over by another tool (Volume Equations, SV-04): observed and predicted columns chosen; read once
+    const ho = await get('handoff:model-degerlendirme');
+    if (ho && typeof ho.text === 'string') {
+      await del('handoff:model-degerlendirme');
+      const imp = { kind: 'paste', name: ho.name || 'handoff', text: ho.text, encoding: 'utf-8', delim: '\t', header: true, sheet: null }, src = await readImport(imp, BASE);
+      S = blank(); S.imp = imp; S.src = src; guessColumns();
+      S.obs = src.headers.indexOf(ho.obs); S.models = (ho.models || []).map(m => ({ col: src.headers.indexOf(m), name: m, role: E.ROLES.includes(ho.role) ? ho.role : 'unknown' })).filter(m => m.col >= 0);
+      S.decimal = '.'; S.decimalChosen = true; S.step = 2; save(); status(T('handoff', { name: imp.name }), 'ok');
+    }
   } catch (e) { S = blank(); }
   render();
 })();

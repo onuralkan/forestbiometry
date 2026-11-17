@@ -236,6 +236,13 @@ function hero_biomass(): string {
     foreach ([[60, 26, 12], [76, 32, 15], [52, 22, 10], [88, 38, 18]] as $k => $v) { $y = 130; foreach ($v as $j => $h) { $o .= '<rect class="hz-st' . $j . '" x="' . (40 + $k * 62) . '" y="' . ($y - $h) . '" width="34" height="' . $h . '"/>'; $y -= $h; } }
     return $o . '<text class="hz-unit" x="' . 292 . '" y="146" text-anchor="end">Mg/ha</text>';
 }
+/** Volume equations: volume against D²H with a fitted line (illustration; points simulated). */
+function hero_volume(): string {
+    $W = 300; $H = 150; $l = 22; $b = 20; $o = hero_axes($W, $H, $l, $b); $Y = $H - $b; $r = hero_rng(20261117);
+    for ($k = 0; $k < 36; $k++) { $u = $r(); $e = ($r() + $r() + $r() - 1.5) * (0.02 + 0.06 * $u); $x = $l + 10 + $u * 250; $y = $Y - 6 - ($u + $e) * 100; $o .= '<circle class="hz-pt" style="--i:' . $k . '" cx="' . round($x, 1) . '" cy="' . round($y, 1) . '" r="2.6"/>'; }
+    $o .= '<path class="hz-line hz-c1" d="M' . ($l + 10) . ' ' . ($Y - 6) . 'L' . ($l + 260) . ' ' . ($Y - 106) . '"/>';
+    return $o . '<text class="hz-unit" x="' . ($W - 8) . '" y="' . ($H - 4) . '" text-anchor="end">D²H</text><text class="hz-unit" x="' . ($l + 6) . '" y="18">V</text>';
+}
 /** Drawing and short caption of each live tool's card (keyed by the tool's page; tools index). */
 function tool_card_data(bool $tr): array {
     return [
@@ -255,6 +262,7 @@ function tool_card_data(bool $tr): array {
         'bonitet.php' => ['hero_site', $tr ? 'Fark denklemleri, kendi katsayılarınız, bonitet sınıfları' : 'Difference equations with your coefficients, site classes'],
         'mescere-yapisi.php' => ['hero_map', $tr ? 'Çap yapısı, sıklık, mekânsal desen ve rekabet' : 'Diameter structure, density, spatial pattern, competition'],
         'govde-profili.php' => ['hero_taper', $tr ? 'Max–Burkhart ve Kozak; kullanılabilir hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking'],
+        'hacim-denklemleri.php' => ['hero_volume', $tr ? 'Sabit biçim sayısı, birleşik değişken, logaritmik ve yerel denklemler' : 'Constant form factor, combined variable, logarithmic and local equations'],
         'biyokutle-karbon.php' => ['hero_biomass', $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients'],
         'buyume-islevi.php' => ['hero_growth', $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination'],
         'agac-olcumu.php' => ['hero_tree', $tr ? 'Eğim ölçerle boy, çap ve göğüs yüzeyi, kabuk, tepe, biçim sayısı' : 'Height with a clinometer, diameter and basal area, bark, crown, form factor'],
@@ -310,7 +318,6 @@ function soon_bars(array $v, string $cls = 'hz-bar', float $x0 = 34, float $w = 
 function soon_figure(string $kind): string {
     $ax = hero_axes(300, 150, 22, 20); $r = hero_rng(crc32($kind) % 100000 + 7);
     switch ($kind) {
-        case 'power':    return $ax . soon_pts(11, 30, function ($u) { return 100 * pow($u, 1.9); }) . soon_curve(function ($u) { return 100 * pow($u, 1.9); }, 22, 288, 130, 'hz-line hz-c2');
         case 'logs':     return '<rect class="hz-k0" x="40" y="58" width="200" height="34" rx="4"/><ellipse class="hz-wood" cx="240" cy="75" rx="10" ry="17"/><ellipse class="hz-ringl" cx="240" cy="75" rx="10" ry="17"/><path class="hz-tape" d="M40 110H240M40 105v10M240 105v10"/><text class="hz-tick" x="140" y="128" text-anchor="middle">L</text>';
         case 'nlreg':    return $ax . soon_pts(31, 34, function ($u) { return 100 * (1 - exp(-3 * $u)); }) . soon_curve(function ($u) { return 100 * (1 - exp(-3 * $u)); });
         case 'mixed':    { $o = $ax; foreach ([[.8, 0], [1, 1], [1.2, 2], [.9, 3]] as [$a, $k]) $o .= soon_curve(function ($u) use ($a) { return $a * 95 * (1 - exp(-2.5 * $u)); }, 22, 288, 130, 'hz-line hz-s' . $k); return $o; }
@@ -323,7 +330,6 @@ function soon_figure(string $kind): string {
  * (17 Nov 2026, user decision) and tools already live have no entry. */
 function soon_card_data(bool $tr): array {
     $d = [
-        'SV-04' => ['power', 'Kendi verinizle hacim denklemi uydurma', 'Fitting volume equations to your data'],
         'SV-05' => ['logs', 'Tomruk hacmi ölçüm kuralları', 'Log volume scaling rules'],
         'SM-02' => ['nlreg', 'Genel doğrusal olmayan regresyon', 'General nonlinear regression'],
         'SM-03' => ['mixed', 'Karma etkili modeller (örnek alan etkisi)', 'Mixed-effects models (plot effects)'],

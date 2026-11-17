@@ -294,6 +294,15 @@ function render() {
     const a = await get('dataset:approved'); if (a && a.schema === 'forest-dataset/1' && Array.isArray(a.trees)) approved = a;
     const saved = await get(KEY);
     if (saved && saved.v === 1) { S = { ...blank(), ...saved }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
+    // a table handed over by another tool (Volume Equations, SV-04): observed and predicted columns chosen; read once
+    const ho = await get('handoff:model-degerlendirme');
+    if (ho && typeof ho.text === 'string') {
+      await del('handoff:model-degerlendirme');
+      const imp = { kind: 'paste', name: ho.name || 'handoff', text: ho.text, encoding: 'utf-8', delim: '\t', header: true, sheet: null }, src = await readImport(imp, BASE);
+      S = blank(); S.imp = imp; S.src = src; guessColumns();
+      S.obs = src.headers.indexOf(ho.obs); S.models = (ho.models || []).map(m => ({ col: src.headers.indexOf(m), name: m, role: E.ROLES.includes(ho.role) ? ho.role : 'unknown' })).filter(m => m.col >= 0);
+      S.decimal = '.'; S.decimalChosen = true; S.step = 2; save(); status(T('handoff', { name: imp.name }), 'ok');
+    }
   } catch (e) { S = blank(); }
   render();
 })();

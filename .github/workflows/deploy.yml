@@ -56,6 +56,7 @@ jobs:
           node tests/taper/test_sv02a3.mjs
           node tests/taper/test_sv06.mjs
           node tests/taper/test_sv03.mjs
+          node tests/volume/test_sv04.mjs
           node tests/tree/test_tm01.mjs
           node tests/tree/test_tm02_06.mjs
           node tests/tree/test_tm05.mjs
