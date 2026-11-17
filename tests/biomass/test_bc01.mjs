@@ -17,7 +17,7 @@ const mk = (formId, params, transform = null, extra = {}) => {
 };
 
 // forms
-ok(formsFor('biomass').length === 8 && Object.keys(B.FORMS).every(id => formsFor('biomass').some(f => f.id === 'biomass.' + id)), 'eight forms registered (six of TOOLS_SPEC 5.1 and the two log10 forms)');
+ok(formsFor('biomass').filter(f => !f.id.startsWith('biomass.lt.')).length === 8 && formsFor('biomass').length === 8 + 15 && Object.keys(B.FORMS).every(id => formsFor('biomass').some(f => f.id === 'biomass.' + id)), 'eight forms registered (six of TOOLS_SPEC 5.1 and the two log10 forms), plus the 15 linear system forms of BC-02 (lt.*)');
 ok(formsFor('biomass').filter(f => f.transform === 'log10').length === 2 && formsFor('biomass').filter(f => f.transform === 'log').length === 2, 'ln and log10 forms kept apart');
 
 // every case of the reference

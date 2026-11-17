@@ -49,7 +49,7 @@ function site_catalog(): array {
         ['SV-05', 'planned', 'Tomruk ölçüm kuralları', 'Log scaling rules'],
         ['SV-06', 'live', 'Ürün bölme (sortiman) eniyileme', 'Log bucking optimizer', 'govde-profili.php'],
         ['BC-01', 'live', 'Allometrik biyokütle', 'Allometric biomass', 'biyokutle-karbon.php'],
-        ['BC-02', 'planned', 'Biyokütle bileşenleri', 'Biomass components'],
+        ['BC-02', 'live', 'Biyokütle bileşenleri', 'Biomass components', 'biyokutle-karbon.php'],
         ['BC-03', 'live', 'Biyokütle dönüşüm etkeni (BEF)', 'Biomass expansion factor (BEF)', 'biyokutle-karbon.php'],
         ['BC-04', 'live', 'Karbon stoku ve CO₂ eşdeğeri', 'Carbon stock and CO₂ equivalent', 'biyokutle-karbon.php'],
         ['BC-05', 'planned', 'IPCC karbon hesabı (katman 1–3)', 'IPCC carbon accounting (tier 1–3)'],

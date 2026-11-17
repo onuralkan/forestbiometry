@@ -69,6 +69,7 @@ jobs:
           node tests/biomass/test_bc02.mjs
           node tests/biomass/test_bc03.mjs
           node tests/biomass/test_bc04.mjs
+          node tests/biomass/test_bc02s.mjs
           node tests/growth/test_sq03.mjs
           node tests/structure/test_ss07.mjs
           node tests/structure/test_ss04.mjs

@@ -16,7 +16,7 @@
 import { registerForm, form, validateCoef, correctionFactor, outsideValid } from '../core/coef.js';
 import { buildUnits } from '../stand/calc.js';
 
-export const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.3' };
+export const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.4' };
 export const CO2_PER_C = 44 / 12;
 /** Scales on which the Baskerville correction is applied: ln ([A], METHODS §22); log10 waits for its source. */
 export const BASKERVILLE_SCALES = ['log'];
@@ -32,6 +32,17 @@ export const FORMS = {
   'log10.d': { params: ['a', 'b'], needsH: false, scale: 'log10', formula: { tr: 'log₁₀ B = a + b·log₁₀ D', en: 'log₁₀ B = a + b·log₁₀ D' }, f: (p, D) => p.a + p.b * Math.log10(D) },
   'log10.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log10', formula: { tr: 'log₁₀ B = a + b·log₁₀ D + c·log₁₀ H', en: 'log₁₀ B = a + b·log₁₀ D + c·log₁₀ H' }, f: (p, D, H) => p.a + p.b * Math.log10(D) + p.c * Math.log10(H) },
 };
+// BC-02: linear component equations of an additive system, B = b0 + Σ b_j·term_j over a subset of D, D², D²H, H
+// (Parresol 1999 §1.1.4–1.1.5 [B]; fitted in sur.js, applied here like any other set).
+{
+  const T = { d: ['D', (D) => D], d2: ['D²', (D) => D * D], d2h: ['D²H', (D, H) => D * D * H], h: ['H', (D, H) => H] }, order = ['d', 'd2', 'd2h', 'h'];
+  for (let m = 1; m < 16; m++) {
+    const ts = order.filter((_, i) => m & (1 << i)), params = ['b0', ...ts.map((_, i) => 'b' + (i + 1))];
+    const text = 'B = b0 + ' + ts.map((t, i) => `b${i + 1}·${T[t][0]}`).join(' + ');
+    FORMS['lt.' + ts.join('.')] = { params, needsH: ts.some(t => t === 'd2h' || t === 'h'), scale: 'none', linear: ts, formula: { tr: text, en: text },
+      f: (p, D, H) => ts.reduce((s, t, i) => s + p['b' + (i + 1)] * T[t][1](D, H), p.b0) };
+  }
+}
 for (const [id, f] of Object.entries(FORMS)) {
   try {
     registerForm({ id: 'biomass.' + id, tool: 'biomass', params: f.params.map(key => ({ key })), inputs: f.needsH ? { D: { unit: 'cm', bark: 'ob' }, H: { unit: 'm' } } : { D: { unit: 'cm', bark: 'ob' } },

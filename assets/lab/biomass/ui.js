@@ -4,10 +4,11 @@ import * as B from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
-import { listCoefs, form as formOf } from '../core/coef.js';
+import { listCoefs, saveCoef, blankSet, form as formOf } from '../core/coef.js';
 import { mountCoefEditor } from '../core/coef-ui.js';
 import { EXTRA } from './coef-extra.js';
 import * as MC from './mc.js';
+import * as SUR from './sur.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, toInternal, detectDecimal, defaultDecimal } from '../core/num.js';
@@ -24,7 +25,7 @@ const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.
 let S = blank(), R = null, sets = [], approved = null, saveT = null, dv = null, U = null;
 function blank() {
   return { v: 1, step: 1, tbl: null, ds: null, dsSrc: null, approach: 'allometric', comps: [{ key: 'c1', label: T('c.default'), CF: '' }], map: {}, total: {}, ec: 'unmeasured',
-    mc: { B: String(MC.MC_DEFAULTS.B), seed: String(MC.MC_DEFAULTS.seed), level: '0.95' }, vol: { from: 'col', col: null, bark: 'ob', mode: 'bef', D: '', BEF: '', BCEF: '', R: '', fbark: 'ob', src: '', CF: '' } };
+    sys: sysBlank(), mc: { B: String(MC.MC_DEFAULTS.B), seed: String(MC.MC_DEFAULTS.seed), level: '0.95' }, vol: { from: 'col', col: null, bark: 'ob', mode: 'bef', D: '', BEF: '', BCEF: '', R: '', fbark: 'ob', src: '', CF: '' } };
 }
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
 function flush() { clearTimeout(saveT); saveT = null; return put(KEY, { ...S, saved: new Date().toISOString() }); }
@@ -158,7 +159,7 @@ function renderStep2() {
       ${sp.map(x => `<tr data-sp="${esc(x.species)}"><th>${esc(x.species || T('m.nosp'))}</th><td class="num">${x.n}</td>${S.comps.map(c => `<td><select data-ms="${esc(x.species)}" data-mc="${c.key}">${opts((S.map[x.species] || {})[c.key])}</select></td>`).join('')}
         <td><select data-ts="${esc(x.species)}">${opts(S.total[x.species])}</select></td></tr>`).join('')}
       <tr class="tail"><td colspan="2"><span class="small">${T('m.all')}</span></td>${S.comps.map(c => `<td><select data-all="${c.key}">${opts(null)}</select></td>`).join('')}<td></td></tr></tbody></table></div></div>`;
-    h += `<div id="coefbox"></div>`;
+    h += sysHTML() + `<div id="coefbox"></div>`;
   }
   if (A !== 'allometric') {
     const v = S.vol, cols = volumeColumns(), inp = (k, size = 7) => `<label>${T('v.' + k)} <input type="text" inputmode="decimal" size="${size}" data-v="${k}" value="${esc(v[k])}"></label>`;
@@ -192,6 +193,7 @@ function renderStep2() {
   $('vsrc') && $('vsrc').addEventListener('change', e => { S.vol.src = e.target.value; re(); });
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); go(3); });
+  mountSys();
   if ($('coefbox')) mountCoefEditor($('coefbox'), { tool: 'biomass', extra: EXTRA, onChange: list => { const changed = list.length !== sets.length || list.some((s, i) => !sets[i] || sets[i].id !== s.id || sets[i].modified !== s.modified); sets = list; if (changed) { R = null; renderStep2(); } } }).refresh();
 }
 /** What the browser holds from the Stem Section Volume tool for this package. */
@@ -200,6 +202,114 @@ function dvHTML() {
   if (!dv.ok) return `<p class="note err small" id="dvbad">${T('dv.bad', { codes: dv.problems.join(', ') })}</p>`;
   const r = dv.record, sides = ['ob', 'ib'].filter(s => r.trees.some(t => t['v_' + s] != null)).map(s => T(s)).join(', ') || '–';
   return `<p class="note ok small" id="dvinfo">${esc(T('dv.info', { tool: `${r.tool.id} ${r.tool.version}`, when: new Date(r.created).toLocaleString(LOC), m: r.settings && r.settings.method || '–', n: r.trees.length, ok: r.trees.filter(t => t.status === 'ok').length, sides }))}</p>`;
+}
+
+/* ---------------- BC-02: additive system from the user's destructive sample (sur.js) ---------------- */
+const SYS_W = ['none', ...SUR.WEIGHT_VARS];
+function sysBlank() { return { imp: null, src: null, D: null, H: null, decimal: null, decChosen: false, comps: [sysComp(0), sysComp(1)], total: { col: null, w: 'none', k: '' }, species: '', cit: '', saveTotal: true, open: false }; }
+function sysComp(i) { return { col: null, label: `${T('c.name')} ${i + 1}`, terms: ['d2h'], w: 'none', k: '' }; }
+let SR = null;
+function sysHTML() {
+  const Y = S.sys;
+  return `<details class="card more" id="syscard"${Y.open ? ' open' : ''}><summary>${T('sy.h')}</summary><p class="muted small">${T('sy.sub')}</p><div id="sysimp"></div><div id="sysmap"></div><div id="sysout"></div></details>`;
+}
+function sysRows() {
+  const Y = S.sys, src = Y.src, num = (r, c) => { if (c == null) return null; const p = parseNumber(cellText(r[c]), Y.decimal || '.'); return p.status === 'ok' ? p.value : null; };
+  return src.rows.map((r, i) => ({ row: src.rowNumbers[i], D: num(r, Y.D), H: num(r, Y.H), y: Object.fromEntries(Y.comps.map((c, k) => ['c' + k, num(r, c.col)])), total: num(r, Y.total.col) }));
+}
+function renderSysMap() {
+  const box = $('sysmap'), Y = S.sys; if (!box) return;
+  if (!Y.src) { box.innerHTML = ''; return; }
+  const src = Y.src, opts = cur => `<option value="">${T('none')}</option>` + src.headers.map((h, i) => `<option value="${i}"${cur === i ? ' selected' : ''}>${esc(h)}</option>`).join('');
+  const dv = detectDecimal([Y.D, Y.H, Y.total.col, ...Y.comps.map(c => c.col)].filter(c => c != null).flatMap(c => src.rows.map(r => r[c]).filter(x => x && x.t === 's').map(x => x.v)));
+  if (!Y.decChosen) Y.decimal = defaultDecimal(dv.verdict);
+  const wsel = (id, w, k) => `<select data-sw="${id}">${SYS_W.map(v => `<option value="${v}"${w === v ? ' selected' : ''}>${v === 'none' ? T('sy.w.none') : 'σ² ∝ ' + SUR.TERMS[v].label + '^k'}</option>`).join('')}</select>${w !== 'none' ? ` <label class="small">k <input type="text" inputmode="decimal" size="6" data-sk="${id}" value="${esc(k)}" placeholder="${esc(T('sy.k.auto'))}"></label>` : ''}`;
+  let h = `<div class="lims"><label>${T('sy.D')} <select data-sc="D">${opts(Y.D)}</select></label><label>${T('sy.H')} <select data-sc="H">${opts(Y.H)}</select></label>
+    <span class="radios"><span class="small">${T('dec.h')}:</span> <label class="small"><input type="radio" name="sydec" value="."${Y.decimal === '.' ? ' checked' : ''}> ${T('dec.dot')}</label><label class="small"><input type="radio" name="sydec" value=","${Y.decimal === ',' ? ' checked' : ''}> ${T('dec.comma')}</label></span></div>
+    <div class="tscroll"><table class="grid" id="systab"><thead><tr><th>${T('sy.col')}</th><th>${T('c.name')}</th><th>${T('sy.terms')}</th><th>${T('sy.w')}</th><th></th></tr></thead><tbody>
+    ${Y.comps.map((c, i) => `<tr><td><select data-cc="${i}">${opts(c.col)}</select></td><td><input type="text" size="12" data-cl2="${i}" value="${esc(c.label)}"></td>
+      <td>${SUR.TERM_ORDER.map(t => `<label class="small"><input type="checkbox" data-ct="${i}" value="${t}"${c.terms.includes(t) ? ' checked' : ''}> ${SUR.TERMS[t].label}</label>`).join(' ')}</td><td>${wsel(i, c.w, c.k)}</td>
+      <td>${Y.comps.length > 2 ? `<button type="button" class="btn ghost small" data-crm2="${i}">${T('c.rm')}</button>` : ''}</td></tr>`).join('')}
+    <tr class="tail"><td><select data-cc="total">${opts(Y.total.col).replace(`>${T('none')}<`, `>${T('sy.tot.sum')}<`)}</select></td><td>${T('sy.tot')}</td><td class="small muted">${T('sy.tot.terms')}</td><td>${wsel('total', Y.total.w, Y.total.k)}</td><td></td></tr></tbody></table></div>
+    <p><button type="button" class="btn ghost small" id="sy-add">${T('c.add')}</button></p><p class="muted small">${T('sy.note')}</p>
+    <div class="nav"><button type="button" class="btn" id="sy-fit">${T('sy.fit')}</button></div>`;
+  box.innerHTML = h;
+  const ch = () => { SR = null; save(); renderSysMap(); $('sysout').innerHTML = ''; };
+  box.querySelectorAll('[data-sc]').forEach(x => x.addEventListener('change', () => { Y[x.dataset.sc] = x.value === '' ? null : +x.value; ch(); }));
+  box.querySelectorAll('input[name="sydec"]').forEach(x => x.addEventListener('change', () => { Y.decimal = x.value; Y.decChosen = true; ch(); }));
+  box.querySelectorAll('[data-cc]').forEach(x => x.addEventListener('change', () => { const v = x.value === '' ? null : +x.value; if (x.dataset.cc === 'total') Y.total.col = v; else { const c = Y.comps[+x.dataset.cc]; c.col = v; if (v != null && /^Bileşen \d+$|^Component \d+$/.test(c.label)) c.label = String(src.headers[v]); } ch(); }));
+  box.querySelectorAll('[data-cl2]').forEach(x => x.addEventListener('change', () => { Y.comps[+x.dataset.cl2].label = x.value; save(); SR = null; }));
+  box.querySelectorAll('[data-ct]').forEach(x => x.addEventListener('change', () => { const c = Y.comps[+x.dataset.ct]; c.terms = SUR.TERM_ORDER.filter(t => t === x.value ? x.checked : c.terms.includes(t)); ch(); }));
+  const wobj = id => id === 'total' ? Y.total : Y.comps[+id];
+  box.querySelectorAll('[data-sw]').forEach(x => x.addEventListener('change', () => { wobj(x.dataset.sw).w = x.value; ch(); }));
+  box.querySelectorAll('[data-sk]').forEach(x => x.addEventListener('change', () => { wobj(x.dataset.sk).k = x.value.trim(); ch(); }));
+  box.querySelectorAll('[data-crm2]').forEach(x => x.addEventListener('click', () => { Y.comps.splice(+x.dataset.crm2, 1); ch(); }));
+  $('sy-add').addEventListener('click', () => { Y.comps.push(sysComp(Y.comps.length)); ch(); });
+  $('sy-fit').addEventListener('click', sysFit);
+}
+function sysFit() {
+  const Y = S.sys, probs = [];
+  if (Y.D == null) probs.push(T('sy.p.D'));
+  if (Y.comps.some(c => c.col == null)) probs.push(T('sy.p.col'));
+  if (Y.comps.some(c => !c.terms.length)) probs.push(T('sy.p.terms'));
+  const kOf = w => { if (w.w === 'none') return { kind: 'none' }; if (w.k === '') return { kind: 'power', v: w.w, k: null }; const v = num(w.k); return Number.isFinite(v) ? { kind: 'power', v: w.w, k: v } : null; };
+  const ws = [...Y.comps.map(kOf), kOf(Y.total)]; if (ws.some(w => !w)) probs.push(T('sy.p.k'));
+  if (probs.length) { $('sysout').innerHTML = `<p class="note err small" id="sy-prob">${esc(probs.join(' · '))}</p>`; return; }
+  const spec = { comps: Y.comps.map((c, i) => ({ key: 'c' + i, label: c.label, terms: c.terms, weight: ws[i] })), total: { from: Y.total.col == null ? 'sum' : 'column', weight: ws[ws.length - 1] } };
+  SR = { ...SUR.fitAdditive(sysRows(), spec), created: new Date().toISOString(), spec };
+  renderSysOut();
+}
+function renderSysOut() {
+  const out = $('sysout'); if (!out || !SR) return;
+  const Y = S.sys, drop = SR.dropped || [];
+  let h = drop.length ? `<p class="note warn small" id="sy-drop">${esc(T('sy.drop', { n: drop.length, rows: rowsText(drop.map(d => d.row)) }))}</p>` : '';
+  if (SR.status !== 'ok') { out.innerHTML = h + `<p class="note err" id="sy-bad">${esc(SR.problems.map(p => T('sy.e.' + p)).join(' · '))}</p>`; return; }
+  const name = e => e.key === 'total' ? T('sy.tot') : e.label, tl = e => ['b0', ...e.terms.map(t => SUR.TERMS[t].label)];
+  h += `<p class="small" id="sy-sum">${esc(T('sy.sum', { n: SR.n, m: SR.equations.length, q: SR.restrictions }))}</p>
+    <div class="tscroll"><table class="grid" id="sy-coef"><thead><tr><th>${T('sy.eq')}</th><th>${T('sy.term')}</th><th>${T('sy.sur')}</th><th>${T('sy.se')}</th><th>${T('sy.sep')}</th><th>${T('sy.se')}</th></tr></thead><tbody>
+    ${SR.equations.map(e => tl(e).map((t, a) => `<tr data-eq="${esc(e.key)}">${a === 0 ? `<th rowspan="${e.terms.length + 1}">${esc(name(e))}</th>` : ''}<td>${t === 'b0' ? T('sy.int') : 'b' + a + '·' + t}</td><td class="num" data-k="b">${fmtNum(e.sur.b[a], 6)}</td><td class="num">${fmtNum(e.sur.se[a], 6)}</td><td class="num">${fmtNum(e.single.b[a], 6)}</td><td class="num">${fmtNum(e.single.se[a], 6)}</td></tr>`).join('')).join('')}</tbody></table></div>
+    <div class="tscroll"><table class="grid" id="sy-stat"><thead><tr><th>${T('sy.eq')}</th><th>${T('sy.w')}</th><th>Se (kg) ${T('sy.sur')}</th><th>${T('sy.bias')}</th><th>FI</th><th>Se (kg) ${T('sy.sep')}</th><th>FI</th></tr></thead><tbody>
+    ${SR.equations.map(e => `<tr><th>${esc(name(e))}</th><td>${e.weight.kind === 'none' ? T('sy.w.none') : `σ² ∝ ${SUR.TERMS[e.weight.v].label}^${fmtNum(e.weight.k, 4)}${e.weight.estimated ? ' (' + T('sy.k.est') + ')' : ''}`}</td>
+      <td class="num">${fmtNum(e.sur.stats.Se, 3)}</td><td class="num">${fmtNum(e.sur.stats.bias, 3)}</td><td class="num">${fmtNum(e.sur.stats.FI, 4)}</td><td class="num">${fmtNum(e.single.stats.Se, 3)}</td><td class="num">${fmtNum(e.single.stats.FI, 4)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="small">${T('sy.corr')}: ${SR.equations.map((e, i) => SR.equations.slice(i + 1).map((g, j) => `${esc(name(e))}–${esc(name(g))} ${fmtNum(SR.corr[i][i + 1 + j], 2)}`).join(', ')).filter(Boolean).join(', ')}</p>
+    <p class="muted small">${T('sy.method')}</p>
+    <h3>${T('sy.save.h')}</h3><div class="lims"><label>${T('m.sp')} <input type="text" size="14" id="sy-sp" value="${esc(Y.species)}"></label><label class="chk small"><input type="checkbox" id="sy-tot"${Y.saveTotal ? ' checked' : ''}> ${T('sy.save.tot')}</label></div>
+    <label class="field"><span>${T('sy.cit')}</span><input type="text" id="sy-cit" value="${esc(Y.cit)}" placeholder="${esc(T('sy.cit.ph'))}"></label>
+    <div class="nav"><button type="button" class="btn" id="sy-save">${T('sy.save')}</button></div><div id="sy-msg"></div>`;
+  out.innerHTML = h;
+  $('sy-sp').addEventListener('change', e => { Y.species = e.target.value.trim(); save(); });
+  $('sy-tot').addEventListener('change', e => { Y.saveTotal = e.target.checked; save(); });
+  $('sy-cit').addEventListener('change', e => { Y.cit = e.target.value; save(); });
+  $('sy-save').addEventListener('click', sysSave);
+}
+async function sysSave() {
+  const Y = S.sys, cit = String(Y.cit).trim();
+  if (!cit) { $('sy-msg').innerHTML = `<p class="note err small">${T('sy.p.cit')}</p>`; return; }
+  const sysId = 'sys' + Date.now().toString(36), eqs = SR.equations.filter(e => e.key !== 'total' || Y.saveTotal), saved = [];
+  for (const e of eqs) {
+    const fid = SUR.formIdOf(e.terms), f = B.FORMS[fid], needsH = f.needsH || (e.weight.kind === 'power' && SUR.TERMS[e.weight.v].needsH);
+    const set = { ...blankSet('biomass.' + fid), params: Object.fromEntries(e.sur.b.map((v, i) => ['b' + i, v])), valid: { D: SR.range.D, ...(needsH && SR.range.H ? { H: SR.range.H } : {}) },
+      species: Y.species || null, component: e.key === 'total' ? T('sy.tot') : e.label, source: { citation: cit }, origin: 'fitted',
+      meta: { cov: e.sur.cov.map(r => r.map(v => String(v)).join(' ')).join('; '), ...(e.weight.kind === 'none' ? { rse: e.sur.stats.Se } : {}) },
+      fit: { method: 'restricted SUR (Parresol 1999, Eq. 31–35)', system: sysId, data: Y.imp ? Y.imp.name : null, n: SR.n, weight: e.weight, Se: e.sur.stats.Se, bias: e.sur.stats.bias, FI: e.sur.stats.FI,
+        se: e.sur.se, separate: { b: e.single.b, se: e.single.se }, sigma: SR.sigma, corr: SR.corr, equations: SR.equations.map(q => q.key === 'total' ? 'total' : q.label), created: SR.created, note: 'cross-equation covariances not stored in the set' } };
+    const r = await saveCoef(set); if (!r.ok) { $('sy-msg').innerHTML = `<p class="note err small">${esc(r.problems.map(q => q.code).join(', '))}</p>`; return; }
+    saved.push(r.set);
+  }
+  sets = await listCoefs('biomass'); R = null; save();
+  $('sy-msg').innerHTML = `<p class="note ok small" id="sy-ok">${esc(T('sy.saved', { n: saved.length }))}</p>`;
+  renderStep2(); const card = $('syscard'); if (card) { card.open = true; renderSysOut(); $('sy-msg').innerHTML = `<p class="note ok small" id="sy-ok">${esc(T('sy.saved', { n: saved.length }))}</p>`; }
+}
+function mountSys() {
+  if (!$('syscard')) return;
+  const Y = S.sys;
+  $('syscard').addEventListener('toggle', e => { Y.open = e.target.open; save(); });
+  renderImport($('sysimp'), { imp: Y.imp, src: Y.src }, { base: BASE, title: T('sy.imp'), sub: T('sy.imp.sub'), onChange: st => {
+    Y.imp = st.imp; Y.src = st.src; SR = null;
+    if (st.src) { const H = st.src.headers.map(h => String(h).trim().toLocaleLowerCase('tr')), find = l => { const i = H.findIndex(h => l.includes(h)); return i < 0 ? null : i; };
+      Y.D = find(GUESS.dbh); Y.H = find(GUESS.height); Y.decChosen = false; }
+    save(); mountSys(); }, onError: m => status(m, 'err') });
+  renderSysMap(); renderSysOut();
 }
 
 /* ---------------- step 3: results ---------------- */
@@ -409,8 +519,9 @@ function render() {
   try {
     const a = await get('dataset:approved'); if (a && !validateDataset(a).length) approved = a;
     sets = await listCoefs('biomass');
-    const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, vol: { ...blank().vol, ...(saved.vol || {}) }, mc: { ...blank().mc, ...(saved.mc || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
+    const saved = await get(KEY); if (saved && saved.v === 1) { S = { ...blank(), ...saved, vol: { ...blank().vol, ...(saved.vol || {}) }, mc: { ...blank().mc, ...(saved.mc || {}) }, sys: { ...sysBlank(), ...(saved.sys || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
     if (S.tbl && S.tbl.imp && S.tbl.imp.buf && !S.tbl.src) S.tbl.src = await readImport(S.tbl.imp, BASE).catch(() => null);
+    if (S.sys.imp && !S.sys.src) S.sys.src = await readImport(S.sys.imp, BASE).catch(() => null);
     await loadDerived();
   } catch (e) { S = blank(); }
   render();
