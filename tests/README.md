@@ -41,6 +41,8 @@ committed, so the tests run without Python.
 - `node tests/biomass/test_bc02s.mjs`: additive component system (BC-02/a1, `assets/lab/biomass/sur.js`): restricted SUR and weighted restricted SUR against Parresol (1999) Table 4 (willow oak data of Table 1 in `tests/ref/parresol1999_willow.json`) and against `tests/ref/biomass_bc02s.json` from `python3 tests/ref/make_biomass_bc02s.py` (standard library only).
 - `node tests/biomass/e2e_bc02s.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for the fitting card: column mapping, terms and weights, values against sur.js, saving to the library, additivity after applying the sets, English.
 - `node tests/biomass/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Biomass and Carbon: table import, components and carbon fractions, species → set mapping, unmapped species and missing heights with row numbers, values against the engine, Excel/CSV/JSON, conversion from volume (bark sides, missing volume), the Coefficient Library listing the sets, English, phone.
+- `node tests/volume/test_sv04.mjs`: Volume Equations (SV-04) against `tests/ref/volume_sv04.json` from `python3 tests/ref/make_volume_sv04.py` (standard library; five forms of Kershaw et al. 2016 §6.2, weights, Baskerville).
+- `node tests/volume/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for hacim-denklemleri.php (values against calc.js, saving a set, hand-off to Model Evaluation, sent Stem Section Volume volumes, English, phone).
 - `node tests/taper/e2e.mjs http://127.0.0.1:8092 [shots-dir]`: browser test for Stem Taper (fit with the sample, one tree,
   tree table, downloads, English, phone).
 - `node tests/site/e2e_boot.mjs http://127.0.0.1:8092`: tool pages must not stay blank when IndexedDB stalls (open or
