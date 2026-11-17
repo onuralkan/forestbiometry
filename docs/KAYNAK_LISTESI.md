@@ -171,7 +171,7 @@ kodu ve sayısal çıktısıyla netleştirilir, yine belirsizse PDF'e dönülür
 | SM-04 SUR | `systemfit` 1.1-30 | formül + sayısal | Zellner 1962 | Henningsen, A., Hamann, J.D. 2007. systemfit: a package for estimating systems of simultaneous equations in R. *J. Statistical Software* 23(4). **Açık** |
 | SM-03 karma modeller | `nlme` 3.1, `lme4` 2.1 | sayısal (yöntem için Bölüm 1'deki kitaplar) | Lindstrom ve Bates 1990 | Bates, D., Mächler, M., Bolker, B., Walker, S. 2015. Fitting linear mixed-effects models using lme4. *J. Statistical Software* 67(1). **Açık** |
 | SM-01/03 boy–çap | `lmfor` 1.7 | formül (zaten [B] olarak kullanıldı, 9 Kasım) | Mehtätalo ve ark. 2015 | Mehtätalo ve Lappi 2020 (Bölüm 1) |
-| SM-05 sağkalım | `survival` 3.8 | sayısal | Cox 1972 | — |
+| SM-05 sağkalım (17 Kasım 2026: kapsam dışı, kullanıcı kararı) | `survival` 3.8 | sayısal | Cox 1972 | — |
 | SM-07 bootstrap | `boot` 1.3 | sayısal | Efron ve Tibshirani 1993 | Davison ve Hinkley 1997 (paketin kitabı) |
 | SI-02, SI-03 tasarımlar | `forestmangr` 0.9: `sprs`, `strs`, `ss_diffs` | sayısal | Kershaw ve ark. 2016 | — |
 | SI-08 Horvitz–Thompson, GREG | `survey` 4.5: `svytotal`, `calibrate` | formül + sayısal | Horvitz ve Thompson 1952; Särndal ve ark. 1992 | Lumley, T. 2004. Analysis of complex survey samples. *J. Statistical Software* 9(8). **Açık** |

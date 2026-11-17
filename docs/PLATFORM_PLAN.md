@@ -29,7 +29,7 @@ raporlayan, yöntemleri şeffaf, kaynaklı ve tekrarlanabilir açık kaynaklı b
 | P5 | **Birimler:** platform metriktir; gerekirse girişte birim dönüştürme yapılır, hesap ve çıktı metrik kalır. İstisna (17 Kasım 2026, kullanıcı kararı): Tomruk Ölçümü (SV-05) board-foot kurallarının sonucunu board foot olarak verir (açıkça etiketli; yanında m³). |
 | P6 | **Sayfa adresleri değişmez** (DOI'li atıflar ve kılavuz bağlantıları). Yeni araçlar Türkçe sayfa adı ve İngilizce kod klasörüyle eklenir (K2). Plandaki uzun İngilizce yollar yalnızca belge kimliğidir. |
 | P7 | **Çıktılar:** Excel, CSV, JSON (yöntem bilgileriyle) ve SVG grafik. PDF rapor DI-05 aşamasında ayrıca değerlendirilir (derleme adımı ve sunucu olmadan). DI-05/a1 (16 Kasım 2026): rapor yazdırılabilir HTML'dir; PDF tarayıcının yazdırma penceresinden ("PDF olarak kaydet") alınır, PDF kütüphanesi eklenmedi. |
-| P8 | **Çıkarılanlar (17 Kasım 2026, kullanıcı kararı):** planlı 27 araç plandan ve siteden çıkarıldı: BC-05; SI-02, SI-04…SI-09; GY-01…GY-07; SM-07; ML-01, ML-04…ML-08; DS-01, DS-02, DS-04…DS-06. P4'teki altı kapsam dışı araçla birlikte 33 kimlik kapsam dışıdır. Kimlikler kalıcıdır (P3): katalogda `out` olarak tarihçe için durur, sitede (kenar çubuğu, araç dizini, ana sayfa sayaçları) gösterilmez, başka adla yeniden önerilmez. Aracı kalmayan GY, ML ve DS modülleri listelenmez; site 8 modül gösterir. Açık kalan planlılar: SV-03, SV-04, SV-05, SM-02…SM-05. |
+| P8 | **Çıkarılanlar (17 Kasım 2026, kullanıcı kararı):** planlı 27 araç plandan ve siteden çıkarıldı: BC-05; SI-02, SI-04…SI-09; GY-01…GY-07; SM-07; ML-01, ML-04…ML-08; DS-01, DS-02, DS-04…DS-06. P4'teki altı kapsam dışı araçla birlikte 33 kimlik kapsam dışıdır. Kimlikler kalıcıdır (P3): katalogda `out` olarak tarihçe için durur, sitede (kenar çubuğu, araç dizini, ana sayfa sayaçları) gösterilmez, başka adla yeniden önerilmez. Aracı kalmayan GY, ML ve DS modülleri listelenmez; site 8 modül gösterir. Açık kalan planlılar: SV-03, SV-04, SV-05, SM-02…SM-05. **Ek (17 Kasım 2026, kullanıcı kararı):** SM-05 (ölüm ve sağkalım modelleri) de plandan ve siteden çıkarıldı; kapsam dışı kimlik 34. Plandaki öteki araçların hepsi yayında; planlı araç kalmadı. |
 
 Plandaki "Açık kararlar" bu kararlarla kapandı: teknoloji mevcut PHP 7.4+ ve tarayıcı JS (derleme adımı yok); hesap
 yeri tarayıcı; veritabanı ve kullanıcı hesabı yok; lisans Apache-2.0 ve CC BY 4.0; başlangıç tür/yöre kapsamı yok (P2).
@@ -145,7 +145,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | SM-02 | Doğrusal olmayan regresyon (NLS, ağırlıklı) | yayında | `dogrusal-olmayan-regresyon.php` | SM-02/a1 (17 Kasım 2026, 1.0.0-beta.1): hazır biçimler ve serbest formül (kullanıcı kararı; `core/expr.js`), ağırlıklı NLS, aralıklar, AIC ile karşılaştırma, kütüphaneye kayıt; Parresol 2001 [B] |
 | SM-03 | Karma etkili modeller | yayında | `karma-modeller.php` | SM-03/a1 (17 Kasım 2026, 1.0.0-beta.1): doğrusal ve doğrusal olmayan karma modeller (Pinheiro ve Bates 2000, Lindstrom ve Bates 1990 [B]), ML/REML, köşegen/genel kovaryans, varPower, AIC/BIC/LRT, yeni grup kalibrasyonu [A], kütüphaneye kayıt; nlme 3.1-168 ile doğrulandı [P] |
 | SM-04 | Eşanlı ve uyumlu sistemler (SUR, toplamsal biyokütle) | yayında | `denklem-sistemleri.php` | SM-04/a1 (17 Kasım 2026, 1.0.0-beta.1): kullanıcının formülleriyle doğrusal ve doğrusal olmayan SUR, yinelemeli SUR, ortak katsayılarla uyumlu sistemler (Henningsen ve Hamann 2007, Parresol 2001 [B]); systemfit 1.1-30 ile doğrulandı [P]; 2SLS/3SLS kapsam dışı |
-| SM-05 | Ölüm ve sağkalım modelleri | planlı | – | |
+| SM-05 | Ölüm ve sağkalım modelleri | kapsam dışı | – | P8 ek (17 Kasım 2026, kullanıcı kararı) |
 | SM-06 | Model değerlendirme | yayında | `model-degerlendirme.php` | Nispi Sıralama (`nispi-siralama.php`) da bu modülde, modelleri sıralamak için |
 | SM-07 | Belirsizlik nicelemesi (bootstrap, Monte Carlo, Bayesçi) | çıkarıldı (P8) | – | bootstrap çap dağılımı ve bonitette var |
 
@@ -197,7 +197,7 @@ aşama kabul ölçütleri sağlanmadan sonrakine geçilmez.
 17 Kasım 2026 kullanıcı kararıyla (P8) yol haritası daraltıldı. Yayında olmayan ve plandan çıkarılmayan araçlar:
 
 1. **Gövde hacmi:** SV-03, SV-04 ve SV-05 yapıldı (17 Kasım 2026); SV modülünde planlı araç kalmadı.
-2. **İstatistiksel modelleme:** SM-02, SM-03 ve SM-04 yapıldı (17 Kasım 2026); SM-05 (ölüm ve sağkalım).
+2. **İstatistiksel modelleme:** SM-02, SM-03 ve SM-04 yapıldı (17 Kasım 2026); SM-05 plandan çıkarıldı (17 Kasım 2026, kullanıcı kararı). Planlı araç kalmadı.
 3. **Biyokütle:** BC-02/a2 yapıldı (17 Kasım 2026); BC modülünde planlı araç kalmadı.
 
 Bağımlılıklar: DI bütün modüllere girdi verir; katsayı kütüphanesi (DI-02) SV, BC, SQ'ya; SM'deki uydurma araçları
