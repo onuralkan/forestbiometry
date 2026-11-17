@@ -1327,3 +1327,20 @@ Uygulama:
 
 Test: `node tests/volume/test_sv04.mjs` (23; `tests/ref/make_volume_sv04.py` yalnız standart kütüphane, ayrı yazılmış: beş biçim, ağırlıksız/kestirilen k/verilen k, Baskerville; katsayılar, standart hatalar, s, k, etken ve ölçütler), tarayıcı `node tests/volume/e2e.mjs` (21; ekrandaki değerler motorla aynı, kayıt, Model Başarısı'na aktarım, Seksiyon Hacmi hacimleri, telefon).
 
+## 25. Tomruk ölçümü / Log scaling (`assets/lab/logscale/calc.js`; PLATFORM_PLAN SV-05; 17 Kasım 2026, 1.0.0-beta.1)
+Kullanıcı kararları (17 Kasım 2026): board-foot kuralları da uygulanır (sonuç board foot olarak etiketlenir; P5'e bu araç için istisna), yanında metrik kübik hacim; ayrı sayfa (`tomruk-olcumu.php`).
+
+Kaynak **[B]**: Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest Mensuration*, 5. baskı. Wiley (kullanıcının ayırdığı s. 160–200; formüller sayfa görüntülerinden doğrulandı):
+- §7.3 (s. 186–191): board foot, 1 inç kalınlığında kereste; D ince uçta kabuksuz çap (in), L tomruk boyu (ft). Scribner (Bruce ve Schumacher 1950 regresyonu) V = (0,79D² − 2D − 4)·L/16 (7.3); Doyle V = ((D − 4)/4)²·L (7.5); International ⅛ inç (Clark 1906) 8, 12, 16, 20 ft için V = 0,44D² − 1,20D − 0,30; 0,66D² − 1,47D − 0,79; 0,88D² − 1,52D − 1,36; 1,10D² − 1,35D − 1,90 (7.7–7.10), 20 ft'ten uzun tomruk iki ya da daha çok tomruk olarak ölçülür; International ¼ inç her boy için (Grosenbaugh 1952a, en küçük kareler) V = 0,0497621LD² + 0,006220L²D − 0,185476LD + 0,000259L³ − 0,011592L² + 0,042222L. Clark'ın tabloları 5 board foot'a yuvarlanır (seçimlik).
+- §7.4.1 (s. 195): çap kabuksuz, ince uçta, en yakın inçe; en uzun ölçme boyunu aşan tomruk iki ya da daha çok tomruk olarak ölçülür, eşit bölünmezse uzun parça dipte; ayrım noktasının ölçme çapı tomruğun konikliğinden kestirilir; kesim payı ölçme boyuna girmez.
+- Tablo 6.1 (s. 141): Smalian V = L/2·(A_b + A_u) (6.5), Huber V = A_m·L (6.6), Newton V = L/6·(A_b + 4A_m + A_u) (6.9).
+
+Uygulama:
+- Ölçüler cm ve m girilir; board-foot kuralları için D_in = D_cm/2,54, L_ft = L_m/0,3048 (kesin). Ölçme düzeni seçimleri (sonuçta yazılı): çap en yakın inçe (varsayılan açık; §7.4.1), ölçme boyu tam ya da çift feet'e aşağı (varsayılan tam; 1e−9 payla) ya da yuvarlamasız; isteğe bağlı en uzun ölçme boyu (varsayılan yok; kitaptaki 16 ft doğu, 40 ft batı örnektir).
+- Bölme: k = ⌈L/L_max⌉ parça, tam feet, olabildiğince eşit, artan feet dipteki parçalara; dip parçaların ince uç çapı ince ve kalın uç arasında doğrusal (araç kuralı; kitap yalnız "koniklikten kestirilir" der) ve kalın uç çapı gerekir.
+- Kurallar parça parça uygulanır ve toplanır; International ⅛ inç denklemi olmayan boy, Doyle'da D ≤ 4 in ve pozitif olmayan değer "hesaplanmadı" durumudur. Bir kuralla hesaplanamayan tomruk varsa o kuralın toplamı verilmez.
+- Kübik hacim ölçülen metrik değerlerden, yuvarlamasız: kalın uç varsa Smalian, orta çap varsa Huber, ikisi de varsa Newton.
+- Kapsam dışı: kusur düşümü (§7.4.1'deki beş kural, net hacim), Spaulding (7.4), Maine ve karma kurallar, ülkelere özgü metrik tomruk standartları.
+
+Test: `node tests/logscale/test_sv05.mjs` (13; kitabın Tablo 7.1'i: 16 ft tomruklarda Doyle dokuz çapta birebir, Grosenbaugh denklemi 5 board foot'a yuvarlanınca International ¼ inç sütununun dokuz değerinin hepsi; Scribner sütunu Scribner'ın yumuşatılmamış özgün tablosu olduğundan (7.3) yalnız referansla; `tests/ref/make_logscale_sv05.py` yalnız standart kütüphane, 40 tomruk: ölçme boyu, parçalar, dört kural, Smalian/Huber/Newton), tarayıcı `node tests/logscale/e2e.mjs` (12; 20 in × 16 ft Doyle = 256 board foot).
+

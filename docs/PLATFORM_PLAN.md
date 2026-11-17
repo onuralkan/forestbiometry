@@ -26,7 +26,7 @@ raporlayan, yöntemleri şeffaf, kaynaklı ve tekrarlanabilir açık kaynaklı b
 | P2 | **Yerleşik katsayı yok (K1 korunur):** "tür ve yöre seçmeli denklem veritabanı" kullanıcının kendi kaynaklı katsayı kütüphanesidir (`model-coef/1`, kaynak alanı zorunlu). Hazır bir set ancak kaynağı okunup [B] işaretlenince, ayrı bir aşama olarak eklenir. IPCC ve benzeri varsayılan değerler gömülmez. |
 | P3 | **Kalıcı araç kimlikleri `MODÜL-NN`:** sayfalar, testler, belgeler ve sorunlar bu kimlikle anılır. Bir sayfa birden çok kimliği karşılayabilir. Aşamalar araç kimliğine bağlanır: `<KİMLİK>/a<n>` (ör. `SS-07/a1`). TOOLS_SPEC ve DIST_SPEC'teki eski aşama kodları (SV01, SI01, SS01, P01…) geçmiş kayıtlarda olduğu gibi kalır; eşlemeleri Bölüm 5'te. |
 | P4 | **Kapsam dışı:** ML-02, ML-03, SQ-04, GY-08, DS-03 ve DI-06 (API). SV-05 düşük öncelikli. |
-| P5 | **Birimler:** platform metriktir; gerekirse girişte birim dönüştürme yapılır, hesap ve çıktı metrik kalır. |
+| P5 | **Birimler:** platform metriktir; gerekirse girişte birim dönüştürme yapılır, hesap ve çıktı metrik kalır. İstisna (17 Kasım 2026, kullanıcı kararı): Tomruk Ölçümü (SV-05) board-foot kurallarının sonucunu board foot olarak verir (açıkça etiketli; yanında m³). |
 | P6 | **Sayfa adresleri değişmez** (DOI'li atıflar ve kılavuz bağlantıları). Yeni araçlar Türkçe sayfa adı ve İngilizce kod klasörüyle eklenir (K2). Plandaki uzun İngilizce yollar yalnızca belge kimliğidir. |
 | P7 | **Çıktılar:** Excel, CSV, JSON (yöntem bilgileriyle) ve SVG grafik. PDF rapor DI-05 aşamasında ayrıca değerlendirilir (derleme adımı ve sunucu olmadan). DI-05/a1 (16 Kasım 2026): rapor yazdırılabilir HTML'dir; PDF tarayıcının yazdırma penceresinden ("PDF olarak kaydet") alınır, PDF kütüphanesi eklenmedi. |
 | P8 | **Çıkarılanlar (17 Kasım 2026, kullanıcı kararı):** planlı 27 araç plandan ve siteden çıkarıldı: BC-05; SI-02, SI-04…SI-09; GY-01…GY-07; SM-07; ML-01, ML-04…ML-08; DS-01, DS-02, DS-04…DS-06. P4'teki altı kapsam dışı araçla birlikte 33 kimlik kapsam dışıdır. Kimlikler kalıcıdır (P3): katalogda `out` olarak tarihçe için durur, sitede (kenar çubuğu, araç dizini, ana sayfa sayaçları) gösterilmez, başka adla yeniden önerilmez. Aracı kalmayan GY, ML ve DS modülleri listelenmez; site 8 modül gösterir. Açık kalan planlılar: SV-03, SV-04, SV-05, SM-02…SM-05. |
@@ -75,7 +75,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | SV-02 | Gövde profili denklemleri (Max ve Burkhart, Kozak, değişken üslü) | yayında | `govde-profili.php` | TOOLS_SPEC TP01–TP02. SV-02/a1 (16 Kasım 2026): Max ve Burkhart (1976) Model 4 çekirdeği [B] (`assets/lab/taper/calc.js`). SV-02/a2 (16 Kasım 2026): Kozak (2004) Model 02 [B]. SV-02/a3 (16 Kasım 2026): gövde ölçümlerinden uydurma (TP02). Sayfa (TP04) 16 Kasım 2026, 1.0.0-beta.1; tepe çapına kadar kullanılabilir hacim de sayfada (SV-03'ün temeli) |
 | SV-03 | Kullanılabilir hacim (profil integrali, tepe çapı ve tomruk boyu sınırları) | yayında | `govde-profili.php` | TP01–TP03. Tepe çapı sınırı SV-02 sayfasıyla; SV-03/a1 (17 Kasım 2026, 1.0.0-beta.3): tomruk boyu sınırı, Kershaw ve ark. 2016 §6.4.1, §7.4.1, §7.4.3 [B] |
 | SV-04 | Hacim denklemleri | yayında | `hacim-denklemleri.php` | TOOLS_SPEC SV04; SV-04/a1 (17 Kasım 2026, 1.0.0-beta.1): Kershaw ve ark. 2016 §6.2 [B] (6.22, 6.23, 6.24–6.25, yerel, 6.29); ağırlık Parresol 1999 [B]; katsayılar kullanıcının verisinden |
-| SV-05 | Tomruk ölçüm kuralları (Doyle, Scribner, International ¼″, kübik) | planlı, düşük öncelik | – | ABD'ye özgü; P4 |
+| SV-05 | Tomruk ölçüm kuralları (Doyle, Scribner, International ¼″, kübik) | yayında | `tomruk-olcumu.php` | SV-05/a1 (17 Kasım 2026, 1.0.0-beta.1): Kershaw ve ark. 2016 §7.3, §7.4.1, Tablo 6.1 [B]; board foot etiketli (P5 istisnası, kullanıcı kararı) ve m³ |
 | SV-06 | Ürün bölme (sortiman) eniyileme | yayında | `govde-profili.php` | TP03. SV-06/a1 (16 Kasım 2026): öncelik sırası ve dinamik programlama çekirdeği (`assets/lab/taper/bucking.js`); Grondin (1998) ve Bennemann ve ark. (2025) [B]; Pnevmaticos ve Mann (1972) aktarılan [D]. Sayfa: Gövde Profili'nde ürün bölme bölümü (`govde-profili.php`, 1.0.0-beta.2; 16 Kasım 2026); yayına alındı (16 Kasım 2026, kullanıcı kararı) |
 
 ### BC — Biyokütle ve karbon
@@ -196,7 +196,7 @@ aşama kabul ölçütleri sağlanmadan sonrakine geçilmez.
 
 17 Kasım 2026 kullanıcı kararıyla (P8) yol haritası daraltıldı. Yayında olmayan ve plandan çıkarılmayan araçlar:
 
-1. **Gövde hacmi:** SV-05 (tomruk ölçüm kuralları, düşük öncelik). SV-03 ve SV-04 yayında (17 Kasım 2026).
+1. **Gövde hacmi:** SV-03, SV-04 ve SV-05 yapıldı (17 Kasım 2026); SV modülünde planlı araç kalmadı.
 2. **İstatistiksel modelleme:** SM-02 (doğrusal olmayan regresyon), SM-03 (karma etkili modeller), SM-04 (eşanlı ve
    uyumlu sistemler; toplamsal biyokütle alt kapsamı BC-02/a1'de yayında), SM-05 (ölüm ve sağkalım).
 3. **Biyokütle:** BC-02/a2 (doğrusal olmayan toplamsal sistemler; Parresol 2001 bekleniyor).

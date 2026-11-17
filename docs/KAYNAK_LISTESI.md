@@ -133,7 +133,7 @@ DS-05 (zarar değerlendirmesi) için kaynak, aracın kapsamı belirlenince seçi
 
 | ☐ | Kaynak | Araç | Yerine olur [A] |
 |---|---|---|---|
-| ☑ | Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest Mensuration*, 5. baskı. Wiley. (Drive'da tam kitap 15–17 MB, okuma aracı s. ~67'de kesiyor; 17 Kasım 2026 kullanıcının ayırdığı sayfalar okundu: s. 125–131 §5.5, 236–246 §8.6, 263–266 §8.9.3–8.9.5, Ek A.2–A.3; s. 160–200 §6.4.1, §7.4.1, §7.4.3 → SV-03 [B]; 17 Kasım 2026: kitap kullanıcı tarafından 7 parçaya bölündü, 2. parça §6.2 s. 156–159 → SV-04 [B]) | TM-01…06, SS-02 (CCF), SV-03, SV-04 | van Laar ve Akça 2007; Avery ve Burkhart 2002 |
+| ☑ | Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest Mensuration*, 5. baskı. Wiley. (Drive'da tam kitap 15–17 MB, okuma aracı s. ~67'de kesiyor; 17 Kasım 2026 kullanıcının ayırdığı sayfalar okundu: s. 125–131 §5.5, 236–246 §8.6, 263–266 §8.9.3–8.9.5, Ek A.2–A.3; s. 160–200 §6.4.1, §7.4.1, §7.4.3 → SV-03 [B]; 17 Kasım 2026: kitap kullanıcı tarafından 7 parçaya bölündü, 2. parça §6.2 s. 156–159 → SV-04 [B]; §7.3, §7.4.1, Tablo 6.1 → SV-05 [B]) | TM-01…06, SS-02 (CCF), SV-03, SV-04, SV-05 | van Laar ve Akça 2007; Avery ve Burkhart 2002 |
 | ☑ | Hamilton, G.J. 1975. *Forest Mensuration Handbook.* Forestry Commission Booklet 39. HMSO. (17 Kasım 2026 yüklendi; METHODS §23) | TM | — |
 | ☑ | Graves, H.S. 1906. *Forest Mensuration.* Wiley. (17 Kasım 2026 yüklendi; kamu malı; METHODS §23) | TM | — |
 | ☑ | C — van Laar, A., Akça, A. 2007. *Forest Mensuration*, 2. baskı. Springer. (17 Kasım 2026 yüklendi; okuma aracı PDF'in ilk 163 sayfasını veriyor, 9. bölüm ve sonrası okunamadı) | TM | Kershaw ve ark. 2016 |
