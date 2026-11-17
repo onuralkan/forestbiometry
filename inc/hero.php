@@ -310,7 +310,6 @@ function soon_bars(array $v, string $cls = 'hz-bar', float $x0 = 34, float $w = 
 function soon_figure(string $kind): string {
     $ax = hero_axes(300, 150, 22, 20); $r = hero_rng(crc32($kind) % 100000 + 7);
     switch ($kind) {
-        case 'merch':    return '<path class="hz-k0" d="' . hero_path(array_merge(array_map(function ($i) { $x = $i / 40; return [20 + $x * 260, 75 - 26 * pow(1 - $x, .6)]; }, range(0, 40)), array_map(function ($i) { $x = 1 - $i / 40; return [20 + $x * 260, 75 + 26 * pow(1 - $x, .6)]; }, range(0, 40)))) . 'Z"/><path class="hz-cut" d="M212 40V110"/><text class="hz-tick" x="212" y="128" text-anchor="middle">d_top</text>';
         case 'power':    return $ax . soon_pts(11, 30, function ($u) { return 100 * pow($u, 1.9); }) . soon_curve(function ($u) { return 100 * pow($u, 1.9); }, 22, 288, 130, 'hz-line hz-c2');
         case 'logs':     return '<rect class="hz-k0" x="40" y="58" width="200" height="34" rx="4"/><ellipse class="hz-wood" cx="240" cy="75" rx="10" ry="17"/><ellipse class="hz-ringl" cx="240" cy="75" rx="10" ry="17"/><path class="hz-tape" d="M40 110H240M40 105v10M240 105v10"/><text class="hz-tick" x="140" y="128" text-anchor="middle">L</text>';
         case 'nlreg':    return $ax . soon_pts(31, 34, function ($u) { return 100 * (1 - exp(-3 * $u)); }) . soon_curve(function ($u) { return 100 * (1 - exp(-3 * $u)); });
@@ -324,7 +323,6 @@ function soon_figure(string $kind): string {
  * (17 Nov 2026, user decision) and tools already live have no entry. */
 function soon_card_data(bool $tr): array {
     $d = [
-        'SV-03' => ['merch', 'Tepe çapına kadar kullanılabilir hacim', 'Merchantable volume to a top diameter'],
         'SV-04' => ['power', 'Kendi verinizle hacim denklemi uydurma', 'Fitting volume equations to your data'],
         'SV-05' => ['logs', 'Tomruk hacmi ölçüm kuralları', 'Log volume scaling rules'],
         'SM-02' => ['nlreg', 'Genel doğrusal olmayan regresyon', 'General nonlinear regression'],

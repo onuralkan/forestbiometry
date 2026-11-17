@@ -37,7 +37,7 @@ const E = FIT.fitTaper(st, { form: 'mb76', bark: 'ib', scale: 'd' });
 
 await page.goto(URL + '?lang=tr'); await page.waitForSelector('#steps button');
 const VER = TP.TOOL.version;
-ok((await page.locator('h1').textContent()).includes('Gövde Profili') && (await page.locator('.b-ids').textContent()).trim() === 'SV-02 · SV-06' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SV-02 · SV-06, version ${VER}`);
+ok((await page.locator('h1').textContent()).includes('Gövde Profili') && (await page.locator('.b-ids').textContent()).trim() === 'SV-02 · SV-03 · SV-06' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SV-02 · SV-06, version ${VER}`);
 ok(await page.isDisabled('#to2'), 'no profile set: cannot continue');
 
 // fitting tab with the sample stems
@@ -118,6 +118,26 @@ ok(await page.locator('#bprod tbody tr').count() === 0, 'products deleted');
 await page.setInputFiles('#b-load', pj); await page.waitForSelector('#bprod input[data-row="2"]');
 ok(await page.inputValue('#bprod input[data-row="0"][data-k="dMin"]') === '26' && (await page.textContent('#status')).includes('yüklendi'), 'product list loaded back from the JSON');
 await page.uncheck('#b-on');
+
+// SV-03: log-length limit on the same tree (top diameter 7 cm): 2 m logs, 10 cm trim, 1 m minimum, short top kept
+await page.click('#steps [data-go="2"]'); await page.check('#o-logOn'); await page.waitForSelector('#o-L');
+ok(await page.isDisabled('#calc') && (await page.textContent('#step2')).includes('Tomruk boyu > 0'), 'log limit on without a log length: cannot compute');
+for (const [k, v] of [['L', '2'], ['trim', '10'], ['minLen', '1']]) { await page.fill('#o-' + k, v); await page.press('#o-' + k, 'Tab'); await page.waitForSelector('#o-L'); }
+await page.selectOption('#o-shortTop', 'keep'); await page.waitForSelector('#calc:not([disabled])');
+ok((await page.textContent('#lgnote')).includes('§6.4.1') && (await page.textContent('#lgnote')).includes('varsayılan değildir'), 'rule and source written; the book values are not defaults');
+await page.click('#calc'); await page.waitForSelector('#logcard');
+{ const mm = TP.merchantable(set, 30, 24, { stump: 0.3, dTop: 7 }), G = TP.logLimit(set, 30, 24, { stump: 0.3, hTop: mm.hTop, L: 2, trim: 0.1, minLen: 1, shortTop: 'keep' });
+  const r = await page.$$eval('#rtab tbody tr td', ts => ts.map(t => t.textContent.trim()));
+  ok(r[7] === `${G.n}${G.short ? ' + 1' : ''}` && Math.abs(num(r[8]) - (G.V.logs + G.V.short)) <= 5e-5 && Math.abs(num(r[9]) - G.V.trims) <= 5e-5 && Math.abs(num(r[10]) - G.V.rest) <= 5e-5,
+    `tree table: ${r[7]} logs, ${r[8]} m³ = engine (${G.n}${G.short ? ' + short' : ''}, ${(G.V.logs + G.V.short).toFixed(4)})`);
+  const lr = await page.$$eval('#logcard table[data-logs="ib"] tbody tr', rs => rs.map(x => [...x.children].map(c => c.textContent.trim())));
+  ok(lr.length === G.logs.length + (G.short ? 1 : 0) && G.logs.every((q, i) => Math.abs(num(lr[i][1]) - q.h1) <= 5e-3 && Math.abs(num(lr[i][2]) - q.h2) <= 5e-3 && Math.abs(num(lr[i][5]) - q.V) <= 5e-5 && num(lr[i][4]) >= 7 - 0.05), 'log list of the tree = engine; every small end at or above the top diameter');
+  ok((await page.textContent('#logcard [data-bal="ib"]')).includes('kullanılabilir hacim'), 'volume balance written (logs + trim + rest = merchantable)');
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-csv')]);
+  const L = (await readFile(await dl.path(), 'utf8')).trim().split(/\r?\n/), hd = L[0].split(','), c = L[1].split(',');
+  ok(hd.includes('logs_n') && Number(c[hd.indexOf('logs_n')]) === G.n && Math.abs(Number(c[hd.indexOf('logs_m3')]) - G.V.logs) <= 1e-9 * Math.max(1, G.V.logs), 'CSV: log count and log volume at full precision'); }
+if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'taper-logs.png'), fullPage: true });
+await page.click('#steps [data-go="2"]'); await page.uncheck('#o-logOn'); await page.waitForSelector('#calc');
 
 // a tree table (pasted) and an invalid tree
 await page.click('#steps [data-go="2"]'); await page.check('input[name="tmode"][value="table"]');

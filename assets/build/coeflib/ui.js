@@ -2791,7 +2791,7 @@ function fitCW(pairs) {
 
 // ---- assets/lab/taper/calc.js
 __fb_m["taper/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "FORMS": () => FORMS, "TOOL": () => TOOL, "barkOf": () => barkOf, "checkSet": () => checkSet, "checkTree": () => checkTree, "consistency": () => consistency, "diameterAt": () => diameterAt, "evaluateTree": () => evaluateTree, "formOf": () => formOf, "heightOf": () => heightOf, "merchantable": () => merchantable, "relProfile": () => relProfile, "volume": () => volume, "volumeNumeric": () => volumeNumeric });
+__fb_x(__fb_e, { "FORMS": () => FORMS, "TOOL": () => TOOL, "barkOf": () => barkOf, "checkSet": () => checkSet, "checkTree": () => checkTree, "consistency": () => consistency, "diameterAt": () => diameterAt, "evaluateTree": () => evaluateTree, "formOf": () => formOf, "heightOf": () => heightOf, "logCount": () => logCount, "logLimit": () => logLimit, "merchantable": () => merchantable, "relProfile": () => relProfile, "volume": () => volume, "volumeNumeric": () => volumeNumeric });
 const { registerForm, validateCoef } = __fb_r("core/coef.js");
 const { brent } = __fb_r("core/roots.js");
 const { gaussLegendre } = __fb_r("core/quad.js");
@@ -2822,7 +2822,7 @@ const { gaussLegendre } = __fb_r("core/quad.js");
 
 
 
-const TOOL = { id: 'govde-profili', version: '1.0.0-beta.2' };
+const TOOL = { id: 'govde-profili', version: '1.0.0-beta.3' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /** Registered forms: params in the order of the source; y(p, x, D, H) = d²/D²; Y (antiderivative in x) if closed. */
@@ -3014,6 +3014,59 @@ function merchantable(set, D, H, { stump = 0, dTop = null } = {}) {
   const hTop = above[above.length - 1], v = volume(set, D, H, stump, hTop);
   return { ...out, hTop, merch: v.status === 'ok' ? v.V : null, note: above.length > 1 ? 'multiple' : null };
 }
+
+/**
+ * SV-03 (17 Nov 2026): log-length limit of the merchantable stem. Source [B]: Husch, Beers, Kershaw, Ducey 2016,
+ * Forest Mensuration, 5th ed., Wiley: §6.4.1 (p. 168–169, worked example, step 3: "Subtracting 1 ft for the stump and
+ * allowing 0.3 ft for trim, then number of 16-ft logs are determined: L = ((72 − 17.3)/16.3) + 1 = 3.3 + 1 = 4 logs",
+ * i.e. the merchantable length from the stump to the top limit, divided by log length + trim, whole logs only);
+ * §7.4.1 (p. 195: trim allowance, the extra length cut with each log, 3–6 in.); §7.4.3 (p. 198: a merchantable log has a
+ * minimum length, e.g. a cull log is any log less than 8 ft long); Table 6.14 note (top sections shorter than a
+ * minimum scaled as fractions). Every length is the user's (no default value from the book; metric on the site).
+ *
+ * Number of whole logs n = ⌊(hTop − stump)/(L + trim)⌋ (the book's form ((hTop − stump − (L + trim))/(L + trim)) + 1 has
+ * the same integer part); a relative tolerance of 1e-9 keeps exact multiples whole. Log i (0-based) runs from
+ * b_i = stump + i·(L + trim) to b_i + L, its trim from b_i + L to b_i + L + trim. The rest r = hTop − stump − n·(L + trim)
+ * is a short top piece only if shortTop === 'keep', r − trim > 0 and (with minLen) r − trim ≥ minLen; otherwise it is
+ * not counted. Full logs shorter than minLen (L < minLen) are not merchantable at all (code 'log.belowmin').
+ * Returns { status, n, logs: [{ h1, h2, L, V, dSmall }], short: { h1, h2, L, V, dSmall } | null, V: { logs, short,
+ * trims, rest, merch }, hTop } with V.logs + V.short + V.trims + V.rest = V.merch (stump → hTop); or { status, code }.
+ */
+function logCount(span, L, trim) {
+  if (!(span > 0)) return 0;
+  const q = span / (L + trim);
+  return Math.floor(q + 1e-9 * Math.max(1, q));
+}
+function logLimit(set, D, H, { stump = 0, hTop = null, L, trim = 0, minLen = null, shortTop = 'drop' } = {}) {
+  const top = hTop == null ? H : hTop;
+  if (!(fin(L) && L > 0)) return { status: 'invalid', code: 'log.L' };
+  if (!(fin(trim) && trim >= 0)) return { status: 'invalid', code: 'log.trim' };
+  if (minLen != null && !(fin(minLen) && minLen > 0)) return { status: 'invalid', code: 'log.min' };
+  if (!['drop', 'keep'].includes(shortTop)) return { status: 'invalid', code: 'log.short' };
+  if (!(fin(stump) && stump >= 0 && fin(top) && top <= H)) return { status: 'invalid', code: 'log.range' };
+  const vol = (a, b) => { if (!(b > a)) return 0; const v = volume(set, D, H, a, b); return v.status === 'ok' ? v.V : NaN; };
+  const span = Math.max(0, top - stump), total = vol(stump, Math.max(stump, top));
+  if (minLen != null && L < minLen) return { status: 'ok', code: 'log.belowmin', n: 0, logs: [], short: null, hTop: top, V: { logs: 0, short: 0, trims: 0, rest: total, merch: total } };
+  const n = logCount(span, L, trim), logs = [];
+  let trims = 0;
+  for (let i = 0; i < n; i++) {
+    const h1 = stump + i * (L + trim), h2 = h1 + L, dS = diameterAt(set, D, H, h2);
+    logs.push({ h1, h2, L, V: vol(h1, h2), dSmall: dS.status === 'ok' ? dS.d : null });
+    trims += vol(h2, Math.min(h2 + trim, top));
+  }
+  const used = stump + n * (L + trim), r = top - used;
+  let short = null;
+  if (shortTop === 'keep' && r - trim > 1e-9 && (minLen == null || r - trim >= minLen - 1e-9)) {
+    const h2 = used + (r - trim), dS = diameterAt(set, D, H, h2);
+    short = { h1: used, h2, L: r - trim, V: vol(used, h2), dSmall: dS.status === 'ok' ? dS.d : null };
+    trims += vol(h2, top);
+  }
+  const sumLogs = logs.reduce((s, q) => s + q.V, 0), vShort = short ? short.V : 0;
+  const rest = short ? 0 : vol(Math.min(used, top), top);
+  const V = { logs: sumLogs, short: vShort, trims, rest, merch: total };
+  if (![sumLogs, vShort, trims, rest, total].every(fin)) return { status: 'invalid', code: 'log.volume' };
+  return { status: 'ok', n, logs, short, hTop: top, V };
+}
 };
 
 // ---- assets/lab/taper/coef-extra.js
@@ -3065,6 +3118,15 @@ const T = makeT({
     'fit.method.nls-d': 'çap üzerinde NLS', 'fit.method.nls-y': 'd²/D² üzerinde NLS', 'fit.method.ols-lnd': 'ln d üzerinde doğrusal EKK',
     'tr.h': 'Ağaçlar', 'tr.mode': 'Girdi', 'tr.single': 'Tek ağaç', 'tr.table': 'Ağaç tablosu', 'tr.D': 'Göğüs çapı D (cm, kabuklu)', 'tr.H': 'Toplam boy H (m)',
     'tr.col.plot': 'Örnek alan', 'tr.col.tree': 'Ağaç', 'tr.col.D': 'Göğüs çapı (cm)', 'tr.col.H': 'Boy (m)', 'tr.need': 'Göğüs çapı ve boy sütunlarını seçin.', 'tr.bad': 'D > 0 ve H > 1.3 m olmalı.',
+    'lg.on': 'Tomruk boyu sınırı (kullanılabilir hacim tam tomruklara indirgenir)', 'lg.L': 'Tomruk boyu (m)', 'lg.trim': 'Kesim payı (cm, her tomrukta)', 'lg.min': 'En kısa tomruk (m, isteğe bağlı)', 'lg.short': 'Kalan kısa parça',
+    'lg.short.drop': 'sayılmaz', 'lg.short.keep': 'en kısa tomruktan uzunsa sayılır',
+    'lg.note': 'Kural: kesim yüksekliğinden tepe sınırına (tepe çapı yüksekliği; tepe çapı yoksa tepe) kadar uzunluk, tomruk boyu + kesim payına bölünür ve tam tomruklar sayılır (Husch, Beers, Kershaw, Ducey 2016, §6.4.1, s. 168–169; kesim payı §7.4.1, en kısa tomruk §7.4.3). Değerler sizin: kitaptaki örnekler (16 ft tomruk, 0,3 ft kesim payı, 8 ft en kısa tomruk) varsayılan değildir.',
+    'lg.bad': 'Tomruk boyu > 0, kesim payı ≥ 0 ve en kısa tomruk (girilirse) > 0 olmalı.',
+    'lg.n': 'Tomruk (adet)', 'lg.V': 'Tomruk hacmi (m³)', 'lg.trims': 'Kesim payları (m³)', 'lg.rest': 'Kalan (m³)',
+    'lg.h': p => `Tomruklar: ${p.tree}`, 'lg.h1': 'Alt uç (m)', 'lg.h2': 'Üst uç (m)', 'lg.len': 'Boy (m)', 'lg.ds': 'İnce uç çapı (cm)', 'lg.vol': 'Hacim (m³)', 'lg.shortrow': 'kısa', 'lg.none': 'Tam tomruk çıkmıyor.',
+    'lg.bal': p => `Tomruklar ${p.logs} + kesim payları ${p.trims} + kalan ${p.rest} = kullanılabilir hacim ${p.merch} m³.`,
+    'lg.src': 'Tomruk hacimleri profil integralidir (seçili set); kesim payları ve kalan parça tomruk hacmine sayılmaz.',
+    'lg.e.log.belowmin': 'tomruk boyu en kısa tomruktan kısa: tomruk çıkmaz', 'lg.e.log.L': 'tomruk boyu geçersiz', 'lg.e.log.trim': 'kesim payı geçersiz', 'lg.e.log.min': 'en kısa tomruk geçersiz', 'lg.e.log.short': 'kısa parça seçimi geçersiz', 'lg.e.log.range': 'aralık geçersiz', 'lg.e.log.volume': 'hacim hesaplanamadı',
     'tr.opts': 'Hacim ayarları', 'tr.stump': 'Kesim yüksekliği (m)', 'tr.dtop': 'Tepe çapı (cm; boş: yalnızca toplam hacim)', 'tr.step': 'Profil tablosu adımı (m)',
     'tr.opts.note': 'Toplam hacim kesim yüksekliğinden tepeye; tepe çapı girilirse çapın o değere en son indiği yüksekliğe kadar kullanılabilir hacim de verilir. Değerler araç ayarıdır, literatür değeri değildir.',
     'tr.opts.bad': 'Kesim yüksekliği ≥ 0, tepe çapı > 0, adım > 0 olmalı.',
@@ -3128,6 +3190,15 @@ const T = makeT({
     'fit.method.nls-d': 'NLS on diameter', 'fit.method.nls-y': 'NLS on d²/D²', 'fit.method.ols-lnd': 'linear LS on ln d',
     'tr.h': 'Trees', 'tr.mode': 'Input', 'tr.single': 'One tree', 'tr.table': 'Tree table', 'tr.D': 'Dbh D (cm, outside bark)', 'tr.H': 'Total height H (m)',
     'tr.col.plot': 'Plot', 'tr.col.tree': 'Tree', 'tr.col.D': 'Dbh (cm)', 'tr.col.H': 'Height (m)', 'tr.need': 'Choose the dbh and height columns.', 'tr.bad': 'D must be > 0 and H > 1.3 m.',
+    'lg.on': 'Log-length limit (merchantable volume reduced to whole logs)', 'lg.L': 'Log length (m)', 'lg.trim': 'Trim allowance (cm, per log)', 'lg.min': 'Minimum log length (m, optional)', 'lg.short': 'Short top piece',
+    'lg.short.drop': 'not counted', 'lg.short.keep': 'counted if not shorter than the minimum log',
+    'lg.note': 'Rule: the length from the cut height to the top limit (the height of the top diameter; the tip without a top diameter) is divided by log length + trim and whole logs are counted (Husch, Beers, Kershaw, Ducey 2016, §6.4.1, p. 168–169; trim allowance §7.4.1, minimum log length §7.4.3). The values are yours: the book\'s examples (16-ft logs, 0.3-ft trim, 8-ft minimum) are not defaults.',
+    'lg.bad': 'Log length > 0, trim ≥ 0 and the minimum log length (if given) > 0 are required.',
+    'lg.n': 'Logs', 'lg.V': 'Log volume (m³)', 'lg.trims': 'Trim (m³)', 'lg.rest': 'Rest (m³)',
+    'lg.h': p => `Logs: ${p.tree}`, 'lg.h1': 'Lower end (m)', 'lg.h2': 'Upper end (m)', 'lg.len': 'Length (m)', 'lg.ds': 'Small-end diameter (cm)', 'lg.vol': 'Volume (m³)', 'lg.shortrow': 'short', 'lg.none': 'No whole log.',
+    'lg.bal': p => `Logs ${p.logs} + trim ${p.trims} + rest ${p.rest} = merchantable volume ${p.merch} m³.`,
+    'lg.src': 'Log volumes are profile integrals (the chosen set); trim and the rest are not counted as log volume.',
+    'lg.e.log.belowmin': 'the log length is below the minimum log length: no logs', 'lg.e.log.L': 'invalid log length', 'lg.e.log.trim': 'invalid trim', 'lg.e.log.min': 'invalid minimum log length', 'lg.e.log.short': 'invalid short-piece choice', 'lg.e.log.range': 'invalid range', 'lg.e.log.volume': 'volume could not be computed',
     'tr.opts': 'Volume settings', 'tr.stump': 'Cut height (m)', 'tr.dtop': 'Top diameter (cm; empty: total volume only)', 'tr.step': 'Profile table step (m)',
     'tr.opts.note': 'Total volume from the cut height to the tip; with a top diameter, also the merchantable volume up to the height where the diameter last falls to that value. The values are tool settings, not literature values.',
     'tr.opts.bad': 'Cut height ≥ 0, top diameter > 0 and step > 0 are required.',

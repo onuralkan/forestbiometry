@@ -30,7 +30,7 @@ function blank() {
   return { v: 1, step: 1, tab: 'coef', setOb: null, setIb: null,
     fit: { imp: null, src: null, map: Object.fromEntries(FKEYS.map(k => [k, null])), decimal: null, decimalChosen: false, barkDef: 'ob', form: 'mb76', bark: 'ib', scale: 'd', cit: '' },
     trees: { mode: 'single', D: '', H: '', imp: null, src: null, map: { plot: null, tree: null, D: null, H: null }, decimal: null, decimalChosen: false },
-    opt: { stump: '0.3', dTop: '', step: '1' }, sel: 0,
+    opt: { stump: '0.3', dTop: '', step: '1', logOn: false, L: '', trim: '', minLen: '', shortTop: 'drop' }, sel: 0,
     buck: { on: false, method: 'value', objective: 'value', step: '0.1', bark: 'ib', currency: '', rows: [] } };
 }
 let saveT = null;
@@ -141,6 +141,8 @@ function renderFitOut() {
 
 /* ---------------- step 2: trees and settings ---------------- */
 const opts = () => ({ stump: num(S.opt.stump), dTop: num(S.opt.dTop), step: num(S.opt.step) });
+/** SV-03 log-length limit settings (lengths in m, trim in cm), or null when off. */
+const logOpts = () => S.opt.logOn ? { L: num(S.opt.L), trim: num(S.opt.trim) ?? 0, minLen: num(S.opt.minLen), shortTop: S.opt.shortTop } : null;
 function treeRows() {
   const t = S.trees;
   if (t.mode === 'single') return [{ row: null, plot_id: null, tree_id: '1', D: num(t.D), H: num(t.H) }];
@@ -154,6 +156,8 @@ function step2Problems() {
   if (t.mode === 'single' && TP.checkTree(num(t.D), num(t.H)).length) p.push(T('tr.bad'));
   if (t.mode === 'table' && (!t.src || t.map.D == null || t.map.H == null)) p.push(T('tr.need'));
   if (!(o.stump != null && o.stump >= 0) || Number.isNaN(o.dTop) || (o.dTop != null && !(o.dTop > 0)) || !(o.step > 0)) p.push(T('tr.opts.bad'));
+  const lo = logOpts();
+  if (lo && (!(lo.L > 0) || !(lo.trim >= 0) || Number.isNaN(lo.minLen) || (lo.minLen != null && !(lo.minLen > 0)))) p.push(T('lg.bad'));
   return [...p, ...buckProblems()];
 }
 
@@ -236,7 +240,12 @@ function renderStep2() {
   }
   h += `</div><div class="card"><h2>${T('tr.opts')}</h2><div class="lims"><label>${T('tr.stump')} <input type="text" inputmode="decimal" size="6" id="o-stump" value="${esc(o.stump)}"></label>
     <label>${T('tr.dtop')} <input type="text" inputmode="decimal" size="6" id="o-dTop" value="${esc(o.dTop)}"></label><label>${T('tr.step')} <input type="text" inputmode="decimal" size="5" id="o-step" value="${esc(o.step)}"></label></div>
-    <p class="muted small">${T('tr.opts.note')}</p></div>` + buckCard();
+    <p class="muted small">${T('tr.opts.note')}</p>
+    <label class="chk"><input type="checkbox" id="o-logOn"${o.logOn ? ' checked' : ''}> <b>${T('lg.on')}</b></label>
+    ${o.logOn ? `<div class="lims" id="lgbox"><label>${T('lg.L')} <input type="text" inputmode="decimal" size="6" id="o-L" value="${esc(o.L)}"></label><label>${T('lg.trim')} <input type="text" inputmode="decimal" size="6" id="o-trim" value="${esc(o.trim)}"></label>
+      <label>${T('lg.min')} <input type="text" inputmode="decimal" size="6" id="o-minLen" value="${esc(o.minLen)}"></label>
+      <label>${T('lg.short')} <select id="o-shortTop">${['drop', 'keep'].map(v => `<option value="${v}"${o.shortTop === v ? ' selected' : ''}>${T('lg.short.' + v)}</option>`).join('')}</select></label></div>
+      <p class="muted small" id="lgnote">${T('lg.note')}</p>` : ''}</div>` + buckCard();
   const pr = step2Problems();
   h += `<div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div>`;
   el.innerHTML = h;
@@ -244,6 +253,9 @@ function renderStep2() {
   el.querySelectorAll('input[name="tmode"]').forEach(x => x.addEventListener('change', () => { t.mode = x.value; re(); }));
   for (const k of ['D', 'H']) $('t-' + k) && $('t-' + k).addEventListener('change', e => { t[k] = e.target.value; re(); });
   for (const k of ['stump', 'dTop', 'step']) $('o-' + k).addEventListener('change', e => { o[k] = e.target.value; re(); });
+  $('o-logOn').addEventListener('change', e => { o.logOn = e.target.checked; re(); });
+  for (const k of ['L', 'trim', 'minLen']) $('o-' + k) && $('o-' + k).addEventListener('change', e => { o[k] = e.target.value.trim(); re(); });
+  $('o-shortTop') && $('o-shortTop').addEventListener('change', e => { o.shortTop = e.target.value; re(); });
   bindBuck(re);
   if (t.mode === 'table') {
     renderImport($('timp'), { imp: t.imp, src: t.src }, { base: BASE, title: T('tr.table'), onChange: st => { t.imp = st.imp; t.src = st.src; t.map = st.src ? guess(st.src, TGUESS) : { plot: null, tree: null, D: null, H: null }; t.decimalChosen = false; re(); }, onError: m => status(m, 'err') });
@@ -258,13 +270,20 @@ function renderStep2() {
 
 /* ---------------- step 3: results ---------------- */
 function compute() {
-  const o = opts(), list = chosenSets();
-  R = { created: new Date().toISOString(), settings: { stump: o.stump, dTop: o.dTop, step: o.step }, sets: list.map(s => ({ id: s.id, form: s.form, bark: TP.barkOf(s), params: s.params, source: s.source.citation, origin: s.origin })),
+  const o = opts(), list = chosenSets(), lo = logOpts();
+  R = { created: new Date().toISOString(), settings: { stump: o.stump, dTop: o.dTop, step: o.step, logs: lo ? { L: lo.L, trim_cm: lo.trim, minLen: lo.minLen, shortTop: lo.shortTop } : null }, sets: list.map(s => ({ id: s.id, form: s.form, bark: TP.barkOf(s), params: s.params, source: s.source.citation, origin: s.origin })),
     trees: treeRows().map(t => ({ ...t, by: list.map(s => {
       const ev = TP.evaluateTree(s, t.D, t.H);
       if (ev.status !== 'ok') return { bark: TP.barkOf(s), status: 'invalid', problems: ev.problems, warnings: [] };
       const m = TP.merchantable(s, t.D, t.H, { stump: o.stump, dTop: o.dTop });
-      return { bark: TP.barkOf(s), status: m.status, total: m.total, hTop: m.hTop, merch: m.merch, note: m.note, d13: ev.consistency.d13, warnings: ev.warnings, problems: [] };
+      // SV-03: logs from the cut height to the top limit (the top-diameter height, or the tip without a top diameter)
+      let logs = null;
+      if (lo && m.status === 'ok') {
+        const top = o.dTop == null ? t.H : m.hTop;
+        logs = top == null ? { status: 'ok', n: 0, logs: [], short: null, V: { logs: 0, short: 0, trims: 0, rest: 0, merch: 0 } }
+          : TP.logLimit(s, t.D, t.H, { stump: o.stump, hTop: top, L: lo.L, trim: lo.trim / 100, minLen: lo.minLen, shortTop: lo.shortTop });
+      }
+      return { bark: TP.barkOf(s), status: m.status, total: m.total, hTop: m.hTop, merch: m.merch, note: m.note, d13: ev.consistency.d13, logs, warnings: ev.warnings, problems: [] };
     }) })) };
   R.buck = null;
   if (S.buck.on && !buckProblems().length) {
@@ -334,10 +353,10 @@ function profileOf(t) {
 function renderStep3() {
   const el = $('step3'); if (!R) compute();
   const used = R.sets.map(s => `${formText(s.form)} (${T('bark.' + s.bark)}; ${s.source})`).join('; ');
-  let h = `<div class="card"><h2>${T('res.trees')}</h2><p class="note small" id="used">${esc(T('res.used', { list: used }))}</p><div class="tscroll"><table class="grid" id="rtab"><thead><tr><th>${T('res.tree')}</th><th>${T('res.D')}</th><th>${T('res.H')}</th><th>${T('res.bark')}</th><th>${T('res.total')}</th>${R.settings.dTop != null ? `<th>${T('res.hTop')}</th><th>${T('res.merch')}</th>` : ''}<th>${T('res.d13')}</th><th>${T('res.notes')}</th></tr></thead><tbody>`;
+  let h = `<div class="card"><h2>${T('res.trees')}</h2><p class="note small" id="used">${esc(T('res.used', { list: used }))}</p><div class="tscroll"><table class="grid" id="rtab"><thead><tr><th>${T('res.tree')}</th><th>${T('res.D')}</th><th>${T('res.H')}</th><th>${T('res.bark')}</th><th>${T('res.total')}</th>${R.settings.dTop != null ? `<th>${T('res.hTop')}</th><th>${T('res.merch')}</th>` : ''}${R.settings.logs ? `<th>${T('lg.n')}</th><th>${T('lg.V')}</th><th>${T('lg.trims')}</th><th>${T('lg.rest')}</th>` : ''}<th>${T('res.d13')}</th><th>${T('res.notes')}</th></tr></thead><tbody>`;
   R.trees.forEach((t, i) => t.by.forEach((b, j) => {
     h += `<tr${i === S.sel ? ' class="sel"' : ''}>${j === 0 ? `<td rowspan="${t.by.length}"><button type="button" class="linkbtn" data-sel="${i}">${esc([t.plot_id, t.tree_id].filter(Boolean).join(' / '))}</button></td><td class="num" rowspan="${t.by.length}">${f(t.D, 1)}</td><td class="num" rowspan="${t.by.length}">${f(t.H, 1)}</td>` : ''}
-      <td>${T('bark.' + b.bark)}</td><td class="num">${f(b.total, 4)}</td>${R.settings.dTop != null ? `<td class="num">${f(b.hTop, 2)}</td><td class="num">${f(b.merch, 4)}</td>` : ''}<td class="num">${f(b.d13, 2)}</td><td class="small">${esc(noteText(b).join('; '))}</td></tr>`;
+      <td>${T('bark.' + b.bark)}</td><td class="num">${f(b.total, 4)}</td>${R.settings.dTop != null ? `<td class="num">${f(b.hTop, 2)}</td><td class="num">${f(b.merch, 4)}</td>` : ''}${R.settings.logs ? logCells(b.logs) : ''}<td class="num">${f(b.d13, 2)}</td><td class="small">${esc(noteText(b).join('; '))}</td></tr>`;
   }));
   h += `</tbody></table></div></div>`;
   const t = R.trees[S.sel];
@@ -349,6 +368,7 @@ function renderStep3() {
       <figure class="chartbox" id="ch-prof">${plotChart({ title: T('res.profile'), xLabel: T('res.h'), yLabel: T('res.d'), xmin: 0, xmax: t.H, ymax: ymax * 1.05, lines, fmt: v => fmtNum(v, 1), height: 340 })}<figcaption class="small">${T('res.profile')} <button type="button" class="btn ghost small" id="svg-prof">${T('res.svg')}</button></figcaption></figure>
       <details class="more"><summary>${T('res.ptab')}</summary><div class="tscroll"><table class="grid" id="ptab"><thead><tr><th>${T('res.h')}</th>${P.cols.map(c => `<th>${T('res.d')} (${T('bark.' + c.bark)})</th>`).join('')}</tr></thead><tbody>${P.hs.map((x, i) => `<tr><td class="num">${f(x, 2)}</td>${P.cols.map(c => `<td class="num">${f(c.d[i], 2)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details></div>`;
   }
+  if (t && R.settings.logs) h += logDetail(t);
   h += buckSection();
   h += `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('res.excel')}</button><button type="button" class="btn ghost" id="x-csv">${T('res.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('res.json')}</button>${recordOption()}</div></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
@@ -375,9 +395,32 @@ function renderStep3() {
   });
 }
 function treeTable() {
-  const rows = [['plot_id', 'tree_id', 'D_cm', 'H_m', 'bark', 'stump_m', 'total_m3', 'dTop_cm', 'hTop_m', 'merch_m3', 'd13_cm', 'status', 'notes']];
-  for (const t of R.trees) for (const b of t.by) rows.push([t.plot_id, t.tree_id, t.D, t.H, b.bark, R.settings.stump, b.total ?? null, R.settings.dTop, b.hTop ?? null, b.merch ?? null, b.d13 ?? null, b.status, noteText(b).join('; ')]);
+  const L = !!R.settings.logs, rows = [['plot_id', 'tree_id', 'D_cm', 'H_m', 'bark', 'stump_m', 'total_m3', 'dTop_cm', 'hTop_m', 'merch_m3', ...(L ? ['logs_n', 'log_L_m', 'trim_cm', 'logs_m3', 'short_L_m', 'short_m3', 'trims_m3', 'rest_m3'] : []), 'd13_cm', 'status', 'notes']];
+  for (const t of R.trees) for (const b of t.by) {
+    const g = b.logs && b.logs.status === 'ok' ? b.logs : null;
+    rows.push([t.plot_id, t.tree_id, t.D, t.H, b.bark, R.settings.stump, b.total ?? null, R.settings.dTop, b.hTop ?? null, b.merch ?? null,
+      ...(L ? [g ? g.n : null, R.settings.logs.L, R.settings.logs.trim_cm, g ? g.V.logs : null, g && g.short ? g.short.L : null, g ? g.V.short : null, g ? g.V.trims : null, g ? g.V.rest : null] : []), b.d13 ?? null, b.status, noteText(b).join('; ')]);
+  }
   return rows;
+}
+/* SV-03: log columns of the tree table and the log list of the selected tree */
+function logCells(g) {
+  if (!g) return '<td colspan="4" class="muted">–</td>';
+  if (g.status !== 'ok') return `<td colspan="4" class="small">${esc(T('lg.e.' + g.code))}</td>`;
+  return `<td class="num">${g.n}${g.short ? ' + 1' : ''}</td><td class="num">${f(g.V.logs + g.V.short, 4)}</td><td class="num">${f(g.V.trims, 4)}</td><td class="num"${g.code ? ` title="${esc(T('lg.e.' + g.code))}"` : ''}>${f(g.V.rest, 4)}</td>`;
+}
+function logDetail(t) {
+  const items = t.by.filter(b => b.logs && b.logs.status === 'ok');
+  if (!items.length) return '';
+  let h = `<div class="card" id="logcard"><h2>${esc(T('lg.h', { tree: [t.plot_id, t.tree_id].filter(Boolean).join(' / ') }))}</h2>`;
+  for (const b of items) {
+    const g = b.logs, rows = [...g.logs.map((q, i) => [String(i + 1), q]), ...(g.short ? [[T('lg.shortrow'), g.short]] : [])];
+    h += `<h3>${T('bark.' + b.bark)}</h3>${g.code ? `<p class="note warn small">${esc(T('lg.e.' + g.code))}</p>` : ''}
+      ${rows.length ? `<div class="tscroll"><table class="grid" data-logs="${b.bark}"><thead><tr><th>#</th><th>${T('lg.h1')}</th><th>${T('lg.h2')}</th><th>${T('lg.len')}</th><th>${T('lg.ds')}</th><th>${T('lg.vol')}</th></tr></thead><tbody>
+      ${rows.map(([k, q]) => `<tr><td>${esc(k)}</td><td class="num">${f(q.h1, 2)}</td><td class="num">${f(q.h2, 2)}</td><td class="num">${f(q.L, 2)}</td><td class="num">${f(q.dSmall, 1)}</td><td class="num">${f(q.V, 4)}</td></tr>`).join('')}</tbody></table></div>` : `<p class="small">${T('lg.none')}</p>`}
+      <p class="small" data-bal="${b.bark}">${esc(T('lg.bal', { logs: f(g.V.logs + g.V.short, 4), trims: f(g.V.trims, 4), rest: f(g.V.rest, 4), merch: f(g.V.merch, 4) }))}</p>`;
+  }
+  return h + `<p class="muted small">${T('lg.src')}</p></div>`;
 }
 
 /* ---------------- navigation ---------------- */

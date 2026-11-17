@@ -43,7 +43,7 @@ function site_catalog(): array {
         ['TM-06', 'live', 'Biçim sayısı ve biçim bölümü', 'Form factor and form quotient', 'agac-olcumu.php'],
         ['SV-01', 'live', 'Seksiyon hacmi', 'Sectional volume', 'seksiyon-hacmi.php'],
         ['SV-02', 'live', 'Gövde profili denklemleri', 'Taper models', 'govde-profili.php'],
-        ['SV-03', 'planned', 'Kullanılabilir hacim', 'Merchantable volume'],
+        ['SV-03', 'live', 'Kullanılabilir hacim', 'Merchantable volume', 'govde-profili.php'],
         ['SV-04', 'planned', 'Hacim denklemleri', 'Volume equations'],
         ['SV-05', 'planned', 'Tomruk ölçüm kuralları', 'Log scaling rules'],
         ['SV-06', 'live', 'Ürün bölme (sortiman) eniyileme', 'Log bucking optimizer', 'govde-profili.php'],

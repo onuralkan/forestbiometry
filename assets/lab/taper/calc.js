@@ -25,7 +25,7 @@ import { registerForm, validateCoef } from '../core/coef.js';
 import { brent } from '../core/roots.js';
 import { gaussLegendre } from '../core/quad.js';
 
-export const TOOL = { id: 'govde-profili', version: '1.0.0-beta.2' };
+export const TOOL = { id: 'govde-profili', version: '1.0.0-beta.3' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /** Registered forms: params in the order of the source; y(p, x, D, H) = d²/D²; Y (antiderivative in x) if closed. */
@@ -216,4 +216,57 @@ export function merchantable(set, D, H, { stump = 0, dTop = null } = {}) {
   if (!above.length) return { ...out, note: 'none' };
   const hTop = above[above.length - 1], v = volume(set, D, H, stump, hTop);
   return { ...out, hTop, merch: v.status === 'ok' ? v.V : null, note: above.length > 1 ? 'multiple' : null };
+}
+
+/**
+ * SV-03 (17 Nov 2026): log-length limit of the merchantable stem. Source [B]: Husch, Beers, Kershaw, Ducey 2016,
+ * Forest Mensuration, 5th ed., Wiley: §6.4.1 (p. 168–169, worked example, step 3: "Subtracting 1 ft for the stump and
+ * allowing 0.3 ft for trim, then number of 16-ft logs are determined: L = ((72 − 17.3)/16.3) + 1 = 3.3 + 1 = 4 logs",
+ * i.e. the merchantable length from the stump to the top limit, divided by log length + trim, whole logs only);
+ * §7.4.1 (p. 195: trim allowance, the extra length cut with each log, 3–6 in.); §7.4.3 (p. 198: a merchantable log has a
+ * minimum length, e.g. a cull log is any log less than 8 ft long); Table 6.14 note (top sections shorter than a
+ * minimum scaled as fractions). Every length is the user's (no default value from the book; metric on the site).
+ *
+ * Number of whole logs n = ⌊(hTop − stump)/(L + trim)⌋ (the book's form ((hTop − stump − (L + trim))/(L + trim)) + 1 has
+ * the same integer part); a relative tolerance of 1e-9 keeps exact multiples whole. Log i (0-based) runs from
+ * b_i = stump + i·(L + trim) to b_i + L, its trim from b_i + L to b_i + L + trim. The rest r = hTop − stump − n·(L + trim)
+ * is a short top piece only if shortTop === 'keep', r − trim > 0 and (with minLen) r − trim ≥ minLen; otherwise it is
+ * not counted. Full logs shorter than minLen (L < minLen) are not merchantable at all (code 'log.belowmin').
+ * Returns { status, n, logs: [{ h1, h2, L, V, dSmall }], short: { h1, h2, L, V, dSmall } | null, V: { logs, short,
+ * trims, rest, merch }, hTop } with V.logs + V.short + V.trims + V.rest = V.merch (stump → hTop); or { status, code }.
+ */
+export function logCount(span, L, trim) {
+  if (!(span > 0)) return 0;
+  const q = span / (L + trim);
+  return Math.floor(q + 1e-9 * Math.max(1, q));
+}
+export function logLimit(set, D, H, { stump = 0, hTop = null, L, trim = 0, minLen = null, shortTop = 'drop' } = {}) {
+  const top = hTop == null ? H : hTop;
+  if (!(fin(L) && L > 0)) return { status: 'invalid', code: 'log.L' };
+  if (!(fin(trim) && trim >= 0)) return { status: 'invalid', code: 'log.trim' };
+  if (minLen != null && !(fin(minLen) && minLen > 0)) return { status: 'invalid', code: 'log.min' };
+  if (!['drop', 'keep'].includes(shortTop)) return { status: 'invalid', code: 'log.short' };
+  if (!(fin(stump) && stump >= 0 && fin(top) && top <= H)) return { status: 'invalid', code: 'log.range' };
+  const vol = (a, b) => { if (!(b > a)) return 0; const v = volume(set, D, H, a, b); return v.status === 'ok' ? v.V : NaN; };
+  const span = Math.max(0, top - stump), total = vol(stump, Math.max(stump, top));
+  if (minLen != null && L < minLen) return { status: 'ok', code: 'log.belowmin', n: 0, logs: [], short: null, hTop: top, V: { logs: 0, short: 0, trims: 0, rest: total, merch: total } };
+  const n = logCount(span, L, trim), logs = [];
+  let trims = 0;
+  for (let i = 0; i < n; i++) {
+    const h1 = stump + i * (L + trim), h2 = h1 + L, dS = diameterAt(set, D, H, h2);
+    logs.push({ h1, h2, L, V: vol(h1, h2), dSmall: dS.status === 'ok' ? dS.d : null });
+    trims += vol(h2, Math.min(h2 + trim, top));
+  }
+  const used = stump + n * (L + trim), r = top - used;
+  let short = null;
+  if (shortTop === 'keep' && r - trim > 1e-9 && (minLen == null || r - trim >= minLen - 1e-9)) {
+    const h2 = used + (r - trim), dS = diameterAt(set, D, H, h2);
+    short = { h1: used, h2, L: r - trim, V: vol(used, h2), dSmall: dS.status === 'ok' ? dS.d : null };
+    trims += vol(h2, top);
+  }
+  const sumLogs = logs.reduce((s, q) => s + q.V, 0), vShort = short ? short.V : 0;
+  const rest = short ? 0 : vol(Math.min(used, top), top);
+  const V = { logs: sumLogs, short: vShort, trims, rest, merch: total };
+  if (![sumLogs, vShort, trims, rest, total].every(fin)) return { status: 'invalid', code: 'log.volume' };
+  return { status: 'ok', n, logs, short, hTop: top, V };
 }
