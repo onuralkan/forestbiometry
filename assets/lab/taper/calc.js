@@ -32,7 +32,7 @@ const fin = x => typeof x === 'number' && Number.isFinite(x);
 export const FORMS = {
   mb76: {
     id: 'mb76', params: ['b1', 'b2', 'b3', 'b4', 'a1', 'a2'], joins: p => [p.a1, p.a2],
-    source: 'Max ve Burkhart (1976), Model 4',
+    source: 'Max ve Burkhart (1976), Model 4', name: { tr: 'Max ve Burkhart (1976), Model 4', en: 'Max & Burkhart (1976), Model 4' },
     formula: { tr: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; I_i = 1 eğer x ≤ a_i',
                en: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; I_i = 1 if x ≤ a_i' },
     y: (p, x) => p.b1 * (x - 1) + p.b2 * (x * x - 1) + (x <= p.a1 ? p.b3 * (p.a1 - x) ** 2 : 0) + (x <= p.a2 ? p.b4 * (p.a2 - x) ** 2 : 0),
@@ -49,7 +49,7 @@ export const FORMS = {
   },
   kozak02: {
     id: 'kozak02', params: ['a0', 'a1', 'a2', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6'], joins: () => [],
-    source: 'Kozak (2004), Model 02',
+    source: 'Kozak (2004), Model 02', name: { tr: 'Kozak (2004), Model 02', en: 'Kozak (2004), Model 02' },
     formula: { tr: 'd = a0·D^a1·H^a2·X^(b1·z⁴ + b2/e^(D/H) + b3·X^0.1 + b4/D + b5·H^Q + b6·X); X = [1 − z^(1/3)]/[1 − p^(1/3)], Q = 1 − z^(1/3), z = h/H, p = 1.3/H',
                en: 'd = a0·D^a1·H^a2·X^(b1·z⁴ + b2/e^(D/H) + b3·X^0.1 + b4/D + b5·H^Q + b6·X); X = [1 − z^(1/3)]/[1 − p^(1/3)], Q = 1 − z^(1/3), z = h/H, p = 1.3/H' },
     y: (p, x, D, H) => {
@@ -64,7 +64,7 @@ export const FORMS = {
 for (const f of Object.values(FORMS)) {
   try {
     registerForm({ id: 'taper.' + f.id, tool: 'taper', params: f.params.map(key => ({ key })), inputs: { D: { unit: 'cm', bark: 'ob' }, H: { unit: 'm' }, h: { unit: 'm' } },
-      output: { name: 'd', unit: 'cm' }, formula: f.formula, transform: 'none' });
+      output: { name: 'd', unit: 'cm' }, formula: f.formula, name: f.name, transform: 'none' });
   } catch (e) { /* already registered (module loaded twice in one page) */ }
 }
 /** Bark side of a set's output: output.bark, or meta.bark (the coefficient editor stores tool fields in meta). */

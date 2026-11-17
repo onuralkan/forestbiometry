@@ -9,7 +9,7 @@ site_top([
 ]);
 $tools = site_tools();
 ?>
-  <?php $cat = site_catalog(); $nLive = count(array_filter($cat, function ($c) { return $c['status'] === 'live'; })); $nAll = count(array_filter($cat, function ($c) { return $c['status'] !== 'out'; })); $nMod = count(site_modules()); ?>
+  <?php $nMod = count(site_modules()); ?>
   <section class="hero" aria-labelledby="hero-h">
     <div class="hz-glow" aria-hidden="true"></div>
     <div class="hero-text">
@@ -19,12 +19,6 @@ $tools = site_tools();
                                        : 'Check your tree and plot measurements, compute stand values, fit distributions and height–diameter models, compare models. Every formula has its source written down; coefficients are yours to enter.' ?></p>
       <p class="b-actions"><a class="btn" href="veri-denetcisi.php"><?= site_icon('checker') ?><?= $tr ? 'Veriyi denetleyerek başla' : 'Start by checking your data' ?></a>
         <a class="btn ghost" href="#h-tools"><?= $tr ? 'Bütün araçlar' : 'All tools' ?></a></p>
-      <ul class="hz-stats">
-        <li><b><?= $nLive ?></b><span><?= $tr ? 'araç yayında' : 'tools live' ?></span></li>
-        <li><b><?= $nAll ?></b><span><?= $tr ? 'araçlık plan' : 'tools in the plan' ?></span></li>
-        <li><b><?= $nMod ?></b><span><?= $tr ? 'modül' : 'modules' ?></span></li>
-        <li><b>0</b><span><?= $tr ? 'sunucuya giden ölçüm' : 'measurements sent to a server' ?></span></li>
-      </ul>
     </div>
     <div class="hz-show"><?= hero_showcase($tr) ?></div>
   </section>
@@ -45,7 +39,7 @@ $tools = site_tools();
     <div class="dir-group" id="mod-<?= $mod['id'] ?>" data-mod="<?= $mod['id'] ?>">
       <button type="button" class="dir-cat" aria-expanded="true" aria-controls="dir-<?= $mod['id'] ?>">
         <span class="dir-t"><span class="dir-h"><?= h($mod['title']) ?></span><span class="dir-d"><?= h($mod['desc']) ?></span></span>
-        <span class="dir-n"><?= $nl ? '<span class="dir-live">' . $nl . ' ' . ($tr ? 'yayında' : 'live') . '</span>' : '' ?><?= $np ? '<span>' . $np . ' ' . ($tr ? 'yolda ve planlı' : 'coming') . '</span>' : '' ?></span>
+        <span class="dir-n"><?= $nl ? '<span class="dir-live">' . $nl . ' ' . ($tr ? 'araç' : ($nl === 1 ? 'tool' : 'tools')) . '</span>' : '' ?><?= $np ? '<span>' . $np . ' ' . ($tr ? 'yolda ve planlı' : 'coming') . '</span>' : '' ?></span>
         <?= site_icon('chev', 'ico chev') ?>
       </button>
       <div class="dir-body" id="dir-<?= $mod['id'] ?>">

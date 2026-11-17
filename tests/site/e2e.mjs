@@ -91,8 +91,9 @@ ok((await page.locator('.dir-group').count()) === N_CATS, `home directory groupe
   const cards = await page.locator('.hz-show .hz-card').evaluateAll(a => a.map(x => [x.getAttribute('href'), x.querySelectorAll('svg.hz-fig *').length]));
   ok(cards.length === 5 && cards.every(([h, n]) => TOOL_IDS.includes(h.replace('.php', '')) && n > 5), 'home showcase: 5 drawings linking to live tools');
   ok((await page.locator('.hz-cap').textContent()).includes('benzetim'), 'showcase labelled as illustrations (points simulated)');
-  const st = await page.locator('.hz-stats b').allTextContents();
-  ok(+st[0] === CATALOG.filter(c => c.status === 'live').length && +st[1] === CATALOG.filter(c => c.status !== 'out').length && +st[2] === N_CATS, 'home figures from the catalogue (live, in the plan without the removed ids, modules)'); }
+  ok((await page.locator('.hz-stats').count()) === 0, 'no tool-count figures in the hero (user decision, 17 Nov 2026)');
+  const badges = await page.locator('.dir-group').evaluateAll(gs => gs.map(g => [g.querySelectorAll('.dir-cards > a.hz-card').length, (g.querySelector('.dir-live') || {}).textContent || '']));
+  ok(badges.length === N_CATS && badges.every(([n, t]) => t === `${n} araç` || (n === 0 && t === '')), 'module badges say "n araç" (the tools of the module): ' + badges.map(b => b[1]).join(', ')); }
 // default language: English without ?lang and without a cookie, whatever the browser language (16 Nov 2026)
 { const c = await browser.newContext({ locale: 'tr-TR', extraHTTPHeaders: { 'Accept-Language': 'tr-TR,tr;q=0.9' } }), q = await c.newPage();
   await q.goto(BASE + '/'); ok(await q.getAttribute('html', 'lang') === 'en', 'default language is English even for a Turkish browser');

@@ -408,7 +408,7 @@ function metaProblems(extra, s) {
  */
 function mountCoefEditor(el, opts) {
   const tool = opts.tool, forms = C.formsFor(tool);
-  let sets = [], draft = null, text = null, msg = null;          // text: the typed strings of the draft
+  let sets = [], draft = null, text = null, msg = null, pick = forms.length ? forms[0].id : null;   // pick: the form chosen in the list          // text: the typed strings of the draft
   const refresh = async () => { sets = await C.listCoefs(tool); render(); opts.onChange && opts.onChange(sets); };
   const startDraft = (s) => {
     draft = JSON.parse(JSON.stringify(s));
@@ -434,15 +434,17 @@ function mountCoefEditor(el, opts) {
   }
   function render() {
     const row = s => { const f = C.form(s.form);
-      return `<tr data-id="${esc(s.id)}"><td>${esc(f ? (f.formula[lang] || f.formula.tr) : s.form)}</td><td>${esc([s.species, s.region, s.component].filter(Boolean).join(' · ') || '–')}${s.origin === 'fitted' ? ` <span class="muted small">(${T('origin_fitted')})</span>` : ''}</td>
+      return `<tr data-id="${esc(s.id)}"><td>${esc(f ? (f.name ? f.name[lang] || f.name.tr : f.formula[lang] || f.formula.tr) : s.form)}</td><td>${esc([s.species, s.region, s.component].filter(Boolean).join(' · ') || '–')}${s.origin === 'fitted' ? ` <span class="muted small">(${T('origin_fitted')})</span>` : ''}</td>
         <td class="small">${esc(s.source.citation)}</td><td class="small">${esc(String(s.modified || '').slice(0, 10))}</td>
         <td><button type="button" class="btn ghost small" data-act="edit">${T('edit')}</button> <button type="button" class="btn ghost small" data-act="del">${T('del')}</button></td></tr>`; };
+    const pickF = forms.find(f => f.id === pick) || forms[0] || null;
     let h = `<div class="card coefcard"><h2>${T('h')}</h2><p class="muted small">${T('sub')}</p>
       ${opts.compact ? '' : sets.length ? `<div class="tscroll"><table class="grid" id="cf-list"><thead><tr><th>${T('th_form')}</th><th>${T('th_scope')}</th><th>${T('th_src')}</th><th>${T('th_mod')}</th><th></th></tr></thead><tbody>${sets.map(row).join('')}</tbody></table></div>` : `<p class="small" id="cf-none">${T('none')}</p>`}
-      <div class="lims"><label>${T('form')} <select id="cf-form">${forms.map(f => `<option value="${esc(f.id)}">${esc(f.formula[lang] || f.formula.tr)}</option>`).join('')}</select></label>
+      <div class="lims"><label>${T('form')} <select id="cf-form">${forms.map(f => `<option value="${esc(f.id)}"${f.id === pick ? ' selected' : ''}>${esc(f.name ? f.name[lang] || f.name.tr : f.formula[lang] || f.formula.tr)}</option>`).join('')}</select></label>
         <button type="button" class="btn ghost small" id="cf-new"${forms.length ? '' : ' disabled'}>${T('new')}</button>
         ${opts.compact ? '' : `<button type="button" class="btn ghost small" id="cf-exp"${sets.length ? '' : ' disabled'}>${T('exp')}</button>
         <label class="btn ghost small">${T('imp')} <input type="file" id="cf-imp" accept=".json,application/json" hidden></label>`}</div>
+      ${pickF && pickF.name ? `<p class="small muted" id="cf-formula">${esc(pickF.formula[lang] || pickF.formula.tr)}</p>` : ''}
       ${msg ? `<p class="note ${msg.kind}" id="cf-msg">${esc(msg.text)}</p>` : ''}
       ${draft ? editor() : ''}</div>`;
     el.innerHTML = h; bind();
@@ -473,6 +475,7 @@ function mountCoefEditor(el, opts) {
   function bind() {
     const $ = id => el.querySelector('#' + id);
     $('cf-new') && $('cf-new').addEventListener('click', () => startDraft(C.blankSet($('cf-form').value)));
+    $('cf-form') && $('cf-form').addEventListener('change', e => { pick = e.target.value; render(); });
     el.querySelectorAll('#cf-list [data-act]').forEach(b => b.addEventListener('click', async () => {
       const id = b.closest('tr').dataset.id, s = sets.find(x => x.id === id);
       if (b.dataset.act === 'edit') startDraft(s);
@@ -545,7 +548,8 @@ const FORMS = new Map();
 
 /**
  * form = { id, tool, params: [{ key, label? }], inputs: { <var>: { unit, bark? } }, output: { name, unit, bark? },
- *          formula: { tr, en } (text shown to the user), transform?: 'none'|'log'|'log10' (the scale the equation is
+ *          formula: { tr, en } (text shown to the user), name?: { tr, en } (author and year, shown in the form list instead of
+ *          the formula, the formula then below it), transform?: 'none'|'log'|'log10' (the scale the equation is
  *          written on; default 'none'), eval?(params, x) → number (optional; the tool's own calculator) }
  */
 function registerForm(f) {
@@ -2263,7 +2267,7 @@ const fin = x => typeof x === 'number' && Number.isFinite(x);
 const FORMS = {
   mb76: {
     id: 'mb76', params: ['b1', 'b2', 'b3', 'b4', 'a1', 'a2'], joins: p => [p.a1, p.a2],
-    source: 'Max ve Burkhart (1976), Model 4',
+    source: 'Max ve Burkhart (1976), Model 4', name: { tr: 'Max ve Burkhart (1976), Model 4', en: 'Max & Burkhart (1976), Model 4' },
     formula: { tr: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; I_i = 1 eğer x ≤ a_i',
                en: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; I_i = 1 if x ≤ a_i' },
     y: (p, x) => p.b1 * (x - 1) + p.b2 * (x * x - 1) + (x <= p.a1 ? p.b3 * (p.a1 - x) ** 2 : 0) + (x <= p.a2 ? p.b4 * (p.a2 - x) ** 2 : 0),
@@ -2280,7 +2284,7 @@ const FORMS = {
   },
   kozak02: {
     id: 'kozak02', params: ['a0', 'a1', 'a2', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6'], joins: () => [],
-    source: 'Kozak (2004), Model 02',
+    source: 'Kozak (2004), Model 02', name: { tr: 'Kozak (2004), Model 02', en: 'Kozak (2004), Model 02' },
     formula: { tr: 'd = a0·D^a1·H^a2·X^(b1·z⁴ + b2/e^(D/H) + b3·X^0.1 + b4/D + b5·H^Q + b6·X); X = [1 − z^(1/3)]/[1 − p^(1/3)], Q = 1 − z^(1/3), z = h/H, p = 1.3/H',
                en: 'd = a0·D^a1·H^a2·X^(b1·z⁴ + b2/e^(D/H) + b3·X^0.1 + b4/D + b5·H^Q + b6·X); X = [1 − z^(1/3)]/[1 − p^(1/3)], Q = 1 − z^(1/3), z = h/H, p = 1.3/H' },
     y: (p, x, D, H) => {
@@ -2295,7 +2299,7 @@ const FORMS = {
 for (const f of Object.values(FORMS)) {
   try {
     registerForm({ id: 'taper.' + f.id, tool: 'taper', params: f.params.map(key => ({ key })), inputs: { D: { unit: 'cm', bark: 'ob' }, H: { unit: 'm' }, h: { unit: 'm' } },
-      output: { name: 'd', unit: 'cm' }, formula: f.formula, transform: 'none' });
+      output: { name: 'd', unit: 'cm' }, formula: f.formula, name: f.name, transform: 'none' });
   } catch (e) { /* already registered (module loaded twice in one page) */ }
 }
 /** Bark side of a set's output: output.bark, or meta.bark (the coefficient editor stores tool fields in meta). */

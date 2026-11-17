@@ -39,6 +39,12 @@ await page.goto(URL + '?lang=tr'); await page.waitForSelector('#steps button');
 const VER = TP.TOOL.version;
 ok((await page.locator('h1').textContent()).includes('Gövde Profili') && (await page.locator('.b-ids').textContent()).trim() === 'SV-02 · SV-03 · SV-06' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SV-02 · SV-06, version ${VER}`);
 ok(await page.isDisabled('#to2'), 'no profile set: cannot continue');
+await page.waitForSelector('#cf-form');
+{ const o = await page.locator('#cf-form option').allTextContents();
+  ok(o.join('|') === 'Max ve Burkhart (1976), Model 4|Kozak (2004), Model 02' && (await page.textContent('#cf-formula')).startsWith('d²/D² = b1(x − 1)'), 'equation forms listed by author and year, the formula of the chosen one shown below');
+  await page.selectOption('#cf-form', 'taper.kozak02'); await page.waitForFunction(() => document.getElementById('cf-formula').textContent.startsWith('d = a0'));
+  await page.click('#cf-new'); ok((await page.inputValue('#cf-form')) === 'taper.kozak02' && (await page.locator('#cf-p-b6').count()) === 1, 'the chosen form stays selected and opens its editor (Kozak 02, nine coefficients)');
+  await page.click('#cf-cancel'); }
 
 // fitting tab with the sample stems
 await page.click('#mt-fit'); await page.click('#fsample'); await page.waitForSelector('#f-run');
