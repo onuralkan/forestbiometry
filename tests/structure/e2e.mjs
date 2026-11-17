@@ -15,6 +15,8 @@ const { parseNumber, toInternal } = await import('../../assets/lab/core/num.js')
 const { tableToDataset } = await import('../../assets/lab/stand/calc.js');
 const RUN = await import('../../assets/lab/structure/run.js');
 const VER = (await import('../../assets/lab/structure/calc.js')).TOOL.version;
+const CF = await import('../../assets/lab/structure/ccf.js');
+const { blankSet } = await import('../../assets/lab/core/coef.js');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/mescere-yapisi.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
@@ -58,6 +60,26 @@ await page.click('#calc'); await page.waitForSelector('#utab');
   ok(['Çarpıklık', 'Basıklık (fazlalık)', 'Shannon (tür)', 'Göreli aralık S%', 'U', 'Hegyi (ort.)'].every(h => th2.includes(h)), 'all columns: skewness, kurtosis, species Shannon, relative spacing, U, mean Hegyi'); }
 await shot('units');
 
+// 2b. crown competition factor (CCF): off by default; a line fitted to open-grown trees, saved as a set, applied
+{ const th0 = await page.evaluate(() => [...document.querySelectorAll('#utab thead th')].map(x => x.textContent.trim()));
+  ok(!th0.includes('CCF'), 'CCF column absent until a set is chosen');
+  await page.click('#steps [data-go="2"]'); await page.waitForSelector('#ccfcard');
+  ok((await page.locator('#ccfcard #cf-none').count()) === 1 && (await page.inputValue('#ccf-all')) === '', 'CCF card: library inside it, no built-in sets (K1)');
+  await page.locator('#ccfcard details summary', { hasText: 'Açıkta' }).click();
+  const P = [[12, 3.1], [18, 4.0], [25, 5.4], [33, 6.6], [41, 8.1], [52, 9.7]];
+  await page.fill('#ccf-pairs', P.map(([d, c]) => `${d}\t${String(c).replace('.', ',')}`).join('\n') + '\nx 4'); await page.locator('#ccf-pairs').dispatchEvent('change');
+  const F = CF.fitCW([...P.map(([d, cw]) => ({ d, cw })), { d: NaN, cw: 4 }]);
+  ok((await page.textContent('#ccffit')).includes(String(F.b0)) && (await page.textContent('#ccfcard')).includes('dışarıda bırakıldı: 7'), `fit CW = ${F.b0.toFixed(3)} + ${F.b1.toFixed(4)}·d = engine (decimal commas; row 7 left out)`);
+  await page.click('#ccf-save'); ok((await page.textContent('#status')).includes('künye'), 'no citation: not saved');
+  await page.fill('#ccf-cit', 'Test, made-up open-grown trees'); await page.click('#ccf-save'); await page.waitForFunction(() => document.getElementById('ccf-all') && document.getElementById('ccf-all').value !== '');
+  ok((await page.textContent('#status')).includes('kaydedildi') && (await page.locator('#ccfcard #cf-list tbody tr').count()) === 1, 'fitted line saved as a set, listed in the library and chosen for all species');
+  await page.click('#calc'); await page.waitForSelector('#utab');
+  const set = { ...blankSet('ccf.cw'), params: { b0: F.b0, b1: F.b1 }, valid: { D: [F.min, F.max] }, origin: 'fitted', fit: {}, source: { citation: 'x' } };
+  const E2 = RUN.analyse(ds, { structure: {}, ccf: { all: set, bySpecies: {} } });
+  const th = await page.evaluate(() => [...document.querySelectorAll('#utab thead th')].map(x => x.textContent.trim())), rr = await rows('utab'), k = th.indexOf('CCF');
+  ok(k > 0 && E2.units.every((u, i) => u.ccf.status === 'ok' && close(num(rr[i][k]), u.ccf.ccf)), `CCF per plot = engine (${E2.units.map(u => u.ccf.ccf.toFixed(1)).join(', ')} %)`);
+}
+
 // 3. details: tiles, histogram, Lorenz curve, stem map, notes, tree table with BAL and Hegyi
 await page.click('#tab-detail'); await page.waitForSelector('#ch-hist');
 ok((await page.locator('#ch-hist svg').count()) === 1 && (await page.locator('#ch-lorenz svg').count()) === 1 && (await page.locator('#ch-map svg circle').count()) > 80, 'histogram, Lorenz curve and stem map drawn');
@@ -81,7 +103,7 @@ await page.click('#tab-export');
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), wb = XLSX.read(await readFile(await dl.path()));
   ok(wb.SheetNames.join() === 'Bilgi,Ornek alanlar,Agaclar,Siniflar,Turler', 'Excel sheets: ' + wb.SheetNames.join());
   const tr = XLSX.utils.sheet_to_json(wb.Sheets.Agaclar, { header: 1 });
-  ok(tr[0].slice(0, 8).join() === 'alan,agac,tur,cap,boy,x,y,alan_buyuklugu' && tr[0].includes('BAL_m2_ha') && tr[0].includes('hegyi') && tr.length === 159 && tr[1][3] === '23.4' && typeof tr[1][tr[0].indexOf('BAL_m2_ha')] === 'number', 'tree sheet: the source rows exactly as read, competition columns appended as numbers');
+  ok(tr[0].slice(0, 8).join() === 'alan,agac,tur,cap,boy,x,y,alan_buyuklugu' && tr[0].includes('BAL_m2_ha') && tr[0].includes('hegyi') && tr[0].includes('MCA_m2') && typeof tr[1][tr[0].indexOf('MCA_m2')] === 'number' && tr.length === 159 && tr[1][3] === '23.4' && typeof tr[1][tr[0].indexOf('BAL_m2_ha')] === 'number', 'tree sheet: the source rows exactly as read, competition columns and the MCA appended as numbers');
   const info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 }); ok(info.some(r => String(r[1]).includes('"edge":"buffer"')) && info.some(r => r[0] === 'Araç' && r[1] === 'mescere-yapisi ' + VER), 'Info: tool and version, settings with the edge handling'); }
 
 // 6. data without coordinates: spatial part "–", the reason given

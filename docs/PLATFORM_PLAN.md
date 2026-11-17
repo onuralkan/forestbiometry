@@ -92,7 +92,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
 |---|---|---|---|---|
 | SS-01 | Meşcere özeti (N/ha, G/ha, Dq, üst boy) | yayında | `ornek-alan.php` | Örnek Alan ve Meşcere |
-| SS-02 | Meşcere sıklık endeksleri (Reineke SDI, göreli sıklık, CCF, Curtis RD) | yayında | `mescere-yapisi.php` | SDI ve RD hazır (Reineke 1933, Curtis 1982 [B]); göreli aralık tanım istisnası; CCF için Krajicek ve ark. (1961): özgün makale bulunamadı; Kershaw ve ark. 2016 §8.9.4 ve van Laar ve Akça 2007 (s. 156–157) okundu [B], ölçek farkı (yüzde / oran) METHODS §23'te; uygulanacak |
+| SS-02 | Meşcere sıklık endeksleri (Reineke SDI, göreli sıklık, CCF, Curtis RD) | yayında | `mescere-yapisi.php` | SDI ve RD hazır (Reineke 1933, Curtis 1982 [B]); göreli aralık tanım istisnası; CCF için Krajicek ve ark. (1961): özgün makale bulunamadı; Kershaw ve ark. 2016 §8.9.4 ve van Laar ve Akça 2007 (s. 156–157) okundu [B], CCF 17 Kasım 2026'da eklendi (`structure/ccf.js`, Meşcere Yapısı 1.0.0-beta.3; katsayılar kullanıcıdan, katsayı kütüphanesinde araç `ccf`; METHODS §16) |
 | SS-03 | Çap dağılımı (Weibull, gamma, Johnson SB…; geri kazanım) | yayında | `cap-dagilimi.php` | Çap Dağılımı Laboratuvarı 2.2.0 |
 | SS-04 | Çeşitlilik endeksleri (Shannon, Simpson, tür zenginliği) | yayında | `mescere-yapisi.php` | İstatistiksel tanım |
 | SS-05 | Yapısal çeşitlilik endeksleri (Gini, karışım, farklılaşma) | yayında | `mescere-yapisi.php` | Gini tanım; M, T, U Pommerening (2002): yüklendi, doğrulama bekliyor |

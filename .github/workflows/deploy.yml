@@ -70,6 +70,7 @@ jobs:
           node tests/growth/test_sq03.mjs
           node tests/structure/test_ss07.mjs
           node tests/structure/test_ss04.mjs
+          node tests/structure/test_ccf.mjs
           node tests/dist/test_p01.mjs
           node tests/dist/test_p05.mjs
           node tests/dist/test_p06.mjs

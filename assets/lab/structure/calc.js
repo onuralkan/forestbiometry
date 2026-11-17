@@ -24,7 +24,7 @@
 //                spacing (geometric definition; textbook-definition exception, user decision 12 Nov 2026)
 import { unitMetrics, classesFromBreaks, breaksFromWidth, classIndex } from '../stand/calc.js';
 
-export const TOOL = { id: 'mescere-yapisi', version: '1.0.0-beta.2' };
+export const TOOL = { id: 'mescere-yapisi', version: '1.0.0-beta.3' };
 export const SCHEMA = 'structure-result/1';
 export const DEFAULTS = { giniOn: 'g', classStart: 0, classWidth: 4, balTies: 'exclude', sdiBeta: 1.605, sdiRef: 25, rdExp: 0.5, spacing: 'square', h0From: 'dbh' };
 export const g = d => Math.PI / 4 * (d / 100) ** 2;

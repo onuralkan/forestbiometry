@@ -1,7 +1,10 @@
-// Stand Structure: user interface. All arithmetic lives in calc.js, spatial.js, competition.js and run.js.
+// Stand Structure: user interface. All arithmetic lives in calc.js, spatial.js, competition.js, ccf.js and run.js.
 import * as S from './calc.js';
 import { analyse } from './run.js';
 import { appendColumns } from './competition.js';
+import * as CF from './ccf.js';
+import { listCoefs, saveCoef, blankSet } from '../core/coef.js';
+import { mountCoefEditor } from '../core/coef-ui.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
@@ -20,10 +23,11 @@ const num = v => { const t = String(v ?? '').trim().replace(',', '.'); if (t ===
 const perLabel = p => p == null ? T('per.none') : p;
 const ukey = u => u.plot_id + '|' + (u.period ?? '');
 
-let st = blank(), R = null, approved = null;
+let st = blank(), R = null, approved = null, ccfSets = [], ccfEditor = null;
 function blank() {
   return { v: 1, step: 1, tab: 'units', ds: null, dsSrc: null, tbl: null, sel: null, nav: null, allCols: false,
     set: { classStart: '0', classWidth: '4', giniOn: 'g', balTies: 'exclude', sdiBeta: '1.605', sdiRef: '25', rdExp: '0.5', spacing: 'square', h0From: 'dbh' },
+    ccf: { all: '', bySp: {}, pairs: '', cit: '' },
     geo: { shape: 'circle-area', cx: '0', cy: '0', r: '', x0: '', y0: '', x1: '', y1: '', k: '4', edge: 'none', buffer: '5', wAngle: 'k', ciMode: 'knn', radius: '' } };
 }
 let saveT = null;
@@ -111,8 +115,18 @@ function settings() {
   const geometry = g.shape === 'circle-area' ? { shape: 'circle-area', cx: num(g.cx), cy: num(g.cy) } : g.shape === 'circle' ? { shape: 'circle', cx: num(g.cx), cy: num(g.cy), r: num(g.r) } : { shape: 'rect', x0: num(g.x0), y0: num(g.y0), x1: num(g.x1), y1: num(g.y1) };
   const spatial = hasXY(st.ds) ? { k: num(g.k), edge: g.edge, buffer: num(g.buffer), wAngle: g.wAngle || 'k' } : null;
   const competition = { mode: g.ciMode, k: num(g.k), radius: g.ciMode === 'radius' ? num(g.radius) : null, edge: g.edge, buffer: num(g.buffer) };
-  return { structure, spatial, geometry, competition };
+  return { structure, spatial, geometry, competition, ccf: ccfMethod() };
 }
+/** CCF method from the chosen library sets: { all, bySpecies } with the sets themselves (null when none is chosen). */
+function ccfMethod() {
+  const c = st.ccf || {}, byId = id => ccfSets.find(x => x.id === id) || null, bySpecies = {};
+  for (const [sp, id] of Object.entries(c.bySp || {})) { const x = byId(id); if (x) bySpecies[sp] = x; }
+  const all = byId(c.all);
+  return all || Object.keys(bySpecies).length ? { all, bySpecies } : null;
+}
+const speciesOf = ds => ds ? [...new Set(ds.trees.map(t => t.species).filter(x => x != null && x !== ''))].sort((a, b) => String(a).localeCompare(String(b))) : [];
+const setLabel = x => [CF.formOf(x) ? CF.formOf(x).formula[lang] : x.form, [x.species, x.region].filter(Boolean).join(', '), x.source && x.source.citation].filter(Boolean).join(' · ');
+const fitRows = t => String(t || '').split(/\r?\n/).map(l => l.trim()).map(l => l ? l.split(/[\t;]+|\s+/).filter(Boolean) : null).map(c => c ? { d: num(c[0]), cw: num(c[1]) } : null);
 const settingsProblems = () => S.checkSettings({ ...S.DEFAULTS, ...settings().structure }).length ? [T('set.bad')] : [];
 function renderStep2() {
   const el = $('step2'), s = st.set, g = st.geo, xy = hasXY(st.ds);
@@ -126,6 +140,7 @@ function renderStep2() {
     <div class="lims">${inp('rdExp', s.rdExp, T('set.rd'))}<span class="muted small">${T('set.rd.note')}</span></div>
     <div class="lims"><span class="small"><b>${T('set.sp')}</b></span>${radio('spacing', s.spacing, [['square', T('set.sp.square')], ['triangular', T('set.sp.triangular')]])}
       <span class="small"><b>${T('set.h0')}</b></span>${radio('h0From', s.h0From, [['dbh', T('set.h0.dbh')], ['height', T('set.h0.height')]])}</div></div>`;
+  h += ccfCard();
   h += `<div class="card" id="geocard"><h2>${T('geo.h')}</h2>`;
   if (!xy) h += `<p class="note">${T('geo.noxy')}</p>`;
   else {
@@ -148,8 +163,51 @@ function renderStep2() {
   el.querySelectorAll('input[name="gedge"]').forEach(x => x.addEventListener('change', () => { st.geo.edge = x.value; re(); }));
   el.querySelectorAll('input[name="gwang"]').forEach(x => x.addEventListener('change', () => { st.geo.wAngle = x.value; re(); }));
   el.querySelectorAll('input[name="gci"]').forEach(x => x.addEventListener('change', () => { st.geo.ciMode = x.value; re(); }));
+  bindCcf(el, re); coefBox();
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); st.tab = 'units'; go(3); });
+}
+
+function ccfCard() {
+  const c = st.ccf, sps = speciesOf(st.ds), opt = (cur, none) => `<option value="">${none}</option>` + ccfSets.map(x => `<option value="${esc(x.id)}"${cur === x.id ? ' selected' : ''}>${esc(setLabel(x))}</option>`).join('');
+  let h = `<div class="card" id="ccfcard"><h2>${T('ccf.h')}</h2><p class="muted small">${T('ccf.sub')}</p>
+    <div class="lims"><label>${T('ccf.all')} <select id="ccf-all">${opt(c.all, T('ccf.none'))}</select></label></div>`;
+  if (sps.length) h += `<details class="more"${Object.keys(c.bySp || {}).length ? ' open' : ''}><summary>${T('ccf.bysp')}</summary><div class="lims">${sps.map(sp => `<label>${esc(sp)} <select data-ccfsp="${esc(sp)}">${opt((c.bySp || {})[sp] || '', T('ccf.useall'))}</select></label>`).join('')}</div></details>`;
+  const F = c.pairs.trim() ? CF.fitCW(fitRows(c.pairs)) : null;
+  h += `<details class="more"${c.pairs.trim() ? ' open' : ''}><summary>${T('ccf.fit.h')}</summary><p class="muted small">${T('ccf.fit.sub')}</p>
+    <label class="field"><span>${T('ccf.fit.pairs')}</span><textarea id="ccf-pairs" rows="4" spellcheck="false">${esc(c.pairs)}</textarea></label>`;
+  if (F) h += F.status === 'ok' ? `<p id="ccffit"><b>${esc(T('ccf.fit.res', { n: F.n, b0: String(F.b0), b1: String(F.b1), r2: f(F.r2, 4), se: f(F.se, 3), min: f(F.min, 1), max: f(F.max, 1) }))}</b></p>${F.bad.length ? `<p class="note warn small">${esc(T('ccf.fit.bad', { rows: F.bad.join(', ') }))}</p>` : ''}
+      <div class="lims"><label>${T('ccf.fit.cit')} <input type="text" id="ccf-cit" size="40" value="${esc(c.cit)}"></label><button type="button" class="btn ghost small" id="ccf-save">${T('ccf.fit.save')}</button></div>`
+    : `<p class="note small" id="ccffit">${esc(T('ccf.fit.' + F.status, { rows: F.bad.join(', ') }))}</p>`;
+  return h + `</details><div id="ccfslot"></div><p class="muted small">${T('ccf.note')}</p></div>`;
+}
+function bindCcf(el, re) {
+  $('ccf-all').addEventListener('change', e => { st.ccf.all = e.target.value; re(); });
+  el.querySelectorAll('[data-ccfsp]').forEach(x => x.addEventListener('change', () => { const b = st.ccf.bySp || (st.ccf.bySp = {}); if (x.value) b[x.dataset.ccfsp] = x.value; else delete b[x.dataset.ccfsp]; re(); }));
+  $('ccf-pairs').addEventListener('change', e => { st.ccf.pairs = e.target.value; re(); });
+  $('ccf-cit') && $('ccf-cit').addEventListener('change', e => { st.ccf.cit = e.target.value; save(); });
+  $('ccf-save') && $('ccf-save').addEventListener('click', async () => {
+    st.ccf.cit = $('ccf-cit').value; const F = CF.fitCW(fitRows(st.ccf.pairs));
+    if (F.status !== 'ok') return;
+    if (!st.ccf.cit.trim()) { status(T('ccf.fit.nocit'), 'err'); $('ccf-cit').focus(); return; }
+    const set = { ...blankSet('ccf.cw'), params: { b0: F.b0, b1: F.b1 }, valid: { D: [F.min, F.max] }, origin: 'fitted', fit: { method: 'least squares', n: F.n, r2: F.r2, se: F.se, data: 'open-grown trees' }, source: { citation: st.ccf.cit.trim() } };
+    const r = await saveCoef(set);
+    if (!r.ok) { status(T('ccf.fit.fail'), 'err'); return; }
+    ccfSets = await listCoefs('ccf'); if (!st.ccf.all) st.ccf.all = r.set.id;
+    status(T('ccf.fit.saved'), 'ok'); ccfEditor && ccfEditor.refresh(); re();
+  });
+}
+// The library editor lives in one element made once and put back into the CCF card at every redraw of step 2, so that
+// a draft typed in it survives the redraws.
+let ccfBoxEl = null;
+function coefBox() {
+  const slot = $('ccfslot'); if (st.step !== 2 || !slot) return;
+  if (!ccfBoxEl) {
+    ccfBoxEl = document.createElement('div'); ccfBoxEl.id = 'ccfcoef';
+    ccfEditor = mountCoefEditor(ccfBoxEl, { tool: 'ccf', onChange: list => { const changed = list.length !== ccfSets.length || list.some((x, i) => !ccfSets[i] || ccfSets[i].id !== x.id || ccfSets[i].modified !== x.modified); ccfSets = list; if (changed && st.step === 2) { R = null; renderStep2(); } } });
+    ccfEditor.refresh();
+  }
+  slot.replaceWith(ccfBoxEl);
 }
 
 /* ---------------- step 3: results ---------------- */
@@ -157,6 +215,7 @@ function compute() { R = analyse(st.ds, settings()); R.created = new Date().toIS
 const COLS = [['c.n', u => u.n, 0], ['c.Nha', u => u.st.Nha, 1], ['c.Gha', u => u.st.Gha, 3], ['c.Dq', u => u.st.Dq, 2], ['c.H0', u => u.st.H0, 2], ['c.cv', u => m(u, 'cv'), 3], ['c.skew', u => m(u, 'skew'), 3, 1], ['c.kurt', u => m(u, 'kurt'), 3, 1],
   ['c.gini', u => m(u, 'gini'), 3], ['c.shD', u => m(u, 'shannonD'), 3], ['c.shS', u => m(u, 'shannonSp'), 3, 1], ['c.simp', u => m(u, 'simpson'), 3], ['c.sdi', u => m(u, 'sdi'), 1], ['c.rd', u => m(u, 'rd'), 2], ['c.hart', u => m(u, 'hartPct'), 1, 1],
   ['c.R', u => u.sp.status === 'ok' ? u.sp.ce.R : null, 3], ['c.RD', u => u.sp.status === 'ok' ? u.sp.ce.RD : null, 3], ['c.W', u => spm(u, 'W'), 3], ['c.M', u => spm(u, 'M'), 3], ['c.T', u => spm(u, 'T'), 3], ['c.T1', u => spm(u, 'T1'), 3, 1], ['c.U', u => spm(u, 'U'), 3, 1],
+  ['c.ccf', u => u.ccf && u.ccf.status === 'ok' ? u.ccf.ccf : null, 1],
   ['c.hegyi', u => { if (u.ci.status !== 'ok') return null; const v = u.ci.trees.map(t => t.hegyi).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }, 3, 1]];
 function m(u, k) { return u.st.status === 'ok' && u.st.measures ? u.st.measures[k] : null; }
 function spm(u, k) { return u.sp.status === 'ok' ? u.sp.means[k] : null; }
@@ -174,7 +233,7 @@ function renderStep3() {
   if (withNav) nav.renderAside($('unav'));
 }
 function tabUnits(p) {
-  const cols = COLS.filter(c => st.allCols || !c[3]);
+  const ccfOn = R.units.some(u => u.ccf && u.ccf.status !== 'off'), cols = COLS.filter(c => (st.allCols || !c[3]) && (c[0] !== 'c.ccf' || ccfOn));
   p.innerHTML = `<p class="muted small">${T('units.note')}</p><label class="chk small"><input type="checkbox" id="allcols"${st.allCols ? ' checked' : ''}> ${T('units.all')}</label>
     <div class="tscroll"><table class="grid" id="utab"><thead><tr><th>${T('c.unit')}</th><th>${T('c.period')}</th>${cols.map(c => `<th>${T(c[0])}</th>`).join('')}<th>${T('c.state')}</th></tr></thead><tbody>
     ${R.units.map(u => `<tr data-key="${esc(ukey(u))}"${uState(u) === 'invalid' ? ' class="st-bad"' : ''}><td><button type="button" class="linkbtn" data-sel="${esc(ukey(u))}"><code>${esc(u.plot_id)}</code></button></td><td>${esc(perLabel(u.period))}</td>${cols.map(c => `<td class="num">${f(c[1](u), c[2])}</td>`).join('')}<td>${T('st.' + (u.st.status === 'ok' ? 'ok' : u.st.status))}</td></tr>`).join('')}</tbody></table></div>`;
@@ -204,6 +263,8 @@ function notesOf(u) {
   const out = [];
   for (const w of u.st.warnings || []) out.push(T('w.' + w.code, w));
   for (const q of u.st.problems || []) out.push(T('p.' + q.code, q));
+  if (u.ccf && u.ccf.status === 'incomplete') out.push(T('w.ccf.incomplete', { sp: u.ccf.missing.map(x => x ?? T('ccf.nosp')).join(', '), rows: u.ccf.bad.map(b => b.row).join(', ') }));
+  if (u.ccf && u.ccf.outside) out.push(T('w.ccf.outside', { n: u.ccf.outside }));
   for (const part of [u.sp, u.ci]) { for (const q of part.problems || []) out.push(T('p.' + q.code, q)); for (const w of part.warnings || []) out.push(T('w.' + w.code, w)); for (const q of part.samePosition || []) out.push(T('p.ci.samepos', q)); }
   return [...new Set(out)];
 }
@@ -213,7 +274,7 @@ function tabDetail(p) {
   const tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
   if (u.st.status === 'ok') {
     const ms = u.st.measures;
-    h += `<div class="tiles">${tile(fmtNum(u.n, 0), T('c.n'))}${tile(f(u.st.Nha, 1), T('c.Nha'))}${tile(f(u.st.Gha, 3), T('c.Gha'))}${tile(f(u.st.Dq, 2), T('c.Dq'))}${tile(f(ms.gini, 3), T('c.gini'))}${tile(f(ms.sdi, 1), T('c.sdi'))}
+    h += `<div class="tiles">${tile(fmtNum(u.n, 0), T('c.n'))}${tile(f(u.st.Nha, 1), T('c.Nha'))}${tile(f(u.st.Gha, 3), T('c.Gha'))}${tile(f(u.st.Dq, 2), T('c.Dq'))}${tile(f(ms.gini, 3), T('c.gini'))}${tile(f(ms.sdi, 1), T('c.sdi'))}${u.ccf && u.ccf.status === 'ok' ? tile(f(u.ccf.ccf, 1), T('c.ccf')) : ''}
       ${u.sp.status === 'ok' ? tile(f(u.sp.ce.R, 3), T('c.R')) : ''}${u.sp.status === 'ok' ? tile(f(u.sp.means.W, 3), T('c.W')) : ''}</div>`;
     const nz = u.st.classes.map((c, i) => c.Nha > 0 ? i : -1).filter(i => i >= 0), cls = u.st.classes.slice(nz[0], nz[nz.length - 1] + 1);   // from the first to the last occupied class
     h += chartBox('ch-hist', barChart({ title: T('d.hist'), categories: cls.map(c => c.hi === Infinity ? `≥ ${fmtNum(c.lo, 1)}` : `${fmtNum(c.lo, 1)}–${fmtNum(c.hi, 1)}`), series: [{ name: T('c.Nha'), values: cls.map(c => c.Nha) }], yLabel: T('c.Nha'), fmt: v => fmtNum(v, 0) }), 'cap-siniflari');
@@ -235,18 +296,19 @@ function tabDetail(p) {
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function unitRows() {
   return [['plot_id', 'period', 'state', 'n', 'N_ha', 'G_m2_ha', 'Dq_cm', 'H0_m', 'd_mean', 'd_sd', 'cv', 'skewness', 'kurtosis_excess', 'gini', 'shannon_d', 'species_n', 'shannon_species', 'simpson', 'simpson_dominance', 'sdi', 'curtis_rd', 'spacing_a_m', 'relative_spacing_pct',
-    'clark_evans_R', 'clark_evans_R_donnelly', 'W', 'W_standard_angle_deg', 'M', 'T', 'T1', 'U', 'n_reference', 'n_edge', 'hegyi_mean', 'spatial_state'],
+    'clark_evans_R', 'clark_evans_R_donnelly', 'W', 'W_standard_angle_deg', 'M', 'T', 'T1', 'U', 'n_reference', 'n_edge', 'hegyi_mean', 'spatial_state', 'ccf_percent', 'ccf_fraction', 'ccf_state'],
     ...R.units.map(u => { const ms = u.st.measures || {}, sp = u.sp.status === 'ok' ? u.sp : null, hm = COLS.find(c => c[0] === 'c.hegyi')[1](u);
       return [u.plot_id, u.period, u.st.status, u.n, u.st.Nha ?? null, u.st.Gha ?? null, u.st.Dq ?? null, u.st.H0 ?? null, ms.d_mean ?? null, ms.d_sd ?? null, ms.cv ?? null, ms.skew ?? null, ms.kurt ?? null, ms.gini ?? null, ms.shannonD ?? null, ms.speciesN ?? null, ms.shannonSp ?? null, ms.simpson ?? null, ms.simpsonD ?? null,
-        ms.sdi ?? null, ms.rd ?? null, ms.spacingA ?? null, ms.hartPct ?? null, sp ? sp.ce.R : null, sp ? sp.ce.RD : null, sp ? sp.means.W : null, sp ? 360 / (sp.settings.wAngle === 'k1' ? sp.settings.k + 1 : sp.settings.k) : null, sp ? sp.means.M : null, sp ? sp.means.T : null, sp ? sp.means.T1 : null, sp ? sp.means.U : null, sp ? sp.nRef : null, sp ? sp.nEdge : null, hm, u.sp.status]; })];
+        ms.sdi ?? null, ms.rd ?? null, ms.spacingA ?? null, ms.hartPct ?? null, sp ? sp.ce.R : null, sp ? sp.ce.RD : null, sp ? sp.means.W : null, sp ? 360 / (sp.settings.wAngle === 'k1' ? sp.settings.k + 1 : sp.settings.k) : null, sp ? sp.means.M : null, sp ? sp.means.T : null, sp ? sp.means.T1 : null, sp ? sp.means.U : null, sp ? sp.nRef : null, sp ? sp.nEdge : null, hm, u.sp.status, u.ccf.status === 'ok' ? u.ccf.ccf : null, u.ccf.status === 'ok' ? u.ccf.fraction : null, u.ccf.status]; })];
 }
 function treeVals() {
   const per = new Map();
   for (const u of R.units) { if (u.st.status !== 'ok') continue; const ci = u.ci.status === 'ok' ? u.ci.trees : null, sp = u.sp.status === 'ok' ? u.sp.trees : null;
-    u.st.trees.forEach((t, i) => per.set(t.row, { bal: t.bal, relD: t.relD, relG: t.relG, hegyi: ci ? ci[i].hegyi : null, edge: ci ? (ci[i].edge ? 1 : 0) : null, W: sp ? sp[i].W : null, M: sp ? sp[i].M : null, T: sp ? sp[i].T : null, T1: sp ? sp[i].T1 : null, U: sp ? sp[i].U : null })); }
+    const cf = u.ccf && u.ccf.trees ? u.ccf.trees : null;
+    u.st.trees.forEach((t, i) => per.set(t.row, { mca: cf ? cf[i].mca : null, mcaPct: cf ? cf[i].mcaPct : null, bal: t.bal, relD: t.relD, relG: t.relG, hegyi: ci ? ci[i].hegyi : null, edge: ci ? (ci[i].edge ? 1 : 0) : null, W: sp ? sp[i].W : null, M: sp ? sp[i].M : null, T: sp ? sp[i].T : null, T1: sp ? sp[i].T1 : null, U: sp ? sp[i].U : null })); }
   return per;
 }
-const TREE_COLS = [['BAL_m2_ha', 'bal'], ['d_Dq', 'relD'], ['g_gmean', 'relG'], ['hegyi', 'hegyi'], ['edge_tree', 'edge'], ['W', 'W'], ['M', 'M'], ['T', 'T'], ['T1', 'T1'], ['U', 'U']];
+const TREE_COLS = [['BAL_m2_ha', 'bal'], ['d_Dq', 'relD'], ['g_gmean', 'relG'], ['hegyi', 'hegyi'], ['edge_tree', 'edge'], ['W', 'W'], ['M', 'M'], ['T', 'T'], ['T1', 'T1'], ['U', 'U'], ['MCA_m2', 'mca'], ['MCA_percent', 'mcaPct']];
 function treeRows() {
   const per = treeVals(), fromTable = st.dsSrc && st.dsSrc.kind === 'table' && st.tbl && st.tbl.src;
   if (fromTable) { const src = st.tbl.src; return appendColumns(src.headers.map(String), src.rows.map(r => src.headers.map((_, k) => { const c = r[k]; return c == null || cellText(c) === '' ? null : c.t === 'n' ? c.v : cellText(c); })), src.rowNumbers, per, TREE_COLS); }
@@ -255,7 +317,7 @@ function treeRows() {
 function infoRows() {
   const s = settings();
   return [[T('x.k'), T('x.v')], [T('x.tool'), `${S.TOOL.id} ${S.TOOL.version}`], [T('x.date'), R.created], [T('x.src'), st.dsSrc ? st.dsSrc.name || st.dsSrc.kind : ''],
-    [T('x.settings'), JSON.stringify(s.structure)], [T('x.geom'), s.spatial ? JSON.stringify({ geometry: s.geometry, spatial: s.spatial, competition: s.competition }) : T('geo.noxy')],
+    [T('x.settings'), JSON.stringify(s.structure)], [T('x.ccf'), s.ccf ? JSON.stringify({ all: s.ccf.all ? { id: s.ccf.all.id, form: s.ccf.all.form, params: s.ccf.all.params, source: s.ccf.all.source.citation } : null, bySpecies: Object.fromEntries(Object.entries(s.ccf.bySpecies).map(([k, x]) => [k, { id: x.id, form: x.form, params: x.params, source: x.source.citation }])) }) : T('ccf.off')], [T('x.geom'), s.spatial ? JSON.stringify({ geometry: s.geometry, spatial: s.spatial, competition: s.competition }) : T('geo.noxy')],
     ...(R.units.find(u => u.st.definitions) ? Object.entries(R.units.find(u => u.st.definitions).st.definitions).map(([k, v]) => [T('x.defs') + ': ' + k, v]) : []), [T('x.src2'), T('geo.src')]];
 }
 function tabExport(p) {
@@ -295,7 +357,8 @@ function render() {
   $('privacy').textContent = T('privacy');
   try {
     const a = await get('dataset:approved'); if (a && !validateDataset(a).length) approved = a;
-    const saved = await get(KEY); if (saved && saved.v === 1) { st = { ...blank(), ...saved }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
+    ccfSets = await listCoefs('ccf');
+    const saved = await get(KEY); if (saved && saved.v === 1) { st = { ...blank(), ...saved, ccf: { ...blank().ccf, ...(saved.ccf || {}) } }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
   } catch (e) { st = blank(); }
   render();
 })();

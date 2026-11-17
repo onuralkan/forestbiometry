@@ -5,6 +5,7 @@ import { buildUnits } from '../stand/calc.js';
 import { structureUnit, g as gOf } from './calc.js';
 import { spatialUnit } from './spatial.js';
 import { hegyi } from './competition.js';
+import { ccfUnit } from './ccf.js';
 
 /**
  * Plot geometry for a unit. spec.shape: 'circle-area' (centre cx, cy; radius √(A/π) from the unit's recorded plot
@@ -28,9 +29,10 @@ export function lorenz(x, w = x.map(() => 1)) {
 
 /**
  * opts = { structure: settings of structureUnit, spatial: { k, edge, buffer } | null (null: no spatial part),
- *          geometry: geometryFor spec, competition: { mode, k, radius, edge, buffer } }.
+ *          geometry: geometryFor spec, competition: { mode, k, radius, edge, buffer },
+ *          ccf: { all: set | null, bySpecies: { species: set } } | null (crown competition factor, ccf.js) }.
  * Returns { units: [{ plot_id, period, state, area, n, st (structureUnit), sp (spatialUnit or { status }),
- * ci (hegyi or { status }), lorenz }], hasXY, periods, skipped }.
+ * ci (hegyi or { status }), ccf (ccfUnit or { status: 'off' }), lorenz }], hasXY, periods, skipped }.
  */
 export function analyse(ds, opts = {}) {
   const { units, periods } = buildUnits(ds, { emptyCombos: 'unmeasured' });
@@ -45,8 +47,9 @@ export function analyse(ds, opts = {}) {
       sp = G ? spatialUnit(T, G, { ...opts.spatial, areaRecorded: u.area }) : { status: 'nogeom' };
       ci = G ? hegyi(T, G, opts.competition || {}) : { status: 'nogeom' };
     }
+    const ccf = opts.ccf && (st.status === 'ok' || st.status === 'empty') ? ccfUnit(u.trees, st.ef, opts.ccf) : { status: 'off' };
     const lz = st.status === 'ok' ? lorenz(st.settings.giniOn === 'd' ? u.trees.map(t => t.dbh) : u.trees.map(t => gOf(t.dbh))) : null;
-    out.push({ plot_id: u.plot_id, period: u.period, state: u.state, area: u.area, n: u.trees.length, trees: u.trees, st, sp, ci, lorenz: lz });
+    out.push({ plot_id: u.plot_id, period: u.period, state: u.state, area: u.area, n: u.trees.length, trees: u.trees, st, sp, ci, ccf, lorenz: lz });
   }
   return { units: out, hasXY, periods, skipped };
 }
