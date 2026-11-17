@@ -1,9 +1,13 @@
-// Tree measurement page (agac-olcumu.php; TM-01 height, TM-02 diameter and basal area, TM-06 form factors).
-// All arithmetic lives in height.js, diameter.js and form.js; results update as the fields change.
+// Tree measurement page (agac-olcumu.php; TM-01 height, TM-02 diameter and basal area, TM-03 bark, TM-05 age and
+// increment, TM-06 form factors). All arithmetic lives in height.js, diameter.js, bark.js, form.js and age.js; results
+// update as the fields change.
 import * as Ht from './height.js';
 import * as Dm from './diameter.js';
 import * as Fm from './form.js';
 import * as Ag from './age.js';
+import * as Bk from './bark.js';
+import { listCoefs } from '../core/coef.js';
+import { mountCoefEditor } from '../core/coef-ui.js';
 import { TOOL } from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
@@ -29,6 +33,7 @@ function blank() {
     h: { method: 'tangent', unit: 'deg', ground: false, slope: '', rows: [blankH()] },
     d: { mean: 'arithmetic', round: 'none', rows: [{ kind: 'diameter', value: '', unit: 'cm' }], imp: null, src: null, col: null, ncol: null, kind: 'diameter', unit: 'cm', decimal: null, decimalChosen: false },
     f: { V: '', d: '', H: '', kind: 'breast', d1: '', x1: '', d2: '', x2: '', exH: '', dMid: '', D: '', c: '' },
+    b: { mode: 'gauge', dob: '', dub: '', cob: '', cub: '', reads: '', L: '', pairs: [{ dob: '', dub: '' }, { dob: '', dub: '' }, { dob: '', dub: '' }], method: 'k', k: '', setId: '', one: '' },
     a: { rings: '', toH: '', ringsOut: '', coreAge: '', gD: '', gMai: '', cD: '', cBark: '', cToBh: '', cPith: true, cW: '', cN: '10', groups: [{ a: '', n: '', b: '', v: '' }], gNow: '', gThen: '', gYears: '', mTotal: '', mAge: '' } };
 }
 let saveT = null;
@@ -241,17 +246,103 @@ function bindAge() {
   $('a-gadd').addEventListener('click', () => { A.groups.push({ a: '', n: '', b: '', v: '' }); re(); });
 }
 
+/* ---------------- bark (TM-03) ---------------- */
+let barkSets = [], coefMounted = false;
+const btext = q => T('bp.' + q.code, q);
+const bwtext = w => T('bw.' + w.code, w);
+function barkPoint() {
+  const B = S.b, any = ks => ks.some(k => String(B[k]).trim() !== '');
+  if (!any(B.mode === 'girths' ? ['cob', 'cub'] : B.mode === 'inside' ? ['dub', 'reads'] : ['dob', 'reads'])) return null;
+  const L = num(B.L);
+  return Bk.measurePoint({ mode: B.mode, dob: nv(B.dob), dub: nv(B.dub), girthOb: nv(B.cob), girthUb: nv(B.cub), readings: widthsOf(B.reads), L: L == null ? null : L });
+}
+function barkFit() {
+  const blankRow = p => String(p.dob).trim() === '' && String(p.dub).trim() === '';
+  return S.b.pairs.every(blankRow) ? null : Bk.fitBark(S.b.pairs.map(p => blankRow(p) ? null : { dob: nv(p.dob), dub: nv(p.dub) }));
+}
+/** The method chosen for applying bark: null when it cannot be built (the reason in .why). */
+function barkMethod() {
+  const B = S.b;
+  if (B.method === 'k') { const k = num(B.k); return k == null ? { why: 'k.empty' } : { kind: 'k', k }; }
+  if (B.method === 'kfit' || B.method === 'line') { const F = barkFit(); if (!F || F.status !== 'ok') return { why: 'fit.none' };
+    if (B.method === 'kfit') return { kind: 'k', k: F.k };
+    return F.line ? { kind: 'line', a: F.line.a, b: F.line.b, min: F.line.min, max: F.line.max } : { why: 'fit.line' }; }
+  const set = barkSets.find(x => x.id === B.setId); return set ? { kind: 'set', set } : { why: 'set.none' };
+}
+function barkApplied() {
+  const m = barkMethod(), L = listRead();
+  if (!m.kind) return { m, one: null, list: null };
+  const d1 = num(S.b.one);
+  return { m, one: d1 == null ? null : Bk.applyBark(m, d1), list: L && L.trees.length ? Bk.barkList(m, L.trees) : null };
+}
+function barkHTML() {
+  const B = S.b, P = barkPoint(), inp = (k, size = 7) => `<label>${T('b.' + k)} <input type="text" inputmode="decimal" size="${size}" id="b-${k}" value="${esc(B[k])}"></label>`;
+  let x = `<div class="card"><h2>${T('b.pt.h')}</h2><p class="muted small">${T('b.pt.sub')}</p>
+    <div class="radios col"><span class="small"><b>${T('b.mode')}</b></span>${['gauge', 'girths', 'inside'].map(m => `<label><input type="radio" name="b-mode" value="${m}"${B.mode === m ? ' checked' : ''}> ${T('b.mode.' + m)}</label>`).join('')}</div>
+    <div class="lims">${B.mode === 'gauge' ? inp('dob') : B.mode === 'inside' ? inp('dub') : inp('cob') + inp('cub')}${inp('L', 5)}</div>`;
+  if (B.mode !== 'girths') x += `<label class="field"><span>${T('b.reads')}</span><textarea id="b-reads" rows="2" spellcheck="false">${esc(B.reads)}</textarea></label>`;
+  if (P) x += P.status === 'ok' ? `<div id="bres"><p><b>${esc(T('b.res', { B1: f(P.B1, 2), B2: f(P.B2, 2), dob: f(P.dob, 2), dub: f(P.dub, 2), k: f(P.k, 4) }))}</b></p><p>${esc(T('b.res.g', { gob: f(P.gob, 5), gub: f(P.gub, 5), ga: f(P.gBark, 5), pct: f(P.pctArea, 2) }))}</p>${P.L != null ? `<p>${esc(T('b.res.v', { Vob: f(P.Vob, 4), Vub: f(P.Vub, 4), Vb: f(P.Vbark, 4), pct: f(P.pctVol, 2) }))}</p>` : ''}</div>`
+    : `<p class="note err small" id="bres">${esc(P.problems.map(btext).join('; '))}</p>`;
+  x += `<p class="muted small">${T('b.pt.note')}</p></div>`;
+  const F = barkFit();
+  x += `<div class="card"><h2>${T('b.k.h')}</h2><p class="muted small">${T('b.k.sub')}</p><div class="tscroll"><table class="grid" id="bktab"><thead><tr><th>#</th><th>${T('b.c.dob')}</th><th>${T('b.c.dub')}</th><th></th></tr></thead><tbody>
+    ${B.pairs.map((p, i) => `<tr><td>${i + 1}</td>${['dob', 'dub'].map(k => `<td><input type="text" inputmode="decimal" size="7" data-brow="${i}" data-k="${k}" value="${esc(p[k])}" aria-label="${esc(T('b.c.' + k))} ${i + 1}"></td>`).join('')}<td>${B.pairs.length > 1 ? `<button type="button" class="btn ghost small" data-bdel="${i}">${T('del')}</button>` : ''}</td></tr>`).join('')}
+    </tbody></table></div><div class="exports"><button type="button" class="btn ghost small" id="b-add">${T('add')}</button><button type="button" class="btn ghost small" id="b-paste">${T('b.paste')}</button></div>`;
+  if (F && F.status === 'ok') x += `<div id="bkres"><p><b>${esc(T('b.k.res', { n: F.n, k: String(F.k), kr: f(F.k, 4), inv: f(F.kInv, 4) }))}</b></p>${F.line ? `<p>${esc(T('b.k.line', { a: String(F.line.a), b: String(F.line.b), r2: f(F.line.r2, 4), se: f(F.line.se, 3), min: f(F.line.min, 1), max: f(F.line.max, 1) }))}</p>` : `<p class="muted small">${T('b.k.noline')}</p>`}${F.bad.length ? `<p class="note warn small">${esc(T('b.k.bad', { rows: F.bad.join(', ') }))}</p>` : ''}</div>`;
+  else if (F) x += `<p class="note err small" id="bkres">${esc(T('b.k.empty', { rows: F.bad.join(', ') }))}</p>`;
+  x += `<p class="muted small">${T('b.k.note')}</p></div>`;
+  const A = barkApplied(), L = listRead();
+  x += `<div class="card"><h2>${T('b.ap.h')}</h2><p class="muted small">${T('b.ap.sub')}</p><div class="radios col"><span class="small"><b>${T('b.ap.method')}</b></span>
+    ${['k', 'kfit', 'line', 'set'].map(m => `<label><input type="radio" name="b-method" value="${m}"${B.method === m ? ' checked' : ''}> ${T('b.ap.' + m)}</label>`).join('')}</div><div class="lims">`;
+  if (B.method === 'k') x += inp('k', 7);
+  if (B.method === 'set') x += `<label>${T('b.ap.set')} <select id="b-setId"><option value="">${T('none')}</option>${barkSets.map(s => `<option value="${esc(s.id)}"${B.setId === s.id ? ' selected' : ''}>${esc([Bk.formOf(s) ? Bk.formOf(s).formula[lang] : s.form, [s.species, s.region].filter(Boolean).join(', '), s.source && s.source.citation].filter(Boolean).join(' · '))}</option>`).join('')}</select></label>`;
+  x += inp('one', 7) + `</div>`;
+  if (!A.m.kind) x += `<p class="note small" id="bapres">${T('b.why.' + A.m.why)}</p>`;
+  else {
+    const o = A.one;
+    if (o) x += o.status === 'ok' ? `<p id="bapres"><b>${esc(T('b.ap.res', { dob: f(o.dob, 2), dub: f(o.dub, 2), B1: f(o.B1, 2) }))}</b>${o.warnings.length ? ` <span class="note warn small">${esc(o.warnings.map(bwtext).join('; '))}</span>` : ''}</p>` : `<p class="note err small" id="bapres">${esc(o.problems.map(btext).join('; '))}</p>`;
+    if (A.list) { const Q = A.list, warn = Q.rows.filter(r => r.status === 'ok' && r.warnings.length).length;
+      x += `<p id="blist"><b>${esc(T('b.ap.list', { N: Q.N, Gob: f(Q.Gob, 4), Gub: f(Q.Gub, 4), Gb: f(Q.Gbark, 4), pct: f(Q.pct, 2) }))}</b></p>${Q.skipped.length ? `<p class="note warn small">${esc(T('b.ap.skip', { n: Q.skipped.length, rows: Q.skipped.slice(0, 10).join(', ') }))}</p>` : ''}${warn ? `<p class="note warn small">${esc(T('b.ap.warn', { n: warn }))}</p>` : ''}`; }
+    else x += `<p class="muted small">${L ? '' : T('b.ap.nolist')}</p>`;
+  }
+  return x + `</div>`;
+}
+function bindBark() {
+  const B = S.b;
+  document.querySelectorAll('input[name="b-mode"]').forEach(x => x.addEventListener('change', () => { B.mode = x.value; re(); }));
+  document.querySelectorAll('input[name="b-method"]').forEach(x => x.addEventListener('change', () => { B.method = x.value; re(); }));
+  for (const k of ['dob', 'dub', 'cob', 'cub', 'L', 'reads', 'k', 'one', 'setId']) { const el = $('b-' + k); if (el) el.addEventListener('change', e => { B[k] = e.target.value; re(); }); }
+  document.querySelectorAll('[data-brow]').forEach(x => x.addEventListener('change', () => { B.pairs[+x.dataset.brow][x.dataset.k] = x.value; re(); }));
+  document.querySelectorAll('[data-bdel]').forEach(x => x.addEventListener('click', () => { B.pairs.splice(+x.dataset.bdel, 1); re(); }));
+  $('b-add').addEventListener('click', () => { B.pairs.push({ dob: '', dub: '' }); re(); });
+  $('b-paste').addEventListener('click', () => {
+    const t = prompt(T('b.paste.q')); if (!t) return;
+    const rows = t.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => l.split(/[\t;]+|\s+/).filter(Boolean)).filter(c => c.length >= 2);
+    if (!rows.length) { status(T('b.paste.none'), 'err'); return; }
+    B.pairs = [...B.pairs.filter(p => String(p.dob).trim() !== '' || String(p.dub).trim() !== ''), ...rows.map(c => ({ dob: c[0], dub: c[1] }))]; status(T('b.paste.ok', { n: rows.length }), 'ok'); re();
+  });
+}
+function coefBox() {
+  const box = $('barkcoef'); if (!box) return;
+  box.hidden = S.tab !== 'b';
+  if (coefMounted || S.tab !== 'b') return;
+  coefMounted = true;
+  mountCoefEditor(box, { tool: 'bark', onChange: list => { const changed = list.length !== barkSets.length || list.some((s, i) => !barkSets[i] || barkSets[i].id !== s.id || barkSets[i].modified !== s.modified); barkSets = list; if (changed) render(); } }).refresh();
+}
+
 /* ---------------- page ---------------- */
 function re() { save(); render(); }
 function render() {
-  const tabs = ['h', 'd', 'f', 'a'];
+  const tabs = ['h', 'd', 'b', 'f', 'a'];
   let x = `<div class="tabs" role="tablist" aria-label="${esc(T('tab.label'))}">${tabs.map(t => `<button type="button" role="tab" id="tab-${t}" aria-selected="${S.tab === t}" aria-controls="panel">${T('tab.' + t)}</button>`).join('')}</div><div id="panel" role="tabpanel" aria-labelledby="tab-${S.tab}">`;
-  x += S.tab === 'h' ? heightHTML() : S.tab === 'd' ? diameterHTML() : S.tab === 'f' ? formHTML() : ageHTML();
-  x += `</div><div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.excel')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}
-    <button type="button" class="btn ghost" id="reset">${T('reset')}</button></div><p class="muted small">${esc(T('src'))}</p></div>`;
+  x += S.tab === 'h' ? heightHTML() : S.tab === 'd' ? diameterHTML() : S.tab === 'b' ? barkHTML() : S.tab === 'f' ? formHTML() : ageHTML();
+  x += `</div>`;
   $('app').innerHTML = x;
+  $('foot').innerHTML = `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.excel')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}
+    <button type="button" class="btn ghost" id="reset">${T('reset')}</button></div><p class="muted small">${esc(T('src'))}</p></div>`;
   tabs.forEach(t => $('tab-' + t).addEventListener('click', () => { S.tab = t; re(); }));
-  ({ h: bindHeight, d: bindDiameter, f: bindForm, a: bindAge })[S.tab]();
+  ({ h: bindHeight, d: bindDiameter, b: bindBark, f: bindForm, a: bindAge })[S.tab]();
+  coefBox();
   $('reset').addEventListener('click', async () => { S = blank(); status(''); await del(KEY); render(); });
   $('x-json').addEventListener('click', () => downloadRecord(fname('json'), payload(), TOOL, S.d.imp && S.d.src ? [['tree-list', S.d.imp]] : [], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', excel);
@@ -267,6 +358,9 @@ function payload() {
     form: { inputs: S.f, formFactor: strip(R.ff), exponent: strip(R.ex), breastFromExponent: R.ex && R.ex.status === 'ok' && num(S.f.exH) > Fm.BH ? Fm.breastFormFactorFromExponent(R.ex.r, num(S.f.exH)) : null, quotient: strip(R.q) },
     age: (() => { const R = ageResults(); return { inputs: S.a, tree: strip(R.tree), economic: strip(R.econ), noRings: strip(R.nog), core: R.core && R.core.status === 'ok' ? { ...strip(R.core), pressler: R.pr } : strip(R.core),
       stand: R.stand && R.stand.map(strip), growthPercent: R.gp && R.gp.map(strip), meanAnnual: R.mai }; })(),
+    bark: (() => { const P = barkPoint(), F = barkFit(), A = barkApplied(), m = A.m;
+      return { inputs: S.b, point: strip(P), sample: F, method: m.kind ? (m.kind === 'set' ? { kind: 'set', set: m.set } : m) : null,
+        one: strip(A.one), list: A.list ? { N: A.list.N, Gob: A.list.Gob, Gub: A.list.Gub, Gbark: A.list.Gbark, pct: A.list.pct, skippedRows: A.list.skipped } : null }; })(),
     sources: [T('src')] };
 }
 async function excel() {
@@ -277,6 +371,15 @@ async function excel() {
   const st = stemResult(), ds = [['row', 'kind', 'value', 'unit'], ...S.d.rows.map((r, i) => [i + 1, r.kind, num(r.value), r.unit]), [], ['mean', S.d.mean], ['round', S.d.round], ['d_cm', st && st.status === 'ok' ? st.d : null], ['d_unrounded_cm', st && st.status === 'ok' ? st.dRaw : null], ['g_m2', st && st.status === 'ok' ? st.g : null]];
   const sheets = [{ name: T('x.info'), rows: info }, { name: T('x.h'), rows: hs }, { name: T('x.d'), rows: ds }];
   if (L) sheets.push({ name: T('x.list'), rows: [['row', 'd_cm', 'n', 'g_m2'], ...L.trees.map(t => [t.row, t.d, t.n, Dm.basalArea(t.d)]), [], ['N', L.sum.N], ['G_m2', L.sum.G], ['d_mean_cm', L.sum.dMean], ['dg_cm', L.sum.dg]] });
+  { const BP = barkPoint(), F = barkFit(), A = barkApplied(), okp = BP && BP.status === 'ok', m = A.m;
+    const rows = [['quantity', 'value'], ['mode', S.b.mode], ['d_ob_cm', okp ? BP.dob : null], ['d_ub_cm', okp ? BP.dub : null], ['bark_single_mm', okp ? BP.B1 : null], ['bark_double_mm', okp ? BP.B2 : null], ['readings_mm', S.b.mode === 'girths' ? null : S.b.reads],
+      ['girth_ob_cm', num(S.b.cob)], ['girth_ub_cm', num(S.b.cub)], ['g_ob_m2', okp ? BP.gob : null], ['g_ub_m2', okp ? BP.gub : null], ['bark_area_m2', okp ? BP.gBark : null], ['bark_percent_of_g', okp ? BP.pctArea : null],
+      ['length_m', okp && BP.L != null ? BP.L : null], ['V_ob_m3', okp && BP.L != null ? BP.Vob : null], ['V_ub_m3', okp && BP.L != null ? BP.Vub : null], ['V_bark_m3', okp && BP.L != null ? BP.Vbark : null], [],
+      ['sample_n', F && F.status === 'ok' ? F.n : null], ['k_ratio_of_means', F && F.status === 'ok' ? F.k : null], ['k_inverse', F && F.status === 'ok' ? F.kInv : null], ['line_a', F && F.line ? F.line.a : null], ['line_b', F && F.line ? F.line.b : null], ['line_R2', F && F.line ? F.line.r2 : null], ['line_SE_cm', F && F.line ? F.line.se : null], ['sample_rows_left_out', F ? F.bad.join(' ') : null], [],
+      ['method', m.kind ? S.b.method : null], ['k_used', m.kind === 'k' ? m.k : null], ['set', m.kind === 'set' ? `${m.set.form} ${m.set.id}` : null], ['set_source', m.kind === 'set' ? m.set.source.citation : null]];
+    if (A.list) rows.push([], ['N', A.list.N], ['G_ob_m2', A.list.Gob], ['G_ub_m2', A.list.Gub], ['bark_area_m2', A.list.Gbark], ['bark_percent_of_G', A.list.pct], [], ['row', 'n', 'd_ob_cm', 'd_ub_cm', 'bark_single_mm', 'status', 'notes'],
+      ...A.list.rows.map(r => [r.row, r.n, r.dob ?? null, r.status === 'ok' ? r.dub : null, r.status === 'ok' ? r.B1 : null, r.status, [...r.problems.map(btext), ...r.warnings.map(bwtext)].join('; ') || null]));
+    sheets.push({ name: T('x.b'), rows }); }
   sheets.push({ name: T('x.f'), rows: [['quantity', 'value'], ['V_m3', num(S.f.V)], ['d_cm', num(S.f.d)], ['H_m', num(S.f.H)], ['kind', S.f.kind], ['F', R.ff && R.ff.status === 'ok' ? R.ff.F : null], ['form_height_m', R.ff && R.ff.status === 'ok' ? R.ff.formHeight : null],
     ['d1', num(S.f.d1)], ['x1_m', num(S.f.x1)], ['d2', num(S.f.d2)], ['x2_m', num(S.f.x2)], ['r', R.ex && R.ex.status === 'ok' ? R.ex.r : null], ['F_absolute_from_r', R.ex && R.ex.status === 'ok' ? R.ex.absoluteF : null], ['F_breast_from_r', P.form.breastFromExponent],
     ['d_mid_cm', num(S.f.dMid)], ['D_cm', num(S.f.D)], ['q', R.q && R.q.status === 'ok' ? R.q.q : null], ['c', num(S.f.c)], ['F_q_minus_c', R.q && R.q.status === 'ok' ? R.q.F : null]] });
@@ -296,7 +399,7 @@ async function excel() {
     const saved = await get(KEY);
     if (saved && saved.v === 1) {
       const b = blank();
-      S = { ...b, ...saved, h: { ...b.h, ...(saved.h || {}) }, d: { ...b.d, ...(saved.d || {}) }, f: { ...b.f, ...(saved.f || {}) }, a: { ...b.a, ...(saved.a || {}) } };
+      S = { ...b, ...saved, h: { ...b.h, ...(saved.h || {}) }, d: { ...b.d, ...(saved.d || {}) }, f: { ...b.f, ...(saved.f || {}) }, a: { ...b.a, ...(saved.a || {}) }, b: { ...b.b, ...(saved.b || {}) } };
       if (S.d.imp && S.d.imp.buf) S.d.src = await readImport(S.d.imp, BASE).catch(() => null);
       status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) }));
     }

@@ -1,4 +1,4 @@
-// Browser test for the Tree Measurement page (agac-olcumu.php; TM-01, TM-02, TM-06).
+// Browser test for the Tree Measurement page (agac-olcumu.php; TM-01, TM-02, TM-03, TM-05, TM-06).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/tree/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 // Values on screen are compared with the engines (assets/lab/tree/*.js) run in Node on the same inputs.
 import { createRequire } from 'node:module';
@@ -14,6 +14,7 @@ const Ht = await import('../../assets/lab/tree/height.js');
 const Dm = await import('../../assets/lab/tree/diameter.js');
 const Fm = await import('../../assets/lab/tree/form.js');
 const Ag = await import('../../assets/lab/tree/age.js');
+const Bk = await import('../../assets/lab/tree/bark.js');
 const { TOOL } = await import('../../assets/lab/tree/calc.js');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/agac-olcumu.php';
 let pass = 0, fail = 0;
@@ -26,7 +27,7 @@ page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if 
 const type = async (sel, v) => { await page.fill(sel, v); await page.press(sel, 'Tab'); };
 
 await page.goto(URL + '?lang=tr'); await page.waitForSelector('#htab');
-ok((await page.locator('.b-ids').textContent()).trim() === 'TM-01 · TM-02 · TM-05 · TM-06' && (await page.locator('.b-ver').textContent()).includes(TOOL.version), 'tool ids TM-01 · TM-02 · TM-05 · TM-06 and version');
+ok((await page.locator('.b-ids').textContent()).trim() === 'TM-01 · TM-02 · TM-03 · TM-05 · TM-06' && (await page.locator('.b-ver').textContent()).includes(TOOL.version), 'tool ids TM-01 · TM-02 · TM-03 · TM-05 · TM-06 and version');
 
 // height: tangent, two readings, one with a decimal comma; percent; ground slope; rangefinder; similar triangles
 await type('[data-hrow="0"][data-k="D"]', '25'); await type('[data-hrow="0"][data-k="top"]', '40'); await type('[data-hrow="0"][data-k="base"]', '-5');
@@ -98,18 +99,52 @@ const gp = await page.$$eval('#gpres tr', rs => rs.map(r => Number(r.children[1]
 ok(['past', 'present', 'mean'].every((pp, k) => Math.abs(gp[k] - Ag.growthPercent({ now: 0.84, then: 0.61, n: 10, principal: pp }).p) < 0.0006), 'growth percent with three principals = engine');
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-age.png'), fullPage: true });
 
+// bark (TM-03): one point by gauge, girths and from inside; sample trees (typed and pasted); applied by k, line and a set
+await page.click('#tab-b'); await page.waitForSelector('#b-dob');
+ok(await page.locator('#barkcoef').isVisible() && (await page.locator('#cf-none').count()) === 1, 'bark tab: coefficient library shown, no built-in sets (K1)');
+await type('#b-dob', '32'); await page.fill('#b-reads', '4 5,5;6'); await page.press('#b-reads', 'Tab');
+const bp = Bk.measurePoint({ mode: 'gauge', dob: 32, readings: [4, 5.5, 6] });
+const fx = (x, d) => String(Number(x.toFixed(d)));
+ok((await page.textContent('#bres')).includes(`${fx(bp.B1, 2)} mm`) && (await page.textContent('#bres')).includes(`kabuksuz çap ${fx(bp.dub, 2)} cm`) && (await page.textContent('#bres')).includes(fx(bp.pctArea, 2)), `gauge: three readings (decimal comma, ; and space), bark ${bp.B1.toFixed(2)} mm, d_ub ${bp.dub.toFixed(2)} cm = engine`);
+await type('#b-L', '4'); const bv = Bk.measurePoint({ mode: 'gauge', dob: 32, readings: [4, 5.5, 6], L: 4 });
+ok((await page.textContent('#bres')).includes(`kabuk hacmi ${fx(bv.Vbark, 4)} m³`), 'with a log length: bark volume = over − under-bark volume');
+await page.check('input[name="b-mode"][value="girths"]'); await type('#b-cob', '100'); await type('#b-cub', '94');
+ok((await page.textContent('#bres')).includes(`Kabuk kalınlığı ${fx(Bk.barkFromGirths(100, 94), 2)} mm`), 'two girths: peripheral bark thickness (c_ob − c_ub)/2π');
+await type('#b-cub', '104'); ok((await page.textContent('#bres')).includes('kabukludan büyük'), 'girth under bark larger: refused with a message');
+const P = [[22, 20.1], [31.5, 28.9], [40, 36.4], [27, 24.8]];
+for (let i = 0; i < 3; i++) { await type(`[data-brow="${i}"][data-k="dob"]`, String(P[i][0]).replace('.', ',')); await type(`[data-brow="${i}"][data-k="dub"]`, String(P[i][1])); }
+page.once('dialog', d => d.accept('27\t24,8\n19 30'));
+await page.click('#b-paste'); await page.waitForSelector('[data-brow="4"]');
+const F = Bk.fitBark([...P.map(([dob, dub]) => ({ dob, dub })), { dob: 19, dub: 30 }]);
+const kt = await page.textContent('#bkres');
+ok(kt.includes(`k = ${fx(F.k, 4)}`) && kt.includes(String(F.k)) && kt.includes(String(F.line.a)) && kt.includes(`R² = ${fx(F.line.r2, 4)}`) && kt.includes('satırlar') && kt.includes('5'), `sample trees (typed and pasted): k ${F.k.toFixed(4)} at full precision, line, row 5 (d_ub > d_ob) left out`);
+await page.check('input[name="b-method"][value="k"]'); await type('#b-k', '0,9'); await type('#b-one', '30');
+ok((await page.textContent('#bapres')).includes('kabuksuz 27 cm'), 'typed k 0.9: 30 → 27 cm');
+const BL = Bk.barkList({ kind: 'k', k: 0.9 }, ds.map(d => ({ d })));
+ok((await page.textContent('#blist')).includes(`${BL.N} ağaç`) && (await page.textContent('#blist')).includes(fx(BL.Gub, 4)), `tree list from the diameter tab: ${BL.N} trees, G under bark ${BL.Gub.toFixed(4)} m² = engine`);
+await page.check('input[name="b-method"][value="line"]'); const lo = Bk.applyBark({ kind: 'line', a: F.line.a, b: F.line.b }, 30);
+ok((await page.textContent('#bapres')).includes(`kabuksuz ${fx(lo.dub, 2)} cm`), 'fitted line applied');
+await page.check('input[name="b-method"][value="set"]'); ok((await page.textContent('#bapres')).includes('katsayı seti seçin'), 'set method without a set: asks for one');
+await page.selectOption('#cf-form', 'bark.b2.loglog'); await page.click('#cf-new');
+await page.fill('#cf-p-a', '0.9'); await page.fill('#cf-p-b', '0.75'); await page.fill('#cf-cit', 'Test, not a real equation'); await page.click('#cf-save');
+await page.waitForSelector('#b-setId option:nth-child(2)', { state: 'attached' }); await page.selectOption('#b-setId', { index: 1 });
+const lset = Bk.applyBark({ kind: 'set', set: { ...(await import('../../assets/lab/core/coef.js')).blankSet('bark.b2.loglog'), params: { a: 0.9, b: 0.75 }, source: { citation: 'x' } } }, 30);
+ok((await page.textContent('#bapres')).includes(`kabuksuz ${fx(lset.dub, 2)} cm`) && lset.dub !== lo.dub, `ln 2B set (no correction) from the library: ${lset.dub.toFixed(2)} cm = engine`);
+if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-bark.png'), fullPage: true });
+
 // downloads: Excel sheets, JSON run record with the tree list fingerprint
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 const wb = XLSX.read(await readFile(await dx.path()), { type: 'buffer' });
-ok(['Bilgi', 'Boy', 'Gövde', 'Ağaç listesi', 'Biçim', 'Yaş ve artım', 'Burgu'].every(n => wb.SheetNames.includes(n)) && XLSX.utils.sheet_to_json(wb.Sheets['Burgu'], { header: 1 }).filter(r => typeof r[0] === 'number' && typeof r[2] === 'number').length >= 21 && XLSX.utils.sheet_to_json(wb.Sheets['Ağaç listesi'], { header: 1 }).length === ds.length + 6, 'Excel: Info, Height, Stem, Tree list, Form, Age and increment, Core (every year)');
+ok(['Bilgi', 'Boy', 'Gövde', 'Ağaç listesi', 'Kabuk', 'Biçim', 'Yaş ve artım', 'Burgu'].every(n => wb.SheetNames.includes(n)) && XLSX.utils.sheet_to_json(wb.Sheets['Kabuk'], { header: 1 }).filter(r => r[5] === 'ok').length === BL.N && XLSX.utils.sheet_to_json(wb.Sheets['Burgu'], { header: 1 }).filter(r => typeof r[0] === 'number' && typeof r[2] === 'number').length >= 21 && XLSX.utils.sheet_to_json(wb.Sheets['Ağaç listesi'], { header: 1 }).length === ds.length + 6, 'Excel: Info, Height, Stem, Tree list, Bark (every tree of the list), Form, Age and increment, Core (every year)');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const J = JSON.parse(await readFile(await dj.path(), 'utf8')), txt = JSON.stringify(J);
 ok(txt.includes(createHash('sha256').update(csv).digest('hex')) && txt.includes(TOOL.version) && txt.includes('Hamilton'), 'JSON run record: tool version, sources and the SHA-256 of the tree list file');
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-form.png'), fullPage: true });
 
 // session, English, phone
-await page.waitForTimeout(400); await page.reload(); await page.waitForSelector('#a-cW'); ok((await page.textContent('#status')).includes('geri yüklendi') && (await page.inputValue('#a-cW')).includes('4,2'), 'session restored on the same tab');
-await page.goto(URL + '?lang=en'); await page.waitForSelector('#a-cW'); ok((await page.textContent('#app')).includes('Increment core') && (await page.textContent('#app')).includes('Height'), 'English page');
+await page.waitForTimeout(400); await page.reload(); await page.waitForSelector('#b-cub'); ok((await page.textContent('#status')).includes('geri yüklendi') && (await page.inputValue('#b-cub')) === '104' && (await page.locator('#b-setId').inputValue()) !== '', 'session restored on the same tab (bark, with the chosen set)');
+await page.click('#tab-a'); await page.waitForSelector('#a-cW'); ok((await page.inputValue('#a-cW')).includes('4,2'), 'age tab restored');
+await page.waitForTimeout(400); await page.goto(URL + '?lang=en'); await page.waitForSelector('#a-cW'); ok((await page.textContent('#app')).includes('Increment core') && (await page.textContent('#app')).includes('Bark'), 'English page');
 const ph = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' }); ph.on('pageerror', e => errors.push(e.message));
 await ph.goto(URL + '?lang=tr'); await ph.waitForSelector('#app .tabs'); ok(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'phone: no horizontal scroll');
 if (SHOTS) await ph.screenshot({ path: path.join(SHOTS, 'tree-phone.png'), fullPage: true });

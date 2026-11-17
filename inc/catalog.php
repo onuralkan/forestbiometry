@@ -38,7 +38,7 @@ function site_catalog(): array {
         ['DI-07', 'live', 'Tekrarlanabilirlik katmanı', 'Reproducibility layer', 'kayit-dogrulayici.php'],
         ['TM-01', 'live', 'Boy hesaplayıcı', 'Height calculator', 'agac-olcumu.php'],
         ['TM-02', 'live', 'Çap ve göğüs yüzeyi', 'DBH and basal area', 'agac-olcumu.php'],
-        ['TM-03', 'planned', 'Kabuk kalınlığı ve kabuksuz çap', 'Bark thickness and under-bark diameter'],
+        ['TM-03', 'live', 'Kabuk kalınlığı ve kabuksuz çap', 'Bark thickness and under-bark diameter', 'agac-olcumu.php'],
         ['TM-04', 'planned', 'Tepe tacı ölçüleri', 'Crown metrics'],
         ['TM-05', 'live', 'Ağaç yaşı ve çap artımı', 'Tree age and radial increment', 'agac-olcumu.php'],
         ['TM-06', 'live', 'Biçim sayısı ve biçim bölümü', 'Form factor and form quotient', 'agac-olcumu.php'],
