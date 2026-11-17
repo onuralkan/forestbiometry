@@ -9,6 +9,7 @@ import { mountCoefEditor } from '../core/coef-ui.js';
 import { EXTRA } from './coef-extra.js';
 import * as MC from './mc.js';
 import * as SUR from './sur.js';
+import * as NS from './nsur.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, toInternal, detectDecimal, defaultDecimal } from '../core/num.js';
@@ -206,8 +207,9 @@ function dvHTML() {
 
 /* ---------------- BC-02: additive system from the user's destructive sample (sur.js) ---------------- */
 const SYS_W = ['none', ...SUR.WEIGHT_VARS];
-function sysBlank() { return { imp: null, src: null, D: null, H: null, decimal: null, decChosen: false, comps: [sysComp(0), sysComp(1)], total: { col: null, w: 'none', k: '' }, species: '', cit: '', saveTotal: true, open: false }; }
-function sysComp(i) { return { col: null, label: `${T('c.name')} ${i + 1}`, terms: ['d2h'], w: 'none', k: '' }; }
+function sysBlank() { return { imp: null, src: null, D: null, H: null, decimal: null, decChosen: false, kind: 'linear', nlm: 'weighted', comps: [sysComp(0), sysComp(1)], total: { col: null, w: 'none', k: '', nw: 'none', nth: '' }, species: '', cit: '', saveTotal: true, open: false, pD: '', pH: '' }; }
+function sysComp(i) { return { col: null, label: `${T('c.name')} ${i + 1}`, terms: ['d2h'], w: 'none', k: '', form: 'pow.d2h', nw: 'none', nth: '' }; }
+const NL = () => S.sys.kind === 'nonlinear';
 let SR = null;
 function sysHTML() {
   const Y = S.sys;
@@ -224,14 +226,19 @@ function renderSysMap() {
   const dv = detectDecimal([Y.D, Y.H, Y.total.col, ...Y.comps.map(c => c.col)].filter(c => c != null).flatMap(c => src.rows.map(r => r[c]).filter(x => x && x.t === 's').map(x => x.v)));
   if (!Y.decChosen) Y.decimal = defaultDecimal(dv.verdict);
   const wsel = (id, w, k) => `<select data-sw="${id}">${SYS_W.map(v => `<option value="${v}"${w === v ? ' selected' : ''}>${v === 'none' ? T('sy.w.none') : 'σ² ∝ ' + SUR.TERMS[v].label + '^k'}</option>`).join('')}</select>${w !== 'none' ? ` <label class="small">k <input type="text" inputmode="decimal" size="6" data-sk="${id}" value="${esc(k)}" placeholder="${esc(T('sy.k.auto'))}"></label>` : ''}`;
+  const nl = NL(), nlw = nl && Y.nlm === 'weighted';
+  const nwsel = (id, o) => `<select data-nw="${id}">${NS.WEIGHT_ORDER.map(v => `<option value="${v}"${(o.nw || 'none') === v ? ' selected' : ''}>${v === 'none' ? T('sy.w.none') : 'ψ = ' + NS.weightText(v)}</option>`).join('')}</select>${(o.nw || 'none') !== 'none' ? ` <label class="small">θ <input type="text" size="9" data-nth="${id}" value="${esc(o.nth || '')}" placeholder="${esc(T('sy.k.auto'))}"></label>` : ''}`;
   let h = `<div class="lims"><label>${T('sy.D')} <select data-sc="D">${opts(Y.D)}</select></label><label>${T('sy.H')} <select data-sc="H">${opts(Y.H)}</select></label>
     <span class="radios"><span class="small">${T('dec.h')}:</span> <label class="small"><input type="radio" name="sydec" value="."${Y.decimal === '.' ? ' checked' : ''}> ${T('dec.dot')}</label><label class="small"><input type="radio" name="sydec" value=","${Y.decimal === ',' ? ' checked' : ''}> ${T('dec.comma')}</label></span></div>
-    <div class="tscroll"><table class="grid" id="systab"><thead><tr><th>${T('sy.col')}</th><th>${T('c.name')}</th><th>${T('sy.terms')}</th><th>${T('sy.w')}</th><th></th></tr></thead><tbody>
+    <div class="radios" id="sy-kind"><span class="small">${T('sy.kind')}:</span> ${['linear', 'nonlinear'].map(k => `<label class="small"><input type="radio" name="sykind" value="${k}"${(Y.kind || 'linear') === k ? ' checked' : ''}> ${T('sy.kind.' + k)}</label>`).join(' ')}</div>
+    ${nl ? `<div class="radios" id="sy-nlm"><span class="small">${T('sn.m')}:</span> ${['weighted', 'log'].map(k => `<label class="small"><input type="radio" name="synlm" value="${k}"${Y.nlm === k ? ' checked' : ''}> ${T('sn.m.' + k)}</label>`).join(' ')}</div>` : ''}
+    <div class="tscroll"><table class="grid" id="systab"><thead><tr><th>${T('sy.col')}</th><th>${T('c.name')}</th><th>${nl ? T('sn.form') : T('sy.terms')}</th><th>${T('sy.w')}</th><th></th></tr></thead><tbody>
     ${Y.comps.map((c, i) => `<tr><td><select data-cc="${i}">${opts(c.col)}</select></td><td><input type="text" size="12" data-cl2="${i}" value="${esc(c.label)}"></td>
-      <td>${SUR.TERM_ORDER.map(t => `<label class="small"><input type="checkbox" data-ct="${i}" value="${t}"${c.terms.includes(t) ? ' checked' : ''}> ${SUR.TERMS[t].label}</label>`).join(' ')}</td><td>${wsel(i, c.w, c.k)}</td>
+      <td>${nl ? `<select data-nf="${i}">${NS.NL_FORM_ORDER.map(fid => `<option value="${fid}"${(c.form || 'pow.d2h') === fid ? ' selected' : ''}>B = ${NS.NL_FORMS[fid].text}</option>`).join('')}</select>`
+        : SUR.TERM_ORDER.map(t => `<label class="small"><input type="checkbox" data-ct="${i}" value="${t}"${c.terms.includes(t) ? ' checked' : ''}> ${SUR.TERMS[t].label}</label>`).join(' ')}</td><td>${nl ? (nlw ? nwsel(i, c) : `<span class="small muted">${T('sn.w.log')}</span>`) : wsel(i, c.w, c.k)}</td>
       <td>${Y.comps.length > 2 ? `<button type="button" class="btn ghost small" data-crm2="${i}">${T('c.rm')}</button>` : ''}</td></tr>`).join('')}
-    <tr class="tail"><td><select data-cc="total">${opts(Y.total.col).replace(`>${T('none')}<`, `>${T('sy.tot.sum')}<`)}</select></td><td>${T('sy.tot')}</td><td class="small muted">${T('sy.tot.terms')}</td><td>${wsel('total', Y.total.w, Y.total.k)}</td><td></td></tr></tbody></table></div>
-    <p><button type="button" class="btn ghost small" id="sy-add">${T('c.add')}</button></p><p class="muted small">${T('sy.note')}</p>
+    <tr class="tail"><td><select data-cc="total">${opts(Y.total.col).replace(`>${T('none')}<`, `>${T('sy.tot.sum')}<`)}</select></td><td>${T('sy.tot')}</td><td class="small muted">${nl ? T('sn.tot.f') : T('sy.tot.terms')}</td><td>${nl ? (nlw ? nwsel('total', Y.total) : `<span class="small muted">${T('sn.w.log')}</span>`) : wsel('total', Y.total.w, Y.total.k)}</td><td></td></tr></tbody></table></div>
+    <p><button type="button" class="btn ghost small" id="sy-add">${T('c.add')}</button></p><p class="muted small">${nl ? T('sn.note') : T('sy.note')}</p>
     <div class="nav"><button type="button" class="btn" id="sy-fit">${T('sy.fit')}</button></div>`;
   box.innerHTML = h;
   const ch = () => { SR = null; save(); renderSysMap(); $('sysout').innerHTML = ''; };
@@ -243,11 +250,17 @@ function renderSysMap() {
   const wobj = id => id === 'total' ? Y.total : Y.comps[+id];
   box.querySelectorAll('[data-sw]').forEach(x => x.addEventListener('change', () => { wobj(x.dataset.sw).w = x.value; ch(); }));
   box.querySelectorAll('[data-sk]').forEach(x => x.addEventListener('change', () => { wobj(x.dataset.sk).k = x.value.trim(); ch(); }));
+  box.querySelectorAll('input[name="sykind"]').forEach(x => x.addEventListener('change', () => { Y.kind = x.value; ch(); }));
+  box.querySelectorAll('input[name="synlm"]').forEach(x => x.addEventListener('change', () => { Y.nlm = x.value; ch(); }));
+  box.querySelectorAll('[data-nf]').forEach(x => x.addEventListener('change', () => { Y.comps[+x.dataset.nf].form = x.value; ch(); }));
+  box.querySelectorAll('[data-nw]').forEach(x => x.addEventListener('change', () => { const o = wobj(x.dataset.nw); o.nw = x.value; o.nth = ''; ch(); }));
+  box.querySelectorAll('[data-nth]').forEach(x => x.addEventListener('change', () => { wobj(x.dataset.nth).nth = x.value.trim(); ch(); }));
   box.querySelectorAll('[data-crm2]').forEach(x => x.addEventListener('click', () => { Y.comps.splice(+x.dataset.crm2, 1); ch(); }));
   $('sy-add').addEventListener('click', () => { Y.comps.push(sysComp(Y.comps.length)); ch(); });
   $('sy-fit').addEventListener('click', sysFit);
 }
 function sysFit() {
+  if (NL()) return sysFitNL();
   const Y = S.sys, probs = [];
   if (Y.D == null) probs.push(T('sy.p.D'));
   if (Y.comps.some(c => c.col == null)) probs.push(T('sy.p.col'));
@@ -259,8 +272,58 @@ function sysFit() {
   SR = { ...SUR.fitAdditive(sysRows(), spec), created: new Date().toISOString(), spec };
   renderSysOut();
 }
+function sysFitNL() {
+  const Y = S.sys, probs = [], log = Y.nlm === 'log';
+  if (Y.D == null) probs.push(T('sy.p.D'));
+  if (Y.comps.some(c => c.col == null)) probs.push(T('sy.p.col'));
+  const wOf = o => { const code = o.nw || 'none'; if (log || code === 'none') return code; const s = String(o.nth || '').trim(); if (!s) return { code, theta: null };
+    const v = s.split(/[\s;]+/).map(num); return v.length === NS.WEIGHTS[code].length && v.every(Number.isFinite) ? { code, theta: v } : null; };
+  const ws = [...Y.comps.map(wOf), wOf(Y.total)]; if (ws.some(w => w === null)) probs.push(T('sn.p.th'));
+  if (probs.length) { $('sysout').innerHTML = `<p class="note err small" id="sy-prob">${esc(probs.join(' · '))}</p>`; return; }
+  const spec = { method: Y.nlm, comps: Y.comps.map((c, i) => ({ key: 'c' + i, label: c.label, form: c.form || 'pow.d2h', weight: ws[i] })), total: { from: Y.total.col == null ? 'sum' : 'column', weight: ws[ws.length - 1] } };
+  SR = { ...NS.fitNonlinearAdditive(sysRows(), spec), kind: 'nonlinear', created: new Date().toISOString(), spec };
+  renderSysOut();
+}
+function renderSysOutNL() {
+  const out = $('sysout'), Y = S.sys, drop = SR.dropped || [];
+  let h = drop.length ? `<p class="note warn small" id="sy-drop">${esc(T('sy.drop', { n: drop.length, rows: rowsText(drop.map(d => d.row)) }))}</p>` : '';
+  if (SR.status !== 'ok') { out.innerHTML = h + `<p class="note err" id="sy-bad">${esc(SR.problems.map(p => T('sy.e.' + p)).join(' · '))}</p>`; return; }
+  const name = e => e.key === 'total' ? T('sy.tot') : e.label, comps = SR.equations.filter(e => e.key !== 'total');
+  const wtxt = e => e.weight.code === 'log' ? T('sn.w.log') : e.weight.code === 'none' ? T('sy.w.none') : `ψ = ${NS.weightText(e.weight.code, e.weight.theta)}${e.weight.estimated ? ' (' + T('sy.k.est') + ')' : ''}`;
+  h += `<p class="small" id="sy-sum">${esc(T('sn.sum', { n: SR.n, m: SR.M, p: SR.P, method: T('sn.m.' + SR.method) }))}</p>
+    <div class="tscroll"><table class="grid" id="sy-coef"><thead><tr><th>${T('sy.eq')}</th><th>${T('sn.par')}</th><th>NSUR</th><th>${T('sy.se')}</th><th>${T('sy.sep')}</th><th>${T('sy.se')}</th></tr></thead><tbody>
+    ${comps.map(e => e.params.map((p, a) => `<tr data-eq="${esc(e.key)}">${a === 0 ? `<th rowspan="${e.K}">${esc(name(e))}<br><span class="small muted">B = ${NS.NL_FORMS[e.form].text}</span></th>` : ''}<td>${p}</td><td class="num" data-k="b">${sig(e.nsur.b[a])}</td><td class="num">${sig(e.nsur.se[a])}</td><td class="num">${sig(e.single.b[a])}</td><td class="num">${sig(e.single.se[a])}</td></tr>`).join('')).join('')}</tbody></table></div>
+    <p class="small muted">${T('sn.tot.sum')}</p>
+    <div class="tscroll"><table class="grid" id="sy-stat"><thead><tr><th>${T('sy.eq')}</th><th>${T('sy.w')}</th><th>Se (kg) NSUR</th><th>${T('sy.bias')}</th><th>FI</th><th>Se (kg) ${T('sy.sep')}</th><th>FI</th></tr></thead><tbody>
+    ${SR.equations.map(e => `<tr data-eq="${esc(e.key)}"><th>${esc(name(e))}</th><td class="small">${esc(wtxt(e))}</td>
+      <td class="num">${fmtNum(e.nsur.stats.Se, 3)}</td><td class="num">${fmtNum(e.nsur.stats.bias, 3)}</td><td class="num" data-k="fi">${fmtNum(e.nsur.stats.FI, 4)}</td><td class="num">${fmtNum(e.single.stats.Se, 3)}</td><td class="num">${fmtNum(e.single.stats.FI, 4)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="small" id="sy-s2">σ̂²<sub>NSUR</sub> = ${sig(SR.s2)} (${T('sn.df')} ${SR.df}). ${T('sy.corr')}: ${SR.equations.map((e, i) => SR.equations.slice(i + 1).map((g, j) => `${esc(name(e))}–${esc(name(g))} ${fmtNum(SR.corr[i][i + 1 + j], 2)}`).join(', ')).filter(Boolean).join(', ')}</p>
+    <p class="muted small">${T('sn.method.' + SR.method)}</p>
+    <h3>${T('sn.iv.h')}</h3><div class="lims"><label>D (cm) <input type="text" inputmode="decimal" size="6" id="sy-pD" value="${esc(Y.pD)}"></label>${SR.range.H ? `<label>H (m) <input type="text" inputmode="decimal" size="6" id="sy-pH" value="${esc(Y.pH)}"></label>` : ''}<button type="button" class="btn ghost small" id="sy-iv">${T('sn.iv.go')}</button></div><div id="sy-ivout"></div>
+    <h3>${T('sy.save.h')}</h3><div class="lims"><label>${T('m.sp')} <input type="text" size="14" id="sy-sp" value="${esc(Y.species)}"></label></div>
+    <p class="muted small">${T('sn.save.note')}</p>
+    <label class="field"><span>${T('sy.cit')}</span><input type="text" id="sy-cit" value="${esc(Y.cit)}" placeholder="${esc(T('sy.cit.ph'))}"></label>
+    <div class="nav"><button type="button" class="btn" id="sy-save">${T('sy.save')}</button></div><div id="sy-msg"></div>`;
+  out.innerHTML = h;
+  const iv = () => {
+    const D = num(Y.pD), H = SR.range.H ? num(Y.pH) : null, r = NS.intervals(SR, D, H), box = $('sy-ivout');
+    if (!r) { box.innerHTML = Y.pD === '' ? '' : `<p class="note err small" id="sy-ivbad">${T('sn.iv.bad')}</p>`; return; }
+    box.innerHTML = `<div class="tscroll"><table class="grid" id="sy-ivtab"><thead><tr><th>${T('sy.eq')}</th><th>ŷ (kg)</th><th>${T('sn.iv.ci')}</th><th>${T('sn.iv.pi')}</th></tr></thead><tbody>
+      ${r.rows.map((q, i) => `<tr data-eq="${esc(q.key)}"><th>${esc(name(SR.equations[i]))}</th><td class="num" data-k="y">${fmtNum(q.yhat, 2)}</td><td class="num">${fmtNum(q.ci[0], 2)} – ${fmtNum(q.ci[1], 2)}</td><td class="num">${fmtNum(q.pi[0], 2)} – ${fmtNum(q.pi[1], 2)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="muted small">${esc(T('sn.iv.note', { t: fmtNum(r.t, 4), df: r.df }))}${SR.method === 'log' ? ' ' + esc(T('sn.iv.log')) : ''}${SR.range && (D < SR.range.D[0] || D > SR.range.D[1]) ? ' ' + esc(T('sn.iv.out')) : ''}</p>`;
+  };
+  $('sy-pD').addEventListener('change', e => { Y.pD = e.target.value.trim(); save(); });
+  if ($('sy-pH')) $('sy-pH').addEventListener('change', e => { Y.pH = e.target.value.trim(); save(); });
+  $('sy-iv').addEventListener('click', () => { Y.pD = $('sy-pD').value.trim(); if ($('sy-pH')) Y.pH = $('sy-pH').value.trim(); save(); iv(); });
+  if (Y.pD !== '') iv();
+  $('sy-sp').addEventListener('change', e => { Y.species = e.target.value.trim(); save(); });
+  $('sy-cit').addEventListener('change', e => { Y.cit = e.target.value; save(); });
+  $('sy-save').addEventListener('click', sysSave);
+}
+function sig(v) { return v == null || !Number.isFinite(v) ? '–' : Math.abs(v) >= 1e-3 && Math.abs(v) < 1e6 ? fmtNum(v, Math.max(0, 5 - Math.floor(Math.log10(Math.abs(v) || 1)))) : v.toExponential(5).replace('-', '−'); }
 function renderSysOut() {
   const out = $('sysout'); if (!out || !SR) return;
+  if (SR.kind === 'nonlinear') return renderSysOutNL();
   const Y = S.sys, drop = SR.dropped || [];
   let h = drop.length ? `<p class="note warn small" id="sy-drop">${esc(T('sy.drop', { n: drop.length, rows: rowsText(drop.map(d => d.row)) }))}</p>` : '';
   if (SR.status !== 'ok') { out.innerHTML = h + `<p class="note err" id="sy-bad">${esc(SR.problems.map(p => T('sy.e.' + p)).join(' · '))}</p>`; return; }
@@ -285,6 +348,7 @@ function renderSysOut() {
 async function sysSave() {
   const Y = S.sys, cit = String(Y.cit).trim();
   if (!cit) { $('sy-msg').innerHTML = `<p class="note err small">${T('sy.p.cit')}</p>`; return; }
+  if (SR.kind === 'nonlinear') return sysSaveNL(cit);
   const sysId = 'sys' + Date.now().toString(36), eqs = SR.equations.filter(e => e.key !== 'total' || Y.saveTotal), saved = [];
   for (const e of eqs) {
     const fid = SUR.formIdOf(e.terms), f = B.FORMS[fid], needsH = f.needsH || (e.weight.kind === 'power' && SUR.TERMS[e.weight.v].needsH);
@@ -299,6 +363,22 @@ async function sysSave() {
   sets = await listCoefs('biomass'); R = null; save();
   $('sy-msg').innerHTML = `<p class="note ok small" id="sy-ok">${esc(T('sy.saved', { n: saved.length }))}</p>`;
   renderStep2(); const card = $('syscard'); if (card) { card.open = true; renderSysOut(); $('sy-msg').innerHTML = `<p class="note ok small" id="sy-ok">${esc(T('sy.saved', { n: saved.length }))}</p>`; }
+}
+async function sysSaveNL(cit) {
+  const Y = S.sys, sysId = 'sys' + Date.now().toString(36), saved = [];
+  for (const e of SR.equations.filter(q => q.key !== 'total')) {
+    const needsH = NS.NL_FORMS[e.form].needsH || NS.weightNeedsH(e.weight.code);
+    const set = { ...blankSet('biomass.' + e.form), params: Object.fromEntries(e.params.map((k, a) => [k, e.nsur.b[a]])), valid: { D: SR.range.D, ...(needsH && SR.range.H ? { H: SR.range.H } : {}) },
+      species: Y.species || null, component: e.label, source: { citation: cit }, origin: 'fitted',
+      meta: { cov: e.nsur.cov.map(r => r.map(v => String(v)).join(' ')).join('; ') },
+      fit: { method: SR.methodText, system: sysId, data: Y.imp ? Y.imp.name : null, n: SR.n, weight: e.weight, Se: e.nsur.stats.Se, bias: e.nsur.stats.bias, FI: e.nsur.stats.FI,
+        se: e.nsur.se, separate: { b: e.single.b, se: e.single.se }, sigma: SR.sigma, corr: SR.corr, s2NSUR: SR.s2, equations: SR.equations.map(q => q.key === 'total' ? 'total' : q.label), created: SR.created,
+        note: (SR.method === 'log' ? 'fitted on the ln scale; predictions exp(ln f), no back-transformation correction (Parresol 2001, Example 2); ' : '') + 'the total is the sum of the component sets; cross-equation covariances not stored in the set' } };
+    const r = await saveCoef(set); if (!r.ok) { $('sy-msg').innerHTML = `<p class="note err small">${esc(r.problems.map(q => q.code).join(', '))}</p>`; return; }
+    saved.push(r.set);
+  }
+  sets = await listCoefs('biomass'); R = null; save();
+  renderStep2(); const card = $('syscard'); if (card) { card.open = true; renderSysOut(); $('sy-msg').innerHTML = `<p class="note ok small" id="sy-ok">${esc(T('sn.saved', { n: saved.length }))}</p>`; }
 }
 function mountSys() {
   if (!$('syscard')) return;

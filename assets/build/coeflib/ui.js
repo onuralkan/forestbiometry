@@ -31,7 +31,7 @@ const { buildUnits } = __fb_r("stand/calc.js");
 
 
 
-const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.4' };
+const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.5' };
 const CO2_PER_C = 44 / 12;
 /** Scales on which the Baskerville correction is applied: ln ([A], METHODS §22); log10 waits for its source. */
 const BASKERVILLE_SCALES = ['log'];
