@@ -12,6 +12,8 @@ import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { scatterChart } from '../core/chart.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
+import { buildR } from './rcode.js';
+import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:' + MX.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
@@ -207,7 +209,7 @@ function fitOne(d, rows) {
   const fit = !start ? { status: 'bad', code: 'start' } : b.groups.length < 3 ? { status: 'bad', code: 'groups' } : MX.fitNLME(model, b.groups, { cov: random.length > 1 ? md.cov : 'diag', power: d.vcol != null, method: md.method }, { start });
   let fitted = null;
   if (fit.status === 'ok') fitted = b.groups.map((g, i) => g.x.map(x => { const ph = fit.beta.slice(); random.forEach((j, l) => { ph[j] += fit.ranef[i].b[l]; }); return [model.f(fit.beta, x), model.f(ph, x)]; }));
-  return { i: d.i, label, kind: 'nonlinear', md: JSON.parse(JSON.stringify(md)), b, fit, model, text: nm.text, params: nm.params, rnames: random.map(j => nm.params[j]), vars: nm.vars, varCols, fitted };
+  return { i: d.i, label, kind: 'nonlinear', md: JSON.parse(JSON.stringify(md)), b, fit, model, start, text: nm.text, params: nm.params, rnames: random.map(j => nm.params[j]), vars: nm.vars, varCols, fitted };
 }
 const rowsText = rows => { const r = rows.filter(x => x != null); return r.length > 25 ? r.slice(0, 25).join(', ') + ' …' : r.join(', '); };
 const modelText = q => `${q.label}: y = ${q.text}`;
@@ -245,7 +247,7 @@ function renderStep3() {
       <label class="field"><span>${T('save.cit')}</span><input type="text" id="sv-cit" value="${esc(S.cit)}" placeholder="${esc(T('save.cit.ph'))}"></label><p class="muted small">${T('save.note')}</p>
       <div class="nav"><button type="button" class="btn" id="sv-save">${T('save.btn')}</button></div><div id="sv-msg"></div></div>`;
   }
-  h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}</div></div>
+  h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button><button type="button" class="btn ghost" id="x-r">${T('x.r')}</button>${recordOption()}</div><p class="muted small">${T('x.r.note')}</p></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('back2').addEventListener('click', () => go(2));
@@ -271,6 +273,19 @@ function renderStep3() {
   }
   const name = ext => `${lang === 'tr' ? 'karma-modeller' : 'mixed-models'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), obsTable(), lang));
+  $('x-r').addEventListener('click', () => {
+    const imp = S.tbl.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null, cq = R.fits[S.cal.idx];
+    // the calibration card's group, as the card reads it (only when it can be computed)
+    let cal = null;
+    if (cq && cq.fit.status === 'ok' && S.cal.text.trim()) {
+      const nv = cq.vars.length, lines = S.cal.text.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.split(/[\s;]+/).map(v => num(v.replace(',', '.'))));
+      if (lines.length && lines.every(r => r.length >= nv + 1 && r.slice(0, nv + 1).every(Number.isFinite)))
+        cal = { idx: S.cal.idx, lines: lines.map(r => r.slice(0, nv + 1)), pts: nv === 1 ? S.cal.pts.split(/[\s;]+/).map(v => num(v.replace(',', '.'))).filter(Number.isFinite).map(v => [v]) : [], iterate: !!S.cal.iterate };
+    }
+    download(name('R'), buildR({ imp, src: S.tbl.src, decimal: S.tbl.decimal || '.', g: S.g, y: S.y, vname }, R, cal, S.lrt, { lang, created: new Date().toISOString(), version: MX.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
+    if (!file) download(csvName(imp), tableCsv(S.tbl.src, cellText, S.tbl.decimal || '.'), 'text/csv;charset=utf-8');
+  });
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }
     download(name('xlsx'), xlsxBlob(XLSX, [{ name: T('x.info'), rows: infoRows(), widths: [28, 100] }, { name: T('x.cmp'), rows: cmpRows() }, { name: T('x.fix'), rows: fixRows() }, { name: T('x.re'), rows: reRows() }, { name: T('x.obs'), rows: obsTable() }]));

@@ -46,6 +46,9 @@ const cb = await nums('#cal-b [data-k^="b"]');
 ok(close(cb, REF.calib_lme.L2.u, 1e-4), 'calibration of the new plot (BLUP) = R: ' + cb.join(' '));
 const cp = await nums('#cal-p [data-k="cal"]');
 ok(close(cp.slice(3), REF.calib_lme.L2.pred, 1e-3), 'calibrated predictions at 15, 30, 45 cm = R');
+{ const [rd] = await Promise.all([page.waitForEvent('download'), page.click('#x-r')]), rs = await readFile(await rd.path(), 'utf8');
+  ok(rd.suggestedFilename().endsWith('.R') && rs.includes('library(nlme)') && rs.includes('data_file <- "ornek-karma.csv"') && rs.includes('lme(.y ~ log(D_cm), random = list(.g = pdSymm(~ log(D_cm)))') && rs.includes('nlme(.y ~ m2_f(a, b, c, D_cm)')
+    && rs.includes('# BLUP') && rs.includes('c(15, 30, 45)') && rs.includes('fb_out(res)'), 'R code: a .R file with lme and nlme, the calibration card\'s plot (its numbers are checked in R by scripts/rcode-check.sh)'); }
 await page.selectOption('#cal-m', '1'); await page.waitForSelector('#cal-it');
 await page.fill('#cal-obs', nd); await page.click('#cal-go'); await page.waitForSelector('#cal-b');
 const cn = await nums('#cal-b [data-k^="b"]');
