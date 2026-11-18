@@ -9,7 +9,8 @@
 #   U (dominance; Hui et al. 1998): forestSAS::dominance on c(d_i, d of the 4 nearest neighbours), the neighbours from
 #     spatstat.geom::nnwhich, i.e. independent of the tool's neighbour search;
 #   Hegyi: siplab::pairwise with powers_ker (p_i = p_j = p_r = 1 by default: (d_j/d_i)/dist), competitors within 6 m,
-#     no edge correction.
+#     no edge correction. The index is read from the last mark column of the result (its name, written to the JSON as
+#     hegyiColumns, depends on the siplab version; the first run of 18 Nov 2026 with siplab 1.6 had no 'cmpt' column).
 suppressPackageStartupMessages({
   library(jsonlite); library(spatstat.geom); library(spatstat.explore); library(forestSAS); library(siplab)
 })
@@ -32,7 +33,10 @@ for (k in seq_along(ref$cases)) {
     res$R <- unname(clarkevans(X, correction = "none"))
     res$RD <- unname(clarkevans(X, correction = "Donnelly"))
     P <- pairwise(X, maxR = out$hegyiRadius, kernel = powers_ker)
-    res$hegyi <- marks(P)$cmpt
+    m <- marks(P)                                  # siplab appends the competition index as the last mark column
+    res$hegyiColumns <- if (is.data.frame(m)) names(m) else "vector"
+    res$hegyi <- if (is.data.frame(m)) as.numeric(m[[ncol(m)]]) else as.numeric(m)
+    stopifnot(length(res$hegyi) == n)
   }
   out$cases[[k]] <- res
 }
