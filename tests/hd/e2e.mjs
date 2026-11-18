@@ -111,6 +111,9 @@ const te = await csvOf('#x-t');
 ok(te[0] === 'row,plot,species,dbh_source,dbh_cm,height_source,height_measured_m,state,height_predicted_m,prediction_model,outside_dbh_range,model_value_m,residual_pred_minus_meas_m', 'EN tree table headers');
 const xd = await dl('#x-xlsx'), wb = XLSX.read(await readFile(await xd.path()));
 ok(wb.SheetNames.join(',') === 'Info,Parameters,Cross-validation,Trees,New diameters', 'XLSX sheets: ' + wb.SheetNames.join(','));
+{ const rd = await dl('#x-r'), rs = await readFile(await rd.path(), 'utf8');
+  ok(rd.suggestedFilename().endsWith('.R') && rs.includes('nls(') && rs.includes('data_file <- "ornek-boy-cap.csv"') && rs.includes('fold <- c(') && rs.includes('new_d <- c(') && rs.includes('fb_out(res)'),
+    'R code: a .R file reading the user\'s file, with the CV folds, the new diameters and the result writer (its numbers are checked in R by scripts/rcode-check.sh)'); }
 
 // 4. data where the asymptote is not identified: reported as diverged, never as a fit
 await page.click('#steps [data-go="1"]');

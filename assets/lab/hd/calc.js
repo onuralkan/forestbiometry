@@ -116,19 +116,19 @@ export function fitModel(m, d, z, opts = {}) {
   if (!starts.length) return { ...out, status: 'nostart' };
   // try a few starts (cheapest first), keep the best converged solution
   const ranked = starts.map(s => ({ s, sse: d.reduce((acc, v, i) => acc + (z[i] - m.f(s, v)) ** 2, 0) })).filter(r => Number.isFinite(r.sse)).sort((a, b) => a.sse - b.sse).slice(0, 4);
-  let best = null, lastBad = null;
+  let best = null, lastBad = null, bestStart = null;
   let agree = 0;
   for (const { s } of ranked) {
     const r = levenbergMarquardt(m, d, z, s, { valid, blowup, maxIter: 1000 });
     if (r.status === 'ok') {
       if (best && Math.abs(r.sse - best.sse) <= 1e-10 * best.sse) agree++;     // two starts reached the same minimum: stop
-      if (!best || r.sse < best.sse) best = r;
+      if (!best || r.sse < best.sse) { best = r; bestStart = s; }
       if (agree) break;
     } else if (!lastBad || r.status === 'diverged') lastBad = r;
   }
   if (!best) { const r = lastBad || { status: 'noconverge', iter: 0 }; return { ...out, status: r.status, iter: r.iter, theta: r.theta || null }; }
   const th = best.theta, sse = best.sse;
-  Object.assign(out, { theta: th, sse, iter: best.iter, asym: m.asym(th) });
+  Object.assign(out, { theta: th, sse, iter: best.iter, asym: m.asym(th), start: bestStart });   // start: the values the solution came from (R code)
   if (blowup(th)) return { ...out, status: 'diverged' };
   if (!th.every(v => v > 0)) out.warn.push({ code: 'sign', params: m.names.filter((_, j) => !(th[j] > 0)) });
   const e = d.map((v, i) => m.f(th, v) - z[i]);            // predicted − observed
@@ -231,6 +231,7 @@ export function cvFold(prep, fold) {
   // model selection inside the fold: smallest training AIC (n·ln(SSE/n) + 2k form) among converged models
   let sel = -1; fits.forEach((fi, k) => { if (fi.status === 'ok' && (sel < 0 || fi.aicValue < fits[sel].aicValue)) sel = k; });
   return { label: fold.label, plots: fold.plots, nTrain: tr.length, test: fold.test, status: fits.map(f => f.status), preds, sel,
+    starts: fits.map(f => f.status === 'ok' ? f.start : null), thetas: fits.map(f => f.status === 'ok' ? f.theta : null),
     outside: fold.test.map(i => rows[i].d < dmin || rows[i].d > dmax) };
 }
 /** Pools held-out predictions. Models are compared on the same held-out rows: rows of folds where any model failed are left out. */

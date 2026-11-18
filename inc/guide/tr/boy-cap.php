@@ -18,7 +18,7 @@
 </ul>
 <p><b>Standart hatalar ne zaman verilmez?</b> Veride iki ya da daha fazla örnek alan varsa aynı alandaki ağaçlar bağımsız değildir; standart hatalar olduğundan küçük çıkar. Bu yüzden bu sürüm o durumda standart hata, güven ve tahmin aralıkları ile AIC/BIC vermez.</p>
 <h3>İndirme</h3>
-<p>Tam rapor (Excel); ağaç tablosu (ölçülen ve tahmin edilen boy ayrı sütunlarda), parametreler, çapraz doğrulama katları ve yeni çap tahminleri CSV olarak.</p>
+<p>Tam rapor (Excel); ağaç tablosu (ölçülen ve tahmin edilen boy ayrı sütunlarda), parametreler, çapraz doğrulama katları ve yeni çap tahminleri CSV olarak. <b>R kodu (.R)</b>: aynı çalıştırmayı temel R ile (<code>nls</code>) aynı ayarlarla, aynı başlangıç değerleri ve aynı çapraz doğrulama katlarıyla yeniden yapan betik; veri gömülmez, betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirirsiniz. Sitenin testleri bu kodun aracın sayılarını verdiğini her yayında R'da denetler.</p>
 <h3>Sık karşılaşılanlar</h3>
 <ul>
 <li>"Yakınsamadı" ya da "ıraksadı" durumundaki modeller parametre vermez; ıraksama, asimptotun veriyle belirlenemediği anlamına gelir.</li>

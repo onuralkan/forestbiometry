@@ -7,6 +7,8 @@ import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordButton } from '../core/record-ui.js';
+import { buildR } from './rcode.js';
+import { tableCsv, csvName } from '../core/rcode.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 
@@ -153,7 +155,7 @@ async function compute() {
           status(T('busy', { what: `${T('cv.h')} ${k + 1}/${plan.folds.length}` })); await tick();
           folds.push(H.cvFold(prep, plan.folds[k]));
         }
-        res.cv = { mode: plan.mode, lopo: plan.lopo, k: plan.folds.length, sum: H.cvSummary(prep, folds) };
+        res.cv = { mode: plan.mode, lopo: plan.lopo, k: plan.folds.length, sum: H.cvSummary(prep, folds), folds };
       } else res.cv = { problem: plan.problem };
     }
     R = res;
@@ -393,13 +395,20 @@ function tabExport(p) {
   const nd = ndExport();
   p.innerHTML = `${selFit() ? '' : `<p class="note warn">${T('ex.nomodel')}</p>`}<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button>
     <button type="button" class="btn ghost" id="x-t">${T('ex.trees')}</button><button type="button" class="btn ghost" id="x-p">${T('ex.params')}</button>
-    ${R.cv && !R.cv.problem ? `<button type="button" class="btn ghost" id="x-cv">${T('ex.cv')}</button>` : ''}${nd ? `<button type="button" class="btn ghost" id="x-nd">${T('ex.nd')}</button>` : ''}${recordButton('x-json')}</div><p class="muted small">${T('ex.note')}</p>`;
+    ${R.cv && !R.cv.problem ? `<button type="button" class="btn ghost" id="x-cv">${T('ex.cv')}</button>` : ''}${nd ? `<button type="button" class="btn ghost" id="x-nd">${T('ex.nd')}</button>` : ''}${recordButton('x-json')}<button type="button" class="btn ghost" id="x-r">${T('ex.r')}</button></div><p class="muted small">${T('ex.r.note')}</p><p class="muted small">${T('ex.note')}</p>`;
   $('x-t').addEventListener('click', () => downloadCSV(fname('boy-cap-agaclar', 'height-diameter-trees') + '.csv', treeRows(), lang));
   $('x-p').addEventListener('click', () => downloadCSV(fname('boy-cap-parametreler', 'height-diameter-parameters') + '.csv', paramRows(), lang));
   $('x-cv') && $('x-cv').addEventListener('click', () => downloadCSV(fname('boy-cap-capraz-dogrulama', 'height-diameter-cv') + '.csv', cvRows(), lang));
   $('x-nd') && $('x-nd').addEventListener('click', () => downloadCSV(fname('boy-cap-yeni-caplar', 'height-diameter-new') + '.csv', ndExport(), lang));
   $('x-json').addEventListener('click', () => downloadRecord(fname('boy-cap', 'height-diameter') + '.json', recordPayload(), H.TOOL,
     [[S.imp && S.imp.kind === 'dataset' ? 'dataset' : 'trees', S.imp && S.imp.kind === 'dataset' ? { kind: 'dataset', dataset: approved } : S.imp]], m => status(m, 'err')));
+  $('x-r').addEventListener('click', () => {
+    const nd = ndRows(), file = S.imp && S.imp.kind !== 'dataset' && S.imp.kind !== 'paste' ? S.imp.name : null;
+    download(fname('boy-cap', 'height-diameter') + '.R', buildR({ ...S, cv: S.cv, model: selFit() ? selFit().id : null }, R, nd ? nd.rows.map(x => x.d) : null,
+      { lang, created: new Date().toISOString(), version: H.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
+    if (!file) download(csvName(S.imp), tableCsv(S.src, cellText), 'text/csv;charset=utf-8');
+  });
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
     const sheets = [{ name: T('sheet.info'), rows: infoRows(), widths: [26, 110] }, { name: T('sheet.params'), rows: paramRows() }, { name: T('sheet.cv'), rows: cvRows() }, { name: T('sheet.trees'), rows: treeRows() }];

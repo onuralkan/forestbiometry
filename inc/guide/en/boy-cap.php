@@ -18,7 +18,7 @@
 </ul>
 <p><b>When are standard errors withheld?</b> With two or more plots in the data, trees in the same plot are not independent; standard errors would come out too small. In that case this version gives no standard errors, confidence or prediction intervals, and no AIC/BIC.</p>
 <h3>Downloads</h3>
-<p>Full report (Excel); the tree table (measured and predicted heights in separate columns), parameters, cross-validation folds and new-diameter predictions as CSV.</p>
+<p>Full report (Excel); the tree table (measured and predicted heights in separate columns), parameters, cross-validation folds and new-diameter predictions as CSV. <b>R code (.R)</b>: a script that redoes the run in base R (<code>nls</code>) with the same settings, starting values and cross-validation folds; the data are not embedded, you change the file name at its top to the path of your file. The site's tests check in R at every release that this code gives the tool's numbers.</p>
 <h3>Common situations</h3>
 <ul>
 <li>Models that "did not converge" or "diverged" give no parameters; divergence means the asymptote is not identified by the data.</li>
