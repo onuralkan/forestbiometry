@@ -55,7 +55,7 @@ const L = {
   'assets/lab/projects/i18n.js': [['Etkin yap', 'Make active'], ['Yedek indir (JSON)', 'Download a backup (JSON)'], ['İçe aktar (JSON)', 'Import (JSON)'], ['Veri paketi (JSON)', 'Data package (JSON)'], ['Ayrıntı', 'Details'], ['Kopyala', 'Copy'], ['Uygula', 'Apply']],
   'assets/lab/dashboard/i18n.js': [['Gösterilen paket', 'Package shown'], ['Dönem', 'Period'], ['Tabaka', 'Stratum'], ['Kaydı olmayan örnek alan × dönem', 'Plot × period without records'], ['Kayıt ekle (.json)', 'Add records (.json)'], ['Çiz', 'Draw'], ['Kaldır', 'Remove']],
   'assets/lab/volume/i18n.js': [['Aktarılan hacimleri kullan', 'Use the sent volumes'], ['Seti kaydet', 'Save the set'], ['Aktar ve Model Başarısı aracını aç', 'Send and open Model Evaluation'], ['R kodu (.R)', 'R code (.R)']],
-  'assets/lab/eqsys/i18n.js': [['Kalıntı kovaryansı', 'Residual covariance'], ['Setleri kaydet', 'Save the sets']],
+  'assets/lab/eqsys/i18n.js': [['Kalıntı kovaryansı', 'Residual covariance'], ['Setleri kaydet', 'Save the sets'], ['R kodu (.R)', 'R code (.R)']],
   'assets/lab/mixed/i18n.js': [['Yeni bir grubu kalibre et', 'Calibrate a new group'], ['Olabilirlik oranı testi', 'Likelihood-ratio test'], ['Doğrusal olmayan karma model', 'Nonlinear mixed model'], ['R kodu (.R)', 'R code (.R)']],
   'assets/lab/nlsreg/i18n.js': [['Serbest formül', 'Free formula'], ['Seti kaydet', 'Save the set'], ['Aktar ve Model Başarısı aracını aç', 'Send and open Model Evaluation'], ['R kodu (.R)', 'R code (.R)']],
   'assets/lab/logscale/i18n.js': [['Tomruk tablosu', 'Log table'], ['Ölçme düzeni', 'Scaling conventions'], ['Tek tomruk', 'One log']],

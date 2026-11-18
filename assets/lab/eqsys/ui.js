@@ -11,6 +11,8 @@ import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { scatterChart } from '../core/chart.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
+import { buildR } from './rcode.js';
+import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:' + Q.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
@@ -152,7 +154,7 @@ function renderStep3() {
       <label class="field"><span>${T('save.cit')}</span><input type="text" id="sv-cit" value="${esc(S.cit)}" placeholder="${esc(T('save.cit.ph'))}"></label>
       <div class="nav"><button type="button" class="btn" id="sv-save">${T('save.btn')}</button></div><div id="sv-msg"></div></div>`;
   }
-  h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx"${x.status === 'ok' ? '' : ' disabled'}>${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv"${x.status === 'ok' ? '' : ' disabled'}>${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}</div></div>
+  h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx"${x.status === 'ok' ? '' : ' disabled'}>${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv"${x.status === 'ok' ? '' : ' disabled'}>${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button><button type="button" class="btn ghost" id="x-r"${x.status === 'ok' ? '' : ' disabled'}>${T('x.r')}</button>${recordOption()}</div><p class="muted small">${T('x.r.note')}</p></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('back2').addEventListener('click', () => go(2));
@@ -169,6 +171,12 @@ function renderStep3() {
     });
   }
   const name = ext => `${lang === 'tr' ? 'denklem-sistemleri' : 'equation-systems'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  $('x-r').addEventListener('click', () => {
+    const imp = S.tbl.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
+    download(name('R'), buildR({ imp, src: S.tbl.src, decimal: S.tbl.decimal || '.', eqs: S.eqs.map(e => ({ y: e.y })), map: S.map }, R, { lang, created: new Date().toISOString(), version: Q.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
+    if (!file) download(csvName(imp), tableCsv(S.tbl.src, cellText, S.tbl.decimal || '.'), 'text/csv;charset=utf-8');
+  });
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), obsTable(), lang));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }

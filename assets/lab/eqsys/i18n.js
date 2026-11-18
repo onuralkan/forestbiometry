@@ -30,7 +30,8 @@ export const T = makeT({
     'ch.obs': p => `${p.e}: gözlenen–tahmin`, 'ch.xo': 'Gözlenen', 'ch.yo': 'Tahmin',
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.sub': 'Her denklem ayrı bir set olarak, sistemin ortak katsayıları ve kovaryansıyla kaydedilir; setler aynı sistem kimliğini taşır.', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi kesim verimiz, 2026, n = 80', 'save.sp': 'Tür (isteğe bağlı)', 'save.unit': p => `${p.v} birimi`, 'save.btn': 'Setleri kaydet',
     'save.ok': p => `${p.n} set kaydedildi; Katsayı Kütüphanesi'nde görünür.`, 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.', 'save.unit.miss': 'Bütün birimleri yazın (birimsizse "-").',
-    'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Gözlemler ve tahminler (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.',
+    'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Gözlemler ve tahminler (CSV)', 'x.json': 'JSON',
+    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile aynı ayarlarla yeniden yapar: aynı satırlar, denklemler ve ortak katsayılar, aynı yöntem (OLS, SUR, yinelemeli SUR) ve kalıntı kovaryansı; ortak katsayı varsa olabilirlik oranı testi. Tahminci (sönümlü Gauss–Newton) betikte açıkça yazılıdır, türevler R\'ın deriv işleviyle. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.', 'x.fail': 'Excel kitaplığı yüklenemedi.',
     'x.info': 'Bilgi', 'x.coef': 'Katsayılar', 'x.eq': 'Denklemler', 'x.obs': 'Gözlemler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.data': 'Veri', 'x.src': 'Kaynak', 'x.rule': 'Kural',
   },
   en: {
@@ -61,7 +62,8 @@ export const T = makeT({
     'ch.obs': p => `${p.e}: observed–predicted`, 'ch.xo': 'Observed', 'ch.yo': 'Predicted',
     'save.h': 'Save to the coefficient library', 'save.sub': 'Every equation is saved as its own set, with the system\'s shared coefficients and covariance; the sets carry the same system id.', 'save.cit': 'Source / description (required)', 'save.cit.ph': 'e.g. Our own felling data, 2026, n = 80', 'save.sp': 'Species (optional)', 'save.unit': p => `unit of ${p.v}`, 'save.btn': 'Save the sets',
     'save.ok': p => `${p.n} set(s) saved; they appear in the Coefficient Library.`, 'save.cit.miss': 'Fill in the source/description.', 'save.unit.miss': 'Write every unit ("-" if unitless).',
-    'x.h': 'Download', 'x.xlsx': 'Excel report', 'x.csv': 'Observations and predictions (CSV)', 'x.json': 'JSON', 'x.fail': 'The Excel library could not be loaded.',
+    'x.h': 'Download', 'x.xlsx': 'Excel report', 'x.csv': 'Observations and predictions (CSV)', 'x.json': 'JSON',
+    'x.r': 'R code (.R)', 'x.r.note': 'The R code redoes this run in base R with the same settings: the same rows, equations and shared coefficients, the same method (OLS, SUR, iterated SUR) and residual covariance; with shared coefficients, the likelihood-ratio test. The estimator (damped Gauss–Newton) is written out in the script, derivatives from R\'s deriv. The data are not embedded; change the file name at the top of the script to the path of your file (an approved package or pasted table comes along as a CSV file). The site\'s tests check in R at every release that this code gives the tool\'s numbers.', 'x.fail': 'The Excel library could not be loaded.',
     'x.info': 'Info', 'x.coef': 'Coefficients', 'x.eq': 'Equations', 'x.obs': 'Observations', 'x.k': 'Field', 'x.v': 'Value', 'x.tool': 'Tool', 'x.date': 'Date', 'x.data': 'Data', 'x.src': 'Source', 'x.rule': 'Rule',
   },
 });
