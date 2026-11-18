@@ -40,7 +40,8 @@ site produces.
 Use the **Cite** button on any page of the site. It gives APA, MLA, Chicago, Harvard, IEEE, Vancouver, BibTeX and RIS,
 for the platform or for one tool and its version. Machine-readable metadata are in [`CITATION.cff`](CITATION.cff).
 Releases of this repository are archived on Zenodo. The concept DOI
-[10.5281/zenodo.24135603](https://doi.org/10.5281/zenodo.24135603) covers all versions (the latest release is v2026.11.2; its version DOI is added when Zenodo assigns it); v2026.11.1 has the version DOI
+[10.5281/zenodo.24135603](https://doi.org/10.5281/zenodo.24135603) covers all versions; the latest release v2026.11.2 has the version DOI
+[10.5281/zenodo.24339226](https://doi.org/10.5281/zenodo.24339226), v2026.11.1
 [10.5281/zenodo.24167712](https://doi.org/10.5281/zenodo.24167712), the first release v2026.11.0
 [10.5281/zenodo.24135604](https://doi.org/10.5281/zenodo.24135604). The site's citations carry the concept DOI. Please also cite the original sources of the methods
 you use; each tool lists them.
