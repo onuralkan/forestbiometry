@@ -72,6 +72,8 @@ await shot('units');
   ok((await page.textContent('#ccffit')).includes(String(F.b0)) && (await page.textContent('#ccfcard')).includes('dışarıda bırakıldı: 7'), `fit CW = ${F.b0.toFixed(3)} + ${F.b1.toFixed(4)}·d = engine (decimal commas; row 7 left out)`);
   await page.click('#ccf-save'); ok((await page.textContent('#status')).includes('künye'), 'no citation: not saved');
   await page.fill('#ccf-cit', 'Test, made-up open-grown trees'); await page.click('#ccf-save'); await page.waitForFunction(() => document.getElementById('ccf-all') && document.getElementById('ccf-all').value !== '');
+  // the status line and the list are written after the store answers: wait for them, not only for the choice (CI flake, 18 Nov 2026)
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('kaydedildi') && document.querySelectorAll('#ccfcard #cf-list tbody tr').length === 1, null, { timeout: 5000 }).catch(() => {});
   ok((await page.textContent('#status')).includes('kaydedildi') && (await page.locator('#ccfcard #cf-list tbody tr').count()) === 1, 'fitted line saved as a set, listed in the library and chosen for all species');
   await page.click('#calc'); await page.waitForSelector('#utab');
   const set = { ...blankSet('ccf.cw'), params: { b0: F.b0, b1: F.b1 }, valid: { D: [F.min, F.max] }, origin: 'fitted', fit: {}, source: { citation: 'x' } };
