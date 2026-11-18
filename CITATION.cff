@@ -6,7 +6,10 @@ abstract: >-
   Browser-based tools for forest inventory and biometrics data: forest data checking, plot and stand metrics,
   model evaluation, diameter distributions (eight families and two optional ones, direct fitting, measurement
   thresholds, grouped data, parameter recovery, stand models, model comparison and bootstrap uncertainty),
-  height–diameter modelling, inventory sampling planning, relative ranking, stem section volume, site index and stand structure and competition.
+  height–diameter modelling, inventory sampling planning, relative ranking, stem section volume, site index, stand structure and competition
+  (with the crown competition factor), stem taper and bucking, growth functions, tree measurement (height, diameter, bark, crown, form, age),
+  volume equations, log scaling, biomass and carbon, nonlinear regression, mixed-effects models and systems of equations; a coefficient
+  library, run records and their verifier, an inventory data manager, a dashboard and a report generator.
   Data stay in the user's browser. Every scientific calculation is tested against an
   independent reference.
 authors:
@@ -24,8 +27,8 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.24135604"
     description: "Version DOI of v2026.11.0"
-version: "2026.11.1"
-date-released: "2026-11-12"
+version: "2026.11.2"
+date-released: "2026-11-18"
 url: "https://forestbiometry.online"
 repository-code: "https://github.com/onuralkan/forestbiometry"
 license:
