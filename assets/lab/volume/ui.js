@@ -13,6 +13,8 @@ import { readDerived, storeKey, KIND_VOLUME } from '../core/derived.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { scatterChart, svgForDownload } from '../core/chart.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
+import { buildR } from './rcode.js';
+import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:' + VOL.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
@@ -158,7 +160,7 @@ function renderStep3() {
       <div class="nav"><button type="button" class="btn" id="sv-save">${T('save.btn')}</button></div><div id="sv-msg"></div></div>
       <div class="card" id="evcard"><h2>${T('ev.h')}</h2><p class="muted small">${T('ev.sub')}</p><button type="button" class="btn ghost" id="ev-send">${T('ev.btn')}</button></div>`;
   }
-  h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}</div></div>
+  h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button><button type="button" class="btn ghost" id="x-r">${T('x.r')}</button>${recordOption()}</div><p class="muted small">${T('x.r.note')}</p></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('back2').addEventListener('click', () => go(2));
@@ -171,6 +173,7 @@ function renderStep3() {
   }
   const name = ext => `${lang === 'tr' ? 'hacim-denklemleri' : 'volume-equations'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), treeRows(), lang));
+  $('x-r').addEventListener('click', downloadR);
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }
     download(name('xlsx'), xlsxBlob(XLSX, [{ name: T('x.info'), rows: infoRows(), widths: [28, 100] }, { name: T('x.cmp'), rows: cmpRows() }, { name: T('x.coef'), rows: coefRows() }, { name: T('x.trees'), rows: treeRows() }]));
@@ -178,6 +181,18 @@ function renderStep3() {
   $('x-json').addEventListener('click', () => downloadRecord(name('json'), { tool: VOL.TOOL, created: R.created, source: R.src,
     fits: R.fits.map(x => x.status === 'ok' ? { form: x.id, eq: x.eq, n: x.n, options: x.opts, coef: x.coef, se: x.se, cov: x.cov, params: x.params, s: x.s, weight: x.weight, correction: x.correction, cf: x.cf, metrics: x.metrics, dropped: x.dropped } : { form: x.id, status: x.status, code: x.code }) },
     VOL.TOOL, S.src && S.src.kind === 'table' && S.tbl ? [['trees', S.tbl.imp]] : approved && S.src && S.src.kind === 'secvol' ? [['dataset', { kind: 'dataset', dataset: approved }]] : [], m => status(m, 'err')));
+}
+/** The R script; trees not read from a file (Stem Section Volume results, pasted cells) go along as a CSV file. */
+function downloadR() {
+  const fromTable = S.src && S.src.kind === 'table' && S.tbl, imp = fromTable ? S.tbl.imp : null, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
+  const n = v => v == null ? null : { t: 'n', v };
+  const s = fromTable ? { imp, src: S.tbl.src, map: S.tbl.map, decimal: S.tbl.decimal || '.' }
+    : { imp: { kind: 'dataset', name: lang === 'tr' ? 'hacim-agaclari' : 'volume-trees' }, decimal: '.', map: { D: 2, H: 3, V: 4 },
+      src: { headers: ['row', 'tree', 'D_cm', 'H_m', 'V_m3'], rows: S.trees.map(t => [n(t.row), { t: 's', v: t.id ?? '' }, n(t.D), n(t.H), n(t.V)]) },
+      note: T('x.r.sv', { src: S.src ? S.src.name : '' }) };
+  const name = `${lang === 'tr' ? 'hacim-denklemleri' : 'volume-equations'}-${new Date().toISOString().slice(0, 10)}.R`;
+  download(name, buildR(s, R, { lang, created: new Date().toISOString(), version: VOL.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+  if (!file) download(csvName(s.imp), tableCsv(s.src, cellText, s.decimal), 'text/csv;charset=utf-8');
 }
 async function saveSet() {
   const cit = String(S.cit).trim(); if (!cit) { $('sv-msg').innerHTML = `<p class="note err small">${T('save.cit.miss')}</p>`; return; }

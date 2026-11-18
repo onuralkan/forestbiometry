@@ -781,10 +781,14 @@ function readBlock(imp, lang, fileName, decimal = '.') {
 }
 /** File name of the CSV offered next to the script for 'paste' and 'dataset' sources. */
 const csvName = imp => String((imp && imp.name) || 'data').replace(/\.[a-z0-9]+$/i, '').replace(/[^\w.-]+/g, '_') + '.csv';
-/** The tool's table (headers + rows of cells) as CSV text, every cell as the text the tool shows. */
-function tableCsv(src, cellText) {
+/**
+ * The tool's table (headers + rows of cells) as CSV text: a cell holding a number at full precision with the given
+ * decimal separator (the shown text of a number may be rounded), every other cell as the text the tool shows.
+ */
+function tableCsv(src, cellText, decimal = '.') {
   const q = v => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  return [src.headers.map(q).join(','), ...src.rows.map(r => src.headers.map((_, k) => q(r[k] == null ? '' : cellText(r[k]))).join(','))].join('\n') + '\n';
+  const cell = c => c == null ? '' : c.t === 'n' && typeof c.v === 'number' && !c.date ? String(c.v).replace('.', decimal) : cellText(c);
+  return [src.headers.map(q).join(','), ...src.rows.map(r => src.headers.map((_, k) => q(cell(r[k]))).join(','))].join('\n') + '\n';
 }
 
 /**
@@ -2735,7 +2739,7 @@ function tabExport(p) {
     download(fname('boy-cap', 'height-diameter') + '.R', buildR({ ...S, cv: S.cv, model: selFit() ? selFit().id : null }, R, nd ? nd.rows.map(x => x.d) : null,
       { lang, created: new Date().toISOString(), version: H.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
     // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
-    if (!file) download(csvName(S.imp), tableCsv(S.src, cellText), 'text/csv;charset=utf-8');
+    if (!file) download(csvName(S.imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
   });
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }

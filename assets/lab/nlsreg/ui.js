@@ -220,7 +220,7 @@ function renderStep3() {
     const imp = S.tbl.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
     download(name('R'), buildR({ imp, src: S.tbl.src, decimal: S.tbl.decimal || '.', y: S.y }, R, ivPoint(), { lang, created: new Date().toISOString(), version: NL.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
     // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
-    if (!file) download(csvName(imp), tableCsv(S.tbl.src, cellText), 'text/csv;charset=utf-8');
+    if (!file) download(csvName(imp), tableCsv(S.tbl.src, cellText, S.tbl.decimal || '.'), 'text/csv;charset=utf-8');
   });
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }

@@ -407,7 +407,7 @@ function tabExport(p) {
     download(fname('boy-cap', 'height-diameter') + '.R', buildR({ ...S, cv: S.cv, model: selFit() ? selFit().id : null }, R, nd ? nd.rows.map(x => x.d) : null,
       { lang, created: new Date().toISOString(), version: H.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
     // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
-    if (!file) download(csvName(S.imp), tableCsv(S.src, cellText), 'text/csv;charset=utf-8');
+    if (!file) download(csvName(S.imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
   });
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }

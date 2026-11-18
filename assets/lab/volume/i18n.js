@@ -27,6 +27,8 @@ export const T = makeT({
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.form': 'Biçim', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi kesim verimiz, 2026, n = 38', 'save.sp': 'Tür (isteğe bağlı)', 'save.btn': 'Seti kaydet', 'save.ok': 'Set kaydedildi; Katsayı Kütüphanesi\'nde görünür.', 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.',
     'ev.h': 'Model Başarısı aracına aktar', 'ev.sub': 'Gözlenen ve fit edilen biçimlerin tahmin ettiği hacimler bir tablo olarak Model Başarısı aracına aktarılır; araç açıldığında sütunlar seçili gelir. Tahminler fit etme verisindendir (eğitim).', 'ev.btn': 'Aktar ve Model Başarısı aracını aç',
     'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Ağaçlar ve tahminler (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.',
+    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile (lm) aynı ayarlarla yeniden yapar: her biçim için aynı ağaçlar, aynı ağırlıklar ve geri dönüşüm düzeltmesi, hacim ölçeğinde aynı ölçütler. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (Seksiyon Hacmi sonuçları ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
+    'x.r.sv': p => `Ağaçlar dosyadan değil, ${p.src} sonuçlarından geldi; betik onları betikle birlikte inen CSV dosyasından okur (sütunlar: satır, ağaç, D_cm, H_m, V_m3).`,
     'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.coef': 'Katsayılar', 'x.trees': 'Ağaçlar', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.data': 'Veri', 'x.src': 'Kaynak', 'x.rule': 'Kural',
   },
   en: {
@@ -54,6 +56,8 @@ export const T = makeT({
     'save.h': 'Save to the coefficient library', 'save.form': 'Form', 'save.cit': 'Source / description (required)', 'save.cit.ph': 'e.g. Our own felling data, 2026, n = 38', 'save.sp': 'Species (optional)', 'save.btn': 'Save the set', 'save.ok': 'Set saved; it appears in the Coefficient Library.', 'save.cit.miss': 'Fill in the source/description.',
     'ev.h': 'Send to Model Evaluation', 'ev.sub': 'The observed volumes and the volumes predicted by the fitted forms go to the Model Evaluation tool as a table; the columns are chosen when it opens. The predictions are from the fitting data (training).', 'ev.btn': 'Send and open Model Evaluation',
     'x.h': 'Download', 'x.xlsx': 'Excel report', 'x.csv': 'Trees and predictions (CSV)', 'x.json': 'JSON', 'x.fail': 'The Excel library could not be loaded.',
+    'x.r': 'R code (.R)', 'x.r.note': 'The R code redoes this run in base R (lm) with the same settings: the same trees for each form, the same weights and back-transformation correction, the same measures on the volume scale. The data are not embedded; change the file name at the top of the script to the path of your file (Stem Section Volume results or a pasted table come along as a CSV file). The site\'s tests check in R at every release that this code gives the tool\'s numbers.',
+    'x.r.sv': p => `The trees came from the results of ${p.src}, not from a file; the script reads them from the CSV file downloaded with it (columns: row, tree, D_cm, H_m, V_m3).`,
     'x.info': 'Info', 'x.cmp': 'Comparison', 'x.coef': 'Coefficients', 'x.trees': 'Trees', 'x.k': 'Field', 'x.v': 'Value', 'x.tool': 'Tool', 'x.date': 'Date', 'x.data': 'Data', 'x.src': 'Source', 'x.rule': 'Rule',
   },
 });

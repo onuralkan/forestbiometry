@@ -136,7 +136,7 @@ function renderStep3() {
     download(name('R'), buildR({ imp: S.imp, src: S.src, map: S.map, decimal: S.decimal || '.', sel: S.sel, step: num(S.step3) > 0 ? num(S.step3) : 5 }, R,
       { lang, created: new Date().toISOString(), version: G.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
     // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
-    if (!file) download(csvName(S.imp), tableCsv(S.src, cellText), 'text/csv;charset=utf-8');
+    if (!file) download(csvName(S.imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
   });
   $('x-json').addEventListener('click', () => downloadRecord(name('json'), { tool: G.TOOL, created: R.created, variable: S.variable, unit: S.unit,
     settings: { columns: Object.fromEntries(Object.entries(S.map).map(([k, i]) => [k, i == null ? null : S.src.headers[i]])), decimal: S.decimal, forms: chosen() }, n: R.n, fits: R.fits.map(({ residuals, ...r }) => r) },

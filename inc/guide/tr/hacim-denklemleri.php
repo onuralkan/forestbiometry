@@ -13,6 +13,6 @@
 <li>Hacim ölçeğindeki biçimlerde isteğe bağlı <b>ağırlık</b>: hata varyansı X^k ile orantılı (X = D²H ya da D²); k boş bırakılırsa artıklardan kestirilir (Parresol 1999). Logaritmik biçimlerde geri dönüşüm düzeltmesi seçilir: yok ya da Baskerville exp(s²/2).</li>
 <li>Sonuçlar: karşılaştırma tablosu (RMSE, yanlılık, MAE, R²; Model Başarısı aracıyla aynı tanımlar, hacim ölçeğinde), her biçimin katsayıları ve standart hataları, gözlenen–tahmin ve artık grafikleri. Değeri eksik ağaçlar satır numarasıyla dışarıda bırakılır.</li>
 <li><b>Seti kaydet</b>: seçilen biçim kaynak açıklamasıyla katsayı kütüphanesine kaydedilir (geçerlilik aralığı örneğin D ve H aralığı). <b>Aktar ve Model Başarısı aracını aç</b>: gözlenen ve tahmin edilen hacimler Model Başarısı aracına sütunları seçili olarak aktarılır.</li>
-<li>İndirme: Excel (Bilgi, Karşılaştırma, Katsayılar, Ağaçlar), ağaçlar ve tahminler CSV, JSON çalışma kaydı.</li>
+<li>İndirme: Excel (Bilgi, Karşılaştırma, Katsayılar, Ağaçlar), ağaçlar ve tahminler CSV, JSON çalışma kaydı. <b>R kodu (.R)</b>: aynı çalıştırmayı temel R ile (<code>lm</code>) yeniden yapan betik; her biçim için aynı ağaçlar, ağırlıklar (k tahmin ediliyorsa ağırlıksız artıklardan) ve geri dönüşüm düzeltmesi, hacim ölçeğinde aynı ölçütler. Veri gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirirsiniz (Seksiyon Hacmi sonuçları betikle birlikte CSV olarak iner). Sitenin testleri bu kodun aracın sayılarını verdiğini her yayında R'da denetler.</li>
 </ul>
 </section>

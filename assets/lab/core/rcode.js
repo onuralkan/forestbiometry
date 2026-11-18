@@ -69,10 +69,14 @@ export function readBlock(imp, lang, fileName, decimal = '.') {
 }
 /** File name of the CSV offered next to the script for 'paste' and 'dataset' sources. */
 export const csvName = imp => String((imp && imp.name) || 'data').replace(/\.[a-z0-9]+$/i, '').replace(/[^\w.-]+/g, '_') + '.csv';
-/** The tool's table (headers + rows of cells) as CSV text, every cell as the text the tool shows. */
-export function tableCsv(src, cellText) {
+/**
+ * The tool's table (headers + rows of cells) as CSV text: a cell holding a number at full precision with the given
+ * decimal separator (the shown text of a number may be rounded), every other cell as the text the tool shows.
+ */
+export function tableCsv(src, cellText, decimal = '.') {
   const q = v => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  return [src.headers.map(q).join(','), ...src.rows.map(r => src.headers.map((_, k) => q(r[k] == null ? '' : cellText(r[k]))).join(','))].join('\n') + '\n';
+  const cell = c => c == null ? '' : c.t === 'n' && typeof c.v === 'number' && !c.date ? String(c.v).replace('.', decimal) : cellText(c);
+  return [src.headers.map(q).join(','), ...src.rows.map(r => src.headers.map((_, k) => q(cell(r[k]))).join(','))].join('\n') + '\n';
 }
 
 /**

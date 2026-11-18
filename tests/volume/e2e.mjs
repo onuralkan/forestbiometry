@@ -55,6 +55,9 @@ const tr = XLSX.utils.sheet_to_json(wb.Sheets['Ağaçlar'], { header: 1 }), j = 
 ok(['Bilgi', 'Karşılaştırma', 'Katsayılar', 'Ağaçlar'].every(s => wb.SheetNames.includes(s)) && tr.length === trees.length + 1 && Math.abs(tr[1][j] - E.ln.pred[0]) < 1e-12, 'Excel: four sheets, predictions at full precision');
 const jd = await dl('#x-json'), rec = JSON.parse(await readFile(await jd.path(), 'utf8'));
 ok(rec.format === 'run-record/1' && rec.tool.ids.includes('SV-04') && rec.fits.length === 4 && rec.inputs[0].kind === 'file', 'run record: catalogue id, four fits, input fingerprint');
+{ const rd = await dl('#x-r'), rs = await readFile(await rd.path(), 'utf8');
+  ok(rd.suggestedFilename().endsWith('.R') && rs.includes('data_file <- "ornek-hacim.csv"') && rs.includes('lm(log(V) ~ log(D) + log(H), data = d, weights = w)') && rs.includes('exp(s^2 / 2)') && rs.includes('fb_out(res)'),
+    'R code: a .R file reading the user\'s file, the forms as lm, the Baskerville correction (its numbers are checked in R by scripts/rcode-check.sh)'); }
 // save a set
 await page.selectOption('#sv-form', 'ln'); await page.click('#sv-save'); await page.waitForSelector('#sv-msg .err');
 await page.fill('#sv-cit', 'e2e benzetim örneği'); await page.locator('#sv-cit').dispatchEvent('change'); await page.click('#sv-save'); await page.waitForSelector('#sv-ok');
@@ -79,6 +82,11 @@ await page.selectOption('#svside', 'ib'); await page.click('#svuse'); await page
 ok((await page.textContent('#dsinfo')).includes('kabuksuz') && (await page.textContent('#dsinfo')).includes(`${trees.length} ağaç`), 'sent volumes used: under bark, every tree');
 await page.click('#to2'); await page.click('#calc'); await page.waitForSelector('#cmptab');
 { const e = VOL.fitForm('cv', trees.map(t => ({ ...t, V: t.V * 0.9 })), { weight: { kind: 'power', k: null } }); ok(Math.abs(n(await page.locator('#cmptab tr[data-form="cv"] [data-k="rmse"]').textContent()) - e.metrics.rmse) < 5e-6, 'fit on the sent under-bark volumes = engine'); }
+{ const got = []; page.on('download', d => got.push(d)); await page.click('#x-r'); await page.waitForFunction(() => true); for (let i = 0; i < 50 && got.length < 2; i++) await page.waitForTimeout(100);
+  const csvD = got.find(d => d.suggestedFilename().endsWith('.csv')), rs = got.find(d => d.suggestedFilename().endsWith('.R'));
+  const ct = csvD ? (await readFile(await csvD.path(), 'utf8')).trim().split('\n') : [], rt = rs ? await readFile(await rs.path(), 'utf8') : '';
+  ok(ct.length === trees.length + 1 && ct[0] === 'row,tree,D_cm,H_m,V_m3' && Math.abs(+ct[1].split(',')[4] - trees[0].V * 0.9) < 1e-15 && rt.includes('data_file <- "hacim-agaclari.csv"') && rt.includes('seksiyon-hacmi'),
+    'R code of the sent volumes: the script and the trees as CSV (full precision)'); }
 // English, phone
 await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
 ok((await page.locator('h1').textContent()).includes('Volume Equations'), 'English');
