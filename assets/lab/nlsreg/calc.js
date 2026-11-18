@@ -100,7 +100,8 @@ function runLM(m, X, y, psi, starts) {
  * Fits one model. X: T × (vars of m) values, y: T values, opts = { start: [per parameter] | null (ready forms: automatic),
  * weight: { kind: 'none' } | { kind: 'power', X: T values (> 0), theta: number | null (null = estimated, Eq. 4) } |
  * { kind: 'column', psi: T values (> 0) }, readyId, level: 0.95 }.
- * → { status: 'ok' | 'noconverge' | 'bad', code?, theta, se, ci, cov, s2, df, n, p, pred, res, metrics, aic, weight, psi, start, iter }
+ * → { status: 'ok' | 'noconverge' | 'bad', code?, theta, se, ci, cov, s2, df, n, p, pred, res, metrics, aic, weight, psi, start,
+ *   ustart (start of the unweighted fit when θ is estimated), iter }
  */
 export function fitModel(m, X, y, opts = {}) {
   const n = y.length, p = m.params.length, level = opts.level ?? 0.95;
@@ -109,7 +110,7 @@ export function fitModel(m, X, y, opts = {}) {
   let starts = opts.start ? [opts.start] : opts.readyId ? autoStarts(opts.readyId, X, y).map(s => ({ s, v: sseOf(m, s, X, y, y.map(() => 1)) })).filter(q => Number.isFinite(q.v)).sort((a, b) => a.v - b.v).slice(0, 5).map(q => q.s) : [];
   if (!starts.length) return { status: 'bad', code: opts.readyId ? 'start.none' : 'start.missing', n, p };
   const w = opts.weight || { kind: 'none' }, ones = y.map(() => 1);
-  let psi = ones, weight = { kind: 'none' };
+  let psi = ones, weight = { kind: 'none' }, ustart = null;
   if (w.kind === 'power') {
     if (!w.X || w.X.length !== n || w.X.some(v => !(fin(v) && v > 0))) return { status: 'bad', code: 'weight.var', n, p };
     let th = w.theta, estimated = false;
@@ -119,7 +120,7 @@ export function fitModel(m, X, y, opts = {}) {
       const rows = e.map((_, i) => i).filter(i => e[i] !== 0 && fin(e[i]));
       const c = rows.length > 2 ? olsMulti(rows.map(i => [1, Math.log(w.X[i])]), rows.map(i => Math.log(e[i] * e[i]))) : null;
       if (!c || !fin(c[1])) return { status: 'bad', code: 'weight.theta', n, p };
-      th = c[1]; estimated = true; starts = [u.theta];
+      th = c[1]; estimated = true; starts = [u.theta]; ustart = u.start;
     }
     if (!fin(th)) return { status: 'bad', code: 'weight.theta', n, p };
     psi = w.X.map(v => v ** th); weight = { kind: 'power', theta: th, estimated };
@@ -135,7 +136,7 @@ export function fitModel(m, X, y, opts = {}) {
   const se = cv ? cv.se : null, k = p + 1, lnL = -n / 2 * Math.log(2 * Math.PI * S / n) - 0.5 * psi.reduce((s, v) => s + Math.log(v), 0) - n / 2;
   return { status: r.status === 'ok' ? (cv ? 'ok' : 'singular') : 'noconverge', reason: r.reason, theta, se, cov: cv ? cv.V : null, corr: cv ? cv.corr : null,
     ci: se ? theta.map((v, j) => [v - tq * se[j], v + tq * se[j]]) : null, t: tq, level, s2: S / df, S, df, n, p, pred, res, psi, weight,
-    metrics: metrics(y, pred), aic: 2 * k - 2 * lnL, k, start: r.start, iter: r.iter };
+    metrics: metrics(y, pred), aic: 2 * k - 2 * lnL, k, start: r.start, ustart, iter: r.iter };
 }
 
 /**

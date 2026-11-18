@@ -751,15 +751,19 @@ function header(o) {
  * decimal separator chosen in the tool). imp = the tool's import record { kind: 'csv'|'txt'|'tsv'|'paste'|'xlsx'|
  * 'dataset', name, encoding, delim, detected, header, sheet }. Defines `dat` (data frame of text) and `row_no` (the row
  * numbers of the source file, as the tool reports them). For 'paste' and 'dataset' sources the tool offers the table
- * as a CSV file next to the script (see tableCsv); the script then reads that file.
+ * as a CSV file next to the script (see tableCsv); the script then reads that file. Excel: a cell that holds a number is
+ * a number in the tool whatever the decimal separator, so in R it is written as text with the chosen separator (17
+ * significant digits, the same double) and read back by fb_num like every other cell.
  */
-function readBlock(imp, lang, fileName) {
+function readBlock(imp, lang, fileName, decimal = '.') {
   const tr = lang === 'tr', kind = imp && imp.kind, header = !imp || imp.header !== false;
   const file = String(fileName || (imp && imp.name) || 'data.csv').replace(/\s+\([^)]*\)$/, '');   // the sample's label "(simulated)" is not part of its file name
   if (kind === 'xlsx') {
-    return [rComment(tr ? 'Veri: Excel dosyası (readxl paketi gerekir), bütün hücreler metin olarak okunur.' : 'Data: Excel file (needs the readxl package), every cell read as text.'),
+    return [rComment(tr ? 'Veri: Excel dosyası (readxl paketi gerekir); sayılar seçilen ondalık ayırıcıyla metne yazılır, sonra bütün hücreler metin olarak okunur.' : 'Data: Excel file (needs the readxl package); numbers written as text with the chosen decimal separator, every cell then read as text.'),
       `data_file <- ${rStr(file)}`,
-      `dat <- as.data.frame(readxl::read_excel(data_file, sheet = ${rStr(imp.sheet || 1)}, col_names = ${header ? 'TRUE' : 'FALSE'}, col_types = "text", .name_repair = "minimal"))`,
+      `xl <- readxl::read_excel(data_file, sheet = ${rStr(imp.sheet || 1)}, col_names = ${header ? 'TRUE' : 'FALSE'}, col_types = "list", .name_repair = "minimal")`,
+      `xl_cell <- function(v) if (is.null(v) || length(v) == 0 || (length(v) == 1 && is.na(v))) "" else if (is.numeric(v)) sub(".", ${rStr(decimal)}, sprintf("%.17g", v), fixed = TRUE) else as.character(v)`,
+      `dat <- as.data.frame(lapply(xl, function(col) vapply(col, xl_cell, "")), check.names = FALSE, stringsAsFactors = FALSE)`,
       `row_no <- seq_len(nrow(dat)) + ${header ? 1 : 0}`, ''].join('\n');
   }
   const csvLike = kind === 'paste' || kind === 'dataset';
@@ -2185,7 +2189,7 @@ function buildR(s, R, nd, o) {
     notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Hata = tahmin − gözlem. RMSE = √(SSE/n); kalıntı standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = predicted − observed. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
-  out.push(readBlock(s.imp, o.lang, o.fileName));
+  out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
     `dec <- ${rStr(s.decimal)}          # ${T('ondalık ayırıcı', 'decimal separator')}`,

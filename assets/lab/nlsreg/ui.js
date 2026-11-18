@@ -12,6 +12,8 @@ import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { scatterChart } from '../core/chart.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
+import { buildR } from './rcode.js';
+import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:' + NL.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
@@ -197,7 +199,7 @@ function renderStep3() {
       <div class="nav"><button type="button" class="btn" id="sv-save">${T('save.btn')}</button></div><div id="sv-msg"></div></div>
       <div class="card" id="evcard"><h2>${T('ev.h')}</h2><p class="muted small">${T('ev.sub')}</p><button type="button" class="btn ghost" id="ev-send">${T('ev.btn')}</button></div>`;
   }
-  h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button>${recordOption()}</div></div>
+  h += `<div class="card"><h2>${T('x.h')}</h2><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('x.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('x.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('x.json')}</button><button type="button" class="btn ghost" id="x-r">${T('x.r')}</button>${recordOption()}</div><p class="muted small">${T('x.r.note')}</p></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('back2').addEventListener('click', () => go(2));
@@ -214,6 +216,12 @@ function renderStep3() {
   }
   const name = ext => `${lang === 'tr' ? 'dogrusal-olmayan-regresyon' : 'nonlinear-regression'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), predTable(), lang));
+  $('x-r').addEventListener('click', () => {
+    const imp = S.tbl.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
+    download(name('R'), buildR({ imp, src: S.tbl.src, decimal: S.tbl.decimal || '.', y: S.y }, R, ivPoint(), { lang, created: new Date().toISOString(), version: NL.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
+    if (!file) download(csvName(imp), tableCsv(S.tbl.src, cellText), 'text/csv;charset=utf-8');
+  });
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }
     download(name('xlsx'), xlsxBlob(XLSX, [{ name: T('x.info'), rows: infoRows(), widths: [28, 100] }, { name: T('x.cmp'), rows: cmpRows() }, { name: T('x.coef'), rows: coefRows() }, { name: T('x.obs'), rows: predTable() }]));
@@ -224,11 +232,19 @@ function renderStep3() {
       ...(q.fit.status === 'ok' ? { theta: q.fit.theta, se: q.fit.se, ci: q.fit.ci, cov: q.fit.cov, s2: q.fit.s2, df: q.fit.df, aic: q.fit.aic, metrics: q.fit.metrics, start: q.fit.start, iter: q.fit.iter } : {}) })) },
     NL.TOOL, S.tbl ? [['data', S.tbl.imp]] : [], m => status(m, 'err')));
 }
+/** The point of the interval card { idx, point, wv (the weight variable's value; null when unweighted) }, or null. */
+function ivPoint() {
+  const q = R && R.fits[S.ivIdx], o = S.iv[S.ivIdx]; if (!q || q.fit.status !== 'ok' || !o) return null;
+  const point = Object.fromEntries(q.c.vars.map(v => [v, num(o[v])]));
+  const vv = q.c.vars.find(v => q.md.map[v] === q.wcol), wv = q.fit.weight.kind === 'none' ? null : vv ? point[vv] : num(o.__w);
+  return { idx: S.ivIdx, point, wv };
+}
 function renderIv() {
-  const q = R.fits[S.ivIdx], o = S.iv[S.ivIdx] || {}, box = $('iv-out'); if (!q || q.fit.status !== 'ok' || !box) return;
-  const pt = Object.fromEntries(q.c.vars.map(v => [v, num(o[v])]));
+  const q = R.fits[S.ivIdx], box = $('iv-out'); if (!q || q.fit.status !== 'ok' || !box) return;
+  const ip = ivPoint(); if (!ip) return;
+  const { point: pt, wv } = ip;
   let psi = 1;
-  if (q.fit.weight.kind !== 'none') { const vv = q.c.vars.find(v => q.md.map[v] === q.wcol), wv = vv ? pt[vv] : num(o.__w); psi = q.fit.weight.kind === 'power' ? wv ** q.fit.weight.theta : wv; }
+  if (q.fit.weight.kind !== 'none') psi = q.fit.weight.kind === 'power' ? wv ** q.fit.weight.theta : wv;
   const r = NL.interval(q.c, q.fit, pt, psi);
   if (!r || !q.c.vars.every(v => pt[v] > 0)) { box.innerHTML = `<p class="note err small" id="iv-bad">${T('iv.bad')}</p>`; return; }
   const out = q.c.vars.some((v, j) => { const col = q.X.map(x => x[j]); return pt[v] < Math.min(...col) || pt[v] > Math.max(...col); });

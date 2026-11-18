@@ -15,6 +15,6 @@
 <li>Her model için katsayılar, asimptotik standart hatalar ve %95 güven aralıkları, gözlenen–tahmin ve artık grafikleri.</li>
 <li><b>Güven ve tahmin aralığı</b>: girilen değişken değerlerinde ortalama için güven aralığı ve yeni gözlem için tahmin aralığı (ağırlıklı modelde ağırlık değişkeninin değeri de istenir).</li>
 <li><b>Seti kaydet</b>: seçilen model formülü, katsayıları, kovaryansı, birimleri ve kaynak açıklamasıyla katsayı kütüphanesine kaydedilir. <b>Aktar ve Model Başarısı aracını aç</b>: gözlenen y ve modellerin tahminleri Model Başarısı aracına aktarılır.</li>
-<li>İndirme: Excel (Bilgi, Karşılaştırma, Katsayılar, Gözlemler), CSV, JSON çalışma kaydı.</li>
+<li>İndirme: Excel (Bilgi, Karşılaştırma, Katsayılar, Gözlemler), CSV, JSON çalışma kaydı. <b>R kodu (.R)</b>: aynı çalıştırmayı temel R ile (<code>nls</code>) yeniden yapan betik; aynı satırlar, formüller (R diline çevrilmiş; <code>ln</code> R'da <code>log</code>), başlangıç değerleri ve ağırlıklar, türevler R'ın <code>deriv</code> işleviyle (<code>abs</code> gibi türev tablosunda olmayan işlevlerde sayısal türev), aralık kartındaki nokta. Veri gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirirsiniz. Sitenin testleri bu kodun aracın sayılarını verdiğini her yayında R'da denetler.</li>
 </ul>
 </section>

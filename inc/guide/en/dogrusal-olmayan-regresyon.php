@@ -15,6 +15,6 @@
 <li>For every model the coefficients, asymptotic standard errors and 95% confidence intervals, observed–predicted and residual charts.</li>
 <li><b>Confidence and prediction intervals</b>: at the variable values you enter, the confidence interval for the mean and the prediction interval for a new observation (a weighted model also asks for the value of the weight variable).</li>
 <li><b>Save the set</b>: the chosen model is saved to the coefficient library with its formula, coefficients, covariance, units and source description. <b>Send and open Model Evaluation</b>: the observed y and the models' predictions go to the Model Evaluation tool.</li>
-<li>Downloads: Excel (Info, Comparison, Coefficients, Observations), CSV, JSON run record.</li>
+<li>Downloads: Excel (Info, Comparison, Coefficients, Observations), CSV, JSON run record. <b>R code (.R)</b>: a script that redoes the run in base R (<code>nls</code>): the same rows, formulas (translated to R; <code>ln</code> is R's <code>log</code>), starting values and weights, derivatives from R's <code>deriv</code> (numerical for functions not in its table, such as <code>abs</code>), the point of the interval card. The data are not embedded; you change the file name at the top of the script to the path of your file. The site's tests check in R at every release that this code gives the tool's numbers.</li>
 </ul>
 </section>

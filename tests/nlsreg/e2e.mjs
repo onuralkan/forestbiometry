@@ -65,6 +65,9 @@ ok(!(await page.locator('[data-iv="__w"]').count()), 'weight variable is a model
 await page.fill('[data-iv="x1"]', '30'); await page.fill('[data-iv="x2"]', '20'); await page.click('#iv-go'); await page.waitForSelector('#iv-tab');
 const ivw = N.interval(P2, W, { x1: 30, x2: 20 }, 30 ** W.weight.theta);
 ok((await page.textContent('#iv-tab [data-k="pi"]')).includes(String(Number(ivw.pi[1].toPrecision(7)))), 'weighted prediction interval uses ψ = D^θ at the point');
+{ const [rd] = await Promise.all([page.waitForEvent('download'), page.click('#x-r')]), rs = await readFile(await rd.path(), 'utf8');
+  ok(rd.suggestedFilename().endsWith('.R') && rs.includes('data_file <- "ornek-nls.csv"') && rs.includes('dec <- ","') && rs.includes('m1 <- fb_model(quote(a * x1^b * x2^c)') && rs.includes('m1_theta <- unname(coef(lm(')
+    && rs.includes('pt <- list(x1 = 30, x2 = 20)') && rs.includes('fb_out(res)'), 'R code: a .R file reading the user\'s file, the formulas, the estimated weight exponent, the interval point (its numbers are checked in R by scripts/rcode-check.sh)'); }
 // save the formula model
 await page.selectOption('#sv-m', '1'); await page.waitForSelector('[data-unit]');
 await page.fill('#sv-cit', 'e2e benzetim'); await page.locator('#sv-cit').dispatchEvent('change');

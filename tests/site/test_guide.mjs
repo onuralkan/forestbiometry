@@ -57,7 +57,7 @@ const L = {
   'assets/lab/volume/i18n.js': [['Aktarılan hacimleri kullan', 'Use the sent volumes'], ['Seti kaydet', 'Save the set'], ['Aktar ve Model Başarısı aracını aç', 'Send and open Model Evaluation']],
   'assets/lab/eqsys/i18n.js': [['Kalıntı kovaryansı', 'Residual covariance'], ['Setleri kaydet', 'Save the sets']],
   'assets/lab/mixed/i18n.js': [['Yeni bir grubu kalibre et', 'Calibrate a new group'], ['Olabilirlik oranı testi', 'Likelihood-ratio test'], ['Doğrusal olmayan karma model', 'Nonlinear mixed model']],
-  'assets/lab/nlsreg/i18n.js': [['Serbest formül', 'Free formula'], ['Seti kaydet', 'Save the set'], ['Aktar ve Model Başarısı aracını aç', 'Send and open Model Evaluation']],
+  'assets/lab/nlsreg/i18n.js': [['Serbest formül', 'Free formula'], ['Seti kaydet', 'Save the set'], ['Aktar ve Model Başarısı aracını aç', 'Send and open Model Evaluation'], ['R kodu (.R)', 'R code (.R)']],
   'assets/lab/logscale/i18n.js': [['Tomruk tablosu', 'Log table'], ['Ölçme düzeni', 'Scaling conventions'], ['Tek tomruk', 'One log']],
   'assets/lab/biomass/i18n.js': [['Ağaç tablosu', 'Tree table'], ['Tür → katsayı seti', 'Species → coefficient set'], ['Bu sütunu bütün türlere uygula', 'Apply this column to every species'], ['Allometrik denklemler', 'Allometric equations'], ['Hacimden dönüşüm', 'Conversion from volume']],
   'assets/lab/report/i18n.js': [['Rapor dili', 'Report language'], ['Kayıt ekle (.json)', 'Add records (.json)'], ['Panodaki kayıtları al', "Take the dashboard's records"], ['Yazdır / PDF olarak kaydet', 'Print / save as PDF'], ['HTML indir', 'Download HTML'], ['Rapor bilgileri', 'Report details']],

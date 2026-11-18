@@ -36,6 +36,7 @@ export const T = makeT({
     'save.ok': 'Set kaydedildi; Katsayı Kütüphanesi\'nde görünür.', 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.', 'save.unit.miss': 'Bütün birimleri yazın (birimsizse "-").', 'save.note': 'Formül, katsayılar, standart hatalar, kovaryans, ağırlık ve uyum ölçütleri sete yazılır; geçerlilik aralığı her değişkenin veri aralığıdır.',
     'ev.h': 'Model Başarısı aracına aktar', 'ev.sub': 'Gözlenen y ve fit edilen modellerin tahminleri bir tablo olarak Model Başarısı aracına aktarılır; araç açıldığında sütunlar seçili gelir. Tahminler fit etme verisindendir (eğitim).', 'ev.btn': 'Aktar ve Model Başarısı aracını aç',
     'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Gözlemler ve tahminler (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.',
+    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı satırlar, aynı formüller, aynı başlangıç değerleri ve ağırlıklar; türevler R\'ın deriv işleviyle. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
     'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.coef': 'Katsayılar', 'x.obs': 'Gözlemler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.data': 'Veri', 'x.src': 'Kaynak', 'x.rule': 'Kural',
   },
   en: {
@@ -72,6 +73,7 @@ export const T = makeT({
     'save.ok': 'Set saved; it appears in the Coefficient Library.', 'save.cit.miss': 'Fill in the source/description.', 'save.unit.miss': 'Write every unit ("-" if unitless).', 'save.note': 'The formula, coefficients, standard errors, covariance, weight and fit measures are written into the set; the range of validity is the data range of every variable.',
     'ev.h': 'Send to Model Evaluation', 'ev.sub': 'The observed y and the predictions of the fitted models go to the Model Evaluation tool as a table; the columns are chosen when it opens. The predictions are from the fitting data (training).', 'ev.btn': 'Send and open Model Evaluation',
     'x.h': 'Download', 'x.xlsx': 'Excel report', 'x.csv': 'Observations and predictions (CSV)', 'x.json': 'JSON', 'x.fail': 'The Excel library could not be loaded.',
+    'x.r': 'R code (.R)', 'x.r.note': 'The R code redoes this run in base R (nls) with the same settings: the same rows, formulas, starting values and weights; derivatives from R\'s deriv. The data are not embedded; change the file name at the top of the script to the path of your file (an approved package or pasted table comes along as a CSV file). The site\'s tests check in R at every release that this code gives the tool\'s numbers.',
     'x.info': 'Info', 'x.cmp': 'Comparison', 'x.coef': 'Coefficients', 'x.obs': 'Observations', 'x.k': 'Field', 'x.v': 'Value', 'x.tool': 'Tool', 'x.date': 'Date', 'x.data': 'Data', 'x.src': 'Source', 'x.rule': 'Rule',
   },
 });
