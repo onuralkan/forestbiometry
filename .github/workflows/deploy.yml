@@ -1,4 +1,4 @@
-# Push to main → run the numerical tests → upload changed files to forestbiometry.online through the cPanel API
+# Push to main → run the numerical and the browser tests → upload changed files to forestbiometry.online through the cPanel API
 # over HTTPS (port 2083). Script: .github/deploy-cpanel.sh. Nothing on the server is deleted; the upload stops
 # unless DIR already holds this site (inc/site.php) or is an empty cPanel document root.
 # Only repository secret: CPANEL_TOKEN (API token of the forestbiometry.online cPanel account).
@@ -103,8 +103,34 @@ jobs:
           node tests/dist/test_p19.mjs
           node tests/dist/test_p20.mjs
           node tests/dist/test_p23.mjs
+  browser:
+    # Every browser test (tests/*/e2e*.mjs, scripts/e2e.sh) against the PHP built-in server: first with the bundled
+    # files the server gets (FB_BUNDLE=1), then with the module sources. Nothing is uploaded unless both pass.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: PHP of the runner image
+        run: php -v
+      - name: Playwright and Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: Browser tests, bundled files (as on the server)
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 FB_BUNDLE=1 php -S 127.0.0.1:8092 > /tmp/php-bundled.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8092/ && break; sleep 1; done
+          scripts/e2e.sh http://127.0.0.1:8092 4
+      - name: Browser tests, module sources
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8093 > /tmp/php-sources.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8093/ && break; sleep 1; done
+          scripts/e2e.sh http://127.0.0.1:8093 4
   deploy:
-    needs: test
+    needs: [test, browser]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

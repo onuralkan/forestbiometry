@@ -1,7 +1,13 @@
 # Tests
 
 Numerical tests need only Node.js (CI: version 22). Browser tests (`e2e.mjs`) need Playwright with Chromium and the site
-served locally with `php -S 127.0.0.1:8092` from the repository root. Reference generators (`tests/ref/make_*.py`) need
+served locally with `php -S 127.0.0.1:8092` from the repository root. **All browser tests at once:**
+`scripts/e2e.sh http://127.0.0.1:8092 [jobs]` (4 at a time by default; prints each test's summary and the FAIL lines, exits
+non-zero if any test fails, times out or crashes; give file names to run only those). CI runs it twice before every
+upload (`.github/workflows/deploy.yml`, job `browser`): against `FB_BUNDLE=1 php -S` (the bundled files the server
+gets) and against the module sources, both with `PHP_CLI_SERVER_WORKERS=4`; a new `tests/*/e2e*.mjs` is picked up
+without editing the workflow. Locally, Playwright from the repository (`npm install --no-save playwright@1.63.0`) or
+`NODE_PATH` pointing to an installed copy. Reference generators (`tests/ref/make_*.py`) need
 Python 3 with the packages named in each script (NumPy, SciPy, mpmath, scikit-learn, openpyxl); their outputs are
 committed, so the tests run without Python.
 
