@@ -9,3 +9,7 @@ __pycache__/
 .DS_Store
 # Last deployed commit, written on the server by the upload (DI-07 run records read it); never committed
 deploy-commit.txt
+# R session files (R/RStudio write them in the working folder when the reference scripts are run)
+.Rhistory
+.RData
+.Rproj.user/
