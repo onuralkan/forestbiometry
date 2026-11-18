@@ -5,7 +5,7 @@
 // fit measures (e = predicted − observed), standard errors, t intervals, AIC, and the interval at the point the page
 // shows. No DOM.
 import { interval } from './calc.js';
-import { header, readBlock, FB_NUM, FB_OUT, rStr, rNum, rComment } from '../core/rcode.js';
+import { header, readBlock, fbModel, FB_NUM, FB_OUT, rStr, rNum, rComment } from '../core/rcode.js';
 
 const RESERVED = new Set(['if', 'else', 'repeat', 'while', 'function', 'for', 'next', 'break', 'TRUE', 'FALSE', 'NULL', 'Inf', 'NaN', 'NA', 'NA_integer_', 'NA_real_', 'NA_character_', 'NA_complex_', 'in']);
 /** A formula name as an R name (backquoted when it is not a syntactic R name, e.g. it starts with _). */
@@ -63,17 +63,8 @@ export function buildR(s, R, iv, o) {
     `keep <- Reduce(\`&\`, lapply(seq_along(need), function(j) { v <- num(need[j]); !is.na(v) & (!positive[j] | v > 0) }))`,
     `y <- num(col_y)[keep]; rows_used <- row_no[keep]; n <- length(y)`,
     `cat(${rStr(T('Kullanılan satır: ', 'Rows used: '))}, n, ${rStr(T('; dışarıda kalan: ', '; left out: '))}, sum(!keep), "\\n")`, '');
-  out.push(`fb_model <- function(rhs, params, vars) {
-  fn <- tryCatch(deriv(rhs, params, function.arg = c(params, vars)), error = function(e) NULL)
-  if (is.null(fn)) message(${rStr(T('deriv bu formülün türevini alamıyor (örneğin abs); nls sayısal türev kullanır', 'deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives'))})
-  form <- if (is.null(fn)) call("~", quote(.y), rhs) else call("~", quote(.y), as.call(c(quote(fn), lapply(c(params, vars), as.name))))
-  list(rhs = rhs, params = params, fn = fn, form = as.formula(form))
-}
-fb_grad <- function(m, th, pt) {
-  if (!is.null(m$fn)) return(attr(do.call(m$fn, c(as.list(th), pt)), "gradient"))
-  attr(numericDeriv(m$rhs, names(th), list2env(c(as.list(th), pt)), central = TRUE), "gradient")
-}
-fb_nls <- function(form, data, start, fallback) {
+  out.push(fbModel(o.lang), '');
+  out.push(`fb_nls <- function(form, data, start, fallback) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(form, data = data, start = start, weights = .w, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {

@@ -10,6 +10,8 @@ import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { saveCoef } from '../core/coef.js';
+import { buildR } from './rcode.js';
+import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:' + G.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
 const $ = id => document.getElementById(id);
@@ -114,7 +116,7 @@ function renderStep3() {
       <details class="more"><summary>${T('r.tab')}</summary><div class="lims"><label>${T('r.step')} <input type="text" inputmode="decimal" size="4" id="tstep" value="${esc(S.step3)}"></label></div><div class="tscroll"><table class="grid" id="ttab"><thead><tr><th>${T('r.age')}</th><th>${esc(S.variable || 'y')}</th><th>CAI</th><th>MAI</th></tr></thead><tbody>${tab.map(c => `<tr><td class="num">${f(c.t, 1)}</td><td class="num">${f(c.y, 3)}</td><td class="num">${f(c.cai, 4)}</td><td class="num">${f(c.mai, 4)}</td></tr>`).join('')}</tbody></table></div></details>
       <div class="lims"><label class="field"><span>${T('r.cit')}</span><input type="text" id="cit" value="${esc(S.cit)}"></label></div><div class="nav"><button type="button" class="btn" id="savecoef">${T('r.save')}</button></div></div>`;
   }
-  h += `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('r.excel')}</button><button type="button" class="btn ghost" id="x-csv">${T('r.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('r.json')}</button>${recordOption()}</div></div>
+  h += `<div class="card"><div class="exports"><button type="button" class="btn" id="x-xlsx">${T('r.excel')}</button><button type="button" class="btn ghost" id="x-csv">${T('r.csv')}</button><button type="button" class="btn ghost" id="x-json">${T('r.json')}</button><button type="button" class="btn ghost" id="x-r">${T('r.rcode')}</button>${recordOption()}</div><p class="muted small">${T('r.rcode.note')}</p></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   el.querySelectorAll('[data-sel]').forEach(b => b.addEventListener('click', () => { if (R.fits.find(x => x.form === b.dataset.sel && x.status === 'ok')) { S.sel = b.dataset.sel; save(); renderStep3(); } }));
@@ -129,6 +131,13 @@ function renderStep3() {
   $('back2').addEventListener('click', () => go(2));
   const name = ext => `${lang === 'tr' ? 'buyume-islevi' : 'growth'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), cmpRows(), lang));
+  $('x-r').addEventListener('click', () => {
+    const file = S.imp && S.imp.kind !== 'dataset' && S.imp.kind !== 'paste' ? S.imp.name : null;
+    download(name('R'), buildR({ imp: S.imp, src: S.src, map: S.map, decimal: S.decimal || '.', sel: S.sel, step: num(S.step3) > 0 ? num(S.step3) : 5 }, R,
+      { lang, created: new Date().toISOString(), version: G.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
+    if (!file) download(csvName(S.imp), tableCsv(S.src, cellText), 'text/csv;charset=utf-8');
+  });
   $('x-json').addEventListener('click', () => downloadRecord(name('json'), { tool: G.TOOL, created: R.created, variable: S.variable, unit: S.unit,
     settings: { columns: Object.fromEntries(Object.entries(S.map).map(([k, i]) => [k, i == null ? null : S.src.headers[i]])), decimal: S.decimal, forms: chosen() }, n: R.n, fits: R.fits.map(({ residuals, ...r }) => r) },
     G.TOOL, [['data', S.imp]], m => status(m, 'err')));

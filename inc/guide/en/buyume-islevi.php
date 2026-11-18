@@ -11,6 +11,6 @@
 <ul>
 <li><b>Model comparison</b>: coefficients and their standard errors, RMSE, bias, σ̂, AIC (the smallest ★), asymptote, inflection age and the age of the culmination of the mean annual increment. Standard errors assume independent observations.</li>
 <li>A chart of the observations and every curve; for the chosen model the current and mean annual increment, the residuals and a curve table. The chosen curve can be saved to the coefficient library with a source.</li>
-<li>Downloads: Excel (Info, Comparison, Predictions, Curves), CSV and JSON.</li>
+<li>Downloads: Excel (Info, Comparison, Predictions, Curves), CSV and JSON. <b>R code (.R)</b>: a script that redoes the run in base R (<code>nls</code>): the same observations, functions and starting values, derivatives and increments (CAI) from R's <code>deriv</code>, the inflection and MAI culmination ages, the table of the chosen function. The data are not embedded; you change the file name at the top of the script to the path of your file. The site's tests check in R at every release that this code gives the tool's numbers.</li>
 </ul>
 </section>

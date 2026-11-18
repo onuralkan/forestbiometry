@@ -93,3 +93,19 @@ export const FB_OUT = `fb_out <- function(x) {
   f <- Sys.getenv("FB_RCODE_OUT"); if (!nzchar(f)) return(invisible(NULL))
   v <- unlist(x); write.csv(data.frame(name = names(v), value = format(v, digits = 17)), f, row.names = FALSE)
 }`;
+
+/**
+ * fb_model(rhs, params, vars): a model formula for nls with the derivatives from R's own deriv (symbolic), as
+ * .y ~ fn(params, vars); for a formula deriv cannot differentiate (e.g. abs) the plain formula, where nls uses numerical
+ * derivatives (said aloud). fb_grad(m, th, pt): the gradient with respect to the parameters at a point.
+ */
+export const fbModel = lang => `fb_model <- function(rhs, params, vars) {
+  fn <- tryCatch(deriv(rhs, params, function.arg = c(params, vars)), error = function(e) NULL)
+  if (is.null(fn)) message(${rStr(lang === 'tr' ? 'deriv bu formülün türevini alamıyor (örneğin abs); nls sayısal türev kullanır' : 'deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives')})
+  form <- if (is.null(fn)) call("~", quote(.y), rhs) else call("~", quote(.y), as.call(c(quote(fn), lapply(c(params, vars), as.name))))
+  list(rhs = rhs, params = params, fn = fn, form = as.formula(form))
+}
+fb_grad <- function(m, th, pt) {
+  if (!is.null(m$fn)) return(attr(do.call(m$fn, c(as.list(th), pt)), "gradient"))
+  attr(numericDeriv(m$rhs, names(th), list2env(c(as.list(th), pt)), central = TRUE), "gradient")
+}`;

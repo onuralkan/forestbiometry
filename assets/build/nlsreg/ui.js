@@ -981,7 +981,7 @@ const defaultDecimal = verdict => verdict === 'comma' ? ',' : '.';
 
 // ---- assets/lab/core/rcode.js
 __fb_m["core/rcode.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "FB_NUM": () => FB_NUM, "FB_OUT": () => FB_OUT, "csvName": () => csvName, "header": () => header, "rComment": () => rComment, "rNum": () => rNum, "rStr": () => rStr, "rVec": () => rVec, "readBlock": () => readBlock, "tableCsv": () => tableCsv });
+__fb_x(__fb_e, { "FB_NUM": () => FB_NUM, "FB_OUT": () => FB_OUT, "csvName": () => csvName, "fbModel": () => fbModel, "header": () => header, "rComment": () => rComment, "rNum": () => rNum, "rStr": () => rStr, "rVec": () => rVec, "readBlock": () => readBlock, "tableCsv": () => tableCsv });
 // "R code" button (PROJECT.md §9, user decision 10 Nov 2026; started 18 Nov 2026): shared pieces of the R scripts the
 // model tools write. A script reproduces the tool's analysis with the same settings on the user's own file: it never
 // embeds the data (the file name and the reading options are written into it), states the R packages it uses, and
@@ -1076,6 +1076,22 @@ const FB_NUM = `fb_num <- function(x, dec) {
 const FB_OUT = `fb_out <- function(x) {
   f <- Sys.getenv("FB_RCODE_OUT"); if (!nzchar(f)) return(invisible(NULL))
   v <- unlist(x); write.csv(data.frame(name = names(v), value = format(v, digits = 17)), f, row.names = FALSE)
+}`;
+
+/**
+ * fb_model(rhs, params, vars): a model formula for nls with the derivatives from R's own deriv (symbolic), as
+ * .y ~ fn(params, vars); for a formula deriv cannot differentiate (e.g. abs) the plain formula, where nls uses numerical
+ * derivatives (said aloud). fb_grad(m, th, pt): the gradient with respect to the parameters at a point.
+ */
+const fbModel = lang => `fb_model <- function(rhs, params, vars) {
+  fn <- tryCatch(deriv(rhs, params, function.arg = c(params, vars)), error = function(e) NULL)
+  if (is.null(fn)) message(${rStr(lang === 'tr' ? 'deriv bu formülün türevini alamıyor (örneğin abs); nls sayısal türev kullanır' : 'deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives')})
+  form <- if (is.null(fn)) call("~", quote(.y), rhs) else call("~", quote(.y), as.call(c(quote(fn), lapply(c(params, vars), as.name))))
+  list(rhs = rhs, params = params, fn = fn, form = as.formula(form))
+}
+fb_grad <- function(m, th, pt) {
+  if (!is.null(m$fn)) return(attr(do.call(m$fn, c(as.list(th), pt)), "gradient"))
+  attr(numericDeriv(m$rhs, names(th), list2env(c(as.list(th), pt)), central = TRUE), "gradient")
 }`;
 };
 
@@ -2259,7 +2275,7 @@ const T = makeT({
 __fb_m["nlsreg/rcode.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "buildR": () => buildR, "rName": () => rName, "toR": () => toR });
 const { interval } = __fb_r("nlsreg/calc.js");
-const { header, readBlock, FB_NUM, FB_OUT, rStr, rNum, rComment } = __fb_r("core/rcode.js");
+const { header, readBlock, fbModel, FB_NUM, FB_OUT, rStr, rNum, rComment } = __fb_r("core/rcode.js");
 // Nonlinear Regression: the "R code" script (core/rcode.js). It redoes the run in base R (stats::nls) with the tool's
 // settings: the same rows (every column a model or weight uses must be a number, weight columns > 0), each model's
 // formula translated to R, fitted from the starting values the tool's solution came from, the same weights (Parresol
@@ -2325,17 +2341,8 @@ function buildR(s, R, iv, o) {
     `keep <- Reduce(\`&\`, lapply(seq_along(need), function(j) { v <- num(need[j]); !is.na(v) & (!positive[j] | v > 0) }))`,
     `y <- num(col_y)[keep]; rows_used <- row_no[keep]; n <- length(y)`,
     `cat(${rStr(T('Kullanılan satır: ', 'Rows used: '))}, n, ${rStr(T('; dışarıda kalan: ', '; left out: '))}, sum(!keep), "\\n")`, '');
-  out.push(`fb_model <- function(rhs, params, vars) {
-  fn <- tryCatch(deriv(rhs, params, function.arg = c(params, vars)), error = function(e) NULL)
-  if (is.null(fn)) message(${rStr(T('deriv bu formülün türevini alamıyor (örneğin abs); nls sayısal türev kullanır', 'deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives'))})
-  form <- if (is.null(fn)) call("~", quote(.y), rhs) else call("~", quote(.y), as.call(c(quote(fn), lapply(c(params, vars), as.name))))
-  list(rhs = rhs, params = params, fn = fn, form = as.formula(form))
-}
-fb_grad <- function(m, th, pt) {
-  if (!is.null(m$fn)) return(attr(do.call(m$fn, c(as.list(th), pt)), "gradient"))
-  attr(numericDeriv(m$rhs, names(th), list2env(c(as.list(th), pt)), central = TRUE), "gradient")
-}
-fb_nls <- function(form, data, start, fallback) {
+  out.push(fbModel(o.lang), '');
+  out.push(`fb_nls <- function(form, data, start, fallback) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(form, data = data, start = start, weights = .w, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {

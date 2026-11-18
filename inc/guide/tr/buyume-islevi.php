@@ -11,6 +11,6 @@
 <ul>
 <li><b>Model karşılaştırması</b>: katsayılar ve standart hataları, RMSE, yanlılık, σ̂, AIC (en küçüğü ★), asimptot, dönüm noktası yaşı ve ortalama artımın doruk yaşı. Standart hatalar bağımsız gözlem varsayımıyla hesaplanır.</li>
 <li>Gözlemler ve bütün eğrilerin grafiği; seçilen model için cari ve ortalama artım grafiği, artıklar ve eğri tablosu. Seçilen eğri kaynak yazılarak katsayı kütüphanesine kaydedilebilir.</li>
-<li>İndirme: Excel (Bilgi, Karşılaştırma, Tahminler, Eğriler), CSV ve JSON.</li>
+<li>İndirme: Excel (Bilgi, Karşılaştırma, Tahminler, Eğriler), CSV ve JSON. <b>R kodu (.R)</b>: aynı çalıştırmayı temel R ile (<code>nls</code>) yeniden yapan betik; aynı gözlemler, işlevler ve başlangıç değerleri, türevler ve artımlar (CAI) R'ın <code>deriv</code> işleviyle, bükülme ve MAI doruğu yaşları, seçilen işlevin tablosu. Veri gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirirsiniz. Sitenin testleri bu kodun aracın sayılarını verdiğini her yayında R'da denetler.</li>
 </ul>
 </section>

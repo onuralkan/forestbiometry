@@ -56,6 +56,9 @@ const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xl
 const wb = XLSX.read(await readFile(await dx.path()), { type: 'buffer' });
 ok(['Bilgi', 'Karşılaştırma', 'Tahminler', 'Eğriler'].every(n => wb.SheetNames.includes(n)) && XLSX.utils.sheet_to_json(wb.Sheets['Karşılaştırma'], { header: 1 }).length === 7, 'Excel: Info, Comparison (6 forms), Predictions, Curves');
 const pr = XLSX.utils.sheet_to_json(wb.Sheets['Tahminler'], { header: 1 }); ok(pr.length === obs.length + 1 && Math.abs(pr[1][pr[0].indexOf('pred_cr')] - G.FORMS.cr.f(E.cr.theta, obs[0].t)) <= 1e-6, 'Excel predictions at full precision');
+{ const [rd] = await Promise.all([page.waitForEvent('download'), page.click('#x-r')]), rs = await readFile(await rd.path(), 'utf8');
+  ok(rd.suggestedFilename().endsWith('.R') && rs.includes('data_file <- "ornek-buyume.csv"') && rs.includes('models$gomp <- m <- fb_model(quote(b0 * exp(-b1 * exp(-b2 * t)))') && rs.includes('fb_mai_peak') && rs.includes('fb_out(res)'),
+    'R code: a .R file reading the user\'s file, the six forms, the increments (its numbers are checked in R by scripts/rcode-check.sh)'); }
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'growth-res.png'), fullPage: true });
 // one form only, reload, English, phone
 await page.click('#steps [data-go="2"]'); for (const id of G.FORM_IDS) if (id !== 'schu') await page.uncheck(`[data-form="${id}"]`);
