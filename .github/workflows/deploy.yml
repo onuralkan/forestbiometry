@@ -113,7 +113,13 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: PHP of the runner image
+      # PHP 8.3 as on the server (the runner image's own PHP, 8.5 in Nov 2026, answers 200 for missing files on the
+      # built-in server, where the site's test expects 404 for the removed pages of the old site)
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: PHP version
         run: php -v
       - name: Playwright and Chromium
         run: |
