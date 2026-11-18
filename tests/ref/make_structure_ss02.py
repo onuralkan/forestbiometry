@@ -45,7 +45,7 @@ def indices(xy, sp, d, k, box=None):
 
 
 def ce(nn, n, A, P):
-    rA = float(np.mean(nn)); rE = 0.5 / math.sqrt(n / A); rED = 0.5 * math.sqrt(A / n) + (0.0514 + 0.041 / math.sqrt(n)) * P / n
+    rA = float(np.mean(nn)); rE = 0.5 / math.sqrt(n / A); rED = 0.5 * math.sqrt(A / n) + (0.0514 + 0.0412 / math.sqrt(n)) * P / n
     return dict(rA=rA, R=rA / rE, RD=rA / rED)
 
 

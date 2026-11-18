@@ -16,7 +16,7 @@
 <li><b>Ayrıntı</b>: çap sınıfı histogramı, Lorenz eğrisi, gövde haritası (renk Hegyi değeri), notlar ve ağaç tablosu (BAL, d/Dq, Hegyi, kenar).</li>
 </ul>
 <p>CCF = Σ (hektardaki ağaç sayısı × MCA'nın hektara yüzdesi) (Krajicek ve ark. 1961, aktaran Kershaw ve ark. 2016); 100, açıkta büyümüş boyuttaki tepelerin yeri tam örteceğini gösterir; tepe kapalılığı ölçüsü değildir. van Laar ve Akça'nın oran biçimi (CCF/100) de dışa aktarılır. Bir türün seti yoksa ya da bir ağacın MCA'sı hesaplanamıyorsa o alanın CCF'si verilmez ve nedeni notlarda yazılır; kısmi toplam sıklığı az gösterirdi.</p>
-<p>Clark–Evans R ile W, M, T ve T1 özgün kaynaklarında okunmuştur; Hegyi endeksi iki ikincil kaynağın aktardığı biçimdedir (özgün endekste uzaklığa 1 ft eklendiği bildirilir, bu araç eklemez). U ve Donnelly düzeltmesi, kaynakları okunana kadar geçici tanım istisnasıyla uygulanmaktadır.</p>
+<p>Clark–Evans R ile W, M, T ve T1 özgün kaynaklarında okunmuştur; Hegyi endeksi iki ikincil kaynağın aktardığı biçimdedir (özgün endekste uzaklığa 1 ft eklendiği bildirilir, bu araç eklemez). U ve Donnelly düzeltmesi R paketlerinin belgesi ve çıktısıyla doğrulandı (forestSAS ve spatstat; Donnelly sabiti spatstat'taki gibi 0,0412); özgün kaynakları okunmadı.</p>
 <h3>İndirme</h3>
 <p><b>Excel raporu</b> (Bilgi, Örnek alanlar, Ağaçlar, Sınıflar, Türler), ağaç tablosunuza rekabet sütunları (CCF hesaplandıysa MCA da) eklenmiş Excel, örnek alanlar CSV ve sonuç kayıtları JSON.</p>
 </section>

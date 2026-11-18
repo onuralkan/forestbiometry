@@ -1831,7 +1831,7 @@ const { unitMetrics, classesFromBreaks, breaksFromWidth, classIndex } = __fb_r("
 //                spacing (geometric definition; textbook-definition exception, user decision 12 Nov 2026)
 
 
-const TOOL = { id: 'mescere-yapisi', version: '1.0.0-beta.3' };
+const TOOL = { id: 'mescere-yapisi', version: '1.0.0-beta.4' };
 const SCHEMA = 'structure-result/1';
 const DEFAULTS = { giniOn: 'g', classStart: 0, classWidth: 4, balTies: 'exclude', sdiBeta: 1.605, sdiRef: 25, rdExp: 0.5, spacing: 'square', h0From: 'dbh' };
 const g = d => Math.PI / 4 * (d / 100) ** 2;
@@ -2205,7 +2205,7 @@ const tr = {
   'geo.note': 'Koordinatlar bütün örnek alanlarda aynı çerçevede olmalıdır (ör. her alanın merkezinden ölçülmüş). Alan dışındaki ya da koordinatı eksik ağaçlar satır numarasıyla bildirilir ve o alan hesaplanmaz.',
   'geo.k': 'Komşu sayısı k', 'geo.edge': 'Kenar etkisi', 'geo.edge.none': 'düzeltme yok (kenar ağaçları işaretlenir)', 'geo.edge.buffer': 'tampon', 'geo.edge.toroidal': 'toroidal öteleme (yalnızca dikdörtgen)', 'geo.buffer': 'Tampon genişliği (m)',
   'geo.ci': 'Hegyi rakipleri', 'geo.ci.knn': 'en yakın k ağaç', 'geo.ci.radius': 'yarıçap içindekiler', 'geo.radius': 'Yarıçap R (m)',
-  'geo.src': 'Kaynak durumu: Clark–Evans R (Clark ve Evans 1954) ve W, M, T, T1 (Pommerening 2002) okundu [B]; Hegyi (1974) aktarılan biçimiyle [A] (Contreras ve ark. 2011; siplab R paketi belgesi); özgün Hegyi\'de uzaklığa 1 ft (0,3048 m) eklendiği bildirilir, bu araç eklemesiz biçimi kullanır. U (Hui ve ark. 1998) ve Donnelly (1978) düzeltmesi kaynakları okunana kadar geçici istisnadır.',
+  'geo.src': 'Kaynak durumu: Clark–Evans R (Clark ve Evans 1954) ve W, M, T, T1 (Pommerening 2002) okundu [B]; Hegyi (1974) aktarılan biçimiyle [A] (Contreras ve ark. 2011; siplab R paketi belgesi); özgün Hegyi\'de uzaklığa 1 ft (0,3048 m) eklendiği bildirilir, bu araç eklemesiz biçimi kullanır. U (Hui ve ark. 1998) ve Donnelly (1978) düzeltmesi paket belgesi ve çıktısıyla doğrulandı [P] (forestSAS dominance; spatstat clarkevans, Donnelly sabiti 0,0412); özgün kaynakları okunmadı.',
   'geo.wangle': 'W standart açısı', 'geo.wangle.k': '360°/k (Pommerening 2002; k = 4 için 90°)', 'geo.wangle.k1': '360°/(k + 1) (k = 4 için 72°; kaynak okunmadı)',
   'res.units': 'Örnek alanlar', 'res.detail': 'Ayrıntı', 'res.export': 'İndir', 'res.skipped': p => `${p.n} örnek alan–dönem birleşiminde ağaç kaydı yok; ölçülmedi sayıldı ve hesaplanmadı.`,
   'c.unit': 'Örnek alan', 'c.period': 'Dönem', 'c.n': 'n', 'c.Nha': 'N/ha', 'c.Gha': 'G (m²/ha)', 'c.Dq': 'Dq (cm)', 'c.H0': 'H0 (m)', 'c.cv': 'ÇK', 'c.skew': 'Çarpıklık', 'c.kurt': 'Basıklık (fazlalık)',
@@ -2271,7 +2271,7 @@ const en = {
   'geo.note': 'Coordinates must be in the same frame in every plot (e.g. measured from each plot centre). Trees outside the plot or without coordinates are reported with their rows and that plot is not computed.',
   'geo.k': 'Number of neighbours k', 'geo.edge': 'Edge effect', 'geo.edge.none': 'no correction (edge trees flagged)', 'geo.edge.buffer': 'buffer', 'geo.edge.toroidal': 'toroidal translation (rectangles only)', 'geo.buffer': 'Buffer width (m)',
   'geo.ci': 'Hegyi competitors', 'geo.ci.knn': 'k nearest trees', 'geo.ci.radius': 'within a radius', 'geo.radius': 'Radius R (m)',
-  'geo.src': 'Source status: Clark–Evans R (Clark and Evans 1954) and W, M, T, T1 (Pommerening 2002) read [B]; Hegyi (1974) in the form cited by secondary sources [A] (Contreras et al. 2011; siplab R package documentation); the original Hegyi index is reported to add 1 ft (0.3048 m) to the distance, this tool uses the form without it. U (Hui et al. 1998) and the Donnelly (1978) correction remain a provisional exception until their sources are read.',
+  'geo.src': 'Source status: Clark–Evans R (Clark and Evans 1954) and W, M, T, T1 (Pommerening 2002) read [B]; Hegyi (1974) in the form cited by secondary sources [A] (Contreras et al. 2011; siplab R package documentation); the original Hegyi index is reported to add 1 ft (0.3048 m) to the distance, this tool uses the form without it. U (Hui et al. 1998) and the Donnelly (1978) correction are verified against package documentation and output [P] (forestSAS dominance; spatstat clarkevans, Donnelly constant 0.0412); their original sources have not been read.',
   'geo.wangle': 'W standard angle', 'geo.wangle.k': '360°/k (Pommerening 2002; 90° for k = 4)', 'geo.wangle.k1': '360°/(k + 1) (72° for k = 4; source not read)',
   'res.units': 'Plots', 'res.detail': 'Details', 'res.export': 'Download', 'res.skipped': p => `${p.n} plot–period combination(s) have no tree records; treated as not measured and not computed.`,
   'c.unit': 'Plot', 'c.period': 'Period', 'c.n': 'n', 'c.Nha': 'N/ha', 'c.Gha': 'G (m²/ha)', 'c.Dq': 'Dq (cm)', 'c.H0': 'H0 (m)', 'c.cv': 'CV', 'c.skew': 'Skewness', 'c.kurt': 'Kurtosis (excess)',
@@ -2379,7 +2379,8 @@ __fb_x(__fb_e, { "SPATIAL_DEFAULTS": () => SPATIAL_DEFAULTS, "boundaryDist": () 
 // the unit is not computed (a partial map would bias every index).
 // Neighbours: k nearest by Euclidean distance (ties by input order; tool rule), found on a uniform grid.
 //   Clark–Evans  R = r̄_A / r̄_E, r̄_A mean distance to the nearest neighbour, r̄_E = 0.5/√λ, λ = n/A (trees per m²)
-//                Donnelly (edge-corrected expectation): r̄_E,D = 0.5·√(A/n) + (0.0514 + 0.041/√n)·P/n, P perimeter
+//                Donnelly (edge-corrected expectation): r̄_E,D = 0.5·√(A/n) + (0.0514 + 0.0412/√n)·P/n, P perimeter (0.0412 as spatstat.explore clarkevans,
+//                [P]; user decision 18 Nov 2026: the 0.041 of other secondary sources gave 2e-5 less)
 //   W (uniform angle) W_i = (1/k)·Σ v_j over the k angles between azimuth-adjacent neighbours (each the smaller angle,
 //                ≤ 180°), v_j = 1 if the angle < α0, else 0; α0 = 360°/k (Pommerening 2002; 90° for k = 4; default)
 //                or 360°/(k + 1) (72° for k = 4; later literature, option wAngle: 'k1', source not read)
@@ -2448,7 +2449,7 @@ function knn(xs, ys, k, torus = null) {
 
 /** Clark–Evans with the plain and the Donnelly expectation. nnDist: distances of the reference trees; n, A, P of the plot. */
 function clarkEvans(nnDist, n, A, P) {
-  const rA = nnDist.reduce((a, b) => a + b, 0) / nnDist.length, rE = 0.5 / Math.sqrt(n / A), rED = 0.5 * Math.sqrt(A / n) + (0.0514 + 0.041 / Math.sqrt(n)) * P / n;
+  const rA = nnDist.reduce((a, b) => a + b, 0) / nnDist.length, rE = 0.5 / Math.sqrt(n / A), rED = 0.5 * Math.sqrt(A / n) + (0.0514 + 0.0412 / Math.sqrt(n)) * P / n;
   return { rA, rE, rED, R: rA / rE, RD: rA / rED };
 }
 /** W of one tree from the azimuths (radians) of its k neighbours; mode: standard angle ('k' default, or 'k1'). */

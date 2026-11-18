@@ -9,7 +9,8 @@
 // the unit is not computed (a partial map would bias every index).
 // Neighbours: k nearest by Euclidean distance (ties by input order; tool rule), found on a uniform grid.
 //   Clark–Evans  R = r̄_A / r̄_E, r̄_A mean distance to the nearest neighbour, r̄_E = 0.5/√λ, λ = n/A (trees per m²)
-//                Donnelly (edge-corrected expectation): r̄_E,D = 0.5·√(A/n) + (0.0514 + 0.041/√n)·P/n, P perimeter
+//                Donnelly (edge-corrected expectation): r̄_E,D = 0.5·√(A/n) + (0.0514 + 0.0412/√n)·P/n, P perimeter (0.0412 as spatstat.explore clarkevans,
+//                [P]; user decision 18 Nov 2026: the 0.041 of other secondary sources gave 2e-5 less)
 //   W (uniform angle) W_i = (1/k)·Σ v_j over the k angles between azimuth-adjacent neighbours (each the smaller angle,
 //                ≤ 180°), v_j = 1 if the angle < α0, else 0; α0 = 360°/k (Pommerening 2002; 90° for k = 4; default)
 //                or 360°/(k + 1) (72° for k = 4; later literature, option wAngle: 'k1', source not read)
@@ -78,7 +79,7 @@ export function knn(xs, ys, k, torus = null) {
 
 /** Clark–Evans with the plain and the Donnelly expectation. nnDist: distances of the reference trees; n, A, P of the plot. */
 export function clarkEvans(nnDist, n, A, P) {
-  const rA = nnDist.reduce((a, b) => a + b, 0) / nnDist.length, rE = 0.5 / Math.sqrt(n / A), rED = 0.5 * Math.sqrt(A / n) + (0.0514 + 0.041 / Math.sqrt(n)) * P / n;
+  const rA = nnDist.reduce((a, b) => a + b, 0) / nnDist.length, rE = 0.5 / Math.sqrt(n / A), rED = 0.5 * Math.sqrt(A / n) + (0.0514 + 0.0412 / Math.sqrt(n)) * P / n;
   return { rA, rE, rED, R: rA / rE, RD: rA / rED };
 }
 /** W of one tree from the azimuths (radians) of its k neighbours; mode: standard angle ('k' default, or 'k1'). */
