@@ -374,6 +374,9 @@ function site_bottom(string $script = ''): void {
 ?>
 <dialog id="citedlg" class="dlg citedlg" aria-label="<?= $tr ? 'Kaynak gösterme' : 'How to cite' ?>"></dialog>
 <script type="application/json" id="cite-data"><?= json_encode($cd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
+<?php if ($cur): ?><script>/* tools used in this browser, newest first, for "Recently used" on the home page; only the page name is kept */
+try { (function (f) { var r = JSON.parse(localStorage.getItem('recentTools') || '[]').filter(function (x) { return x !== f; }); r.unshift(f); localStorage.setItem('recentTools', JSON.stringify(r.slice(0, 6))); })(<?= json_encode($cur['file']) ?>); } catch (e) {}</script>
+<?php endif; ?>
 <?php
     // entry modules: the shell's citation dialog and the page's own script(s). With bundles (site_bundles()) the page's
     // tool script and the citation dialog come as one file from assets/build/; otherwise as ES module trees whose files

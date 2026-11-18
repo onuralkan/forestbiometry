@@ -24,10 +24,10 @@ const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path
 // 1. tools index is the home page; every ready tool link opens
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('h1').textContent()).trim() === 'Ormancılık Biyometrisi Araçları', 'home page is the tools index (TR)');
-const links = await page.locator('.dir-cards a.hz-card').evaluateAll(a => a.map(x => x.getAttribute('href')));
+const links = await page.locator('.hm-item a.hm-tool').evaluateAll(a => a.map(x => x.getAttribute('href')));
 ok(links.length === N_TOOLS && N_TOOLS >= 7, `${N_TOOLS} ready tools listed: ` + links.join(', '));
 for (const l of links) { const r = await page.request.get(BASE + '/' + l); ok(r.status() === 200, l + ' opens'); }
-ok((await page.locator('.dir-cards a.hz-card').evaluateAll(a => a.every(x => x.querySelectorAll('svg.hz-fig *').length > 5 && x.querySelector('.hz-sub').textContent.trim().length > 10 && x.querySelector('.hz-sub').textContent.length <= 90 && (x.getAttribute('title') || '').length > 40))), 'tools index: every tool a card with a drawing, a short caption (≤ 90 characters) and the full description as a tooltip');
+ok((await page.locator('.hm-item a.hm-tool').evaluateAll(a => a.every(x => x.querySelector('.hm-ico svg') && x.querySelector('.hm-tc').textContent.trim().length > 10 && x.querySelector('.hm-tc').textContent.length <= 90 && (x.getAttribute('title') || '').length > 40))), 'tools index: every tool a card with its icon, a short caption (≤ 90 characters) and the full description as a tooltip');
 ok((await page.locator('text=/Meşcere Postası|Stand Gazette|Bulmaca/').count()) === 0, 'no trace of the gazette');
 await shot('site-1-dizin');
 
@@ -69,17 +69,18 @@ await shot('site-3-telefon-koyu', phone);
 // 6. sidebar: categories, current tool, narrow mode remembered, drawer on phones; stem map labelled as illustration
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('#side .b-cat').count()) === N_CATS && N_CATS === 8 && (await page.locator('#side .b-live a').count()) === N_TOOLS, `sidebar: ${N_CATS} modules, ${N_TOOLS} tool pages`);
-ok((await page.locator('.dir-group').count()) === N_CATS, `home directory grouped in ${N_CATS} modules`);
-{ const g = page.locator('.dir-group[data-mod="SS"]'), b = g.locator('.dir-cat');
-  ok((await page.locator('.dir-group.collapsed').count()) === N_CATS && !(await g.locator('.dir-cards').isVisible()), 'home: modules closed by default');
-  await b.click(); ok(await g.locator('.dir-cards').isVisible() && (await b.getAttribute('aria-expanded')) === 'true', 'home: a module opens from its heading');
-  await page.reload(); ok(await page.locator('.dir-group[data-mod="SS"] .dir-cards').isVisible(), 'home: an open module stays open after a reload');
-  await page.click('#dir-open'); ok((await page.locator('.dir-group.collapsed').count()) === 0, 'home: open all');
-  await page.click('#dir-close'); ok((await page.locator('.dir-group.collapsed').count()) === N_CATS, 'home: close all'); }
+ok((await page.locator('.hm-mod').count()) === N_CATS && (await page.locator('.hm-mod[hidden], .hm-item[hidden]').count()) === 0, `home directory: ${N_CATS} modules, every tool visible without a click`);
+{ const vis = () => page.$$eval('.hm-item:not([hidden]) a', a => a.map(x => x.getAttribute('href')));
+  ok((await page.locator('.hm-chip[data-mod]').count()) === N_CATS + 1, 'module filters: all + one per module');
+  await page.fill('#tool-q', 'GOVDE PROFILI'); ok((await vis()).includes('govde-profili.php') && (await page.textContent('#tool-count')).includes('24 araçtan'.replace('24', String(N_TOOLS))), 'search: Turkish letters and case ignored, count of the shown tools');
+  await page.fill('#tool-q', 'zzzz'); ok(await page.isVisible('#hm-none'), 'search without a match says so');
+  await page.click('#hm-reset'); await page.click('.hm-chip[data-mod="SV"]'); ok((await vis()).length === (await page.locator('.hm-mod[data-mod="SV"] .hm-item').count()) && page.url().includes('m=SV'), 'module filter, kept in the address');
+  await page.click('.hm-task[data-task="agac"]'); ok((await vis()).includes('agac-olcumu.php') && (await vis()).includes('biyokutle-karbon.php') && await page.isVisible('#hm-task-note'), 'task filter across modules (guide task cards)');
+  await page.click('#hm-task-clear'); await page.click('.hm-chip[data-mod=""]'); ok((await vis()).length === N_TOOLS, 'filters cleared: every tool'); }
 { const pl = CATALOG.filter(c => !c.page && c.status !== 'out'), out = CATALOG.filter(c => c.status === 'out');
   ok(CATALOG.length === 74 && out.length === 34 && pl.length === 0, `catalogue: 74 tool ids kept, 34 out of scope (6 earlier + 27 removed on 17 Nov 2026 + SM-05), 0 planned: ${pl.map(c => c.id).join(', ')}`);
-  ok(['GY', 'ML', 'DS'].every(m => !CATALOG.some(c => c.id.startsWith(m + '-') && c.status !== 'out')) && (await page.locator('#side .b-group[data-mod="GY"], #side .b-group[data-mod="ML"], #side .b-group[data-mod="DS"], .dir-group[data-mod="GY"]').count()) === 0, 'modules left without a tool (GY, ML, DS) are not listed');
-  ok((await page.locator('#side .b-pl').count()) === pl.length && (await page.locator('#side .b-pl a').count()) === 0 && (await page.locator('.dir-cards .hz-card.soon').count()) === pl.length && (await page.locator('.dir-cards .hz-card.soon a, .dir-cards a.hz-card.soon').count()) === 0 && (await page.locator('.dir-cards .hz-card.soon .hz-badge').count()) === pl.length && (await page.locator('.dir-cards .hz-card.soon svg.hz-fig').evaluateAll(a => a.every(x => x.childElementCount > 0))), `${pl.length} planned tools greyed in the sidebar and the directory, without links`);
+  ok(['GY', 'ML', 'DS'].every(m => !CATALOG.some(c => c.id.startsWith(m + '-') && c.status !== 'out')) && (await page.locator('#side .b-group[data-mod="GY"], #side .b-group[data-mod="ML"], #side .b-group[data-mod="DS"], .hm-mod[data-mod="GY"]').count()) === 0, 'modules left without a tool (GY, ML, DS) are not listed');
+  ok((await page.locator('#side .b-pl').count()) === pl.length && (await page.locator('#side .b-pl a').count()) === 0 && (await page.locator('.hm-planned').count()) === pl.length && (await page.locator('.hm-planned a').count()) === 0 && (await page.locator('.hm-planned .hm-badge').count()) === pl.length, `${pl.length} planned tools greyed in the sidebar and the directory, without links`);
   const titles = await page.locator('#side .b-pl .b-planned').evaluateAll(a => a.map(x => x.getAttribute('title')));
   ok(!out.some(c => titles.some(t => t.startsWith(c.id + ' '))), 'out-of-scope tools are not shown');
   ok(CATALOG.filter(c => c.page).every(c => TOOL_IDS.includes(c.page.replace('.php', ''))), 'every catalogue page exists in site_tools()'); }
@@ -87,13 +88,11 @@ ok((await page.locator('.dir-group').count()) === N_CATS, `home directory groupe
   const was = await b.getAttribute('aria-expanded'); await b.click();
   ok((await b.getAttribute('aria-expanded')) !== was && (await g.evaluate(x => x.classList.contains('collapsed'))) === (was === 'true'), 'a module opens and closes from its heading');
   await page.reload(); ok((await page.locator('#side .b-group[data-mod="TM"] .b-cat').getAttribute('aria-expanded')) !== was, 'the state of the module is remembered in this browser'); }
-{ // home showcase: one card per live tool it names, each a link to an existing tool page; labelled as illustrations
-  const cards = await page.locator('.hz-show .hz-card').evaluateAll(a => a.map(x => [x.getAttribute('href'), x.querySelectorAll('svg.hz-fig *').length]));
-  ok(cards.length === 5 && cards.every(([h, n]) => TOOL_IDS.includes(h.replace('.php', '')) && n > 5), 'home showcase: 5 drawings linking to live tools');
-  ok((await page.locator('.hz-cap').textContent()).includes('benzetim'), 'showcase labelled as illustrations (points simulated)');
-  ok((await page.locator('.hz-stats').count()) === 0, 'no tool-count figures in the hero (user decision, 17 Nov 2026)');
-  const badges = await page.locator('.dir-group').evaluateAll(gs => gs.map(g => [g.querySelectorAll('.dir-cards > a.hz-card').length, (g.querySelector('.dir-live') || {}).textContent || '']));
-  ok(badges.length === N_CATS && badges.every(([n, t]) => t === `${n} araç` || (n === 0 && t === '')), 'module badges say "n araç" (the tools of the module): ' + badges.map(b => b[1]).join(', ')); }
+{ // home: no decorative showcase or tool-count figures; module filters count the tools of each module
+  ok((await page.locator('.hz-show, .hz-stats').count()) === 0, 'no decorative showcase or tool-count figures on the home page');
+  const counts = await page.locator('.hm-chip[data-mod]:not([data-mod=""])').evaluateAll(cs => cs.map(c => [c.dataset.mod, +c.querySelector('span').textContent]));
+  const real = await page.locator('.hm-mod').evaluateAll(ms => ms.map(m => [m.dataset.mod, m.querySelectorAll('.hm-item:not(.hm-planned)').length]));
+  ok(JSON.stringify(counts) === JSON.stringify(real), 'module filters show the number of tools of each module: ' + counts.map(c => c.join(' ')).join(', ')); }
 // default language: English without ?lang and without a cookie, whatever the browser language (16 Nov 2026)
 { const c = await browser.newContext({ locale: 'tr-TR', extraHTTPHeaders: { 'Accept-Language': 'tr-TR,tr;q=0.9' } }), q = await c.newPage();
   await q.goto(BASE + '/'); ok(await q.getAttribute('html', 'lang') === 'en', 'default language is English even for a Turkish browser');
