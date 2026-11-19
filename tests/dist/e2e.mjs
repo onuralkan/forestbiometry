@@ -511,7 +511,7 @@ await page.waitForSelector('#panel .srcs');
   await q.check('input[name="st-fit"][value="sur"]'); await q.click('#st-train-btn'); await q.waitForSelector('table.sttab', { timeout: 120000 });
   const [dm] = await Promise.all([q.waitForEvent('download'), q.click('#st-json')]), file = await dm.path(), mj = JSON.parse(await readFile(file, 'utf8'));
   { const [dr] = await Promise.all([q.waitForEvent('download'), q.click('#st-r')]), rs = await readFile(await dr.path(), 'utf8');
-    ok(/mescere-modeli.*\.R$/.test(dr.suggestedFilename()) && rs.includes('f <- fb_sur(Z, Y, iterate = TRUE)') && rs.includes('stand_cols <- c(') && rs.includes('fb_out(res)'), 'stand model R code: the units, SUR (checked in R by scripts/rcode-check.sh)'); }
+    ok(/mescere-modeli.*\.R$/.test(dr.suggestedFilename()) && rs.includes('f <- fb_sur(Z, Y, iterate = TRUE)') && rs.includes('stand_cols <- c(') && rs.includes('fold <- c(') && rs.includes('fb_out(res)'), 'stand model R code: the units, SUR, the cross-validation folds (checked in R by scripts/rcode-check.sh)'); }
   ok(mj.schema === 'dist-stand-model/1' && mj.fit === 'sur' && mj.validation.K === 5 && mj.scope.plots === 36 && mj.hColumn === 'H_m', 'model file: schema, method, validation, scope, H column');
   await q.click('#stt-predict'); await q.check('input[name="st-src"][value="imported"]'); await q.setInputFiles('#st-file', file); await q.waitForSelector('#st-msum');
   for (const [k, v] of [['N', '800'], ['H', '20'], ['A', '40']]) { await q.fill('#st-x-' + k, v); await q.locator('#st-x-' + k).dispatchEvent('change'); }

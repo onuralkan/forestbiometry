@@ -15,7 +15,7 @@ import { STARTS as FNS_STARTS } from './recover/fonseca.js';
 
 const rList = obj => `list(${Object.entries(obj).filter(([, v]) => v != null && v !== '').map(([k, v]) => `${k} = ${typeof v === 'string' ? rStr(v) : rNum(v)}`).join(', ')})`;
 
-const R_SB = String.raw`# E[Y^r], Y = logistic((Z − γ)/δ), Z standard normal (integrate, split at γ ± kδ so that a narrow integrand is not missed)
+export const R_SB = String.raw`# E[Y^r], Y = logistic((Z − γ)/δ), Z standard normal (integrate, split at γ ± kδ so that a narrow integrand is not missed)
 fb_sbY <- function(g, d, r) { br <- sort(unique(c(-Inf, g + c(-16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16) * d, Inf)))
   sum(sapply(seq_len(length(br) - 1), function(i) integrate(function(z) plogis((z - g) / d)^r * dnorm(z), br[i], br[i + 1], rel.tol = 1e-13, subdivisions = 2000L)$value)) }
 fb_sb_back <- function(xi, lambda, gamma, delta) { u1 <- fb_sbY(gamma, delta, 1); u2 <- fb_sbY(gamma, delta, 2); u3 <- fb_sbY(gamma, delta, 3)
