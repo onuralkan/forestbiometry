@@ -2,11 +2,11 @@
 require __DIR__ . '/inc/site.php';
 $tr = site_ctx()['tr'];
 site_top([
-    'title'  => $tr ? 'Büyüme İşlevi Fit Etme' : 'Growth Function Fitter',
-    'kicker' => $tr ? 'Büyüme işlevleri' : 'Growth functions',
-    'lede'   => $tr ? 'Kendi yaş–büyüklük verinize (boy, çap, hacim) Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler ve Weibull büyüme işlevlerini fit edin; modelleri karşılaştırın, cari ve ortalama artımı, dönüm noktasını ve ortalama artımın doruğunu görün.'
+    'title'  => $tr ? 'Büyüme Fonksiyonu Fit Etme' : 'Growth Function Fitter',
+    'kicker' => $tr ? 'Büyüme fonksiyonları' : 'Growth functions',
+    'lede'   => $tr ? 'Kendi yaş–büyüklük verinize (boy, çap, hacim) Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler ve Weibull büyüme fonksiyonlarını fit edin; modelleri karşılaştırın, cari ve ortalama artımı, dönüm noktasını ve ortalama artımın doruğunu görün.'
                     : 'Fit Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular and Weibull growth functions to your own age–size data (height, diameter, volume); compare the models, see the current and mean annual increment, the inflection point and the culmination of the mean annual increment.',
-    'desc'   => $tr ? 'Büyüme işlevi fit etme: Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler, Weibull; model karşılaştırması, CAI, MAI, dönüm noktası, MAI doruğu.'
+    'desc'   => $tr ? 'Büyüme fonksiyonu fit etme: Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler, Weibull; model karşılaştırması, CAI, MAI, dönüm noktası, MAI doruğu.'
                     : 'Growth function fitting: Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular, Weibull; model comparison, CAI, MAI, inflection point, MAI culmination.',
 ]);
 ?>

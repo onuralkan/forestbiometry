@@ -151,7 +151,7 @@ export function buildStandR(s, cfg, model, x, pred, o, cv = null) {
   const set = model.set, approach = model.approach, keys = model.keys, terms = model.terms, sb = model.family === 'johnsonsb';
   out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu (meşcere modeli)', 'Diameter Distribution Lab: R code (stand model)'), tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang,
     packages: ['fitdistrplus', ...(sb ? ['nleqslv'] : [])],
-    notes: [T(`Aşama 3b–3c: meşcere modelini eğitme, örnek alan katlı çapraz doğrulama ve tahmin. Yanıt kümesi ${set}; terimler ${terms.join(', ')}; yöntem ${model.fit}. Model biçimi (Poudel ve Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; hata özgün ölçekte toplamsal (log-OLS'de çarpımsal).`,
+    notes: [T(`Aşama 3b–3c: meşcere modelini geliştirme, örnek alan katlı çapraz doğrulama ve tahmin. Yanıt kümesi ${set}; terimler ${terms.join(', ')}; yöntem ${model.fit}. Model biçimi (Poudel ve Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; hata özgün ölçekte toplamsal (log-OLS'de çarpımsal).`,
       `Stages 3b–3c: stand model training, plot-level cross-validation and prediction. Response set ${set}; terms ${terms.join(', ')}; method ${model.fit}. Model form (Poudel and Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; additive error on the original scale (multiplicative for log-OLS).`)] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal), FB_NUM, '', FB_OUT, '');
   out.push(...dataBlock({ ...s, mode: 'each' }, null, T, hd, false, s.unit === 'mm' ? 0.1 : 1, false), R_FAMILIES, R_METHODS, R_STAND, `res <- list()`, '');
@@ -165,9 +165,9 @@ export function buildStandR(s, cfg, model, x, pred, o, cv = null) {
     `units <- Filter(function(u) u$ok, units); cat(${rStr(T('Birim: ', 'Units: '))}, length(units), "\\n")`,
     `terms <- ${rVec(terms, rStr)}; keys <- ${rVec(keys, rStr)}; need <- ${rVec([...new Set(terms.flatMap(t => ({ RS: ['N', 'H'], lnN: ['N'], lnH: ['H'], invA: ['A'] })[t]))], rStr)}`, '');
   out.push(...rFunctions(model, T), '');
-  out.push(rComment(T('Eğitim: bütün birimler', 'Training: all units')),
+  out.push(rComment(T('Model geliştirme: bütün birimler', 'Training: all units')),
     `model <- fb_train(units); B <- model$B; colnames(B) <- keys; print(B)`,
-    `cat(${rStr(T('Eğitim birimi: ', 'Training units: '))}, nrow(model$Y), ${rStr(T('; örnek alan: ', '; plots: '))}, length(unique(sapply(model$rows, function(r) r$u$plot))), "\\n")`,
+    `cat(${rStr(T('Model geliştirme birimi: ', 'Training units: '))}, nrow(model$Y), ${rStr(T('; örnek alan: ', '; plots: '))}, length(unique(sapply(model$rows, function(r) r$u$plot))), "\\n")`,
     ...(model.fit === 'sur' ? ['cat("SUR rounds:", model$rounds, "\\n")'] : []),
     ...(model.fit === 'cdfr' || model.fit === 'mcdfr' ? ['print(model$cdf); res[["cdf.start"]] <- model$cdf[["start"]]; res[["cdf.objective"]] <- model$cdf[["objective"]]'] : []),
     `for (k in seq_len(ncol(B))) { pr <- exp(drop(model$Z %*% B[, k])) * model$back[k]; r <- model$Y[, k] - pr; key <- keys[k]`,
@@ -176,7 +176,7 @@ export function buildStandR(s, cfg, model, x, pred, o, cv = null) {
   const plots = [...new Set((model.trainingUnits || []).map(u => u.plot))];
   const asg = cv && cv.assignment ? cv.assignment : null;
   if (asg) {
-    out.push(rComment(T(`Örnek alan katlı çapraz doğrulama (K = ${cv.K}): örnek alanlar doğal sırayla, j. örnek alan j mod K katına (aracın ataması; bir alanın bütün dönemleri aynı katta). Her katta model yalnızca öbür katlarla eğitilir; dışarıdaki her birim için tahmin edilen dağılımda −ln L ve KS D. Başarısız tahminler sayılır.`,
+    out.push(rComment(T(`Örnek alan katlı çapraz doğrulama (K = ${cv.K}): örnek alanlar doğal sırayla, j. örnek alan j mod K katına (aracın ataması; bir alanın bütün dönemleri aynı katta). Her katta model yalnızca öbür katlarla geliştirilir; dışarıdaki her birim için tahmin edilen dağılımda −ln L ve KS D. Başarısız tahminler sayılır.`,
       `Plot-level cross-validation (K = ${cv.K}): plots in natural order, plot j to fold j mod K (the tool's assignment; all periods of a plot in one fold). In each fold the model is trained on the other folds only; for every held-out unit −ln L and KS D under the predicted distribution. Failed predictions are counted.`)),
       `fold <- c(${Object.entries(asg).sort((a, b) => natural(a[0], b[0])).map(([pl, f]) => `${rStr(pl)} = ${f}`).join(', ')})`,
       `cvu <- list()`,

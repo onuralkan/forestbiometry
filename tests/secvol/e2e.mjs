@@ -85,7 +85,7 @@ await page.click('#steps [data-go="2"]'); await page.check('input[name="top"][va
 await page.click('#calc'); await page.waitForSelector('#ttab');
 E = engine({ method: 'smalian', layout: 'ends', top: 'paraboloid', includeStump: true, dTop: 7 }); tr = await rows('ttab');
 const hd = await page.evaluate(() => [...document.querySelectorAll('#ttab thead th')].map(x => x.textContent));
-ok(hd.includes("Kullanılabilir hacim, 7 cm'ye (m³)") && hd.includes('7 cm yüksekliği (m)'), 'merchantable columns appear');
+ok(hd.includes("Ticari hacim, 7 cm'ye (m³)") && hd.includes('7 cm yüksekliği (m)'), 'merchantable columns appear');
 TREES.forEach(([, t], i) => { const r = tr.find(x => x[1] === t); near(num(r[3]), E[i].ob.total, 6e-5, `${t}: paraboloid top + stump = engine`); near(num(r[6]), E[i].ob.merch.volume, 6e-5, `${t}: merchantable volume = engine`); near(num(r[7]), E[i].ob.merch.h, 6e-3, `${t}: height of 7 cm`); ok(r[8] === 'kesimden tepeye + kütük', `${t}: extent says the stump is included`); });
 { const [, , D0, H, , hs] = TREES[0], h0 = hs[hs.length - 1], d0 = cone(D0, H)(h0), L = H - h0;   // 7 cm lies in the top piece of A: the chosen paraboloid's profile d0·(1 − t/L)^(1/2)
   near(E[0].ob.merch.h, h0 + L * (1 - (7 / d0) ** 2), 1e-9, 'A: height of 7 cm in the paraboloid top piece'); ok(E[0].ob.merch.rule === 'top-solid', 'A: rule recorded'); }

@@ -2232,20 +2232,20 @@ const T = makeT({
     sample: 'Benzetim tablosunu yükle', 'sample.note': 'Benzetim verisi denemek içindir (80 ağaç, çap, boy, hacim; rastgele sayılar, hiçbir türün değeri değildir).', 'need.data': 'Önce bir tablo yükleyin.',
     'eq.h': 'Denklemler', 'eq.sub': 'Her denklemin bağımlı değişkenini seçip formülünü yazın. Birden çok denklemde aynı adla geçen katsayı tek katsayıdır: denklemler arası kısıt böyle kurulur (ör. boy ve hacim denklemlerinde aynı a, b, c ile uyumlu sistem).',
     'eq.y': 'Bağımlı değişken', 'eq.expr': 'Formül: y =', 'eq.label': p => `Denklem ${p.i}`, 'eq.add': 'Denklem ekle', 'eq.rm': 'Kaldır', 'eq.perr': p => `Denklem ${p.i}: ${p.why}`,
-    'eq.syntax': 'İşlemler + − * / ^, ayraçlar; işlevler exp, ln, log10, sqrt, abs; sabit pi. Bir sütun başlığıyla aynı ad o sütuna eşlenir; aşağıdaki tablodan değiştirebilirsiniz.',
+    'eq.syntax': 'İşlemler + − * / ^, ayraçlar; fonksiyonlar exp, ln, log10, sqrt, abs; sabit pi. Bir sütun başlığıyla aynı ad o sütuna eşlenir; aşağıdaki tablodan değiştirebilirsiniz.',
     'n.h': 'Adlar', 'n.name': 'Ad', 'n.role': 'Sütun ya da katsayı', 'n.par': '— katsayı —', 'n.start': 'Başlangıç değeri', 'n.eqs': 'Denklemler', 'n.shared': 'ortak',
-    'm.h': 'Kestirim', 'm.method': 'Yöntem', 'm.OLS': 'OLS (her denklem eşit ağırlıkta, kısıtlarla birlikte)', 'm.SUR': 'SUR (görünüşte ilişkisiz regresyon, FGLS)', 'm.ISUR': 'Yinelemeli SUR', 'm.resid': 'Kalıntı kovaryansı', 'r.geomean': '√((T − Kᵢ)(T − Kⱼ)) ile (Denklem 38)', 'r.noDfCor': 'T ile (Denklem 37; yinelemeli SUR’da en çok olabilirlik)', 'r.max': 'T − max(Kᵢ, Kⱼ) ile (Denklem 39)',
-    'm.note': 'Henningsen ve Hamann (2007): SUR, birinci adımdaki (kısıtlı) OLS kalıntılarından kestirilen Σ̂ ile genelleştirilmiş en küçük karelerdir; yinelemeli SUR’da Σ̂ her adımda yeniden kestirilir. Doğrusal olmayan denklemler Gauss–Newton ile çözülür (Parresol 2001, Denklem 24); doğrusal denklemlerde aynı çözüm tek adımda bulunur.',
+    'm.h': 'Kestirim', 'm.method': 'Yöntem', 'm.OLS': 'OLS (her denklem eşit ağırlıkta, kısıtlarla birlikte)', 'm.SUR': 'SUR (görünüşte ilişkisiz regresyon, FGLS)', 'm.ISUR': 'Yinelemeli SUR', 'm.resid': 'Artık kovaryansı', 'r.geomean': '√((T − Kᵢ)(T − Kⱼ)) ile (Denklem 38)', 'r.noDfCor': 'T ile (Denklem 37; yinelemeli SUR’da en çok olabilirlik)', 'r.max': 'T − max(Kᵢ, Kⱼ) ile (Denklem 39)',
+    'm.note': 'Henningsen ve Hamann (2007): SUR, birinci adımdaki (kısıtlı) OLS artıklarından kestirilen Σ̂ ile genelleştirilmiş en küçük karelerdir; yinelemeli SUR’da Σ̂ her adımda yeniden kestirilir. Doğrusal olmayan denklemler Gauss–Newton ile çözülür (Parresol 2001, Denklem 24); doğrusal denklemlerde aynı çözüm tek adımda bulunur.',
     'p.eqs': 'En az iki denklem gerekir', 'p.y': p => `Denklem ${p.i}: bağımlı değişkeni seçin`, 'p.start': p => `${p.p} için başlangıç değeri girin (doğrusal olmayan katsayılarda zorunlu; doğrusal denklemlerde 0 yeterli)`, 'p.startnum': 'başlangıç değerleri sayı olmalı', 'p.nocoef': p => `Denklem ${p.i}: formülde katsayı yok`,
     'px.char': p => `${p.pos + 1}. karakter geçersiz`, 'px.end': 'formül eksik bitiyor', 'px.expected': p => `${p.pos + 1}. konumda ")" bekleniyor`, 'px.token': p => `${p.pos + 1}. konumda beklenmeyen işaret`, 'px.trailing': p => `${p.pos + 1}. konumdan sonrası fazla (çarpma için * yazın)`,
-    'px.empty': 'formül boş', 'px.long': 'formül 500 karakteri aşıyor', 'px.deep': 'çok fazla iç içe ayraç', 'px.log': '"log" belirsiz: ln ya da log10 yazın', 'px.func': p => `bilinmeyen işlev ${p.name}`, 'px.funcname': p => `${p.name} bir işlevdir, ayraçla yazın`, 'px.args': 'işlevler tek bağımsız değişken alır',
+    'px.empty': 'formül boş', 'px.long': 'formül 500 karakteri aşıyor', 'px.deep': 'çok fazla iç içe ayraç', 'px.log': '"log" belirsiz: ln ya da log10 yazın', 'px.func': p => `bilinmeyen fonksiyon ${p.name}`, 'px.funcname': p => `${p.name} bir fonksiyondur, ayraçla yazın`, 'px.args': 'fonksiyonlar tek bağımsız değişken alır',
     'r.sum': p => `${p.method}; ${p.T} gözlem, ${p.G} denklem, ${p.K} katsayı${p.it ? `, ${p.it} yineleme` : ''}.`, 'r.drop': p => `${p.n} satır dışarıda bırakıldı (bir denklemde eksik ya da geçersiz değer): satırlar ${p.rows}.`,
-    'r.bad': p => `Fit edilemedi: ${p.why}.`, 'e.n.few': 'gözlem sayısı çok az', 'e.converge': 'yakınsamadı (başlangıç değerlerini değiştirin)', 'e.sigma.singular': 'kalıntı kovaryans matrisi tekil', 'e.singular': 'denklem sistemi tekil (katsayılar belirlenemiyor)',
-    'r.coef': 'Katsayılar', 'r.name': 'Katsayı', 'r.eqs': 'Denklemler', 'r.est': 'Tahmin', 'r.se': 'Standart hata', 'r.t': 't',
+    'r.bad': p => `Fit edilemedi: ${p.why}.`, 'e.n.few': 'gözlem sayısı çok az', 'e.converge': 'yakınsamadı (başlangıç değerlerini değiştirin)', 'e.sigma.singular': 'artık kovaryans matrisi tekil', 'e.singular': 'denklem sistemi tekil (katsayılar belirlenemiyor)',
+    'r.coef': 'Katsayılar', 'r.name': 'Katsayı', 'r.eqs': 'Denklemler', 'r.est': 'Kestirim', 'r.se': 'Standart hata', 'r.t': 't',
     'r.eqh': 'Denklemler', 'r.eq': 'Denklem', 'r.r2': 'R²', 'r.ssr': 'SSR', 'r.s': 'σ̂', 'r.sys': p => `Sistem: OLS R² ${p.ols}, McElroy R² ${p.mc}; log L ${p.ll} (sd ${p.df}).`,
-    'r.corr': 'Denklemler arası kalıntı korelasyonu', 'r.cmp': 'Yöntem karşılaştırması', 'r.cmpnote': 'Aynı sistem ve kalıntı kovaryansı seçimiyle üç yöntem; standart hatalar ayraç içinde.',
-    'r.note': 'cov(b) = (XᵀΩ̂⁻¹X)⁻¹ (Denklem 8); OLS’de σ̂ denklem başına, katsayılar ortaksa tek σ̂² (systemfit’in öntanımı). R² denklem başına (Denklem 42); McElroy R² sistem için (Denklem 43); log L, Σ̂ = kalıntılar/T ile çok değişkenli normal olabilirlik (sd: OLS’de K + 1, SUR’da K + G(G + 1)/2).',
-    'lrt.h': 'Ortak katsayıların testi (olabilirlik oranı)', 'lrt.sub': 'Sistem, ortak katsayılar her denklemde ayrı olacak biçimde (ör. a yerine a_1 ve a_2) bir kez daha fit edilir; iki fit etme yinelemeli SUR ve T bölenli kalıntı kovaryansıyla (en çok olabilirlik) yapılır. LR = T(log|Σ̂_kısıtlı| − log|Σ̂_kısıtsız|), χ² dağılımı, serbestlik derecesi eklenen katsayı sayısı (Henningsen ve Hamann 2007, Denklem 48). Küçük p, ortak katsayı kısıtının veriyle uyuşmadığını gösterir.', 'lrt.go': 'Testi yap',
+    'r.corr': 'Denklemler arası artık korelasyonu', 'r.cmp': 'Yöntem karşılaştırması', 'r.cmpnote': 'Aynı sistem ve artık kovaryansı seçimiyle üç yöntem; standart hatalar ayraç içinde.',
+    'r.note': 'cov(b) = (XᵀΩ̂⁻¹X)⁻¹ (Denklem 8); OLS’de σ̂ denklem başına, katsayılar ortaksa tek σ̂² (systemfit’in öntanımı). R² denklem başına (Denklem 42); McElroy R² sistem için (Denklem 43); log L, Σ̂ = artıklar/T ile çok değişkenli normal olabilirlik (sd: OLS’de K + 1, SUR’da K + G(G + 1)/2).',
+    'lrt.h': 'Ortak katsayıların testi (olabilirlik oranı)', 'lrt.sub': 'Sistem, ortak katsayılar her denklemde ayrı olacak biçimde (ör. a yerine a_1 ve a_2) bir kez daha fit edilir; iki fit etme yinelemeli SUR ve T bölenli artık kovaryansıyla (en çok olabilirlik) yapılır. LR = T(log|Σ̂_kısıtlı| − log|Σ̂_kısıtsız|), χ² dağılımı, serbestlik derecesi eklenen katsayı sayısı (Henningsen ve Hamann 2007, Denklem 48). Küçük p, ortak katsayı kısıtının veriyle uyuşmadığını gösterir.', 'lrt.go': 'Testi yap',
     'r.noconv': 'Uyarı: kestirim yineleme sınırına ulaştı, tam yakınsamamış olabilir (başlangıç değerlerini ya da modeli gözden geçirin; katsayılar birbirinin yerine geçebiliyor olabilir).',
     'lrt.res': p => `LR = ${p.L}, sd = ${p.df}, p = ${p.p}. log L: kısıtlı ${p.lr}, kısıtsız ${p.lu}.`, 'lrt.bad': p => `Test yapılamadı: ${p.why}.`, 'lrt.unrel': 'Test güvenilir değil: p-değeri verilmez.',
     'lrt.multi': p => `Kısıtsız sistem farklı başlangıçlardan farklı en büyük olabilirliklere gidiyor (log L: ${p.lls}); tek bir en büyük bulunamadı.`,
@@ -2254,12 +2254,12 @@ const T = makeT({
     'lrt.weak': p => `Kısıtsız sistem veriyle belirlenemiyor: ölçekli bilgi matrisinin koşul sayısı ${p.cond} (sınır 10⁸); belirlenemeyen bileşimde ${p.names}.`,
     'lrt.unrel.info': p => `Bilgi için: LR = ${p.L}, sd = ${p.df}; log L kısıtlı ${p.lr}, kısıtsız ${p.lu}. Ortak katsayıları sınamak için modeli sadeleştirin (ör. bir denklemin katsayılarını ortak bırakın ya da başka bir değişken kullanın).`,
     'r.weak': p => `Uyarı: katsayılar veriyle zayıf belirleniyor (ölçekli bilgi matrisinin koşul sayısı ${p.cond}, sınır 10⁸); veri ${p.names} bileşimini ayıramıyor. Standart hatalar ve testler güvenilir değil.`,
-    'r.sebig': p => `Not: standart hatası tahmininden büyük katsayılar: ${p.names} (veri bunları zayıf belirliyor).`, 'lrt.names': p => `Kısıtsız sistemdeki adlar: ${p.n}.`,
+    'r.sebig': p => `Not: standart hatası kestiriminden büyük katsayılar: ${p.names} (veri bunları zayıf belirliyor).`, 'lrt.names': p => `Kısıtsız sistemdeki adlar: ${p.n}.`,
     'ch.obs': p => `${p.e}: gözlenen–tahmin`, 'ch.xo': 'Gözlenen', 'ch.yo': 'Tahmin',
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.sub': 'Her denklem ayrı bir set olarak, sistemin ortak katsayıları ve kovaryansıyla kaydedilir; setler aynı sistem kimliğini taşır.', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi kesim verimiz, 2026, n = 80', 'save.sp': 'Tür (isteğe bağlı)', 'save.unit': p => `${p.v} birimi`, 'save.btn': 'Setleri kaydet',
     'save.ok': p => `${p.n} set kaydedildi; Katsayı Kütüphanesi'nde görünür.`, 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.', 'save.unit.miss': 'Bütün birimleri yazın (birimsizse "-").',
     'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Gözlemler ve tahminler (CSV)', 'x.json': 'JSON',
-    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile aynı ayarlarla yeniden yapar: aynı satırlar, denklemler ve ortak katsayılar, aynı yöntem (OLS, SUR, yinelemeli SUR) ve kalıntı kovaryansı; ortak katsayı varsa olabilirlik oranı testi. Tahminci (sönümlü Gauss–Newton) betikte açıkça yazılıdır, türevler R\'ın deriv işleviyle. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.', 'x.fail': 'Excel kitaplığı yüklenemedi.',
+    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile aynı ayarlarla yeniden yapar: aynı satırlar, denklemler ve ortak katsayılar, aynı yöntem (OLS, SUR, yinelemeli SUR) ve artık kovaryansı; ortak katsayı varsa olabilirlik oranı testi. Kestirici (sönümlü Gauss–Newton) betikte açıkça yazılıdır, türevler R\'ın deriv fonksiyonuyla. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.', 'x.fail': 'Excel kitaplığı yüklenemedi.',
     'x.info': 'Bilgi', 'x.coef': 'Katsayılar', 'x.eq': 'Denklemler', 'x.obs': 'Gözlemler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.data': 'Veri', 'x.src': 'Kaynak', 'x.rule': 'Kural',
   },
   en: {
@@ -2333,9 +2333,9 @@ function buildR(s, R, o) {
   const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]);
   const sys = R.sys, G = sys.eqs.length, out = [];
   out.push(header({ title: T('Denklem Sistemleri: R kodu', 'Systems of Equations: R code'), tool: { id: 'denklem-sistemleri', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Tahminci: Σ_t r_tᵀ Σ̂⁻¹ r_t en küçüklenir (Parresol 2001 Denk. 24; Henningsen ve Hamann 2007 Denk. 7); artıklar Σ̂⁻¹\'in Cholesky çarpanıyla dönüştürülür; sönümlü Gauss–Newton (Levenberg–Marquardt) burada açıkça yazılmıştır, türevler R\'ın deriv işleviyle. OLS: Σ̂ = I; SUR: Σ̂ OLS artıklarından; yinelemeli SUR: Σ̂ her adımda bir önceki artıklardan. Birden çok denklemde geçen katsayı adı tek katsayıdır (denklemler arası kısıt).',
+    notes: [T('Kestirici: Σ_t r_tᵀ Σ̂⁻¹ r_t en küçüklenir (Parresol 2001 Denk. 24; Henningsen ve Hamann 2007 Denk. 7); artıklar Σ̂⁻¹\'in Cholesky çarpanıyla dönüştürülür; sönümlü Gauss–Newton (Levenberg–Marquardt) burada açıkça yazılmıştır, türevler R\'ın deriv fonksiyonuyla. OLS: Σ̂ = I; SUR: Σ̂ OLS artıklarından; yinelemeli SUR: Σ̂ her adımda bir önceki artıklardan. Birden çok denklemde geçen katsayı adı tek katsayıdır (denklemler arası kısıt).',
       'Estimator: Σ_t r_tᵀ Σ̂⁻¹ r_t is minimized (Parresol 2001 Eq. 24; Henningsen and Hamann 2007 Eq. 7); the residuals are transformed with the Cholesky factor of Σ̂⁻¹; damped Gauss–Newton (Levenberg–Marquardt) is written out here, derivatives from R\'s deriv. OLS: Σ̂ = I; SUR: Σ̂ from the OLS residuals; iterated SUR: Σ̂ from the previous residuals at each step. A coefficient name in several equations is one coefficient (a cross-equation restriction).'),
-    T('systemfit paketi doğrusal sistemlerde aracın test referansıdır; doğrusal olmayan sistemler için nlsystemfit bu tür verilerde SUR adımında OLS\'den ayrılmadığından tahminci burada açıkça yazılmıştır.',
+    T('systemfit paketi doğrusal sistemlerde aracın test referansıdır; doğrusal olmayan sistemler için nlsystemfit bu tür verilerde SUR adımında OLS\'den ayrılmadığından kestirici burada açıkça yazılmıştır.',
       'The systemfit package is the tool\'s test reference for linear systems; for nonlinear systems nlsystemfit did not move from OLS in the SUR step on such data, so the estimator is written out here.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -2348,8 +2348,8 @@ function buildR(s, R, o) {
     `d <- data.frame(row = row_no[keep]${vcols.map(([v, c]) => `, ${rName(v)} = num(${c + 1})[keep]`).join('')}${ycols.map((c, i) => `, .y${i + 1} = num(${c + 1})[keep]`).join('')}, check.names = FALSE)`,
     rComment([...vcols.map(([v, c]) => `${v} = ${hd(c)}`), ...ycols.map((c, i) => `.y${i + 1} = ${hd(c)} (${sys.eqs[i].name})`)].join('; ')),
     `n_t <- nrow(d); cat(${rStr(T('Gözlem (T): ', 'Observations (T): '))}, n_t, ${rStr(T('; dışarıda kalan satır: ', '; rows left out: '))}, sum(!keep), "\\n")`,
-    `resid_cov <- ${rStr(R.resid)}   # ${T('kalıntı kovaryansı', 'residual covariance')}: noDfCor = u'u/T (Eq. 37), geomean = /√((T − Ki)(T − Kj)) (Eq. 38), max = /(T − max(Ki, Kj)) (Eq. 39)`, '');
-  out.push(`# ${T('Bir sistemin işlevleri: tahminler (T × G) ve her denklemin katsayılara göre türevi (T × K)', 'Functions of a system: predictions (T × G) and each equation\'s derivatives with respect to the coefficients (T × K)')}
+    `resid_cov <- ${rStr(R.resid)}   # ${T('artık kovaryansı', 'residual covariance')}: noDfCor = u'u/T (Eq. 37), geomean = /√((T − Ki)(T − Kj)) (Eq. 38), max = /(T − max(Ki, Kj)) (Eq. 39)`, '');
+  out.push(`# ${T('Bir sistemin fonksiyonları: tahminler (T × G) ve her denklemin katsayılara göre türevi (T × K)', 'Functions of a system: predictions (T × G) and each equation\'s derivatives with respect to the coefficients (T × K)')}
 fb_system <- function(eqs) {
   P <- unique(unlist(lapply(eqs, function(e) e$params)))
   for (k in seq_along(eqs)) {
@@ -2369,7 +2369,7 @@ fb_system <- function(eqs) {
   list(eqs = eqs, P = P, Y = Y, K = K, G = length(eqs),
        at = function(b) { r <- lapply(eqs, eval1, b = b); list(F = sapply(r, function(x) x$f), J = lapply(r, function(x) x$J)) })
 }
-# ${T('Kalıntı kovaryansı (Henningsen ve Hamann 2007 Denk. 37–39)', 'Residual covariance (Henningsen and Hamann 2007 Eq. 37–39)')}
+# ${T('Artık kovaryansı (Henningsen ve Hamann 2007 Denk. 37–39)', 'Residual covariance (Henningsen and Hamann 2007 Eq. 37–39)')}
 fb_sigma <- function(S, U, rc) { M <- crossprod(U); K <- S$K
   if (rc == "noDfCor") M / n_t else if (rc == "max") M / (n_t - outer(K, K, pmax)) else M / sqrt(outer(n_t - K, n_t - K)) }
 # ${T('Σ̂ sabitken GLS: Σ_t ‖R r_t‖² (Σ̂⁻¹ = RᵀR) sönümlü Gauss–Newton (Levenberg–Marquardt) ile; geçersiz ya da kötüleşen adım reddedilir, sönüm artar', 'GLS for a fixed Σ̂: Σ_t ‖R r_t‖² (Σ̂⁻¹ = RᵀR) by damped Gauss–Newton (Levenberg–Marquardt); an invalid or worse step is rejected and the damping grows')}
@@ -2398,7 +2398,7 @@ fb_gls <- function(S, Sig, start) {
 fb_fit <- function(S, method, rc, start, fallback = NULL) {
   I <- diag(S$G)
   ols <- tryCatch(fb_gls(S, I, start), error = function(e) NULL)
-  if (is.null(ols) && !is.null(fallback)) { message(${rStr(T('aracın başlangıcında model hesaplanamadı; aracın OLS tahminlerinden başlıyor', 'the model cannot be evaluated at the tool\'s start; starting from the tool\'s OLS estimates'))}); ols <- fb_gls(S, I, fallback) }
+  if (is.null(ols) && !is.null(fallback)) { message(${rStr(T('aracın başlangıcında model hesaplanamadı; aracın OLS kestirimlerinden başlıyor', 'the model cannot be evaluated at the tool\'s start; starting from the tool\'s OLS estimates'))}); ols <- fb_gls(S, I, fallback) }
   shared <- sum(sapply(S$P, function(p) sum(sapply(S$eqs, function(e) p %in% e$params)) > 1)) > 0
   if (method == "OLS") {
     # ${T('kovaryans: kısıt yoksa her denklemin σ̂\'si, ortak katsayı varsa tek σ̂² (systemfit gibi)', 'covariance: σ̂ per equation without restrictions, one pooled σ̂² with shared coefficients (as systemfit)')}
@@ -2429,7 +2429,7 @@ res <- list()
   out.push(rComment(T('Sistem (araçtaki gibi)', 'The system (as in the tool)')),
     `S <- fb_system(${sysR(sys, i => '.y' + (i + 1))})`,
     `start <- ${L(sys.params, startV)}   # ${T('aracın başlangıç değerleri (boş = 0)', 'the tool\'s starting values (empty = 0)')}`,
-    ...(ols ? [`ols_tool <- ${L(sys.params, ols)}   # ${T('aracın OLS tahminleri (yedek başlangıç)', 'the tool\'s OLS estimates (fallback start)')}`] : [`ols_tool <- NULL`]),
+    ...(ols ? [`ols_tool <- ${L(sys.params, ols)}   # ${T('aracın OLS kestirimleri (yedek başlangıç)', 'the tool\'s OLS estimates (fallback start)')}`] : [`ols_tool <- NULL`]),
     `fit <- fb_fit(S, ${rStr(R.method)}, resid_cov, start, ols_tool)`,
     `V <- solve(fit$A); se <- sqrt(diag(V))`,
     `rc <- fb_sigma(S, fit$U, resid_cov); ssr <- colSums(fit$U^2); Yc <- scale(S$Y, scale = FALSE); r2 <- 1 - ssr / colSums(Yc^2)`,
@@ -2441,13 +2441,13 @@ res <- list()
     `res[["mcelroy"]] <- mcelroy; res[["ols_r2"]] <- ols_r2; res[["logLik"]] <- ll; res[["df"]] <- df`,
     `id <- fb_ident(fit$A, names(fit$b)); res[["cond"]] <- id$cond; res[["weak"]] <- as.numeric(id$cond > 1e8)`,
     `if (id$cond > 1e8) cat(${rStr(T('Uyarı: katsayılar zayıf belirlenmiş, koşul sayısı ', 'Warning: weakly identified coefficients, condition number '))}, signif(id$cond, 3), ":", id$weak, "\n")`,
-    `if (any(se > abs(fit$b))) cat(${rStr(T('Not: standart hatası tahmininden büyük: ', 'Note: standard error larger than the estimate: '))}, names(fit$b)[se > abs(fit$b)], "\n")`, '');
+    `if (any(se > abs(fit$b))) cat(${rStr(T('Not: standart hatası kestiriminden büyük: ', 'Note: standard error larger than the estimate: '))}, names(fit$b)[se > abs(fit$b)], "\n")`, '');
   if (sys.shared.length) {
     const u = unrestrictedSystem(sys, R.vars);
     if (u.ok && u !== sys) {
-      out.push(rComment(T(`Ortak katsayıların olabilirlik oranı testi (Denk. 48): iki sistem de yinelemeli SUR ve Denk. 37 ile; kısıtsız sistemde her ortak katsayı denklem başına ayrı (${Object.entries(u.renamed).map(([k, v]) => `${k} → ${v.join(', ')}`).join('; ')}), kısıtlı tahminlerden başlar.`,
+      out.push(rComment(T(`Ortak katsayıların olabilirlik oranı testi (Denk. 48): iki sistem de yinelemeli SUR ve Denk. 37 ile; kısıtsız sistemde her ortak katsayı denklem başına ayrı (${Object.entries(u.renamed).map(([k, v]) => `${k} → ${v.join(', ')}`).join('; ')}), kısıtlı kestirimlerden başlar.`,
         `Likelihood-ratio test of the shared coefficients (Eq. 48): both systems by iterated SUR with Eq. 37; in the unrestricted system each shared coefficient is separate per equation (${Object.entries(u.renamed).map(([k, v]) => `${k} → ${v.join(', ')}`).join('; ')}), started from the restricted estimates.`)),
-        rComment(T('Kısıtsız sistemde bazı katsayılar verilerle belirlenemeyebilir (olabilirlik yüzeyi düz); o zaman R ile araç aynı olabilirliğin farklı noktalarında durabilir ve LR ayrılabilir. Kısıtsız tahminleri yazdırıp bakın.', 'Without the restriction some coefficients may not be identified by the data (a flat likelihood); R and the tool can then stop at different points of it and the LR can differ. Print and look at the unrestricted estimates.')),
+        rComment(T('Kısıtsız sistemde bazı katsayılar verilerle belirlenemeyebilir (olabilirlik yüzeyi düz); o zaman R ile araç aynı olabilirliğin farklı noktalarında durabilir ve LR ayrılabilir. Kısıtsız kestirimleri yazdırıp bakın.', 'Without the restriction some coefficients may not be identified by the data (a flat likelihood); R and the tool can then stop at different points of it and the LR can differ. Print and look at the unrestricted estimates.')),
         `Su <- fb_system(${sysR(u, i => '.y' + (i + 1))})`,
         `fr <- fb_fit(S, "ISUR", "noDfCor", start, ols_tool)`,
         `orig <- c(${u.params.map(p => `${rStr(p)} = ${rStr(Object.entries(u.renamed).find(([, v]) => v.includes(p))?.[0] ?? p)}`).join(', ')})   # ${T('kısıtsız katsayı → kısıtlı katsayı', 'unrestricted coefficient → restricted coefficient')}`,
@@ -3232,11 +3232,11 @@ function buildR(s, R, iv, o) {
   const fitted = R.fits.filter(q => q.fit.status === 'ok' || q.fit.status === 'singular');
   const out = [];
   out.push(header({ title: T('Doğrusal Olmayan Regresyon: R kodu', 'Nonlinear Regression: R code'), tool: { id: 'dogrusal-olmayan-regresyon', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt, tam Jacobian; R: nls, Gauss–Newton, türevler R\'ın deriv işleviyle). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
+    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt, tam Jacobian; R: nls, Gauss–Newton, türevler R\'ın deriv fonksiyonuyla). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Ağırlık (Parresol 2001): Var(e) = σ²ψ; nls ağırlığı 1/ψ. ψ = X^θ (θ verilmişse o, verilmemişse ağırlıksız fit artıklarından ln e² = ln σ² + θ ln X ile) ya da ψ bir sütundan.',
       'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.'),
-    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
+    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı artık kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; kestirilen θ sayılmaz), aracınkiyle aynı.',
       'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -3260,7 +3260,7 @@ function buildR(s, R, iv, o) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(form, data = data, start = start, weights = .w, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın tahminlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
     f <- tryCatch(nls(form, data = data, start = fallback, weights = .w, control = ctl), error = function(e) NULL)
   }
   f
@@ -3286,11 +3286,11 @@ fits <- list()
     const title = `${q.label}: ${q.md.kind === 'ready' ? (q.md.ready + ', ') : ''}y = ${q.c ? q.c.text : q.md.expr}`;
     if (!fitted.includes(q)) { out.push(rComment(T(`${title}\nAraçta fit edilmedi (${x.status}${x.code ? ', ' + x.code : ''}); R'da da fit edilmez.`, `${title}\nNot fitted by the tool (${x.status}${x.code ? ', ' + x.code : ''}); not fitted in R either.`)), ''); continue; }
     const vars = q.c.vars, w = x.weight || { kind: 'none' }, wc = q.wcol;
-    out.push(rComment(`${title}\n${vars.map(v => `${v} = ${hd(q.md.map[v])}`).join(', ')}${w.kind === 'none' ? '' : `; ${T('ağırlık', 'weight')}: ${w.kind === 'power' ? `ψ = ${hd(wc)}^θ${w.estimated ? T(' (θ tahmin edilir)', ' (θ estimated)') : ''}` : `ψ = ${hd(wc)}`}`}`),
+    out.push(rComment(`${title}\n${vars.map(v => `${v} = ${hd(q.md.map[v])}`).join(', ')}${w.kind === 'none' ? '' : `; ${T('ağırlık', 'weight')}: ${w.kind === 'power' ? `ψ = ${hd(wc)}^θ${w.estimated ? T(' (θ kestirilir)', ' (θ estimated)') : ''}` : `ψ = ${hd(wc)}`}`}`),
       `${id}_data <- data.frame(.y = y, ${vars.map(v => `${rName(v)} = num(${q.md.map[v] + 1})[keep]`).join(', ')}, check.names = FALSE)`,
       `${id} <- fb_model(quote(${toR(q.c.ast)}), ${rStrs(q.c.params)}, ${rStrs(vars)})`,
       `${id}_start <- ${rList(q.c.params, x.start)}   # ${q.md.kind === 'ready' && !(q.md.starts && Object.values(q.md.starts).some(v => String(v).trim() !== '')) ? T('aracın veriden seçtiği başlangıç', 'the start the tool chose from the data') : T('kullanıcının başlangıç değerleri', 'the user\'s starting values')}`,
-      `${id}_tool <- ${rList(q.c.params, x.theta)}   # ${T('aracın tahminleri', 'the tool\'s estimates')}`);
+      `${id}_tool <- ${rList(q.c.params, x.theta)}   # ${T('aracın kestirimleri', 'the tool\'s estimates')}`);
     if (w.kind === 'power' && w.estimated) out.push(
       `${id}_wx <- num(${wc + 1})[keep]`,
       `${id}_data$.w <- 1`,
@@ -3299,7 +3299,7 @@ fits <- list()
       `${id}_theta <- unname(coef(lm(log(${id}_e[${id}_ok]^2) ~ log(${id}_wx[${id}_ok])))[2])   # ${T('Parresol 2001, Denk. 4–5', 'Parresol 2001, Eq. 4–5')}`,
       `cat(${rStr(id + ': θ = ')}, signif(${id}_theta, 10), "\\n"); res[[${rStr(id + '.theta_w')}]] <- ${id}_theta`,
       `${id}_data$.w <- 1 / ${id}_wx^${id}_theta`,
-      `${id}_start <- as.list(coef(${id}_u))   # ${T('araçtaki gibi ağırlıklı fit ağırlıksız tahminlerden başlar', 'as in the tool, the weighted fit starts from the unweighted estimates')}`);
+      `${id}_start <- as.list(coef(${id}_u))   # ${T('araçtaki gibi ağırlıklı fit ağırlıksız kestirimlerden başlar', 'as in the tool, the weighted fit starts from the unweighted estimates')}`);
     else if (w.kind === 'power') out.push(`${id}_theta <- ${rNum(w.theta)}`, `${id}_data$.w <- 1 / num(${wc + 1})[keep]^${id}_theta`);
     else if (w.kind === 'column') out.push(`${id}_data$.w <- 1 / num(${wc + 1})[keep]`);
     else out.push(`${id}_data$.w <- 1`);

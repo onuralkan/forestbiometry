@@ -259,7 +259,7 @@ export function buildBootR(s, R, POOL, k, r, runs, o) {
   const pool = s.mode === 'pool' || s.pcol == null, f = s.unit === 'mm' ? 0.1 : 1, u = R.units[k], out = [];
   const name = `${u.plot === POOL ? T('bütün örnek alanlar', 'all plots') : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
   out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu (bootstrap)', 'Diameter Distribution Lab: R code (bootstrap)'), tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
-    notes: [T(`Aşama 3a: bir birimin (${name}) bir fit'inin (${r.method}) bootstrap'ı. Üreteç aracınkidir (mulberry32, 32 bitlik aritmetik): aynı tohum aynı çekilişleri verir. Çekilişler aracın tahminlerinden yapılır (aynı örnekler için); R'ın kendi tahmini yanında yazdırılır.`,
+    notes: [T(`Aşama 3a: bir birimin (${name}) bir fit'inin (${r.method}) bootstrap'ı. Üreteç aracınkidir (mulberry32, 32 bitlik aritmetik): aynı tohum aynı çekilişleri verir. Çekilişler aracın kestirimlerinden yapılır (aynı örnekler için); R'ın kendi kestirimi yanında yazdırılır.`,
       `Stage 3a: the bootstrap of one fit (${r.method}) of one unit (${name}). The generator is the tool's (mulberry32, 32-bit arithmetic): the same seed gives the same draws. The draws come from the tool's estimates (for the same samples); R's own estimate is printed beside them.`),
     T('Parametrik: her yineleme fit edilen gözlem modelinden (eşikli veride koşullu dağılım, sınıflarda sınıf sayıları), aynı ölçüm yuvarlamasıyla çekilir ve aynı yöntemle yeniden fit edilir; p = (1 + #{T_b ≥ T_0})/(B_ok + 1). Parametrik olmayan: ağaçlar birim içinde yerine koyarak çekilir. Aralıklar yüzdelik (tip 7). Yeniden fit edemeyen yinelemeler sayılır ve dışarıda kalır.',
       'Parametric: every replicate is drawn from the fitted observation model (the conditional distribution under thresholds, class counts for classes) with the same measurement rounding and refitted with the same method; p = (1 + #{T_b ≥ T_0})/(B_ok + 1). Non-parametric: trees resampled with replacement within the unit. Percentile intervals (type 7). Replicates whose refit fails are counted and left out.')] }));
@@ -267,8 +267,8 @@ export function buildBootR(s, R, POOL, k, r, runs, o) {
   const { fam, how, fix, start, opt } = fitArgs(r), L = r.truncation ? r.truncation.lower : null, U = r.truncation ? r.truncation.upper : null;
   out.push(rComment(`${T('Birim', 'Unit')}: ${name}; ${r.method}`),
     `x <- ${g ? 'fb_cls' : 'fb_unit'}(${rStr(u.plot === POOL ? '' : u.plot)}, ${u.period == null ? 'NA' : rStr(u.period)})`,
-    `r0 <- fb_run(x, ${rStr(fam.id)}, ${rStr(how)}, fix = ${rList(fix)}, start = ${rList(start)}, opt = ${rList(opt)})   # ${T('R\'ın kendi tahmini', 'R\'s own estimate')}`,
-    `par <- ${rList(Object.fromEntries(fam.params.map(q => [q.key, r.params[q.key]])))}   # ${T('aracın tahminleri: çekilişler bunlardan', 'the tool\'s estimates: the draws come from these')}`,
+    `r0 <- fb_run(x, ${rStr(fam.id)}, ${rStr(how)}, fix = ${rList(fix)}, start = ${rList(start)}, opt = ${rList(opt)})   # ${T('R\'ın kendi kestirimi', 'R\'s own estimate')}`,
+    `par <- ${rList(Object.fromEntries(fam.params.map(q => [q.key, r.params[q.key]])))}   # ${T('aracın kestirimleri: çekilişler bunlardan', 'the tool\'s estimates: the draws come from these')}`,
     `print(rbind(tool = unlist(par)[names(r0$est)], R = r0$est))`,
     `fix <- ${rList(fix)}; opt <- ${rList(opt)}; L <- ${L == null ? 'NA' : rNum(L)}; U <- ${U == null ? 'NA' : rNum(U)}`, '');
   for (const run of runs) {

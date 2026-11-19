@@ -22,15 +22,15 @@ function home_captions(bool $tr): array {
         'seksiyon-hacmi.php' => $tr ? 'Huber, Smalian, Newton, Hohenadl; ağaç ve hektar hacmi' : 'Huber, Smalian, Newton, Hohenadl; tree and per-hectare volume',
         'bonitet.php' => $tr ? 'Fark denklemleri, kendi katsayılarınız, bonitet sınıfları' : 'Difference equations with your coefficients, site classes',
         'mescere-yapisi.php' => $tr ? 'Çap yapısı, sıklık, mekânsal desen ve rekabet' : 'Diameter structure, density, spatial pattern, competition',
-        'govde-profili.php' => $tr ? 'Max–Burkhart ve Kozak; kullanılabilir hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking',
-        'hacim-denklemleri.php' => $tr ? 'Sabit biçim sayısı, birleşik değişken, logaritmik ve yerel denklemler' : 'Constant form factor, combined variable, logarithmic and local equations',
+        'govde-profili.php' => $tr ? 'Max–Burkhart ve Kozak; ticari hacim, ürün bölme' : 'Max–Burkhart and Kozak; merchantable volume, bucking',
+        'hacim-denklemleri.php' => $tr ? 'Sabit şekil katsayısı, birleşik değişken, logaritmik ve yerel denklemler' : 'Constant form factor, combined variable, logarithmic and local equations',
         'dogrusal-olmayan-regresyon.php' => $tr ? 'Hazır biçimler ya da serbest formül; ağırlık, aralıklar, AIC' : 'Ready-made forms or a free formula; weights, intervals, AIC',
         'karma-modeller.php' => $tr ? 'Doğrusal ve doğrusal olmayan; ML/REML, yeni alan kalibrasyonu' : 'Linear and nonlinear; ML/REML, calibration of a new plot',
         'denklem-sistemleri.php' => $tr ? 'Kendi formülleriniz; ortak katsayılar, OLS, SUR, yinelemeli SUR' : 'Your own formulas; shared coefficients, OLS, SUR, iterated SUR',
         'tomruk-olcumu.php' => $tr ? 'Scribner, Doyle, International; Smalian, Huber, Newton' : 'Scribner, Doyle, International; Smalian, Huber, Newton',
         'biyokutle-karbon.php' => $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients',
-        'buyume-islevi.php' => $tr ? 'Altı büyüme işlevi; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination',
-        'agac-olcumu.php' => $tr ? 'Eğim ölçerle boy, çap ve göğüs yüzeyi, kabuk, tepe, biçim sayısı' : 'Height with a clinometer, diameter and basal area, bark, crown, form factor',
+        'buyume-islevi.php' => $tr ? 'Altı büyüme fonksiyonu; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination',
+        'agac-olcumu.php' => $tr ? 'Eğim ölçerle boy, çap ve göğüs yüzeyi, kabuk, tepe, şekil katsayısı' : 'Height with a clinometer, diameter and basal area, bark, crown, form factor',
     ];
 }
 

@@ -55,7 +55,7 @@ await page.click('#calc'); await page.waitForSelector('#rtab');
 const M = { form: 'cr.ada.b0', params: { b1: 0.03, b2: 1.4 }, baseAge: 50, ageType: 'total' }, si1 = SI.siteIndex(M, 30, 15).value;
 let r = (await rows())[0];
 near(num(r[6]), si1, 6e-4, 'SI50 on screen = engine'); ok(r[7] === 'III' && r[9] === 'tamam', 'class III ([18, 22))');
-ok((await page.locator('#rmodel').textContent()).includes('Dayanak yaş 50 yıl (toplam yaş)') && (await page.locator('#rsrc').textContent()).includes('Kullanıcı katsayılarıyla üretildi: Test, not a real equation'), 'base age, age type and source in the result');
+ok((await page.locator('#rmodel').textContent()).includes('Standart yaş 50 yıl (toplam yaş)') && (await page.locator('#rsrc').textContent()).includes('Kullanıcı katsayılarıyla üretildi: Test, not a real equation'), 'base age, age type and source in the result');
 ok((await page.locator('#ch-si svg path, #ch-si svg polyline').count()) >= 6, 'curve family: six class-boundary curves');
 // class boundaries change → class changes, SI does not
 await page.click('#steps [data-go="1"]'); await fillC('#cls-start', '14');

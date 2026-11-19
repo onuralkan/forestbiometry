@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('ornekleme', 'Envanter Örnekleme Planlayıcısı') ?>
-<p>Tek bir soruyu yanıtlar: basit rastgele örneklemede, örnek alan düzeyindeki bir değişkenin (ör. hektarda hacim) ortalamasını hedeflediğiniz bağıl hatayla tahmin etmek için yaklaşık kaç örnek alan gerekir. Hesap n₀ = z²(CV/E)², isteğe bağlı sonlu popülasyon düzeltmesiyle.</p>
+<p>Tek bir soruyu yanıtlar: basit rastgele örneklemede, örnek alan düzeyindeki bir değişkenin (ör. hektarda hacim) ortalamasını hedeflediğiniz bağıl hatayla kestirmek için yaklaşık kaç örnek alan gerekir. Hesap n₀ = z²(CV/E)², isteğe bağlı sonlu popülasyon düzeltmesiyle.</p>
 <p><b>Yapmadıkları:</b> hipotez testi için güç analizi değildir; tabakalı örneklemede tabakalara dağıtım, sistematik örneklemenin varyansı, kümeli ya da çok aşamalı örnekleme bu formülle çözülmez.</p>
 <h3>Kartlar</h3>
 <ol>

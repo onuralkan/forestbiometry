@@ -3,7 +3,7 @@ import { makeT } from '../core/i18n.js';
 
 export const T = makeT({
   tr: {
-    privacy: 'Kayıt ve girdi dosyaları yalnızca bu tarayıcıda okunur; sunucuya gönderilmez. Parmak izleri tarayıcının kendi SHA-256 işleviyle hesaplanır.',
+    privacy: 'Kayıt ve girdi dosyaları yalnızca bu tarayıcıda okunur; sunucuya gönderilmez. Parmak izleri tarayıcının kendi SHA-256 fonksiyonuyla hesaplanır.',
     'in.h': 'Çalışma kaydını açın', 'in.sub': 'Araçların "JSON" ya da "Çalışma kaydı (JSON)" düğmesiyle indirilen dosya (run-record/1). DI-07 öncesi indirilen JSON dosyaları da açılır, ama mühürleri yoktur.',
     'in.file': 'Kayıt seç (.json)', 'in.bad': 'Dosya JSON olarak okunamadı.', 'in.none': 'Henüz bir kayıt açılmadı.',
     'sum.h': 'Kayıt', 'k.tool': 'Araç', 'k.ids': 'Araç kimlikleri', 'k.ver': 'Kayıttaki sürüm', 'k.now': 'Sitedeki sürüm', 'k.created': 'Oluşturma zamanı', 'k.lang': 'Arayüz dili',

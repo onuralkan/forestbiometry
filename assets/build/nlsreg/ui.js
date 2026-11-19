@@ -2417,17 +2417,17 @@ const T = makeT({
     'tb.h': 'Veri tablosu', 'tb.sub': 'Her satır bir gözlem; bağımlı değişken ve açıklayıcı değişkenler sütun olarak (ör. çap, boy, hacim, yaş). Birimler sizindir; kaydederken yazılır.',
     'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'nokta (12.5)', 'dec.comma': 'virgül (12,5)', 'tb.info': p => `${p.name}: ${p.n} satır, ${p.c} sütun.`,
     sample: 'Benzetim tablosunu yükle', 'sample.note': 'Benzetim verisi denemek içindir (rastgele sayılar; hiçbir türün değeri değildir).', 'need.data': 'Önce bir tablo yükleyin.',
-    'rf.cr': 'Chapman–Richards', 'rf.schu': 'Schumacher', 'rf.gomp': 'Gompertz', 'rf.logi': 'Lojistik', 'rf.mono': 'Monomoleküler', 'rf.weib': 'Weibull', 'rf.pow': 'Üs', 'rf.pow2': 'Üs, iki değişken',
+    'rf.cr': 'Chapman–Richards', 'rf.schu': 'Schumacher', 'rf.gomp': 'Gompertz', 'rf.logi': 'Lojistik', 'rf.mono': 'Monomoleküler', 'rf.weib': 'Weibull', 'rf.pow': 'Kuvvet', 'rf.pow2': 'Kuvvet, iki değişken',
     'y.h': 'Bağımlı değişken (y)', 'm.h': 'Modeller', 'm.sub': 'Hazır bir biçim seçin ya da formülü kendiniz yazın. Bütün modeller aynı satırlara fit edilir (kullanılan bütün sütunları geçerli olan satırlar), böylece karşılaştırılabilir.',
     'm.type': 'Model', 'm.formula': 'Serbest formül', 'm.expr': 'Formül: y =', 'm.expr.ph': 'ör. a*D^b*H^c ya da 1.3 + b0*(1-exp(-b1*D))^b2', 'm.names': 'Formüldeki adlar', 'm.role': 'Sütun ya da katsayı', 'm.par': '— katsayı —',
     'm.start': 'Başlangıç değeri', 'm.auto': 'otomatik', 'm.var': p => `${p.v} sütunu`, 'm.add': 'Model ekle', 'm.rm': 'Kaldır', 'm.label': p => `M${p.i}`,
-    'm.syntax': 'İşlemler + − * / ^, ayraçlar; işlevler exp, ln, log10, sqrt, abs; sabit pi. Sütunla eşlenmeyen her ad katsayıdır. ^ birli eksiden önce gelir: −x^2 = −(x²).',
+    'm.syntax': 'İşlemler + − * / ^, ayraçlar; fonksiyonlar exp, ln, log10, sqrt, abs; sabit pi. Sütunla eşlenmeyen her ad katsayıdır. ^ birli eksiden önce gelir: −x^2 = −(x²).',
     'w.h': 'Ağırlık', 'w.none': 'yok (eşit varyans)', 'w.power': 'σ² ∝ X^θ (X bir sütun)', 'w.column': 'σ² ∝ bir sütunun değeri', 'w.theta': 'θ', 'w.auto': 'kestirilsin', 'w.col': 'Sütun',
     'w.note': 'Ağırlık: hata varyansı σ²·ψ (Parresol 2001, Denklem 2). ψ = X^θ seçildiğinde θ boş bırakılırsa ağırlıksız fit işleminin artıklarından ln e² = c + θ·ln X regresyonuyla kestirilir (Denklem 4); ψ hazır bir sütundan da alınabilir (pozitif değerler).',
     'p.y': 'Bağımlı değişkeni seçin', 'p.models': 'En az bir model ekleyin', 'p.var': p => `${p.m}: ${p.v} için sütun seçin`, 'p.expr': p => `${p.m}: formül okunamadı (${p.why})`, 'p.start': p => `${p.m}: ${p.p} için başlangıç değeri girin`,
     'p.startnum': p => `${p.m}: başlangıç değerleri sayı olmalı`, 'p.wcol': p => `${p.m}: ağırlık sütununu seçin`, 'p.theta': p => `${p.m}: θ bir sayı olmalı ya da boş bırakılmalı`, 'p.compile': p => `${p.m}: ${p.why}`,
     'px.char': p => `${p.pos + 1}. karakter geçersiz`, 'px.end': 'formül eksik bitiyor', 'px.expected': p => `${p.pos + 1}. konumda ")" bekleniyor`, 'px.token': p => `${p.pos + 1}. konumda beklenmeyen işaret`, 'px.trailing': p => `${p.pos + 1}. konumdan sonrası fazla (çarpma için * yazın)`,
-    'px.empty': 'formül boş', 'px.long': 'formül 500 karakteri aşıyor', 'px.deep': 'çok fazla iç içe ayraç', 'px.log': '"log" belirsiz: ln ya da log10 yazın', 'px.func': p => `bilinmeyen işlev ${p.name}`, 'px.funcname': p => `${p.name} bir işlevdir, ayraçla yazın`, 'px.args': 'işlevler tek bağımsız değişken alır',
+    'px.empty': 'formül boş', 'px.long': 'formül 500 karakteri aşıyor', 'px.deep': 'çok fazla iç içe ayraç', 'px.log': '"log" belirsiz: ln ya da log10 yazın', 'px.func': p => `bilinmeyen fonksiyon ${p.name}`, 'px.funcname': p => `${p.name} bir fonksiyondur, ayraçla yazın`, 'px.args': 'fonksiyonlar tek bağımsız değişken alır',
     'c.params.none': 'formülde katsayı yok', 'c.vars.none': 'en az bir ad bir sütunla eşlenmeli', 'c.params.many': 'en çok 12 katsayı', 'c.var.absent': 'sütun adı formülde yok',
     'r.cmp': 'Karşılaştırma', 'r.model': 'Model', 'r.n': 'n', 'r.p': 'p', 'r.rmse': 'RMSE', 'r.bias': 'Yanlılık', 'r.r2': 'R²', 'r.aic': 'AIC', 'r.s': 'σ̂', 'r.w': 'Ağırlık', 'r.st': 'Durum',
     'r.cmpnote': 'Ölçütler Model Başarısı aracıyla aynı tanımlarla, y ölçeğinde ve ağırlıksız artıklarla (e = gözlenen − tahmin; R² = 1 − SSE/SST). AIC = 2k − 2 ln L, Gauss olabilirliği, varyans σ²ψ, k = katsayı sayısı + 1 (kestirilen θ sayılmaz); yalnız aynı veriye fit edilmiş modeller arasında karşılaştırılır. σ̂² = S/(n − p), S ağırlıklı artık kareler toplamı.',
@@ -2435,16 +2435,16 @@ const T = makeT({
     'st.ok': 'yakınsadı', 'st.noconverge': 'yakınsamadı', 'st.singular': 'kovaryans hesaplanamadı (tekil)', 'st.bad': 'fit edilemedi',
     'e.n.few': 'katsayı sayısına göre gözlem çok az', 'e.start.none': 'veriden başlangıç değeri bulunamadı; başlangıç değerlerini girin', 'e.start.missing': 'başlangıç değerleri eksik', 'e.start.invalid': 'model başlangıç değerlerinde tanımsız',
     'e.weight.var': 'ağırlık değişkeni pozitif olmalı', 'e.weight.col': 'ağırlık sütunu pozitif olmalı', 'e.weight.theta': 'θ kestirilemedi', 'e.weight.unweighted': 'θ için ağırlıksız fit etme yakınsamadı',
-    'r.coef': 'Katsayılar', 'r.term': 'Katsayı', 'r.est': 'Tahmin', 'r.se': 'Standart hata', 'r.ci': p => `%${p.l} güven aralığı`, 'r.cinote': p => `Aralıklar b ± t·SH, t = ${p.t} (sd ${p.df}). Standart hatalar asimptotiktir (σ̂²[ZᵀΨ⁻¹Z]⁻¹, Parresol 2001 Denklem 9a).`,
+    'r.coef': 'Katsayılar', 'r.term': 'Katsayı', 'r.est': 'Kestirim', 'r.se': 'Standart hata', 'r.ci': p => `%${p.l} güven aralığı`, 'r.cinote': p => `Aralıklar b ± t·SH, t = ${p.t} (sd ${p.df}). Standart hatalar asimptotiktir (σ̂²[ZᵀΨ⁻¹Z]⁻¹, Parresol 2001 Denklem 9a).`,
     'r.wtxt': p => p.kind === 'none' ? 'yok' : p.kind === 'column' ? `ψ = ${p.col}` : `ψ = ${p.col}^${p.theta}${p.est ? ' (kestirildi)' : ''}`,
     'ch.obs': p => `${p.m}: gözlenen–tahmin`, 'ch.res': p => `${p.m}: artıklar (gözlenen − tahmin)`, 'ch.xo': 'Gözlenen y', 'ch.yo': 'Tahmin y', 'ch.x': 'Tahmin y', 'ch.y': 'Artık',
     'iv.h': 'Güven ve tahmin aralığı', 'iv.model': 'Model', 'iv.psi': p => `Ağırlık değişkeni ${p.v}`, 'iv.go': 'Hesapla', 'iv.bad': 'Modelin bütün değişkenleri için (ve ağırlık değişkeni için) pozitif bir değer girin.',
     'iv.y': 'ŷ', 'iv.ci': 'Ortalama için güven aralığı', 'iv.pi': 'Yeni gözlem için tahmin aralığı', 'iv.note': p => `%95, t = ${p.t} (sd ${p.df}); ortalama: zᵀVz (Parresol 2001 Denklem 10), yeni gözlem: σ̂²ψ + zᵀVz (Denklem 11).`, 'iv.out': 'Değerlerden biri fit etme verisinin aralığı dışında.',
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.model': 'Model', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi ölçümlerimiz, 2026, n = 60', 'save.sp': 'Tür (isteğe bağlı)', 'save.unit': p => `${p.v} birimi`, 'save.btn': 'Seti kaydet',
     'save.ok': 'Set kaydedildi; Katsayı Kütüphanesi\'nde görünür.', 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.', 'save.unit.miss': 'Bütün birimleri yazın (birimsizse "-").', 'save.note': 'Formül, katsayılar, standart hatalar, kovaryans, ağırlık ve uyum ölçütleri sete yazılır; geçerlilik aralığı her değişkenin veri aralığıdır.',
-    'ev.h': 'Model Başarısı aracına aktar', 'ev.sub': 'Gözlenen y ve fit edilen modellerin tahminleri bir tablo olarak Model Başarısı aracına aktarılır; araç açıldığında sütunlar seçili gelir. Tahminler fit etme verisindendir (eğitim).', 'ev.btn': 'Aktar ve Model Başarısı aracını aç',
+    'ev.h': 'Model Başarısı aracına aktar', 'ev.sub': 'Gözlenen y ve fit edilen modellerin tahminleri bir tablo olarak Model Başarısı aracına aktarılır; araç açıldığında sütunlar seçili gelir. Tahminler fit etme verisindendir (model geliştirme verisi).', 'ev.btn': 'Aktar ve Model Başarısı aracını aç',
     'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Gözlemler ve tahminler (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.',
-    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı satırlar, aynı formüller, aynı başlangıç değerleri ve ağırlıklar; türevler R\'ın deriv işleviyle. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
+    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı satırlar, aynı formüller, aynı başlangıç değerleri ve ağırlıklar; türevler R\'ın deriv fonksiyonuyla. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
     'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.coef': 'Katsayılar', 'x.obs': 'Gözlemler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.data': 'Veri', 'x.src': 'Kaynak', 'x.rule': 'Kural',
   },
   en: {
@@ -2534,11 +2534,11 @@ function buildR(s, R, iv, o) {
   const fitted = R.fits.filter(q => q.fit.status === 'ok' || q.fit.status === 'singular');
   const out = [];
   out.push(header({ title: T('Doğrusal Olmayan Regresyon: R kodu', 'Nonlinear Regression: R code'), tool: { id: 'dogrusal-olmayan-regresyon', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt, tam Jacobian; R: nls, Gauss–Newton, türevler R\'ın deriv işleviyle). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
+    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt, tam Jacobian; R: nls, Gauss–Newton, türevler R\'ın deriv fonksiyonuyla). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Ağırlık (Parresol 2001): Var(e) = σ²ψ; nls ağırlığı 1/ψ. ψ = X^θ (θ verilmişse o, verilmemişse ağırlıksız fit artıklarından ln e² = ln σ² + θ ln X ile) ya da ψ bir sütundan.',
       'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.'),
-    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
+    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı artık kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; kestirilen θ sayılmaz), aracınkiyle aynı.',
       'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -2562,7 +2562,7 @@ function buildR(s, R, iv, o) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(form, data = data, start = start, weights = .w, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın tahminlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
     f <- tryCatch(nls(form, data = data, start = fallback, weights = .w, control = ctl), error = function(e) NULL)
   }
   f
@@ -2588,11 +2588,11 @@ fits <- list()
     const title = `${q.label}: ${q.md.kind === 'ready' ? (q.md.ready + ', ') : ''}y = ${q.c ? q.c.text : q.md.expr}`;
     if (!fitted.includes(q)) { out.push(rComment(T(`${title}\nAraçta fit edilmedi (${x.status}${x.code ? ', ' + x.code : ''}); R'da da fit edilmez.`, `${title}\nNot fitted by the tool (${x.status}${x.code ? ', ' + x.code : ''}); not fitted in R either.`)), ''); continue; }
     const vars = q.c.vars, w = x.weight || { kind: 'none' }, wc = q.wcol;
-    out.push(rComment(`${title}\n${vars.map(v => `${v} = ${hd(q.md.map[v])}`).join(', ')}${w.kind === 'none' ? '' : `; ${T('ağırlık', 'weight')}: ${w.kind === 'power' ? `ψ = ${hd(wc)}^θ${w.estimated ? T(' (θ tahmin edilir)', ' (θ estimated)') : ''}` : `ψ = ${hd(wc)}`}`}`),
+    out.push(rComment(`${title}\n${vars.map(v => `${v} = ${hd(q.md.map[v])}`).join(', ')}${w.kind === 'none' ? '' : `; ${T('ağırlık', 'weight')}: ${w.kind === 'power' ? `ψ = ${hd(wc)}^θ${w.estimated ? T(' (θ kestirilir)', ' (θ estimated)') : ''}` : `ψ = ${hd(wc)}`}`}`),
       `${id}_data <- data.frame(.y = y, ${vars.map(v => `${rName(v)} = num(${q.md.map[v] + 1})[keep]`).join(', ')}, check.names = FALSE)`,
       `${id} <- fb_model(quote(${toR(q.c.ast)}), ${rStrs(q.c.params)}, ${rStrs(vars)})`,
       `${id}_start <- ${rList(q.c.params, x.start)}   # ${q.md.kind === 'ready' && !(q.md.starts && Object.values(q.md.starts).some(v => String(v).trim() !== '')) ? T('aracın veriden seçtiği başlangıç', 'the start the tool chose from the data') : T('kullanıcının başlangıç değerleri', 'the user\'s starting values')}`,
-      `${id}_tool <- ${rList(q.c.params, x.theta)}   # ${T('aracın tahminleri', 'the tool\'s estimates')}`);
+      `${id}_tool <- ${rList(q.c.params, x.theta)}   # ${T('aracın kestirimleri', 'the tool\'s estimates')}`);
     if (w.kind === 'power' && w.estimated) out.push(
       `${id}_wx <- num(${wc + 1})[keep]`,
       `${id}_data$.w <- 1`,
@@ -2601,7 +2601,7 @@ fits <- list()
       `${id}_theta <- unname(coef(lm(log(${id}_e[${id}_ok]^2) ~ log(${id}_wx[${id}_ok])))[2])   # ${T('Parresol 2001, Denk. 4–5', 'Parresol 2001, Eq. 4–5')}`,
       `cat(${rStr(id + ': θ = ')}, signif(${id}_theta, 10), "\\n"); res[[${rStr(id + '.theta_w')}]] <- ${id}_theta`,
       `${id}_data$.w <- 1 / ${id}_wx^${id}_theta`,
-      `${id}_start <- as.list(coef(${id}_u))   # ${T('araçtaki gibi ağırlıklı fit ağırlıksız tahminlerden başlar', 'as in the tool, the weighted fit starts from the unweighted estimates')}`);
+      `${id}_start <- as.list(coef(${id}_u))   # ${T('araçtaki gibi ağırlıklı fit ağırlıksız kestirimlerden başlar', 'as in the tool, the weighted fit starts from the unweighted estimates')}`);
     else if (w.kind === 'power') out.push(`${id}_theta <- ${rNum(w.theta)}`, `${id}_data$.w <- 1 / num(${wc + 1})[keep]^${id}_theta`);
     else if (w.kind === 'column') out.push(`${id}_data$.w <- 1 / num(${wc + 1})[keep]`);
     else out.push(`${id}_data$.w <- 1`);

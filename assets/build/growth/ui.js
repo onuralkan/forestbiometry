@@ -1684,7 +1684,7 @@ const T = makeT({
     'r.curves': 'Gözlemler ve fit edilen eğriler', 'r.age': 'Yaş (yıl)', 'r.sel': 'Ayrıntı için model', 'r.inc': 'Cari (CAI) ve ortalama (MAI) artım', 'r.cai': 'CAI = dy/dt', 'r.maiL': 'MAI = y/t', 'r.resid': 'Artıklar (gözlenen − tahmin)',
     'r.der': p => `Asimptot ${p.a}; dönüm noktası (en büyük CAI) ${p.i}; MAI doruğu ${p.m}.`, 'r.der.none': 'yok',
     'r.cit': 'Kaynak (zorunlu; ör. "kendi gövde analizim, 2025, yayımlanmamış")', 'r.save': 'Katsayı kütüphanesine kaydet', 'r.saved': 'Fit edilen eğri kütüphaneye kaydedildi.', 'r.cit.need': 'Kaydetmek için kaynak yazın.',
-    'r.rcode': 'R kodu (.R)', 'r.rcode.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı gözlemler, işlevler ve başlangıç değerleri; artımlar ve doruk yaşları R\'ın deriv işleviyle; seçilen işlevin tablosu. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
+    'r.rcode': 'R kodu (.R)', 'r.rcode.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı gözlemler, fonksiyonlar ve başlangıç değerleri; artımlar ve doruk yaşları R\'ın deriv fonksiyonuyla; seçilen fonksiyonun tablosu. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
     'r.excel': 'Excel', 'r.csv': 'CSV', 'r.json': 'JSON', 'r.svg': 'SVG', 'r.tab': 'Eğri tablosu', 'r.step': 'Adım (yıl)',
     'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.pred': 'Tahminler', 'x.curve': 'Eğriler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.lang': 'Dil', 'x.data': 'Veri', 'x.var': 'Değişken', 'x.forms': 'Biçimler',
   },
@@ -1743,12 +1743,12 @@ function buildR(s, R, o) {
   const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]);
   const ok = R.fits.filter(q => q.status === 'ok'), sel = ok.find(q => q.form === s.sel);
   const out = [];
-  out.push(header({ title: T('Büyüme İşlevi Fit Etme: R kodu', 'Growth Function Fitter: R code'), tool: { id: 'buyume-islevi', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('İşlevler doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton, türevler R\'ın deriv işleviyle). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
+  out.push(header({ title: T('Büyüme Fonksiyonu Fit Etme: R kodu', 'Growth Function Fitter: R code'), tool: { id: 'buyume-islevi', version: o.version }, created: o.created, lang: o.lang, packages: [],
+    notes: [T('Fonksiyonlar doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton, türevler R\'ın deriv fonksiyonuyla). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The functions are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton, derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Yanlılık = gözlem − tahmin (araçtaki gibi); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC R\'ın logLik\'iyle (k = p + 1). Standart hatalar gözlemlerin bağımsız olduğunu varsayar; aynı ağacın yinelenen ölçümlerinde bu varsayım tutmaz.',
       'Bias = observed − predicted (as in the tool); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC from R\'s logLik (k = p + 1). Standard errors assume independent observations, which repeated measurements of the same tree are not.'),
-    T('Cari yıllık artım CAI = dy/dt (R\'ın deriv işleviyle), ortalama yıllık artım MAI = y/t; MAI\'nin doruğu t·y\' − y\'nin +\'dan −\'ye geçtiği yaş.',
+    T('Cari yıllık artım CAI = dy/dt (R\'ın deriv fonksiyonuyla), ortalama yıllık artım MAI = y/t; MAI\'nin doruğu t·y\' − y\'nin +\'dan −\'ye geçtiği yaş.',
       'Current annual increment CAI = dy/dt (from R\'s deriv), mean annual increment MAI = y/t; MAI culminates where t·y\' − y turns from + to −.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -1768,7 +1768,7 @@ function buildR(s, R, o) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(form, data = data, start = start, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın tahminlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
     f <- tryCatch(nls(form, data = data, start = fallback, control = ctl), error = function(e) NULL)
   }
   f
@@ -1809,7 +1809,7 @@ res <- list(); fits <- list(); models <- list()
   }
   if (sel) {
     const F = FORMS[sel.form];
-    out.push(rComment(T(`Seçilen işlev: ${F.name}. Tablo: t = adım, 2·adım, … 1,25·t_max'a kadar; y, CAI, MAI.`, `Chosen function: ${F.name}. Table: t = step, 2·step, … up to 1.25·t_max; y, CAI, MAI.`)),
+    out.push(rComment(T(`Seçilen fonksiyon: ${F.name}. Tablo: t = adım, 2·adım, … 1,25·t_max'a kadar; y, CAI, MAI.`, `Chosen function: ${F.name}. Table: t = step, 2·step, … up to 1.25·t_max; y, CAI, MAI.`)),
       `step <- ${rNum(s.step)}`,
       `tab <- fb_curve(models$${sel.form}, coef(fits$${sel.form}), step * seq_len(floor((1.25 * t_max + 1e-9) / step)))`,
       `print(tab)`,

@@ -27,9 +27,9 @@ export function buildR(s, R, nd, o) {
   const ok = R.fits.filter(f => f.status === 'ok'), sel = s.model && ok.find(f => f.id === s.model);
   const out = [];
   out.push(header({ title: T('Boy–Çap Modelleme: R kodu', 'Height–Diameter Modelling: R code'), tool: { id: 'boy-cap', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
+    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Hata = gözlem − tahmin. RMSE = √(SSE/n); kalıntı standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
+    T('Hata = gözlem − tahmin. RMSE = √(SSE/n); artık standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
@@ -60,7 +60,7 @@ export function buildR(s, R, nd, o) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(models[[id]]$formula, data = data, start = start, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(id, ${rStr(T(': nls aracın başlangıcından yakınsamadı; aracın tahminlerinden başlıyor', ': nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(id, ${rStr(T(': nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', ': nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
     f <- tryCatch(nls(models[[id]]$formula, data = data, start = fallback, control = ctl), error = function(e) NULL)
   }
   f
@@ -93,7 +93,7 @@ fb_metrics <- function(f, data) {
   const cv = R.cv;
   if (cv && !cv.problem && cv.folds) {
     const foldOf = new Array(p.fitRows.length).fill(0); cv.folds.forEach((f, k) => f.test.forEach(i => { foldOf[i] = k + 1; }));
-    out.push(rComment(T(`Çapraz doğrulama (${cv.mode === 'plot' ? (cv.lopo ? 'her seferinde bir örnek alan dışarıda' : 'örnek alan grupları') : 'ağaç düzeyinde'}): her ağacın katı aracınkiyle aynı (araç ${cv.mode === 'plot' && cv.lopo ? 'örnek alanları sırayla' : 'tohum 20261109 ile karıştırıp'} dağıttı). Her katta her model yalnızca eğitim ağaçlarına fit edilir; modeller, bütün modellerin yakınsadığı katların ortak dışarıda bırakılan ağaçlarında karşılaştırılır; "seçim" satırı her katta eğitim AIC'si en küçük modeli kullanır.`,
+    out.push(rComment(T(`Çapraz doğrulama (${cv.mode === 'plot' ? (cv.lopo ? 'her seferinde bir örnek alan dışarıda' : 'örnek alan grupları') : 'ağaç düzeyinde'}): her ağacın katı aracınkiyle aynı (araç ${cv.mode === 'plot' && cv.lopo ? 'örnek alanları sırayla' : 'tohum 20261109 ile karıştırıp'} dağıttı). Her katta her model yalnızca model geliştirme ağaçlarına fit edilir; modeller, bütün modellerin yakınsadığı katların ortak dışarıda bırakılan ağaçlarında karşılaştırılır; "seçim" satırı her katta model geliştirme AIC'si en küçük modeli kullanır.`,
       `Cross-validation (${cv.mode === 'plot' ? (cv.lopo ? 'leave one plot out' : 'groups of plots') : 'tree level'}): each tree's fold is the tool's (the tool ${cv.mode === 'plot' && cv.lopo ? 'took the plots in order' : 'shuffled with seed 20261109'}). In each fold every model is fitted to the training trees only; models are compared on the held-out trees of the folds where all models converged; the "selection" row uses, in each fold, the model with the smallest training AIC.`)),
       `fold <- ${rVec(foldOf)}`,
       `cv_starts <- list(`);

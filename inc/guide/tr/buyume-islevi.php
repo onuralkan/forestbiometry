@@ -1,7 +1,7 @@
 <section class="card guide-sec">
-<?= $sec('buyume-islevi', 'Büyüme İşlevi Fit Etme') ?>
-<p>Yaş–büyüklük verinize (boy, çap, hacim…) altı büyüme işlevini aynı anda fit eder ve karşılaştırır: Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler ve Weibull. Katsayılar sizin verinizden gelir; site hazır eğri vermez.</p>
-<p><b>Yapmadıkları:</b> Korf işlevi (kaynağı henüz okunmadı); dizi ya da örnek alan düzeyinde rastgele etkiler (bütün gözlemlere tek eğri fit edilir); bonitet eğrisi (bunun için Bonitet aracı).</p>
+<?= $sec('buyume-islevi', 'Büyüme Fonksiyonu Fit Etme') ?>
+<p>Yaş–büyüklük verinize (boy, çap, hacim…) altı büyüme fonksiyonunu aynı anda fit eder ve karşılaştırır: Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler ve Weibull. Katsayılar sizin verinizden gelir; site hazır eğri vermez.</p>
+<p><b>Yapmadıkları:</b> Korf fonksiyonu (kaynağı henüz okunmadı); dizi ya da örnek alan düzeyinde rastgele etkiler (bütün gözlemlere tek eğri fit edilir); bonitet eğrisi (bunun için Bonitet aracı).</p>
 <h3>Veri ve modeller</h3>
 <ul>
 <li>Tablo ya da yapıştırma: <b>Yaş (yıl)</b> ve <b>Büyüklük</b> sütunları zorunlu, dizi sütunu isteğe bağlı. Değişkenin adı ve birimi grafiklerde ve indirmelerde yazılır. Okunamayan satırlar numaralarıyla bildirilir.</li>
@@ -11,6 +11,6 @@
 <ul>
 <li><b>Model karşılaştırması</b>: katsayılar ve standart hataları, RMSE, yanlılık, σ̂, AIC (en küçüğü ★), asimptot, dönüm noktası yaşı ve ortalama artımın doruk yaşı. Standart hatalar bağımsız gözlem varsayımıyla hesaplanır.</li>
 <li>Gözlemler ve bütün eğrilerin grafiği; seçilen model için cari ve ortalama artım grafiği, artıklar ve eğri tablosu. Seçilen eğri kaynak yazılarak katsayı kütüphanesine kaydedilebilir.</li>
-<li>İndirme: Excel (Bilgi, Karşılaştırma, Tahminler, Eğriler), CSV ve JSON. <b>R kodu (.R)</b>: aynı çalıştırmayı temel R ile (<code>nls</code>) yeniden yapan betik; aynı gözlemler, işlevler ve başlangıç değerleri, türevler ve artımlar (CAI) R'ın <code>deriv</code> işleviyle, bükülme ve MAI doruğu yaşları, seçilen işlevin tablosu. Veri gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirirsiniz. Sitenin testleri bu kodun aracın sayılarını verdiğini her yayında R'da denetler.</li>
+<li>İndirme: Excel (Bilgi, Karşılaştırma, Tahminler, Eğriler), CSV ve JSON. <b>R kodu (.R)</b>: aynı çalıştırmayı temel R ile (<code>nls</code>) yeniden yapan betik; aynı gözlemler, fonksiyonlar ve başlangıç değerleri, türevler ve artımlar (CAI) R'ın <code>deriv</code> fonksiyonuyla, bükülme ve MAI doruğu yaşları, seçilen fonksiyonun tablosu. Veri gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirirsiniz. Sitenin testleri bu kodun aracın sayılarını verdiğini her yayında R'da denetler.</li>
 </ul>
 </section>

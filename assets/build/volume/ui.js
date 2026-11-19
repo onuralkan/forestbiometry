@@ -2600,20 +2600,20 @@ const T = makeT({
     'sample': 'Benzetim tablosunu yükle', 'sample.note': 'Benzetim verisi denemek içindir (rastgele sayılar; hiçbir türün değeri değildir).',
     'src.current': 'Kullanılan veri', 'src.info': p => `${p.name}: ${p.n} ağaç (${p.bark}).`, 'need.data': 'Önce bir veri seçin.',
     'f.h': 'Denklem biçimleri', 'f.sub': 'Kershaw ve ark. (2016) §6.2: standart (D ve H) ve yerel (yalnız D) hacim denklemleri. Birden çok biçim seçip karşılaştırabilirsiniz.',
-    'f.cf': 'Sabit biçim sayısı V = b1·D²H (6.22)', 'f.cv': 'Birleşik değişken V = b0 + b1·D²H (6.23)', 'f.ln': 'Logaritmik ln V = ln b1 + b2·ln D + b3·ln H (6.24–6.25)', 'f.loc': 'Yerel V = b0 + b1·D²', 'f.locln': 'Yerel logaritmik ln V = ln b0 + b1·ln D (6.29)',
-    'w.h': 'Ağırlık', 'w.none': 'yok (eşit varyans)', 'w.power': p => `σ² ∝ (${p.v})^k`, 'w.k': 'k (boş: kestirilsin)', 'corr.h': 'Geri dönüşüm', 'corr.none': 'düzeltme yok', 'corr.baskerville': 'Baskerville exp(s²/2)',
-    'f.note': 'Ağırlık hacim ölçeğindeki biçimler içindir: hata varyansı X^k ile orantılı (Parresol 1999, Denklem 12), k boş bırakılırsa en küçük kareler artıklarından ln e² = a₁ + k·ln X ile kestirilir (Denklem 15). Logaritmik biçimlerde ağırlık yoktur; geri dönüşümde Baskerville düzeltmesi seçimliktir.',
+    'f.cf': 'Sabit şekil katsayısı V = b1·D²H (6.22)', 'f.cv': 'Birleşik değişken V = b0 + b1·D²H (6.23)', 'f.ln': 'Logaritmik ln V = ln b1 + b2·ln D + b3·ln H (6.24–6.25)', 'f.loc': 'Yerel V = b0 + b1·D²', 'f.locln': 'Yerel logaritmik ln V = ln b0 + b1·ln D (6.29)',
+    'w.h': 'Ağırlık', 'w.none': 'yok (eşit varyans)', 'w.power': p => `σ² ∝ (${p.v})^k`, 'w.k': 'k (boş: kestirilsin)', 'corr.h': 'Ters dönüşüm', 'corr.none': 'düzeltme yok', 'corr.baskerville': 'Baskerville exp(s²/2)',
+    'f.note': 'Ağırlık hacim ölçeğindeki biçimler içindir: hata varyansı X^k ile orantılı (Parresol 1999, Denklem 12), k boş bırakılırsa en küçük kareler artıklarından ln e² = a₁ + k·ln X ile kestirilir (Denklem 15). Logaritmik biçimlerde ağırlık yoktur; ters dönüşümde Baskerville düzeltmesi isteğe bağlıdır.',
     'p.forms': 'En az bir biçim seçin', 'p.k': 'k bir sayı olmalı ya da boş bırakılmalı',
     'r.cmp': 'Karşılaştırma (hacim ölçeğinde)', 'r.form': 'Biçim', 'r.n': 'n', 'r.s': 's (fit etme ölçeği)', 'r.rmse': 'RMSE (m³)', 'r.bias': 'Yanlılık (m³)', 'r.mae': 'MAE (m³)', 'r.r2': 'R²', 'r.w': 'Ağırlık', 'r.cf': 'Düzeltme',
     'r.cmpnote': 'Ölçütler Model Başarısı aracıyla aynı tanımlarla, hacim ölçeğinde (e = gözlenen − tahmin; R² = 1 − SSE/SST). Logaritmik biçimlerin s değeri ln ölçeğindedir; biçimler arası karşılaştırma için hacim ölçeğindeki ölçütleri kullanın.',
-    'r.coef': 'Katsayılar', 'r.term': 'Katsayı', 'r.est': 'Tahmin', 'r.se': 'Standart hata', 'r.lnnote': 'Logaritmik biçimde regresyon ln ölçeğindedir: ilk satır ln b ve standart hatası; b = exp(ln b) ayrıca yazılır.',
+    'r.coef': 'Katsayılar', 'r.term': 'Katsayı', 'r.est': 'Kestirim', 'r.se': 'Standart hata', 'r.lnnote': 'Logaritmik biçimde regresyon ln ölçeğindedir: ilk satır ln b ve standart hatası; b = exp(ln b) ayrıca yazılır.',
     'r.drop': p => `${p.n} ağaç dışarıda bırakıldı (eksik ya da geçersiz değer): satırlar ${p.rows}.`, 'r.bad': p => `Fit edilemedi: ${p.why}.`,
     'e.n.few': 'katsayı sayısına göre ağaç çok az', 'e.singular': 'denklem sistemi tekil', 'e.weight.k': 'varyans üssü kestirilemedi', 'e.weight.log': 'logaritmik biçimde ağırlık yok', 'e.correction': 'geçersiz düzeltme', 'e.form.unknown': 'bilinmeyen biçim',
     'r.k.est': 'kestirildi', 'ch.res': p => `${p.f}: artıklar (gözlenen − tahmin)`, 'ch.x': 'Tahmin V (m³)', 'ch.y': 'Artık (m³)', 'ch.obs': p => `${p.f}: gözlenen–tahmin`, 'ch.xo': 'Gözlenen V (m³)', 'ch.yo': 'Tahmin V (m³)', 'ch.svg': 'Grafik (SVG)',
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.form': 'Biçim', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi kesim verimiz, 2026, n = 38', 'save.sp': 'Tür (isteğe bağlı)', 'save.btn': 'Seti kaydet', 'save.ok': 'Set kaydedildi; Katsayı Kütüphanesi\'nde görünür.', 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.',
-    'ev.h': 'Model Başarısı aracına aktar', 'ev.sub': 'Gözlenen ve fit edilen biçimlerin tahmin ettiği hacimler bir tablo olarak Model Başarısı aracına aktarılır; araç açıldığında sütunlar seçili gelir. Tahminler fit etme verisindendir (eğitim).', 'ev.btn': 'Aktar ve Model Başarısı aracını aç',
+    'ev.h': 'Model Başarısı aracına aktar', 'ev.sub': 'Gözlenen ve fit edilen biçimlerin tahmin ettiği hacimler bir tablo olarak Model Başarısı aracına aktarılır; araç açıldığında sütunlar seçili gelir. Tahminler fit etme verisindendir (model geliştirme verisi).', 'ev.btn': 'Aktar ve Model Başarısı aracını aç',
     'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Ağaçlar ve tahminler (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.',
-    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile (lm) aynı ayarlarla yeniden yapar: her biçim için aynı ağaçlar, aynı ağırlıklar ve geri dönüşüm düzeltmesi, hacim ölçeğinde aynı ölçütler. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (Seksiyon Hacmi sonuçları ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
+    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı temel R ile (lm) aynı ayarlarla yeniden yapar: her biçim için aynı ağaçlar, aynı ağırlıklar ve ters dönüşüm düzeltmesi, hacim ölçeğinde aynı ölçütler. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (Seksiyon Hacmi sonuçları ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
     'x.r.sv': p => `Ağaçlar dosyadan değil, ${p.src} sonuçlarından geldi; betik onları betikle birlikte inen CSV dosyasından okur (sütunlar: satır, ağaç, D_cm, H_m, V_m3).`,
     'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.coef': 'Katsayılar', 'x.trees': 'Ağaçlar', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.data': 'Veri', 'x.src': 'Kaynak', 'x.rule': 'Kural',
   },
@@ -2682,7 +2682,7 @@ function buildR(s, R, o) {
   out.push(header({ title: T('Hacim Denklemleri: R kodu', 'Volume Equations: R code'), tool: { id: 'hacim-denklemleri', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Biçimler (Kershaw ve ark. 2016, §6.2) doğrusal regresyon olarak lm ile fit edilir; logaritmik biçimler ln ölçeğinde. Ağırlık: σ² ∝ X^k, lm ağırlığı 1/X^k; k verilmemişse ağırlıksız artıklardan ln e² = a + k ln X (Parresol 1999).',
       'The forms (Kershaw et al. 2016, §6.2) are fitted as linear regressions by lm; the logarithmic forms on the ln scale. Weights: σ² ∝ X^k, the lm weight 1/X^k; when k is not given, from ln e² = a + k ln X on the unweighted residuals (Parresol 1999).'),
-    T('Logaritmik biçimlerde geri dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki kalıntı standart hatası. Ölçütler hacim ölçeğinde: hata = gözlem − tahmin, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
+    T('Logaritmik biçimlerde ters dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki artık standart hatası. Ölçütler hacim ölçeğinde: hata = gözlem − tahmin, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
       'Back-transformation correction of the log forms: none or Baskerville exp(s²/2), s the residual standard error on the ln scale. Measures on the volume scale: error = observed − predicted, RMSE = √(SSE/n), R² = 1 − SSE/SST.'),
     ...(s.note ? [s.note] : [])] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
@@ -2705,7 +2705,7 @@ res <- list(); fits <- list()
     const F = FORMS[x.id], rf = R_FORMS[x.id], id = x.id;
     if (x.status !== 'ok') { out.push(rComment(T(`${F.formula}: araçta fit edilmedi (${x.code}); R'da da fit edilmez.`, `${F.formula}: not fitted by the tool (${x.code}); not fitted in R either.`)), ''); continue; }
     const w = x.weight, log = F.scale === 'log';
-    out.push(rComment(`${F.formula} (Kershaw et al. 2016, ${F.eq})${w.kind === 'power' ? `; ${T('ağırlık', 'weight')} σ² ∝ (${WX[w.var]})^k${w.estimated ? T(', k tahmin edilir', ', k estimated') : ''}` : ''}${log ? `; ${T('düzeltme', 'correction')}: ${x.correction}` : ''}`),
+    out.push(rComment(`${F.formula} (Kershaw et al. 2016, ${F.eq})${w.kind === 'power' ? `; ${T('ağırlık', 'weight')} σ² ∝ (${WX[w.var]})^k${w.estimated ? T(', k kestirilir', ', k estimated') : ''}` : ''}${log ? `; ${T('düzeltme', 'correction')}: ${x.correction}` : ''}`),
       `d <- subset(trees, is.finite(D) & D > 0 & is.finite(V) & V > 0${F.needsH ? ' & is.finite(H) & H > 0' : ''})`,
       `d$w <- 1`);
     if (w.kind === 'power') {

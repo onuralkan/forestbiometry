@@ -20,7 +20,7 @@ export function buildR(s, R, cal, lrt, o) {
   const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]);
   const out = [];
   out.push(header({ title: T('Karma Etkili Modeller: R kodu', 'Mixed-Effects Models: R code'), tool: { id: 'karma-modeller', version: o.version }, created: o.created, lang: o.lang, packages: ['nlme'],
-    notes: [T('Doğrusal modeller lme, doğrusal olmayanlar nlme ile (Pinheiro ve Bates 2000; araç da Lindstrom–Bates yöntemini uygular ve nlme ile sınanmıştır). Rastgele etkiler, kovaryans yapısı (pdDiag / pdSymm), varyans işlevi (varPower: Var = σ²|v|^(2δ)) ve yöntem araçtakiyle aynı.',
+    notes: [T('Doğrusal modeller lme, doğrusal olmayanlar nlme ile (Pinheiro ve Bates 2000; araç da Lindstrom–Bates yöntemini uygular ve nlme ile sınanmıştır). Rastgele etkiler, kovaryans yapısı (pdDiag / pdSymm), varyans fonksiyonu (varPower: Var = σ²|v|^(2δ)) ve yöntem araçtakiyle aynı.',
       'Linear models by lme, nonlinear ones by nlme (Pinheiro and Bates 2000; the tool implements the Lindstrom–Bates method too and was tested against nlme). Random effects, covariance structure (pdDiag / pdSymm), variance function (varPower: Var = σ²|v|^(2δ)) and method as in the tool.'),
     T('k = sabit etkiler + kovaryans parametreleri + varyans parametresi + 1 (σ); AIC = −2ℓ + 2k; BIC\'de REML için ln(N − p), nlme\'deki gibi. Doğrusal olmayan REML\'de nlme REML optimumuna gitmeyebilir (ML göreli kesinliğinde durur); orada aracın REML olabilirliği daha yüksek çıkabilir.',
       'k = fixed effects + covariance parameters + variance parameter + 1 (σ); AIC = −2ℓ + 2k; BIC with ln(N − p) for REML, as nlme. For nonlinear REML nlme may stop short of the REML optimum (at the ML relative precision); there the tool\'s REML log-likelihood can be higher.')] }));
@@ -81,11 +81,11 @@ res <- list(); fits <- list()
       out.push(`${id}_d <- ${filt}`,
         `${id}_f <- deriv(quote(${toR(ast)}), ${rVec(params, rStr)}, function.arg = ${rVec([...params, ...q.vars], rStr)})   # ${T('model ve parametre türevleri (deriv)', 'model and parameter derivatives (deriv)')}`,
         `${id}_start <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.start[j])}`).join(', ')})`}   # ${T('aracın başlangıcı: havuzlanmış doğrusal olmayan EKK', 'the tool\'s start: pooled nonlinear least squares')}`,
-        `${id}_tool <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.fit.beta[j])}`).join(', ')})`}   # ${T('aracın tahminleri', 'the tool\'s estimates')}`,
+        `${id}_tool <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.fit.beta[j])}`).join(', ')})`}   # ${T('aracın kestirimleri', 'the tool\'s estimates')}`,
         `${id}_call <- function(st) nlme(.y ~ ${id}_f(${[...params, ...q.vars].map(rName).join(', ')}), data = ${id}_d, fixed = ${params.map(rName).join(' + ')} ~ 1,`,
         `  random = ${cov}(${re.map(rName).join(' + ')} ~ 1), groups = ~ .g, start = st${wArg}, method = ${rStr(q.fit.method)}, control = nctl)`,
         `m <- tryCatch(${id}_call(${id}_start), error = function(e) NULL)`,
-        `if (is.null(m)) { message(${rStr(q.label + T(': nlme aracın başlangıcından yakınsamadı; aracın tahminlerinden başlıyor', ': nlme did not converge from the tool\'s start; starting from the tool\'s estimates'))}); m <- ${id}_call(${id}_tool) }`,
+        `if (is.null(m)) { message(${rStr(q.label + T(': nlme aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', ': nlme did not converge from the tool\'s start; starting from the tool\'s estimates'))}); m <- ${id}_call(${id}_tool) }`,
         `fits$${id} <- m`);
       if (q.fit.method === 'REML') out.push(rComment(T('REML: nlme burada ML göreli kesinliğinde durabilir; sonuçlar araçtan ayrılabilir (başta not).', 'REML: nlme may stop here at the ML relative precision; the results can differ from the tool (see the note at the top).')));
     }
@@ -110,7 +110,7 @@ res <- list(); fits <- list()
       `Calibration of a new group: ${cq.label}; the group's measurements (columns: ${cq.vars.join(', ')}, y). Random effects with the model's fixed part and variances, the group not added to the fit.`)),
       `m <- fits$${id}; beta <- fixef(m); D <- fb_D(m); s2 <- m$sigma^2; dl <- fb_delta(m)`,
       `nd <- data.frame(${cq.vars.map((v, j) => `${rName(v)} = ${rVec(cal.lines.map(r => r[j]))}`).join(', ')}, check.names = FALSE); ny <- ${rVec(cal.lines.map(r => r[nv]))}`,
-      `w <- ${vIdx >= 0 ? `abs(nd[[${vIdx + 1}]])^(2 * dl)` : 'rep(1, nrow(nd))'}   # ${T('varyans işlevi', 'variance function')}`);
+      `w <- ${vIdx >= 0 ? `abs(nd[[${vIdx + 1}]])^(2 * dl)` : 'rep(1, nrow(nd))'}   # ${T('varyans fonksiyonu', 'variance function')}`);
     const pts = (cal.pts || []).map(p => p[0]);
     if (cq.kind === 'linear') {
       const terms = md.terms.map(t => TF_R[t.tf](s.vname(t.col))), rterms = md.rTerms.map((b, j) => b ? terms[j] : null).filter(Boolean);

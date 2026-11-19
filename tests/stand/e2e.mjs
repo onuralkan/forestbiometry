@@ -122,7 +122,7 @@ ok(ns4.on === '004' && ns4.per === '2019' && ns4.title.includes('004 / 2019'), '
 ok(await page.locator('.tiles .tile b').first().textContent() === '0', 'empty plot detail: N = 0');
 await shot('st-4b-gezinme');
 await page.click('#tab-between');
-ok((await page.locator('.note', { hasText: 'orman tahmini değildir' }).count()) === 1, 'between-plot summary labelled as descriptive');
+ok((await page.locator('.note', { hasText: 'orman kestirimi değildir' }).count()) === 1, 'between-plot summary labelled as descriptive');
 await shot('st-5-arasi');
 await page.click('#tab-forest');
 ok((await page.locator('#panel table').count()) >= 2, 'forest estimate tables for both periods');

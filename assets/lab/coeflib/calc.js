@@ -18,7 +18,7 @@ export const TOOL = { id: 'katsayi-kutuphanesi', version: '1.0.0-beta.1' };
 /** Tools that keep sets in the library: catalogue id, page, names. Order = display order. */
 export const TOOLS = [
   { tool: 'siteindex', id: 'SQ-01', page: 'bonitet.php', name: { tr: 'Bonitet', en: 'Site Index' } },
-  { tool: 'growth', id: 'SQ-03', page: 'buyume-islevi.php', name: { tr: 'Büyüme İşlevi', en: 'Growth Functions' } },
+  { tool: 'growth', id: 'SQ-03', page: 'buyume-islevi.php', name: { tr: 'Büyüme Fonksiyonu', en: 'Growth Functions' } },
   { tool: 'taper', id: 'SV-02', page: 'govde-profili.php', name: { tr: 'Gövde Profili', en: 'Stem Taper' } },
   { tool: 'biomass', id: 'BC-01', page: 'biyokutle-karbon.php', name: { tr: 'Biyokütle ve Karbon', en: 'Biomass and Carbon' } },
   { tool: 'volume', id: 'SV-04', page: 'hacim-denklemleri.php', name: { tr: 'Hacim Denklemleri', en: 'Volume Equations' } },

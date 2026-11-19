@@ -2563,26 +2563,26 @@ const T = makeT({
     'm.method': 'Kestirim', 'm.cov': 'Rastgele etkilerin kovaryansı', 'cov.diag': 'köşegen (bağımsız)', 'cov.symm': 'genel (ilişkili)', 'm.var': 'Hata varyansı', 'var.none': 'sabit', 'var.power': p => `σ²·|${p.v}|^(2δ), δ kestirilir`,
     'l.terms': 'Sabit etkiler (sabit terim her zaman var)', 'l.term': 'Terim', 'l.tf': 'Dönüşüm', 'tf.x': 'x', 'tf.ln': 'ln x', 'tf.sq': 'x²', 'l.rand': 'Rastgele', 'l.rint': 'Sabit terimde rastgele etki', 'l.add': 'Terim ekle',
     'n.form': 'Model', 'n.formula': 'Serbest formül', 'n.expr': 'Formül: y =', 'n.expr.ph': 'ör. 1.3 + a*(1-exp(-b*D))^c', 'n.names': 'Formüldeki adlar', 'n.role': 'Sütun ya da katsayı', 'n.par': '— katsayı —', 'n.start': 'Başlangıç değeri', 'n.auto': 'otomatik', 'n.rand': 'Rastgele etki',
-    'n.syntax': 'İşlemler + − * / ^, ayraçlar; işlevler exp, ln, log10, sqrt, abs; sabit pi. Sütunla eşlenmeyen her ad katsayıdır; rastgele etki seçilen katsayılara grup başına eklenir.',
+    'n.syntax': 'İşlemler + − * / ^, ayraçlar; fonksiyonlar exp, ln, log10, sqrt, abs; sabit pi. Sütunla eşlenmeyen her ad katsayıdır; rastgele etki seçilen katsayılara grup başına eklenir.',
     'p.g': 'Grup sütununu seçin', 'p.y': 'Bağımlı değişkeni seçin', 'p.models': 'En az bir model ekleyin', 'p.terms': p => `${p.m}: terimler için sütun seçin`, 'p.rand': p => `${p.m}: en az bir rastgele etki seçin`,
     'p.var': p => `${p.m}: ${p.v} için sütun seçin`, 'p.expr': p => `${p.m}: formül okunamadı (${p.why})`, 'p.start': p => `${p.m}: ${p.p} için başlangıç değeri girin`, 'p.startnum': p => `${p.m}: başlangıç değerleri sayı olmalı`, 'p.compile': p => `${p.m}: ${p.why}`, 'p.vcol': p => `${p.m}: varyans değişkeni modelin bir değişkeni olmalı`,
     'px.char': p => `${p.pos + 1}. karakter geçersiz`, 'px.end': 'formül eksik bitiyor', 'px.expected': p => `${p.pos + 1}. konumda ")" bekleniyor`, 'px.token': p => `${p.pos + 1}. konumda beklenmeyen işaret`, 'px.trailing': p => `${p.pos + 1}. konumdan sonrası fazla (çarpma için * yazın)`,
-    'px.empty': 'formül boş', 'px.long': 'formül 500 karakteri aşıyor', 'px.deep': 'çok fazla iç içe ayraç', 'px.log': '"log" belirsiz: ln ya da log10 yazın', 'px.func': p => `bilinmeyen işlev ${p.name}`, 'px.funcname': p => `${p.name} bir işlevdir, ayraçla yazın`, 'px.args': 'işlevler tek bağımsız değişken alır',
+    'px.empty': 'formül boş', 'px.long': 'formül 500 karakteri aşıyor', 'px.deep': 'çok fazla iç içe ayraç', 'px.log': '"log" belirsiz: ln ya da log10 yazın', 'px.func': p => `bilinmeyen fonksiyon ${p.name}`, 'px.funcname': p => `${p.name} bir fonksiyondur, ayraçla yazın`, 'px.args': 'fonksiyonlar tek bağımsız değişken alır',
     'c.params.none': 'formülde katsayı yok', 'c.vars.none': 'en az bir ad bir sütunla eşlenmeli',
     'r.cmp': 'Karşılaştırma', 'r.model': 'Model', 'r.method': 'Kestirim', 'r.k': 'k', 'r.ll': 'log L', 'r.aic': 'AIC', 'r.bic': 'BIC', 'r.sigma': 'σ̂', 'r.st': 'Durum', 'r.n': p => `${p.n} gözlem, ${p.g} grup.`,
     'r.cmpnote': 'AIC = −2 log L + 2k, BIC = −2 log L + k·ln N (REML’de ln(N − p)); k = sabit etkiler + kovaryans parametreleri + varyans parametresi + σ. REML olabilirlikleri yalnız sabit etkileri aynı modeller arasında karşılaştırılır; sabit etkileri farklı modelleri ML ile karşılaştırın. Doğrusal olmayan modellerde olabilirlik, son Lindstrom–Bates adımının doğrusal karma yaklaşımıdır (Pinheiro ve Bates 2000, Denklem 7.12–7.13).',
     'r.drop': p => `${p.n} satır dışarıda bırakıldı (kullanılan bir sütunda eksik ya da geçersiz değer): satırlar ${p.rows}.`,
     'st.ok': 'yakınsadı', 'st.bad': 'fit edilemedi', 'e.converge': 'yakınsamadı', 'e.pnls': 'ceza terimli doğrusal olmayan adım yakınsamadı (başlangıç değerlerini değiştirin)', 'e.start': 'başlangıç değerleri bulunamadı; girin', 'e.groups': 'en az 3 grup gerekir', 'e.n.few': 'gözlem sayısı çok az',
     'lrt.h': 'Olabilirlik oranı testi', 'lrt.sub': 'İki iç içe ML modelini seçin (küçük model önce). Test χ² dağılımıyla, serbestlik derecesi k farkı; varyans bileşeninin sınırda sınandığı durumda p değeri tutucudur (Pinheiro ve Bates 2000, §2.4.1).', 'lrt.go': 'Test et', 'lrt.res': p => `L = ${p.L}, sd = ${p.df}, p = ${p.p}`, 'lrt.ml': 'Her iki model de ML ile fit edilmiş olmalı.',
-    'f.h': 'Sabit etkiler', 'f.est': 'Tahmin', 'f.se': 'Standart hata', 'f.t': 't', 'r.h': 'Varyans bileşenleri', 'r.sd': 'Standart sapma', 'r.corr': 'Korelasyon', 'r.resid': 'Artık (σ)', 'r.delta': 'Varyans üssü δ',
+    'f.h': 'Sabit etkiler', 'f.est': 'Kestirim', 'f.se': 'Standart hata', 'f.t': 't', 'r.h': 'Varyans bileşenleri', 'r.sd': 'Standart sapma', 'r.corr': 'Korelasyon', 'r.resid': 'Artık (σ)', 'r.delta': 'Varyans üssü δ',
     're.h': p => `Grup rastgele etkileri (${p.n})`, 're.g': 'Grup', 'ch.obs': p => `${p.m}: gözlenen–tahmin (grup düzeyi)`, 'ch.res': p => `${p.m}: artıklar (grup düzeyi)`, 'ch.xo': 'Gözlenen y', 'ch.yo': 'Tahmin y', 'ch.x': 'Tahmin y', 'ch.y': 'Artık',
-    'cal.h': 'Yeni bir grubu kalibre et', 'cal.sub': p => `Fit işleminde olmayan bir grubun (ör. yeni örnek alan) birkaç ölçümünden rastgele etkiler tahmin edilir. Her satıra ${p.cols} yazın (boşluk ya da ; ile).`, 'cal.model': 'Model', 'cal.obs': 'Ölçümler',
+    'cal.h': 'Yeni bir grubu kalibre et', 'cal.sub': p => `Fit işleminde olmayan bir grubun (ör. yeni örnek alan) birkaç ölçümünden rastgele etkiler öngörülür. Her satıra ${p.cols} yazın (boşluk ya da ; ile).`, 'cal.model': 'Model', 'cal.obs': 'Ölçümler',
     'cal.pts': p => `Tahmin noktaları (${p.v}, boşlukla)`, 'cal.iter': 'Koşullu mod (yinelemeli)', 'cal.go': 'Kalibre et', 'cal.bad': 'Ölçümler okunamadı ya da modelin bütün değişkenleri yok.',
-    'cal.b': 'Tahmin edilen rastgele etkiler', 'cal.pred': 'Tahminler', 'cal.fix': 'Sabit kısım', 'cal.cal': 'Kalibre edilmiş', 'cal.note1': 'Tek adım: b̂ = DẐᵀ(R̂ + ẐDẐᵀ)⁻¹ê, Ẑ ve ê rastgele etkiler sıfırken (Vonesh ve Chinchilli 1997; Raptis ve ark. 2021, Ciceu ve ark. 2020). Doğrusal modelde bu en iyi doğrusal yansız öngörüdür (BLUP).', 'cal.note2': 'Koşullu mod: aynı adım, rastgele etkilerin güncel değerinde yakınsayana dek yinelenir (sabit etkiler sabit; araç kuralı).',
+    'cal.b': 'Öngörülen rastgele etkiler', 'cal.pred': 'Tahminler', 'cal.fix': 'Sabit kısım', 'cal.cal': 'Kalibre edilmiş', 'cal.note1': 'Tek adım: b̂ = DẐᵀ(R̂ + ẐDẐᵀ)⁻¹ê, Ẑ ve ê rastgele etkiler sıfırken (Vonesh ve Chinchilli 1997; Raptis ve ark. 2021, Ciceu ve ark. 2020). Doğrusal modelde bu en iyi doğrusal yansız öngörüdür (BLUP).', 'cal.note2': 'Koşullu mod: aynı adım, rastgele etkilerin güncel değerinde yakınsayana dek yinelenir (sabit etkiler sabit; araç kuralı).',
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.model': 'Model', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi örnek alanlarımız, 2026, 25 alan', 'save.sp': 'Tür (isteğe bağlı)', 'save.unit': p => `${p.v} birimi`, 'save.btn': 'Seti kaydet',
     'save.ok': 'Set kaydedildi; Katsayı Kütüphanesi\'nde görünür.', 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.', 'save.unit.miss': 'Bütün birimleri yazın (birimsizse "-").', 'save.note': 'Sabit etkiler setin katsayılarıdır; rastgele etkilerin kovaryansı D, σ, δ, kestirim yöntemi ve uyum ölçütleri sete yazılır, böylece set kalibrasyonda yeniden kullanılabilir.',
     'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Gözlemler ve tahminler (CSV)', 'x.json': 'JSON',
-    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı nlme paketiyle (lme, nlme) aynı ayarlarla yeniden yapar: aynı satırlar, rastgele etkiler, kovaryans yapısı, varyans işlevi ve yöntem; olabilirlik oranı testi ve kalibrasyon kartındaki grup. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler (doğrusal olmayan modellerde ML ile).', 'x.fail': 'Excel kitaplığı yüklenemedi.',
+    'x.r': 'R kodu (.R)', 'x.r.note': 'R kodu bu çalıştırmayı nlme paketiyle (lme, nlme) aynı ayarlarla yeniden yapar: aynı satırlar, rastgele etkiler, kovaryans yapısı, varyans fonksiyonu ve yöntem; olabilirlik oranı testi ve kalibrasyon kartındaki grup. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler (doğrusal olmayan modellerde ML ile).', 'x.fail': 'Excel kitaplığı yüklenemedi.',
     'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.fix': 'Sabit etkiler', 'x.re': 'Rastgele etkiler', 'x.obs': 'Gözlemler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.data': 'Veri', 'x.src': 'Kaynak', 'x.rule': 'Kural',
   },
   en: {
@@ -2650,7 +2650,7 @@ function buildR(s, R, cal, lrt, o) {
   const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]);
   const out = [];
   out.push(header({ title: T('Karma Etkili Modeller: R kodu', 'Mixed-Effects Models: R code'), tool: { id: 'karma-modeller', version: o.version }, created: o.created, lang: o.lang, packages: ['nlme'],
-    notes: [T('Doğrusal modeller lme, doğrusal olmayanlar nlme ile (Pinheiro ve Bates 2000; araç da Lindstrom–Bates yöntemini uygular ve nlme ile sınanmıştır). Rastgele etkiler, kovaryans yapısı (pdDiag / pdSymm), varyans işlevi (varPower: Var = σ²|v|^(2δ)) ve yöntem araçtakiyle aynı.',
+    notes: [T('Doğrusal modeller lme, doğrusal olmayanlar nlme ile (Pinheiro ve Bates 2000; araç da Lindstrom–Bates yöntemini uygular ve nlme ile sınanmıştır). Rastgele etkiler, kovaryans yapısı (pdDiag / pdSymm), varyans fonksiyonu (varPower: Var = σ²|v|^(2δ)) ve yöntem araçtakiyle aynı.',
       'Linear models by lme, nonlinear ones by nlme (Pinheiro and Bates 2000; the tool implements the Lindstrom–Bates method too and was tested against nlme). Random effects, covariance structure (pdDiag / pdSymm), variance function (varPower: Var = σ²|v|^(2δ)) and method as in the tool.'),
     T('k = sabit etkiler + kovaryans parametreleri + varyans parametresi + 1 (σ); AIC = −2ℓ + 2k; BIC\'de REML için ln(N − p), nlme\'deki gibi. Doğrusal olmayan REML\'de nlme REML optimumuna gitmeyebilir (ML göreli kesinliğinde durur); orada aracın REML olabilirliği daha yüksek çıkabilir.',
       'k = fixed effects + covariance parameters + variance parameter + 1 (σ); AIC = −2ℓ + 2k; BIC with ln(N − p) for REML, as nlme. For nonlinear REML nlme may stop short of the REML optimum (at the ML relative precision); there the tool\'s REML log-likelihood can be higher.')] }));
@@ -2711,11 +2711,11 @@ res <- list(); fits <- list()
       out.push(`${id}_d <- ${filt}`,
         `${id}_f <- deriv(quote(${toR(ast)}), ${rVec(params, rStr)}, function.arg = ${rVec([...params, ...q.vars], rStr)})   # ${T('model ve parametre türevleri (deriv)', 'model and parameter derivatives (deriv)')}`,
         `${id}_start <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.start[j])}`).join(', ')})`}   # ${T('aracın başlangıcı: havuzlanmış doğrusal olmayan EKK', 'the tool\'s start: pooled nonlinear least squares')}`,
-        `${id}_tool <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.fit.beta[j])}`).join(', ')})`}   # ${T('aracın tahminleri', 'the tool\'s estimates')}`,
+        `${id}_tool <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.fit.beta[j])}`).join(', ')})`}   # ${T('aracın kestirimleri', 'the tool\'s estimates')}`,
         `${id}_call <- function(st) nlme(.y ~ ${id}_f(${[...params, ...q.vars].map(rName).join(', ')}), data = ${id}_d, fixed = ${params.map(rName).join(' + ')} ~ 1,`,
         `  random = ${cov}(${re.map(rName).join(' + ')} ~ 1), groups = ~ .g, start = st${wArg}, method = ${rStr(q.fit.method)}, control = nctl)`,
         `m <- tryCatch(${id}_call(${id}_start), error = function(e) NULL)`,
-        `if (is.null(m)) { message(${rStr(q.label + T(': nlme aracın başlangıcından yakınsamadı; aracın tahminlerinden başlıyor', ': nlme did not converge from the tool\'s start; starting from the tool\'s estimates'))}); m <- ${id}_call(${id}_tool) }`,
+        `if (is.null(m)) { message(${rStr(q.label + T(': nlme aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', ': nlme did not converge from the tool\'s start; starting from the tool\'s estimates'))}); m <- ${id}_call(${id}_tool) }`,
         `fits$${id} <- m`);
       if (q.fit.method === 'REML') out.push(rComment(T('REML: nlme burada ML göreli kesinliğinde durabilir; sonuçlar araçtan ayrılabilir (başta not).', 'REML: nlme may stop here at the ML relative precision; the results can differ from the tool (see the note at the top).')));
     }
@@ -2740,7 +2740,7 @@ res <- list(); fits <- list()
       `Calibration of a new group: ${cq.label}; the group's measurements (columns: ${cq.vars.join(', ')}, y). Random effects with the model's fixed part and variances, the group not added to the fit.`)),
       `m <- fits$${id}; beta <- fixef(m); D <- fb_D(m); s2 <- m$sigma^2; dl <- fb_delta(m)`,
       `nd <- data.frame(${cq.vars.map((v, j) => `${rName(v)} = ${rVec(cal.lines.map(r => r[j]))}`).join(', ')}, check.names = FALSE); ny <- ${rVec(cal.lines.map(r => r[nv]))}`,
-      `w <- ${vIdx >= 0 ? `abs(nd[[${vIdx + 1}]])^(2 * dl)` : 'rep(1, nrow(nd))'}   # ${T('varyans işlevi', 'variance function')}`);
+      `w <- ${vIdx >= 0 ? `abs(nd[[${vIdx + 1}]])^(2 * dl)` : 'rep(1, nrow(nd))'}   # ${T('varyans fonksiyonu', 'variance function')}`);
     const pts = (cal.pts || []).map(p => p[0]);
     if (cq.kind === 'linear') {
       const terms = md.terms.map(t => TF_R[t.tf](s.vname(t.col))), rterms = md.rTerms.map((b, j) => b ? terms[j] : null).filter(Boolean);
@@ -3429,11 +3429,11 @@ function buildR(s, R, iv, o) {
   const fitted = R.fits.filter(q => q.fit.status === 'ok' || q.fit.status === 'singular');
   const out = [];
   out.push(header({ title: T('Doğrusal Olmayan Regresyon: R kodu', 'Nonlinear Regression: R code'), tool: { id: 'dogrusal-olmayan-regresyon', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt, tam Jacobian; R: nls, Gauss–Newton, türevler R\'ın deriv işleviyle). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
+    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt, tam Jacobian; R: nls, Gauss–Newton, türevler R\'ın deriv fonksiyonuyla). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Ağırlık (Parresol 2001): Var(e) = σ²ψ; nls ağırlığı 1/ψ. ψ = X^θ (θ verilmişse o, verilmemişse ağırlıksız fit artıklarından ln e² = ln σ² + θ ln X ile) ya da ψ bir sütundan.',
       'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.'),
-    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
+    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı artık kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; kestirilen θ sayılmaz), aracınkiyle aynı.',
       'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -3457,7 +3457,7 @@ function buildR(s, R, iv, o) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(form, data = data, start = start, weights = .w, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın tahminlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
     f <- tryCatch(nls(form, data = data, start = fallback, weights = .w, control = ctl), error = function(e) NULL)
   }
   f
@@ -3483,11 +3483,11 @@ fits <- list()
     const title = `${q.label}: ${q.md.kind === 'ready' ? (q.md.ready + ', ') : ''}y = ${q.c ? q.c.text : q.md.expr}`;
     if (!fitted.includes(q)) { out.push(rComment(T(`${title}\nAraçta fit edilmedi (${x.status}${x.code ? ', ' + x.code : ''}); R'da da fit edilmez.`, `${title}\nNot fitted by the tool (${x.status}${x.code ? ', ' + x.code : ''}); not fitted in R either.`)), ''); continue; }
     const vars = q.c.vars, w = x.weight || { kind: 'none' }, wc = q.wcol;
-    out.push(rComment(`${title}\n${vars.map(v => `${v} = ${hd(q.md.map[v])}`).join(', ')}${w.kind === 'none' ? '' : `; ${T('ağırlık', 'weight')}: ${w.kind === 'power' ? `ψ = ${hd(wc)}^θ${w.estimated ? T(' (θ tahmin edilir)', ' (θ estimated)') : ''}` : `ψ = ${hd(wc)}`}`}`),
+    out.push(rComment(`${title}\n${vars.map(v => `${v} = ${hd(q.md.map[v])}`).join(', ')}${w.kind === 'none' ? '' : `; ${T('ağırlık', 'weight')}: ${w.kind === 'power' ? `ψ = ${hd(wc)}^θ${w.estimated ? T(' (θ kestirilir)', ' (θ estimated)') : ''}` : `ψ = ${hd(wc)}`}`}`),
       `${id}_data <- data.frame(.y = y, ${vars.map(v => `${rName(v)} = num(${q.md.map[v] + 1})[keep]`).join(', ')}, check.names = FALSE)`,
       `${id} <- fb_model(quote(${toR(q.c.ast)}), ${rStrs(q.c.params)}, ${rStrs(vars)})`,
       `${id}_start <- ${rList(q.c.params, x.start)}   # ${q.md.kind === 'ready' && !(q.md.starts && Object.values(q.md.starts).some(v => String(v).trim() !== '')) ? T('aracın veriden seçtiği başlangıç', 'the start the tool chose from the data') : T('kullanıcının başlangıç değerleri', 'the user\'s starting values')}`,
-      `${id}_tool <- ${rList(q.c.params, x.theta)}   # ${T('aracın tahminleri', 'the tool\'s estimates')}`);
+      `${id}_tool <- ${rList(q.c.params, x.theta)}   # ${T('aracın kestirimleri', 'the tool\'s estimates')}`);
     if (w.kind === 'power' && w.estimated) out.push(
       `${id}_wx <- num(${wc + 1})[keep]`,
       `${id}_data$.w <- 1`,
@@ -3496,7 +3496,7 @@ fits <- list()
       `${id}_theta <- unname(coef(lm(log(${id}_e[${id}_ok]^2) ~ log(${id}_wx[${id}_ok])))[2])   # ${T('Parresol 2001, Denk. 4–5', 'Parresol 2001, Eq. 4–5')}`,
       `cat(${rStr(id + ': θ = ')}, signif(${id}_theta, 10), "\\n"); res[[${rStr(id + '.theta_w')}]] <- ${id}_theta`,
       `${id}_data$.w <- 1 / ${id}_wx^${id}_theta`,
-      `${id}_start <- as.list(coef(${id}_u))   # ${T('araçtaki gibi ağırlıklı fit ağırlıksız tahminlerden başlar', 'as in the tool, the weighted fit starts from the unweighted estimates')}`);
+      `${id}_start <- as.list(coef(${id}_u))   # ${T('araçtaki gibi ağırlıklı fit ağırlıksız kestirimlerden başlar', 'as in the tool, the weighted fit starts from the unweighted estimates')}`);
     else if (w.kind === 'power') out.push(`${id}_theta <- ${rNum(w.theta)}`, `${id}_data$.w <- 1 / num(${wc + 1})[keep]^${id}_theta`);
     else if (w.kind === 'column') out.push(`${id}_data$.w <- 1 / num(${wc + 1})[keep]`);
     else out.push(`${id}_data$.w <- 1`);

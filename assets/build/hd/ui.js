@@ -2235,8 +2235,8 @@ const tr = {
   'cv.h': 'Çapraz doğrulama', 'cv.plot': 'Örnek alan bazında: bir örnek alanın bütün ağaçları birlikte dışarıda tutulur (yeni örnek alanlara genelleme)',
   'cv.tree': 'Ağaç bazında: ağaçlar rastgele 10 kata ayrılır (aynı örnek alanlardaki yeni ağaçlar; yeni örnek alanlara genellemeyi ölçmez)', 'cv.none': 'Yapma',
   'cv.plot.few': 'Örnek alan bazında doğrulama için en az 2 örnek alan gerekir. Örnek alan sütunu seçilmediyse ya da tek örnek alan varsa bu seçenek yoktur; ağaç bazındaki doğrulama yeni örnek alanlara genellemeyi göstermez.',
-  'cv.plot.fewwarn': p => `Yalnızca ${p.n} örnek alan var: örnek alan bazında hata tahmini çok az örnek alana dayanır ve kararsız olabilir.`,
-  'cv.sub': p => `Her katta modeller yalnızca eğitim ağaçlarıyla fit edilir (başlangıç değerleri de eğitim verisinden); dışarıdaki ağaçlar yalnızca tahmin edilir. Katlar sabit tohumla (${p.seed}) kurulur ve tekrarlanabilir. ${p.lopo} örnek alana kadar her kat bir örnek alandır; daha fazlasında örnek alanlar ${p.k} kata dağıtılır.`,
+  'cv.plot.fewwarn': p => `Yalnızca ${p.n} örnek alan var: örnek alan bazında hata kestirimi çok az örnek alana dayanır ve kararsız olabilir.`,
+  'cv.sub': p => `Her katta modeller yalnızca model geliştirme ağaçlarıyla fit edilir (başlangıç değerleri de model geliştirme verisinden); dışarıdaki ağaçlar yalnızca tahmin edilir. Katlar sabit tohumla (${p.seed}) kurulur ve tekrarlanabilir. ${p.lopo} örnek alana kadar her kat bir örnek alandır; daha fazlasında örnek alanlar ${p.k} kata dağıtılır.`,
   'tab.models': 'Modeller', 'tab.compare': 'Karşılaştırma', 'tab.charts': 'Grafikler', 'tab.predict': 'Tahmin', 'tab.export': 'İndir',
   'data.sum': p => `Fit işleminde kullanılan ağaç: ${p.n}; çap aralığı ${p.dmin}–${p.dmax} cm${p.plots ? `; ${p.plots} örnek alan` : ''}. Boyu eksik (tahmin edilecek) ağaç: ${p.missing}.`,
   'data.exc': p => `Fit etme dışında: ${p.dEmpty} boş çap, ${p.dBad} okunamayan çap, ${p.dNonpos} sıfır veya negatif çap, ${p.hBad} okunamayan boy, ${p.hLeBh} boyu bh'ye eşit veya küçük${p.species ? `, ${p.species} başka tür` : ''}${p.filter ? `, süzgeç dışında ${p.filter}` : ''}.`,
@@ -2246,8 +2246,8 @@ const tr = {
   'm.naslund': 'Näslund', 'm.michailoff': 'Michailoff', 'm.curtis': 'Curtis', 'm.power': 'Kuvvet (Stoffels ve van Soest)', 'm.richards': 'Chapman–Richards', 'm.weibull': 'Weibull (Yang ve ark.)',
   'm.short.power': 'Kuvvet', 'm.short.weibull': 'Weibull',
   'src.naslund': 'Näslund (1936)', 'src.michailoff': 'Michailoff (1943)', 'src.curtis': 'Curtis (1967)', 'src.power': 'Stoffels ve van Soest (1953)', 'src.richards': 'Richards (1959)', 'src.weibull': 'Yang, Kozak ve Smith (1978)',
-  'src.note': 'Parametrelemeler Mehtätalo\'nun lmfor R paketindeki (HDmodels) biçimlerle aynıdır; künyeler METHODS.md §10\'da. Parametreler d cm, h m birimleri içindir; başka birimle tahmin edilen katsayılarla karıştırılamaz.',
-  'p.model': 'Model', 'p.formula': 'Biçim', 'p.status': 'Durum', 'p.param': 'Parametre', 'p.est': 'Tahmin', 'p.se': 'Std. hata', 'p.ci': '%95 güven aralığı (parametre)', 'p.iter': 'Yineleme',
+  'src.note': 'Parametrelemeler Mehtätalo\'nun lmfor R paketindeki (HDmodels) biçimlerle aynıdır; künyeler METHODS.md §10\'da. Parametreler d cm, h m birimleri içindir; başka birimle kestirilen katsayılarla karıştırılamaz.',
+  'p.model': 'Model', 'p.formula': 'Biçim', 'p.status': 'Durum', 'p.param': 'Parametre', 'p.est': 'Kestirim', 'p.se': 'Std. hata', 'p.ci': '%95 güven aralığı (parametre)', 'p.iter': 'Yineleme',
   'p.asym': 'Asimptot bh + a (m)', 'p.n': 'n', 'p.p': 'p', 'p.src': 'Kaynak',
   's.ok': 'yakınsadı', 's.toofew': 'yetersiz veri', 's.nostart': 'başlangıç değeri bulunamadı', 's.noconverge': 'yakınsamadı', 's.diverged': 'ıraksadı', 's.invalid': 'başlangıçta tanımsız',
   'sx.toofew': p => `En az ${p.k} ağaç ve ${p.u} farklı çap gerekir.`, 'sx.nostart': 'Veriden geçerli bir başlangıç değeri türetilemedi.',
@@ -2255,7 +2255,7 @@ const tr = {
   'sx.diverged': p => `Asimptot veri tarafından belirlenemiyor (gözlenen en büyük h − bh değerinin ${p.k} katını aştı); parametre verilmez. Veri bu çap aralığında doygunluğa ulaşmayan, neredeyse doğrusal bir ilişki gösteriyor olabilir.`,
   'sx.invalid': 'Model başlangıç değerinde tanımsız.',
   'w.sign': p => `Beklenen işaret dışında (> 0 beklenir): ${p.params}.`, 'w.singular': 'JᵀJ tekil: standart hata hesaplanamadı.',
-  'w.corr': p => `${p.a} ile ${p.b} arasındaki tahmin korelasyonu ${p.r}: parametreler birbirinden zor ayrılıyor.`,
+  'w.corr': p => `${p.a} ile ${p.b} parametre kestirimleri arasındaki korelasyon ${p.r}: parametreler birbirinden zor ayrılıyor.`,
   'c.fit.h': 'Fit etme verisinde başarı (bütün modeller aynı ağaçlarla)', 'c.rmse': 'RMSE (m)', 'c.mae': 'MAE (m)', 'c.bias': 'Yanlılık (m)', 'c.sigma': 'Artık std. hatası σ̂ (m)', 'c.aic': 'AIC', 'c.daic': 'ΔAIC', 'c.bic': 'BIC', 'c.ll': 'ln L',
   'c.fit.note': 'e = ölçülen − tahmin. RMSE = √(SSE/n) (Model Başarısı Değerlendiricisi ile aynı tanım); σ̂ = √(SSE/(n − p)). Fit etme verisindeki hatalar iyimserdir; genelleme için çapraz doğrulamaya bakın.',
   'c.aic.note': 'AIC/BIC: normal, bağımsız ve sabit varyanslı hata olabilirliği; σ dahil k = p + 1 parametre. Bütün modeller aynı ağaçlara ve aynı yanıt ölçeğine (h, m) fit edildiği için karşılaştırılabilir. ΔAIC en küçük AIC\'ye göredir.',
@@ -2265,10 +2265,10 @@ const tr = {
   'c.cv.kind.tree': p => `Ağaç bazında rastgele; ${p.k} kat. Aynı örnek alanlardaki yeni ağaçları değerlendirir; yeni örnek alanlara genellemeyi göstermez.`,
   'c.cv.same': p => `Bütün modeller aynı ${p.n} dışarıda tutulan ağaçla karşılaştırıldı.`,
   'c.cv.dropped': p => `Bir veya daha fazla model yakınsamadığı için şu katlar karşılaştırmadan çıkarıldı (bütün modeller için): ${p.list}.`,
-  'c.cv.out': p => `Dışarıda tutulan ağaçlardan ${p.n} tanesi o katın eğitim çap aralığı dışındaydı (ekstrapolasyon).`,
-  'c.cv.sel': 'Seçim süreci (her katta eğitim AIC\'si en küçük model)', 'c.cv.chosen': 'Seçilme sayısı',
-  'c.cv.sel.note': 'Seçim süreci satırı, model seçimini de katın içinde yapar: her katta yalnızca eğitim ağaçlarına göre AIC\'si en küçük model seçilir ve dışarıdaki ağaçlar onunla tahmin edilir. En küçük çapraz doğrulama hatasına bakarak seçilen modelin kendi satırındaki hata iyimserdir; seçilmiş bir modelin beklenen hatası için bu satıra bakın.',
-  'c.cv.folds': 'Katlar', 'c.cv.fold': 'Kat', 'c.cv.ntr': 'Eğitim', 'c.cv.nte': 'Dışarıda', 'c.cv.nout': 'Aralık dışı', 'c.cv.selm': 'Seçilen',
+  'c.cv.out': p => `Dışarıda tutulan ağaçlardan ${p.n} tanesi o katın model geliştirme verisinin çap aralığı dışındaydı (ekstrapolasyon).`,
+  'c.cv.sel': 'Seçim süreci (her katta model geliştirme AIC\'si en küçük model)', 'c.cv.chosen': 'Seçilme sayısı',
+  'c.cv.sel.note': 'Seçim süreci satırı, model seçimini de katın içinde yapar: her katta yalnızca model geliştirme ağaçlarına göre AIC\'si en küçük model seçilir ve dışarıdaki ağaçlar onunla tahmin edilir. En küçük çapraz doğrulama hatasına bakarak seçilen modelin kendi satırındaki hata iyimserdir; seçilmiş bir modelin beklenen hatası için bu satıra bakın.',
+  'c.cv.folds': 'Katlar', 'c.cv.fold': 'Kat', 'c.cv.ntr': 'Geliştirme', 'c.cv.nte': 'Dışarıda', 'c.cv.nout': 'Aralık dışı', 'c.cv.selm': 'Seçilen',
   'ch.pick': 'Ayrıntılı grafik ve tahmin modeli', 'ch.pick.none': '— model seçin —', 'ch.need': 'Artık grafikleri ve tahminler için bir model seçin.',
   'ch.data': p => `Ölçülen boylar ve fit edilen eğriler (${p.n} ağaç)`, 'ch.d': 'Çap d (cm)', 'ch.h': 'Boy h (m)', 'ch.e': 'e = ölçülen − tahmin (m)', 'ch.fit': 'Tahmin edilen boy (m)',
   'ch.resfit': p => `Artıklar ve tahmin edilen boy, ${p.m}`, 'ch.resd': p => `Artıklar ve çap, ${p.m}`,
@@ -2418,9 +2418,9 @@ function buildR(s, R, nd, o) {
   const ok = R.fits.filter(f => f.status === 'ok'), sel = s.model && ok.find(f => f.id === s.model);
   const out = [];
   out.push(header({ title: T('Boy–Çap Modelleme: R kodu', 'Height–Diameter Modelling: R code'), tool: { id: 'boy-cap', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
+    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Hata = gözlem − tahmin. RMSE = √(SSE/n); kalıntı standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
+    T('Hata = gözlem − tahmin. RMSE = √(SSE/n); artık standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
@@ -2451,7 +2451,7 @@ function buildR(s, R, nd, o) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(models[[id]]$formula, data = data, start = start, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(id, ${rStr(T(': nls aracın başlangıcından yakınsamadı; aracın tahminlerinden başlıyor', ': nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(id, ${rStr(T(': nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', ': nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
     f <- tryCatch(nls(models[[id]]$formula, data = data, start = fallback, control = ctl), error = function(e) NULL)
   }
   f
@@ -2484,7 +2484,7 @@ fb_metrics <- function(f, data) {
   const cv = R.cv;
   if (cv && !cv.problem && cv.folds) {
     const foldOf = new Array(p.fitRows.length).fill(0); cv.folds.forEach((f, k) => f.test.forEach(i => { foldOf[i] = k + 1; }));
-    out.push(rComment(T(`Çapraz doğrulama (${cv.mode === 'plot' ? (cv.lopo ? 'her seferinde bir örnek alan dışarıda' : 'örnek alan grupları') : 'ağaç düzeyinde'}): her ağacın katı aracınkiyle aynı (araç ${cv.mode === 'plot' && cv.lopo ? 'örnek alanları sırayla' : 'tohum 20261109 ile karıştırıp'} dağıttı). Her katta her model yalnızca eğitim ağaçlarına fit edilir; modeller, bütün modellerin yakınsadığı katların ortak dışarıda bırakılan ağaçlarında karşılaştırılır; "seçim" satırı her katta eğitim AIC'si en küçük modeli kullanır.`,
+    out.push(rComment(T(`Çapraz doğrulama (${cv.mode === 'plot' ? (cv.lopo ? 'her seferinde bir örnek alan dışarıda' : 'örnek alan grupları') : 'ağaç düzeyinde'}): her ağacın katı aracınkiyle aynı (araç ${cv.mode === 'plot' && cv.lopo ? 'örnek alanları sırayla' : 'tohum 20261109 ile karıştırıp'} dağıttı). Her katta her model yalnızca model geliştirme ağaçlarına fit edilir; modeller, bütün modellerin yakınsadığı katların ortak dışarıda bırakılan ağaçlarında karşılaştırılır; "seçim" satırı her katta model geliştirme AIC'si en küçük modeli kullanır.`,
       `Cross-validation (${cv.mode === 'plot' ? (cv.lopo ? 'leave one plot out' : 'groups of plots') : 'tree level'}): each tree's fold is the tool's (the tool ${cv.mode === 'plot' && cv.lopo ? 'took the plots in order' : 'shuffled with seed 20261109'}). In each fold every model is fitted to the training trees only; models are compared on the held-out trees of the folds where all models converged; the "selection" row uses, in each fold, the model with the smallest training AIC.`)),
       `fold <- ${rVec(foldOf)}`,
       `cv_starts <- list(`);

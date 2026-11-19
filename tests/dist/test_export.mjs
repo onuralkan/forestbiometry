@@ -69,7 +69,7 @@ ok(P.length === 1 + okRes.reduce((s, [, r]) => s + D.family(r.family).params.len
 { let i = 1, good = true;
   for (const [u, r] of okRes) for (const q of D.family(r.family).params) { const row = P[i++]; if (row[0] !== u.plot || row[4] !== r.method || row[6] !== q.key || row[7] !== r.params[q.key]) good = false; }
   ok(good, 'parameters: values exact, in order'); }
-ok(P.some(r => r[4] === 'beta.ml' && r[6] === 'L' && r[10] === 'kullanıcı') && P.some(r => r[4] === 'beta.ml' && r[6] === 'alpha' && r[10] === 'tahmin edildi'), 'parameters: fixed bounds marked user, shapes marked estimated');
+ok(P.some(r => r[4] === 'beta.ml' && r[6] === 'L' && r[10] === 'kullanıcı') && P.some(r => r[4] === 'beta.ml' && r[6] === 'alpha' && r[10] === 'kestirildi'), 'parameters: fixed bounds marked user, shapes marked estimated');
 ok(P.some(r => r[4] === 'weibull.ml' && r[6] === 'a' && r[7] === 0 && r[10] === 'sıfır (iki parametreli biçim)'), 'parameters: a = 0 marked as the two-parameter form');
 ok(P.some(r => r[4] === 'lognormal.mom' && r[6] === 'mu' && r[8] === 'ln cm') && P.some(r => r[4] === 'lognormal.mom' && r[6] === 'sigma' && r[8] === 'log ölçek'), 'parameters: lognormal units on the log scale');
 

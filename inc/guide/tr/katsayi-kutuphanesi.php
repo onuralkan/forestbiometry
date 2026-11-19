@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('katsayi-kutuphanesi', 'Katsayı Kütüphanesi') ?>
-<p>Bonitet, Büyüme İşlevi ve Gövde Profili araçlarında girdiğiniz ya da fit ettiğiniz bütün katsayı setlerini tek yerde gösterir. Setler yalnızca bu tarayıcıda saklanır; site hazır katsayı vermez ve bu sayfa hiçbir set eklemez.</p>
+<p>Bonitet, Büyüme Fonksiyonu ve Gövde Profili araçlarında girdiğiniz ya da fit ettiğiniz bütün katsayı setlerini tek yerde gösterir. Setler yalnızca bu tarayıcıda saklanır; site hazır katsayı vermez ve bu sayfa hiçbir set eklemez.</p>
 <p><b>Yapmadıkları:</b> setleri başka bir cihaza ya da kişiye kendiliğinden taşımaz (yedek dosyasıyla taşınır); denklemle hesap yapmaz (hesap aracın kendi sayfasında).</p>
 <h3>Kütüphane</h3>
 <ul>

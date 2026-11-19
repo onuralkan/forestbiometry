@@ -138,7 +138,7 @@ await page.click('#calc'); await page.waitForSelector('#logcard');
     `tree table: ${r[7]} logs, ${r[8]} m³ = engine (${G.n}${G.short ? ' + short' : ''}, ${(G.V.logs + G.V.short).toFixed(4)})`);
   const lr = await page.$$eval('#logcard table[data-logs="ib"] tbody tr', rs => rs.map(x => [...x.children].map(c => c.textContent.trim())));
   ok(lr.length === G.logs.length + (G.short ? 1 : 0) && G.logs.every((q, i) => Math.abs(num(lr[i][1]) - q.h1) <= 5e-3 && Math.abs(num(lr[i][2]) - q.h2) <= 5e-3 && Math.abs(num(lr[i][5]) - q.V) <= 5e-5 && num(lr[i][4]) >= 7 - 0.05), 'log list of the tree = engine; every small end at or above the top diameter');
-  ok((await page.textContent('#logcard [data-bal="ib"]')).includes('kullanılabilir hacim'), 'volume balance written (logs + trim + rest = merchantable)');
+  ok((await page.textContent('#logcard [data-bal="ib"]')).includes('ticari hacim'), 'volume balance written (logs + trim + rest = merchantable)');
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-csv')]);
   const L = (await readFile(await dl.path(), 'utf8')).trim().split(/\r?\n/), hd = L[0].split(','), c = L[1].split(',');
   ok(hd.includes('logs_n') && Number(c[hd.indexOf('logs_n')]) === G.n && Math.abs(Number(c[hd.indexOf('logs_m3')]) - G.V.logs) <= 1e-9 * Math.max(1, G.V.logs), 'CSV: log count and log volume at full precision'); }

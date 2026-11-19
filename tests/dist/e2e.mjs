@@ -211,7 +211,7 @@ await page.click('#steps [data-go="2"]'); await setB('5', '50'); await page.clic
 await page.click('#steps [data-go="2"]'); await page.uncheck('[data-m="beta.ml"]'); await page.uncheck('[data-m="beta.mom"]');
 for (const m of ['johnsonsb.cml', 'johnsonsb.mom', 'johnsonsb.kb', 'johnsonsb.pct']) await page.check(`[data-m="${m}"]`);
 ok(await page.isDisabled('#calc') && (await page.locator('#bnd-johnsonsb .note.err', { hasText: 'ξ ve λ girin' }).count()) === 1 && (await page.locator('#bnd-beta').count()) === 0, 'SB chosen: ξ and λ required, no automatic values');
-ok((await page.locator('#famcard [data-mnote]', { hasText: 'dört parametrenin birlikte tahmini değildir' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'Knoebel ve Burkhart (1991)' }).count()) === 1, 'CML stated as conditional; KB source named');
+ok((await page.locator('#famcard [data-mnote]', { hasText: 'dört parametrenin birlikte kestirimi değildir' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'Knoebel ve Burkhart (1991)' }).count()) === 1, 'CML stated as conditional; KB source named');
 for (const [k, v] of [['xi', '5'], ['lambda', '45']]) { await page.fill('#b-' + k, v); await page.locator('#b-' + k).dispatchEvent('change'); }
 ok((await page.locator('#bnd-johnsonsb', { hasText: 'Üst sınır ξ + λ = 50 cm' }).count()) === 1 && await page.isEnabled('#calc'), 'upper bound ξ + λ shown');
 await page.fill('#o-johnsonsb-pct-p', '0.1'); await page.locator('#o-johnsonsb-pct-p').dispatchEvent('change'); await page.fill('#o-johnsonsb-pct-r', '0.9'); await page.locator('#o-johnsonsb-pct-r').dispatchEvent('change');
