@@ -16,7 +16,7 @@ committed, so the tests run without Python.
   Node on its sample data, the R script the page would download is written (`assets/lab/<tool>/rcode.js`, shared parts in
   `assets/lab/core/rcode.js`) with its data file, R runs it (`Rscript --vanilla`, results written to `FB_RCODE_OUT`) and
   `tests/rcode/compare.mjs` checks every number against the tool within its tolerance. Needs Rscript (base R for
-  Height–Diameter, Nonlinear Regression, Growth Functions and Volume Equations, the nlme package for Mixed-Effects Models, base R for Systems of Equations, the fitdistrplus package for the Diameter Distribution Lab; readxl only for scripts of Excel files, not in the cases); CI job `rcode` installs `r-base-core`, `r-cran-nlme` and `r-cran-fitdistrplus` from the Ubuntu archive and runs it before every upload.
+  Height–Diameter, Nonlinear Regression, Growth Functions and Volume Equations, the nlme package for Mixed-Effects Models, base R for Systems of Equations, the fitdistrplus package for the Diameter Distribution Lab and nleqslv for its Johnson SB recovery; readxl only for scripts of Excel files, not in the cases); CI job `rcode` installs `r-base-core`, `r-cran-nlme`, `r-cran-fitdistrplus` and `r-cran-nleqslv` from the Ubuntu archive and runs it before every upload.
 
 ## Diameter Distribution Lab 2.2.0 (`assets/lab/dist/`)
 - `node tests/dist/test_p01.mjs` … `test_p23.mjs` (no P21, P22: out of scope): one file per stage of the revision (`docs/DIST_SPEC.md`), each against

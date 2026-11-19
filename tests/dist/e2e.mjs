@@ -163,6 +163,8 @@ ok(rr.map(r => r.m + ':' + r.s).join() === 'normal.rec:ok,lognormal.rec:ok,gamma
 ok((await page.locator('#ch-r svg path').count()) >= 2, 'recovered densities drawn');
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#s-json')]);
 const js2 = JSON.parse(await readFile(await dl2.path(), 'utf8'));
+{ const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#s-r')]), rs = await readFile(await dr.path(), 'utf8');
+  ok(/\.R$/.test(dr.suggestedFilename()) && rs.includes('s <- list(mean = 20, dq = 21)') && rs.includes('lognormal') && rs.includes('fb_out(res)'), 'recovery R code: the typed summary and the three families (checked in R by scripts/rcode-check.sh)'); }
 ok(js2.results.length === 3 && js2.results[1].kind === 'recover' && js2.results[1].data.type === 'summary' && js2.results[1].targets.source === 'dq' && js2.results[1].logLik === null && js2.summary.dq === 21, 'recovery JSON: kind, data type, inputs, no likelihood');
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#s-xlsx')]), wb = XLSX.read(await readFile(await dx.path())), rows = XLSX.utils.sheet_to_json(wb.Sheets['Geri kazanim'], { header: 1 });
   const ln = rows.find(r => r[2] === 'lognormal.rec'), H = rows[0];
@@ -253,6 +255,8 @@ ok(wr[0].c[6].includes('1 kök') && wr[2].c[6] === 'kapalı biçim' && (await pa
 await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5'); await page.check('input[name="w-origin"][value="predicted"]');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (kullanıcı)'), 'user a = 5: the same parameters, labelled as the user\'s');
+{ const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#w-r')]), rs = await readFile(await dr.path(), 'utf8');
+  ok(/\.R$/.test(dr.suggestedFilename()) && rs.includes('a <- 5') && rs.includes('report("m2"') && rs.includes('fb_out(res)'), 'Weibull recovery R code: the user location and the chosen methods'); }
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
   ok(j.tool.version === '2.2.0' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });

@@ -14,6 +14,7 @@ import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { createUnitNav } from '../core/unitnav.js';
 import { buildR } from './rcode.js';
+import { buildRecoverR } from './rcode-rec.js';
 import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:cap-dagilimi-2';
@@ -376,6 +377,10 @@ function exportRaw(kind) {
     { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) },
     { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.ba'), rows: REP.basalRows(R.units, h, u => classesFor(u), perHaOf()) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) },
     { name: T('sheet.boot'), rows: REP.bootRows(bootRecords(), h) }, { name: T('sheet.src'), rows: REP.sourceRows(R.units.flatMap(x => x.results.map(r => r.method)), h, bootRecords().length ? ['R9'] : []), widths: [22, 34, 16, 14, 14, 12, 26] }])), () => status(T('ex.fail'), 'err'));
+}
+/** R script of a recovery card (stage 2): the card's summary, options and results. */
+function recR(card, summary, opts, results, base) {
+  download(fname(base[0], base[1], 'R'), buildRecoverR(card, summary, opts, results, { lang, created: new Date().toISOString(), version: D.TOOL.version }), 'text/plain;charset=utf-8');
 }
 function exportRec(kind, results, info, base) {
   const h = repH(), rows = REP.recoverRows(results, h);
@@ -749,10 +754,11 @@ function drawRecover() {
     h += `<figure class="chartbox" id="ch-r">${plotChart({ title: T('rec.chart'), xmin, xmax, lines: okR.map((r, i) => ({ name: T('fam.' + r.family), k: i, pts: xs.map(x => [x, D.family(r.family).pdf(x, r.params)]) })), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-r-svg">${T('ch.svg')}</button></figcaption></figure>`;
   }
-  h += srcBlock(RS) + exportButtons('s', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  h += srcBlock(RS) + exportButtons('s', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json'], ['r', 'ex.r']]) + `<p class="muted small">${T('ex.r.rec')}</p>`;
   out.innerHTML = h;
   const sInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(summaryInput()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('rec.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('s-' + k).addEventListener('click', () => exportRec(k, RS, sInfo(), ['cap-dagilimi-geri-kazanim', 'diameter-distribution-recovery']));
+  $('s-r').addEventListener('click', () => recR('mom', summaryInput(), {}, RS, ['cap-dagilimi-geri-kazanim', 'diameter-distribution-recovery']));
   $('ch-r-svg') && $('ch-r-svg').addEventListener('click', () => download('geri-kazanim.svg', svgForDownload($('ch-r').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), fits: okR.map(r => ({ method: r.method, params: r.params, targets: r.targets })) }), 'image/svg+xml'));
   $('s-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: summaryInput(), results: RS, sources: srcJSON(RS.map(r => r.method)) }, D.TOOL, [], m => status(m, 'err')));
 }
@@ -849,11 +855,12 @@ function drawWb() {
     h += `<figure class="chartbox" id="ch-w">${plotChart({ title: T('wb.chart'), xmin, xmax, lines: okR.map((r, i) => ({ name: T('m.' + r.method), k: i, pts: xs.map(x => [x, D.family('weibull').pdf(x, r.params)]) })), xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-w-svg">${T('ch.svg')}</button></figcaption></figure>`;
   }
-  h += srcBlock(RW) + exportButtons('w', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  h += srcBlock(RW) + exportButtons('w', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json'], ['r', 'ex.r']]) + `<p class="muted small">${T('ex.r.rec')}</p>`;
   out.innerHTML = h;
   const wInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(wbSummary()).filter(([k]) => k !== 'unit').map(([k, v]) => [T('x.in', { k }), v]),
     ...Object.entries(wbOpts()).map(([k, v]) => [T('x.in', { k }), v]), S.wb.from ? [T('x.in', { k: 'unit' }), S.wb.from.label] : null, ['', T('wb.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('w-' + k).addEventListener('click', () => exportRec(k, RW, wInfo(), ['cap-dagilimi-weibull-geri-kazanim', 'diameter-distribution-weibull-recovery']));
+  $('w-r').addEventListener('click', () => recR('weibull', wbSummary(), wbOpts(), RW, ['cap-dagilimi-weibull-geri-kazanim', 'diameter-distribution-weibull-recovery']));
   $('ch-w-svg') && $('ch-w-svg').addEventListener('click', () => download('weibull-geri-kazanim.svg', svgForDownload($('ch-w').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), fits: okR.map(r => ({ method: r.method, params: r.params, fixed: r.fixed, targets: r.targets })) }), 'image/svg+xml'));
   $('w-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-weibull-geri-kazanim-${new Date().toISOString().slice(0, 10)}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: wbSummary(), location: wbOpts(), results: RW, sources: srcJSON(RW.map(r => r.method)) }, D.TOOL, [], m => status(m, 'err')));
 }
@@ -917,11 +924,12 @@ function drawPrs() {
     h += `<figure class="chartbox" id="ch-p">${plotChart({ title: T('prs.chart'), xmin, xmax, lines: [{ name: T('fam.johnsonsb'), k: 0, pts: xs.map(x => [x, fam.pdf(x, r.params)]) }], xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-p-svg">${T('ch.svg')}</button></figcaption></figure>`;
   }
-  h += srcBlock(RP) + exportButtons('p', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  h += srcBlock(RP) + exportButtons('p', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json'], ['r', 'ex.r']]) + `<p class="muted small">${T('ex.r.rec')}</p>`;
   out.innerHTML = h;
   $('ch-p-svg') && $('ch-p-svg').addEventListener('click', () => download('johnson-sb-parresol.svg', svgForDownload($('ch-p').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), fits: [{ method: r.method, params: r.params, targets: r.targets }] }), 'image/svg+xml'));
   const pInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(prsSummary()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('prs.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('p-' + k).addEventListener('click', () => exportRec(k, RP, pInfo(), ['cap-dagilimi-johnson-sb-parresol', 'diameter-distribution-johnson-sb-parresol']));
+  $('p-r').addEventListener('click', () => recR('parresol', prsSummary(), {}, RP, ['cap-dagilimi-johnson-sb-parresol', 'diameter-distribution-johnson-sb-parresol']));
   $('p-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-johnson-sb-parresol-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: prsSummary(), results: RP, sources: srcJSON(RP.map(r => r.method)) }, D.TOOL, [], m => status(m, 'err')));
 }
 /* ---------------- stand models (P16): train on many plots, predict from stand variables ---------------- */
@@ -1131,11 +1139,12 @@ function drawFns() {
     h += `<figure class="chartbox" id="ch-f">${plotChart({ title: T('fns.chart'), xmin, xmax, lines: [{ name: T('fam.johnsonsb'), k: 0, pts: xs.map(x => [x, fam.pdf(x, r.params)]) }], xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-f-svg">${T('ch.svg')}</button></figcaption></figure>`;
   }
-  h += srcBlock(RF) + exportButtons('fx', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json']]);
+  h += srcBlock(RF) + exportButtons('fx', [['xlsx', 'ex.rxlsx', true], ['csv', 'ex.rcsv'], ['json', 'p.json'], ['r', 'ex.r']]) + `<p class="muted small">${T('ex.r.rec')}</p>`;
   out.innerHTML = h;
   $('ch-f-svg') && $('ch-f-svg').addEventListener('click', () => download('johnson-sb-fonseca.svg', svgForDownload($('ch-f').querySelector('svg'), { tool: D.TOOL, created: new Date().toISOString(), summary: fnsSummary(), fits: [{ method: r.method, params: r.params, targets: r.targets }] }), 'image/svg+xml'));
   const fInfo = () => [[T('x.tool'), `${D.TOOL.id} ${D.TOOL.version}`], [T('x.date'), new Date().toISOString()], ...Object.entries(fnsSummary()).map(([k, v]) => [T('x.in', { k }), v]), ['', T('fns.p.note')], ['', T('x.n.num')]];
   for (const k of ['xlsx', 'csv']) $('fx-' + k).addEventListener('click', () => exportRec(k, RF, fInfo(), ['cap-dagilimi-johnson-sb-fonseca', 'diameter-distribution-johnson-sb-fonseca']));
+  $('fx-r').addEventListener('click', () => recR('fonseca', fnsSummary(), {}, RF, ['cap-dagilimi-johnson-sb-fonseca', 'diameter-distribution-johnson-sb-fonseca']));
   $('fx-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-johnson-sb-fonseca-${stamp()}.json`, { tool: D.TOOL, created: new Date().toISOString(), summary: fnsSummary(), results: RF, sources: srcJSON(RF.map(x => x.method)) }, D.TOOL, [], m => status(m, 'err')));
 }
 function renderWf() {

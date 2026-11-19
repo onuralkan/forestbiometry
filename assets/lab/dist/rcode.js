@@ -5,7 +5,7 @@
 // SB ξ/λ), options (variance divisor, percentile pair, probabilities and weights, distance) and measurement thresholds;
 // the fit statistics KS D, Anderson–Darling A², Cramér–von Mises W², and AIC/BIC where the likelihood was maximised.
 // The families are written in R with the tool's parameters (no base-R name is reused for a different parameterisation).
-// Recovery, Weibull recovery (m2–m10), Johnson SB recovery, stand models, bootstrap and the class table are later stages.
+// The recovery cards have their own scripts (rcode-rec.js, stage 2); stand models, bootstrap and the class table are later.
 // No DOM.
 import { family as famOf } from './registry.js';
 import { header, readBlock, FB_NUM, FB_OUT, rStr, rNum, rVec, rComment } from '../core/rcode.js';
