@@ -160,7 +160,7 @@ Durum (18 Kasım 2026): 24 araç, 8 modül; planlı araç yok (P8). Sürüm **v2
 - **Kaynakça künyeleri en sona** bırakıldı; zamanını kullanıcı söyleyecek.
 - **Araç eksiklerine** başlanır; **Örnekleme kategorisine yeni araç ya da tasarım eklenmez**, o haliyle kalır.
 - Küçük tutarlılık işlerinden **erişilebilirlik sonraya** bırakıldı; **Nispi Sıralama, Model Başarısı'nın yanına** (model değerlendirme altına) taşınacak.
-- **Türkçe terminoloji denetimi** sonraya bırakıldı ve bir kez yapılacak (yeni şeyler eklendikçe yinelenmez); talimatı `docs/TERMINOLOJI_DENETIMI_PROMPT.md` (kullanıcının belgesi, 19 Kasım 2026). Yalnız rapor üretir, uygulamada değişiklik yapmaz.
+- **Türkçe terminoloji denetimi** sonraya bırakıldı ve bir kez yapılacak (yeni şeyler eklendikçe yinelenmez); talimatı `docs/TERMINOLOJI_DENETIMI_PROMPT.md` (kullanıcının belgesi, 19 Kasım 2026). Yalnız rapor üretir, uygulamada değişiklik yapmaz. ✔ **Yapıldı (19 Kasım 2026):** rapor `docs/TURKISH_TERMINOLOGY_AUDIT.md` (154 benzersiz bulgu: 5 Kritik, 25 Major, 86 Minor, 38 Opsiyonel; yazar kararı bekleyen terimler raporun 9.3 bölümünde); uygulamada değişiklik yapılmadı, düzeltmeler kullanıcı kararıyla adım adım.
 - **Minör revizyonlar:** kullanıcı sitede gezinirken notları `docs/MINOR_REVIZYONLAR.md`'de biriktirir (MR-001…); ara ara kullanıcının seçtiği maddeler uygulanır, belgedeki yönergeye göre (belirsiz olanlarda önce öneri).
 
 Açık işler (18 Kasım 2026 değerlendirmesi, öncelik sırasıyla; 19 Kasım 2026 kararlarıyla güncel):
