@@ -132,7 +132,10 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
   ok(/^cap-dagilimi-fit-islemleri-.*\.csv$/.test(dc.suggestedFilename()) && csv.charCodeAt(0) === 0xFEFF && csv.includes(',' + ml0.b + ',') && csv.split('\r\n').length === 45, 'fits CSV: BOM, comma separator, full-precision b, 45 lines');
-  const [dp] = await Promise.all([page.waitForEvent('download'), page.click('#x-params')]); ok(/parametreler/.test(dp.suggestedFilename()) && (await readFile(await dp.path(), 'utf8')).includes(',theta,'), 'parameters CSV'); }
+  const [dp] = await Promise.all([page.waitForEvent('download'), page.click('#x-params')]); ok(/parametreler/.test(dp.suggestedFilename()) && (await readFile(await dp.path(), 'utf8')).includes(',theta,'), 'parameters CSV');
+  const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#x-r')]), rs = await readFile(await dr.path(), 'utf8');
+  ok(/^cap-dagilimi-.*\.R$/.test(dr.suggestedFilename()) && rs.includes('library(fitdistrplus)') && rs.includes('r <- fb_run(x, "weibull", "ml"') && rs.includes('fb_out(res)'),
+    'R code: a .R file with fitdistrplus and the fits of every unit (its numbers are checked in R by scripts/rcode-check.sh)'); }
 
 // 2. English keeps the values; comma setting; pooled mode
 await page.click('#ulist [data-u="A"]');

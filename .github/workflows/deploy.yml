@@ -148,7 +148,7 @@ jobs:
       - name: R from the Ubuntu archive
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends r-base-core r-cran-nlme
+          sudo apt-get install -y -qq --no-install-recommends r-base-core r-cran-nlme r-cran-fitdistrplus
           Rscript -e 'cat(R.version.string, "\n")'
       - name: R code of the model tools gives the tools' numbers
         run: scripts/rcode-check.sh "$RUNNER_TEMP/rcode"

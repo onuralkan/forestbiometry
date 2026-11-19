@@ -13,6 +13,8 @@ import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { createUnitNav } from '../core/unitnav.js';
+import { buildR } from './rcode.js';
+import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:cap-dagilimi-2';
 const $ = id => document.getElementById(id);
@@ -417,10 +419,17 @@ function tabParams(p) {
   h += `<details class="more ptabs"${S.ptabsOpen ? ' open' : ''}><summary>${T('p.all')}</summary>${fam}<p class="muted small">${T('p.note')}</p></details>`;
   const nOk = u.results.filter(r => r.status === 'ok').length, nW = u.results.filter(r => r.status === 'ok' && r.warnings.some(w => w.code !== 'var.n1')).length;
   h = h.replace('<div class="tiles">', `<p class="small pstates" data-ok="${nOk}" data-bad="${u.results.length - nOk}">${T('p.states', { ok: nOk, w: nW, bad: u.results.length - nOk })}</p><div class="tiles">`);
-  h += srcBlock(u.results) + `<h3>${T('ex.h')}</h3>` + exportButtons('x', [['xlsx', 'ex.xlsx', true], ['fits', 'ex.fits'], ['params', 'ex.params'], ['json', 'p.json']]);
+  h += srcBlock(u.results) + `<h3>${T('ex.h')}</h3>` + exportButtons('x', [['xlsx', 'ex.xlsx', true], ['fits', 'ex.fits'], ['params', 'ex.params'], ['json', 'p.json'], ['r', 'ex.r']]) + `<p class="muted small">${T('ex.r.note')}</p>`;
   p.innerHTML = h; bindBar(); bindCompare(p);
   p.querySelector('details.ptabs').addEventListener('toggle', e => { S.ptabsOpen = e.target.open; save(); });
   for (const k of ['xlsx', 'fits', 'params']) $('x-' + k).addEventListener('click', () => exportRaw(k));
+  $('x-r').addEventListener('click', () => {
+    const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
+    download(fname('cap-dagilimi', 'diameter-distribution', 'R'), buildR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
+      fcol: S.fcol, fval: S.fval, mode: S.mode, dtype: S.dtype, countType: R.countType, outside: S.outside }, R, D.POOL, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
+    if (!file) download(csvName(imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
+  });
   $('x-json').addEventListener('click', () => downloadRecord(`cap-dagilimi-sonuc-${new Date().toISOString().slice(0, 10)}.json`,
     { tool: D.TOOL, created: new Date().toISOString(), source: S.imp ? S.imp.name : null, settings: jsonSettings(), results: R.units.flatMap(x => x.results.map(({ gof, ...r }) => ({ ...r, fit: gof || null }))),
       bootstrap: bootRecords().map(({ u, r, ...b }) => b), sources: srcJSON([...R.units.flatMap(x => x.results.map(r => r.method))]) },
