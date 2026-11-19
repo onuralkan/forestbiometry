@@ -124,7 +124,7 @@ const en = {
   'src.h': 'Data source', 'src.sub': 'Load your tree table (Excel, CSV) directly or use data approved in the Forest Data Checker. The checker screens coding and unit errors in detail; a direct load reports only values that cannot be read.',
   'src.approved': 'Data approved in the checker', 'src.use': 'Use these data', 'src.none': 'No approved data in this browser.',
   'src.checker': 'Open the Data Checker', 'src.file': 'or load a data package (JSON)', 'src.filebtn': 'Choose a data package (.json)',
-  'src.sample': 'Load the sample data package', 'src.sample.note': 'The sample package is made up, not real measurements: it is the checker\'s sample files, fixed and approved.',
+  'src.sample': 'Load the sample data package', 'src.sample.note': 'The sample package is simulated, not real measurements: it is the checker\'s sample files, fixed and approved.',
   'src.info': p => `${p.name}: ${p.trees} records, ${p.plots} plots, ${p.periods} period(s); approved ${p.when}.`,
   'src.current': 'Data in use', 'src.newer': 'The checker has newer approved data than these.',
   'src.bad': p => `The data package cannot be used (${p.codes}). Choose a "forest-dataset/1" package downloaded from the checker.`,

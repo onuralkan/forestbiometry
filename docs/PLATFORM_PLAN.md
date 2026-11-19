@@ -146,7 +146,7 @@ Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi 
 | SM-03 | Karma etkili modeller | yayında | `karma-modeller.php` | SM-03/a1 (17 Kasım 2026, 1.0.0-beta.1): doğrusal ve doğrusal olmayan karma modeller (Pinheiro ve Bates 2000, Lindstrom ve Bates 1990 [B]), ML/REML, köşegen/genel kovaryans, varPower, AIC/BIC/LRT, yeni grup kalibrasyonu [A], kütüphaneye kayıt; nlme 3.1-168 ile doğrulandı [P] |
 | SM-04 | Eşanlı ve uyumlu sistemler (SUR, toplamsal biyokütle) | yayında | `denklem-sistemleri.php` | SM-04/a1 (17 Kasım 2026, 1.0.0-beta.1): kullanıcının formülleriyle doğrusal ve doğrusal olmayan SUR, yinelemeli SUR, ortak katsayılarla uyumlu sistemler (Henningsen ve Hamann 2007, Parresol 2001 [B]); systemfit 1.1-30 ile doğrulandı [P]; 2SLS/3SLS kapsam dışı |
 | SM-05 | Ölüm ve sağkalım modelleri | kapsam dışı | – | P8 ek (17 Kasım 2026, kullanıcı kararı) |
-| SM-06 | Model değerlendirme | yayında | `model-degerlendirme.php` | Nispi Sıralama (`nispi-siralama.php`) da bu modülde, modelleri sıralamak için |
+| SM-06 | Model değerlendirme | yayında | `model-degerlendirme.php`, `nispi-siralama.php` | Nispi Sıralama 19 Kasım 2026'da katalogda SM-06'nın altına alındı (kullanıcı kararı; ayrı sayfa, dizinde Model Başarısı'nın hemen yanında), modelleri sıralamak için |
 | SM-07 | Belirsizlik nicelemesi (bootstrap, Monte Carlo, Bayesçi) | çıkarıldı (P8) | – | bootstrap çap dağılımı ve bonitette var |
 
 ### ML — Makine öğrenmesi ve mekânsal tahmin

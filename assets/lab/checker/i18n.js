@@ -132,7 +132,7 @@ const en = {
   'xlsx.loading': 'Loading the Excel reader…', 'xlsx.fail': 'The Excel reader could not be loaded.', 'read.fail': 'The file could not be read.',
   'xlsx.only': 'The old .xls format is not supported; save the file as .xlsx or CSV.',
   'preview': p => `Preview: first ${p.k} of ${p.n} records, ${p.c} columns`, 'rowno': 'Row',
-  'sample': 'Load sample data', 'sample.note': 'The sample files are made up, not real measurements; they contain deliberate problems to show what the checker does.',
+  'sample': 'Load sample data', 'sample.note': 'The sample files are simulated, not real measurements; they contain deliberate problems to show what the checker does.',
   'sample.dl': 'Download sample files',
   'next': 'Continue', 'back': 'Back', 'need.trees': 'Load the tree table first.',
   'reset': 'Reset session', 'reset.q': 'Remove the loaded tables, mapping, fixes and log? (The approved dataset is kept.)',

@@ -127,7 +127,7 @@ function renderStep1() {
   });
   $('sample').addEventListener('click', async () => {
     const ds = await (await fetch(BASE + 'assets/lab/stand/ornek/ornek-veri.json')).json();
-    useDataset(ds, { kind: 'sample', name: lang === 'tr' ? 'örnek veri paketi (benzetim)' : 'sample data package (made up)' });
+    useDataset(ds, { kind: 'sample', name: lang === 'tr' ? 'örnek veri paketi (benzetim)' : 'sample data package (simulated)' });
   });
   $('scope').addEventListener('change', e => { S.scopeOk = e.target.checked; save(); renderStep1(); renderSteps(); });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });

@@ -55,7 +55,7 @@ const en = {
   'privacy': 'Your file is read and processed in this browser and is not sent to the server. The session is kept only in this browser (IndexedDB).',
   'imp.h': 'Observed and predicted values', 'imp.sub': 'One observation per row: the observed value and the predictions of one or more models. Plot, species, diameter and validation fold columns are optional.',
   'ds.h': 'Use approved data', 'ds.sub': 'If the data approved in the Data Checker contain prediction columns (unmapped columns), you can use them.', 'ds.use': 'Open the approved data as a table', 'ds.none': 'No approved data in this browser.',
-  'sample': 'Load the sample file', 'sample.note': 'The sample file is made up (not real measurements or models); it contains deliberate empty and unreadable cells.',
+  'sample': 'Load the sample file', 'sample.note': 'The sample file is simulated (not real measurements or models); it contains deliberate empty and unreadable cells.',
   'next': 'Continue', 'back': 'Back', 'calc': 'Calculate', 'reset': 'Reset session', 'need.data': 'Load a table first.',
   'restored': p => `Previous session restored (${p.when}).`,
   'handoff': p => `Table handed over by another tool loaded: ${p.name}. The observed and model columns are chosen.`,

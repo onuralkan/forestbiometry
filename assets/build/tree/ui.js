@@ -1990,7 +1990,7 @@ const T = makeT({
     'd.list': 'Tree list', 'd.list.sub': 'One row per tree (or a diameter class and its number of trees). A diameter or girth column is required, a count column is optional.',
     'd.col.d': 'Diameter or girth column', 'd.col.n': 'Number of trees (optional)', 'd.col.kind': 'Values in the column', 'd.col.unit': 'Their unit', 'd.dec': 'Decimal separator', 'd.dec.dot': 'point', 'd.dec.comma': 'comma',
     'd.sum': p => `${p.N} tree(s); total basal area ${p.G} m²; mean basal area ${p.gm} m²; arithmetic mean diameter ${p.dm} cm; diameter of the tree of mean basal area ${p.dg} cm${p.skip ? `; ${p.skip} row(s) not read (rows ${p.rows})` : ''}.`,
-    'd.sample': 'Load the sample list', 'd.sample.note': 'The sample is made up (not real measurements).',
+    'd.sample': 'Load the sample list', 'd.sample.note': 'The sample is simulated (not real measurements).',
     'd.rules.h': 'Rules for measuring diameter at breast height (Hamilton 1975; Graves 1906)',
     'd.rules': ['Diameter is measured 1.3 m above the ground; the tape taut and at right angles to the stem, the calipers at right angles to the stem.', 'On sloping ground 1.3 m is measured from the ground on the upper side of the tree.', 'A leaning tree on level ground is measured 1.3 m from the ground on the under side, parallel to the stem axis.', 'On ploughed or mounded ground measure from the root collar or the ground, whichever is higher.', 'If there is a swelling at 1.3 m, measure below it where the diameter is smallest (Graves: above or below it, or both and average).', 'A stem forked below 1.3 m: each limb is a tree; forked at 1.3 m: one tree, measured below the fork where smallest.', 'A girthing tape usually reads larger than calipers because it spans irregularities (Graves); on a stem that is not round measure two diameters at right angles and average them.'],
     'f.ff': 'Form factor F = V/(B·H)', 'f.V': 'Volume V (m³)', 'f.d': 'Diameter (cm)', 'f.H': 'Height H (m)', 'f.kind': 'Kind',
@@ -2251,7 +2251,7 @@ function bindDiameter() {
   renderImport($('dimp'), { imp: d.imp, src: d.src }, { base: BASE, title: T('d.list'), sub: T('d.list.sub'), onChange: onImp, onError: m => status(m, 'err') });
   $('d-sample') && $('d-sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/tree/ornek/ornek-capler.csv')).arrayBuffer();
-    d.imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-capler.csv (benzetim)' : 'ornek-capler.csv (made up)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    d.imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-capler.csv (benzetim)' : 'ornek-capler.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     d.src = await readImport(d.imp, BASE); d.col = null; d.ncol = null; d.decimalChosen = false; guessList(); re();
   });
   if (!d.src) return;

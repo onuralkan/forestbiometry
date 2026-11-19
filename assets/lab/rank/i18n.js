@@ -40,7 +40,7 @@ const en = {
   'step.1': 'Data', 'step.2': 'Criteria', 'step.3': 'Results',
   'privacy': 'Your file is read and processed in this browser and is not sent to the server. The session is kept only in this browser (IndexedDB).',
   'imp.h': 'Goodness-of-fit table', 'imp.sub': 'One model per row, one goodness-of-fit statistic per column (R², FI, RMSE, MAE, Bias, AIC, BIC…). Any number of criteria. In an Excel file the first worksheet is read; you can choose another.',
-  'sample': 'Load the sample file', 'sample.note': 'The sample file is made up, not the result of a real study. It deliberately has a repeated model name, a missing value, two criteria with the same ranking (R² and FI) and one very poor model.',
+  'sample': 'Load the sample file', 'sample.note': 'The sample file is simulated, not the result of a real study. It deliberately has a repeated model name, a missing value, two criteria with the same ranking (R² and FI) and one very poor model.',
   'next': 'Continue', 'back': 'Back', 'calc': 'Rank', 'reset': 'Reset session', 'need.data': 'Load a table first.',
   'restored': p => `Previous session restored (${p.when}).`,
   'hdr.h': 'Table layout', 'hdr.row': 'Header row', 'hdr.model': 'Model name column', 'hdr.guess': 'The header row was found automatically; change it if it is wrong.',

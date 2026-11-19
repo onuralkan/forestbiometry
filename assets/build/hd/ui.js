@@ -2090,7 +2090,7 @@ const en = {
   'privacy': 'Your file is read and processed in this browser; it is not sent to the server. The session is kept only in this browser (IndexedDB).',
   'imp.h': 'Tree table', 'imp.sub': 'One row per tree: diameter at breast height, measured height (may be empty), optional plot and species. Trees without a height are not used for fitting; they get a separate predicted-height column.',
   'ds.h': 'Use the approved dataset', 'ds.sub': 'Data approved in the Forest Data Checker (dbh cm, height m, plot, species, period).', 'ds.use': 'Open the approved dataset', 'ds.none': 'No approved dataset in this browser.',
-  'sample': 'Load sample data', 'sample.note': 'The sample is a simulation with a fixed seed (made up; not real measurements): 8 plots, two species, trees without heights, an unreadable height, a tree shorter than breast height and two trees without heights outside the diameter range.',
+  'sample': 'Load sample data', 'sample.note': 'The sample is a simulation with a fixed seed (not real measurements): 8 plots, two species, trees without heights, an unreadable height, a tree shorter than breast height and two trees without heights outside the diameter range.',
   'next': 'Continue', 'back': 'Back', 'calc': 'Calculate', 'reset': 'Reset session', 'need.data': 'Load a table first.',
   'restored': p => `Previous session restored (${p.when}).`, 'busy': p => `Working… ${p.what || ''}`, 'none': '— none —', 'all': '— all —',
   'col.h': 'Columns and units', 'col.d': 'Diameter column', 'col.dunit': 'Diameter unit', 'col.h2': 'Height column', 'col.hunit': 'Height unit',

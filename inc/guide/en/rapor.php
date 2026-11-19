@@ -5,7 +5,7 @@
 <h3>Content</h3>
 <ul>
 <li><b>Report details</b>: title, prepared by, institution, date, introduction and the <b>Report language</b> (Turkish or English, apart from the interface language).</li>
-<li><b>Data package</b>: a package of the Inventory Data Manager (or the made-up sample package); the filters are those of the Visualization Dashboard and affect only the charts.</li>
+<li><b>Data package</b>: a package of the Inventory Data Manager (or the simulated sample package); the filters are those of the Visualization Dashboard and affect only the charts.</li>
 <li><b>Run records</b>: <b>Add records (.json)</b> or <b>Take the dashboard's records</b>; their order can be changed. For each record the tool, version, seal, origin of the data, settings and result tables (the first 60 rows of long tables) are written.</li>
 </ul>
 <h3>Sections and output</h3>

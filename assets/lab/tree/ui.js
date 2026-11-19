@@ -146,7 +146,7 @@ function bindDiameter() {
   renderImport($('dimp'), { imp: d.imp, src: d.src }, { base: BASE, title: T('d.list'), sub: T('d.list.sub'), onChange: onImp, onError: m => status(m, 'err') });
   $('d-sample') && $('d-sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/tree/ornek/ornek-capler.csv')).arrayBuffer();
-    d.imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-capler.csv (benzetim)' : 'ornek-capler.csv (made up)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    d.imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-capler.csv (benzetim)' : 'ornek-capler.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     d.src = await readImport(d.imp, BASE); d.col = null; d.ncol = null; d.decimalChosen = false; guessList(); re();
   });
   if (!d.src) return;

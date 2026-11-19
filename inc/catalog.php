@@ -87,6 +87,7 @@ function site_catalog(): array {
         ['SM-04', 'live', 'Eşanlı ve uyumlu sistemler', 'Simultaneous and compatible systems', 'denklem-sistemleri.php'],
         ['SM-05', 'out', 'Ölüm ve sağkalım modelleri', 'Mortality and survival models'],
         ['SM-06', 'live', 'Model değerlendirme', 'Model evaluation', 'model-degerlendirme.php'],
+        ['SM-06', 'live', 'Model değerlendirme: nispi sıralama', 'Model evaluation: relative ranking', 'nispi-siralama.php'],   // 19 Nov 2026, user decision: Relative Ranking under SM-06, own page
         ['SM-07', 'out', 'Belirsizlik nicelemesi', 'Uncertainty quantification'],
         ['ML-01', 'out', 'Makine öğrenmesi ile regresyon ve sınıflama', 'ML regression and classification'],
         ['ML-02', 'out', 'Derin öğrenmeyle tepe tacı ayırma', 'Deep-learning crown delineation'],
@@ -111,6 +112,9 @@ function site_catalog(): array {
  */
 function site_module_items(string $mod, array $tools, array $catalog): array {
     $home = array_values(array_filter($tools, function ($t) use ($mod) { return $t['cat'] === $mod; }));
+    // a tool listed under another tool's id stands right after it ('after'; Relative Ranking after Model Evaluation, SM-06)
+    foreach ($home as $i => $t) if (!empty($t['after'])) { $j = array_search($t['after'], array_column($home, 'file'), true);
+        if ($j !== false) { array_splice($home, $i, 1); $j = array_search($t['after'], array_column($home, 'file'), true); array_splice($home, $j + 1, 0, [$t]); } }
     $homeFiles = array_column($home, 'file');
     $cover = []; $planned = [];
     foreach ($catalog as $c) {

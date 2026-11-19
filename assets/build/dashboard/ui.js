@@ -1764,9 +1764,9 @@ const T = makeT({
   },
   en: {
     privacy: 'Data and records are read in this browser only; nothing is sent to the server.',
-    'src.h': 'Data package', 'src.pick': 'Package shown', 'src.active': 'active', 'src.sample': 'Show the sample package (made-up data)',
+    'src.h': 'Data package', 'src.pick': 'Package shown', 'src.active': 'active', 'src.sample': 'Show the sample package (simulated data)',
     'src.none': 'No approved data package in this browser. Approve data in the Data Checker or import a package into the Inventory Data Manager.',
-    'src.samplenote': 'Shown: the sample data package of Plot & Stand Metrics (made up, for trying out only).', 'src.checker': 'Data Checker', 'src.manager': 'Inventory Data Manager',
+    'src.samplenote': 'Shown: the sample data package of Plot & Stand Metrics (simulated, for trying out only).', 'src.checker': 'Data Checker', 'src.manager': 'Inventory Data Manager',
     'f.h': 'Filters', 'f.period': 'Period', 'f.stratum': 'Stratum', 'f.species': 'Species', 'f.plot': 'Plot', 'f.all': 'all', 'f.noper': 'no period', 'f.nosp': 'no species',
     'f.width': 'Diameter class width (cm)', 'f.auto': 'automatic', 'f.ec': 'Plot × period without records', 'f.ec.unmeasured': 'not measured (left out)', 'f.ec.empty': 'empty (N = G = 0)',
     'f.est': 'Show estimated heights too',

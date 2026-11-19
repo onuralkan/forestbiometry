@@ -12,7 +12,7 @@
 <h3>Decimal separator</h3>
 <p>The decimal separator does not depend on the interface language. The tool looks at the text cells and says whether a point or a comma was used, but leaves the decision to you: <b>Point (24.5)</b> or <b>Comma (24,5)</b>. Values such as "1.234", which could be either a decimal or a thousands separator, are reported as "ambiguous". Values that do not fit your choice count as unreadable and are reported with their row numbers; no value is skipped silently. Excel number cells are not affected by this setting.</p>
 <h3>Sample data</h3>
-<p>Every tool has a sample data button. The samples are simulated (made up), not real measurements; they are there to try the tool and to show edge cases.</p>
+<p>Every tool has a sample data button. The samples are simulated, not real measurements; they are there to try the tool and to show edge cases.</p>
 <h3>Exports</h3>
 <ul>
 <li><b>Excel report</b>: numbers are written as number cells at full precision; the first sheet (Info) holds the tool, version, date and settings.</li>

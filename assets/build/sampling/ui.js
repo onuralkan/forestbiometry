@@ -1659,7 +1659,7 @@ const en = {
   'restored': p => `Previous session restored (${p.when}).`, 'reset': 'Reset session',
   'src.h': '1. Variability: coefficient of variation (CV)', 'src.pilot': 'Compute from pilot measurements (plot-level values)', 'src.manual': 'I will enter the CV myself',
   'imp.h': 'Pilot plots', 'imp.sub': 'Each row must be one plot and that plot\'s value (e.g. volume m³/ha, basal area m²/ha, trees/ha). The "plots" CSV of Plot & Stand Metrics can be used. Tree-level measurements (single-tree diameter or height) are not used here: the variability of diameters among trees is not the variability of a plot-level variable.',
-  'sample': 'Load sample pilot data', 'sample.note': 'The sample is a simulation with a fixed seed (made up; not real measurements): volume per hectare of 14 plots, one empty.',
+  'sample': 'Load sample pilot data', 'sample.note': 'The sample is a simulation with a fixed seed (not real measurements): volume per hectare of 14 plots, one empty.',
   'col.v': 'Value column (plot level)', 'col.p': 'Plot identifier (optional, to check for repeats)', 'col.f': 'Filter column (optional, e.g. period)', 'col.fv': 'Filter value', 'none': '— none —',
   'col.unit': 'Unit of the value (written in the report; does not affect the calculation)',
   'dec.h': 'Decimal separator', 'dec.dot': 'Point (24.5)', 'dec.comma': 'Comma (24,5)', 'dec.choose': 'Choose the decimal separator.',
