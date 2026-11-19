@@ -21,7 +21,7 @@ const when = iso => iso ? new Date(iso).toLocaleString(LOC) : '–';
 let S = blank(), R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, tab: 'units', ds: null, dsSrc: null, scopeOk: false, status: null, emptyCombos: null,
-    cls: null, design: { type: 'none', forestArea: '', strata: {} }, selPlot: null, selPer: null, nav: null, tbl: null, domBy: 'both' };
+    cls: null, design: { type: 'none', forestArea: '', strata: {} }, selPlot: null, selPer: null, nav: null, tbl: null };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -162,8 +162,7 @@ function renderStep2() {
       <div class="radios col">${['empty', 'unmeasured'].map(v => `<label><input type="radio" name="ec" value="${v}"${S.emptyCombos === v ? ' checked' : ''}> ${T('ec.' + v)}</label>`).join('')}</div>
       ${S.emptyCombos ? '' : `<p class="note warn">${T('ec.undecided')}</p>`}</div>`;
   }
-  h += `<div class="card"><h2>${T('dom.title')}</h2><details class="more"><summary>${T('more')}</summary><p class="muted small">${T('dom.sub', { n: C.DOM_PER_HA })}</p></details><p class="small"><b>${T('dom.pick')}</b></p><div class="radios col">
-    ${['both', 'd', 'h'].map(v => `<label><input type="radio" name="domby" value="${v}"${S.domBy === v ? ' checked' : ''}> ${T('dom.' + v)}</label>`).join('')}</div>
+  h += `<div class="card"><h2>${T('dom.title')}</h2><details class="more"><summary>${T('more')}</summary><p class="muted small">${T('dom.sub', { n: C.DOM_PER_HA })}</p></details><p class="small">${T('dom.def')}</p>
     <details class="more"><summary>${T('dom.hnote.h')}</summary><p class="muted small">${T('dom.hnote')} ${T('dom.agenote')}</p></details></div>`;
   h += `<div class="card"><h2>${T('cls.h')}</h2><p class="muted">${T('cls.sub')}</p>
     <div class="radios"><label><input type="radio" name="cm" value="width"${c.mode === 'width' ? ' checked' : ''}> ${T('cls.width')}</label><label><input type="radio" name="cm" value="list"${c.mode === 'list' ? ' checked' : ''}> ${T('cls.list')}</label></div>`;
@@ -185,7 +184,6 @@ function renderStep2() {
     const on = [...el.querySelectorAll('[data-st]')].filter(i => i.checked).map(i => i.dataset.st);
     S.status = on.length === stats.length ? null : on; R = null; save();
   }));
-  el.querySelectorAll('input[name="domby"]').forEach(x => x.addEventListener('change', () => { S.domBy = x.value; save(); }));
   el.querySelectorAll('input[name="ec"]').forEach(x => x.addEventListener('change', () => { S.emptyCombos = x.value; R = null; save(); renderStep2(); }));
   el.querySelectorAll('input[name="cm"]').forEach(x => x.addEventListener('change', () => {
     if (x.value === 'list' && !c.breaks) { const b = C.breaksFromWidth(num(c.start), num(c.width), num(c.end)); c.breaks = b ? b.map(v => String(v)).join(' ') : ''; }
@@ -241,11 +239,9 @@ const UNIT_COLS = [['plot', m => esc(m.plot_id), 'code'], ['per', m => esc(perLa
   ['c.n', m => fmtNum(m.n, 0), 'num'], ['c.Nha', m => f(m.Nha, 1), 'num'], ['c.Gha', m => f(m.Gha, 3), 'num'], ['c.dmean', m => f(m.d_mean, 2), 'num'], ['c.dq', m => f(m.dq, 2), 'num'],
   ['c.dmin', m => f(m.d_min, 1), 'num'], ['c.dmax', m => f(m.d_max, 1), 'num'], ['c.dsd', m => f(m.d_sd, 2), 'num'], ['c.hm', m => fmtNum(m.h_measured.n, 0), 'num'],
   ['c.hmean', m => f(m.h_measured.mean, 2), 'num'], ['c.he', m => fmtNum(m.h_estimated.n, 0), 'num']];
-/** Dominant-tree columns for the chosen selection ('both' | 'd' | 'h'). */
+/** D0 (100 thickest trees per hectare), H0 (100 tallest) and age columns. */
 function domCols() {
-  const by = S.domBy || 'both', c = (lab, key, v) => [lab, m => f(m.dom[key][v], v === 'D0' ? 2 : 2), 'num'];
-  const cols = by === 'both' ? [c('c.D0d', 'd', 'D0'), c('c.H0d', 'd', 'H0'), c('c.D0h', 'h', 'D0'), c('c.H0h', 'h', 'H0')] : [c('c.D0', by, 'D0'), c('c.H0', by, 'H0')];
-  return [...cols, ['c.age', m => f(m.age.mean, 1), 'num'], ['c.agen', m => fmtNum(m.age.n, 0), 'num']];
+  return [['c.D0', m => f(m.dom.D0, 2), 'num'], ['c.H0', m => f(m.dom.H0, 2), 'num'], ['c.age', m => f(m.age.mean, 1), 'num'], ['c.agen', m => fmtNum(m.age.n, 0), 'num']];
 }
 function tabUnits(p) {
   const COLS = [...UNIT_COLS, ...domCols()];
@@ -269,12 +265,11 @@ function tabDetail(p) {
     <p class="muted small">${T('c.area')}: ${f(m.area_m2, 2)} · ${T('c.G')}: ${f(m.G_m2, 5)} · ${T('state')}: ${T('s.' + m.state)}</p>`;
   if (!valid) { p.innerHTML = h + `<p class="note warn">${T('units.note')}</p>`; bindDetail(); return; }
   {
-    const by = S.domBy === 'both' || !S.domBy ? ['d', 'h'] : [S.domBy], notes = [];
-    let tl = '';
-    for (const b of by) {
-      const r = m.dom[b], suf = by.length > 1 ? ` · ${T('det.by.' + b)}` : '';
-      tl += tile(f(r.D0, 2), T('c.D0') + suf) + tile(f(r.H0, 2), T('c.H0') + suf);
-      if (r.why && r.why !== 'empty') notes.push(`${T('det.by.' + b)}: ${T('why.' + r.why)}`);
+    const notes = [];
+    let tl = tile(f(m.dom.D0, 2), T('c.D0')) + tile(f(m.dom.H0, 2), T('c.H0'));
+    for (const b of ['d', 'h']) {
+      const r = m.dom[b];
+      if (r.why && r.why !== 'empty') notes.push(`${T('c.' + (b === 'd' ? 'D0' : 'H0'))}: ${T('why.' + r.why)}`);
       if (r.short && !notes.includes('short')) notes.push('short');
     }
     tl += tile(f(m.h_measured.mean, 2), T('c.hmean')) + tile(m.age.n ? f(m.age.mean, 1) : '–', `${T('c.age')} · n = ${fmtNum(m.age.n, 0)}`);
@@ -394,10 +389,10 @@ function tabForest(p) {
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function unitRows() {
   return [['plot_id', 'period', 'state', 'stratum', 'area_m2', 'expansion_factor', 'n', 'N_ha', 'G_m2', 'G_m2_ha', 'd_mean_cm', 'dq_cm', 'd_min_cm', 'd_max_cm', 'd_sd_cm', 'h_measured_n', 'h_measured_mean_m', 'h_estimated_n', 'h_estimated_mean_m', 'h_missing_n', 'below_classes_n', 'above_classes_n',
-    'dominant_k', 'D0_by_dbh_cm', 'H0_by_dbh_m', 'D0_by_height_cm', 'H0_by_height_m', 'age_mean', 'age_n'],
+    'dominant_k', 'D0_cm', 'H0_m', 'age_mean', 'age_n'],
     ...R.metrics.map(m => { const v = C.isValidUnit(m); return [m.plot_id, m.period, m.state, m.stratum, m.area_m2, m.ef, v ? m.n : null, v ? m.Nha : null, v ? m.G_m2 : null, v ? m.Gha : null, m.d_mean, m.dq, m.d_min, m.d_max, m.d_sd,
       m.h_measured.n, m.h_measured.mean, m.h_estimated.n, m.h_estimated.mean, v ? m.h_missing : null, m.below, m.above,
-      m.dom.k, m.dom.d.D0, m.dom.d.H0, m.dom.h.D0, m.dom.h.H0, m.age.mean, m.age.n]; })];
+      m.dom.k, m.dom.D0, m.dom.H0, m.age.mean, m.age.n]; })];
 }
 /**
  * Tree table with the plot's stand parameters appended to every row (the user's field-data layout).
@@ -405,9 +400,8 @@ function unitRows() {
  * otherwise the tree records of the data package are written. Names already in the table get "_plot".
  */
 function treeExport() {
-  const by = S.domBy || 'both', unit = new Map(R.metrics.map(m => [m.plot_id + '\u0000' + (m.period ?? '\u0001'), m]));
-  const dom = by === 'both' ? [['D0_d', 'd', 'D0'], ['H0_d', 'd', 'H0'], ['D0_h', 'h', 'D0'], ['H0_h', 'h', 'H0']] : [['D0', by, 'D0'], ['H0', by, 'H0']];
-  const add = [...dom.map(([n, b, v]) => [n, m => m.dom[b][v]]), ['hm', m => m.h_measured.mean], ['dm', m => m.d_mean], ['N', m => m.Nha], ['BA', m => m.Gha], ['age', m => m.age.mean], ['Dq', m => m.dq]];
+  const unit = new Map(R.metrics.map(m => [m.plot_id + '\u0000' + (m.period ?? '\u0001'), m]));
+  const add = [['D0', m => m.dom.D0], ['H0', m => m.dom.H0], ['hm', m => m.h_measured.mean], ['dm', m => m.d_mean], ['N', m => m.Nha], ['BA', m => m.Gha], ['age', m => m.age.mean], ['Dq', m => m.dq]];
   const fromTable = S.dsSrc && S.dsSrc.kind === 'table' && S.tbl && S.tbl.src && S.tbl.usedKey === tblKey();
   let head, body;
   if (fromTable) {
@@ -424,8 +418,7 @@ function treeExport() {
     const m = unit.get(t.plot_id + '\u0000' + (t.period ?? '\u0001')), ok = m && C.isValidUnit(m);
     return [...body[i], ...add.map(([, g]) => ok ? g(m) : null), ...(keep ? [keep.has(t.status ?? '') ? 1 : 0] : [])];
   })];
-  const def = { D0: T('xd.D0', { by: T('xd.by.' + (by === 'both' ? 'd' : by)) }), H0: T('xd.H0', { by: T('xd.by.' + (by === 'both' ? 'd' : by)) }),
-    D0_d: T('xd.D0', { by: T('xd.by.d') }), H0_d: T('xd.H0', { by: T('xd.by.d') }), D0_h: T('xd.D0', { by: T('xd.by.h') }), H0_h: T('xd.H0', { by: T('xd.by.h') }),
+  const def = { D0: T('xd.D0'), H0: T('xd.H0'),
     hm: T('xd.hm'), dm: T('xd.dm'), N: T('xd.N'), BA: T('xd.BA'), age: T('xd.age'), Dq: T('xd.Dq') };
   const units = { D0: 'cm', D0_d: 'cm', D0_h: 'cm', H0: 'm', H0_d: 'm', H0_h: 'm', hm: 'm', dm: 'cm', N: '1/ha', BA: 'm²/ha', age: T('xd.yr'), Dq: 'cm' };
   const info = [...infoRows(), [], [T('xd.h')], [T('xd.col'), T('xd.def'), T('xd.unit')], ...add.map(([n], i) => [names[i], def[n], units[n]]),
@@ -458,7 +451,7 @@ function infoRows() {
   const c = S.cls;
   return [[T('x.k'), T('x.v')], [T('x.tool'), `${C.TOOL.id} ${C.TOOL.version}`], [T('x.date'), new Date().toISOString()], [T('x.src'), `${S.dsSrc ? S.dsSrc.name || S.dsSrc.kind : ''} (${S.ds.created})`],
     [T('x.status'), S.status ? S.status.map(s => s || T('st.blank')).join(', ') : T('x.all')], [T('x.ec'), S.emptyCombos ? T('ec.' + S.emptyCombos) : T('ec.undecided')],
-    [T('x.cls'), R.classes.map(clsLabel).join(' ')], [T('x.design'), T('des.' + S.design.type)], [T('dom.pick'), T('dom.' + (S.domBy || 'both'))], ['', T('x.formulas')], ['', T('scope.no')]];
+    [T('x.cls'), R.classes.map(clsLabel).join(' ')], [T('x.design'), T('des.' + S.design.type)], [T('dom.title'), T('dom.def')], ['', T('x.formulas')], ['', T('scope.no')]];
 }
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-trees">${T('ex.trees')}</button></div><p class="muted small">${T('ex.trees.note')}</p>
@@ -467,7 +460,7 @@ function tabExport(p) {
   $('x-json').addEventListener('click', () => {
     const fromTable = S.dsSrc && S.dsSrc.kind === 'table' && S.tbl;
     downloadRecord(fname('ornek-alan', 'plot-stand') + '.json', { tool: C.TOOL, created: new Date().toISOString(),
-      settings: { source: S.dsSrc ? { kind: S.dsSrc.kind, name: S.dsSrc.name || null } : null, status: S.status, emptyCombos: S.emptyCombos, classes: R.classes, design: designObj(), domainBy: S.domBy || 'both',
+      settings: { source: S.dsSrc ? { kind: S.dsSrc.kind, name: S.dsSrc.name || null } : null, status: S.status, emptyCombos: S.emptyCombos, classes: R.classes, design: designObj(), dominant: { D0: 'thickest', H0: 'tallest', perHa: C.DOM_PER_HA },
         reading: fromTable ? { columns: Object.fromEntries(Object.entries(S.tbl.map).map(([k, i]) => [k, i == null ? null : S.tbl.src.headers[i]])), ...S.tbl.spec } : null },
       units: R.metrics, periods: R.periods, noPeriod: R.noPeriod, byPeriod: R.byPeriod },
       C.TOOL, fromTable ? [['trees', S.tbl.imp]] : S.ds ? [['dataset', { kind: 'dataset', dataset: S.ds }]] : [], m => status(m, 'err'));

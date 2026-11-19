@@ -39,8 +39,8 @@ const { units } = buildUnits(ds, { emptyCombos: 'empty' });
 for (const ref of R.units) {
   const u = units.find(x => x.plot_id === ref.plot_id && x.period === ref.period), r = S.structureUnit(u), tag = `${ref.plot_id}/${ref.period}`, m = r.measures;
   const um = unitMetrics(u);
-  ok(r.status === 'ok' && r.Nha === um.Nha && r.Gha === um.Gha && r.Dq === um.dq && r.H0 === um.dom.d.H0, `${tag}: N/ha, G/ha, Dq and H0 are the Plot & Stand values`);
-  near(r.Nha, ref.Nha, `${tag} N/ha`); near(r.Gha, ref.Gha, `${tag} G/ha`); near(r.Dq, ref.Dq, `${tag} Dq`); near(r.H0, ref.H0, `${tag} H0 (Python, 100 thickest per ha)`, 1e-12);
+  ok(r.status === 'ok' && r.Nha === um.Nha && r.Gha === um.Gha && r.Dq === um.dq && r.H0 === um.dom.H0, `${tag}: N/ha, G/ha, Dq and H0 are the Plot & Stand values`);
+  near(r.Nha, ref.Nha, `${tag} N/ha`); near(r.Gha, ref.Gha, `${tag} G/ha`); near(r.Dq, ref.Dq, `${tag} Dq`); near(r.H0, ref.H0, `${tag} H0 (Python, 100 tallest per ha)`, 1e-12);
   for (const q of ['cv', 'skew', 'kurt']) near(m[q], ref.moments[q], `${tag} ${q}`, 1e-11);
   near(m.gini, ref.gini_g, `${tag} Gini on basal area`); near(S.structureUnit(u, { giniOn: 'd' }).measures.gini, ref.gini_d, `${tag} Gini on diameter (option)`);
   near(m.shannonD, ref.shannonD, `${tag} Shannon over 4 cm classes from 0`, 1e-13); near(m.shannonSp, ref.shannonSp, `${tag} species Shannon`, 1e-13); near(m.simpson, ref.simpson, `${tag} species Simpson`, 1e-13);

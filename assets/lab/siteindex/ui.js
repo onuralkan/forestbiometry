@@ -24,7 +24,7 @@ let S0 = blank(), sets = [], R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, setId: null, a0: '', cls: { mode: 'none', start: '', width: '', n: '', list: '', order: 'desc' },
     fit: { imp: null, src: null, map: { series: null, plot: null, A: null, H: null }, decimal: null, decimalChosen: false, form: 'cr.ada.b0', pairing: 'consecutive', startMode: 'grid', start: {}, ageType: '', topDef: '', topNote: '', cit: '', open: false },
-    mode: 'single', A: '', H: '', imp: null, src: null, map: { plot: null, period: null, A: null, H: null }, decimal: null, decimalChosen: false, dAge: null, rank: 'dbh' };
+    mode: 'single', A: '', H: '', imp: null, src: null, map: { plot: null, period: null, A: null, H: null }, decimal: null, decimalChosen: false, dAge: null };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -223,10 +223,10 @@ function rowsFromInput() {
   // approved data: one unit per plot × period; H0 by the Plot & Stand definition, age = mean recorded age
   const units = buildUnits(approved, { emptyCombos: 'unmeasured' }).units.filter(u => u.state === 'measured');
   return { rows: units.map(u => {
-    const m = unitMetrics(u), dom = S0.rank === 'height' ? m.dom.h : m.dom.d, pre = [];
+    const m = unitMetrics(u), dom = { H0: m.dom.H0 }, pre = [];   // H0: the 100 tallest trees per hectare
     if (!u.trees.length) pre.push({ code: 'unit.empty' });
     else { if (dom.H0 == null) pre.push({ code: 'h0.none' }); if (!(m.age.n > 0)) pre.push({ code: 'age.none' }); }
-    return { key: u.plot_id + '|' + (u.period ?? ''), unit: [u.plot_id, u.period].filter(x => x != null).join(' / '), plot: u.plot_id, period: u.period, A: m.age.mean, H: dom.H0, Hsrc: S0.rank === 'height' ? 'h0height' : 'h0dbh', pre, nAge: m.age.n, k: m.dom.k };
+    return { key: u.plot_id + '|' + (u.period ?? ''), unit: [u.plot_id, u.period].filter(x => x != null).join(' / '), plot: u.plot_id, period: u.period, A: m.age.mean, H: dom.H0, Hsrc: 'h0height', pre, nAge: m.age.n, k: m.dom.k };
   }), problems: [] };
 }
 function dataProblems() {
@@ -254,7 +254,7 @@ function renderStep2() {
         <div class="radios"><span class="small">${T('d.dec')}:</span> <label class="small"><input type="radio" name="dec" value="."${S0.decimal === '.' ? ' checked' : ''}> ${T('d.dec.dot')}</label><label class="small"><input type="radio" name="dec" value=","${S0.decimal === ',' ? ' checked' : ''}> ${T('d.dec.comma')}</label></div></div>`;
     }
   }
-  if (S0.mode === 'ds') h += `<div class="card"><div class="radios"><span class="small">${T('d.rank')}:</span> ${['dbh', 'height'].map(r => `<label class="small"><input type="radio" name="rank" value="${r}"${S0.rank === r ? ' checked' : ''}> ${T('d.rank.' + r)}</label>`).join(' ')}</div><p class="muted small">${T('d.ds.note')}</p></div>`;
+  if (S0.mode === 'ds') h += `<div class="card"><p class="muted small">${T('d.ds.note')}</p></div>`;
   const pr = dataProblems();
   h += `<div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div>`;
   el.innerHTML = h;
@@ -266,7 +266,6 @@ function renderStep2() {
   $('sH') && $('sH').addEventListener('change', e => { S0.H = e.target.value; re(); });
   for (const k of ['plot', 'period', 'A', 'H']) $('map-' + k) && $('map-' + k).addEventListener('change', e => { S0.map[k] = e.target.value === '' ? null : +e.target.value; re(); });
   el.querySelectorAll('input[name="dec"]').forEach(x => x.addEventListener('change', () => { S0.decimal = x.value; S0.decimalChosen = true; re(); }));
-  el.querySelectorAll('input[name="rank"]').forEach(x => x.addEventListener('change', () => { S0.rank = x.value; re(); }));
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); if (R) go(3); });
 }

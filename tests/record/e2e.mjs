@@ -72,7 +72,7 @@ const st = await viaTab('/ornek-alan.php', async () => {
   await page.check('input[name="ec"][value="empty"]'); await page.click('#calc'); await page.waitForSelector('table.units'); await page.click('#tab-export');
 });
 const standDs = JSON.parse(await fileOf('assets/lab/stand/ornek/ornek-veri.json'));
-ok(st.obj.tool.version === '1.2.0' && st.obj.units.length > 0 && st.obj.inputs[0].kind === 'dataset' && st.obj.inputs[0].sha256 === sha(Buffer.from(R.canonical(standDs))) && await sealOk(st.obj), 'plot & stand 1.2.0: record; data package fingerprinted in canonical form');
+ok(st.obj.tool.version === '1.2.1' && st.obj.units.length > 0 && st.obj.inputs[0].kind === 'dataset' && st.obj.inputs[0].sha256 === sha(Buffer.from(R.canonical(standDs))) && await sealOk(st.obj), 'plot & stand 1.2.0: record; data package fingerprinted in canonical form');
 
 // 3. Record Verifier
 await page.goto(BASE + '/kayit-dogrulayici.php?lang=tr');

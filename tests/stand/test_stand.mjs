@@ -121,7 +121,7 @@ eq(C.validateDataset({ schema: 'x', plots: [], trees: [] }), ['ds.schema'], 'wro
 eq(C.validateDataset(DS([{ plot_id: 'a', plot_area: 0 }], [tree('z', '1', -1)])), ['ds.plotarea', 'ds.treeplot', 'ds.dbh'], 'bad plot area, unknown plot, bad dbh');
 
 
-/* D0, H0 (100 largest trees per hectare, by diameter or by height), hm, dm, N, BA, age, Dq
+/* D0 (100 thickest trees per hectare), H0 (100 tallest; 19 Nov 2026), hm, dm, N, BA, age, Dq
    reference: tests/ref/stand_dominant.json from tests/ref/make_stand_dominant_reference.py (numpy, stems per hectare) */
 {
   const REF = JSON.parse(readFileSync(path.join(root, 'tests/ref/stand_dominant.json'), 'utf8'));
@@ -131,14 +131,14 @@ eq(C.validateDataset(DS([{ plot_id: 'a', plot_area: 0 }], [tree('z', '1', -1)]))
     eq(C.validateDataset(ds), [], c.name + ': valid');
     const m = C.computeAll(ds, {}, null, null).metrics[0];
     near(m.dom.k, c.k, c.name + ': k');
-    near(m.dom.d.D0, c.D0_dbh, c.name + ': D0 by diameter', 1e-12); near(m.dom.d.H0, c.H0_dbh, c.name + ': H0 by diameter', 1e-12);
-    near(m.dom.h.D0, c.D0_height, c.name + ': D0 by height', 1e-12); near(m.dom.h.H0, c.H0_height, c.name + ': H0 by height', 1e-12);
+    near(m.dom.D0, c.D0_dbh, c.name + ': D0 = 100 thickest', 1e-12); near(m.dom.H0, c.H0_height, c.name + ': H0 = 100 tallest', 1e-12);
+    ok(m.dom.d.H0 === undefined && m.dom.h.D0 === undefined, c.name + ': no H0 of the thickest trees, no D0 of the tallest');
     near(m.age.mean, c.age_mean, c.name + ': mean age of aged trees', 1e-12); eq(m.age.n, c.age_n, c.name + ': aged trees');
     near(m.h_measured.mean, c.hm, c.name + ': hm', 1e-12); near(m.d_mean, c.dm, c.name + ': dm', 1e-12); near(m.dq, c.dq, c.name + ': Dq', 1e-12);
     near(m.Nha, c.N, c.name + ': N', 1e-12); near(m.Gha, c.BA, c.name + ': BA', 1e-12);
     // row order must not matter (ties at the boundary share the weight)
     const rev = C.computeAll(DS([{ plot_id: 'P', plot_area: c.area }], trees.slice().reverse()), {}, null, null).metrics[0];
-    near(rev.dom.d.H0, c.H0_dbh, c.name + ': H0 by diameter, reversed rows', 1e-12); near(rev.dom.h.D0, c.D0_height, c.name + ': D0 by height, reversed rows', 1e-12);
+    near(rev.dom.D0, c.D0_dbh, c.name + ': D0, reversed rows', 1e-12); near(rev.dom.H0, c.H0_height, c.name + ': H0, reversed rows', 1e-12);
   }
   // hand examples
   const t = (d, h) => tree('A', String(d) + '-' + h, d, { height: h });
@@ -150,12 +150,12 @@ eq(C.validateDataset(DS([{ plot_id: 'a', plot_area: 0 }], [tree('z', '1', -1)]))
   m = C.computeAll(DS([{ plot_id: 'A', plot_area: 1800 }], [t(30, 15), t(25, 13)]), {}, null, null).metrics[0];
   ok(m.dom.d.short === true && m.dom.d.D0 === 27.5, 'fewer trees than k: all trees, flagged');
   m = C.computeAll(DS([{ plot_id: 'A', plot_area: 400 }], [t(50, 21), tree('A', 'x', 48), t(46, 19), t(44, 18), t(20, 15)]), {}, null, null).metrics[0];
-  ok(m.dom.d.D0 === 47 && m.dom.d.H0 === null && m.dom.d.why === 'h.sel', 'H0 not given when a dominant tree has no measured height');
-  ok(m.dom.h.D0 === null && m.dom.h.why === 'h.rank', 'selection by height impossible when a height is missing');
+  ok(m.dom.D0 === 47 && m.dom.d.why === null, 'D0 from the thickest trees regardless of heights');
+  ok(m.dom.H0 === null && m.dom.h.why === 'h.rank', 'H0 not given when a tree has no measured height (the tallest cannot be found)');
   m = C.computeAll(DS([{ plot_id: 'A', plot_area: 400 }], [t(50, 21), tree('A', 'e', 48, { height: 30, height_source: 'estimated' }), t(46, 19), t(44, 18), t(20, 15)]), {}, null, null).metrics[0];
-  ok(m.dom.d.H0 === null && m.dom.h.D0 === null, 'estimated heights are not used for H0');
+  ok(m.dom.H0 === null && m.dom.h.why === 'h.rank', 'estimated heights are not used for H0');
   m = C.computeAll(DS([{ plot_id: 'E', plot_area: 400 }], []), {}, null, null).metrics[0];
-  ok(m.dom.d.D0 === null && m.dom.d.why === 'empty' && m.age.mean === null, 'empty plot: no D0, H0, age');
+  ok(m.dom.D0 === null && m.dom.H0 === null && m.dom.d.why === 'empty' && m.age.mean === null, 'empty plot: no D0, H0, age');
   eq(C.validateDataset(DS([{ plot_id: 'A', plot_area: 400 }], [tree('A', '1', 20, { age: -3 })])), ['ds.age'], 'negative age rejected');
 }
 

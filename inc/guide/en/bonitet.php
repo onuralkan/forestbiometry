@@ -13,7 +13,7 @@
 </ul>
 <h3>Data</h3>
 <ul>
-<li>One point (age and top height), a table (plot, period, age, top height) or the approved tree data. With approved data, H0 uses the same definition as the Plot & Stand tool (the 100 thickest or tallest trees per hectare) and measured heights only; the age is the mean of the trees with a recorded age.</li>
+<li>One point (age and top height), a table (plot, period, age, top height) or the approved tree data. With approved data, H0 uses the same definition as the Plot & Stand tool (the 100 tallest trees per hectare) and measured heights only; the age is the mean of the trees with a recorded age.</li>
 <li><b>Age type in the data</b>: you choose it; if it is not the age type of the equation, nothing is computed.</li>
 </ul>
 <h3>Results and downloads</h3>

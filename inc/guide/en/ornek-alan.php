@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('ornek-alan', 'Plot & Stand Metrics') ?>
-<p>For every plot and measurement period: stems per hectare (N/ha) and basal area (G/ha), arithmetic mean diameter and quadratic mean diameter (Dq), the standard deviation of diameter, the smallest and largest diameter, the diameter class distribution, species composition, dominant diameter and height (D0, H0: the 100 largest trees per hectare), the mean of measured heights and the mean age. Also a descriptive between-plot summary and, when a sampling design is given, a design-based estimate for the forest.</p>
+<p>For every plot and measurement period: stems per hectare (N/ha) and basal area (G/ha), arithmetic mean diameter and quadratic mean diameter (Dq), the standard deviation of diameter, the smallest and largest diameter, the diameter class distribution, species composition, the dominant diameter D0 (mean diameter of the 100 thickest trees per hectare) and the top height H0 (mean height of the 100 tallest trees per hectare), the mean of measured heights and the mean age. Also a descriptive between-plot summary and, when a sampling design is given, a design-based estimate for the forest.</p>
 <p><b>What it does not do:</b> it does not estimate heights (heights flagged "estimated" in the data are shown apart, never pooled with measured ones); it gives no confidence intervals; it is for fixed-area plots only (nested plots and angle counts are out of scope, and the tool does not correct for them); it applies no finite population correction under simple random sampling. The between-plot table is not a forest estimate.</p>
 <h3>Data</h3>
 <ul>
@@ -13,7 +13,7 @@
 <ul>
 <li><b>Records to count</b>: if the data have a status, which statuses are counted (default: all).</li>
 <li><b>Plot–period combinations without records</b>: if some plots have no tree records in some periods, you decide: "Measured, no trees (N = 0, G = 0)" or "Not measured". Without a decision these combinations stay out of the calculation and no forest estimate is made for that period.</li>
-<li><b>Dominant diameter and height</b>: the "largest" trees by diameter, by height, or both separately. H0 uses measured heights only.</li>
+<li><b>Dominant diameter and top height</b>: D0 from the 100 thickest, H0 from the 100 tallest trees per hectare; there is no choice. H0 uses measured heights only.</li>
 <li><b>Diameter classes</b>: equal width (default 4 cm) or a list of limits; classes are half-open [lower, upper); optional open class above the last limit.</li>
 <li><b>Estimate for the forest</b>: without a design no forest estimate is made. "Simple random" (approximately for systematic grids) with an optional forest area (for totals); "Stratified random" with stratum areas (when the data have strata).</li>
 </ul>

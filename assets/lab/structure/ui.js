@@ -26,7 +26,7 @@ const ukey = u => u.plot_id + '|' + (u.period ?? '');
 let st = blank(), R = null, approved = null, ccfSets = [], ccfEditor = null;
 function blank() {
   return { v: 1, step: 1, tab: 'units', ds: null, dsSrc: null, tbl: null, sel: null, nav: null, allCols: false,
-    set: { classStart: '0', classWidth: '4', giniOn: 'g', balTies: 'exclude', sdiBeta: '1.605', sdiRef: '25', rdExp: '0.5', spacing: 'square', h0From: 'dbh' },
+    set: { classStart: '0', classWidth: '4', giniOn: 'g', balTies: 'exclude', sdiBeta: '1.605', sdiRef: '25', rdExp: '0.5', spacing: 'square' },
     ccf: { all: '', bySp: {}, pairs: '', cit: '' },
     geo: { shape: 'circle-area', cx: '0', cy: '0', r: '', x0: '', y0: '', x1: '', y1: '', k: '4', edge: 'none', buffer: '5', wAngle: 'k', ciMode: 'knn', radius: '' } };
 }
@@ -111,7 +111,7 @@ function renderStep1() {
 /* ---------------- step 2: settings ---------------- */
 function settings() {
   const s = st.set, g = st.geo;
-  const structure = { classStart: num(s.classStart), classWidth: num(s.classWidth), giniOn: s.giniOn, balTies: s.balTies, sdiBeta: num(s.sdiBeta), sdiRef: num(s.sdiRef), rdExp: num(s.rdExp), spacing: s.spacing, h0From: s.h0From };
+  const structure = { classStart: num(s.classStart), classWidth: num(s.classWidth), giniOn: s.giniOn, balTies: s.balTies, sdiBeta: num(s.sdiBeta), sdiRef: num(s.sdiRef), rdExp: num(s.rdExp), spacing: s.spacing };
   const geometry = g.shape === 'circle-area' ? { shape: 'circle-area', cx: num(g.cx), cy: num(g.cy) } : g.shape === 'circle' ? { shape: 'circle', cx: num(g.cx), cy: num(g.cy), r: num(g.r) } : { shape: 'rect', x0: num(g.x0), y0: num(g.y0), x1: num(g.x1), y1: num(g.y1) };
   const spatial = hasXY(st.ds) ? { k: num(g.k), edge: g.edge, buffer: num(g.buffer), wAngle: g.wAngle || 'k' } : null;
   const competition = { mode: g.ciMode, k: num(g.k), radius: g.ciMode === 'radius' ? num(g.radius) : null, edge: g.edge, buffer: num(g.buffer) };
@@ -138,8 +138,7 @@ function renderStep2() {
     <div class="lims"><span class="small"><b>${T('set.ties')}</b></span>${radio('balTies', s.balTies, [['exclude', T('set.ties.exclude')], ['include', T('set.ties.include')]])}</div>
     <div class="lims"><span class="small"><b>${T('set.sdi')}</b></span>${inp('sdiBeta', s.sdiBeta, T('set.beta'))}${radio('sdiRef', s.sdiRef, [['25', T('set.ref.25')], ['25.4', T('set.ref.254')]])}</div>
     <div class="lims">${inp('rdExp', s.rdExp, T('set.rd'))}<span class="muted small">${T('set.rd.note')}</span></div>
-    <div class="lims"><span class="small"><b>${T('set.sp')}</b></span>${radio('spacing', s.spacing, [['square', T('set.sp.square')], ['triangular', T('set.sp.triangular')]])}
-      <span class="small"><b>${T('set.h0')}</b></span>${radio('h0From', s.h0From, [['dbh', T('set.h0.dbh')], ['height', T('set.h0.height')]])}</div></div>`;
+    <div class="lims"><span class="small"><b>${T('set.sp')}</b></span>${radio('spacing', s.spacing, [['square', T('set.sp.square')], ['triangular', T('set.sp.triangular')]])}</div></div>`;
   h += ccfCard();
   h += `<div class="card" id="geocard"><h2>${T('geo.h')}</h2>`;
   if (!xy) h += `<p class="note">${T('geo.noxy')}</p>`;
@@ -158,7 +157,7 @@ function renderStep2() {
   el.innerHTML = h;
   const re = () => { R = null; save(); renderStep2(); renderSteps(); };
   el.querySelectorAll('[data-set]').forEach(x => x.addEventListener('change', () => { const k = x.dataset.set; if (k.startsWith('g.')) st.geo[k.slice(2)] = x.value; else st.set[k] = x.value; re(); }));
-  for (const n of ['giniOn', 'balTies', 'sdiRef', 'spacing', 'h0From']) el.querySelectorAll(`input[name="${n}"]`).forEach(x => x.addEventListener('change', () => { st.set[n] = x.value; re(); }));
+  for (const n of ['giniOn', 'balTies', 'sdiRef', 'spacing']) el.querySelectorAll(`input[name="${n}"]`).forEach(x => x.addEventListener('change', () => { st.set[n] = x.value; re(); }));
   el.querySelectorAll('input[name="gshape"]').forEach(x => x.addEventListener('change', () => { st.geo.shape = x.value; re(); }));
   el.querySelectorAll('input[name="gedge"]').forEach(x => x.addEventListener('change', () => { st.geo.edge = x.value; re(); }));
   el.querySelectorAll('input[name="gwang"]').forEach(x => x.addEventListener('change', () => { st.geo.wAngle = x.value; re(); }));

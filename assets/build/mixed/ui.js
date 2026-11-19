@@ -3528,8 +3528,8 @@ __fb_x(__fb_e, { "DOM_PER_HA": () => DOM_PER_HA, "SCHEMA": () => SCHEMA, "TOOL":
 // Plot & Stand Metrics: pure logic (no DOM). Definitions: docs/METHODS.md §6.
 // Scope: fixed-area plots, every tree on the plot has the same inclusion probability.
 // Nested plots and angle counts (Bitterlich) need per-tree expansion factors and are NOT handled here.
-const TOOL = { id: 'ornek-alan-mescere', version: '1.2.0' };
-/** Dominant trees per hectare for D0 and H0 (the user's definition: the 100 largest trees per hectare). */
+const TOOL = { id: 'ornek-alan-mescere', version: '1.2.1' };
+/** Trees per hectare for D0 (the 100 thickest) and H0 (the 100 tallest), the user's definitions (H0: 19 Nov 2026). */
 const DOM_PER_HA = 100;
 const SCHEMA = 'forest-dataset/1';
 
@@ -3659,9 +3659,10 @@ function unitMetrics(u, classes) {
   // age: mean of the trees whose age was recorded (all of them, or as many as were measured)
   const ages = u.trees.map(t => t.age).filter(a => Number.isFinite(a));
   out.age = stats(ages);
-  // dominant diameter and height: the DOM_PER_HA largest trees per hectare, chosen by diameter or by height
-  const k = DOM_PER_HA * u.area / 10000;
-  out.dom = { k, d: dominant(u.trees, k, 'dbh'), h: dominant(u.trees, k, 'height') };
+  // dominant diameter D0: the DOM_PER_HA thickest trees per hectare; top height H0: the DOM_PER_HA tallest trees per
+  // hectare (19 Nov 2026, user decision: H0 only from the tallest trees; the H0 of the thickest trees is no longer given)
+  const k = DOM_PER_HA * u.area / 10000, byD = dominant(u.trees, k, 'dbh'), byH = dominant(u.trees, k, 'height');
+  out.dom = { k, D0: byD.D0, H0: byH.H0, d: byD, h: byH };
   return out;
 }
 
@@ -3688,19 +3689,18 @@ function dominantWeights(trees, k, rank = 'dbh') {
   }
   return w;
 }
-/** D0 and H0 for one ranking. H0 needs a measured height on every selected tree; otherwise it is not given. */
+/**
+ * rank 'dbh': D0, the mean diameter of the k thickest trees. rank 'height': H0 (top height), the mean measured height
+ * of the k tallest trees; it needs a measured height on every tree of the plot (otherwise the tallest are unknown).
+ */
 function dominant(trees, k, rank = 'dbh') {
-  const n = trees.length;
-  if (!n) return { D0: null, H0: null, used: 0, short: false, why: 'empty' };
+  const n = trees.length, key = rank === 'height' ? 'H0' : 'D0';
+  if (!n) return { [key]: null, used: 0, short: false, why: 'empty' };
   const w = dominantWeights(trees, k, rank);
-  if (!w) return { D0: null, H0: null, used: 0, short: false, why: 'h.rank' };   // some tree without a measured height
-  let sw = 0, sd = 0, sh = 0, hOk = true, nSel = 0;
-  trees.forEach((t, i) => {
-    if (!w[i]) return;
-    nSel++; sw += w[i]; sd += w[i] * t.dbh;
-    if (measuredH(t)) sh += w[i] * t.height; else hOk = false;
-  });
-  return { D0: sd / sw, H0: hOk ? sh / sw : null, used: sw, nSel, short: n < k, why: hOk ? null : 'h.sel' };
+  if (!w) return { [key]: null, used: 0, short: false, why: 'h.rank' };   // some tree without a measured height
+  let sw = 0, sv = 0, nSel = 0;
+  trees.forEach((t, i) => { if (!w[i]) return; nSel++; sw += w[i]; sv += w[i] * (rank === 'height' ? t.height : t.dbh); });
+  return { [key]: sv / sw, used: sw, nSel, short: n < k, why: null };
 }
 
 /* ---------------- direct table import (without the Data Checker) ---------------- */

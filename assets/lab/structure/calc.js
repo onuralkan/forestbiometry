@@ -24,9 +24,9 @@
 //                spacing (geometric definition; textbook-definition exception, user decision 12 Nov 2026)
 import { unitMetrics, classesFromBreaks, breaksFromWidth, classIndex } from '../stand/calc.js';
 
-export const TOOL = { id: 'mescere-yapisi', version: '1.0.0-beta.4' };
+export const TOOL = { id: 'mescere-yapisi', version: '1.0.0-beta.5' };
 export const SCHEMA = 'structure-result/1';
-export const DEFAULTS = { giniOn: 'g', classStart: 0, classWidth: 4, balTies: 'exclude', sdiBeta: 1.605, sdiRef: 25, rdExp: 0.5, spacing: 'square', h0From: 'dbh' };
+export const DEFAULTS = { giniOn: 'g', classStart: 0, classWidth: 4, balTies: 'exclude', sdiBeta: 1.605, sdiRef: 25, rdExp: 0.5, spacing: 'square' };   // H0: the 100 tallest trees per hectare (stand/calc.js; 19 Nov 2026)
 export const g = d => Math.PI / 4 * (d / 100) ** 2;
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
@@ -86,7 +86,6 @@ export function checkSettings(s) {
   if (!(fin(s.sdiBeta) && s.sdiBeta > 0) || !(fin(s.sdiRef) && s.sdiRef > 0)) p.push({ code: 'set.sdi' });
   if (!(fin(s.rdExp) && s.rdExp > 0)) p.push({ code: 'set.rd' });
   if (!['square', 'triangular'].includes(s.spacing)) p.push({ code: 'set.spacing' });
-  if (!['dbh', 'height'].includes(s.h0From)) p.push({ code: 'set.h0' });
   return p;
 }
 
@@ -104,7 +103,7 @@ export function structureUnit(u, settings = {}) {
   const head = { ...base, n, ef: m.ef, Nha: m.Nha, Gha: m.Gha, Dq: m.dq, H0: null };
   if (!n) return { ...head, status: 'empty', measures: null, warnings: [{ code: 'unit.empty' }] };
   const d = u.trees.map(t => t.dbh), w = d.map(() => m.ef), gi = d.map(g);
-  const dom = s.h0From === 'height' ? m.dom.h : m.dom.d; head.H0 = dom.H0;
+  const dom = { H0: m.dom.H0, why: m.dom.h.why }; head.H0 = dom.H0;
   // diameter structure
   const mo = moments(d, w);
   if (mo.skew == null) warnings.push({ code: 'd.constant' });
@@ -137,5 +136,5 @@ export function structureUnit(u, settings = {}) {
   return { ...head, status: 'ok', measures, classes: cls.map((c, i) => ({ lo: c.lo, hi: c.hi, Nha: cnt[i], share: pc[i] ?? null })), species, trees,
     definitions: { moments: 'divisor n (weighted: W = Σw); kurtosis = excess (m4/m2² − 3)', gini: `on ${s.giniOn === 'd' ? 'diameter' : 'basal area'}; ascending sort; mean absolute difference over all pairs / (2·mean)`,
       shannon: 'natural log; diameter classes [lo, hi), shares of trees per hectare', simpson: '1 − Σp² (shares by number)', bal: `m²/ha; equal diameters ${s.balTies === 'include' ? 'included' : 'excluded'}; the tree itself never`,
-      sdi: `N·(Dq/${s.sdiRef})^${s.sdiBeta} (Reineke 1933)`, rd: `G/Dq^${s.rdExp} (Curtis 1982; G m²/ha, Dq cm)`, spacing: `${s.spacing}; S% = 100·a/H0 (H0 by ${s.h0From === 'height' ? 'height' : 'diameter'} ranking)` } };
+      sdi: `N·(Dq/${s.sdiRef})^${s.sdiBeta} (Reineke 1933)`, rd: `G/Dq^${s.rdExp} (Curtis 1982; G m²/ha, Dq cm)`, spacing: `${s.spacing}; S% = 100·a/H0 (H0: mean height of the 100 tallest trees per hectare)` } };
 }

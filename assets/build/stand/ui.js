@@ -1146,8 +1146,8 @@ __fb_x(__fb_e, { "DOM_PER_HA": () => DOM_PER_HA, "SCHEMA": () => SCHEMA, "TOOL":
 // Plot & Stand Metrics: pure logic (no DOM). Definitions: docs/METHODS.md §6.
 // Scope: fixed-area plots, every tree on the plot has the same inclusion probability.
 // Nested plots and angle counts (Bitterlich) need per-tree expansion factors and are NOT handled here.
-const TOOL = { id: 'ornek-alan-mescere', version: '1.2.0' };
-/** Dominant trees per hectare for D0 and H0 (the user's definition: the 100 largest trees per hectare). */
+const TOOL = { id: 'ornek-alan-mescere', version: '1.2.1' };
+/** Trees per hectare for D0 (the 100 thickest) and H0 (the 100 tallest), the user's definitions (H0: 19 Nov 2026). */
 const DOM_PER_HA = 100;
 const SCHEMA = 'forest-dataset/1';
 
@@ -1277,9 +1277,10 @@ function unitMetrics(u, classes) {
   // age: mean of the trees whose age was recorded (all of them, or as many as were measured)
   const ages = u.trees.map(t => t.age).filter(a => Number.isFinite(a));
   out.age = stats(ages);
-  // dominant diameter and height: the DOM_PER_HA largest trees per hectare, chosen by diameter or by height
-  const k = DOM_PER_HA * u.area / 10000;
-  out.dom = { k, d: dominant(u.trees, k, 'dbh'), h: dominant(u.trees, k, 'height') };
+  // dominant diameter D0: the DOM_PER_HA thickest trees per hectare; top height H0: the DOM_PER_HA tallest trees per
+  // hectare (19 Nov 2026, user decision: H0 only from the tallest trees; the H0 of the thickest trees is no longer given)
+  const k = DOM_PER_HA * u.area / 10000, byD = dominant(u.trees, k, 'dbh'), byH = dominant(u.trees, k, 'height');
+  out.dom = { k, D0: byD.D0, H0: byH.H0, d: byD, h: byH };
   return out;
 }
 
@@ -1306,19 +1307,18 @@ function dominantWeights(trees, k, rank = 'dbh') {
   }
   return w;
 }
-/** D0 and H0 for one ranking. H0 needs a measured height on every selected tree; otherwise it is not given. */
+/**
+ * rank 'dbh': D0, the mean diameter of the k thickest trees. rank 'height': H0 (top height), the mean measured height
+ * of the k tallest trees; it needs a measured height on every tree of the plot (otherwise the tallest are unknown).
+ */
 function dominant(trees, k, rank = 'dbh') {
-  const n = trees.length;
-  if (!n) return { D0: null, H0: null, used: 0, short: false, why: 'empty' };
+  const n = trees.length, key = rank === 'height' ? 'H0' : 'D0';
+  if (!n) return { [key]: null, used: 0, short: false, why: 'empty' };
   const w = dominantWeights(trees, k, rank);
-  if (!w) return { D0: null, H0: null, used: 0, short: false, why: 'h.rank' };   // some tree without a measured height
-  let sw = 0, sd = 0, sh = 0, hOk = true, nSel = 0;
-  trees.forEach((t, i) => {
-    if (!w[i]) return;
-    nSel++; sw += w[i]; sd += w[i] * t.dbh;
-    if (measuredH(t)) sh += w[i] * t.height; else hOk = false;
-  });
-  return { D0: sd / sw, H0: hOk ? sh / sw : null, used: sw, nSel, short: n < k, why: hOk ? null : 'h.sel' };
+  if (!w) return { [key]: null, used: 0, short: false, why: 'h.rank' };   // some tree without a measured height
+  let sw = 0, sv = 0, nSel = 0;
+  trees.forEach((t, i) => { if (!w[i]) return; nSel++; sw += w[i]; sv += w[i] * (rank === 'height' ? t.height : t.dbh); });
+  return { [key]: sv / sw, used: sw, nSel, short: n < k, why: null };
 }
 
 /* ---------------- direct table import (without the Data Checker) ---------------- */
@@ -1569,25 +1569,24 @@ const tr = {
   'pr.row.height': p => `boy okunamadı veya sıfırdan büyük değil ("${p.v}")`, 'pr.row.age': p => `yaş okunamadı veya sıfırdan büyük değil ("${p.v}")`, 'pr.row.dup': p => `aynı örnek alan ve dönemde tekrar eden ağaç no ("${p.v}")`,
   'src.info.t': p => `${p.name}: ${p.trees} ağaç, ${p.plots} örnek alan, ${p.periods} dönem; okunma ${p.when}.`,
   // dominant trees, age
-  'dom.title': 'Baskın çap ve boy (D0, H0)',
+  'dom.title': 'Baskın çap ve üst boy (D0, H0)',
   'more': 'Nasıl hesaplanır?', 'dom.hnote.h': 'H0 ve yaş nasıl hesaplanır?',
-  'more': 'How is it computed?', 'dom.hnote.h': 'How are H0 and age computed?',
-  'dom.sub': p => `Hektardaki en büyük ${p.n} ağacın ortalaması. Her örnek alanda k = ${p.n} × A / 10000 ağaç seçilir (ör. 700 m² → 7, 1250 m² → 12.5). k kesirliyse ilk ⌊k⌋ ağaç tam, sıradaki ağaç kesir kadar ağırlıkla girer; sınırda eşit değerli ağaçlar bu ağırlığı eşit paylaşır, sonuç satır sırasına bağlı olmaz. Örnek alanda k'dan az ağaç varsa hepsi kullanılır.`,
-  'dom.pick': '"En büyük" ağaçlar', 'dom.both': 'İkisi de: çapa göre ve boya göre ayrı ayrı', 'dom.d': 'En kalın ağaçlar (çapa göre)', 'dom.h': 'En uzun ağaçlar (boya göre)',
-  'dom.hnote': 'H0 yalnızca ölçülmüş boylarla hesaplanır: seçilen ağaçlardan birinin boyu yoksa o örnek alanda H0 verilmez. Boya göre seçim, örnek alandaki bütün ağaçların boyu ölçülmüşse yapılır.',
+  'dom.sub': p => `D0: hektardaki en kalın ${p.n} ağacın ortalama çapı; H0 (üst boy): hektardaki en uzun ${p.n} ağacın ortalama boyu. Her örnek alanda k = ${p.n} × A / 10000 ağaç seçilir (ör. 700 m² → 7, 1250 m² → 12.5). k kesirliyse ilk ⌊k⌋ ağaç tam, sıradaki ağaç kesir kadar ağırlıkla girer; sınırda eşit değerli ağaçlar bu ağırlığı eşit paylaşır, sonuç satır sırasına bağlı olmaz. Örnek alanda k'dan az ağaç varsa hepsi kullanılır.`,
+  'dom.def': 'D0 (baskın çap): hektardaki en kalın 100 ağacın ortalama çapı. H0 (üst boy): hektardaki en uzun 100 ağacın ortalama boyu.',
+  'dom.hnote': 'H0 yalnızca ölçülmüş boylarla hesaplanır: en uzun ağaçların seçilebilmesi için örnek alandaki bütün ağaçların boyu ölçülmüş olmalıdır; değilse o örnek alanda H0 verilmez.',
   'dom.agenote': 'Yaş: örnek alanda yaşı ölçülen ağaçların ortalaması (hepsi ölçülmediyse ölçülenlerin).',
-  'c.D0': 'D0 (cm)', 'c.H0': 'H0 (m)', 'c.D0d': 'D0 çapa göre (cm)', 'c.H0d': 'H0 çapa göre (m)', 'c.D0h': 'D0 boya göre (cm)', 'c.H0h': 'H0 boya göre (m)',
+  'c.D0': 'D0 (cm)', 'c.H0': 'H0 (m)',
   'c.age': 'Yaş ort. (yıl)', 'c.agen': 'Yaşı ölçülen n',
-  'det.dom': 'Baskın ağaçlar ve yaş', 'det.domk': p => `k = ${p.k} ağaç (hektarda ${p.n} ağaç, alan ${p.a} m²)`, 'det.by.d': 'çapa göre', 'det.by.h': 'boya göre',
-  'why.h.sel': 'seçilen baskın ağaçlardan en az birinin ölçülmüş boyu yok', 'why.h.rank': 'boyu ölçülmemiş ağaç var, boya göre sıralanamaz', 'why.empty': 'ağaç yok',
+  'det.dom': 'Baskın ağaçlar ve yaş', 'det.domk': p => `k = ${p.k} ağaç (hektarda ${p.n} ağaç, alan ${p.a} m²)`,
+  'why.h.rank': 'boyu ölçülmemiş ağaç var; en uzun ağaçlar belirlenemiyor', 'why.empty': 'ağaç yok',
   'dom.short': p => `Örnek alanda k = ${p.k} ağaçtan az ağaç var (${p.n}); bütün ağaçlar kullanıldı.`,
-  'units.dom': 'D0, H0: hektardaki en büyük 100 ağaç (kesirli k ağırlıklı). "–": hesaplanamadı; nedeni Ayrıntı sekmesinde yazar.',
+  'units.dom': 'D0: hektardaki en kalın 100 ağaç; H0: hektardaki en uzun 100 ağaç (kesirli k ağırlıklı). "–": hesaplanamadı; nedeni Ayrıntı sekmesinde yazar.',
   // tree data export
   'ex.trees': 'Ağaç verisi + meşcere parametreleri (Excel)',
   'ex.trees.note': 'Ağaç tablonuz aynen kalır; her satıra kendi örnek alanının (ve dönemin) değerleri sütun olarak eklenir. Eklenen sütunun adı tabloda zaten varsa sonuna "_plot" eklenir (ör. age_plot). Tanımlar ve birimler "Bilgi" sayfasındadır.',
   'sheet.data': 'Veri', 'xd.yr': 'yıl', 'xd.h': 'Eklenen sütunlar', 'xd.col': 'Sütun', 'xd.def': 'Tanım', 'xd.unit': 'Birim',
-  'xd.D0': p => `Baskın çap: hektardaki en büyük 100 ağacın (${p.by}) çap ortalaması`, 'xd.H0': p => `Baskın boy: hektardaki en büyük 100 ağacın (${p.by}) ölçülmüş boy ortalaması`,
-  'xd.by.d': 'en kalın, çapa göre', 'xd.by.h': 'en uzun, boya göre', 'xd.hm': 'Ölçülmüş boyların ortalaması', 'xd.dm': 'Çapların aritmetik ortalaması', 'xd.N': 'Hektardaki ağaç sayısı',
+  'xd.D0': 'Baskın çap: hektardaki en kalın 100 ağacın çap ortalaması', 'xd.H0': 'Üst boy: hektardaki en uzun 100 ağacın ölçülmüş boy ortalaması',
+  'xd.hm': 'Ölçülmüş boyların ortalaması', 'xd.dm': 'Çapların aritmetik ortalaması', 'xd.N': 'Hektardaki ağaç sayısı',
   'xd.BA': 'Hektardaki göğüs yüzeyi', 'xd.age': 'Yaşı ölçülen ağaçların yaş ortalaması', 'xd.Dq': 'Kuadratik ortalama çap √(Σd²/n)', 'xd.used': 'Ağaç, sayılan durumlar arasında mı (1/0)',
   'xd.k': 'Baskın ağaç sayısı k = 100 × A / 10000; kesirli k: ⌊k⌋ ağaç tam, sıradaki kesirli ağırlıkla; sınırda eşit değerler ağırlığı paylaşır.',
   'xd.empty': 'Boş hücre: değer hesaplanamadı (ör. baskın ağaçlardan birinin boyu yok ya da hiç yaş ölçülmemiş).',
@@ -1682,22 +1681,23 @@ const en = {
   'pr.row.areaconf': p => `different sizes for plot "${p.plot}" (${p.a} and ${p.b} m²)`, 'pr.row.stratconf': p => `different strata for plot "${p.plot}"`,
   'pr.row.height': p => `height cannot be read or is not above zero ("${p.v}")`, 'pr.row.age': p => `age cannot be read or is not above zero ("${p.v}")`, 'pr.row.dup': p => `tree number repeated in the same plot and period ("${p.v}")`,
   'src.info.t': p => `${p.name}: ${p.trees} trees, ${p.plots} plots, ${p.periods} period(s); read ${p.when}.`,
-  'dom.title': 'Dominant diameter and height (D0, H0)',
-  'dom.sub': p => `Mean of the ${p.n} largest trees per hectare. On each plot k = ${p.n} × A / 10000 trees are taken (e.g. 700 m² → 7, 1250 m² → 12.5). When k is fractional the first ⌊k⌋ trees count fully and the next one with the fractional weight; trees with equal values at the boundary share that weight equally, so the result does not depend on the row order. A plot with fewer than k trees uses all of them.`,
-  'dom.pick': '"Largest" trees', 'dom.both': 'Both: by diameter and by height, separately', 'dom.d': 'Thickest trees (by diameter)', 'dom.h': 'Tallest trees (by height)',
-  'dom.hnote': 'H0 uses measured heights only: if one of the selected trees has no height, H0 is not given for that plot. Selection by height needs a measured height on every tree of the plot.',
+  'dom.title': 'Dominant diameter and top height (D0, H0)',
+  'more': 'How is it computed?', 'dom.hnote.h': 'How are H0 and age computed?',
+  'dom.sub': p => `D0: mean diameter of the ${p.n} thickest trees per hectare; H0 (top height): mean height of the ${p.n} tallest trees per hectare. On each plot k = ${p.n} × A / 10000 trees are taken (e.g. 700 m² → 7, 1250 m² → 12.5). When k is fractional the first ⌊k⌋ trees count fully and the next one with the fractional weight; trees with equal values at the boundary share that weight equally, so the result does not depend on the row order. A plot with fewer than k trees uses all of them.`,
+  'dom.def': 'D0 (dominant diameter): mean diameter of the 100 thickest trees per hectare. H0 (top height): mean height of the 100 tallest trees per hectare.',
+  'dom.hnote': 'H0 uses measured heights only: to pick the tallest trees, every tree on the plot needs a measured height; otherwise H0 is not given for that plot.',
   'dom.agenote': 'Age: mean of the trees whose age was recorded on the plot (all of them, or as many as were measured).',
-  'c.D0': 'D0 (cm)', 'c.H0': 'H0 (m)', 'c.D0d': 'D0 by diameter (cm)', 'c.H0d': 'H0 by diameter (m)', 'c.D0h': 'D0 by height (cm)', 'c.H0h': 'H0 by height (m)',
+  'c.D0': 'D0 (cm)', 'c.H0': 'H0 (m)',
   'c.age': 'Mean age (yr)', 'c.agen': 'Aged trees n',
-  'det.dom': 'Dominant trees and age', 'det.domk': p => `k = ${p.k} trees (${p.n} trees per hectare, area ${p.a} m²)`, 'det.by.d': 'by diameter', 'det.by.h': 'by height',
-  'why.h.sel': 'at least one selected dominant tree has no measured height', 'why.h.rank': 'some trees have no measured height, so they cannot be ranked by height', 'why.empty': 'no trees',
+  'det.dom': 'Dominant trees and age', 'det.domk': p => `k = ${p.k} trees (${p.n} trees per hectare, area ${p.a} m²)`,
+  'why.h.rank': 'some trees have no measured height, so the tallest trees cannot be found', 'why.empty': 'no trees',
   'dom.short': p => `The plot has fewer than k = ${p.k} trees (${p.n}); all trees were used.`,
-  'units.dom': 'D0, H0: the 100 largest trees per hectare (fractional k weighted). "–": not computable; the Detail tab gives the reason.',
+  'units.dom': 'D0: the 100 thickest trees per hectare; H0: the 100 tallest trees per hectare (fractional k weighted). "–": not computable; the Detail tab gives the reason.',
   'ex.trees': 'Tree data + stand parameters (Excel)',
   'ex.trees.note': 'Your tree table is kept as it is; every row gets the values of its own plot (and period) as extra columns. If a column name already exists in the table, "_plot" is appended (e.g. age_plot). Definitions and units are on the "Info" sheet.',
   'sheet.data': 'Data', 'xd.yr': 'years', 'xd.h': 'Added columns', 'xd.col': 'Column', 'xd.def': 'Definition', 'xd.unit': 'Unit',
-  'xd.D0': p => `Dominant diameter: mean diameter of the 100 largest trees per hectare (${p.by})`, 'xd.H0': p => `Dominant height: mean measured height of the 100 largest trees per hectare (${p.by})`,
-  'xd.by.d': 'thickest, by diameter', 'xd.by.h': 'tallest, by height', 'xd.hm': 'Mean of the measured heights', 'xd.dm': 'Arithmetic mean diameter', 'xd.N': 'Trees per hectare',
+  'xd.D0': 'Dominant diameter: mean diameter of the 100 thickest trees per hectare', 'xd.H0': 'Top height: mean measured height of the 100 tallest trees per hectare',
+  'xd.hm': 'Mean of the measured heights', 'xd.dm': 'Arithmetic mean diameter', 'xd.N': 'Trees per hectare',
   'xd.BA': 'Basal area per hectare', 'xd.age': 'Mean age of the trees whose age was recorded', 'xd.Dq': 'Quadratic mean diameter √(Σd²/n)', 'xd.used': 'Tree among the counted statuses (1/0)',
   'xd.k': 'Number of dominant trees k = 100 × A / 10000; fractional k: ⌊k⌋ trees fully, the next with the fractional weight; equal values at the boundary share the weight.',
   'xd.empty': 'Empty cell: value not computable (e.g. a dominant tree without height, or no age recorded).',
@@ -1743,7 +1743,7 @@ const when = iso => iso ? new Date(iso).toLocaleString(LOC) : '–';
 let S = blank(), R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, tab: 'units', ds: null, dsSrc: null, scopeOk: false, status: null, emptyCombos: null,
-    cls: null, design: { type: 'none', forestArea: '', strata: {} }, selPlot: null, selPer: null, nav: null, tbl: null, domBy: 'both' };
+    cls: null, design: { type: 'none', forestArea: '', strata: {} }, selPlot: null, selPer: null, nav: null, tbl: null };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -1884,8 +1884,7 @@ function renderStep2() {
       <div class="radios col">${['empty', 'unmeasured'].map(v => `<label><input type="radio" name="ec" value="${v}"${S.emptyCombos === v ? ' checked' : ''}> ${T('ec.' + v)}</label>`).join('')}</div>
       ${S.emptyCombos ? '' : `<p class="note warn">${T('ec.undecided')}</p>`}</div>`;
   }
-  h += `<div class="card"><h2>${T('dom.title')}</h2><details class="more"><summary>${T('more')}</summary><p class="muted small">${T('dom.sub', { n: C.DOM_PER_HA })}</p></details><p class="small"><b>${T('dom.pick')}</b></p><div class="radios col">
-    ${['both', 'd', 'h'].map(v => `<label><input type="radio" name="domby" value="${v}"${S.domBy === v ? ' checked' : ''}> ${T('dom.' + v)}</label>`).join('')}</div>
+  h += `<div class="card"><h2>${T('dom.title')}</h2><details class="more"><summary>${T('more')}</summary><p class="muted small">${T('dom.sub', { n: C.DOM_PER_HA })}</p></details><p class="small">${T('dom.def')}</p>
     <details class="more"><summary>${T('dom.hnote.h')}</summary><p class="muted small">${T('dom.hnote')} ${T('dom.agenote')}</p></details></div>`;
   h += `<div class="card"><h2>${T('cls.h')}</h2><p class="muted">${T('cls.sub')}</p>
     <div class="radios"><label><input type="radio" name="cm" value="width"${c.mode === 'width' ? ' checked' : ''}> ${T('cls.width')}</label><label><input type="radio" name="cm" value="list"${c.mode === 'list' ? ' checked' : ''}> ${T('cls.list')}</label></div>`;
@@ -1907,7 +1906,6 @@ function renderStep2() {
     const on = [...el.querySelectorAll('[data-st]')].filter(i => i.checked).map(i => i.dataset.st);
     S.status = on.length === stats.length ? null : on; R = null; save();
   }));
-  el.querySelectorAll('input[name="domby"]').forEach(x => x.addEventListener('change', () => { S.domBy = x.value; save(); }));
   el.querySelectorAll('input[name="ec"]').forEach(x => x.addEventListener('change', () => { S.emptyCombos = x.value; R = null; save(); renderStep2(); }));
   el.querySelectorAll('input[name="cm"]').forEach(x => x.addEventListener('change', () => {
     if (x.value === 'list' && !c.breaks) { const b = C.breaksFromWidth(num(c.start), num(c.width), num(c.end)); c.breaks = b ? b.map(v => String(v)).join(' ') : ''; }
@@ -1963,11 +1961,9 @@ const UNIT_COLS = [['plot', m => esc(m.plot_id), 'code'], ['per', m => esc(perLa
   ['c.n', m => fmtNum(m.n, 0), 'num'], ['c.Nha', m => f(m.Nha, 1), 'num'], ['c.Gha', m => f(m.Gha, 3), 'num'], ['c.dmean', m => f(m.d_mean, 2), 'num'], ['c.dq', m => f(m.dq, 2), 'num'],
   ['c.dmin', m => f(m.d_min, 1), 'num'], ['c.dmax', m => f(m.d_max, 1), 'num'], ['c.dsd', m => f(m.d_sd, 2), 'num'], ['c.hm', m => fmtNum(m.h_measured.n, 0), 'num'],
   ['c.hmean', m => f(m.h_measured.mean, 2), 'num'], ['c.he', m => fmtNum(m.h_estimated.n, 0), 'num']];
-/** Dominant-tree columns for the chosen selection ('both' | 'd' | 'h'). */
+/** D0 (100 thickest trees per hectare), H0 (100 tallest) and age columns. */
 function domCols() {
-  const by = S.domBy || 'both', c = (lab, key, v) => [lab, m => f(m.dom[key][v], v === 'D0' ? 2 : 2), 'num'];
-  const cols = by === 'both' ? [c('c.D0d', 'd', 'D0'), c('c.H0d', 'd', 'H0'), c('c.D0h', 'h', 'D0'), c('c.H0h', 'h', 'H0')] : [c('c.D0', by, 'D0'), c('c.H0', by, 'H0')];
-  return [...cols, ['c.age', m => f(m.age.mean, 1), 'num'], ['c.agen', m => fmtNum(m.age.n, 0), 'num']];
+  return [['c.D0', m => f(m.dom.D0, 2), 'num'], ['c.H0', m => f(m.dom.H0, 2), 'num'], ['c.age', m => f(m.age.mean, 1), 'num'], ['c.agen', m => fmtNum(m.age.n, 0), 'num']];
 }
 function tabUnits(p) {
   const COLS = [...UNIT_COLS, ...domCols()];
@@ -1991,12 +1987,11 @@ function tabDetail(p) {
     <p class="muted small">${T('c.area')}: ${f(m.area_m2, 2)} · ${T('c.G')}: ${f(m.G_m2, 5)} · ${T('state')}: ${T('s.' + m.state)}</p>`;
   if (!valid) { p.innerHTML = h + `<p class="note warn">${T('units.note')}</p>`; bindDetail(); return; }
   {
-    const by = S.domBy === 'both' || !S.domBy ? ['d', 'h'] : [S.domBy], notes = [];
-    let tl = '';
-    for (const b of by) {
-      const r = m.dom[b], suf = by.length > 1 ? ` · ${T('det.by.' + b)}` : '';
-      tl += tile(f(r.D0, 2), T('c.D0') + suf) + tile(f(r.H0, 2), T('c.H0') + suf);
-      if (r.why && r.why !== 'empty') notes.push(`${T('det.by.' + b)}: ${T('why.' + r.why)}`);
+    const notes = [];
+    let tl = tile(f(m.dom.D0, 2), T('c.D0')) + tile(f(m.dom.H0, 2), T('c.H0'));
+    for (const b of ['d', 'h']) {
+      const r = m.dom[b];
+      if (r.why && r.why !== 'empty') notes.push(`${T('c.' + (b === 'd' ? 'D0' : 'H0'))}: ${T('why.' + r.why)}`);
       if (r.short && !notes.includes('short')) notes.push('short');
     }
     tl += tile(f(m.h_measured.mean, 2), T('c.hmean')) + tile(m.age.n ? f(m.age.mean, 1) : '–', `${T('c.age')} · n = ${fmtNum(m.age.n, 0)}`);
@@ -2116,10 +2111,10 @@ function tabForest(p) {
 const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
 function unitRows() {
   return [['plot_id', 'period', 'state', 'stratum', 'area_m2', 'expansion_factor', 'n', 'N_ha', 'G_m2', 'G_m2_ha', 'd_mean_cm', 'dq_cm', 'd_min_cm', 'd_max_cm', 'd_sd_cm', 'h_measured_n', 'h_measured_mean_m', 'h_estimated_n', 'h_estimated_mean_m', 'h_missing_n', 'below_classes_n', 'above_classes_n',
-    'dominant_k', 'D0_by_dbh_cm', 'H0_by_dbh_m', 'D0_by_height_cm', 'H0_by_height_m', 'age_mean', 'age_n'],
+    'dominant_k', 'D0_cm', 'H0_m', 'age_mean', 'age_n'],
     ...R.metrics.map(m => { const v = C.isValidUnit(m); return [m.plot_id, m.period, m.state, m.stratum, m.area_m2, m.ef, v ? m.n : null, v ? m.Nha : null, v ? m.G_m2 : null, v ? m.Gha : null, m.d_mean, m.dq, m.d_min, m.d_max, m.d_sd,
       m.h_measured.n, m.h_measured.mean, m.h_estimated.n, m.h_estimated.mean, v ? m.h_missing : null, m.below, m.above,
-      m.dom.k, m.dom.d.D0, m.dom.d.H0, m.dom.h.D0, m.dom.h.H0, m.age.mean, m.age.n]; })];
+      m.dom.k, m.dom.D0, m.dom.H0, m.age.mean, m.age.n]; })];
 }
 /**
  * Tree table with the plot's stand parameters appended to every row (the user's field-data layout).
@@ -2127,9 +2122,8 @@ function unitRows() {
  * otherwise the tree records of the data package are written. Names already in the table get "_plot".
  */
 function treeExport() {
-  const by = S.domBy || 'both', unit = new Map(R.metrics.map(m => [m.plot_id + '\u0000' + (m.period ?? '\u0001'), m]));
-  const dom = by === 'both' ? [['D0_d', 'd', 'D0'], ['H0_d', 'd', 'H0'], ['D0_h', 'h', 'D0'], ['H0_h', 'h', 'H0']] : [['D0', by, 'D0'], ['H0', by, 'H0']];
-  const add = [...dom.map(([n, b, v]) => [n, m => m.dom[b][v]]), ['hm', m => m.h_measured.mean], ['dm', m => m.d_mean], ['N', m => m.Nha], ['BA', m => m.Gha], ['age', m => m.age.mean], ['Dq', m => m.dq]];
+  const unit = new Map(R.metrics.map(m => [m.plot_id + '\u0000' + (m.period ?? '\u0001'), m]));
+  const add = [['D0', m => m.dom.D0], ['H0', m => m.dom.H0], ['hm', m => m.h_measured.mean], ['dm', m => m.d_mean], ['N', m => m.Nha], ['BA', m => m.Gha], ['age', m => m.age.mean], ['Dq', m => m.dq]];
   const fromTable = S.dsSrc && S.dsSrc.kind === 'table' && S.tbl && S.tbl.src && S.tbl.usedKey === tblKey();
   let head, body;
   if (fromTable) {
@@ -2146,8 +2140,7 @@ function treeExport() {
     const m = unit.get(t.plot_id + '\u0000' + (t.period ?? '\u0001')), ok = m && C.isValidUnit(m);
     return [...body[i], ...add.map(([, g]) => ok ? g(m) : null), ...(keep ? [keep.has(t.status ?? '') ? 1 : 0] : [])];
   })];
-  const def = { D0: T('xd.D0', { by: T('xd.by.' + (by === 'both' ? 'd' : by)) }), H0: T('xd.H0', { by: T('xd.by.' + (by === 'both' ? 'd' : by)) }),
-    D0_d: T('xd.D0', { by: T('xd.by.d') }), H0_d: T('xd.H0', { by: T('xd.by.d') }), D0_h: T('xd.D0', { by: T('xd.by.h') }), H0_h: T('xd.H0', { by: T('xd.by.h') }),
+  const def = { D0: T('xd.D0'), H0: T('xd.H0'),
     hm: T('xd.hm'), dm: T('xd.dm'), N: T('xd.N'), BA: T('xd.BA'), age: T('xd.age'), Dq: T('xd.Dq') };
   const units = { D0: 'cm', D0_d: 'cm', D0_h: 'cm', H0: 'm', H0_d: 'm', H0_h: 'm', hm: 'm', dm: 'cm', N: '1/ha', BA: 'm²/ha', age: T('xd.yr'), Dq: 'cm' };
   const info = [...infoRows(), [], [T('xd.h')], [T('xd.col'), T('xd.def'), T('xd.unit')], ...add.map(([n], i) => [names[i], def[n], units[n]]),
@@ -2180,7 +2173,7 @@ function infoRows() {
   const c = S.cls;
   return [[T('x.k'), T('x.v')], [T('x.tool'), `${C.TOOL.id} ${C.TOOL.version}`], [T('x.date'), new Date().toISOString()], [T('x.src'), `${S.dsSrc ? S.dsSrc.name || S.dsSrc.kind : ''} (${S.ds.created})`],
     [T('x.status'), S.status ? S.status.map(s => s || T('st.blank')).join(', ') : T('x.all')], [T('x.ec'), S.emptyCombos ? T('ec.' + S.emptyCombos) : T('ec.undecided')],
-    [T('x.cls'), R.classes.map(clsLabel).join(' ')], [T('x.design'), T('des.' + S.design.type)], [T('dom.pick'), T('dom.' + (S.domBy || 'both'))], ['', T('x.formulas')], ['', T('scope.no')]];
+    [T('x.cls'), R.classes.map(clsLabel).join(' ')], [T('x.design'), T('des.' + S.design.type)], [T('dom.title'), T('dom.def')], ['', T('x.formulas')], ['', T('scope.no')]];
 }
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-trees">${T('ex.trees')}</button></div><p class="muted small">${T('ex.trees.note')}</p>
@@ -2189,7 +2182,7 @@ function tabExport(p) {
   $('x-json').addEventListener('click', () => {
     const fromTable = S.dsSrc && S.dsSrc.kind === 'table' && S.tbl;
     downloadRecord(fname('ornek-alan', 'plot-stand') + '.json', { tool: C.TOOL, created: new Date().toISOString(),
-      settings: { source: S.dsSrc ? { kind: S.dsSrc.kind, name: S.dsSrc.name || null } : null, status: S.status, emptyCombos: S.emptyCombos, classes: R.classes, design: designObj(), domainBy: S.domBy || 'both',
+      settings: { source: S.dsSrc ? { kind: S.dsSrc.kind, name: S.dsSrc.name || null } : null, status: S.status, emptyCombos: S.emptyCombos, classes: R.classes, design: designObj(), dominant: { D0: 'thickest', H0: 'tallest', perHa: C.DOM_PER_HA },
         reading: fromTable ? { columns: Object.fromEntries(Object.entries(S.tbl.map).map(([k, i]) => [k, i == null ? null : S.tbl.src.headers[i]])), ...S.tbl.spec } : null },
       units: R.metrics, periods: R.periods, noPeriod: R.noPeriod, byPeriod: R.byPeriod },
       C.TOOL, fromTable ? [['trees', S.tbl.imp]] : S.ds ? [['dataset', { kind: 'dataset', dataset: S.ds }]] : [], m => status(m, 'err'));

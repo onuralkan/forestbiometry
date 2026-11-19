@@ -157,14 +157,14 @@ ok((await page.locator('#panel', { hasText: 'W_h' }).count()) === 1, 'stratified
   await page.click('#usetbl'); await page.waitForSelector('#mapbox .note.ok');
   ok((await page.textContent('#mapbox .note.ok')).includes(`${aoa.length - 1} ağaç, 9 örnek alan`), 'table read without the checker');
   await page.check('#scope'); await page.click('#to2');
-  ok(await page.isChecked('input[name="domby"][value="both"]'), 'dominant selection: both by default');
+  ok(await page.locator('input[name="domby"]').count() === 0, 'no choice of dominant selection: D0 thickest, H0 tallest');
   await page.click('#calc'); await page.waitForSelector('table.units');
   const heads = await page.evaluate(() => [...document.querySelectorAll('table.units th')].map(x => x.textContent));
-  ok(['D0 çapa göre (cm)', 'H0 çapa göre (m)', 'D0 boya göre (cm)', 'H0 boya göre (m)', 'Yaş ort. (yıl)'].every(x => heads.includes(x)), 'units table shows D0, H0 (both selections) and age');
+  ok(['D0 (cm)', 'H0 (m)', 'Yaş ort. (yıl)'].every(x => heads.includes(x)) && !heads.some(x => x.includes('göre')), 'units table shows D0, H0 and age');
   await page.click('#tab-detail');
-  ok((await page.locator('#domtiles .tile').count()) === 6, 'detail: D0/H0 by diameter and by height, hm, age');
+  ok((await page.locator('#domtiles .tile').count()) === 4, 'detail: D0, H0, hm, age');
   await page.click(`#ulist [data-u="P7"]`);
-  ok((await page.locator('.note.warn', { hasText: 'ölçülmüş boyu yok' }).count()) === 1 && (await page.locator('.note.warn', { hasText: 'sıralanamaz' }).count()) === 1, 'missing height: reasons shown');
+  ok((await page.locator('.note.warn', { hasText: 'en uzun ağaçlar belirlenemiyor' }).count()) === 1, 'missing height: reason shown');
   await page.click(`#ulist [data-u="P4"]`);
   ok((await page.locator('.note.warn', { hasText: 'bütün ağaçlar kullanıldı' }).count()) === 1, 'fewer trees than k: stated');
   await page.click('#tab-export');
@@ -173,24 +173,24 @@ ok((await page.locator('#panel', { hasText: 'W_h' }).count()) === 1, 'stratified
   const wbOut = XLSX.read(await readFile(await dt.path()));
   ok(wbOut.SheetNames.join() === 'Veri,Bilgi', 'sheets: data and info');
   const rows = XLSX.utils.sheet_to_json(wbOut.Sheets.Veri, { header: 1, defval: null });
-  ok(rows[0].join() === 'species,plot,treeno,dbh,age,h,plotsize,D0_d,H0_d,D0_h,H0_h,hm,dm,N,BA,age_plot,Dq', 'original columns kept, parameters appended, "age" clash → age_plot: ' + rows[0].join());
+  ok(rows[0].join() === 'species,plot,treeno,dbh,age,h,plotsize,D0,H0,hm,dm,N,BA,age_plot,Dq', 'original columns kept, parameters appended, "age" clash → age_plot: ' + rows[0].join());
   ok(rows.length === aoa.length && rows.slice(1).every((r, i) => r.slice(0, 7).every((v, k) => v === aoa[i + 1][k])), 'every source row and value unchanged');
   const ix = n => rows[0].indexOf(n); let bad = 0;
   const cmp = (a, b) => (a == null && b == null) || (a != null && b != null && Math.abs(a - b) <= 1e-12 * Math.max(1, Math.abs(b)));
   for (const r of rows.slice(1)) {
     const c = REF[+String(r[1]).slice(1) - 1];
-    for (const [col, k] of [['D0_d', 'D0_dbh'], ['H0_d', 'H0_dbh'], ['D0_h', 'D0_height'], ['H0_h', 'H0_height'], ['hm', 'hm'], ['dm', 'dm'], ['N', 'N'], ['BA', 'BA'], ['age_plot', 'age_mean'], ['Dq', 'dq']]) if (!cmp(r[ix(col)], c[k])) { bad++; if (bad < 4) console.log('  mismatch', r[1], col, r[ix(col)], c[k]); }
+    for (const [col, k] of [['D0', 'D0_dbh'], ['H0', 'H0_height'], ['hm', 'hm'], ['dm', 'dm'], ['N', 'N'], ['BA', 'BA'], ['age_plot', 'age_mean'], ['Dq', 'dq']]) if (!cmp(r[ix(col)], c[k])) { bad++; if (bad < 4) console.log('  mismatch', r[1], col, r[ix(col)], c[k]); }
   }
   ok(bad === 0, 'appended values equal the numpy reference (empty where not computable)');
   const info = XLSX.utils.sheet_to_json(wbOut.Sheets.Bilgi, { header: 1, defval: '' }).map(r => r.join(' | '));
-  ok(info.some(l => l.startsWith('D0_d | Baskın çap')) && info.some(l => l.includes('k = 100 × A / 10000')), 'info sheet: definitions, units and the k rule');
-  // one selection only → plain D0 / H0 columns; English labels
-  await page.click('#steps [data-go="2"]'); await page.check('input[name="domby"][value="h"]'); await page.click('#calc');
+  ok(info.some(l => l.startsWith('D0 | Baskın çap')) && info.some(l => l.startsWith('H0 | Üst boy')) && info.some(l => l.includes('k = 100 × A / 10000')), 'info sheet: definitions, units and the k rule');
+  // English labels
+  await page.click('#steps [data-go="2"]'); await page.click('#calc');
   await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('#tab-export'); await page.click('#tab-export');
   const [de] = await Promise.all([page.waitForEvent('download'), page.click('#x-trees')]);
   const wbE = XLSX.read(await readFile(await de.path()));
   const rE = XLSX.utils.sheet_to_json(wbE.Sheets.Data, { header: 1, defval: null });
-  ok(wbE.SheetNames.join() === 'Data,Info' && rE[0].slice(7).join() === 'D0,H0,hm,dm,N,BA,age_plot,Dq' && cmp(rE[1][7], REF[0].D0_height), 'by height only: D0, H0 columns, English sheets');
+  ok(wbE.SheetNames.join() === 'Data,Info' && rE[0].slice(7).join() === 'D0,H0,hm,dm,N,BA,age_plot,Dq' && cmp(rE[1][7], REF[0].D0_dbh) && cmp(rE[1][8], REF[0].H0_height), 'D0, H0 columns, English sheets');
   // problems are listed with source rows and block the table
   await page.click('#steps [data-go="1"]');
   await page.locator('#tblbox details summary').click();

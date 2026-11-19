@@ -92,15 +92,18 @@ const H = [[30, 24, 45], [28, 23, 45], [26, 22, 44], [22, 19, null], [18, 16, nu
 H.forEach(([d, h, a], i) => ds.trees.push({ row: i + 2, plot_id: i < 5 ? 'P1' : 'P2', tree_id: String(i + 1), period: null, dbh: d, height: h, age: a, status: null }));
 await page.evaluate(async d => { const s = await import('/assets/lab/core/store.js'); await s.put('dataset:approved', d); }, ds);
 await page.reload(); await page.waitForSelector('#steps');
-await page.click('#steps [data-go="2"]'); await page.check('input[name="dmode"][value="ds"]'); await page.check('input[name="rank"][value="dbh"]');
+await page.click('#steps [data-go="2"]'); await page.check('input[name="dmode"][value="ds"]');
+ok(await page.locator('input[name="rank"]').count() === 0, 'no choice of ranking: H0 is always the 100 tallest trees per hectare');
 await page.click('#calc');
 await page.waitForSelector('#rtab');
 const dr = await rows(), units = ST.buildUnits(ds, {}).units.filter(u => u.state === 'measured');
-units.forEach((u, i) => { const mm = ST.unitMetrics(u), H0 = mm.dom.d.H0, A = mm.age.mean;
-  near(num(dr[i][4]), H0, 6e-4, `${u.plot_id}: H0 = Plot & Stand function`); near(num(dr[i][3]), A, 6e-4, `${u.plot_id}: mean recorded age`);
-  near(num(dr[i][6]), SI.siteIndex(M100, A, H0).value, 6e-4, `${u.plot_id}: SI100 from H0`); ok(dr[i][5] === 'H0, en kalın 100', `${u.plot_id}: source of the top height named`); });
-await page.click('#steps [data-go="2"]'); await page.check('input[name="rank"][value="height"]'); await page.click('#calc'); await page.waitForSelector('#rtab');
-ok((await rows())[1][8] === 'hesaplanmadı' && (await rows())[1][7].includes('H0 hesaplanamadı'), 'tallest-tree H0 with an unmeasured height: not computed (Plot & Stand rule)');
+let nH0 = 0;
+units.forEach((u, i) => { const mm = ST.unitMetrics(u), H0 = mm.dom.H0, A = mm.age.mean;
+  if (H0 == null) { ok(dr[i][8] === 'hesaplanmadı' && dr[i][7].includes('H0 hesaplanamadı'), `${u.plot_id}: tallest-tree H0 with an unmeasured height: not computed (Plot & Stand rule)`); return; }
+  nH0++;
+  near(num(dr[i][4]), H0, 6e-4, `${u.plot_id}: H0 = Plot & Stand function (100 tallest)`); near(num(dr[i][3]), A, 6e-4, `${u.plot_id}: mean recorded age`);
+  near(num(dr[i][6]), SI.siteIndex(M100, A, H0).value, 6e-4, `${u.plot_id}: SI100 from H0`); ok(dr[i][5] === 'H0, en uzun 100', `${u.plot_id}: source of the top height named`); });
+ok(nH0 > 0 && nH0 < units.length, `some units with H0 (${nH0}) and some without (unmeasured heights)`);
 await shot('si-results');
 
 // 4b. fitting to own series (SI03): the simulated stem analyses of the SciPy reference, same start → same coefficients

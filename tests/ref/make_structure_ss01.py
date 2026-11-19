@@ -7,7 +7,7 @@ NumPy/SciPy only; written apart from the JavaScript code:
   - BAL: brute-force double loop, equal diameters excluded and included
   - SDI (Reineke 1933), RD (Curtis 1982), relative spacing; DIST_SPEC-style table values of TOOLS_SPEC §8.3
   - simulated plots (numpy default_rng(20261113); NOT real measurements): per plot × period N/ha, G/ha, Dq, H0 (the
-    100 thickest trees per hectare, fractional last tree), class shares, species shares, all measures
+    100 tallest trees per hectare, fractional last tree), class shares, species shares, all measures
     python3 tests/ref/make_structure_ss01.py  →  tests/ref/structure_ss01.json
 """
 import json
@@ -74,8 +74,8 @@ out["dataset"] = dict(plots=[dict(plot_id=p, plot_area=a) for p, a in plots], tr
 
 
 def h0(ds, area):
-    """mean height of the 100 thickest trees per hectare; the last one with a fractional weight (no ties assumed)"""
-    k = 100 * area / 10000; s = sorted(ds, key=lambda t: -t["dbh"]); left, sw, sh = k, 0.0, 0.0
+    """top height: mean height of the 100 tallest trees per hectare (19 Nov 2026); the last one with a fractional weight (no ties assumed)"""
+    k = 100 * area / 10000; s = sorted(ds, key=lambda t: -t["height"]); left, sw, sh = k, 0.0, 0.0
     for t in s:
         if left <= 0: break
         wt = min(1.0, left); sw += wt; sh += wt * t["height"]; left -= wt

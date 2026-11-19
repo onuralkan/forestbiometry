@@ -13,7 +13,7 @@
 </ul>
 <h3>Veri</h3>
 <ul>
-<li>Tek nokta (yaş ve üst boy), tablo (örnek alan, dönem, yaş, üst boy) ya da onaylanmış ağaç verisi. Onaylanmış veride H0, Örnek Alan ve Meşcere aracıyla aynı tanımla (hektarda en kalın ya da en uzun 100 ağaç) ve yalnızca ölçülmüş boylardan hesaplanır; yaş, yaşı kayıtlı ağaçların ortalamasıdır.</li>
+<li>Tek nokta (yaş ve üst boy), tablo (örnek alan, dönem, yaş, üst boy) ya da onaylanmış ağaç verisi. Onaylanmış veride H0, Örnek Alan ve Meşcere aracıyla aynı tanımla (hektardaki en uzun 100 ağaç) ve yalnızca ölçülmüş boylardan hesaplanır; yaş, yaşı kayıtlı ağaçların ortalamasıdır.</li>
 <li><b>Verideki yaşın türü</b>: siz seçersiniz; denklemin yaş türüyle aynı değilse hesap yapılmaz.</li>
 </ul>
 <h3>Sonuçlar ve indirme</h3>
