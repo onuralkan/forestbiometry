@@ -11,7 +11,7 @@
 <h3>Doğrulama</h3>
 <ul>
 <li><b>Kayıt seç (.json)</b>: mühür denetlenir (kayıt indirildiğinden beri değişmiş mi), araç, sürüm, araç kimlikleri ve commit gösterilir; aracın sitedeki sürümü farklıysa bildirilir. Commit bağlantısı kaydı üreten kaynak koduna gider.</li>
-<li><b>Girdiler</b> tablosu her girdinin rolünü, boyutunu, parmak izini ve okuma ayarlarını (kodlama, ayırıcı, başlık satırı, çalışma sayfası) gösterir. Kayıtta veri varsa parmak iziyle tuttuğu denetlenir ve dosya indirilebilir.</li>
+<li><b>Girdiler</b> tablosu her girdinin rolünü, boyutunu, parmak izini ve okuma ayarlarını (kodlama, ayırıcı, başlık satırı, çalışma sayfası) gösterir. Kayıtta veri varsa parmak iziyle uyuştuğu denetlenir ve dosya indirilebilir.</li>
 <li><b>Elinizdeki dosyaları denetleyin</b>: özgün veri dosyalarınızı seçin; her biri kayıttaki girdilerle karşılaştırılır. Tek bir bayt farkı eşleşmeyi bozar (ör. Excel'de açılıp yeniden kaydedilen CSV).</li>
 <li>DI-07 öncesi indirilen JSON dosyaları da açılır: aracı, sürümü ve zamanı okunur; mühür ve parmak izi yoktur.</li>
 </ul>

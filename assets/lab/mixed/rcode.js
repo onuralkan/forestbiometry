@@ -22,7 +22,7 @@ export function buildR(s, R, cal, lrt, o) {
   out.push(header({ title: T('Karma Etkili Modeller: R kodu', 'Mixed-Effects Models: R code'), tool: { id: 'karma-modeller', version: o.version }, created: o.created, lang: o.lang, packages: ['nlme'],
     notes: [T('Doğrusal modeller lme, doğrusal olmayanlar nlme ile (Pinheiro ve Bates 2000; araç da Lindstrom–Bates yöntemini uygular ve nlme ile sınanmıştır). Rastgele etkiler, kovaryans yapısı (pdDiag / pdSymm), varyans fonksiyonu (varPower: Var = σ²|v|^(2δ)) ve yöntem araçtakiyle aynı.',
       'Linear models by lme, nonlinear ones by nlme (Pinheiro and Bates 2000; the tool implements the Lindstrom–Bates method too and was tested against nlme). Random effects, covariance structure (pdDiag / pdSymm), variance function (varPower: Var = σ²|v|^(2δ)) and method as in the tool.'),
-    T('k = sabit etkiler + kovaryans parametreleri + varyans parametresi + 1 (σ); AIC = −2ℓ + 2k; BIC\'de REML için ln(N − p), nlme\'deki gibi. Doğrusal olmayan REML\'de nlme REML optimumuna gitmeyebilir (ML göreli kesinliğinde durur); orada aracın REML olabilirliği daha yüksek çıkabilir.',
+    T('k = sabit etkiler + kovaryans parametreleri + varyans parametresi + 1 (σ); AIC = −2ℓ + 2k; BIC\'de REML için ln(N − p), nlme\'deki gibi. Doğrusal olmayan REML\'de nlme REML optimumuna gitmeyebilir (ML için kullanılan göreli yakınsama toleransında durur); orada aracın REML olabilirliği daha yüksek çıkabilir.',
       'k = fixed effects + covariance parameters + variance parameter + 1 (σ); AIC = −2ℓ + 2k; BIC with ln(N − p) for REML, as nlme. For nonlinear REML nlme may stop short of the REML optimum (at the ML relative precision); there the tool\'s REML log-likelihood can be higher.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -38,7 +38,7 @@ export function buildR(s, R, cal, lrt, o) {
     `dec <- ${rStr(s.decimal)}   # ${T('ondalık ayırıcı', 'decimal separator')}`,
     `num <- function(k) fb_num(dat[[k]], dec)$value`,
     `grp <- trimws(dat[[${s.g + 1}]])   # ${T('grup', 'group')}: ${hd(s.g)}`,
-    rComment(T('Ortak satırlar: grup boş değil, yanıt ve modellerin kullandığı her sütun sayı.', 'Common rows: a group, and a number in the response and in every column the models use.')),
+    rComment(T('Ortak satırlar: grup boş değil, bağımlı değişken ve modellerin kullandığı her sütun sayı.', 'Common rows: a group, and a number in the response and in every column the models use.')),
     `keep <- grp != "" & Reduce(\`&\`, lapply(c(${used.map(c => c + 1).join(', ')}), function(k) is.finite(num(k))))   # ${used.map(hd).join(', ')}`,
     `d <- data.frame(.g = factor(grp[keep]), .y = num(${s.y + 1})[keep], row = row_no[keep])   # y: ${hd(s.y)}`);
   for (const [n, c] of cols) out.push(`d[[${rStr(n)}]] <- num(${c + 1})[keep]   # ${hd(c)}`);
@@ -80,14 +80,14 @@ res <- list(); fits <- list()
       const filt = vn ? `subset(d, ${rName(vn)} > 0)` : 'd';
       out.push(`${id}_d <- ${filt}`,
         `${id}_f <- deriv(quote(${toR(ast)}), ${rVec(params, rStr)}, function.arg = ${rVec([...params, ...q.vars], rStr)})   # ${T('model ve parametre türevleri (deriv)', 'model and parameter derivatives (deriv)')}`,
-        `${id}_start <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.start[j])}`).join(', ')})`}   # ${T('aracın başlangıcı: havuzlanmış doğrusal olmayan EKK', 'the tool\'s start: pooled nonlinear least squares')}`,
+        `${id}_start <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.start[j])}`).join(', ')})`}   # ${T('aracın başlangıcı: havuzlanmış doğrusal olmayan en küçük kareler', 'the tool\'s start: pooled nonlinear least squares')}`,
         `${id}_tool <- ${`c(${params.map((p, j) => `${rName(p)} = ${rNum(q.fit.beta[j])}`).join(', ')})`}   # ${T('aracın kestirimleri', 'the tool\'s estimates')}`,
         `${id}_call <- function(st) nlme(.y ~ ${id}_f(${[...params, ...q.vars].map(rName).join(', ')}), data = ${id}_d, fixed = ${params.map(rName).join(' + ')} ~ 1,`,
         `  random = ${cov}(${re.map(rName).join(' + ')} ~ 1), groups = ~ .g, start = st${wArg}, method = ${rStr(q.fit.method)}, control = nctl)`,
         `m <- tryCatch(${id}_call(${id}_start), error = function(e) NULL)`,
         `if (is.null(m)) { message(${rStr(q.label + T(': nlme aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', ': nlme did not converge from the tool\'s start; starting from the tool\'s estimates'))}); m <- ${id}_call(${id}_tool) }`,
         `fits$${id} <- m`);
-      if (q.fit.method === 'REML') out.push(rComment(T('REML: nlme burada ML göreli kesinliğinde durabilir; sonuçlar araçtan ayrılabilir (başta not).', 'REML: nlme may stop here at the ML relative precision; the results can differ from the tool (see the note at the top).')));
+      if (q.fit.method === 'REML') out.push(rComment(T('REML: nlme burada ML için kullanılan göreli yakınsama toleransında durabilir; sonuçlar araçtan ayrılabilir (başta not).', 'REML: nlme may stop here at the ML relative precision; the results can differ from the tool (see the note at the top).')));
     }
     out.push(`cat("\\n", ${rStr(q.label)}, "\\n"); res <- c(res, fb_report(${rStr(id)}, m))`, '');
   }

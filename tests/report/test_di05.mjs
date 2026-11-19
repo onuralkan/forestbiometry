@@ -58,7 +58,7 @@ ok((html.match(/<section class="r-sec"/g) || []).length === 5 && html.includes('
 ok(html.includes('<p>Birinci paragraf.</p><p>İkinci') && html.includes('<div class="r-note"><p>Grafik notu</p></div>'), 'intro paragraphs and a section note');
 ok((html.match(/<svg/g) || []).length === 5 && html.includes('weibull · weibull.ml'), 'five charts; density from the record named under the histogram');
 ok(html.includes(cite('apa', { lang: 'tr', ...citeData, accessed: '2026-11-16', tool: null })) && html.includes(cite('apa', { lang: 'tr', ...citeData, accessed: '2026-11-16', tool: { file: 'boy-cap.php', ...tools['boy-cap.php'] } })), 'platform and tool citations as the Cite dialog writes them (APA, report date as access date)');
-ok(html.includes('Bailey, R.L., Dell, T.R. 1973') && html.includes('[B] okundu') && html.includes('Kullanıcı, A. 2020. Bonitet tablosu.'), 'literature from the records with its status; user coefficient source');
+ok(html.includes('Bailey, R.L., Dell, T.R. 1973') && html.includes('[B] birincil kaynakta kontrol edildi') && html.includes('Kullanıcı, A. 2020. Bonitet tablosu.'), 'literature from the records with its status; user coefficient source');
 ok(html.includes('b'.repeat(40)) && html.includes('a'.repeat(40)) && html.includes(project.sha256) && html.includes(distRec.integrity.value) && html.includes('ff'.repeat(32)), 'appendix: report and record commits, package fingerprint, seal, input fingerprints');
 const off = renderReport({ ...model, sections: { package: true, charts: false, records: false, sources: false, repro: false } });
 ok((off.match(/<section/g) || []).length === 1 && !off.includes('<svg'), 'sections can be left out');

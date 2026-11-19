@@ -23,7 +23,7 @@ function apa(array $r, bool $tr): string {
     $ed = '';
     if (!empty($r['edition'])) {
         $e = (string) $r['edition'];
-        if ($tr) $ed = ' (' . h($e) . (ctype_digit($e) ? '. baskı' : '') . ')';
+        if ($tr) $ed = ' (' . h($e) . (ctype_digit($e) ? '. bs.' : '') . ')';
         else { $n = (int) $e; $suf = ctype_digit($e) ? (in_array($n % 100, [11, 12, 13], true) ? 'th' : ([1 => 'st', 2 => 'nd', 3 => 'rd'][$n % 10] ?? 'th')) : ''; $ed = ' (' . h($e) . $suf . ' ed.)'; }
     }
     $title = trim((string) ($r['title'] ?? ''));
@@ -40,7 +40,7 @@ function apa(array $r, bool $tr): string {
         }
     } elseif ($type === 'chapter') {
         $o .= h(apa_end($title)) . ' ';
-        if (!empty($r['container'])) $o .= ($tr ? 'İçinde ' : 'In ') . '<i>' . h($r['container']) . '</i>' . (!empty($r['pages']) ? ' (' . ($tr ? 's. ' : 'pp. ') . h($r['pages']) . ')' : '') . '. ';
+        if (!empty($r['container'])) $o .= ($tr ? '' : 'In ') . '<i>' . h($r['container']) . '</i>' . ($tr ? ' içinde' : '') . (!empty($r['pages']) ? ' (' . ($tr ? 'ss. ' : 'pp. ') . h($r['pages']) . ')' : '') . '. ';
         if (!empty($r['publisher'])) $o .= h(apa_end($r['publisher']));
     } elseif ($type === 'software') {
         $o .= '<i>' . h($title) . '</i>' . (!empty($r['version']) ? ' (' . ($tr ? 'Sürüm ' : 'Version ') . h($r['version']) . ')' : '') . ' [' . ($tr ? 'Yazılım' : 'Computer software') . ']. ';
@@ -54,7 +54,10 @@ function apa(array $r, bool $tr): string {
     elseif (!empty($r['url'])) $o .= ' <a href="' . h($r['url']) . '" rel="noopener">' . h($r['url']) . '</a>';
     return trim($o);
 }
-$label = ['B' => $tr ? 'okundu, uygulandı' : 'read, applied', 'A' => $tr ? 'ikincil kaynaktan' : 'via a secondary source', 'P' => $tr ? 'R paketi, sayısal referans' : 'R package, numerical reference', 'İ' => $tr ? 'İncelendi' : 'Reviewed', 'D' => $tr ? 'tanım ya da doğrulanacak' : 'definition or to be verified'];
+// status labels as defined in docs/METHODS.md (lines 4–8); assets/lab/report/render.js uses the same wording
+$label = ['B' => $tr ? 'birincil kaynakta kontrol edildi' : 'checked in the primary source', 'A' => $tr ? 'aktarılan (ikincil kaynaktan)' : 'quoted via a secondary source', 'P' => $tr ? 'paket belgesinden doğrulandı' : 'verified from the package documentation', 'İ' => $tr ? 'künye doğrulandı (ikincil kaynağın kaynakçasında)' : 'citation verified (in a secondary source\'s reference list)', 'D' => $tr ? 'henüz doğrulanmadı' : 'not yet verified'];
+// Turkish page: the few English words of the "tools" notes in inc/kaynakca.json (data, kept as they are)
+$toolsTr = $tr ? [' audit fixes' => ' denetim düzeltmeleri', ' tests' => ' testleri', ' note' => ' notu'] : [];
 ?>
   <section class="card about" aria-labelledby="h-refs">
     <h2 id="h-refs" class="b-h2"><?= $tr ? 'Kaynakça' : 'References' ?></h2>
@@ -65,7 +68,7 @@ $label = ['B' => $tr ? 'okundu, uygulandı' : 'read, applied', 'A' => $tr ? 'iki
     <ol class="refs" id="refs">
       <?php foreach ($refs as $r): ?>
       <li id="ref-<?= h($r['key'] ?? '') ?>"><?= apa($r, $tr) ?>
-        <span class="muted small"> — <?= h(implode('; ', array_unique(array_map(function ($t) { return trim(preg_replace('/\s*\(.*?\)/u', '', $t)); }, $r['tools'] ?? [])))) ?><?= !empty($r['status']) ? ' · ' . h($r['status']) . ' (' . h($label[$r['status']] ?? $r['status']) . ')' : '' ?><?= !empty($r['note']) && stripos($r['note'], 'incomplete') === 0 ? ' · ' . ($tr ? 'künye kaynak belgelerde eksik' : 'citation incomplete in the source documents') : '' ?></span></li>
+        <span class="muted small"> — <?= h(implode('; ', array_unique(array_map(function ($t) use ($toolsTr) { return strtr(trim(preg_replace('/\s*(\((?:[^()]++|(?1))*\))/u', '', $t)), $toolsTr); }, $r['tools'] ?? [])))) ?><?= !empty($r['status']) ? ' · ' . h($r['status']) . ' (' . h($label[$r['status']] ?? $r['status']) . ')' : '' ?><?= !empty($r['note']) && stripos($r['note'], 'incomplete') === 0 ? ' · ' . ($tr ? 'künye kaynak belgelerde eksik' : 'citation incomplete in the source documents') : '' ?></span></li>
       <?php endforeach; ?>
     </ol>
   </section>

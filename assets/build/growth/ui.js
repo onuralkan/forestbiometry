@@ -569,10 +569,10 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'veya Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
+  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
     auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
     encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx veya CSV olarak kaydedin.',
+    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
     fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
     comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
@@ -1504,6 +1504,7 @@ __fb_x(__fb_e, { "FORMS": () => FORMS, "FORM_IDS": () => FORM_IDS, "TOOL": () =>
 const { levenbergMarquardt, covariance } = __fb_r("core/nls.js");
 const { brent } = __fb_r("core/roots.js");
 const { registerForm } = __fb_r("core/coef.js");
+const { lang } = __fb_r("core/i18n.js");
 // Growth function fitter (SQ-03): forms, fitting and derived quantities. No DOM.
 // Formulas and their reading status: docs/METHODS.md §18. The site ships NO coefficients (K1): curves are fitted to
 // the user's own age–size data (height, diameter, volume, …; the variable and its unit are the user's).
@@ -1517,6 +1518,7 @@ const { registerForm } = __fb_r("core/coef.js");
 // Derived (definitions): current annual increment CAI(t) = dy/dt, mean annual increment MAI(t) = y/t, the age of the
 // inflection point (maximum CAI) and the age where MAI culminates (MAI = CAI with MAI turning from rising to falling,
 // i.e. t·y'(t) − y(t) changing from + to −; a change from − to + is a minimum of MAI, not its culmination).
+
 
 
 
@@ -1544,13 +1546,13 @@ const FORMS = {
     dy: (p, t) => { const e = E(-p[2] * t); return p[0] * E(-p[1] * e) * p[1] * p[2] * e; },
     ok: p => p[0] > 0 && p[1] > 0 && p[2] > 0,
     inflection: p => p[1] > 1 ? Math.log(p[1]) / p[2] : null, asymptote: p => p[0] },
-  logi: { id: 'logi', name: 'Logistic', params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0 / (1 + b1·e^(−b2·t))',
+  logi: { id: 'logi', name: lang === 'tr' ? 'Lojistik' : 'Logistic', names: { tr: 'Lojistik', en: 'Logistic' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0 / (1 + b1·e^(−b2·t))',
     f: (p, t) => p[0] / (1 + p[1] * E(-p[2] * t)),
     grad: (p, t) => { const e = E(-p[2] * t), q = 1 + p[1] * e; return [1 / q, -p[0] * e / (q * q), p[0] * p[1] * t * e / (q * q)]; },
     dy: (p, t) => { const e = E(-p[2] * t), q = 1 + p[1] * e; return p[0] * p[1] * p[2] * e / (q * q); },
     ok: p => p[0] > 0 && p[1] > 0 && p[2] > 0,
     inflection: p => p[1] > 1 ? Math.log(p[1]) / p[2] : null, asymptote: p => p[0] },
-  mono: { id: 'mono', name: 'Monomolecular', params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0·(1 − b1·e^(−b2·t))',
+  mono: { id: 'mono', name: lang === 'tr' ? 'Monomoleküler' : 'Monomolecular', names: { tr: 'Monomoleküler', en: 'Monomolecular' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0·(1 − b1·e^(−b2·t))',
     f: (p, t) => p[0] * (1 - p[1] * E(-p[2] * t)),
     grad: (p, t) => { const e = E(-p[2] * t); return [1 - p[1] * e, -p[0] * e, p[0] * p[1] * t * e]; },
     dy: (p, t) => p[0] * p[1] * p[2] * E(-p[2] * t),
@@ -1678,13 +1680,13 @@ const T = makeT({
     'd.sample': 'Örnek veriyi yükle', 'd.sample.note': 'Örnek veri benzetimdir (gerçek ölçüm değildir): üç gövde analizi dizisi, yaş ve boy.',
     'm.h': 'Fit edilecek modeller', 'm.note': 'Bütün parametreler pozitif kalır (büyüyen, asimptotlu eğriler). Başlangıç değerleri küçük bir ızgaranın en iyisidir.', 'm.need': 'En az bir model seçin.',
     'm.src.B': 'kaynak okundu [B]', 'm.src.A': 'ikincil kaynaktan aktarılan [A]', 'm.korf': 'Korf: kaynağı henüz okunmadığı için eklenmedi.',
-    'r.h': 'Model karşılaştırması', 'r.model': 'Model', 'r.status': 'Durum', 'r.params': 'Katsayılar (SH)', 'r.rmse': 'RMSE', 'r.bias': 'Yanlılık', 'r.rse': 'σ̂', 'r.aic': 'AIC', 'r.asym': 'Asimptot', 'r.infl': 'Dönüm yaşı', 'r.mai': 'MAI doruk yaşı',
+    'r.h': 'Model karşılaştırması', 'r.model': 'Model', 'r.status': 'Durum', 'r.params': 'Katsayılar (standart hata)', 'r.rmse': 'RMSE', 'r.bias': 'Yanlılık', 'r.rse': 'σ̂', 'r.aic': 'AIC', 'r.asym': 'Asimptot', 'r.infl': 'Dönüm noktası yaşı', 'r.mai': 'Ortalama yıllık artımın (MAI) doruk yaşı',
     'r.status.ok': 'yakınsadı', 'r.status.noconverge': 'yakınsamadı', 'r.status.invalid': 'fit edilemedi',
     'r.note': 'Yanlılık = gözlenen − tahmin. σ̂ = √(SSE/(n − p)). AIC yalnızca aynı veriye fit edilen modeller arasında karşılaştırılabilir. Standart hatalar bağımsız gözlem varsayımıyla hesaplanır; aynı dizinin ölçümleri bağımsız değildir, gerçek belirsizlik daha büyüktür.',
-    'r.curves': 'Gözlemler ve fit edilen eğriler', 'r.age': 'Yaş (yıl)', 'r.sel': 'Ayrıntı için model', 'r.inc': 'Cari (CAI) ve ortalama (MAI) artım', 'r.cai': 'CAI = dy/dt', 'r.maiL': 'MAI = y/t', 'r.resid': 'Artıklar (gözlenen − tahmin)',
-    'r.der': p => `Asimptot ${p.a}; dönüm noktası (en büyük CAI) ${p.i}; MAI doruğu ${p.m}.`, 'r.der.none': 'yok',
+    'r.curves': 'Gözlemler ve fit edilen eğriler', 'r.age': 'Yaş (yıl)', 'r.sel': 'Ayrıntı için model', 'r.inc': 'Cari yıllık artım (CAI) ve ortalama yıllık artım (MAI)', 'r.cai': 'CAI = dy/dt', 'r.maiL': 'MAI = y/t', 'r.resid': 'Artıklar (gözlenen − tahmin)',
+    'r.der': p => `Asimptot ${p.a}; dönüm noktası yaşı (en büyük cari yıllık artım) ${p.i}; ortalama yıllık artımın (MAI) doruk yaşı ${p.m}.`, 'r.der.none': 'yok',
     'r.cit': 'Kaynak (zorunlu; ör. "kendi gövde analizim, 2025, yayımlanmamış")', 'r.save': 'Katsayı kütüphanesine kaydet', 'r.saved': 'Fit edilen eğri kütüphaneye kaydedildi.', 'r.cit.need': 'Kaydetmek için kaynak yazın.',
-    'r.rcode': 'R kodu (.R)', 'r.rcode.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı gözlemler, fonksiyonlar ve başlangıç değerleri; artımlar ve doruk yaşları R\'ın deriv fonksiyonuyla; seçilen fonksiyonun tablosu. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
+    'r.rcode': 'R kodu (.R)', 'r.rcode.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı gözlemler, fonksiyonlar ve başlangıç değerleri; artımlar ve doruk yaşları R\'ın deriv fonksiyonuyla; seçilen fonksiyonun tablosu. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylanmış paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
     'r.excel': 'Excel', 'r.csv': 'CSV', 'r.json': 'JSON', 'r.svg': 'SVG', 'r.tab': 'Eğri tablosu', 'r.step': 'Adım (yıl)',
     'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.pred': 'Tahminler', 'x.curve': 'Eğriler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.lang': 'Dil', 'x.data': 'Veri', 'x.var': 'Değişken', 'x.forms': 'Biçimler',
   },
@@ -1740,13 +1742,13 @@ const R_FORMS = {
  * results { tMax, obs, fits }, o = { lang, created, version, fileName }.
  */
 function buildR(s, R, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]);
+  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), named = F => (F.names ? { ...F, name: F.names[tr ? 'tr' : 'en'] } : F), hd = c => c == null ? '' : String(s.src.headers[c]);
   const ok = R.fits.filter(q => q.status === 'ok'), sel = ok.find(q => q.form === s.sel);
   const out = [];
   out.push(header({ title: T('Büyüme Fonksiyonu Fit Etme: R kodu', 'Growth Function Fitter: R code'), tool: { id: 'buyume-islevi', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Fonksiyonlar doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton, türevler R\'ın deriv fonksiyonuyla). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The functions are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton, derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Yanlılık = gözlem − tahmin (araçtaki gibi); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC R\'ın logLik\'iyle (k = p + 1). Standart hatalar gözlemlerin bağımsız olduğunu varsayar; aynı ağacın yinelenen ölçümlerinde bu varsayım tutmaz.',
+    T('Yanlılık = gözlenen − tahmin (araçtaki gibi); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC R\'ın logLik\'iyle (k = p + 1). Standart hatalar gözlemlerin bağımsız olduğunu varsayar; aynı ağacın yinelenen ölçümlerinde bu varsayım tutmaz.',
       'Bias = observed − predicted (as in the tool); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC from R\'s logLik (k = p + 1). Standard errors assume independent observations, which repeated measurements of the same tree are not.'),
     T('Cari yıllık artım CAI = dy/dt (R\'ın deriv fonksiyonuyla), ortalama yıllık artım MAI = y/t; MAI\'nin doruğu t·y\' − y\'nin +\'dan −\'ye geçtiği yaş.',
       'Current annual increment CAI = dy/dt (from R\'s deriv), mean annual increment MAI = y/t; MAI culminates where t·y\' − y turns from + to −.')] }));
@@ -1790,7 +1792,7 @@ fb_mai_peak <- function(m, b) {
 res <- list(); fits <- list(); models <- list()
 `);
   for (const q of R.fits) {
-    const F = FORMS[q.form], id = q.form;
+    const F = named(FORMS[q.form]), id = q.form;
     if (q.status !== 'ok') { out.push(rComment(T(`${F.name}: araçta fit edilmedi (${q.status}); R'da da fit edilmez.`, `${F.name}: not fitted by the tool (${q.status}); not fitted in R either.`)), ''); continue; }
     const L = th => `list(${F.params.map((p, j) => `${p} = ${rNum(th[j])}`).join(', ')})`;
     out.push(rComment(`${F.name}: ${F.formula}`),
@@ -1808,7 +1810,7 @@ res <- list(); fits <- list(); models <- list()
       `}`, '');
   }
   if (sel) {
-    const F = FORMS[sel.form];
+    const F = named(FORMS[sel.form]);
     out.push(rComment(T(`Seçilen fonksiyon: ${F.name}. Tablo: t = adım, 2·adım, … 1,25·t_max'a kadar; y, CAI, MAI.`, `Chosen function: ${F.name}. Table: t = step, 2·step, … up to 1.25·t_max; y, CAI, MAI.`)),
       `step <- ${rNum(s.step)}`,
       `tab <- fb_curve(models$${sel.form}, coef(fits$${sel.form}), step * seq_len(floor((1.25 * t_max + 1e-9) / step)))`,

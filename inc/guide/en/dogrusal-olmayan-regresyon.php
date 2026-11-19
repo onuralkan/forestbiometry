@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('dogrusal-olmayan-regresyon', 'Nonlinear Regression') ?>
 <p>Fits nonlinear models to your own data: you choose a ready-made form or write the formula yourself. Several models are fitted to the same rows and compared. The site ships no coefficients.</p>
-<p><b>What it does not do:</b> mixed-effects models (plot effects), equation systems (for these, the additive system in the Biomass and Carbon tool), constrained parameters, autocorrelated errors, profile-likelihood intervals.</p>
+<p><b>What it does not do:</b> mixed-effects models (for plot effects, use the Mixed-Effects Models tool), equation systems (for these, use the Systems of Equations tool), constrained parameters, autocorrelated errors, profile-likelihood intervals.</p>
 <h3>Data and models</h3>
 <ul>
 <li><b>Data table</b>: one observation per row; the response and the explanatory variables as columns. The simulated table is only for trying out.</li>

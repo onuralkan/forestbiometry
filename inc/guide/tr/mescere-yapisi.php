@@ -12,7 +12,7 @@
 </ul>
 <h3>Sonuçlar</h3>
 <ul>
-<li><b>Örnek alanlar</b>: N/ha, G, Dq, H0, ÇK, Gini, Shannon, Simpson, SDI, Curtis RD, set seçildiyse CCF (%); koordinat varsa Clark–Evans R (düzeltmesiz ve Donnelly), W, M, T. <b>Bütün sütunlar</b> çarpıklık, basıklık, tür Shannon'ı, göreli aralık, T1 (en yakın komşuyla çap farklılaşması), U ve ortalama Hegyi'yi de gösterir. Hesaplanamayan değer "–" olarak yazılır.</li>
+<li><b>Örnek alanlar</b>: N/ha, G, Dq, H0, CV (değişim katsayısı), Gini, Shannon, Simpson, SDI, Curtis RD, set seçildiyse CCF (%); koordinat varsa Clark–Evans R (düzeltmesiz ve Donnelly), W (düzenli açı endeksi), M (karışım endeksi), T (çap farklılaşma endeksi). <b>Bütün sütunlar</b> çarpıklık, fazla basıklık (basıklık − 3), tür Shannon'ı, göreli aralık, T1 (en yakın komşuyla çap farklılaşması), U (baskınlık endeksi) ve ortalama Hegyi'yi de gösterir. Hesaplanamayan değer "–" olarak yazılır.</li>
 <li><b>Ayrıntı</b>: çap sınıfı histogramı, Lorenz eğrisi, gövde haritası (renk Hegyi değeri), notlar ve ağaç tablosu (BAL, d/Dq, Hegyi, kenar).</li>
 </ul>
 <p>CCF = Σ (hektardaki ağaç sayısı × MCA'nın hektara yüzdesi) (Krajicek ve ark. 1961, aktaran Kershaw ve ark. 2016); 100, açıkta büyümüş boyuttaki tepelerin yeri tam örteceğini gösterir; tepe kapalılığı ölçüsü değildir. van Laar ve Akça'nın oran biçimi (CCF/100) de dışa aktarılır. Bir türün seti yoksa ya da bir ağacın MCA'sı hesaplanamıyorsa o alanın CCF'si verilmez ve nedeni notlarda yazılır; kısmi toplam sıklığı az gösterirdi.</p>

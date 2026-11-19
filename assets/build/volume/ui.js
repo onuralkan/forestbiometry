@@ -634,10 +634,10 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'veya Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
+  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
     auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
     encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx veya CSV olarak kaydedin.',
+    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
     fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
     comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
@@ -2682,7 +2682,7 @@ function buildR(s, R, o) {
   out.push(header({ title: T('Hacim Denklemleri: R kodu', 'Volume Equations: R code'), tool: { id: 'hacim-denklemleri', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Biçimler (Kershaw ve ark. 2016, §6.2) doğrusal regresyon olarak lm ile fit edilir; logaritmik biçimler ln ölçeğinde. Ağırlık: σ² ∝ X^k, lm ağırlığı 1/X^k; k verilmemişse ağırlıksız artıklardan ln e² = a + k ln X (Parresol 1999).',
       'The forms (Kershaw et al. 2016, §6.2) are fitted as linear regressions by lm; the logarithmic forms on the ln scale. Weights: σ² ∝ X^k, the lm weight 1/X^k; when k is not given, from ln e² = a + k ln X on the unweighted residuals (Parresol 1999).'),
-    T('Logaritmik biçimlerde ters dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki artık standart hatası. Ölçütler hacim ölçeğinde: hata = gözlem − tahmin, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
+    T('Logaritmik biçimlerde ters dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki artık standart hatası. Ölçütler hacim ölçeğinde: hata = gözlenen − tahmin, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
       'Back-transformation correction of the log forms: none or Baskerville exp(s²/2), s the residual standard error on the ln scale. Measures on the volume scale: error = observed − predicted, RMSE = √(SSE/n), R² = 1 − SSE/SST.'),
     ...(s.note ? [s.note] : [])] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));

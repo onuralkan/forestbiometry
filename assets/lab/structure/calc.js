@@ -136,5 +136,11 @@ export function structureUnit(u, settings = {}) {
   return { ...head, status: 'ok', measures, classes: cls.map((c, i) => ({ lo: c.lo, hi: c.hi, Nha: cnt[i], share: pc[i] ?? null })), species, trees,
     definitions: { moments: 'divisor n (weighted: W = Σw); kurtosis = excess (m4/m2² − 3)', gini: `on ${s.giniOn === 'd' ? 'diameter' : 'basal area'}; ascending sort; mean absolute difference over all pairs / (2·mean)`,
       shannon: 'natural log; diameter classes [lo, hi), shares of trees per hectare', simpson: '1 − Σp² (shares by number)', bal: `m²/ha; equal diameters ${s.balTies === 'include' ? 'included' : 'excluded'}; the tree itself never`,
-      sdi: `N·(Dq/${s.sdiRef})^${s.sdiBeta} (Reineke 1933)`, rd: `G/Dq^${s.rdExp} (Curtis 1982; G m²/ha, Dq cm)`, spacing: `${s.spacing}; S% = 100·a/H0 (H0: mean height of the 100 tallest trees per hectare)` } };
+      sdi: `N·(Dq/${s.sdiRef})^${s.sdiBeta} (Reineke 1933)`, rd: `G/Dq^${s.rdExp} (Curtis 1982; G m²/ha, Dq cm)`, spacing: `${s.spacing}; S% = 100·a/H0 (H0: mean height of the 100 tallest trees per hectare)` },
+    // The same definitions in Turkish for the Turkish interface and Excel (audit MS-06); keys and values as above.
+    definitions_tr: { moments: 'bölen n (ağırlıklı: W = Σw); basıklık = fazla basıklık (m4/m2² − 3)', gini: `${s.giniOn === 'd' ? 'çap' : 'göğüs yüzeyi'} üzerinden; artan sıralama; bütün çiftler üzerinden ortalama mutlak fark / (2·ortalama)`,
+      shannon: 'doğal logaritma; çap sınıfları [alt, üst), hektardaki ağaç sayısının payları', simpson: '1 − Σp² (ağaç sayısına göre paylar)', bal: `m²/ha; eşit çaplar ${s.balTies === 'include' ? 'dahil' : 'hariç'}; ağacın kendisi hiçbir zaman dahil değil`,
+      sdi: `N·(Dq/${trNum(s.sdiRef)})^${trNum(s.sdiBeta)} (Reineke 1933)`, rd: `G/Dq^${trNum(s.rdExp)} (Curtis 1982; G m²/ha, Dq cm)`, spacing: `${s.spacing === 'triangular' ? 'üçgen' : s.spacing === 'square' ? 'kare' : s.spacing}; S% = 100·a/H0 (H0: hektardaki en uzun 100 ağacın ortalama boyu)` } };
 }
+/** A number written with the Turkish decimal comma (definition texts only). */
+const trNum = x => String(x).replace('.', ',');

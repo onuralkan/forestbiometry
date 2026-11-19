@@ -339,7 +339,7 @@ function treeRows() {
     const hMeas = r.hStatus === 'ok' || r.hStatus === 'lebh' ? r.h : null;
     let hhat = null, model = null, outF = null, fitv = null, e = null;
     if (sf && r.missing) { hhat = H.predict(sf, r.d, prep.bh); model = mname(sf.id); outF = H.outside(prep, r.d) ? T('yes') : T('no'); }
-    if (sf && r.fit) { fitv = H.predict(sf, r.d, prep.bh); e = fitv - r.h; model = mname(sf.id); }
+    if (sf && r.fit) { fitv = H.predict(sf, r.d, prep.bh); e = r.h - fitv; model = mname(sf.id); }
     out.push([r.rowNo, r.plot, r.species, cellText(src[S.dcol]), r.dStatus === 'ok' ? r.d : null, cellText(src[S.hcol]), hMeas, T('st.' + st), hhat, model, outF, fitv, e]);
   }
   return out;

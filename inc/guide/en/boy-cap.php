@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('boy-cap', 'Height–Diameter Modelling') ?>
 <p>Fits six height–diameter equations to measured heights by nonlinear least squares: Näslund, Michailoff, Curtis, Power (Stoffels and van Soest), Chapman–Richards and Weibull (Yang et al.). It compares the models on the same trees, tests them by plot-based cross-validation and predicts heights for trees without a measured height.</p>
-<p><b>What it does not do:</b> no mixed-effects models (plot effects are the next stage); species share one curve (if they differ, run each species separately); it does not choose a model for prediction by itself; it does not write predicted heights back into the approved data.</p>
+<p><b>What it does not do:</b> no mixed-effects models (for plot effects, use the Mixed-Effects Models tool); species share one curve (if they differ, run each species separately); it does not choose a model for prediction by itself; it does not write predicted heights back into the approved data.</p>
 <h3>Data and settings</h3>
 <ul>
 <li>Source: a file, pasting, the approved data or the sample data.</li>

@@ -352,13 +352,13 @@ const T = makeT({
     tr_h: 'Ters dönüşüm düzeltmesi', 'corr.none': 'yok', 'corr.baskerville': 'Baskerville, exp(SEE²/2)', 'corr.snowdon': 'Snowdon oranı', 'corr.user': 'kullanıcı faktörü',
     see: p => p.kind === 'log10' ? 'SEE (log10 ölçeğinde)' : 'SEE (ln ölçeğinde)', fac: 'Faktör',
     src: 'Kaynak', cit: 'Künye (zorunlu)', doi: 'DOI', page: 'Sayfa', table: 'Tablo', note: 'Not',
-    cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verim, yayımlanmamış".',
+    cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verilerim, yayımlanmamış".',
     extra: 'Denklemin tanımı', choose: '— seçin —', 'p.extra.missing': p => `${p.what} seçilmedi`, 'p.extra.num': p => `${p.what} pozitif bir sayı olmalı`,
     saved: 'Set kaydedildi.', imported: p => `${p.n} set yüklendi.`, rejected: p => `${p.n} set geçersiz olduğu için yüklenmedi: ${p.why}`,
-    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Değişti', origin_fitted: 'fit edilen',
+    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Son değişiklik', origin_fitted: 'fit edilen',
     'p.schema': 'şema geçersiz', 'p.id': 'kimlik yok', 'p.tool': 'araç yok', 'p.form.unknown': 'biçim tanınmıyor', 'p.form.tool': 'biçim bu araca ait değil',
     'p.param.missing': p => `${p.key} katsayısı girilmedi`, 'p.param.extra': p => `${p.key} bu biçimde yok`, 'p.param.nonfinite': p => `${p.key} sayı değil`,
-    'p.unit.input': p => `${p.key} girdisinin birimi yok`, 'p.unit.output': 'çıktı birimi yok', 'p.bark': 'kabuk durumu ob ya da ib olmalı',
+    'p.unit.input': p => `${p.key} girdisinin birimi yok`, 'p.unit.output': 'çıktı birimi yok', 'p.bark': 'kabuk durumu kabuklu (ob) ya da kabuksuz (ib) olmalı',
     'p.valid.bad': p => `${p.key ?? ''} geçerlilik aralığı geçersiz (en küçük < en büyük olmalı)`, 'p.transform.bad': 'dönüşüm biçimle uyuşmuyor',
     'p.correction.bad': 'düzeltme türü geçersiz', 'p.correction.value': 'düzeltme için pozitif bir değer girin', 'p.source.missing': 'kaynak künyesi zorunlu',
     'p.origin.bad': 'köken geçersiz', 'p.fit.missing': 'fit etme özeti yok', 'p.library.schema': 'dosya bir katsayı kütüphanesi değil', 'p.num': p => `${p.what}: sayı okunamadı ("${p.text}")`,
@@ -767,10 +767,10 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'veya Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
+  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
     auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
     encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx veya CSV olarak kaydedin.',
+    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
     fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
     comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
@@ -1923,7 +1923,7 @@ const fin = x => typeof x === 'number' && Number.isFinite(x);
 const FORMS = {
   'cr.ada.b0': {
     id: 'cr.ada.b0', kind: 'anamorphic', params: ['b1', 'b2'], site: 'b0',
-    formula: { tr: 'H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂  (Chapman–Richards, b₀ yere özgü)', en: 'H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂  (Chapman–Richards, b₀ site-specific)' },
+    formula: { tr: 'H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂  (Chapman–Richards, b₀ yetişme ortamına özgü)', en: 'H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂  (Chapman–Richards, b₀ site-specific)' },
     base: (p, b0, A) => b0 * Math.exp(p.b2 * lnOneMinusExp(p.b1 * A)),
     siteParam: (p, A, H) => H * Math.exp(-p.b2 * lnOneMinusExp(p.b1 * A)),
     project: (p, A2, A1, H1) => H1 * Math.exp(p.b2 * (lnOneMinusExp(p.b1 * A2) - lnOneMinusExp(p.b1 * A1))),
@@ -1932,7 +1932,7 @@ const FORMS = {
   },
   'cr.ada.b2': {
     id: 'cr.ada.b2', kind: 'polymorphic', params: ['b0', 'b1'], site: 'b2',
-    formula: { tr: 'H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))]  (Chapman–Richards, b₂ yere özgü)', en: 'H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))]  (Chapman–Richards, b₂ site-specific)' },
+    formula: { tr: 'H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))]  (Chapman–Richards, b₂ yetişme ortamına özgü)', en: 'H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))]  (Chapman–Richards, b₂ site-specific)' },
     base: (p, b2, A) => p.b0 * Math.exp(b2 * lnOneMinusExp(p.b1 * A)),
     siteParam: (p, A, H) => Math.log(H / p.b0) / lnOneMinusExp(p.b1 * A),
     project: (p, A2, A1, H1) => p.b0 * Math.exp(Math.log(H1 / p.b0) * lnOneMinusExp(p.b1 * A2) / lnOneMinusExp(p.b1 * A1)),
@@ -1942,7 +1942,7 @@ const FORMS = {
   },
   'schu.ada': {
     id: 'schu.ada', kind: 'anamorphic', params: ['b1'], site: 'b0',
-    formula: { tr: 'ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁)  (Schumacher ln H = b₀ + b₁/A, b₀ yere özgü; büyüme için b₁ < 0)', en: 'ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁)  (Schumacher ln H = b₀ + b₁/A, b₀ site-specific; growth needs b₁ < 0)' },
+    formula: { tr: 'ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁)  (Schumacher ln H = b₀ + b₁/A, b₀ yetişme ortamına özgü; büyüme için b₁ < 0)', en: 'ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁)  (Schumacher ln H = b₀ + b₁/A, b₀ site-specific; growth needs b₁ < 0)' },
     base: (p, b0, A) => Math.exp(b0 + p.b1 / A),
     siteParam: (p, A, H) => Math.log(H) - p.b1 / A,
     project: (p, A2, A1, H1) => H1 * Math.exp(p.b1 * (1 / A2 - 1 / A1)),
@@ -2246,7 +2246,7 @@ const tr = {
   // step 1
   'x.ageType': 'Yaş türü', 'x.ageType.total': 'toplam yaş', 'x.ageType.bh': 'göğüs yüksekliği yaşı',
   'x.ageType.note': 'Denklem hangi yaş türüyle fit edildiyse o seçilir; araç yaş türlerini birbirine çevirmez.',
-  'x.topDef': 'Üst boy tanımı', 'x.topDef.h0dbh': 'hektarda en kalın 100 ağacın ortalama boyu', 'x.topDef.h0height': 'hektarda en uzun 100 ağacın ortalama boyu (platformun üst boyu H0)', 'x.topDef.other': 'başka bir tanım (nota yazın)',
+  'x.topDef': 'Üst boy tanımı', 'x.topDef.h0dbh': 'hektarda en kalın 100 ağacın ortalama boyu', 'x.topDef.h0height': 'hektarda en uzun 100 ağacın ortalama boyu (platformun üst boyu H0; ağaçlar boya göre seçilir, en kalın 100 ağaca dayanan Assmann tanımından farklıdır)', 'x.topDef.other': 'başka bir tanım (nota yazın)',
   'x.topNote': 'Üst boy tanımı notu',
   'm.h': 'Kullanılacak denklem', 'm.set': 'Katsayı seti', 'm.noset': 'Önce yukarıda bir katsayı seti kaydedin.', 'm.a0': 'Standart yaş A₀ (yıl)',
   'm.a0.note': 'Bonitet endeksi, standart yaştaki üst boydur. Fark denklemleri standart yaştan bağımsızdır: standart yaşı değiştirmek eğrileri değil, endeksin hangi yaşta okunduğunu değiştirir. Varsayılan yoktur; kullandığınız sınıflandırmanın standart yaşını girin.',
@@ -2254,7 +2254,7 @@ const tr = {
   'm.info': p => `${p.form} · yaş türü: ${p.age} · üst boy: ${p.top} · kaynak: ${p.src}`,
   'cls.h': 'Bonitet sınıfları (isteğe bağlı)', 'cls.none': 'Sınıf yok (yalnızca endeks)', 'cls.equal': 'Eşit aralıklı', 'cls.breaks': 'Sınırları ben yazacağım',
   'cls.start': 'Başlangıç (m)', 'cls.width': 'Genişlik (m)', 'cls.n': 'Sınıf sayısı', 'cls.list': 'Sınırlar (m, artan, boşlukla ya da noktalı virgülle)',
-  'cls.order': 'Adlandırma', 'cls.order.desc': 'I en yüksek bonitet', 'cls.order.asc': 'I en düşük bonitet',
+  'cls.order': 'Adlandırma', 'cls.order.desc': 'I en iyi bonitet', 'cls.order.asc': 'I en kötü bonitet',
   'cls.note': 'Sınıf sınırlarını siz verirsiniz; araç hiçbir hasılat tablosunun sınırlarını içermez. Sınıflar [alt, üst) aralıklarıdır, sonuncusu üst sınırı da kapsar; dışında kalan endeks "sınıf dışı" yazılır.',
   'cls.bad': 'Sınıf tanımı geçersiz: başlangıç ≥ 0, genişlik > 0, 1–20 sınıf; sınırlar artan olmalı.',
   'cls.preview': p => `Sınıflar: ${p.list}`,
@@ -2277,7 +2277,7 @@ const tr = {
   'fit.par': 'Katsayı', 'fit.est': 'Kestirim', 'fit.se': 'Standart hata*', 'fit.senote': '* Gözlemler bağımsız varsayımıyla (σ̂²(JᵀJ)⁻¹). Aynı dizinin gözlemleri bağımsız değildir; gerçek belirsizlik daha büyük olabilir.',
   'fit.gof': p => `RMSE ${p.rmse} m, yanlılık ${p.bias} m (gözlenen − tahmin; Model Başarısı aracıyla aynı tanımlar), σ̂ ${p.sigma} m.`,
   'fit.ch.curves': 'Fit edilen eğriler ve gözlemler', 'fit.ch.note': 'Her dizinin eğrisi o dizinin en yaşlı gözleminden geçer (ilk 30 dizi).', 'fit.ch.lines': 'dizilerin eğrileri', 'fit.ch.age': 'Yaş (yıl)', 'fit.ch.h': 'Boy (m)',
-  'fit.ch.res': 'Artıklar ve tahmin yaşı', 'fit.ch.age2': 'Tahmin edilen yaş A₂ (yıl)', 'fit.ch.e': 'Artık e = gözlenen − tahmin (m)',
+  'fit.ch.res': 'Artıklar ve hedef yaş', 'fit.ch.age2': 'Hedef yaş A₂ (boyun tahmin edildiği yaş, yıl)', 'fit.ch.e': 'Artık e = gözlenen − tahmin (m)',
   'fit.save.h': 'Katsayı kaydına yaz', 'fit.save.sub': 'Kayıt, kökeni "fit edilen" olan bir set olur; fit etme özeti (veri, çift ve dizi sayısı, eşleştirme, RMSE, yanlılık), verinin yaş ve boy aralığı (geçerlilik aralığı olarak) ve sizin verdiğiniz kaynak künyesiyle saklanır.',
   'fit.cit': 'Kaynak künyesi (zorunlu)', 'fit.cit.ph': 'ör. Kendi gövde analizi verim, 2026, yayımlanmamış', 'fit.save': 'Seti kaydet', 'fit.saved': 'Set kaydedildi ve seçildi.',
   'fit.miss': p => `Eksik: ${p.list}.`,

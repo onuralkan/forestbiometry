@@ -14,6 +14,7 @@
 import { levenbergMarquardt, covariance } from '../core/nls.js';
 import { brent } from '../core/roots.js';
 import { registerForm } from '../core/coef.js';
+import { lang } from '../core/i18n.js';
 
 export const TOOL = { id: 'buyume-islevi', version: '1.0.0-beta.1' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
@@ -38,13 +39,13 @@ export const FORMS = {
     dy: (p, t) => { const e = E(-p[2] * t); return p[0] * E(-p[1] * e) * p[1] * p[2] * e; },
     ok: p => p[0] > 0 && p[1] > 0 && p[2] > 0,
     inflection: p => p[1] > 1 ? Math.log(p[1]) / p[2] : null, asymptote: p => p[0] },
-  logi: { id: 'logi', name: 'Logistic', params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0 / (1 + b1·e^(−b2·t))',
+  logi: { id: 'logi', name: lang === 'tr' ? 'Lojistik' : 'Logistic', names: { tr: 'Lojistik', en: 'Logistic' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0 / (1 + b1·e^(−b2·t))',
     f: (p, t) => p[0] / (1 + p[1] * E(-p[2] * t)),
     grad: (p, t) => { const e = E(-p[2] * t), q = 1 + p[1] * e; return [1 / q, -p[0] * e / (q * q), p[0] * p[1] * t * e / (q * q)]; },
     dy: (p, t) => { const e = E(-p[2] * t), q = 1 + p[1] * e; return p[0] * p[1] * p[2] * e / (q * q); },
     ok: p => p[0] > 0 && p[1] > 0 && p[2] > 0,
     inflection: p => p[1] > 1 ? Math.log(p[1]) / p[2] : null, asymptote: p => p[0] },
-  mono: { id: 'mono', name: 'Monomolecular', params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0·(1 − b1·e^(−b2·t))',
+  mono: { id: 'mono', name: lang === 'tr' ? 'Monomoleküler' : 'Monomolecular', names: { tr: 'Monomoleküler', en: 'Monomolecular' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0·(1 − b1·e^(−b2·t))',
     f: (p, t) => p[0] * (1 - p[1] * E(-p[2] * t)),
     grad: (p, t) => { const e = E(-p[2] * t); return [1 - p[1] * e, -p[0] * e, p[0] * p[1] * t * e]; },
     dy: (p, t) => p[0] * p[1] * p[2] * E(-p[2] * t),

@@ -26,7 +26,7 @@ const dl = async btn => { const [d] = await Promise.all([page.waitForEvent('down
 
 // 1. acceptance with a typed CV: CV 30 %, E 10 %, 95 %, no frame → 35
 await page.goto(URL + '?lang=tr'); await page.waitForSelector('#app .statement');
-ok((await page.locator('.statement', { hasText: 'hipotez testi güç analizi değildir' }).count()) === 1, 'scope statement: not a power analysis');
+ok((await page.locator('.statement', { hasText: 'hipotez testi için güç analizi değildir' }).count()) === 1, 'scope statement: not a power analysis');
 await page.check('input[name="src"][value="manual"]');
 ok((await page.locator('#c-res li', { hasText: 'CV yok' }).count()) === 1, 'missing CV reported, no number shown');
 await page.fill('#cv', '30');

@@ -352,13 +352,13 @@ const T = makeT({
     tr_h: 'Ters dönüşüm düzeltmesi', 'corr.none': 'yok', 'corr.baskerville': 'Baskerville, exp(SEE²/2)', 'corr.snowdon': 'Snowdon oranı', 'corr.user': 'kullanıcı faktörü',
     see: p => p.kind === 'log10' ? 'SEE (log10 ölçeğinde)' : 'SEE (ln ölçeğinde)', fac: 'Faktör',
     src: 'Kaynak', cit: 'Künye (zorunlu)', doi: 'DOI', page: 'Sayfa', table: 'Tablo', note: 'Not',
-    cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verim, yayımlanmamış".',
+    cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verilerim, yayımlanmamış".',
     extra: 'Denklemin tanımı', choose: '— seçin —', 'p.extra.missing': p => `${p.what} seçilmedi`, 'p.extra.num': p => `${p.what} pozitif bir sayı olmalı`,
     saved: 'Set kaydedildi.', imported: p => `${p.n} set yüklendi.`, rejected: p => `${p.n} set geçersiz olduğu için yüklenmedi: ${p.why}`,
-    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Değişti', origin_fitted: 'fit edilen',
+    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Son değişiklik', origin_fitted: 'fit edilen',
     'p.schema': 'şema geçersiz', 'p.id': 'kimlik yok', 'p.tool': 'araç yok', 'p.form.unknown': 'biçim tanınmıyor', 'p.form.tool': 'biçim bu araca ait değil',
     'p.param.missing': p => `${p.key} katsayısı girilmedi`, 'p.param.extra': p => `${p.key} bu biçimde yok`, 'p.param.nonfinite': p => `${p.key} sayı değil`,
-    'p.unit.input': p => `${p.key} girdisinin birimi yok`, 'p.unit.output': 'çıktı birimi yok', 'p.bark': 'kabuk durumu ob ya da ib olmalı',
+    'p.unit.input': p => `${p.key} girdisinin birimi yok`, 'p.unit.output': 'çıktı birimi yok', 'p.bark': 'kabuk durumu kabuklu (ob) ya da kabuksuz (ib) olmalı',
     'p.valid.bad': p => `${p.key ?? ''} geçerlilik aralığı geçersiz (en küçük < en büyük olmalı)`, 'p.transform.bad': 'dönüşüm biçimle uyuşmuyor',
     'p.correction.bad': 'düzeltme türü geçersiz', 'p.correction.value': 'düzeltme için pozitif bir değer girin', 'p.source.missing': 'kaynak künyesi zorunlu',
     'p.origin.bad': 'köken geçersiz', 'p.fit.missing': 'fit etme özeti yok', 'p.library.schema': 'dosya bir katsayı kütüphanesi değil', 'p.num': p => `${p.what}: sayı okunamadı ("${p.text}")`,
@@ -767,10 +767,10 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'veya Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
+  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
     auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
     encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx veya CSV olarak kaydedin.',
+    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
     fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
     comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
@@ -1948,8 +1948,14 @@ function structureUnit(u, settings = {}) {
   return { ...head, status: 'ok', measures, classes: cls.map((c, i) => ({ lo: c.lo, hi: c.hi, Nha: cnt[i], share: pc[i] ?? null })), species, trees,
     definitions: { moments: 'divisor n (weighted: W = Σw); kurtosis = excess (m4/m2² − 3)', gini: `on ${s.giniOn === 'd' ? 'diameter' : 'basal area'}; ascending sort; mean absolute difference over all pairs / (2·mean)`,
       shannon: 'natural log; diameter classes [lo, hi), shares of trees per hectare', simpson: '1 − Σp² (shares by number)', bal: `m²/ha; equal diameters ${s.balTies === 'include' ? 'included' : 'excluded'}; the tree itself never`,
-      sdi: `N·(Dq/${s.sdiRef})^${s.sdiBeta} (Reineke 1933)`, rd: `G/Dq^${s.rdExp} (Curtis 1982; G m²/ha, Dq cm)`, spacing: `${s.spacing}; S% = 100·a/H0 (H0: mean height of the 100 tallest trees per hectare)` } };
+      sdi: `N·(Dq/${s.sdiRef})^${s.sdiBeta} (Reineke 1933)`, rd: `G/Dq^${s.rdExp} (Curtis 1982; G m²/ha, Dq cm)`, spacing: `${s.spacing}; S% = 100·a/H0 (H0: mean height of the 100 tallest trees per hectare)` },
+    // The same definitions in Turkish for the Turkish interface and Excel (audit MS-06); keys and values as above.
+    definitions_tr: { moments: 'bölen n (ağırlıklı: W = Σw); basıklık = fazla basıklık (m4/m2² − 3)', gini: `${s.giniOn === 'd' ? 'çap' : 'göğüs yüzeyi'} üzerinden; artan sıralama; bütün çiftler üzerinden ortalama mutlak fark / (2·ortalama)`,
+      shannon: 'doğal logaritma; çap sınıfları [alt, üst), hektardaki ağaç sayısının payları', simpson: '1 − Σp² (ağaç sayısına göre paylar)', bal: `m²/ha; eşit çaplar ${s.balTies === 'include' ? 'dahil' : 'hariç'}; ağacın kendisi hiçbir zaman dahil değil`,
+      sdi: `N·(Dq/${trNum(s.sdiRef)})^${trNum(s.sdiBeta)} (Reineke 1933)`, rd: `G/Dq^${trNum(s.rdExp)} (Curtis 1982; G m²/ha, Dq cm)`, spacing: `${s.spacing === 'triangular' ? 'üçgen' : s.spacing === 'square' ? 'kare' : s.spacing}; S% = 100·a/H0 (H0: hektardaki en uzun 100 ağacın ortalama boyu)` } };
 }
+/** A number written with the Turkish decimal comma (definition texts only). */
+const trNum = x => String(x).replace('.', ',');
 };
 
 // ---- assets/lab/structure/ccf.js
@@ -2190,7 +2196,7 @@ const tr = {
   'need.ds': 'Önce bir veri seçin.',
   'set.h': 'Yapı ve sıklık', 'set.cls': 'Çap sınıfları (Shannon)', 'set.cstart': 'Başlangıç (cm)', 'set.cwidth': 'Genişlik (cm)',
   'set.gini': 'Gini', 'set.gini.g': 'göğüs yüzeyi üzerinden', 'set.gini.d': 'çap üzerinden', 'set.ties': 'BAL\'da eşit çaplar', 'set.ties.exclude': 'hariç', 'set.ties.include': 'dahil',
-  'set.sdi': 'SDI (Reineke)', 'set.beta': 'Eğim β', 'set.ref': 'Referans çap', 'set.ref.25': '25 cm (metrik araç kuralı)', 'set.ref.254': '25,4 cm (Reineke\'nin 10 inç\'i)',
+  'set.sdi': 'SDI (Reineke)', 'set.beta': 'Eğim β', 'set.ref': 'Referans çap', 'set.ref.25': '25 cm (metrik araç kuralı)', 'set.ref.254': '25,4 cm (Reineke\'nin 10 inçi)',
   'set.rd': 'Curtis RD üssü b', 'set.rd.note': 'Curtis (1982): 0,5 kıyı Douglas göknarı için; bilgi yoksa 0,4 (Reineke\'nin eğimine karşılık).',
   'set.sp': 'Göreli aralık: dikim düzeni', 'set.sp.square': 'kare', 'set.sp.triangular': 'üçgen',
   'set.bad': 'Ayarlarda geçersiz değer var.',
@@ -2209,10 +2215,10 @@ const tr = {
   'geo.note': 'Koordinatlar bütün örnek alanlarda aynı çerçevede olmalıdır (ör. her alanın merkezinden ölçülmüş). Alan dışındaki ya da koordinatı eksik ağaçlar satır numarasıyla bildirilir ve o alan hesaplanmaz.',
   'geo.k': 'Komşu sayısı k', 'geo.edge': 'Kenar etkisi', 'geo.edge.none': 'düzeltme yok (kenar ağaçları işaretlenir)', 'geo.edge.buffer': 'tampon', 'geo.edge.toroidal': 'toroidal öteleme (yalnızca dikdörtgen)', 'geo.buffer': 'Tampon genişliği (m)',
   'geo.ci': 'Hegyi rakipleri', 'geo.ci.knn': 'en yakın k ağaç', 'geo.ci.radius': 'yarıçap içindekiler', 'geo.radius': 'Yarıçap R (m)',
-  'geo.src': 'Kaynak durumu: Clark–Evans R (Clark ve Evans 1954) ve W, M, T, T1 (Pommerening 2002) okundu [B]; Hegyi (1974) aktarılan biçimiyle [A] (Contreras ve ark. 2011; siplab R paketi belgesi); özgün Hegyi\'de uzaklığa 1 ft (0,3048 m) eklendiği bildirilir, bu araç eklemesiz biçimi kullanır. U (Hui ve ark. 1998) ve Donnelly (1978) düzeltmesi paket belgesi ve çıktısıyla doğrulandı [P] (forestSAS dominance; spatstat clarkevans, Donnelly sabiti 0,0412); özgün kaynakları okunmadı.',
+  'geo.src': 'Kaynak durumu: Clark–Evans R (Clark ve Evans 1954) ve W (düzenli açı endeksi), M (karışım endeksi), T ve T1 (çap farklılaşma endeksi; T1 en yakın komşuyla) (Pommerening 2002) okundu [B]; Hegyi (1974) aktarılan biçimiyle [A] (Contreras ve ark. 2011; siplab R paketi belgesi); özgün Hegyi\'de uzaklığa 1 ft (0,3048 m) eklendiği bildirilir, bu araç eklemesiz biçimi kullanır. U (baskınlık endeksi; Hui ve ark. 1998) ve Donnelly (1978) düzeltmesi paket belgesi ve çıktısıyla doğrulandı [P] (forestSAS dominance; spatstat clarkevans, Donnelly sabiti 0,0412); özgün kaynakları okunmadı.',
   'geo.wangle': 'W standart açısı', 'geo.wangle.k': '360°/k (Pommerening 2002; k = 4 için 90°)', 'geo.wangle.k1': '360°/(k + 1) (k = 4 için 72°; kaynak okunmadı)',
   'res.units': 'Örnek alanlar', 'res.detail': 'Ayrıntı', 'res.export': 'İndir', 'res.skipped': p => `${p.n} örnek alan–dönem birleşiminde ağaç kaydı yok; ölçülmedi sayıldı ve hesaplanmadı.`,
-  'c.unit': 'Örnek alan', 'c.period': 'Dönem', 'c.n': 'n', 'c.Nha': 'N/ha', 'c.Gha': 'G (m²/ha)', 'c.Dq': 'Dq (cm)', 'c.H0': 'H0 (m)', 'c.cv': 'ÇK', 'c.skew': 'Çarpıklık', 'c.kurt': 'Basıklık (fazlalık)',
+  'c.unit': 'Örnek alan', 'c.period': 'Dönem', 'c.n': 'n', 'c.Nha': 'N/ha', 'c.Gha': 'G (m²/ha)', 'c.Dq': 'Dq (cm)', 'c.H0': 'H0 (m)', 'c.cv': 'CV (değişim katsayısı)', 'c.skew': 'Çarpıklık', 'c.kurt': 'Fazla basıklık (basıklık − 3)',
   'c.gini': 'Gini', 'c.shD': 'Shannon (çap)', 'c.shS': 'Shannon (tür)', 'c.simp': 'Simpson (1 − Σp²)', 'c.sdi': 'SDI', 'c.rd': 'Curtis RD', 'c.hart': 'Göreli aralık S%',
   'c.R': 'Clark–Evans R', 'c.RD': 'R (Donnelly)', 'c.W': 'W', 'c.M': 'M', 'c.T': 'T', 'c.T1': 'T1', 'c.U': 'U', 'c.state': 'Durum', 'c.hegyi': 'Hegyi (ort.)',
   'st.ok': 'tamam', 'st.empty': 'ağaçsız', 'st.invalid': 'hesaplanamadı', 'st.nocoord': 'koordinat yok', 'st.nogeom': 'geometri yok', 'st.off': '–',
@@ -2820,7 +2826,7 @@ function tabDetail(p) {
     const ci = u.ci.status === 'ok' ? u.ci.trees : null;
     h += `<details class="more"><summary>${T('d.trees')}</summary><div class="tscroll"><table class="grid" id="ttab"><thead><tr><th>${T('t.row')}</th><th>${T('t.tree')}</th><th>${T('t.sp')}</th><th>${T('t.dbh')}</th><th>${T('t.bal')}</th><th>${T('t.relD')}</th><th>${T('t.hegyi')}</th><th>${T('t.edge')}</th></tr></thead><tbody>
       ${u.st.trees.map((t, i) => `<tr><td>${t.row ?? '–'}</td><td>${esc(t.tree_id ?? '')}</td><td>${esc(t.species ?? '')}</td><td class="num">${f(t.dbh, 1)}</td><td class="num">${f(t.bal, 3)}</td><td class="num">${f(t.relD, 3)}</td><td class="num">${ci ? f(ci[i].hegyi, 3) : '–'}</td><td>${ci && ci[i].edge ? T('t.yes') : ''}</td></tr>`).join('')}</tbody></table></div></details>`;
-    h += `<details class="more"><summary>${T('d.defs')}</summary><ul class="small">${Object.values(u.st.definitions).map(x => `<li>${esc(x)}</li>`).join('')}${u.sp.status === 'ok' ? `<li>${esc(T('geo.src'))}</li>` : ''}</ul></details>`;
+    h += `<details class="more"><summary>${T('d.defs')}</summary><ul class="small">${Object.values((lang === 'tr' && u.st.definitions_tr) || u.st.definitions).map(x => `<li>${esc(x)}</li>`).join('')}${u.sp.status === 'ok' ? `<li>${esc(T('geo.src'))}</li>` : ''}</ul></details>`;
   } else h += `<p class="note warn">${esc(notesOf(u).join('; ') || T('st.' + u.st.status))}</p>`;
   p.innerHTML = h;
   if (R.units.length > 1) { nav.bindBar(); if ($('unav')) nav.renderAside($('unav')); }
@@ -2853,7 +2859,7 @@ function infoRows() {
   const s = settings();
   return [[T('x.k'), T('x.v')], [T('x.tool'), `${S.TOOL.id} ${S.TOOL.version}`], [T('x.date'), R.created], [T('x.src'), st.dsSrc ? st.dsSrc.name || st.dsSrc.kind : ''],
     [T('x.settings'), JSON.stringify(s.structure)], [T('x.ccf'), s.ccf ? JSON.stringify({ all: s.ccf.all ? { id: s.ccf.all.id, form: s.ccf.all.form, params: s.ccf.all.params, source: s.ccf.all.source.citation } : null, bySpecies: Object.fromEntries(Object.entries(s.ccf.bySpecies).map(([k, x]) => [k, { id: x.id, form: x.form, params: x.params, source: x.source.citation }])) }) : T('ccf.off')], [T('x.geom'), s.spatial ? JSON.stringify({ geometry: s.geometry, spatial: s.spatial, competition: s.competition }) : T('geo.noxy')],
-    ...(R.units.find(u => u.st.definitions) ? Object.entries(R.units.find(u => u.st.definitions).st.definitions).map(([k, v]) => [T('x.defs') + ': ' + k, v]) : []), [T('x.src2'), T('geo.src')]];
+    ...(R.units.find(u => u.st.definitions) ? Object.entries((st => (lang === 'tr' && st.definitions_tr) || st.definitions)(R.units.find(u => u.st.definitions).st)).map(([k, v]) => [T('x.defs') + ': ' + k, v]) : []), [T('x.src2'), T('geo.src')]];
 }
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-trees">${T('ex.trees')}</button>

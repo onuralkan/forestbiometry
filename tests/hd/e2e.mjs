@@ -40,7 +40,7 @@ await shot('hd-2-ayarlar');
 await page.click('#calc'); await page.waitForSelector('#ptab', { timeout: 60000 });
 ok((await page.locator('#ptab tbody tr').count()) === 6 && (await page.locator('#ptab td', { hasText: 'yakınsadı' }).count()) === 6, 'six models converged');
 ok((await page.locator('.statement', { hasText: '8 örnek alan' }).count()) === 1, 'multi-plot statement shown');
-ok((await page.locator('#ptab', { hasText: 'Std. hata' }).count()) === 0, 'no standard errors with 8 plots');
+ok((await page.locator('#ptab', { hasText: 'Standart hata' }).count()) === 0, 'no standard errors with 8 plots');
 const wRow = (await cellsOf('#ptab tr[data-model="weibull"]'))[0];
 ok(Math.abs(trNum(wRow[3].split('Std')[0]) - REF.all.fits.weibull.theta[0]) < 1e-5, 'Weibull a matches SciPy: ' + wRow[3]);
 ok((await page.locator('.small', { hasText: 'Boyu eksik (tahmin edilecek) ağaç' }).count()) === 1 && (await page.locator('.small.muted', { hasText: '1 okunamayan boy, 1 boyu bh' }).count()) === 1, 'exclusions reported');
@@ -71,7 +71,7 @@ await shot('hd-6-tahmin');
 // export: measured and predicted heights kept apart
 await tab('export');
 const t = await csvOf('#x-t'), head = parseDelimited(t[0], ',')[0], rows = t.slice(1).filter(Boolean).map(l => parseDelimited(l, ',')[0]);
-ok(head.join() === 'satir,ornek_alan,tur,cap_kaynak,cap_cm,boy_kaynak,boy_olculen_m,durum,boy_tahmin_m,tahmin_modeli,cap_araligi_disinda,model_degeri_m,artik_tahmin_eksi_olculen_m', 'TR tree table headers');
+ok(head.join() === 'satir,ornek_alan,tur,cap_kaynak,cap_cm,boy_kaynak,boy_olculen_m,durum,boy_tahmin_m,tahmin_modeli,cap_araligi_disinda,model_degeri_m,artik_olculen_eksi_tahmin_m', 'TR tree table headers');
 const iH = head.indexOf('boy_olculen_m'), iP = head.indexOf('boy_tahmin_m'), iS = head.indexOf('boy_kaynak'), iSt = head.indexOf('durum'), iO = head.indexOf('cap_araligi_disinda');
 ok(rows.length === FIX.length, 'every source row exported');
 ok(rows.every((r, k) => r[iS] === FIX[k][4]), 'source height text exported unchanged');
@@ -88,7 +88,7 @@ ok(await page.isDisabled('input[name="cv"][value="plot"]') && await page.isCheck
 await page.click('#calc'); await page.waitForSelector('#ptab');
 ok((await page.locator('.statement', { hasText: 'Tek örnek alan' }).count()) === 1, 'single-plot statement');
 const w1 = (await cellsOf('#ptab tr[data-model="weibull"]'))[0][3];
-ok(Math.abs(trNum(w1.split('Std. hata')[1]) - REF.P1.fits.weibull.se[0]) < 1e-5, 'P1 Weibull SE(a) matches SciPy: ' + w1);
+ok(Math.abs(trNum(w1.split('Standart hata')[1]) - REF.P1.fits.weibull.se[0]) < 1e-5, 'P1 Weibull SE(a) matches SciPy: ' + w1);
 await tab('compare');
 ok((await page.locator('#ctab th', { hasText: 'ΔAIC' }).count()) === 1, 'AIC shown for one plot');
 const aicW = (await cellsOf('#ctab tr[data-model="weibull"]'))[0][8];
@@ -108,7 +108,7 @@ ok((await page.locator('#ch-data path.ch-dash').count()) === 2 && (await page.lo
 await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('#tab-export');
 await tab('export');
 const te = await csvOf('#x-t');
-ok(te[0] === 'row,plot,species,dbh_source,dbh_cm,height_source,height_measured_m,state,height_predicted_m,prediction_model,outside_dbh_range,model_value_m,residual_pred_minus_meas_m', 'EN tree table headers');
+ok(te[0] === 'row,plot,species,dbh_source,dbh_cm,height_source,height_measured_m,state,height_predicted_m,prediction_model,outside_dbh_range,model_value_m,residual_meas_minus_pred_m', 'EN tree table headers');
 const xd = await dl('#x-xlsx'), wb = XLSX.read(await readFile(await xd.path()));
 ok(wb.SheetNames.join(',') === 'Info,Parameters,Cross-validation,Trees,New diameters', 'XLSX sheets: ' + wb.SheetNames.join(','));
 { const rd = await dl('#x-r'), rs = await readFile(await rd.path(), 'utf8');

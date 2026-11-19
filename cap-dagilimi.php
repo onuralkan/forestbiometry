@@ -8,7 +8,7 @@ site_top([
     'kicker' => $tr ? 'Çap dağılımları' : 'Diameter distributions',
     'lede'   => $tr ? 'Tek ağaç çaplarına ya da çap sınıflarına sekiz olasılık dağılımı fit edin ya da özet değerlerden parametreleri geri kazanın; her örnek alan ve dönem ayrı hesaplanır.'
                     : 'Fit eight probability distributions to individual tree diameters or diameter classes, or recover their parameters from summary values; each plot and period is computed separately.',
-    'desc'   => $tr ? 'Çap dağılımları: Weibull, normal, lognormal, gamma, beta, Johnson SB, üstel, log-lojistik; en çok olabilirlik, momentler, yüzdelikler; özetlerden geri kazanım.' : 'Diameter distributions: Weibull, normal, lognormal, gamma, beta, Johnson SB, exponential, log-logistic; maximum likelihood, moments, percentiles; recovery from summaries.',
+    'desc'   => $tr ? 'Çap dağılımları: Weibull, normal, lognormal, gama, beta, Johnson SB, üstel, log-lojistik; en çok olabilirlik, momentler, yüzdelikler; özetlerden geri kazanım.' : 'Diameter distributions: Weibull, normal, lognormal, gamma, beta, Johnson SB, exponential, log-logistic; maximum likelihood, moments, percentiles; recovery from summaries.',
 ]);
 ?>
   <p class="privacy" id="privacy"></p>

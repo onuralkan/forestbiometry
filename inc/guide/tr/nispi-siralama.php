@@ -5,13 +5,13 @@
 <h3>Veri</h3>
 <p>Her satır bir model, her sütun bir başarı ölçütü. Başlık satırı ve model adı sütunu önerilir, değiştirilebilir. Yalnızca sayı içeren sütunlar ölçüt olur.</p>
 <h3>Ölçütler</h3>
-<p>Her ölçüt için <b>Sıralamaya kat</b> ve <b>İyi olan</b>: en büyük (R², FI), en küçük (RMSE, MAE, AIC, BIC…) ya da sıfıra en yakın, |değer| (Bias, ME…). Yön sütun adından önerilir; tanınmayan adlarda yönü siz seçersiniz.</p>
+<p>Her ölçüt için <b>Sıralamaya kat</b> ve <b>İyi olan</b>: en büyük (R², FI), en küçük (RMSE, MAE, AIC, BIC…) ya da sıfıra en yakın, |değer| (yanlılık (Bias), ME…). Yön sütun adından önerilir; tanınmayan adlarda yönü siz seçersiniz.</p>
 <h3>Sonuçlar ve indirme</h3>
-<p><b>Sıralama</b> tablosunda modeller sıralamadan çıkarılıp geri alınabilir (sıralar kalan modellerle yeniden hesaplanır); <b>Radar grafiği</b> en iyi ve en kötü modelleri gösterir (merkez 1 = en iyi, küçük alan daha iyi). İndirme: tam rapor (Excel) ve sıralama tablosu (CSV).</p>
+<p><b>Sıralama</b> tablosunda modeller sıralamadan çıkarılıp geri alınabilir (sıralar kalan modellerle yeniden hesaplanır); <b>Radar grafiği</b> en iyi ve en kötü modelleri gösterir (merkez 1 = en iyi; alanı küçük olan model daha iyidir). İndirme: tam rapor (Excel) ve sıralama tablosu (CSV).</p>
 <h3>Sık karşılaşılanlar</h3>
 <ul>
 <li>Eksik ya da okunamayan değeri olan modeller sıralanmaz; o ölçütü dışarıda bırakmak onları geri getirir.</li>
-<li>Aynı sıraları veren ölçütler iki kez sayılmış olur (ör. FI = tahmin R²); birini bırakmayı düşünün.</li>
+<li>Aynı sıraları veren ölçütler iki kez sayılmış olur (ör. FI ile R², ikisi de 1 − SSE/SST); birini bırakmayı düşünün.</li>
 <li>Çok kötü tek bir model ötekileri birbirine yaklaştırır. Radar grafiği için en az 3 ölçüt gerekir.</li>
 </ul>
 </section>

@@ -4,7 +4,7 @@ $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
     'kicker' => $tr ? 'Orman envanteri' : 'Forest inventory',
-    'lede'   => $tr ? 'Onaylanmış verinizden her örnek alan ve ölçüm dönemi için hektardaki ağaç sayısı, göğüs yüzeyi, ortalama ve kuadratik ortalama çap, çap sınıfı dağılımı ve tür katılımı. Örnek alanlar arası betimsel özet ile orman için tasarıma dayalı kestirim ayrı tutulur.'
+    'lede'   => $tr ? 'Onaylanmış verinizden her örnek alan ve ölçüm dönemi için hektardaki ağaç sayısı, göğüs yüzeyi, aritmetik ve kareli ortalama çap, çap sınıfı dağılımı ve tür katılımı. Örnek alanlar arası betimsel özet ile orman için tasarıma dayalı kestirim ayrı tutulur.'
                     : 'From your approved data, for every plot and measurement period: stems and basal area per hectare, arithmetic and quadratic mean diameter, diameter class distribution and species composition. The descriptive between-plot summary and the design-based forest estimate are kept apart.',
     'desc'   => $tr ? 'Sabit alanlı örnek alanlardan hektarda N, G, ortalama çap, Dq, çap sınıfları, tür katılımı ve tasarıma dayalı kestirim.'
                     : 'N, G, mean diameter, Dq, diameter classes, species composition and design-based forest estimates from fixed-area plots.',

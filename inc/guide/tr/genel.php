@@ -15,7 +15,7 @@
 <p>Her araçta bir örnek veri düğmesi vardır. Örnek veriler benzetimdir (rastgele sayılarla üretilmiştir), gerçek ölçüm değildir; aracı denemek ve sınır durumlarını görmek içindir.</p>
 <h3>Dışa aktarma</h3>
 <ul>
-<li><b>Excel raporu</b>: sayılar sayı hücresi olarak, tam duyarlıkla yazılır; ilk sayfada (Bilgi) araç, sürüm, tarih ve ayarlar bulunur.</li>
+<li><b>Excel raporu</b>: sayılar sayı hücresi olarak, tam duyarlıkla yazılır; ilk sayfada (çoğu araçta Bilgi, Veri Denetçisi'nde Ozet) araç, sürüm, tarih ve ayarlar bulunur.</li>
 <li><b>CSV</b>: her iki dilde sütun ayırıcı virgül, ondalık ayırıcı noktadır. Türkçe bölge ayarlı Excel CSV dosyasını tek sütunda açabilir; o durumda Excel raporunu kullanın.</li>
 <li><b>Grafikler</b> SVG olarak indirilir.</li>
 </ul>

@@ -88,7 +88,7 @@ await shot('dist-1-parametreler');
   const gr = await rowsOf('gamma'), gm = E.runMethod('gamma.ml', { d: d1 }), gmo = E.runMethod('gamma.mom', { d: d1 });
   const gh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="gamma"] thead th')].map(x => x.textContent));
   ok(gr.length === 2 && Math.abs(parseFloat(String(gr[0].c[2]).replace(',', '.')) - gm.params.k) < 6e-5 && Math.abs(parseFloat(String(gr[0].c[3]).replace(',', '.')) - gm.params.theta) < 6e-5 && Math.abs(parseFloat(String(gr[1].c[2]).replace(',', '.')) - gmo.params.k) < 6e-5 && gr[0].c[6] !== '–' && gr[1].c[6] === '–' && gr[0].c[11].startsWith('Brent'), 'gamma: ML (Brent) and moments, AIC only for ML');
-  ok(gh.includes('k') && gh.includes('θ (cm)') && (await page.locator('#panel').textContent()).includes('Gamma (iki parametreli)'), 'gamma: shape k without unit, scale θ in cm: ' + gh.join('|'));
+  ok(gh.includes('k') && gh.includes('θ (cm)') && (await page.locator('#panel').textContent()).includes('Gama (iki parametreli)'), 'gamma: shape k without unit, scale θ in cm: ' + gh.join('|'));
   ok((await page.locator('ul.notes li', { hasText: 'negatif çap olasılığı Φ(−μ/σ)' }).count()) === 1, 'normal: probability of a negative diameter shown');
   ok(await page.evaluate(() => [...document.querySelectorAll('.tile span')].some(x => x.textContent.includes('n − 1'))), 'both variances shown (n and n − 1)');
 }
@@ -112,7 +112,7 @@ ok((await page.locator('#ch-h svg rect').count()) > 3 && (await page.locator('#c
 await page.locator('[data-fit]').first().uncheck();
 ok((await page.locator('[data-fit]:checked').count()) === 10, 'a fit can be hidden (eleven fits: Weibull 3 × 2 locations, normal, lognormal 2, gamma 2)');
 await page.click('#ulist [data-u="C"]');
-ok((await page.locator('#panel .note.warn', { hasText: 'tamamlanmış fit etme yok' }).count()) === 1 && (await page.locator('#ch-h').count()) === 0, 'no chart for a unit without a fit');
+ok((await page.locator('#panel .note.warn', { hasText: 'tamamlanmış fit işlemi yok' }).count()) === 1 && (await page.locator('#ch-h').count()) === 0, 'no chart for a unit without a fit');
 await shot('dist-2-grafik');
 // result records (contract)
 await page.click('#tab-params');
@@ -397,7 +397,7 @@ await page.click('#tab-boot'); await page.waitForSelector('#bt-gof');
   const got = await page.evaluate(() => [...document.querySelectorAll('#bt-gof-out tr[data-stat]')].map(tr => [tr.dataset.stat, ...[...tr.children].slice(1).map(x => x.textContent.trim())]));
   const r0 = E.runMethod('weibull.ml', { d: pool }, { a: 0 }), ref = E.boot.bootstrapGOF({ result: r0, input: { d: pool }, opts: { a: 0 }, B: 99, seed: 20261111, step: 'auto' });
   ok(got.length === 3 && got.every(([k, t0, ge, pv]) => +ge === ref.stats[k].ge && Math.abs(parseFloat(String(pv).replace(',', '.')) - ref.stats[k].p) < 6e-5), 'worker result = engine (same seed, same counts and p): ' + JSON.stringify(got) + ' vs ' + JSON.stringify(Object.fromEntries(Object.entries(ref.stats).map(([k, v]) => [k, [v.ge, v.p]]))));
-  ok((await page.locator('#bt-gof-out .bt-meta').textContent()).includes('Seed 20261111; istenen 99, tamamlanan') && (await page.locator('#bt-gof-out .bt-meta').textContent()).includes('yuvarlama: 0,1 cm'), 'seed, requested and completed replicates, failures and rounding recorded');
+  ok((await page.locator('#bt-gof-out .bt-meta').textContent()).includes('Tohum 20261111; istenen 99, tamamlanan') && (await page.locator('#bt-gof-out .bt-meta').textContent()).includes('yuvarlama: 0,1 cm'), 'seed, requested and completed replicates, failures and rounding recorded');
   const first = await page.locator('#bt-gof-out table').innerHTML(); await page.click('#bt-gof'); await page.waitForFunction(() => !document.querySelector('#bt-gof').disabled, null, { timeout: 120000 });
   ok((await page.locator('#bt-gof-out table').innerHTML()) === first, 'same seed again → identical table');
   await page.selectOption('#bt-B', '999'); await page.evaluate(() => { document.getElementById('bt-ci').click(); document.getElementById('bt-cancel').click(); });   // start and cancel at once (999 replicates can finish within a second)

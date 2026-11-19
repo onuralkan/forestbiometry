@@ -21,7 +21,7 @@ for (const i of ev.issues.filter(i => i.suggestion)) C.editField(sources, work, 
 ev = C.evaluate(sources, work, settings);
 for (const i of ev.issues.filter(i => i.severity === 'warning')) C.acceptIssue(work, i, 'Örnek veri / sample data');
 ev = C.evaluate(sources, work, settings);
-const ds = C.approve(sources, work, mapping, settings, ev, { note: 'SYNTHETIC SAMPLE, NOT REAL DATA / UYDURMA ÖRNEK, GERÇEK VERİ DEĞİL' });
+const ds = C.approve(sources, work, mapping, settings, ev, { note: 'SYNTHETIC SAMPLE, NOT REAL DATA / BENZETİM ÖRNEK, GERÇEK VERİ DEĞİL' });
 ds.created = '2026-11-05T00:00:00.000Z';
 ds.changelog.forEach(e => { e.time = ds.created; });
 writeFileSync(path.join(root, 'assets/lab/stand/ornek/ornek-veri.json'), JSON.stringify(ds, null, 1) + '\n');

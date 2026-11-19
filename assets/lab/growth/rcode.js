@@ -22,13 +22,13 @@ const R_FORMS = {
  * results { tMax, obs, fits }, o = { lang, created, version, fileName }.
  */
 export function buildR(s, R, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]);
+  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), named = F => (F.names ? { ...F, name: F.names[tr ? 'tr' : 'en'] } : F), hd = c => c == null ? '' : String(s.src.headers[c]);
   const ok = R.fits.filter(q => q.status === 'ok'), sel = ok.find(q => q.form === s.sel);
   const out = [];
   out.push(header({ title: T('Büyüme Fonksiyonu Fit Etme: R kodu', 'Growth Function Fitter: R code'), tool: { id: 'buyume-islevi', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Fonksiyonlar doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton, türevler R\'ın deriv fonksiyonuyla). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The functions are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton, derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Yanlılık = gözlem − tahmin (araçtaki gibi); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC R\'ın logLik\'iyle (k = p + 1). Standart hatalar gözlemlerin bağımsız olduğunu varsayar; aynı ağacın yinelenen ölçümlerinde bu varsayım tutmaz.',
+    T('Yanlılık = gözlenen − tahmin (araçtaki gibi); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC R\'ın logLik\'iyle (k = p + 1). Standart hatalar gözlemlerin bağımsız olduğunu varsayar; aynı ağacın yinelenen ölçümlerinde bu varsayım tutmaz.',
       'Bias = observed − predicted (as in the tool); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC from R\'s logLik (k = p + 1). Standard errors assume independent observations, which repeated measurements of the same tree are not.'),
     T('Cari yıllık artım CAI = dy/dt (R\'ın deriv fonksiyonuyla), ortalama yıllık artım MAI = y/t; MAI\'nin doruğu t·y\' − y\'nin +\'dan −\'ye geçtiği yaş.',
       'Current annual increment CAI = dy/dt (from R\'s deriv), mean annual increment MAI = y/t; MAI culminates where t·y\' − y turns from + to −.')] }));
@@ -72,7 +72,7 @@ fb_mai_peak <- function(m, b) {
 res <- list(); fits <- list(); models <- list()
 `);
   for (const q of R.fits) {
-    const F = FORMS[q.form], id = q.form;
+    const F = named(FORMS[q.form]), id = q.form;
     if (q.status !== 'ok') { out.push(rComment(T(`${F.name}: araçta fit edilmedi (${q.status}); R'da da fit edilmez.`, `${F.name}: not fitted by the tool (${q.status}); not fitted in R either.`)), ''); continue; }
     const L = th => `list(${F.params.map((p, j) => `${p} = ${rNum(th[j])}`).join(', ')})`;
     out.push(rComment(`${F.name}: ${F.formula}`),
@@ -90,7 +90,7 @@ res <- list(); fits <- list(); models <- list()
       `}`, '');
   }
   if (sel) {
-    const F = FORMS[sel.form];
+    const F = named(FORMS[sel.form]);
     out.push(rComment(T(`Seçilen fonksiyon: ${F.name}. Tablo: t = adım, 2·adım, … 1,25·t_max'a kadar; y, CAI, MAI.`, `Chosen function: ${F.name}. Table: t = step, 2·step, … up to 1.25·t_max; y, CAI, MAI.`)),
       `step <- ${rNum(s.step)}`,
       `tab <- fb_curve(models$${sel.form}, coef(fits$${sel.form}), step * seq_len(floor((1.25 * t_max + 1e-9) / step)))`,

@@ -28,7 +28,7 @@ site_top([
   </section>
   <section class="card about" aria-labelledby="h-data">
     <h2 id="h-data" class="b-h2"><?= $tr ? 'Verileriniz' : 'Your data' ?></h2>
-    <p><?= $tr ? 'Araçlar tarayıcınızda çalışır. Yüklediğiniz tablolar sunucuya gönderilmez; oturumlar yalnızca bu tarayıcının yerel deposunda (IndexedDB) tutulur ve araçlardaki silme düğmeleriyle kaldırılabilir. Sitede kullanıcı hesabı, veritabanı ve izleme kodu yoktur; yalnızca dil ve tema tercihiniz tarayıcınızda saklanır.'
+    <p><?= $tr ? 'Araçlar tarayıcınızda çalışır. Yüklediğiniz tablolar sunucuya gönderilmez; oturumlar yalnızca bu tarayıcının yerel deposunda (IndexedDB) tutulur ve araçlardaki silme düğmeleriyle kaldırılabilir. Sitede kullanıcı hesabı, veritabanı ve izleme kodu yoktur; oturumlar dışında tarayıcınızda yalnızca dil ve tema tercihiniz saklanır.'
                    : 'The tools run in your browser. Tables you load are not sent to the server; sessions are kept only in this browser\'s local storage (IndexedDB) and can be removed with the delete buttons in the tools. The site has no user accounts, no database and no tracking code; only your language and theme choice are stored in your browser.' ?></p>
   </section>
 <?php site_bottom();

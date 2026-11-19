@@ -4,9 +4,9 @@ $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner',
     'kicker' => $tr ? 'Basit rastgele örnekleme' : 'Simple random sampling',
-    'lede'   => $tr ? 'Örnek alan düzeyindeki pilot ölçümlerden veya bildiğiniz bir değişim katsayısından, bir ortalamayı hedeflediğiniz bağıl hatayla kestirmek için yaklaşık kaç örnek alan gerektiğini hesaplayın. Yaklaşım, varsayımlar ve farklı hata hedefleri raporlanır.'
+    'lede'   => $tr ? 'Örnek alan düzeyindeki pilot ölçümlerden ya da bildiğiniz bir değişim katsayısından, bir ortalamayı hedeflediğiniz bağıl hatayla kestirmek için yaklaşık kaç örnek alan gerektiğini hesaplayın. Yaklaşım, varsayımlar ve farklı hata hedefleri raporlanır.'
                     : 'From plot-level pilot measurements or a coefficient of variation you know, compute about how many plots are needed to estimate a mean with the relative error you aim for. The approach, the assumptions and other error targets are reported.',
-    'desc'   => $tr ? 'Basit rastgele örneklemede ortalama için örnek alan sayısı: n₀ = z²(CV/E)², isteğe bağlı sonlu çerçeve düzeltmesi.' : 'Number of plots for a mean under simple random sampling: n₀ = z²(CV/E)², optional finite-frame correction.',
+    'desc'   => $tr ? 'Basit rastgele örneklemede ortalama için örnek alan sayısı: n₀ = z²(CV/E)², isteğe bağlı sonlu popülasyon düzeltmesi.' : 'Number of plots for a mean under simple random sampling: n₀ = z²(CV/E)², optional finite-frame correction.',
 ]);
 ?>
   <p class="privacy" id="privacy"></p>

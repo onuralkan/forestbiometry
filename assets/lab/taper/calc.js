@@ -33,7 +33,7 @@ export const FORMS = {
   mb76: {
     id: 'mb76', params: ['b1', 'b2', 'b3', 'b4', 'a1', 'a2'], joins: p => [p.a1, p.a2],
     source: 'Max ve Burkhart (1976), Model 4', name: { tr: 'Max ve Burkhart (1976), Model 4', en: 'Max & Burkhart (1976), Model 4' },
-    formula: { tr: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; I_i = 1 eğer x ≤ a_i',
+    formula: { tr: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; x ≤ a_i ise I_i = 1, değilse 0',
                en: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; I_i = 1 if x ≤ a_i' },
     y: (p, x) => p.b1 * (x - 1) + p.b2 * (x * x - 1) + (x <= p.a1 ? p.b3 * (p.a1 - x) ** 2 : 0) + (x <= p.a2 ? p.b4 * (p.a2 - x) ** 2 : 0),
     Y: (p, x) => p.b1 * (x * x / 2 - x) + p.b2 * (x ** 3 / 3 - x) + p.b3 * (p.a1 ** 3 - (p.a1 - Math.min(x, p.a1)) ** 3) / 3 + p.b4 * (p.a2 ** 3 - (p.a2 - Math.min(x, p.a2)) ** 3) / 3,

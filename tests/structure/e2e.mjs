@@ -53,11 +53,11 @@ await page.click('#calc'); await page.waitForSelector('#utab');
 // 2. the plots table = engine
 { const th = await page.evaluate(() => [...document.querySelectorAll('#utab thead th')].map(x => x.textContent.trim())), rr = await rows('utab'), col = h => th.indexOf(h);
   ok(rr.length === 3, 'one row per plot');
-  const checks = [['N/ha', u => u.st.Nha], ['G (m²/ha)', u => u.st.Gha], ['Dq (cm)', u => u.st.Dq], ['H0 (m)', u => u.st.H0], ['ÇK', u => u.st.measures.cv], ['Gini', u => u.st.measures.gini], ['Shannon (çap)', u => u.st.measures.shannonD], ['Simpson (1 − Σp²)', u => u.st.measures.simpson],
+  const checks = [['N/ha', u => u.st.Nha], ['G (m²/ha)', u => u.st.Gha], ['Dq (cm)', u => u.st.Dq], ['H0 (m)', u => u.st.H0], ['CV (değişim katsayısı)', u => u.st.measures.cv], ['Gini', u => u.st.measures.gini], ['Shannon (çap)', u => u.st.measures.shannonD], ['Simpson (1 − Σp²)', u => u.st.measures.simpson],
     ['SDI', u => u.st.measures.sdi], ['Curtis RD', u => u.st.measures.rd], ['Clark–Evans R', u => u.sp.ce.R], ['R (Donnelly)', u => u.sp.ce.RD], ['W', u => u.sp.means.W], ['M', u => u.sp.means.M], ['T', u => u.sp.means.T]];
   for (const [h, g] of checks) ok(col(h) > 0 && E.units.every((u, i) => close(num(rr[i][col(h)]), g(u))), `${h} = engine (${E.units.map(g).map(v => v.toFixed(4)).join(', ')})`);
   await page.check('#allcols'); const th2 = await page.evaluate(() => [...document.querySelectorAll('#utab thead th')].map(x => x.textContent.trim()));
-  ok(['Çarpıklık', 'Basıklık (fazlalık)', 'Shannon (tür)', 'Göreli aralık S%', 'U', 'Hegyi (ort.)'].every(h => th2.includes(h)), 'all columns: skewness, kurtosis, species Shannon, relative spacing, U, mean Hegyi'); }
+  ok(['Çarpıklık', 'Fazla basıklık (basıklık − 3)', 'Shannon (tür)', 'Göreli aralık S%', 'U', 'Hegyi (ort.)'].every(h => th2.includes(h)), 'all columns: skewness, kurtosis, species Shannon, relative spacing, U, mean Hegyi'); }
 await shot('units');
 
 // 2b. crown competition factor (CCF): off by default; a line fitted to open-grown trees, saved as a set, applied

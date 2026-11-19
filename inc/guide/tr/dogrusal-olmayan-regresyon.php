@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('dogrusal-olmayan-regresyon', 'Doğrusal Olmayan Regresyon') ?>
 <p>Kendi verinize doğrusal olmayan modeller fit eder: hazır bir biçim seçersiniz ya da formülü kendiniz yazarsınız. Birden çok model aynı satırlara fit edilip karşılaştırılır. Site hazır katsayı vermez.</p>
-<p><b>Yapmadıkları:</b> karma etkili modeller (örnek alan etkisi), denklem sistemleri (bunlar için Biyokütle ve Karbon aracındaki toplamsal sistem), kısıtlı parametreler, otokorelasyonlu hatalar, profil olabilirliği aralıkları.</p>
+<p><b>Yapmadıkları:</b> karma etkili modeller (örnek alan etkisi için Karma Etkili Modeller aracını kullanın), denklem sistemleri (bunlar için Denklem Sistemleri aracını kullanın), kısıtlı parametreler, otokorelasyonlu hatalar, profil olabilirliği aralıkları.</p>
 <h3>Veri ve modeller</h3>
 <ul>
 <li><b>Veri tablosu</b>: her satır bir gözlem; bağımlı değişken ve açıklayıcı değişkenler sütun olarak. Benzetim tablosu yalnızca denemek içindir.</li>

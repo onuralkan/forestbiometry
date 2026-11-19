@@ -75,7 +75,7 @@ await page.click('#steps [data-go="2"]'); await page.evaluate(() => { document.q
 await page.locator('#ttab tr[data-key]').nth(2).click();
 ok(await page.evaluate(() => document.getElementById('tdetail').open), 'clicking a row opens the details');
 const secs = await rows('sectab');
-ok(secs[0][0] === 'kütük' && secs[secs.length - 1][0].startsWith('uç (koni') && secs.length === 6, 'stump, four sections, top: ' + secs.map(r => r[0]).join(','));
+ok(secs[0][0] === 'dip kütük' && secs[secs.length - 1][0].startsWith('uç (koni') && secs.length === 6, 'stump, four sections, top: ' + secs.map(r => r[0]).join(','));
 near(secs.slice(1).reduce((a, r) => a + num(r[7]), 0), E[2].ob.total, 3e-5, 'section volumes add up to the total (stump not added)');
 ok((await page.locator('#ch-prof svg path, #ch-prof svg polyline').count()) >= 2, 'profile chart with measured line and top piece');
 await page.check('input[name="dbark"][value="ib"]'); ok(num((await rows('sectab'))[1][7]) < num(secs[1][7]), 'under-bark breakdown is smaller');
@@ -86,7 +86,7 @@ await page.click('#calc'); await page.waitForSelector('#ttab');
 E = engine({ method: 'smalian', layout: 'ends', top: 'paraboloid', includeStump: true, dTop: 7 }); tr = await rows('ttab');
 const hd = await page.evaluate(() => [...document.querySelectorAll('#ttab thead th')].map(x => x.textContent));
 ok(hd.includes("Ticari hacim, 7 cm'ye (m³)") && hd.includes('7 cm yüksekliği (m)'), 'merchantable columns appear');
-TREES.forEach(([, t], i) => { const r = tr.find(x => x[1] === t); near(num(r[3]), E[i].ob.total, 6e-5, `${t}: paraboloid top + stump = engine`); near(num(r[6]), E[i].ob.merch.volume, 6e-5, `${t}: merchantable volume = engine`); near(num(r[7]), E[i].ob.merch.h, 6e-3, `${t}: height of 7 cm`); ok(r[8] === 'kesimden tepeye + kütük', `${t}: extent says the stump is included`); });
+TREES.forEach(([, t], i) => { const r = tr.find(x => x[1] === t); near(num(r[3]), E[i].ob.total, 6e-5, `${t}: paraboloid top + stump = engine`); near(num(r[6]), E[i].ob.merch.volume, 6e-5, `${t}: merchantable volume = engine`); near(num(r[7]), E[i].ob.merch.h, 6e-3, `${t}: height of 7 cm`); ok(r[8] === 'kesimden tepeye + dip kütük', `${t}: extent says the stump is included`); });
 { const [, , D0, H, , hs] = TREES[0], h0 = hs[hs.length - 1], d0 = cone(D0, H)(h0), L = H - h0;   // 7 cm lies in the top piece of A: the chosen paraboloid's profile d0·(1 − t/L)^(1/2)
   near(E[0].ob.merch.h, h0 + L * (1 - (7 / d0) ** 2), 1e-9, 'A: height of 7 cm in the paraboloid top piece'); ok(E[0].ob.merch.rule === 'top-solid', 'A: rule recorded'); }
 

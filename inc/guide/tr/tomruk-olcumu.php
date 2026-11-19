@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('tomruk-olcumu', 'Tomruk Ölçümü') ?>
 <p>Tomrukların hacmini iki yoldan verir: Kuzey Amerika ticaretindeki board-foot tomruk kurallarıyla (Scribner, Doyle, International ⅛ ve ¼ inç; Kershaw ve ark. 2016 §7.3) ve uç ile orta çaplardan m³ olarak (Smalian, Huber, Newton; Tablo 6.1). Ölçüler cm ve m girilir; board-foot kuralları için inç ve feet'e çevrilir, sonuç board foot olarak etiketlenir.</p>
-<p><b>Yapmadıkları:</b> kusur düşümü (net hacim), Spaulding, Maine ve karma kurallar, ülkelere özgü metrik tomruk standartları.</p>
+<p><b>Yapmadıkları:</b> kusur indirimi (net hacim), Spaulding, Maine ve karma kurallar, ülkelere özgü metrik tomruk standartları.</p>
 <h3>Tomruklar</h3>
 <ul>
 <li><b>Tek tomruk</b> ya da <b>Tomruk tablosu</b>: ince uç çapı (kabuksuz, cm) ve boy (m) zorunlu; kalın uç ve orta çap isteğe bağlıdır (kübik hacim ve uzun tomruğun bölünmesi için). Benzetim tablosu yalnızca denemek içindir.</li>

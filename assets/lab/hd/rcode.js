@@ -29,7 +29,7 @@ export function buildR(s, R, nd, o) {
   out.push(header({ title: T('Boy–Çap Modelleme: R kodu', 'Height–Diameter Modelling: R code'), tool: { id: 'boy-cap', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Hata = gözlem − tahmin. RMSE = √(SSE/n); artık standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
+    T('Hata = ölçülen − tahmin. RMSE = √(SSE/n); artık standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
@@ -42,7 +42,7 @@ export function buildR(s, R, nd, o) {
     `keep <- dat[[${col(s.fcol)}]] == ${rStr(s.fval)}; dat <- dat[keep, , drop = FALSE]; row_no <- row_no[keep]`, '');
   if (s.scol != null && s.sval != null) out.push(rComment(T(`Tür: ${hd(s.scol)} = "${s.sval}" (boşluklar kırpılarak)`, `Species: ${hd(s.scol)} = "${s.sval}" (spaces trimmed)`)),
     `keep <- trimws(dat[[${col(s.scol)}]]) == ${rStr(s.sval)}; dat <- dat[keep, , drop = FALSE]; row_no <- row_no[keep]`, '');
-  out.push(rComment(T('Satırların durumu: fit için çap ve boy geçerli olmalı, boy > bh; boyu boş satırlara ayrı tahmin yapılır (ölçülmüş boy değiştirilmez).',
+  out.push(rComment(T('Satırların durumu: fit için çap ve boy geçerli olmalı, boy > bh; boyu boş satırlara ayrı tahmin yapılır (ölçülen boy değiştirilmez).',
     'Row status: fitting needs a valid diameter and height, height > bh; rows with an empty height get a separate prediction (the measured height is never changed).')),
     `dn <- fb_num(dat[[col_d]], dec); hn <- fb_num(dat[[col_h]], dec)`,
     `d_all <- dn$value * f_d; h_all <- hn$value * f_h`,

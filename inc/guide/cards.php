@@ -4,8 +4,8 @@
 // tests/site/test_guide.mjs checks that every tool appears in at least one card.
 function guide_cards(bool $tr): array {
     return [
-        ['id' => 'veri', 'title' => $tr ? 'Ölçüm verimi denetleyip saklamak istiyorum' : 'I want to check and keep my measurement data',
-         'text' => $tr ? 'Tabloyu okuyun, hataları düzeltin, onaylı paketi saklayın; paketten grafik ve rapor üretin.' : 'Read the table, fix errors, keep the approved package; make charts and a report from it.',
+        ['id' => 'veri', 'title' => $tr ? 'Ölçüm verilerimi denetleyip saklamak istiyorum' : 'I want to check and keep my measurement data',
+         'text' => $tr ? 'Tabloyu okuyun, hataları düzeltin, onaylanmış paketi saklayın; paketten grafik ve rapor üretin.' : 'Read the table, fix errors, keep the approved package; make charts and a report from it.',
          'ids' => ['veri-denetcisi', 'veri-yoneticisi', 'pano', 'rapor']],
         ['id' => 'agac', 'title' => $tr ? 'Tek ağaç ölçtüm' : 'I measured single trees',
          'text' => $tr ? 'Boy, çap, biçim, yaş; seksiyonlardan ya da profil denklemiyle hacim; biyokütle ve karbon.' : 'Height, diameter, form, age; volume from sections or a taper equation; biomass and carbon.',

@@ -4,7 +4,7 @@ $tr = site_ctx()['tr'];
 site_top([
     'title'  => $tr ? 'Rapor Üretici' : 'Report Generator',
     'kicker' => $tr ? 'Rapor üretici' : 'Report generator',
-    'lede'   => $tr ? 'Bir veri paketini ve araçların çalışma kayıtlarını tek bir raporda toplayın: bölümleri seçin, başlık ve notlarınızı yazın, raporu yazdırın ya da PDF veya HTML olarak kaydedin. Rapor Türkçe ya da İngilizce olabilir.'
+    'lede'   => $tr ? 'Bir veri paketini ve araçların çalışma kayıtlarını tek bir raporda toplayın: bölümleri seçin, başlık ve notlarınızı yazın, raporu yazdırın ya da PDF ya da HTML olarak kaydedin. Rapor Türkçe ya da İngilizce olabilir.'
                     : 'Gather a data package and the tools\' run records in one report: choose the sections, write your title and notes, print the report or save it as PDF or HTML. The report can be in Turkish or English.',
     'desc'   => $tr ? 'Rapor üretici: veri paketi özeti, grafikler, çalışma kayıtlarının ayarları ve sonuçları, kaynaklar, tekrarlanabilirlik eki; yazdırılabilir HTML ve PDF; tarayıcıda, veri sunucuya gitmez.'
                     : 'Report generator: data package summary, charts, settings and results of run records, references, reproducibility appendix; printable HTML and PDF; in the browser, data stay with you.',

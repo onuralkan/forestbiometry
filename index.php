@@ -57,7 +57,7 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
         <p id="handoff-text"></p>
         <p class="b-actions"><a class="btn" href="ornek-alan.php"><?= $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı\'nda kullan' : 'Use in Plot & Stand Metrics' ?></a>
           <a class="btn ghost" href="veri-yoneticisi.php"><?= $tr ? 'Envanter Verisi Yöneticisi' : 'Inventory Data Manager' ?></a>
-          <button type="button" class="btn ghost" id="handoff-clear"><?= $tr ? 'Etkinliği kaldır' : 'Deactivate' ?></button></p>
+          <button type="button" class="btn ghost" id="handoff-clear"><?= $tr ? 'Etkin paketi bırak' : 'Deactivate' ?></button></p>
       </section>
 
       <h2 id="h-tools" class="vh"><?= $tr ? 'Araçlar' : 'Tools' ?></h2>
@@ -169,7 +169,7 @@ async function show() {
   const id = await get('project:active'), p = id ? await get('project:' + id) : null;
   const src = p ? p.name : ds.source && ds.source.trees ? ds.source.trees.name : '';
   $('handoff-text').textContent = tr
-    ? `${src ? '"' + src + '", ' : ''}${ds.trees.length} ağaç kaydı, ${ds.plots.length} örnek alan; ${when} tarihinde onaylandı. Bu veri yalnızca bu tarayıcıda saklanıyor; onaylanmış veriyi okuyan araçlar bu paketi kullanır. "Etkinliği kaldır" paketi silmez; Envanter Verisi Yöneticisi'nde kalır.`
+    ? `${src ? '"' + src + '", ' : ''}${ds.trees.length} ağaç kaydı, ${ds.plots.length} örnek alan; ${when} tarihinde onaylandı. Bu veri yalnızca bu tarayıcıda saklanıyor; onaylanmış veriyi okuyan araçlar bu paketi kullanır. "Etkin paketi bırak" paketi silmez; Envanter Verisi Yöneticisi'nde kalır.`
     : `${src ? '"' + src + '", ' : ''}${ds.trees.length} tree records, ${ds.plots.length} plots; approved ${when}. Stored only in this browser; the tools that read approved data use this package. "Deactivate" does not delete it; it stays in the Inventory Data Manager.`;
   box.hidden = false;
 }

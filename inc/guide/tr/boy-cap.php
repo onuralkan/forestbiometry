@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('boy-cap', 'Boy–Çap Modelleme') ?>
-<p>Ölçülmüş boylara altı boy–çap denklemini doğrusal olmayan en küçük karelerle fit eder: Näslund, Michailoff, Curtis, Kuvvet (Stoffels ve van Soest), Chapman–Richards ve Weibull (Yang ve ark.). Modelleri aynı ağaçlar üzerinde karşılaştırır, örnek alan bazında çapraz doğrulamayla sınar ve boyu ölçülmemiş ağaçlar için boy tahmin eder.</p>
-<p><b>Yapmadıkları:</b> karma etkili model yoktur (örnek alan etkileri sonraki aşamadadır); türler tek eğriyi paylaşır (farklıysa her türü ayrı çalıştırın); tahmin için model seçimini kendisi yapmaz; tahmin edilen boyları onaylanmış veriye geri yazmaz.</p>
+<p>Ölçülen boylara altı boy–çap denklemini doğrusal olmayan en küçük karelerle fit eder: Näslund, Michailoff, Curtis, Kuvvet (Stoffels ve van Soest), Chapman–Richards ve Weibull (Yang ve ark.). Modelleri aynı ağaçlar üzerinde karşılaştırır, örnek alan bazında çapraz doğrulamayla sınar ve boyu ölçülmemiş ağaçlar için boy tahmin eder.</p>
+<p><b>Yapmadıkları:</b> karma etkili model yoktur (örnek alan etkileri için Karma Etkili Modeller aracını kullanın); türler tek eğriyi paylaşır (farklıysa her türü ayrı çalıştırın); tahmin için model seçimini kendisi yapmaz; tahmin edilen boyları onaylanmış veriye geri yazmaz.</p>
 <h3>Veri ve ayarlar</h3>
 <ul>
 <li>Kaynak: dosya, yapıştırma, onaylanmış veri ya da örnek veri.</li>

@@ -421,7 +421,7 @@ const { makeT } = __fb_r("core/i18n.js");
 const T = makeT({
   tr: {
     privacy: 'Katsayı setleriniz yalnızca bu tarayıcıda saklanır (IndexedDB); sunucuya gönderilmez. Tarayıcı verisi silinirse setler de silinir: yedek alın.',
-    'sum.h': 'Kütüphane', 'sum.none': 'Bu tarayıcıda kayıtlı katsayı seti yok. Setler araçların sayfalarında ya da aşağıdaki düzenleyicide girilir veya fit edilir; site hazır set vermez.',
+    'sum.h': 'Kütüphane', 'sum.none': 'Bu tarayıcıda kayıtlı katsayı seti yok. Setler araçların sayfalarında ya da aşağıdaki düzenleyicide girilir ya da fit edilir; site hazır set vermez.',
     'sum.line': p => `${p.n} set: ${p.list}.`, 'sum.dups': p => `${p.n} grup aynı katsayıları taşıyor (farklı kaynak ya da kapsamla kaydedilmiş olabilir).`, 'sum.probs': p => `${p.n} sette sorun var.`,
     backup: 'Yedek indir (JSON)', restore: 'Yedekten geri yükle', excel: 'Liste (Excel)', csv: 'Liste (CSV)',
     'r.h': 'Geri yükleme önizlemesi', 'r.sum': p => `${p.add} yeni, ${p.replace} değişen (üzerine yazılır), ${p.same} aynı (atlanır), ${p.reject} geçersiz (yüklenmez).`,
@@ -430,11 +430,11 @@ const T = makeT({
     'r.dup': p => `aynı katsayılar kütüphanede var (${p.id})`, 'p.id.repeated': 'aynı kimlik dosyada iki kez', 'p.tool.unknown': p => `"${p.tool}" aracı bu sitede yok`,
     'f.h': 'Setler', 'f.tool': 'Araç', 'f.all': 'hepsi', 'f.q': 'Ara (biçim, tür, yöre, kaynak…)', 'f.origin': 'Köken', 'f.origin.user-entered': 'girilen', 'f.origin.fitted': 'fit edilen', 'f.prob': 'yalnızca sorunlular',
     'f.count': p => `${p.n} / ${p.total} set gösteriliyor.`,
-    'c.tool': 'Araç', 'c.form': 'Biçim', 'c.scope': 'Kapsam', 'c.src': 'Kaynak', 'c.origin': 'Köken', 'c.mod': 'Değişti', 'c.state': 'Durum',
+    'c.tool': 'Araç', 'c.form': 'Biçim', 'c.scope': 'Kapsam', 'c.src': 'Kaynak', 'c.origin': 'Köken', 'c.mod': 'Son değişiklik', 'c.state': 'Durum',
     'st.ok': 'geçerli', 'st.dup': 'aynı katsayılı set var', 'st.prob': 'sorunlu',
     more: 'Ayrıntı', edit: 'Düzenle', copy: 'Kopyala', del: 'Sil', delq: 'Bu set silinsin mi? Geri alınamaz (yedeğiniz yoksa).', open: 'Araçta aç',
     copied: 'Kopya oluşturuldu: kaynağını ya da kapsamını düzenleyin.', deleted: 'Set silindi.',
-    'd.id': 'Kimlik', 'd.params': 'Katsayılar (saklandığı duyarlılıkla)', 'd.units': 'Birimler', 'd.valid': 'Geçerlilik aralığı', 'd.transform': 'Dönüşüm', 'd.meta': 'Aracın alanları', 'd.source': 'Kaynak', 'd.fit': 'Fit etme özeti', 'd.copyOf': 'Kopyalandığı set', 'd.dates': 'Oluşturma / değişiklik', 'd.probs': 'Sorunlar',
+    'd.id': 'Kimlik', 'd.params': 'Katsayılar (saklandığı duyarlıkla)', 'd.units': 'Birimler', 'd.valid': 'Geçerlilik aralığı', 'd.transform': 'Dönüşüm', 'd.meta': 'Aracın alanları', 'd.source': 'Kaynak', 'd.fit': 'Fit etme özeti', 'd.copyOf': 'Kopyalandığı set', 'd.dates': 'Oluşturma / değişiklik', 'd.probs': 'Sorunlar',
     'e.h': 'Set düzenleyici', 'e.tool': 'Araç', 'e.note': 'Düzenleyici, aracın kendi sayfasındakiyle aynıdır (aynı denetimler, zorunlu kaynak ve aracın kendi alanları).',
   },
   en: {
@@ -783,13 +783,13 @@ const T = makeT({
     tr_h: 'Ters dönüşüm düzeltmesi', 'corr.none': 'yok', 'corr.baskerville': 'Baskerville, exp(SEE²/2)', 'corr.snowdon': 'Snowdon oranı', 'corr.user': 'kullanıcı faktörü',
     see: p => p.kind === 'log10' ? 'SEE (log10 ölçeğinde)' : 'SEE (ln ölçeğinde)', fac: 'Faktör',
     src: 'Kaynak', cit: 'Künye (zorunlu)', doi: 'DOI', page: 'Sayfa', table: 'Tablo', note: 'Not',
-    cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verim, yayımlanmamış".',
+    cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verilerim, yayımlanmamış".',
     extra: 'Denklemin tanımı', choose: '— seçin —', 'p.extra.missing': p => `${p.what} seçilmedi`, 'p.extra.num': p => `${p.what} pozitif bir sayı olmalı`,
     saved: 'Set kaydedildi.', imported: p => `${p.n} set yüklendi.`, rejected: p => `${p.n} set geçersiz olduğu için yüklenmedi: ${p.why}`,
-    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Değişti', origin_fitted: 'fit edilen',
+    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Son değişiklik', origin_fitted: 'fit edilen',
     'p.schema': 'şema geçersiz', 'p.id': 'kimlik yok', 'p.tool': 'araç yok', 'p.form.unknown': 'biçim tanınmıyor', 'p.form.tool': 'biçim bu araca ait değil',
     'p.param.missing': p => `${p.key} katsayısı girilmedi`, 'p.param.extra': p => `${p.key} bu biçimde yok`, 'p.param.nonfinite': p => `${p.key} sayı değil`,
-    'p.unit.input': p => `${p.key} girdisinin birimi yok`, 'p.unit.output': 'çıktı birimi yok', 'p.bark': 'kabuk durumu ob ya da ib olmalı',
+    'p.unit.input': p => `${p.key} girdisinin birimi yok`, 'p.unit.output': 'çıktı birimi yok', 'p.bark': 'kabuk durumu kabuklu (ob) ya da kabuksuz (ib) olmalı',
     'p.valid.bad': p => `${p.key ?? ''} geçerlilik aralığı geçersiz (en küçük < en büyük olmalı)`, 'p.transform.bad': 'dönüşüm biçimle uyuşmuyor',
     'p.correction.bad': 'düzeltme türü geçersiz', 'p.correction.value': 'düzeltme için pozitif bir değer girin', 'p.source.missing': 'kaynak künyesi zorunlu',
     'p.origin.bad': 'köken geçersiz', 'p.fit.missing': 'fit etme özeti yok', 'p.library.schema': 'dosya bir katsayı kütüphanesi değil', 'p.num': p => `${p.what}: sayı okunamadı ("${p.text}")`,
@@ -2632,6 +2632,7 @@ __fb_x(__fb_e, { "FORMS": () => FORMS, "FORM_IDS": () => FORM_IDS, "TOOL": () =>
 const { levenbergMarquardt, covariance } = __fb_r("core/nls.js");
 const { brent } = __fb_r("core/roots.js");
 const { registerForm } = __fb_r("core/coef.js");
+const { lang } = __fb_r("core/i18n.js");
 // Growth function fitter (SQ-03): forms, fitting and derived quantities. No DOM.
 // Formulas and their reading status: docs/METHODS.md §18. The site ships NO coefficients (K1): curves are fitted to
 // the user's own age–size data (height, diameter, volume, …; the variable and its unit are the user's).
@@ -2645,6 +2646,7 @@ const { registerForm } = __fb_r("core/coef.js");
 // Derived (definitions): current annual increment CAI(t) = dy/dt, mean annual increment MAI(t) = y/t, the age of the
 // inflection point (maximum CAI) and the age where MAI culminates (MAI = CAI with MAI turning from rising to falling,
 // i.e. t·y'(t) − y(t) changing from + to −; a change from − to + is a minimum of MAI, not its culmination).
+
 
 
 
@@ -2672,13 +2674,13 @@ const FORMS = {
     dy: (p, t) => { const e = E(-p[2] * t); return p[0] * E(-p[1] * e) * p[1] * p[2] * e; },
     ok: p => p[0] > 0 && p[1] > 0 && p[2] > 0,
     inflection: p => p[1] > 1 ? Math.log(p[1]) / p[2] : null, asymptote: p => p[0] },
-  logi: { id: 'logi', name: 'Logistic', params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0 / (1 + b1·e^(−b2·t))',
+  logi: { id: 'logi', name: lang === 'tr' ? 'Lojistik' : 'Logistic', names: { tr: 'Lojistik', en: 'Logistic' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0 / (1 + b1·e^(−b2·t))',
     f: (p, t) => p[0] / (1 + p[1] * E(-p[2] * t)),
     grad: (p, t) => { const e = E(-p[2] * t), q = 1 + p[1] * e; return [1 / q, -p[0] * e / (q * q), p[0] * p[1] * t * e / (q * q)]; },
     dy: (p, t) => { const e = E(-p[2] * t), q = 1 + p[1] * e; return p[0] * p[1] * p[2] * e / (q * q); },
     ok: p => p[0] > 0 && p[1] > 0 && p[2] > 0,
     inflection: p => p[1] > 1 ? Math.log(p[1]) / p[2] : null, asymptote: p => p[0] },
-  mono: { id: 'mono', name: 'Monomolecular', params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0·(1 − b1·e^(−b2·t))',
+  mono: { id: 'mono', name: lang === 'tr' ? 'Monomoleküler' : 'Monomolecular', names: { tr: 'Monomoleküler', en: 'Monomolecular' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0·(1 − b1·e^(−b2·t))',
     f: (p, t) => p[0] * (1 - p[1] * E(-p[2] * t)),
     grad: (p, t) => { const e = E(-p[2] * t); return [1 - p[1] * e, -p[0] * e, p[0] * p[1] * t * e]; },
     dy: (p, t) => p[0] * p[1] * p[2] * E(-p[2] * t),
@@ -3362,7 +3364,7 @@ const fin = x => typeof x === 'number' && Number.isFinite(x);
 const FORMS = {
   'cr.ada.b0': {
     id: 'cr.ada.b0', kind: 'anamorphic', params: ['b1', 'b2'], site: 'b0',
-    formula: { tr: 'H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂  (Chapman–Richards, b₀ yere özgü)', en: 'H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂  (Chapman–Richards, b₀ site-specific)' },
+    formula: { tr: 'H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂  (Chapman–Richards, b₀ yetişme ortamına özgü)', en: 'H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂  (Chapman–Richards, b₀ site-specific)' },
     base: (p, b0, A) => b0 * Math.exp(p.b2 * lnOneMinusExp(p.b1 * A)),
     siteParam: (p, A, H) => H * Math.exp(-p.b2 * lnOneMinusExp(p.b1 * A)),
     project: (p, A2, A1, H1) => H1 * Math.exp(p.b2 * (lnOneMinusExp(p.b1 * A2) - lnOneMinusExp(p.b1 * A1))),
@@ -3371,7 +3373,7 @@ const FORMS = {
   },
   'cr.ada.b2': {
     id: 'cr.ada.b2', kind: 'polymorphic', params: ['b0', 'b1'], site: 'b2',
-    formula: { tr: 'H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))]  (Chapman–Richards, b₂ yere özgü)', en: 'H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))]  (Chapman–Richards, b₂ site-specific)' },
+    formula: { tr: 'H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))]  (Chapman–Richards, b₂ yetişme ortamına özgü)', en: 'H₂ = b₀·(H₁/b₀)^[ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))]  (Chapman–Richards, b₂ site-specific)' },
     base: (p, b2, A) => p.b0 * Math.exp(b2 * lnOneMinusExp(p.b1 * A)),
     siteParam: (p, A, H) => Math.log(H / p.b0) / lnOneMinusExp(p.b1 * A),
     project: (p, A2, A1, H1) => p.b0 * Math.exp(Math.log(H1 / p.b0) * lnOneMinusExp(p.b1 * A2) / lnOneMinusExp(p.b1 * A1)),
@@ -3381,7 +3383,7 @@ const FORMS = {
   },
   'schu.ada': {
     id: 'schu.ada', kind: 'anamorphic', params: ['b1'], site: 'b0',
-    formula: { tr: 'ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁)  (Schumacher ln H = b₀ + b₁/A, b₀ yere özgü; büyüme için b₁ < 0)', en: 'ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁)  (Schumacher ln H = b₀ + b₁/A, b₀ site-specific; growth needs b₁ < 0)' },
+    formula: { tr: 'ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁)  (Schumacher ln H = b₀ + b₁/A, b₀ yetişme ortamına özgü; büyüme için b₁ < 0)', en: 'ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁)  (Schumacher ln H = b₀ + b₁/A, b₀ site-specific; growth needs b₁ < 0)' },
     base: (p, b0, A) => Math.exp(b0 + p.b1 / A),
     siteParam: (p, A, H) => Math.log(H) - p.b1 / A,
     project: (p, A2, A1, H1) => H1 * Math.exp(p.b1 * (1 / A2 - 1 / A1)),
@@ -3685,7 +3687,7 @@ const tr = {
   // step 1
   'x.ageType': 'Yaş türü', 'x.ageType.total': 'toplam yaş', 'x.ageType.bh': 'göğüs yüksekliği yaşı',
   'x.ageType.note': 'Denklem hangi yaş türüyle fit edildiyse o seçilir; araç yaş türlerini birbirine çevirmez.',
-  'x.topDef': 'Üst boy tanımı', 'x.topDef.h0dbh': 'hektarda en kalın 100 ağacın ortalama boyu', 'x.topDef.h0height': 'hektarda en uzun 100 ağacın ortalama boyu (platformun üst boyu H0)', 'x.topDef.other': 'başka bir tanım (nota yazın)',
+  'x.topDef': 'Üst boy tanımı', 'x.topDef.h0dbh': 'hektarda en kalın 100 ağacın ortalama boyu', 'x.topDef.h0height': 'hektarda en uzun 100 ağacın ortalama boyu (platformun üst boyu H0; ağaçlar boya göre seçilir, en kalın 100 ağaca dayanan Assmann tanımından farklıdır)', 'x.topDef.other': 'başka bir tanım (nota yazın)',
   'x.topNote': 'Üst boy tanımı notu',
   'm.h': 'Kullanılacak denklem', 'm.set': 'Katsayı seti', 'm.noset': 'Önce yukarıda bir katsayı seti kaydedin.', 'm.a0': 'Standart yaş A₀ (yıl)',
   'm.a0.note': 'Bonitet endeksi, standart yaştaki üst boydur. Fark denklemleri standart yaştan bağımsızdır: standart yaşı değiştirmek eğrileri değil, endeksin hangi yaşta okunduğunu değiştirir. Varsayılan yoktur; kullandığınız sınıflandırmanın standart yaşını girin.',
@@ -3693,7 +3695,7 @@ const tr = {
   'm.info': p => `${p.form} · yaş türü: ${p.age} · üst boy: ${p.top} · kaynak: ${p.src}`,
   'cls.h': 'Bonitet sınıfları (isteğe bağlı)', 'cls.none': 'Sınıf yok (yalnızca endeks)', 'cls.equal': 'Eşit aralıklı', 'cls.breaks': 'Sınırları ben yazacağım',
   'cls.start': 'Başlangıç (m)', 'cls.width': 'Genişlik (m)', 'cls.n': 'Sınıf sayısı', 'cls.list': 'Sınırlar (m, artan, boşlukla ya da noktalı virgülle)',
-  'cls.order': 'Adlandırma', 'cls.order.desc': 'I en yüksek bonitet', 'cls.order.asc': 'I en düşük bonitet',
+  'cls.order': 'Adlandırma', 'cls.order.desc': 'I en iyi bonitet', 'cls.order.asc': 'I en kötü bonitet',
   'cls.note': 'Sınıf sınırlarını siz verirsiniz; araç hiçbir hasılat tablosunun sınırlarını içermez. Sınıflar [alt, üst) aralıklarıdır, sonuncusu üst sınırı da kapsar; dışında kalan endeks "sınıf dışı" yazılır.',
   'cls.bad': 'Sınıf tanımı geçersiz: başlangıç ≥ 0, genişlik > 0, 1–20 sınıf; sınırlar artan olmalı.',
   'cls.preview': p => `Sınıflar: ${p.list}`,
@@ -3716,7 +3718,7 @@ const tr = {
   'fit.par': 'Katsayı', 'fit.est': 'Kestirim', 'fit.se': 'Standart hata*', 'fit.senote': '* Gözlemler bağımsız varsayımıyla (σ̂²(JᵀJ)⁻¹). Aynı dizinin gözlemleri bağımsız değildir; gerçek belirsizlik daha büyük olabilir.',
   'fit.gof': p => `RMSE ${p.rmse} m, yanlılık ${p.bias} m (gözlenen − tahmin; Model Başarısı aracıyla aynı tanımlar), σ̂ ${p.sigma} m.`,
   'fit.ch.curves': 'Fit edilen eğriler ve gözlemler', 'fit.ch.note': 'Her dizinin eğrisi o dizinin en yaşlı gözleminden geçer (ilk 30 dizi).', 'fit.ch.lines': 'dizilerin eğrileri', 'fit.ch.age': 'Yaş (yıl)', 'fit.ch.h': 'Boy (m)',
-  'fit.ch.res': 'Artıklar ve tahmin yaşı', 'fit.ch.age2': 'Tahmin edilen yaş A₂ (yıl)', 'fit.ch.e': 'Artık e = gözlenen − tahmin (m)',
+  'fit.ch.res': 'Artıklar ve hedef yaş', 'fit.ch.age2': 'Hedef yaş A₂ (boyun tahmin edildiği yaş, yıl)', 'fit.ch.e': 'Artık e = gözlenen − tahmin (m)',
   'fit.save.h': 'Katsayı kaydına yaz', 'fit.save.sub': 'Kayıt, kökeni "fit edilen" olan bir set olur; fit etme özeti (veri, çift ve dizi sayısı, eşleştirme, RMSE, yanlılık), verinin yaş ve boy aralığı (geçerlilik aralığı olarak) ve sizin verdiğiniz kaynak künyesiyle saklanır.',
   'fit.cit': 'Kaynak künyesi (zorunlu)', 'fit.cit.ph': 'ör. Kendi gövde analizi verim, 2026, yayımlanmamış', 'fit.save': 'Seti kaydet', 'fit.saved': 'Set kaydedildi ve seçildi.',
   'fit.miss': p => `Eksik: ${p.list}.`,
@@ -4286,7 +4288,7 @@ const FORMS = {
   mb76: {
     id: 'mb76', params: ['b1', 'b2', 'b3', 'b4', 'a1', 'a2'], joins: p => [p.a1, p.a2],
     source: 'Max ve Burkhart (1976), Model 4', name: { tr: 'Max ve Burkhart (1976), Model 4', en: 'Max & Burkhart (1976), Model 4' },
-    formula: { tr: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; I_i = 1 eğer x ≤ a_i',
+    formula: { tr: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; x ≤ a_i ise I_i = 1, değilse 0',
                en: 'd²/D² = b1(x − 1) + b2(x² − 1) + b3(a1 − x)²·I1 + b4(a2 − x)²·I2; x = h/H; I_i = 1 if x ≤ a_i' },
     y: (p, x) => p.b1 * (x - 1) + p.b2 * (x * x - 1) + (x <= p.a1 ? p.b3 * (p.a1 - x) ** 2 : 0) + (x <= p.a2 ? p.b4 * (p.a2 - x) ** 2 : 0),
     Y: (p, x) => p.b1 * (x * x / 2 - x) + p.b2 * (x ** 3 / 3 - x) + p.b3 * (p.a1 ** 3 - (p.a1 - Math.min(x, p.a1)) ** 3) / 3 + p.b4 * (p.a2 ** 3 - (p.a2 - Math.min(x, p.a2)) ** 3) / 3,
@@ -4548,14 +4550,14 @@ const T = makeT({
     privacy: 'Dosyalarınız ve katsayılarınız yalnızca bu tarayıcıda işlenir ve saklanır (IndexedDB); sunucuya gönderilmez.',
     'step.1': 'Model', 'step.2': 'Ağaçlar', 'step.3': 'Sonuçlar', next: 'Devam', back: 'Geri', reset: 'Oturumu sıfırla', none: '—', calc: 'Hesapla',
     restored: p => `Önceki oturum geri yüklendi (${p.when}).`,
-    'mt.label': 'Katsayı setine ulaşma yolu', 'mt.coef': 'Katsayı seti gir', 'mt.fit': 'Gövde ölçümlerine fit et',
+    'mt.label': 'Katsayı setinin kaynağı', 'mt.coef': 'Katsayı seti gir', 'mt.fit': 'Gövde ölçümlerine fit et',
     'x.bark': 'Kabuk', 'x.bark.ob': 'kabuklu çap verir (ob)', 'x.bark.ib': 'kabuksuz çap verir (ib)', 'x.bark.note': 'Profil denkleminin verdiği çap kabuklu mu kabuksuz mu; kaynağındaki tanıma bakın.',
     'm.h': 'Kullanılacak profil setleri', 'm.ob': 'Kabuklu profil', 'm.ib': 'Kabuksuz profil', 'm.need': 'En az bir profil seti seçin.',
     'm.note': 'Kabuklu ve kabuksuz profil ayrı katsayı setleridir; ikisini birlikte seçerseniz sonuçlar ve grafik ikisini de gösterir. Kaynaklı bir kabuk modeli henüz yok.',
     'm.info': p => `${p.form}; ${p.bark}; kaynak: ${p.src}`,
     'fit.h': 'Gövde ölçümlerinden profil denklemi fit etme', 'fit.imp': 'Gövde ölçüm tablosu', 'fit.weak': p => `Standart hatası kestiriminden büyük parametreler: ${p.list}. Veri bu parametreleri iyi belirlemiyor (ör. kök şişkinliği için tabana yakın ölçüm az); bu bölgede profil güvenilir değildir.`, 'fit.sub': 'Her satır bir ağacın bir ölçüm noktasıdır (Seksiyon Hacmi aracıyla aynı tablo). Göğüs çapı (kabuklu) ve toplam boy ağaç sütunlarından okunur.',
     'fit.col.tree': 'Ağaç', 'fit.col.plot': 'Örnek alan', 'fit.col.period': 'Dönem', 'fit.col.h': 'Yükseklik (m, zeminden)', 'fit.col.d': 'Çap (cm)', 'fit.col.bark_t': 'Çift kabuk kalınlığı (mm)',
-    'fit.col.dbh': 'Göğüs çapı (cm, kabuklu)', 'fit.col.height': 'Toplam boy (m)', 'fit.col.stump_h': 'Kesim yüksekliği (m)', 'fit.barkdef': 'Çap sütunu', 'fit.barkdef.ob': 'kabuklu', 'fit.barkdef.ib': 'kabuksuz',
+    'fit.col.dbh': 'Göğüs çapı (cm, kabuklu)', 'fit.col.height': 'Toplam boy (m)', 'fit.col.stump_h': 'Kütük yüksekliği (kesim yüksekliği, m)', 'fit.barkdef': 'Çap sütunu', 'fit.barkdef.ob': 'kabuklu', 'fit.barkdef.ib': 'kabuksuz',
     'fit.dec': 'Ondalık ayırıcı', 'fit.dec.dot': 'nokta', 'fit.dec.comma': 'virgül',
     'fit.form': 'Biçim', 'fit.bark': 'Fit edilecek çap', 'fit.bark.ob': 'kabuklu', 'fit.bark.ib': 'kabuksuz (kabuk kalınlığı ya da kabuksuz çap gerekir)',
     'fit.scale': 'Fit etme ölçeği', 'fit.scale.d': 'çap (cm), doğrusal olmayan en küçük kareler', 'fit.scale.source': 'kaynağın ölçeği (Max–Burkhart: d²/D²; Kozak: ln d ile doğrusal en küçük kareler, ters dönüşüm düzeltmesi yok)',
@@ -4576,16 +4578,16 @@ const T = makeT({
     'tr.col.plot': 'Örnek alan', 'tr.col.tree': 'Ağaç', 'tr.col.D': 'Göğüs çapı (cm)', 'tr.col.H': 'Boy (m)', 'tr.need': 'Göğüs çapı ve boy sütunlarını seçin.', 'tr.bad': 'D > 0 ve H > 1,3 m olmalı.',
     'lg.on': 'Tomruk boyu sınırı (ticari hacim tam tomruklara indirgenir)', 'lg.L': 'Tomruk boyu (m)', 'lg.trim': 'Kesim payı (cm, her tomrukta)', 'lg.min': 'En kısa tomruk (m, isteğe bağlı)', 'lg.short': 'Kalan kısa parça',
     'lg.short.drop': 'sayılmaz', 'lg.short.keep': 'en kısa tomruktan uzunsa sayılır',
-    'lg.note': 'Kural: kesim yüksekliğinden tepe sınırına (tepe çapı yüksekliği; tepe çapı yoksa tepe) kadar uzunluk, tomruk boyu + kesim payına bölünür ve tam tomruklar sayılır (Kershaw, Ducey, Beers, Husch 2016, §6.4.1, s. 168–169; kesim payı §7.4.1, en kısa tomruk §7.4.3). Değerler sizin: kitaptaki örnekler (16 ft tomruk, 0,3 ft kesim payı, 8 ft en kısa tomruk) varsayılan değildir.',
+    'lg.note': 'Kural: kütük yüksekliğinden tepe sınırına (tepe çapı yüksekliği; tepe çapı yoksa tepe) kadar uzunluk, tomruk boyu + kesim payına bölünür ve tam tomruklar sayılır (Kershaw, Ducey, Beers, Husch 2016, §6.4.1, s. 168–169; kesim payı §7.4.1, en kısa tomruk §7.4.3). Değerler sizin: kitaptaki örnekler (16 ft tomruk, 0,3 ft kesim payı, 8 ft en kısa tomruk) varsayılan değildir.',
     'lg.bad': 'Tomruk boyu > 0, kesim payı ≥ 0 ve en kısa tomruk (girilirse) > 0 olmalı.',
     'lg.n': 'Tomruk (adet)', 'lg.V': 'Tomruk hacmi (m³)', 'lg.trims': 'Kesim payları (m³)', 'lg.rest': 'Kalan (m³)',
     'lg.h': p => `Tomruklar: ${p.tree}`, 'lg.h1': 'Alt uç (m)', 'lg.h2': 'Üst uç (m)', 'lg.len': 'Boy (m)', 'lg.ds': 'İnce uç çapı (cm)', 'lg.vol': 'Hacim (m³)', 'lg.shortrow': 'kısa', 'lg.none': 'Tam tomruk çıkmıyor.',
     'lg.bal': p => `Tomruklar ${p.logs} + kesim payları ${p.trims} + kalan ${p.rest} = ticari hacim ${p.merch} m³.`,
     'lg.src': 'Tomruk hacimleri profil integralidir (seçili set); kesim payları ve kalan parça tomruk hacmine sayılmaz.',
     'lg.e.log.belowmin': 'tomruk boyu en kısa tomruktan kısa: tomruk çıkmaz', 'lg.e.log.L': 'tomruk boyu geçersiz', 'lg.e.log.trim': 'kesim payı geçersiz', 'lg.e.log.min': 'en kısa tomruk geçersiz', 'lg.e.log.short': 'kısa parça seçimi geçersiz', 'lg.e.log.range': 'aralık geçersiz', 'lg.e.log.volume': 'hacim hesaplanamadı',
-    'tr.opts': 'Hacim ayarları', 'tr.stump': 'Kesim yüksekliği (m)', 'tr.dtop': 'Tepe çapı (cm; boş: yalnızca toplam hacim)', 'tr.step': 'Profil tablosu adımı (m)',
-    'tr.opts.note': 'Toplam hacim kesim yüksekliğinden tepeye; tepe çapı girilirse çapın o değere en son indiği yüksekliğe kadar ticari hacim de verilir. Değerler araç ayarıdır, literatür değeri değildir.',
-    'tr.opts.bad': 'Kesim yüksekliği ≥ 0, tepe çapı > 0, adım > 0 olmalı.',
+    'tr.opts': 'Hacim ayarları', 'tr.stump': 'Kütük yüksekliği (kesim yüksekliği, m)', 'tr.dtop': 'Tepe çapı (cm; boş: yalnızca toplam hacim)', 'tr.step': 'Profil tablosu adımı (m)',
+    'tr.opts.note': 'Toplam hacim kütük yüksekliğinden tepeye; tepe çapı girilirse çapın o değere en son indiği yüksekliğe kadar ticari hacim de verilir. Değerler araç ayarıdır, literatür değeri değildir.',
+    'tr.opts.bad': 'Kütük yüksekliği ≥ 0, tepe çapı > 0, adım > 0 olmalı.',
     'res.trees': 'Ağaçlar', 'res.tree': 'Ağaç', 'res.D': 'D (cm)', 'res.H': 'H (m)', 'res.bark': 'Kabuk', 'res.total': 'Toplam hacim (m³)', 'res.hTop': 'Tepe çapı yüksekliği (m)', 'res.merch': 'Ticari hacim (m³)', 'res.d13': 'd(1,3) (cm)', 'res.notes': 'Notlar',
     'res.detail': 'Ayrıntı', 'res.sel': 'Ağaç', 'res.profile': 'Gövde profili', 'res.ptab': 'Profil tablosu', 'res.h': 'Yükseklik (m)', 'res.d': 'Çap (cm)',
     'res.used': p => `Kullanıcı katsayılarıyla üretildi: ${p.list}.`, 'res.excel': 'Excel', 'res.csv': 'CSV', 'res.json': 'JSON', 'res.svg': 'SVG',
@@ -4595,9 +4597,9 @@ const T = makeT({
     'n.none': 'tepe çapına inilmiyor', 'n.negative': 'aralıkta çap tanımsız: hacim yok', 'n.nonfinite': 'hacim sonlu değil',
     'p.tree.D': 'göğüs çapı eksik ya da ≤ 0', 'p.tree.H': 'boy eksik ya da ≤ 1,3 m', 'p.bark.missing': 'setin kabuk tarafı seçilmemiş', 'p.source.missing': 'setin kaynağı yok', 'p.param.join': 'ek noktaları (a1, a2) 0 ile 1 arasında olmalı',
     'b.h': 'Boylama (sortimanlara ayırma; isteğe bağlı)', 'b.on': 'Gövdeyi sortimanlara boyla',
-    'b.sub': 'Ürünleri siz tanımlarsınız; site hazır ürün, boy, çap sınırı ya da fiyat vermez. Kesim yüksekliği ve tepe çapı yukarıdaki hacim ayarlarından alınır.',
+    'b.sub': 'Ürünleri siz tanımlarsınız; site hazır ürün, boy, çap sınırı ya da fiyat vermez. Kütük yüksekliği ve tepe çapı yukarıdaki hacim ayarlarından alınır.',
     'b.bark': 'Ürünlerin çap tarafı', 'b.method': 'Yöntem', 'b.method.value': 'en yüksek değer (dinamik programlama)', 'b.method.priority': 'öncelik sırası (dipten yukarı, sığan en yüksek öncelikli ürün)',
-    'b.obj': 'En büyüklenen', 'b.obj.value': 'toplam değer', 'b.obj.volume': 'toplam hacim', 'b.step': 'Boylama adımı (m)', 'b.cur': 'Para birimi (yalnızca etiket)',
+    'b.obj': 'Amaç (en büyüklenecek)', 'b.obj.value': 'toplam değer', 'b.obj.volume': 'toplam hacim', 'b.step': 'Boylama adımı (m)', 'b.cur': 'Para birimi (yalnızca etiket)',
     'b.col.name': 'Ürün', 'b.col.dMin': 'En küçük ince uç çapı (cm)', 'b.col.L': 'Boy (m)', 'b.col.Lmax': 'En çok boy (m; boş: sabit)', 'b.col.Lstep': 'Boy adımı (m)', 'b.col.trim': 'Kesim payı (cm)', 'b.col.priority': 'Öncelik (1 en yüksek)', 'b.col.value': 'Değer (/m³)',
     'b.add': 'Ürün ekle', 'b.del': 'Sil', 'b.save': 'Ürün listesini indir (JSON)', 'b.load': 'Ürün listesi yükle (JSON)', 'b.loaded': 'Ürün listesi yüklendi.',
     'b.rules': 'Kurallar (araç kuralı; kaynak Grondin 1998, Bennemann ve ark. 2025): parçalar kesimden yukarı adım ızgarasında; boy + kesim payı adımın tam katı olmalı; parça boy + kesim payı kadar yer kaplar, ince uç çapı parçanın üst ucundaki profil çapıdır, hacmi ve değeri kesim payını da kapsar; herhangi bir yerde bir adımlık artık kalabilir. Kabuk modeli olmadığı için ürünlerin çap tarafı seçilen profil setininkiyle aynı olmalı.',

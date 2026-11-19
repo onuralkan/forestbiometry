@@ -44,7 +44,7 @@ export function buildR(s, R, iv, o) {
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Ağırlık (Parresol 2001): Var(e) = σ²ψ; nls ağırlığı 1/ψ. ψ = X^θ (θ verilmişse o, verilmemişse ağırlıksız fit artıklarından ln e² = ln σ² + θ ln X ile) ya da ψ bir sütundan.',
       'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.'),
-    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı artık kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; kestirilen θ sayılmaz), aracınkiyle aynı.',
+    T('Hata = gözlenen − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı artık kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; kestirilen θ sayılmaz), aracınkiyle aynı.',
       'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -54,9 +54,9 @@ export function buildR(s, R, iv, o) {
   const cols = [...need.keys()];
   out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
     `dec <- ${rStr(s.decimal)}   # ${T('ondalık ayırıcı', 'decimal separator')}`,
-    `col_y <- ${s.y + 1}   # ${T('yanıt', 'response')}: ${hd(s.y)}`,
+    `col_y <- ${s.y + 1}   # ${T('bağımlı değişken', 'response')}: ${hd(s.y)}`,
     `num <- function(k) fb_num(dat[[k]], dec)$value`, '',
-    rComment(T('Ortak satırlar: modellerin ve ağırlıkların kullandığı her sütunda sayı (ağırlık sütunlarında > 0); bütün modeller aynı ağaçlarda karşılaştırılır.',
+    rComment(T('Ortak satırlar: modellerin ve ağırlıkların kullandığı her sütunda sayı (ağırlık sütunlarında > 0); bütün modeller aynı satırlarda (gözlemlerde) karşılaştırılır.',
       'Common rows: a number in every column the models and weights use (> 0 in weight columns); all models are compared on the same trees.')),
     `need <- c(${cols.map(c => c + 1).join(', ')})   # ${cols.map(hd).join(', ')}`,
     `positive <- c(${cols.map(c => need.get(c) ? 'TRUE' : 'FALSE').join(', ')})`,

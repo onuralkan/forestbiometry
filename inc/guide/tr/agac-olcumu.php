@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('agac-olcumu', 'Ağaç Ölçümü') ?>
-<p>Tek ağaç ölçümlerinden boy, çap ve göğüs yüzeyi, kabuk, tepe, şekil katsayısı, yaş ve artımı hesaplar. Formüller ölçme kitaplarından alınmıştır: Hamilton (1975) <i>Forest Mensuration Handbook</i>, Graves (1906) <i>Forest Mensuration</i> van Laar ve Akça (2007) <i>Forest Mensuration</i> ve Kershaw ve ark. (2016) <i>Forest Mensuration</i>. Altı sekme vardır; sonuçlar alanlar değiştikçe güncellenir.</p>
-<p><b>Yapmadıkları:</b> eğik ağacın gövde uzunluğu (kaynakta formül yok); gövde boyunca kabuk modelleri; tepe oranı regresyon modelleri ve tepe rekabet faktörü (CCF; meşcere sıklığıyla birlikte Meşcere Yapısı'na gelecek); gövde analizi (bütün gövde boyunca kesitler); türe özgü şekil katsayısı tabloları ya da şekil bölümü sabitleri (site hazır değer vermez).</p>
+<p>Tek ağaç ölçümlerinden boy, çap ve göğüs yüzeyi, kabuk, tepe, şekil katsayısı, yaş ve artımı hesaplar. Formüller ölçme kitaplarından alınmıştır: Hamilton (1975) <i>Forest Mensuration Handbook</i>, Graves (1906) <i>Forest Mensuration</i>, van Laar ve Akça (2007) <i>Forest Mensuration</i> ve Kershaw ve ark. (2016) <i>Forest Mensuration</i>. Altı sekme vardır; sonuçlar alanlar değiştikçe güncellenir.</p>
+<p><b>Yapmadıkları:</b> eğik ağacın gövde uzunluğu (kaynakta formül yok); gövde boyunca kabuk modelleri; tepe oranı regresyon modelleri ve tepe rekabet faktörü (CCF; Meşcere Yapısı aracında hesaplanır); gövde analizi (bütün gövde boyunca kesitler); türe özgü şekil katsayısı tabloları ya da şekil bölümü sabitleri (site hazır değer vermez).</p>
 <h3>Boy</h3>
 <ul>
 <li><b>Tanjant</b>: yatay uzaklık ve tepeye ve dibe açılar, derece ya da yüzde. Açılar yataydan ölçülür; dip gözün altındaysa dibe açı eksi girilir. Uzaklık eğimli zeminde ölçüldüyse kutuyu işaretleyip zeminin eğimini girin, yatay uzaklığa çevrilir.</li>
@@ -27,13 +27,13 @@
 <ul>
 <li><b>Tepe izdüşümü</b>: gövdeden birkaç yöne tepe yarıçapları ya da iki tepe çapı (en geniş ve ona dik), m. Yarıçaplardan: ortalama yarıçap, tepe çapı (2 × ortalama yarıçap) ve kareli ortalama yarıçaplı dairenin alanı; yarıçaplar gelişigüzel ya da düzenli yönlerden alınmışsa bu alan tepe biçimi ne olursa olsun yansızdır (Gregoire ve Valentine; Kershaw ve ark.). En az 4 yön önerilir; meşcere için 4–8, tek ağaç için 8–16 yarıçap (van Laar ve Akça). İki çaptan: ortalama çaplı daire ve iki çapı eksen alan elips.</li>
 <li><b>Tepe uzunluğu ve tepe oranı</b>: ağaç boyu − tepe dibinin yüksekliği; oran boyun yüzdesi. Göğüs çapı girilirse tepe çapı / göğüs çapı oranı. Tepe dibi tanımı çalışmaya göre değişir; kullandığınızı kaydedin.</li>
-<li><b>Tepe yüzeyi ve hacmi</b>: tepe çapı ve uzunluğuyla koni, paraboloit ve silindir için dış yüzey (taban hariç) ve hacim (Hamilton'ın geometri tablosu; van Laar ve Akça'daki basılı paraboloit formülünde bir terim eksiktir, kullanılmaz).</li>
+<li><b>Tepe yüzeyi ve hacmi</b>: tepe çapı ve uzunluğuyla koni, paraboloid ve silindir için dış yüzey (taban hariç) ve hacim (Hamilton'ın geometri tablosu; van Laar ve Akça'daki basılı paraboloid formülünde bir terim eksiktir, kullanılmaz).</li>
 <li><b>Tepe örtüsü</b>: örnek alandaki ağaçların tepe çapları ve alan büyüklüğü; toplam tepe izdüşüm alanı / alan (Kershaw ve ark.). Tepeler örtüştüğünde 1'i aşabilir; tepe çatısının yeri örttüğü paydan farklıdır.</li>
 </ul>
 <h3>Yaş ve artım</h3>
 <ul>
 <li><b>Ağaç yaşı</b>: sayılan halka + ağacın o yüksekliğe ulaşma süresi (süreyi kendi verinizden girin). Lorey'in <b>ekonomik yaşı</b> (baskı çekirdeği dışındaki halka + o çaptaki çekirdeklerin ortalama yaşı) ve halkası olmayan ağaçta çap / yıllık ortalama çap artımı.</li>
 <li><b>Burgu örneği</b>: göğüs yüksekliğinden alınan örnekte halka genişlikleri, kabuktan öze, mm. Şimdiki çap, kabukluysa çift kabuk kalınlığı ve 1,3 m'ye ulaşma süresiyle her yılın kabuksuz çapı ve yaşı (tablo on yılda bir, bütün yıllar Excel'de); seçilen n yıl için periyodik yıllık çap artımı ve Pressler artım yüzdesi. Örnek öze ulaşmıyorsa yaş bir alt sınırdır; genişlikler yarıçapı aşarsa uyarı verilir.</li>
-<li><b>Meşcerenin ortalama yaşı</b>: çap grupları; aritmetik, ağaç sayısıyla, göğüs yüzeyiyle ya da hacimle (Smalian) ağırlıklı. <b>Artım yüzdesi</b>: şimdiki ve n yıl önceki değerden üç ana parayla (geçmiş, şimdiki, ortalama/Pressler); ortalama yıllık artım.</li>
+<li><b>Meşcerenin ortalama yaşı</b>: çap grupları; aritmetik, ağaç sayısıyla, göğüs yüzeyiyle ya da hacimle (Smalian) ağırlıklı. <b>Artım yüzdesi</b>: şimdiki ve n yıl önceki değerden üç esasa göre (geçmiş değer, şimdiki değer, ortalama/Pressler); ortalama yıllık artım.</li>
 </ul>
 </section>

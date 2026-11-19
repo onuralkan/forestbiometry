@@ -11,10 +11,10 @@ function site_modules(): array {
     return [
         ['id' => 'DI', 'title' => $tr ? 'Veri altyapısı' : 'Data infrastructure', 'desc' => $tr ? 'Ölçüm verisini denetleme, onaylama, saklama ve raporlama.' : 'Checking, approving, keeping and reporting measurement data.'],
         ['id' => 'TM', 'title' => $tr ? 'Ağaç ölçümü' : 'Tree measurement', 'desc' => $tr ? 'Tek ağaç ölçümlerinden boy, çap, tepe tacı, yaş ve biçim.' : 'Height, diameter, crown, age and form from single-tree measurements.'],
-        ['id' => 'SV', 'title' => $tr ? 'Gövde hacmi ve profili' : 'Stem volume and taper', 'desc' => $tr ? 'Seksiyon hacmi, gövde profili, ticari hacim ve ürün bölme.' : 'Section volume, taper, merchantable volume and bucking.'],
+        ['id' => 'SV', 'title' => $tr ? 'Gövde hacmi ve profili' : 'Stem volume and taper', 'desc' => $tr ? 'Seksiyon hacmi, gövde profili, ticari hacim ve boylama.' : 'Section volume, taper, merchantable volume and bucking.'],
         ['id' => 'BC', 'title' => $tr ? 'Biyokütle ve karbon' : 'Biomass and carbon', 'desc' => $tr ? 'Allometrik biyokütle, biyokütle genişletme faktörleri, karbon ve CO₂ (katsayılar sizden).' : 'Allometric biomass, expansion factors, carbon and CO₂ (coefficients are yours).'],
         ['id' => 'SS', 'title' => $tr ? 'Meşcere yapısı ve sıklığı' : 'Stand structure and density', 'desc' => $tr ? 'Meşcere özeti, çap dağılımı, sıklık, çeşitlilik, mekânsal yapı ve rekabet.' : 'Stand summary, diameter distribution, density, diversity, spatial pattern and competition.'],
-        ['id' => 'SQ', 'title' => $tr ? 'Yetişme ortamı verimliliği' : 'Site quality and productivity', 'desc' => $tr ? 'Bonitet endeksi, bonitet eğrileri ve büyüme fonksiyonları.' : 'Site index, site curves and growth functions.'],
+        ['id' => 'SQ', 'title' => $tr ? 'Yetişme ortamı verim gücü' : 'Site quality and productivity', 'desc' => $tr ? 'Bonitet endeksi, bonitet eğrileri ve büyüme fonksiyonları.' : 'Site index, site curves and growth functions.'],
         ['id' => 'SI', 'title' => $tr ? 'Örnekleme ve envanter' : 'Sampling and inventory', 'desc' => $tr ? 'Örnek büyüklüğü ve sabit alanlı örnek alan kestirimi.' : 'Sample size and fixed-area plot estimation.'],
         ['id' => 'SM', 'title' => $tr ? 'İstatistiksel modelleme' : 'Statistical modelling', 'desc' => $tr ? 'Model fit etme, karşılaştırma ve değerlendirme.' : 'Model fitting, comparison and evaluation.'],
     ];
@@ -39,7 +39,7 @@ function site_catalog(): array {
         ['TM-02', 'live', 'Çap ve göğüs yüzeyi', 'DBH and basal area', 'agac-olcumu.php'],
         ['TM-03', 'live', 'Kabuk kalınlığı ve kabuksuz çap', 'Bark thickness and under-bark diameter', 'agac-olcumu.php'],
         ['TM-04', 'live', 'Tepe tacı ölçüleri', 'Crown metrics', 'agac-olcumu.php'],
-        ['TM-05', 'live', 'Ağaç yaşı ve çap artımı', 'Tree age and radial increment', 'agac-olcumu.php'],
+        ['TM-05', 'live', 'Ağaç yaşı ve yarıçap artımı', 'Tree age and radial increment', 'agac-olcumu.php'],
         ['TM-06', 'live', 'Şekil katsayısı ve şekil bölümü', 'Form factor and form quotient', 'agac-olcumu.php'],
         ['SV-01', 'live', 'Seksiyon hacmi', 'Sectional volume', 'seksiyon-hacmi.php'],
         ['SV-02', 'live', 'Gövde profili denklemleri', 'Taper models', 'govde-profili.php'],

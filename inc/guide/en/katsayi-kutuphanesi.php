@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('katsayi-kutuphanesi', 'Coefficient Library') ?>
-<p>Shows every coefficient set you entered or fitted in the Site Index, Growth Functions and Stem Taper tools in one place. Sets are stored in this browser only; the site ships no coefficients and this page adds none.</p>
+<p>Shows every coefficient set you entered or fitted in the Site Index, Growth Functions, Stem Taper, Biomass and Carbon, Volume Equations, Nonlinear Regression, Mixed-Effects Models, Systems of Equations, Stand Structure (CCF) and Tree Measurement (bark) tools in one place. Sets are stored in this browser only; the site ships no coefficients and this page adds none.</p>
 <p><b>What it does not do:</b> move sets to another device or person by itself (a backup file does); compute with an equation (that is done on the tool's own page).</p>
 <h3>Library</h3>
 <ul>

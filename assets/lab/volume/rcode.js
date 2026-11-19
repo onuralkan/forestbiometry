@@ -26,7 +26,7 @@ export function buildR(s, R, o) {
   out.push(header({ title: T('Hacim Denklemleri: R kodu', 'Volume Equations: R code'), tool: { id: 'hacim-denklemleri', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Biçimler (Kershaw ve ark. 2016, §6.2) doğrusal regresyon olarak lm ile fit edilir; logaritmik biçimler ln ölçeğinde. Ağırlık: σ² ∝ X^k, lm ağırlığı 1/X^k; k verilmemişse ağırlıksız artıklardan ln e² = a + k ln X (Parresol 1999).',
       'The forms (Kershaw et al. 2016, §6.2) are fitted as linear regressions by lm; the logarithmic forms on the ln scale. Weights: σ² ∝ X^k, the lm weight 1/X^k; when k is not given, from ln e² = a + k ln X on the unweighted residuals (Parresol 1999).'),
-    T('Logaritmik biçimlerde ters dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki artık standart hatası. Ölçütler hacim ölçeğinde: hata = gözlem − tahmin, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
+    T('Logaritmik biçimlerde ters dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki artık standart hatası. Ölçütler hacim ölçeğinde: hata = gözlenen − tahmin, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
       'Back-transformation correction of the log forms: none or Baskerville exp(s²/2), s the residual standard error on the ln scale. Measures on the volume scale: error = observed − predicted, RMSE = √(SSE/n), R² = 1 − SSE/SST.'),
     ...(s.note ? [s.note] : [])] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));

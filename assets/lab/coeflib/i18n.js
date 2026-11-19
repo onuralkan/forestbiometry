@@ -4,7 +4,7 @@ import { makeT } from '../core/i18n.js';
 export const T = makeT({
   tr: {
     privacy: 'Katsayı setleriniz yalnızca bu tarayıcıda saklanır (IndexedDB); sunucuya gönderilmez. Tarayıcı verisi silinirse setler de silinir: yedek alın.',
-    'sum.h': 'Kütüphane', 'sum.none': 'Bu tarayıcıda kayıtlı katsayı seti yok. Setler araçların sayfalarında ya da aşağıdaki düzenleyicide girilir veya fit edilir; site hazır set vermez.',
+    'sum.h': 'Kütüphane', 'sum.none': 'Bu tarayıcıda kayıtlı katsayı seti yok. Setler araçların sayfalarında ya da aşağıdaki düzenleyicide girilir ya da fit edilir; site hazır set vermez.',
     'sum.line': p => `${p.n} set: ${p.list}.`, 'sum.dups': p => `${p.n} grup aynı katsayıları taşıyor (farklı kaynak ya da kapsamla kaydedilmiş olabilir).`, 'sum.probs': p => `${p.n} sette sorun var.`,
     backup: 'Yedek indir (JSON)', restore: 'Yedekten geri yükle', excel: 'Liste (Excel)', csv: 'Liste (CSV)',
     'r.h': 'Geri yükleme önizlemesi', 'r.sum': p => `${p.add} yeni, ${p.replace} değişen (üzerine yazılır), ${p.same} aynı (atlanır), ${p.reject} geçersiz (yüklenmez).`,
@@ -13,11 +13,11 @@ export const T = makeT({
     'r.dup': p => `aynı katsayılar kütüphanede var (${p.id})`, 'p.id.repeated': 'aynı kimlik dosyada iki kez', 'p.tool.unknown': p => `"${p.tool}" aracı bu sitede yok`,
     'f.h': 'Setler', 'f.tool': 'Araç', 'f.all': 'hepsi', 'f.q': 'Ara (biçim, tür, yöre, kaynak…)', 'f.origin': 'Köken', 'f.origin.user-entered': 'girilen', 'f.origin.fitted': 'fit edilen', 'f.prob': 'yalnızca sorunlular',
     'f.count': p => `${p.n} / ${p.total} set gösteriliyor.`,
-    'c.tool': 'Araç', 'c.form': 'Biçim', 'c.scope': 'Kapsam', 'c.src': 'Kaynak', 'c.origin': 'Köken', 'c.mod': 'Değişti', 'c.state': 'Durum',
+    'c.tool': 'Araç', 'c.form': 'Biçim', 'c.scope': 'Kapsam', 'c.src': 'Kaynak', 'c.origin': 'Köken', 'c.mod': 'Son değişiklik', 'c.state': 'Durum',
     'st.ok': 'geçerli', 'st.dup': 'aynı katsayılı set var', 'st.prob': 'sorunlu',
     more: 'Ayrıntı', edit: 'Düzenle', copy: 'Kopyala', del: 'Sil', delq: 'Bu set silinsin mi? Geri alınamaz (yedeğiniz yoksa).', open: 'Araçta aç',
     copied: 'Kopya oluşturuldu: kaynağını ya da kapsamını düzenleyin.', deleted: 'Set silindi.',
-    'd.id': 'Kimlik', 'd.params': 'Katsayılar (saklandığı duyarlılıkla)', 'd.units': 'Birimler', 'd.valid': 'Geçerlilik aralığı', 'd.transform': 'Dönüşüm', 'd.meta': 'Aracın alanları', 'd.source': 'Kaynak', 'd.fit': 'Fit etme özeti', 'd.copyOf': 'Kopyalandığı set', 'd.dates': 'Oluşturma / değişiklik', 'd.probs': 'Sorunlar',
+    'd.id': 'Kimlik', 'd.params': 'Katsayılar (saklandığı duyarlıkla)', 'd.units': 'Birimler', 'd.valid': 'Geçerlilik aralığı', 'd.transform': 'Dönüşüm', 'd.meta': 'Aracın alanları', 'd.source': 'Kaynak', 'd.fit': 'Fit etme özeti', 'd.copyOf': 'Kopyalandığı set', 'd.dates': 'Oluşturma / değişiklik', 'd.probs': 'Sorunlar',
     'e.h': 'Set düzenleyici', 'e.tool': 'Araç', 'e.note': 'Düzenleyici, aracın kendi sayfasındakiyle aynıdır (aynı denetimler, zorunlu kaynak ve aracın kendi alanları).',
   },
   en: {

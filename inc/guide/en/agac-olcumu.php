@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('agac-olcumu', 'Tree Measurement') ?>
 <p>Computes height, diameter and basal area, bark, crown, form factors, age and increment from single-tree measurements. The formulas come from mensuration books: Hamilton (1975) <i>Forest Mensuration Handbook</i>, Graves (1906) <i>Forest Mensuration</i> van Laar and Akça (2007) <i>Forest Mensuration</i> and Kershaw et al. (2016) <i>Forest Mensuration</i>. There are six tabs; results update as the fields change.</p>
-<p><b>What it does not do:</b> the stem length of a leaning tree (no formula in the source); bark models along the stem; crown-ratio regression models and the crown competition factor (CCF; it will come to Stand Structure with stand density); stem analysis (sections along the whole stem); species form-factor tables or form-quotient constants (the site ships no values).</p>
+<p><b>What it does not do:</b> the stem length of a leaning tree (no formula in the source); bark models along the stem; crown-ratio regression models and the crown competition factor (CCF; it is computed in the Stand Structure tool); stem analysis (sections along the whole stem); species form-factor tables or form-quotient constants (the site ships no values).</p>
 <h3>Height</h3>
 <ul>
 <li><b>Tangent</b>: horizontal distance and the angles to the top and the base, in degrees or percent. Angles are measured from the horizontal; if the base is below the eye, enter its angle with a minus sign. If the distance was measured along sloping ground, tick the box and enter the ground slope: it is made horizontal.</li>

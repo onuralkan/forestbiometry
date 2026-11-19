@@ -714,7 +714,7 @@ const T = makeT({
   tr: {
     privacy: 'Veri paketleri yalnızca bu tarayıcıda saklanır (IndexedDB); sunucuya gönderilmez. Tarayıcı verisi silinirse paketler de silinir: yedek alın.',
     'act.h': 'Etkin paket', 'act.none': 'Etkin paket yok. Veri Denetçisi\'nde onaylanan veri buraya eklenir ve etkin olur; aşağıdaki listeden de bir paketi etkin yapabilirsiniz.',
-    'act.note': 'Onaylanmış veriyi okuyan araçlar (Örnek Alan ve Meşcere, Meşcere Yapısı, Boy–Çap, Bonitet, Seksiyon Hacmi, Model Başarısı) etkin paketi kullanır. Bu araçlar açıksa sayfayı yenileyin.',
+    'act.note': 'Onaylanmış veriyi okuyan araçlar (Örnek Alan ve Meşcere, Meşcere Yapısı, Boy–Çap, Bonitet, Seksiyon Hacmi, Hacim Denklemleri, Biyokütle ve Karbon, Model Başarısı) etkin paketi kullanır; Görselleştirme Panosu ve Rapor Üretici de ilk olarak onu açar. Bu araçlar açıksa sayfayı yenileyin.',
     'act.checker': 'Veri Denetçisi\'ni aç',
     'list.h': 'Paketler', 'list.none': 'Bu tarayıcıda kayıtlı paket yok.', 'list.line': p => `${p.n} paket.`,
     backup: 'Yedek indir (JSON)', imp: 'İçe aktar (JSON)', 'imp.sub': 'Veri paketi (Veri Denetçisi\'nin JSON\'u), tek proje ya da bu sayfanın yedeği.',
@@ -730,7 +730,7 @@ const T = makeT({
     'm.note': 'Ağaç ve örnek alan kayıtları burada değiştirilmez; ölçüm düzeltmeleri Veri Denetçisi\'nde gerekçesiyle yapılır ve yeniden onaylanır.',
     'p.name.missing': 'Ad gerekli.', 'p.year.bad': 'Yıl dört haneli olmalı (1800–2200) ya da boş kalmalı.', 'p.text.long': 'Metin çok uzun.',
     's.h': 'Özet', 's.plots': 'Örnek alan', 's.empty': p => `${p.n} tanesinde ağaç yok`, 's.periods': 'Dönemler', 's.noper': 'dönemsiz', 's.records': 'Kayıt',
-    's.trees': 'Ayrı ağaç (alan + ağaç + gövde)', 's.species': 'Türler', 's.blank': 'tür yok', 's.dbh': 'Çap aralığı (cm)', 's.h2': 'Boy', 's.hval': p => `${p.m} ölçülmüş, ${p.e} tahmini`,
+    's.trees': 'Farklı ağaç sayısı (alan + ağaç + gövde)', 's.species': 'Türler', 's.blank': 'tür yok', 's.dbh': 'Çap aralığı (cm)', 's.h2': 'Boy', 's.hval': p => `${p.m} ölçülmüş, ${p.e} tahmini`,
     's.age': 'Yaşı olan kayıt', 's.xy': 'Koordinatı olan kayıt', 's.strata': 'Tabakalar', 's.area': 'Örnek alan büyüklüğü (m²)', 's.areaval': p => `${p.min}–${p.max}, toplam ${p.t}`,
     's.warn': 'Uyarılar', 's.warnval': p => `${p.n} (${p.o} açık)`, 's.exc': 'Dışlanan satır', 's.chg': 'Değişiklik günlüğü', 's.created': 'Onay zamanı', 's.src': 'Kaynak dosya', 's.sha': 'Parmak izi (SHA-256)', 's.probs': 'Paket sorunları',
     'h.h': 'Örnek alan × dönem (kayıt sayısı)', 'h.plot': 'Örnek alan', 'h.area': 'Alan (m²)', 'h.stratum': 'Tabaka',
@@ -739,7 +739,7 @@ const T = makeT({
   en: {
     privacy: 'Data packages are kept in this browser only (IndexedDB); nothing is sent to the server. If the browser data are cleared, the packages go too: keep a backup.',
     'act.h': 'Active package', 'act.none': 'No active package. Data approved in the Data Checker are added here and made active; you can also make a package active from the list below.',
-    'act.note': 'The tools that read approved data (Plot & Stand Metrics, Stand Structure, Height–Diameter, Site Index, Section Volume, Model Evaluation) use the active package. Reload them if they are open.',
+    'act.note': 'The tools that read approved data (Plot & Stand Metrics, Stand Structure, Height–Diameter, Site Index, Section Volume, Volume Equations, Biomass & Carbon, Model Evaluation) use the active package; the Visualization Dashboard and the Report Generator also open it first. Reload them if they are open.',
     'act.checker': 'Open the Data Checker',
     'list.h': 'Packages', 'list.none': 'No packages are kept in this browser.', 'list.line': p => `${p.n} package(s).`,
     backup: 'Download a backup (JSON)', imp: 'Import (JSON)', 'imp.sub': 'A data package (the Data Checker\'s JSON), one project or a backup of this page.',
