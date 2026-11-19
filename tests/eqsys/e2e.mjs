@@ -30,8 +30,10 @@ const b = await nums('#coeftab [data-k^="b"]'), R = NL.compatible_SUR;
 ok(b.length === 6 && b.every((v, j) => Math.abs(v - R.coef[j]) <= 1e-3 * R.se[j] + 1e-9 * Math.abs(R.coef[j])), 'compatible system by SUR on the page = Python reference: ' + b.join(' '));
 ok((await page.textContent('#r-sum')).includes('80 gözlem, 2 denklem, 6 katsayı'), 'summary: 80 observations, 2 equations, 6 coefficients');
 ok((await page.locator('#cmptab tbody tr').count()) === 7, 'method comparison: six coefficients and log L');
-await page.click('#lrt-go'); await page.waitForSelector('#lrt-res', { timeout: 60000 });
-ok(/LR = [\d.]+, sd = 3/.test(await page.textContent('#lrt-res')) && (await page.textContent('#lrtcard')).includes('a → a_1, a_2'), 'likelihood-ratio test of the shared a, b, c: 3 df, renamed coefficients listed');
+await page.click('#lrt-go'); await page.waitForSelector('#lrt-unrel', { timeout: 60000 });
+{ const t = await page.textContent('#lrt-unrel');
+  ok(t.includes('p-değeri verilmez') && t.includes('belirlenemiyor') && t.includes('uç değerlere') && /LR = [\d.]+, sd = 3/.test(t) && !(await page.locator('#lrt-res').count()) && (await page.textContent('#lrtcard')).includes('a → a_1, a_2'),
+    'likelihood-ratio test of the shared a, b, c on the sample: the unrestricted system is not identified, so no p-value; reasons and LR for information (1.0.0-beta.2)'); }
 { const [rd] = await Promise.all([page.waitForEvent('download'), page.click('#x-r')]), rs = await readFile(await rd.path(), 'utf8');
   ok(rd.suggestedFilename().endsWith('.R') && rs.includes('data_file <- "ornek-sistem.csv"') && rs.includes('rhs = quote(k * D_cm^p * (1.3 + a * (1 - exp(-b * D_cm))^c)^q)') && rs.includes('fit <- fb_fit(S, "SUR", resid_cov, start, ols_tool)')
     && rs.includes('Su <- fb_system(') && rs.includes('fb_out(res)'), 'R code: a .R file with the system, SUR and the test of the shared coefficients (its numbers are checked in R by scripts/rcode-check.sh)'); }

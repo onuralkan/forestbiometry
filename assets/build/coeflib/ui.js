@@ -2076,7 +2076,7 @@ function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k 
 
 // ---- assets/lab/eqsys/calc.js
 __fb_m["eqsys/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "TOOL": () => TOOL, "compileSystem": () => compileSystem, "ensureForm": () => ensureForm, "fitSystem": () => fitSystem, "lrtSystems": () => lrtSystems, "registerStoredForms": () => registerStoredForms, "testRestrictions": () => testRestrictions, "unrestrictedSystem": () => unrestrictedSystem });
+__fb_x(__fb_e, { "COND_MAX": () => COND_MAX, "START_FACTORS": () => START_FACTORS, "TOOL": () => TOOL, "compileSystem": () => compileSystem, "ensureForm": () => ensureForm, "fitSystem": () => fitSystem, "identification": () => identification, "lrtSystems": () => lrtSystems, "registerStoredForms": () => registerStoredForms, "symEigen": () => symEigen, "testRestrictions": () => testRestrictions, "unrestrictedSystem": () => unrestrictedSystem });
 const { parse, evaluate, evalGrad, toText } = __fb_r("core/expr.js");
 const { gammaQ } = __fb_r("core/stats.js");
 const { registerForm, form: coefForm } = __fb_r("core/coef.js");
@@ -2097,7 +2097,9 @@ const { registerForm, form: coefForm } = __fb_r("core/coef.js");
 
 
 
-const TOOL = { id: 'denklem-sistemleri', version: '1.0.0-beta.1' };
+const TOOL = { id: 'denklem-sistemleri', version: '1.0.0-beta.2' };
+/** Tool rule (19 Nov 2026, user decision): a scaled information matrix with a larger condition number is weakly identified. */
+const COND_MAX = 1e8;
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /* ---------- small linear algebra ---------- */
@@ -2105,6 +2107,37 @@ function chol(A) { const n = A.length, L = Array.from({ length: n }, () => new A
 const cholSolve = (L, b) => { const n = L.length, x = new Array(n); for (let i = 0; i < n; i++) { let s = b[i]; for (let k = 0; k < i; k++) s -= L[i][k] * x[k]; x[i] = s / L[i][i]; } for (let i = n - 1; i >= 0; i--) { let s = x[i]; for (let k = i + 1; k < n; k++) s -= L[k][i] * x[k]; x[i] = s / L[i][i]; } return x; };
 function inv(A) { const L = chol(A); if (!L) return null; const n = A.length, cols = []; for (let j = 0; j < n; j++) { const e = new Array(n).fill(0); e[j] = 1; cols.push(cholSolve(L, e)); } return A.map((_, i) => cols.map(c => c[i])); }
 const logdet = A => { const L = chol(A); return L ? 2 * L.reduce((s, r, i) => s + Math.log(r[i]), 0) : NaN; };
+
+/* ---------- identification (tool rule, 19 Nov 2026) ---------- */
+/** Eigenvalues and eigenvectors of a symmetric matrix (cyclic Jacobi). → { values, vectors: [column per value] } */
+function symEigen(A0) {
+  const n = A0.length, A = A0.map(r => r.slice()), V = A.map((_, i) => A.map((__, j) => i === j ? 1 : 0));
+  for (let sweep = 0; sweep < 100; sweep++) {
+    let off = 0; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) off += A[i][j] * A[i][j];
+    if (off < 1e-30) break;
+    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) {
+      if (Math.abs(A[p][q]) < 1e-300) continue;
+      const th = (A[q][q] - A[p][p]) / (2 * A[p][q]), t = Math.sign(th || 1) / (Math.abs(th) + Math.sqrt(th * th + 1)), c = 1 / Math.sqrt(t * t + 1), sn = t * c;
+      for (let k = 0; k < n; k++) { const a = A[k][p], b = A[k][q]; A[k][p] = c * a - sn * b; A[k][q] = sn * a + c * b; }
+      for (let k = 0; k < n; k++) { const a = A[p][k], b = A[q][k]; A[p][k] = c * a - sn * b; A[q][k] = sn * a + c * b; }
+      for (let k = 0; k < n; k++) { const a = V[k][p], b = V[k][q]; V[k][p] = c * a - sn * b; V[k][q] = sn * a + c * b; }
+    }
+  }
+  return { values: A.map((r, i) => r[i]), vectors: A.map((_, j) => V.map(r => r[j])) };
+}
+/**
+ * Identification of a fit from its information matrix A = Jᵀ(Σ̂⁻¹ ⊗ I)J scaled to unit diagonal (scale-free): the
+ * condition number λmax/λmin, and when it exceeds COND_MAX the coefficients of the near-null direction (eigenvector of
+ * λmin, components ≥ 0.3 in absolute value): the combination the data do not determine.
+ */
+function identification(A, names) {
+  if (!A || A.some(r => r.some(v => !fin(v)))) return { cond: Infinity, weak: names.slice() };
+  const d = A.map((r, i) => Math.sqrt(r[i]));
+  if (d.some(v => !(v > 0))) return { cond: Infinity, weak: names.filter((_, i) => !(d[i] > 0)) };
+  const C = A.map((r, i) => r.map((v, j) => v / (d[i] * d[j]))), E = symEigen(C);
+  const lo = E.values.indexOf(Math.min(...E.values)), lmax = Math.max(...E.values), lmin = E.values[lo], cond = lmin > 0 ? lmax / lmin : Infinity;
+  return { cond, weak: cond > COND_MAX ? names.filter((_, i) => Math.abs(E.vectors[lo][i]) >= 0.3) : [] };
+}
 
 /* ---------- system definition ---------- */
 /**
@@ -2215,7 +2248,7 @@ function fitSystem(sys, rows, opts = {}) {
   const olsR2 = 1 - eq.reduce((s, e) => s + e.ssr, 0) / Yc.reduce((s, y) => s + y.reduce((a, v) => a + v * v, 0), 0);
   // log-likelihood of the multivariate normal with Σ̂ = residuals/T (Eq. 37), as systemfit
   const S37 = U.map(a => U.map(c => a.reduce((x, v, t) => x + v * c[t], 0) / T)), ll = -G * T / 2 * Math.log(2 * Math.PI) - T / 2 * logdet(S37) - G * T / 2;
-  return { status: 'ok', method, resid: rc, names: P, coef: fit.b, se: vcov ? vcov.map((r, i) => Math.sqrt(r[i])) : null, vcov, sigmaUsed: Sig, residCov, iter: method === 'OLS' ? null : iter,
+  return { status: 'ok', method, resid: rc, names: P, coef: fit.b, se: vcov ? vcov.map((r, i) => Math.sqrt(r[i])) : null, vcov, ident: identification(fit.A, P), sigmaUsed: Sig, residCov, iter: method === 'OLS' ? null : iter,
     eq, mcelroy, olsR2, logLik: ll, converged: !!fit.converged && isurDone, df: method === 'OLS' ? K + 1 : K + G * (G + 1) / 2, T, G, K, dropped, rows: use.map(r => r.row) };
 }
 
@@ -2264,16 +2297,43 @@ function unrestrictedSystem(sys, vars) {
 }
 /**
  * Likelihood-ratio test of the shared coefficients (Henningsen and Hamann 2007 Eq. 48): both systems by iterated SUR with
- * the residual covariance of Eq. 37 (maximum likelihood, §2.4), the unrestricted one started from the restricted estimates.
- * → { LR, df, p, restricted, unrestricted (its se and vcov null when not invertible) } | { status: 'bad', code }
+ * the residual covariance of Eq. 37 (maximum likelihood, §2.4). The unrestricted system is fitted from the restricted
+ * estimates and from START_FACTORS × the separated copies (tool rule, 19 Nov 2026), the largest log-likelihood kept.
+ * The test is reported as reliable only when (tool rules): the unrestricted log-likelihood is not below the restricted
+ * one, no separated copy runs off (|value| > 1e6·max(1, |shared value|)), the unrestricted information matrix is
+ * identified (condition number ≤ COND_MAX) and every start reaches the same maximum (relative 1e-6; the other starts are
+ * run only when the first fit passes the other checks). Otherwise status 'unreliable' with the reasons: LR is given for
+ * information, no p-value.
+ * → { status: 'ok' | 'unreliable', LR, df, p, restricted, unrestricted, renamed, reasons, starts } | { status: 'bad', code }
  */
+const START_FACTORS = [0.5, 0.8, 1.25, 2];
 function testRestrictions(sys, vars, rows, start = {}) {
   const u = unrestrictedSystem(sys, vars); if (!u.ok || u === sys) return { status: 'bad', code: 'none' };
   const r = fitSystem(sys, rows, { method: 'ISUR', resid: 'noDfCor', start }); if (r.status !== 'ok') return { status: 'bad', code: r.code };
   const s0 = { ...start }; sys.params.forEach((p, j) => { s0[p] = r.coef[j]; for (const n of (u.renamed[p] || [])) s0[n] = r.coef[j]; });
+  // the separated copies other than the first one of each shared coefficient are moved by the factors
+  const moved = Object.values(u.renamed).flatMap(v => v.slice(1));
+  const starts = [s0, ...START_FACTORS.map(f => { const s1 = { ...s0 }; for (const n of moved) s1[n] = s0[n] * f; return s1; })];
   // only the likelihood is needed: the unrestricted system may be close to unidentifiable (its covariance not invertible)
-  const f = fitSystem(u, rows, { method: 'ISUR', resid: 'noDfCor', start: s0, noCov: true }); if (f.status !== 'ok') return { status: 'bad', code: f.code };
-  return { status: 'ok', ...lrtSystems(r, f), restricted: r, unrestricted: f, renamed: u.renamed };
+  const fitFrom = st => fitSystem(u, rows, { method: 'ISUR', resid: 'noDfCor', start: st, noCov: true });
+  const checks = f => { const out = [];
+    if (f.logLik < r.logLik - 1e-8 * Math.max(1, Math.abs(r.logLik))) out.push({ code: 'lrt.below', llu: f.logLik, llr: r.logLik });
+    const run = Object.entries(u.renamed).flatMap(([p, ns]) => ns.filter(n => Math.abs(f.coef[f.names.indexOf(n)]) > 1e6 * Math.max(1, Math.abs(r.coef[r.names.indexOf(p)]))));
+    if (run.length) out.push({ code: 'lrt.boundary', names: run });
+    if (f.ident.cond > COND_MAX) out.push({ code: 'lrt.weak', cond: f.ident.cond, names: f.ident.weak });
+    return out; };
+  const f0 = fitFrom(starts[0]); if (f0.status !== 'ok') return { status: 'bad', code: f0.code };
+  // the other starts only when the first fit passes the checks (an unidentified system already fails them, and its
+  // fits from other starts are slow and wander): they confirm that the maximum is the same
+  let fits = [f0], reasons = checks(f0);
+  if (!reasons.length) {
+    fits = [f0, ...starts.slice(1).map(fitFrom).filter(f => f.status === 'ok')];
+    const best = fits.reduce((a, b) => (b.logLik > a.logLik ? b : a)), tol = 1e-6 * Math.max(1, Math.abs(best.logLik));
+    if (fits.some(x => Math.abs(x.logLik - best.logLik) > tol)) reasons.push({ code: 'lrt.multi', lls: fits.map(x => x.logLik) });
+    if (best !== f0) reasons.push(...checks(best));
+  }
+  const f = fits.reduce((a, b) => (b.logLik > a.logLik ? b : a)), t = lrtSystems(r, f), ok = !reasons.length;
+  return { status: ok ? 'ok' : 'unreliable', LR: t.LR, df: t.df, p: ok ? t.p : null, restricted: r, unrestricted: f, renamed: u.renamed, reasons, starts: fits.length };
 }
 };
 

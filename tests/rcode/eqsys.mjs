@@ -30,9 +30,13 @@ function run(name, eqs, map, starts, method, resid, iterated, lrt = true) {
   const tq = iterated ? 1e-6 : 1e-8;
   fit.eq.forEach((e, i) => { exp[`eq${i + 1}.ssr`] = [e.ssr, tq]; exp[`eq${i + 1}.r2`] = [e.r2, tq]; fit.residCov[i].forEach((v, j) => { exp[`rcov.${i + 1}.${j + 1}`] = [v, tq]; }); });
   exp.mcelroy = [fit.mcelroy, 1e-7]; exp.ols_r2 = [fit.olsR2, tq]; exp.logLik = [fit.logLik, 1e-8]; exp.df = [fit.df, 0];
-  if (sys.shared.length && lrt) {
-    const t = Q.testRestrictions(sys, vars, rows, start); if (t.status !== 'ok') throw new Error(name + ' lrt ' + t.code);
-    exp['lrt.LR'] = [t.LR, 1e-5]; exp['lrt.df'] = [t.df, 0]; exp['lrt.p'] = [t.p, 1e-5]; exp['lrt.llr'] = [t.restricted.logLik, 1e-8]; exp['lrt.llu'] = [t.unrestricted.logLik, 1e-8];
+  // identification (1.0.0-beta.2): the condition number of the scaled information matrix and its verdict
+  exp.cond = [fit.ident.cond, 1e-3]; exp.weak = [fit.ident.cond > Q.COND_MAX ? 1 : 0, 0];
+  if (sys.shared.length) {
+    const t = Q.testRestrictions(sys, vars, rows, start); if (t.status === 'bad') throw new Error(name + ' lrt ' + t.code);
+    exp['lrt.reliable'] = [t.status === 'ok' ? 1 : 0, 0]; exp['lrt.df'] = [t.df, 0]; exp['lrt.llr'] = [t.restricted.logLik, 1e-8];
+    if (lrt !== (t.status === 'ok')) throw new Error(`${name}: the LR test is ${t.status}`);
+    if (t.status === 'ok') { exp['lrt.LR'] = [t.LR, 1e-5]; exp['lrt.p'] = [t.p, 1e-5]; exp['lrt.llu'] = [t.unrestricted.logLik, 1e-8]; }
   }
   return { name, script, files: { [imp.name]: csv }, expected: exp };
 }
@@ -42,8 +46,8 @@ const H = { y: 2, expr: '1.3 + a*(1-exp(-b*D_cm))^c' };
 export default function cases() {
   return [
     // the page's sample: compatible height and volume equations sharing a, b, c; SUR, residual covariance Eq. 38. The
-    // likelihood-ratio test is not compared here: without the restriction the volume equation's a_2, b_2, c_2, q are not
-    // identified on these data (the tool stops at c_2 ≈ 1e16, R elsewhere on the same flat likelihood; 18 Nov 2026)
+    // likelihood-ratio test is not reliable here (1.0.0-beta.2): without the restriction the volume equation's a_2, b_2,
+    // c_2, q are not identified on these data; the tool and R must both say so (only the verdict and log L_r compared)
     run('eqsys-compatible', [H, { y: 3, expr: 'k*D_cm^p*(1.3 + a*(1-exp(-b*D_cm))^c)^q' }], { D_cm: 1 }, { a: 30, b: 0.04, c: 1.2, k: 0.00006, p: 1.9, q: 1 }, 'SUR', 'geomean', false, false),
     // free height and volume equations, iterated SUR with Eq. 39 (no shared coefficients)
     run('eqsys-isur', [H, { y: 3, expr: 'k*D_cm^p*H_m^q' }], { D_cm: 1, H_m: 2 }, { a: 30, b: 0.04, c: 1.2, k: 0.00006, p: 1.9, q: 1 }, 'ISUR', 'max', true),

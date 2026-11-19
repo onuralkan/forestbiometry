@@ -104,6 +104,11 @@ fb_fit <- function(S, method, rc, start, fallback = NULL) {
   }
   modifyList(fit, list(Sig = Sig))
 }
+# identification (tool rule): the information matrix scaled to unit diagonal, condition number λmax/λmin (limit 1e8);
+# the coefficients of the near-null direction (|eigenvector component| ≥ 0.3) when it is exceeded
+fb_ident <- function(A, names) { d <- sqrt(diag(A)); C <- A / outer(d, d); e <- eigen(C, symmetric = TRUE)
+  cond <- if (min(e$values) > 0) max(e$values) / min(e$values) else Inf
+  list(cond = cond, weak = if (cond > 1e8) names[abs(e$vectors[, which.min(e$values)]) >= 0.3] else character(0)) }
 fb_logLik <- function(S, U) { S37 <- crossprod(U) / n_t; -S$G * n_t / 2 * log(2 * pi) - n_t / 2 * as.numeric(determinant(S37)$modulus) - S$G * n_t / 2 }
 res <- list()
 `);
@@ -121,7 +126,10 @@ res <- list()
     `print(cbind(estimate = fit$b, se = se)); print(rc); cat("R2", signif(r2, 8), " McElroy", signif(mcelroy, 8), " logLik", signif(ll, 10), " df", df, "\\n")`,
     `res[paste0("b.", names(fit$b))] <- as.list(unname(fit$b)); res[paste0("se.", names(fit$b))] <- as.list(unname(se))`,
     `for (i in seq_len(S$G)) { res[[paste0("eq", i, ".ssr")]] <- ssr[[i]]; res[[paste0("eq", i, ".r2")]] <- r2[[i]]; for (j in seq_len(S$G)) res[[paste0("rcov.", i, ".", j)]] <- rc[i, j] }`,
-    `res[["mcelroy"]] <- mcelroy; res[["ols_r2"]] <- ols_r2; res[["logLik"]] <- ll; res[["df"]] <- df`, '');
+    `res[["mcelroy"]] <- mcelroy; res[["ols_r2"]] <- ols_r2; res[["logLik"]] <- ll; res[["df"]] <- df`,
+    `id <- fb_ident(fit$A, names(fit$b)); res[["cond"]] <- id$cond; res[["weak"]] <- as.numeric(id$cond > 1e8)`,
+    `if (id$cond > 1e8) cat(${rStr(T('Uyarı: katsayılar zayıf belirlenmiş, koşul sayısı ', 'Warning: weakly identified coefficients, condition number '))}, signif(id$cond, 3), ":", id$weak, "\n")`,
+    `if (any(se > abs(fit$b))) cat(${rStr(T('Not: standart hatası tahmininden büyük: ', 'Note: standard error larger than the estimate: '))}, names(fit$b)[se > abs(fit$b)], "\n")`, '');
   if (sys.shared.length) {
     const u = unrestrictedSystem(sys, R.vars);
     if (u.ok && u !== sys) {
@@ -132,10 +140,21 @@ res <- list()
         `fr <- fb_fit(S, "ISUR", "noDfCor", start, ols_tool)`,
         `orig <- c(${u.params.map(p => `${rStr(p)} = ${rStr(Object.entries(u.renamed).find(([, v]) => v.includes(p))?.[0] ?? p)}`).join(', ')})   # ${T('kısıtsız katsayı → kısıtlı katsayı', 'unrestricted coefficient → restricted coefficient')}`,
         `su <- fr$b[orig[Su$P]]`,
-        `fu <- fb_fit(Su, "ISUR", "noDfCor", su)`,
+        rComment(T('Güvenilirlik (araç kuralları): kısıtsız log L kısıtlıdan küçük olmamalı; ayrılan kopyalar uç değerlere (|değer| > 10⁶·max(1, |ortak değer|)) kaçmamalı; koşul sayısı ≤ 10⁸; bunlar tutarsa ikinci ve sonraki kopyalar 0,5, 0,8, 1,25, 2 ile çarpılarak dört başlangıçtan daha fit edilir ve hepsi aynı en büyüğe ulaşmalı. Tutmazsa p-değeri verilmez.',
+          'Reliability (tool rules): the unrestricted log L must not be below the restricted one; no separated copy may run off (|value| > 1e6·max(1, |shared value|)); condition number ≤ 1e8; if these hold the system is fitted again from four starts with the second and later copies times 0.5, 0.8, 1.25, 2, and all must reach the same maximum. Otherwise no p-value.')),
+        `moved <- ${rVec(Object.values(u.renamed).flatMap(v => v.slice(1)), rStr)}`,
+        `llr <- fb_logLik(S, fr$U)`,
+        `checks <- function(fu) { why <- c(); llu <- fb_logLik(Su, fu$U); if (llu < llr - 1e-8 * max(1, abs(llr))) why <- c(why, "below")
+  if (any(abs(fu$b[names(orig)]) > 1e6 * pmax(1, abs(fr$b[orig])))) why <- c(why, "boundary")
+  if (fb_ident(fu$A, names(fu$b))$cond > 1e8) why <- c(why, "weak"); why }`,
+        `fu <- fb_fit(Su, "ISUR", "noDfCor", su); why <- checks(fu)`,
+        `if (!length(why)) { fus <- c(list(fu), lapply(${rVec([0.5, 0.8, 1.25, 2])}, function(f) { s1 <- su; s1[moved] <- s1[moved] * f; tryCatch(fb_fit(Su, "ISUR", "noDfCor", s1), error = function(e) NULL) }))
+  fus <- Filter(Negate(is.null), fus); lls <- sapply(fus, function(x) fb_logLik(Su, x$U)); fu <- fus[[which.max(lls)]]
+  if (any(abs(lls - max(lls)) > 1e-6 * max(1, abs(max(lls))))) why <- c(why, "multi") }`,
         `LR <- n_t * (as.numeric(determinant(crossprod(fr$U) / n_t)$modulus) - as.numeric(determinant(crossprod(fu$U) / n_t)$modulus)); ldf <- length(Su$P) - length(S$P)`,
-        `print(fu$b); cat(${rStr(T('LR = ', 'LR = '))}, signif(LR, 8), " df", ldf, " p", signif(pchisq(LR, ldf, lower.tail = FALSE), 6), "\\n")`,
-        `res[["lrt.LR"]] <- LR; res[["lrt.df"]] <- ldf; res[["lrt.p"]] <- pchisq(LR, ldf, lower.tail = FALSE); res[["lrt.llr"]] <- fb_logLik(S, fr$U); res[["lrt.llu"]] <- fb_logLik(Su, fu$U)`, '');
+        `print(fu$b); cat(${rStr(T('LR = ', 'LR = '))}, signif(LR, 8), " df", ldf, if (length(why)) paste(${rStr(T(' — güvenilir değil: ', ' — not reliable: '))}, paste(why, collapse = ", ")) else paste(" p", signif(pchisq(LR, ldf, lower.tail = FALSE), 6)), "\\n")`,
+        `res[["lrt.reliable"]] <- as.numeric(!length(why)); res[["lrt.df"]] <- ldf; res[["lrt.llr"]] <- llr`,
+        `if (!length(why)) { res[["lrt.LR"]] <- LR; res[["lrt.p"]] <- pchisq(LR, ldf, lower.tail = FALSE); res[["lrt.llu"]] <- fb_logLik(Su, fu$U) }`, '');
     }
   }
   out.push(`fb_out(res)`, '');

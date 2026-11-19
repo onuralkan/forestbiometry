@@ -45,6 +45,17 @@ ok(F.ISUR.iter > 1 && F.SUR.iter === 1 && F.OLS.iter === null, `iterated SUR ite
   ok(u.ok && u.params.join() === 'h0,s_1,v0,s_2,v2' && u.eqs[1].text === 'v0+s_2*lnD+v2*lnD^2', 'unrestricted system: the shared s becomes s_1 and s_2');
   ok(t.status === 'ok' && Math.abs(t.LR - REF.lrt.LR) < 1e-5 && t.df === 1 && Math.abs(t.restricted.logLik - REF.lrt.logLikR) < 1e-6 && Math.abs(t.unrestricted.logLik - REF.lrt.logLikU) < 1e-6, `testRestrictions (iterated SUR, Eq. 37): LR ${t.LR.toFixed(5)}, df ${t.df}, log L ${t.restricted.logLik.toFixed(4)} / ${t.unrestricted.logLik.toFixed(4)} = systemfit lrtest`);
   ok(Q.testRestrictions(un, vars, rows).code === 'none', 'nothing shared: nothing to test'); }
+// 1.0.0-beta.2 (19 Nov 2026): identification and the reliability of the likelihood-ratio test (METHODS §28, tool rules)
+{ const E = Q.symEigen([[4, 1, 0], [1, 3, 1], [0, 1, 2]]), sum = E.values.reduce((a, b) => a + b, 0), prod = E.values.reduce((a, b) => a * b, 1);
+  ok(Math.abs(sum - 9) < 1e-12 && Math.abs(prod - 18) < 1e-10 && E.vectors.every(v => Math.abs(Math.hypot(...v) - 1) < 1e-12), 'Jacobi eigenvalues: trace 9 and determinant 18 kept, unit eigenvectors');
+  const I = Q.identification([[1, 0.9999999999], [0.9999999999, 1]], ['x', 'y']), J = Q.identification([[4, 0], [0, 9]], ['x', 'y']);
+  ok(I.cond > 1e8 && I.weak.join() === 'x,y' && Math.abs(J.cond - 1) < 1e-12 && !J.weak.length, `condition number of the scaled information matrix: nearly collinear ${I.cond.toExponential(2)} (weak x, y), diagonal 1 (scale-free)`);
+  const t = Q.testRestrictions(re, vars, rows); ok(t.status === 'ok' && !t.reasons.length && t.starts === 5 && t.p != null, 'linear system with a shared slope: identified, all five starts reach the same maximum, p-value given');
+  const nlv = ['D', 'H'], cs = Q.compileSystem([{ name: 'h', y: 'H', expr: '1.3 + a*(1-exp(-b*D))^c' }, { name: 'v', y: 'V', expr: 'k*D^p*(1.3 + a*(1-exp(-b*D))^c)^q' }], nlv);
+  const tc = Q.testRestrictions(cs, nlv, rows, { a: 30, b: 0.04, c: 1.2, k: 0.00006, p: 1.9, q: 1 }), codes = tc.reasons.map(r => r.code);
+  ok(tc.status === 'unreliable' && tc.p === null && codes.includes('lrt.weak') && codes.includes('lrt.boundary') && Number.isFinite(tc.LR), `compatible height–volume system of the sample: unrestricted a_2, b_2, c_2, q not identified → not reliable, no p-value (${codes.join(', ')})`);
+  const fr = Q.fitSystem(cs, rows, { method: 'SUR', start: { a: 30, b: 0.04, c: 1.2, k: 0.00006, p: 1.9, q: 1 } });
+  ok(fr.ident.cond < 1e8 && fr.names.some((n, j) => fr.se[j] > Math.abs(fr.coef[j])), `restricted compatible system: identified (condition ${fr.ident.cond.toExponential(1)}), but q has a standard error larger than its estimate (note shown)`); }
 ok(Math.abs(F.SUR.mcelroy - NL.mcelroy_SUR) < 1e-9, `McElroy's R² (Eq. 43) of the SUR fit: ${F.SUR.mcelroy.toFixed(6)} (Python ${NL.mcelroy_SUR.toFixed(6)})`);
 
 // 2. nonlinear systems

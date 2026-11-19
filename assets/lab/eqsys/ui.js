@@ -135,7 +135,7 @@ function renderStep3() {
   let h = `<div class="card"><h2>${esc(T('m.' + R.method))}</h2>`;
   if (x.status !== 'ok') { h += `<p class="note err" id="r-bad">${esc(T('r.bad', { why: T('e.' + x.code) }))}</p></div>`; }
   else {
-    h += `<p class="small" id="r-sum">${esc(T('r.sum', { method: R.method, T: x.T, G: x.G, K: x.K, it: R.method === 'ISUR' ? x.iter : 0 }))}</p>${!x.converged ? `<p class="note warn small" id="r-noconv">${T('r.noconv')}</p>` : ''}${x.dropped.length ? `<p class="note warn small" id="r-drop">${esc(T('r.drop', { n: x.dropped.length, rows: rowsText(x.dropped.map(d => d.row)) }))}</p>` : ''}
+    h += `<p class="small" id="r-sum">${esc(T('r.sum', { method: R.method, T: x.T, G: x.G, K: x.K, it: R.method === 'ISUR' ? x.iter : 0 }))}</p>${!x.converged ? `<p class="note warn small" id="r-noconv">${T('r.noconv')}</p>` : ''}${x.ident && x.ident.cond > Q.COND_MAX ? `<p class="note warn small" id="r-weak">${esc(T('r.weak', { cond: x.ident.cond === Infinity ? '∞' : x.ident.cond.toExponential(1), names: x.ident.weak.join(', ') }))}</p>` : ''}${x.se && x.names.some((n, j) => x.se[j] > Math.abs(x.coef[j])) ? `<p class="note small" id="r-sebig">${esc(T('r.sebig', { names: x.names.filter((n, j) => x.se[j] > Math.abs(x.coef[j])).join(', ') }))}</p>` : ''}${x.dropped.length ? `<p class="note warn small" id="r-drop">${esc(T('r.drop', { n: x.dropped.length, rows: rowsText(x.dropped.map(d => d.row)) }))}</p>` : ''}
       <ul class="small">${R.eqs.map(e => `<li>${esc(e.label)}: ${esc(e.y)} = ${esc(e.text)}</li>`).join('')}</ul>
       <h3>${T('r.coef')}</h3><div class="tscroll"><table class="grid" id="coeftab"><thead><tr><th>${T('r.name')}</th><th>${T('r.eqs')}</th><th>${T('r.est')}</th><th>${T('r.se')}</th><th>${T('r.t')}</th></tr></thead><tbody>
       ${x.names.map((n, j) => `<tr><th><code>${esc(n)}</code></th><td class="small">${sys.eqs.map((e, i) => e.params.includes(n) ? i + 1 : null).filter(Boolean).join(', ')}${sys.shared.includes(n) ? ' (' + T('n.shared') + ')' : ''}</td><td class="num" data-k="b${j}">${sig(x.coef[j])}</td><td class="num">${sig(x.se[j])}</td><td class="num">${f(x.coef[j] / x.se[j], 3)}</td></tr>`).join('')}</tbody></table></div>
@@ -165,7 +165,9 @@ function renderStep3() {
     $('sv-save').addEventListener('click', saveSets);
     $('lrt-go') && $('lrt-go').addEventListener('click', () => {
       const t = Q.testRestrictions(R.sys, R.vars, R.rows, R.start), out = $('lrt-out');
-      if (t.status !== 'ok') { out.innerHTML = `<p class="note err small" id="lrt-bad">${esc(T('lrt.bad', { why: T('e.' + t.code) }))}</p>`; return; }
+      if (t.status === 'bad') { out.innerHTML = `<p class="note err small" id="lrt-bad">${esc(T('lrt.bad', { why: T('e.' + t.code) }))}</p>`; return; }
+      if (t.status === 'unreliable') { out.innerHTML = `<div class="note warn small" id="lrt-unrel"><p><b>${T('lrt.unrel')}</b></p><ul>${t.reasons.map(q => `<li>${esc(T(q.code, { ...q, names: (q.names || []).join(', '), cond: q.cond != null ? q.cond.toExponential(1) : '', lls: (q.lls || []).map(v => f(v, 3)).join('; '), llu: f(q.llu, 4), llr: f(q.llr, 4) }))}</li>`).join('')}</ul>
+        <p>${esc(T('lrt.unrel.info', { L: f(t.LR, 4), df: t.df, lr: f(t.restricted.logLik, 4), lu: f(t.unrestricted.logLik, 4) }))}</p></div><p class="muted small">${esc(T('lrt.names', { n: Object.entries(t.renamed).map(([k, v]) => `${k} → ${v.join(', ')}`).join('; ') }))}</p>`; return; }
       out.innerHTML = `<p class="note small" id="lrt-res">${esc(T('lrt.res', { L: f(t.LR, 4), df: t.df, p: t.p == null ? '–' : t.p < 1e-4 ? '< 0.0001' : f(t.p, 4), lr: f(t.restricted.logLik, 4), lu: f(t.unrestricted.logLik, 4) }))}</p>
         ${t.restricted.converged && t.unrestricted.converged ? '' : `<p class="note warn small">${T('r.noconv')}</p>`}<p class="muted small">${esc(T('lrt.names', { n: Object.entries(t.renamed).map(([k, v]) => `${k} → ${v.join(', ')}`).join('; ') }))}</p>`;
     });
