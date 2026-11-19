@@ -400,6 +400,9 @@ await page.click('#tab-boot'); await page.waitForSelector('#bt-gof');
   const ci = await page.evaluate(() => [...document.querySelectorAll('#bt-ci-out tr[data-q]')].map(tr => [tr.dataset.q, ...[...tr.children].slice(1).map(x => parseFloat(x.textContent))]));
   const rci = E.boot.bootstrapCI({ result: r0, input: { d: pool }, opts: { a: 0 }, B: 199, seed: 20261111, step: 'auto', scheme: 'parametric' });
   ok(ci.length === 6 && ci.every(([k, est, lo, hi]) => Math.abs(lo - rci.intervals[k].lo) < 6e-5 && Math.abs(hi - rci.intervals[k].hi) < 6e-5 && lo <= est && est <= hi), 'intervals for b, c and Q25–Q95 = engine; estimate inside: ' + JSON.stringify(ci.map(x => x.slice(0, 4)))); }
+  const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#bt-r')]), rs = await readFile(await dr.path(), 'utf8');
+  ok(/bootstrap.*\.R$/.test(dr.suggestedFilename()) && rs.includes('fb_rng <- function(seed)') && rs.includes('b <- fb_boot("gof"') && rs.includes('b <- fb_boot("ci"') && rs.includes('seed = 20261111'),
+    'bootstrap R code: the tool\'s generator, both runs with their seed (checked in R by scripts/rcode-check.sh)');
 await page.click('#tab-params');
 
 // 2l. P15: sources of every result, state summary, exports keep version, settings, parameters and the bootstrap seed

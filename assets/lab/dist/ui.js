@@ -13,7 +13,7 @@ import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { createUnitNav } from '../core/unitnav.js';
-import { buildR } from './rcode.js';
+import { buildR, buildBootR } from './rcode.js';
 import { buildRecoverR } from './rcode-rec.js';
 import { tableCsv, csvName } from '../core/rcode.js';
 
@@ -521,6 +521,7 @@ function tabBoot(p) {
     <div class="card"><h3>${T('bt.ci.h')}</h3><p class="muted small">${T('bt.ci.sub')}</p>
       <div class="radios">${['parametric', 'nonparametric'].map(v => `<label><input type="radio" name="bt-scheme" value="${v}"${b.scheme === v ? ' checked' : ''}${v === 'nonparametric' && R.grouped ? ' disabled' : ''}> ${T('bt.scheme.' + v)}</label>`).join('')}</div>
       <button type="button" class="btn" id="bt-ci">${T('bt.run')}</button><div id="bt-ci-out">${bootOut(u, r, 'ci')}</div></div>${srcBlock([r], true)}
+    <div class="card"><button type="button" class="btn ghost" id="bt-r"${['gof', 'ci'].some(k => BOOT.get(`${u.id}|${b.fit}|${k}`)) ? '' : ' disabled'}>${T('ex.r')}</button><p class="muted small">${T('ex.r.boot')}</p></div>
     <div id="bt-prog" hidden><progress id="bt-bar" max="1" value="0"></progress> <span id="bt-txt" class="small"></span> <button type="button" class="btn ghost small" id="bt-cancel">${T('bt.cancel')}</button></div>`;
   p.innerHTML = h; bindBoot(p, u); bindBar();
   const go = kind => {
@@ -543,6 +544,14 @@ function tabBoot(p) {
     w.postMessage({ kind, args: { result: plain, input: inp, opts: bootOpts(r), B, seed, step, scheme: b.scheme, level: 0.95 } });
   };
   $('bt-gof').addEventListener('click', () => go('gof')); $('bt-ci').addEventListener('click', () => go('ci'));
+  $('bt-r').addEventListener('click', () => {
+    const runs = ['gof', 'ci'].map(k => BOOT.get(`${u.id}|${b.fit}|${k}`)).filter(x => x && !x.unsupported).map(x => ({ kind: x.kind, B: x.B, seed: x.seed, step: x.step ?? null, scheme: x.scheme || 'parametric', level: x.level ?? 0.95 }));
+    if (!runs.length) return;
+    const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
+    download(fname('cap-dagilimi-bootstrap', 'diameter-distribution-bootstrap', 'R'), buildBootR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
+      fcol: S.fcol, fval: S.fval, mode: S.mode, dtype: S.dtype, countType: R.countType, outside: S.outside }, R, D.POOL, R.units.indexOf(u), r, runs, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    if (!file) download(csvName(imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
+  });
   $('bt-cancel').addEventListener('click', () => { if (bootJob) { bootJob.terminate(); bootJob = null; } status(T('bt.cancelled')); tabBoot(p); });
 }
 function bindBoot(p, u) {
