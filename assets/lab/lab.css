@@ -138,6 +138,7 @@ label.chk { display: inline-flex; gap: 6px; align-items: center; }
 .tag { font: 600 11px var(--ui); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; vertical-align: middle; }
 .tag.req { color: var(--acc); border-color: var(--acc); }
 .note { margin: 8px 0; padding: 7px 10px; border-radius: 6px; font-size: 13.5px; background: var(--sunk); border-left: 4px solid var(--line); }
+span.note { display: block; margin: 6px 0 0; }   /* a note inside a table cell or sentence: a whole box, not a box broken at every line wrap */
 .note.warn { background: var(--warn-bg); border-color: var(--warn); }
 .note.err { background: var(--err-bg); border-color: var(--err); }
 .note.ok { background: var(--ok-bg); border-color: var(--ok); }
