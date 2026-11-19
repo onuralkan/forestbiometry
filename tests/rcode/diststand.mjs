@@ -18,7 +18,8 @@ function run(name, cfg, x) {
   const tb = cfg.fit === 'logols' ? 1e-9 : 1e-6, exp = {};
   // iterated SUR: the objective is flat along the weakly determined coefficients (here the one of 1/A); the tool's
   // Levenberg–Marquardt and R's nls stop about 1e-5 apart there (the fitted values and the prediction agree to 1e-6)
-  const tbeta = cfg.fit === 'sur' ? 1e-4 : tb;
+  // CDF fits: the distance is flat along some coefficients too; R on the CI runner and locally differ by ~2e-6 there
+  const tbeta = cfg.fit === 'sur' ? 1e-4 : cfg.fit === 'cdfr' || cfg.fit === 'mcdfr' ? 1e-5 : tb;
   for (const e of m.equations) { e.beta.forEach((b, j) => { exp[`${e.key}.b${j + 1}`] = [b, tbeta]; }); exp[`${e.key}.rmse`] = [e.rmse, tb]; exp[`${e.key}.bias`] = [e.bias, tb * 10]; }
   for (const [k, v] of Object.entries(pred.responses)) exp[`pred.${k}`] = [v, tb];
   if (m.approach === 'ppm') for (const [k, v] of Object.entries(pred.params)) exp[`pred.param.${k}`] = [v, tb];
