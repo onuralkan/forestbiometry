@@ -165,5 +165,39 @@ const ri = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval_inference.jso
   eq(E.inference([1, 2, 4], { margin: { type: 'abs', value: -1 } }).equiv.reason, 'margin', 'negative margin rejected');
 }
 
+/* 1.2.0-beta.2: bootstrap percentile and BCa intervals (reference: tests/ref/eval_boot.R, same generator and seed) */
+const rb = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval_boot.json'), 'utf8'));
+{
+  const r = E.evaluate(tb, { ...spec('common'), infer: { level: 0.95, alpha: 0.05, margin: null } });
+  const cases = [['h_m1', r.models[0].obs, r.models[0].pred, 2000, 1, 0.95], ['h_m2', r.models[1].obs, r.models[1].pred, 2000, 1, 0.95],
+    ['small', [10, 20, 30, 25, 14, 18, 40, 33], [12, 18, 33, 22, 15, 21, 36, 35], 2000, 7, 0.9], ['m2_b1000_s42_99', r.models[1].obs, r.models[1].pred, 1000, 42, 0.99]];
+  for (const [key, o, q, B, seed, level] of cases) {
+    const b = E.bootstrapCI(o, q, { B, seed, level });
+    for (const st of E.BOOT_STATS) {
+      const x = rb[key][st], y = b.stats[st], lab = `boot ${key} ${st}`;
+      near(y.est, x.est, `${lab}: estimate`, 1e-12); eq(y.Bok, x.Bok, `${lab}: replications`);
+      near(y.pct.lo, x.pct[0], `${lab}: percentile lower = R`, 1e-12); near(y.pct.hi, x.pct[1], `${lab}: percentile upper = R`, 1e-12);
+      near(y.pct.lo, x.pct_q1[0], `${lab}: percentile lower = quantile(type = 1)`, 1e-12); near(y.pct.hi, x.pct_q1[1], `${lab}: percentile upper = quantile(type = 1)`, 1e-12);
+      near(y.z0, x.z0, `${lab}: z0`, 1e-10); near(y.a, x.a, `${lab}: acceleration (jackknife, eq. 6.6–6.7)`, 1e-9);
+      if (st === 'bias' || st === 'mae') near(y.a, x.a_empinf, `${lab}: acceleration = boot::empinf (linear statistic)`, 1e-9);
+      near(y.bca.lo, x.bca[0], `${lab}: BCa lower = R`, 1e-12); near(y.bca.hi, x.bca[1], `${lab}: BCa upper = R`, 1e-12);
+    }
+  }
+  // with a = z0 = 0 the BCa endpoint is the percentile endpoint (eq. 2.3)
+  const b0 = E.bootstrapCI([1, 2, 3, 4, 5, 6], [1.5, 1.5, 3.5, 3.5, 5.5, 5.5], { B: 400, seed: 3 });
+  ok(b0.stats.bias.pct.lo <= b0.stats.bias.pct.hi && b0.stats.r2.Bok <= 400, 'small sample: intervals ordered; R² replications with constant y left out');
+  // constant observed values: R² undefined in every replication
+  const bc = E.bootstrapCI([5, 5, 5, 5], [4, 5, 6, 7], { B: 200, seed: 1 });
+  eq([bc.stats.r2.reason, bc.stats.bias.reason], ['est', null], 'constant observed: no R² interval, bias interval still given');
+  eq(E.bootstrapCI([1], [2]).reason, 'n', 'bootstrap needs n ≥ 2');
+  // same seed, same result; different seed, different draws
+  const s1 = E.bootstrapCI(cases[2][1], cases[2][2], { B: 500, seed: 9 }), s2 = E.bootstrapCI(cases[2][1], cases[2][2], { B: 500, seed: 9 }), s3 = E.bootstrapCI(cases[2][1], cases[2][2], { B: 500, seed: 10 });
+  eq(s1, s2, 'reproducible with the seed'); ok(JSON.stringify(s1) !== JSON.stringify(s3), 'another seed gives other draws');
+  // through evaluate: only with weights off
+  const rr = E.evaluate(tb, { ...spec('common'), infer: { level: 0.95, boot: { B: 2000, seed: 1 } } });
+  near(rr.models[1].infer.boot.stats.rmse.bca.hi, rb.h_m2.rmse.bca[1], 'evaluate → bootstrap BCa upper RMSE = R', 1e-12);
+  ok(!E.evaluate(tb, { ...spec('common'), weight: col('dbh'), infer: { level: 0.95, boot: { B: 200, seed: 1 } } }).models[0].infer.boot, 'no bootstrap under weights');
+}
+
 console.log(`eval: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

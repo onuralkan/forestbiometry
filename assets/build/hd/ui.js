@@ -1677,11 +1677,11 @@ function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k 
 
 // ---- assets/lab/eval/calc.js
 __fb_m["eval/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "ALPHAS": () => ALPHAS, "LEVELS": () => LEVELS, "MARGINS": () => MARGINS, "NORMS": () => NORMS, "ROLES": () => ROLES, "TOOL": () => TOOL, "evaluate": () => evaluate, "inference": () => inference, "metrics": () => metrics, "readNum": () => readNum, "relative": () => relative });
+__fb_x(__fb_e, { "ALPHAS": () => ALPHAS, "BOOT_B": () => BOOT_B, "BOOT_STATS": () => BOOT_STATS, "LEVELS": () => LEVELS, "MARGINS": () => MARGINS, "NORMS": () => NORMS, "ROLES": () => ROLES, "TOOL": () => TOOL, "bootstrapCI": () => bootstrapCI, "evaluate": () => evaluate, "inference": () => inference, "metrics": () => metrics, "readNum": () => readNum, "relative": () => relative });
 const { parseNumber } = __fb_r("core/num.js");
 const { cellText } = __fb_r("core/table.js");
 const { classIndex } = __fb_r("stand/calc.js");
-const { tQuantile, tCdf, ncF1Quantile } = __fb_r("core/stats.js");
+const { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } = __fb_r("core/stats.js");
 // Model Evaluation: pure logic (no DOM). Definitions: docs/METHODS.md §7.
 // Sign convention everywhere: e = predicted − observed.
 
@@ -1694,7 +1694,9 @@ const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement a
 const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
 const ALPHAS = [0.01, 0.05, 0.1];                          // sizes of the equivalence tests
-const MARGINS = ['abs', 'rel'];                            // equivalence margin: data units, or a fraction of s_e
+const MARGINS = ['abs', 'rel'];
+const BOOT_B = [1000, 2000, 5000];                         // bootstrap replications offered
+const BOOT_STATS = ['bias', 'mae', 'rmse', 'r2'];                            // equivalence margin: data units, or a fraction of s_e
 
 /** Read one cell as a number. XLSX numeric cells need no decimal setting; text uses the user's choice. */
 function readNum(cell, decimal) {
@@ -1774,6 +1776,80 @@ function inference(e, opts = {}) {
   return out;
 }
 
+/* ---------------- nonparametric bootstrap intervals (unweighted pairs) ---------------- */
+/** bias, MAE, RMSE, R² of the pairs listed in idx (R² NaN when the observed values in idx are all equal). */
+function quick(obs, pred, idx) {
+  const n = idx.length; let se = 0, sa = 0, ss = 0, so = 0, oMin = Infinity, oMax = -Infinity;
+  for (const i of idx) { const e = pred[i] - obs[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
+  const mo = so / n; let sst = 0; for (const i of idx) sst += (obs[i] - mo) ** 2;
+  return [se / n, sa / n, Math.sqrt(ss / n), oMax > oMin && sst > 0 ? 1 - ss / sst : NaN];
+}
+/** Ĝ⁻¹(α) for Ĝ(c) = #{θ*_b < c}/B (DiCiccio and Efron 1996, eq. 2.2): the ⌈αB⌉-th smallest replication. */
+function invG(sorted, alpha) {
+  const B = sorted.length; let k = Math.ceil(alpha * B - 1e-9);
+  const edge = k <= 1 || k >= B; k = Math.min(B, Math.max(1, k));
+  return { value: sorted[k - 1], k, edge };
+}
+/**
+ * Bootstrap confidence intervals for bias, MAE, RMSE and R²: B samples of n pairs drawn with replacement
+ * (DiCiccio and Efron 1996 §6, eq. 6.3), indices floor(u·n) with u from mulberry32(seed) (core/stats.js rng).
+ * Percentile: [Ĝ⁻¹((1 − γ)/2), Ĝ⁻¹((1 + γ)/2)]. BCa (eq. 2.3): Ĝ⁻¹(Φ(z₀ + (z₀ + z_α)/(1 − a(z₀ + z_α)))),
+ * z₀ = Φ⁻¹(#{θ*_b < θ̂}/B) (eq. 2.8), a = ΣU³/(6(ΣU²)^{3/2}) (eq. 6.6) with the jackknife U_i = (n − 1)(θ̂_· − θ̂_(i))
+ * (eq. 6.7). Replications where a measure is undefined (R² with constant observed values) are left out for that
+ * measure and counted. An endpoint taken from the smallest or largest replication is flagged ('edge').
+ */
+function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}) {
+  const n = obs.length, out = { n, B, seed, level, stats: {}, reason: null };
+  if (n < 2) { out.reason = 'n'; return out; }
+  const all = Array.from({ length: n }, (_, i) => i), est = quick(obs, pred, all);
+  const reps = BOOT_STATS.map(() => []), r = rng(seed), idx = new Array(n);
+  for (let b = 0; b < B; b++) {
+    for (let j = 0; j < n; j++) idx[j] = Math.floor(r() * n);
+    const q = quick(obs, pred, idx);
+    for (let k = 0; k < q.length; k++) if (Number.isFinite(q[k])) reps[k].push(q[k]);
+  }
+  // jackknife: each pair left out once; sums updated in O(1) per pair (R² from deviations about the full mean)
+  const jack = BOOT_STATS.map(() => new Array(n));
+  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = pred[i] - obs[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
+  const mo = so / n; let Q = 0; for (let i = 0; i < n; i++) Q += (obs[i] - mo) ** 2;
+  const count = new Map(); for (const y of obs) count.set(y, (count.get(y) || 0) + 1);
+  for (let i = 0; i < n; i++) {
+    const e = pred[i] - obs[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
+    jack[0][i] = (SE - e) / m; jack[1][i] = (SA - Math.abs(e)) / m; jack[2][i] = Math.sqrt(Math.max(0, ss) / m);
+    const constant = count.size === 1 || (count.size === 2 && count.get(obs[i]) === 1);
+    const sst = Q - c * c - c * c / m;
+    jack[3][i] = constant || !(sst > 0) ? NaN : 1 - ss / sst;
+  }
+  const lo = (1 - level) / 2, hi = (1 + level) / 2;
+  BOOT_STATS.forEach((name, k) => {
+    const st = { est: Number.isFinite(est[k]) ? est[k] : null, Bok: reps[k].length, pct: null, bca: null, z0: null, a: null, reason: null };
+    out.stats[name] = st;
+    if (st.est == null) { st.reason = 'est'; return; }
+    if (st.Bok < 2) { st.reason = 'reps'; return; }
+    const sorted = reps[k].slice().sort((x, y) => x - y), Bk = sorted.length;
+    const pl = invG(sorted, lo), ph = invG(sorted, hi);
+    st.pct = { lo: pl.value, hi: ph.value, edge: pl.edge || ph.edge };
+    let below = 0; for (const t of sorted) if (t < st.est) below++;
+    const J = jack[k];
+    if (J.some(x => !Number.isFinite(x))) { st.bcaReason = 'jack'; return; }
+    if (below === 0 || below === Bk) { st.bcaReason = 'z0'; return; }
+    st.z0 = normQuantile(below / Bk);
+    let m = 0; for (const x of J) m += x; m /= n;
+    let s2 = 0, s3 = 0; for (const x of J) { const u = (n - 1) * (m - x); s2 += u * u; s3 += u * u * u; }
+    st.a = s2 > 0 ? s3 / (6 * Math.pow(s2, 1.5)) : 0;
+    const end = alpha => {
+      const z = normQuantile(alpha), d = 1 - st.a * (st.z0 + z);
+      if (!(d > 0)) return null;
+      return invG(sorted, normCdf(st.z0 + (st.z0 + z) / d));
+    };
+    const bl = end(lo), bh = end(hi);
+    if (!bl || !bh) { st.bcaReason = 'a'; return; }
+    st.bca = { lo: bl.value, hi: bh.value, alphaLo: normCdf(st.z0 + (st.z0 + normQuantile(lo)) / (1 - st.a * (st.z0 + normQuantile(lo)))),
+      alphaHi: normCdf(st.z0 + (st.z0 + normQuantile(hi)) / (1 - st.a * (st.z0 + normQuantile(hi)))), edge: bl.edge || bh.edge };
+  });
+  return out;
+}
+
 /* ---------------- rows, models, row sets ---------------- */
 /**
  * table: raw table (core/table.js). spec = {
@@ -1781,7 +1857,7 @@ function inference(e, opts = {}) {
  *   groups: { plot?: col, species?: col, dclass?: { col, classes }, fold?: col },
  *   rowSet: 'common' | 'own', norm: null | 'mean' | 'range' | 'sd',
  *   weight?: colIndex (positive weights; rows with an empty, unreadable or non-positive weight are left out),
- *   infer?: { level, alpha, margin } (see inference; not computed when weights are chosen) }
+ *   infer?: { level, alpha, margin, boot?: { B, seed } } (see inference, bootstrapCI; not computed when weights are chosen) }
  */
 function evaluate(table, spec) {
   const rows = table.rows, N = rows.length;
@@ -1830,6 +1906,7 @@ function evaluate(table, spec) {
       groups[key] = labels.map(lab => ({ label: lab, ...metrics(by.get(lab).map(i => obs[i].value), by.get(lab).map(i => p[i].value), spec.norm, wOf(by.get(lab))) }));
     }
     const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(q.map((x, j) => x - o[j]), spec.infer);
+    if (infer && !wt && spec.infer.boot) infer.boot = bootstrapCI(o, q, { ...spec.infer.boot, level: spec.infer.level || 0.95 });
     return { ...m, index: k, acc, idx, obs: o, pred: q, w, overall: metrics(o, q, spec.norm, w), groups, infer };
   });
   // sample overlap between models (only differs in 'own' mode)

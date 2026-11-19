@@ -3077,7 +3077,7 @@
   "version": null,
   "status": "D",
   "tools": [
-   "METHODS §7 (bootstrap intervals: out of scope until the source arrives)"
+   "METHODS §7 (background; the bootstrap intervals follow DiCiccio and Efron 1996)"
   ],
   "note": "only chapter 17 (cross-validation and other estimates of prediction error, pp. 237–257) was in the file read on 19 Nov 2026; the percentile interval (chapter 13) was not"
  },
@@ -3127,5 +3127,53 @@
    "METHODS §7 (paired t-test for equivalence, cited through Robinson and Froese 2004)"
   ],
   "note": "not read; the test is applied as given by Robinson and Froese (2004)"
+ },
+ {
+  "key": "diciccio1988",
+  "type": "article",
+  "authors": [
+   "DiCiccio, T. J.",
+   "Romano, J. P."
+  ],
+  "year": "1988",
+  "title": "A review of bootstrap confidence intervals",
+  "container": "Journal of the Royal Statistical Society: Series B (Methodological)",
+  "edition": null,
+  "volume": "50",
+  "issue": "3",
+  "pages": "338–354",
+  "publisher": null,
+  "doi": null,
+  "url": null,
+  "version": null,
+  "status": "B",
+  "tools": [
+   "METHODS §7 (bootstrap percentile and BCa intervals)"
+  ],
+  "note": null
+ },
+ {
+  "key": "diciccio1996",
+  "type": "article",
+  "authors": [
+   "DiCiccio, T. J.",
+   "Efron, B."
+  ],
+  "year": "1996",
+  "title": "Bootstrap confidence intervals",
+  "container": "Statistical Science",
+  "edition": null,
+  "volume": "11",
+  "issue": "3",
+  "pages": "189–228",
+  "publisher": null,
+  "doi": null,
+  "url": null,
+  "version": null,
+  "status": "B",
+  "tools": [
+   "METHODS §7 (bootstrap percentile and BCa intervals)"
+  ],
+  "note": null
  }
 ]

@@ -20,7 +20,7 @@ let S = blank(), R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, tab: 'summary', imp: null, src: null, obs: null, models: [], groups: { plot: null, species: null, fold: null, dcol: null, breaks: '', openTop: true },
     decimal: null, decimalChosen: false, rowSet: 'common', norm: null, chartModel: 0, groupKey: null,
-    weight: null, level: 0.95, alpha: 0.05, mtype: null, mvalue: '' };
+    weight: null, level: 0.95, alpha: 0.05, mtype: null, mvalue: '', boot: false, bootB: 2000, seed: '1' };
 }
 let saveT = null;
 function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
@@ -102,9 +102,11 @@ function problems() {
   const c = classes(); if (c.problem) p.push(T(c.problem));
   if (S.weight != null && (S.weight === S.obs || S.models.some(m => m.col === S.weight))) p.push(T('w.same'));
   if (S.mtype && !(margin() > 0)) p.push(T('eq.need'));
+  if (S.boot && seed() == null) p.push(T('bt.needseed'));
   return p;
 }
 const margin = () => num(S.mvalue);
+const seed = () => /^\s*\d{1,10}\s*$/.test(String(S.seed)) && +S.seed <= 4294967295 ? +S.seed : null;
 function renderStep2() {
   const el = $('step2'), H = S.src.headers;
   const opts = (sel, none = true) => (none ? `<option value="">${T('none')}</option>` : '') + H.map((h, i) => `<option value="${i}"${sel === i ? ' selected' : ''}>${esc(h)}</option>`).join('');
@@ -133,7 +135,10 @@ function renderStep2() {
       <h3>${T('eq.h')}</h3><p class="muted small">${T('eq.sub')}</p>
       <div class="radios col">${['none', ...E.MARGINS].map(v => `<label><input type="radio" name="mtype" value="${v}"${(S.mtype || 'none') === v ? ' checked' : ''}> ${T('eq.' + v)}</label>`).join('')}</div>
       ${S.mtype ? `<div class="lims"><label>${T(S.mtype === 'abs' ? 'eq.delta' : 'eq.eps')} <input type="text" id="mvalue" value="${esc(S.mvalue)}" size="8" inputmode="decimal"></label>
-        <label>${T('eq.alpha')} <select id="alpha">${E.ALPHAS.map(a => `<option value="${a}"${S.alpha === a ? ' selected' : ''}>${fmtNum(a, 2)}</option>`).join('')}</select></label></div>` : ''}</div>`;
+        <label>${T('eq.alpha')} <select id="alpha">${E.ALPHAS.map(a => `<option value="${a}"${S.alpha === a ? ' selected' : ''}>${fmtNum(a, 2)}</option>`).join('')}</select></label></div>` : ''}
+      <h3>${T('bt.h')}</h3><label class="chk"><input type="checkbox" id="boot"${S.boot ? ' checked' : ''}> ${T('bt.on')}</label><p class="muted small">${T('bt.sub')}</p>
+      ${S.boot ? `<div class="lims"><label>${T('bt.B')} <select id="bootB">${E.BOOT_B.map(b => `<option value="${b}"${S.bootB === b ? ' selected' : ''}>${fmtNum(b, 0)}</option>`).join('')}</select></label>
+        <label>${T('bt.seed')} <input type="text" id="seed" value="${esc(S.seed)}" size="10" inputmode="numeric"></label></div>` : ''}</div>`;
   const pr = problems();
   if (pr.length) h += `<div class="card"><ul class="probs">${pr.map(x => `<li class="note err">${esc(x)}</li>`).join('')}</ul></div>`;
   h += `<div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button></div>`;
@@ -158,6 +163,9 @@ function renderStep2() {
   el.querySelectorAll('input[name="mtype"]').forEach(x => x.addEventListener('change', () => { S.mtype = x.value === 'none' ? null : x.value; re(); }));
   $('mvalue') && $('mvalue').addEventListener('change', e => { S.mvalue = e.target.value; re(); });
   $('alpha') && $('alpha').addEventListener('change', e => { S.alpha = +e.target.value; R = null; save(); });
+  $('boot').addEventListener('change', e => { S.boot = e.target.checked; re(); });
+  $('bootB') && $('bootB').addEventListener('change', e => { S.bootB = +e.target.value; R = null; save(); });
+  $('seed') && $('seed').addEventListener('change', e => { S.seed = e.target.value.trim(); re(); });
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); S.tab = 'summary'; go(3); });
 }
@@ -166,7 +174,7 @@ function compute() {
   const groups = { plot: S.groups.plot, species: S.groups.species, fold: S.groups.fold };
   if (c.classes) groups.dclass = { col: S.groups.dcol, classes: c.classes };
   R = E.evaluate(S.src, { obs: S.obs, models: S.models, decimal: S.decimal, groups, rowSet: S.rowSet, norm: S.norm, weight: S.weight,
-    infer: { level: S.level, alpha: S.alpha, margin: S.mtype ? { type: S.mtype, value: margin() } : null } });
+    infer: { level: S.level, alpha: S.alpha, margin: S.mtype ? { type: S.mtype, value: margin() } : null, boot: S.boot ? { B: S.bootB, seed: seed() } : null } });
   if (S.chartModel >= R.models.length) S.chartModel = 0;
   const keys = groupKeys(); if (!keys.includes(S.groupKey)) S.groupKey = keys[0] || null;
 }
@@ -226,6 +234,7 @@ function tabInfer(p) {
       : `<tr><th>${esc(m.name)}</th><td class="num">${fmtNum(x.n, 0)}</td><td class="num">${f(x.mean)}</td><td class="num">${f(x.sd)}</td><td class="num">${f(x.se)}</td><td class="num">${f(x.ci.t)}</td><td class="num">${f(x.ci.lo)}</td><td class="num">${f(x.ci.hi)}</td></tr>`;
   }
   h += `</tbody></table></div><p class="muted small">${T('ci.note', { l: pc })}</p>`;
+  h += bootHtml(pc);
   if (!S.mtype) { p.innerHTML = h + `<p class="muted">${T('eq.off')}</p>`; return; }
   const a = fmtNum(S.alpha, 2), a2 = fmtNum((1 - 2 * S.alpha) * 100, 0);
   h += `<h3>${T('eq.res', { a })}</h3><p class="small">${T(S.mtype === 'abs' ? 'eq.abs.set' : 'eq.rel.set', { v: esc(S.mvalue) })}</p><div class="tscroll"><table class="grid"><thead>
@@ -239,6 +248,26 @@ function tabInfer(p) {
       <td class="num">${f(q.wellek.psi2)}</td><td class="num">${f(q.wellek.C)}</td><td class="num">${f(Math.abs(q.wellek.t))}</td>${dec(q.wellek.equivalent)}<td class="num">${f(q.wellek.power, 3)}</td></tr>`;
   }
   p.innerHTML = h + `</tbody></table></div><p class="statement">${T('eq.read')}</p><p class="muted small">${T('eq.note')}</p>`;
+}
+function bootHtml(pc) {
+  if (!S.boot) return `<p class="muted">${T('bt.off')}</p>`;
+  const cell = (st, key) => st[key] ? `<td class="num">${f(st[key].lo)}</td><td class="num">${f(st[key].hi)}${st[key].edge ? ' *' : ''}</td>` : `<td class="num undef" colspan="2">${T('undef')}${key === 'bca' && st.bcaReason ? ` (${T('bt.r.' + st.bcaReason)})` : ''}</td>`;
+  let h = `<h3>${T('bt.res', { l: pc })}</h3>`, edge = false;
+  for (const m of R.models) {
+    const b = m.infer && m.infer.boot; if (!b) continue;
+    h += `<h4>${esc(m.name)}</h4>`;
+    if (b.reason) { h += `<p class="note warn">${T('undef')} (${T('inf.' + b.reason)})</p>`; continue; }
+    h += `<div class="tscroll"><table class="grid boot"><thead><tr><th rowspan="2">${T('bt.stat')}</th><th rowspan="2">${T('bt.est')}</th><th colspan="2">${T('bt.pct')}</th><th colspan="2">BCa</th><th rowspan="2">ẑ₀</th><th rowspan="2">â</th><th rowspan="2">${T('bt.Bok')}</th></tr>
+      <tr><th>${T('ci.lo')}</th><th>${T('ci.hi')}</th><th>${T('ci.lo')}</th><th>${T('ci.hi')}</th></tr></thead><tbody>`;
+    for (const k of E.BOOT_STATS) {
+      const st = b.stats[k], lab = T('bt.s.' + k);
+      if (st.reason) { h += `<tr><th>${lab}</th><td class="num undef" colspan="8">${T('undef')} (${T('bt.r.' + st.reason)})</td></tr>`; continue; }
+      if ((st.pct && st.pct.edge) || (st.bca && st.bca.edge)) edge = true;
+      h += `<tr><th>${lab}</th><td class="num">${f(st.est)}</td>${cell(st, 'pct')}${cell(st, 'bca')}<td class="num">${f(st.z0)}</td><td class="num">${f(st.a)}</td><td class="num">${fmtNum(st.Bok, 0)}</td></tr>`;
+    }
+    h += '</tbody></table></div>';
+  }
+  return h + `<p class="muted small">${T('bt.note', { B: fmtNum(S.bootB, 0), seed: esc(S.seed) })}${edge ? ' ' + T('bt.edge') : ''}</p>`;
 }
 function tabCharts(p) {
   const m = R.models[S.chartModel], pts = m.obs.map((o, i) => [o, m.pred[i]]), res = m.pred.map((q, i) => [q, q - m.obs[i]]);
@@ -278,6 +307,19 @@ function accCols() {
   return c.concat([['ownValid', 'own'], ['used', 'used'], ['dropped', 'dropped']]);
 }
 function accRows() { return [[T('m.model'), ...accCols().map(([, l]) => T('acc.' + l))], ...R.models.map(m => [m.name, ...accCols().map(([k]) => m.acc[k])])]; }
+/** Bootstrap intervals, one row per model and measure. */
+function bootRows() {
+  const out = [[T('m.model'), T('bt.stat'), T('bt.est'), T('x.level'), 'B', T('bt.seed'), T('bt.Bok'), T('x.pctlo'), T('x.pcthi'), T('x.bcalo'), T('x.bcahi'), 'z0', 'a', T('x.note')]];
+  for (const m of R.models) {
+    const b = m.infer && m.infer.boot; if (!b) continue;
+    if (b.reason) { out.push([m.name, '', '', S.level, b.B, b.seed, '', '', '', '', '', '', '', `${T('undef')}: ${T('inf.' + b.reason)}`]); continue; }
+    for (const k of E.BOOT_STATS) {
+      const st = b.stats[k], note = st.reason ? T('bt.r.' + st.reason) : st.bcaReason ? 'BCa: ' + T('bt.r.' + st.bcaReason) : ((st.pct && st.pct.edge) || (st.bca && st.bca.edge)) ? T('bt.edgeshort') : '';
+      out.push([m.name, T('bt.s.' + k), st.est, S.level, b.B, b.seed, st.Bok, st.pct ? st.pct.lo : '', st.pct ? st.pct.hi : '', st.bca ? st.bca.lo : '', st.bca ? st.bca.hi : '', st.z0 == null ? '' : st.z0, st.a == null ? '' : st.a, note]);
+    }
+  }
+  return out;
+}
 /** Interval for the bias and equivalence tests, one row per model (empty when weights are chosen). */
 function inferRows() {
   const out = [[T('m.model'), T('m.n'), T('m.bias'), T('ci.sd'), T('ci.se'), T('x.level'), T('ci.t'), T('ci.lo'), T('ci.hi'),
@@ -305,7 +347,7 @@ function residualRows() {
 function infoRows() {
   return [[T('x.k'), T('x.v')], [T('x.tool'), `${E.TOOL.id} ${E.TOOL.version}`], [T('x.date'), new Date().toISOString()], [T('x.src'), S.imp ? S.imp.name : ''],
     [T('x.obs'), S.src.headers[S.obs]], [T('x.rs'), T('rs.' + S.rowSet)], [T('x.norm'), S.norm ? T('norm.' + S.norm) : T('norm.none')], [T('x.dec'), S.decimal], [T('x.weight'), S.weight == null ? T('none') : S.src.headers[S.weight]],
-    [T('x.level'), S.level], [T('x.mtype'), S.mtype ? T('eq.' + S.mtype) : T('eq.none')], ...(S.mtype ? [[T('x.mvalue'), S.mvalue], ['alpha', S.alpha]] : []),
+    [T('x.level'), S.level], [T('x.mtype'), S.mtype ? T('eq.' + S.mtype) : T('eq.none')], ...(S.mtype ? [[T('x.mvalue'), S.mvalue], ['alpha', S.alpha]] : []), [T('bt.h'), S.boot ? `B = ${S.bootB}, ${T('bt.seed')} = ${S.seed}` : T('eq.none')],
     ...R.models.map(m => [`${T('m.model')}: ${m.name}`, `${S.src.headers[m.col]} · ${T('role.' + m.role)}`]), ['', T('x.def')], ['', T('noinf')]];
 }
 /** JSON run record (DI-07): settings and every model's measures, overall and by group (no row-level residuals: CSV). */
@@ -313,24 +355,26 @@ function recordPayload() {
   const col = c => c == null ? null : S.src.headers[c];
   return { tool: E.TOOL, created: new Date().toISOString(),
     settings: { observed: col(S.obs), models: S.models.map(m => ({ column: col(m.col), name: m.name, role: m.role })), rowSet: S.rowSet, norm: S.norm, decimal: S.decimal, weight: col(S.weight),
-      inference: { level: S.level, alpha: S.alpha, margin: S.mtype ? { type: S.mtype, value: margin() } : null },
+      inference: { level: S.level, alpha: S.alpha, margin: S.mtype ? { type: S.mtype, value: margin() } : null, bootstrap: S.boot ? { B: S.bootB, seed: seed() } : null },
       groups: { plot: col(S.groups.plot), species: col(S.groups.species), fold: col(S.groups.fold), dclass: S.groups.dcol == null ? null : { column: col(S.groups.dcol), breaks: S.groups.breaks, openTop: S.groups.openTop } } },
     rows: { N: R.N, common: R.nCommon, sameSample: R.sameSample, weighted: R.weighted },
     models: R.models.map(m => ({ name: m.name, column: col(m.col), role: m.role, accounting: m.acc, overall: m.overall, groups: m.groups, inference: m.infer })) };
 }
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-m">${T('ex.metrics')}</button>
-    <button type="button" class="btn ghost" id="x-g"${groupKeys().length ? '' : ' disabled'}>${T('ex.groups')}</button><button type="button" class="btn ghost" id="x-i"${R.weighted ? ' disabled' : ''}>${T('ex.infer')}</button><button type="button" class="btn ghost" id="x-r">${T('ex.rows')}</button>${recordButton('x-json')}</div><p class="muted small">${T('ex.note')}</p>`;
+    <button type="button" class="btn ghost" id="x-g"${groupKeys().length ? '' : ' disabled'}>${T('ex.groups')}</button><button type="button" class="btn ghost" id="x-i"${R.weighted ? ' disabled' : ''}>${T('ex.infer')}</button><button type="button" class="btn ghost" id="x-b"${R.weighted || !S.boot ? ' disabled' : ''}>${T('ex.boot')}</button><button type="button" class="btn ghost" id="x-r">${T('ex.rows')}</button>${recordButton('x-json')}</div><p class="muted small">${T('ex.note')}</p>`;
   $('x-m').addEventListener('click', () => downloadCSV(fname('model-olcutleri', 'model-measures') + '.csv', metricsRows(), lang));
   $('x-g').addEventListener('click', () => downloadCSV(fname('grup-olcutleri', 'group-measures') + '.csv', groupRows(), lang));
   $('x-r').addEventListener('click', () => downloadCSV(fname('artiklar', 'residuals') + '.csv', residualRows(), lang));
   $('x-i').addEventListener('click', () => downloadCSV(fname('cikarim', 'inference') + '.csv', inferRows(), lang));
+  $('x-b').addEventListener('click', () => downloadCSV(fname('bootstrap', 'bootstrap') + '.csv', bootRows(), lang));
   $('x-json').addEventListener('click', () => downloadRecord(fname('model-degerlendirme', 'model-evaluation') + '.json', recordPayload(), E.TOOL,
     [[S.imp && S.imp.kind === 'dataset' ? 'dataset' : 'data', S.imp && S.imp.kind === 'dataset' ? { kind: 'dataset', dataset: approved } : S.imp]], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
     const sheets = [{ name: T('sheet.info'), rows: infoRows(), widths: [30, 100] }, { name: T('sheet.metrics'), rows: metricsRows() }, { name: T('sheet.acc'), rows: accRows() }];
     if (!R.weighted) sheets.push({ name: T('sheet.infer'), rows: inferRows() });
+    if (!R.weighted && S.boot) sheets.push({ name: 'Bootstrap', rows: bootRows() });
     if (groupKeys().length) sheets.push({ name: T('sheet.groups'), rows: groupRows() });
     sheets.push({ name: T('sheet.rows'), rows: residualRows() });
     download(fname('model-degerlendirme', 'model-evaluation') + '.xlsx', xlsxBlob(XLSX, sheets));
