@@ -171,7 +171,7 @@ export function buildStandR(s, cfg, model, x, pred, o, cv = null) {
     ...(model.fit === 'sur' ? ['cat("SUR rounds:", model$rounds, "\\n")'] : []),
     ...(model.fit === 'cdfr' || model.fit === 'mcdfr' ? ['print(model$cdf); res[["cdf.start"]] <- model$cdf[["start"]]; res[["cdf.objective"]] <- model$cdf[["objective"]]'] : []),
     `for (k in seq_len(ncol(B))) { pr <- exp(drop(model$Z %*% B[, k])) * model$back[k]; r <- model$Y[, k] - pr; key <- keys[k]`,
-    `  for (j in seq_len(nrow(B))) res[[paste0(key, ".b", j)]] <- unname(B[j, k]); res[[paste0(key, ".rmse")]] <- sqrt(mean(r^2)); res[[paste0(key, ".bias")]] <- -mean(r) }`, '');
+    `  for (j in seq_len(nrow(B))) res[[paste0(key, ".b", j)]] <- unname(B[j, k]); res[[paste0(key, ".rmse")]] <- sqrt(mean(r^2)); res[[paste0(key, ".bias")]] <- mean(r) }`, '');
   // cross-validation
   const plots = [...new Set((model.trainingUnits || []).map(u => u.plot))];
   const asg = cv && cv.assignment ? cv.assignment : null;

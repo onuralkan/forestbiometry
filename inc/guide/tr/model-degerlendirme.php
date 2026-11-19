@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('model-degerlendirme', 'Model Başarısı Değerlendiricisi') ?>
-<p>Gözlenen değerleri bir ya da daha fazla modelin tahminleriyle karşılaştırır: yanlılık (ē), MAE, RMSE ve tahmin R² (1 − SSE/SST); gözlenen–tahmin ve artık grafikleri; örnek alan, tür, çap sınıfı ve doğrulama katına göre tablolar. Hata işareti her yerde <b>e = tahmin − gözlenen</b>; pozitif yanlılık modelin ortalamada fazla tahmin ettiğini gösterir. R² ilişki katsayısının karesi değildir, negatif olabilir.</p>
+<p>Gözlenen değerleri bir ya da daha fazla modelin tahminleriyle karşılaştırır: yanlılık (ē), MAE, RMSE ve tahmin R² (1 − SSE/SST); gözlenen–tahmin ve artık grafikleri; örnek alan, tür, çap sınıfı ve doğrulama katına göre tablolar. Hata işareti her yerde <b>e = gözlenen − tahmin</b>; negatif yanlılık modelin ortalamada fazla tahmin ettiğini gösterir. R² ilişki katsayısının karesi değildir, negatif olabilir.</p>
 <p>İsteğe bağlı olarak ölçütler bir ağırlık sütunuyla ağırlıklı hesaplanır; ortalama hata (yanlılık) için güven aralığı, eşdeğerlik testleri (Robinson ve Froese 2004) ve yanlılık, MAE, RMSE ve R² için bootstrap güven aralıkları (yüzdelik ve BCa; DiCiccio ve Efron 1996) verilir.</p>
 <p><b>Yapmadıkları:</b> AIC, düzeltilmiş R², parametre güven aralıkları ve model anlamlılığı hesaplanmaz (parametre sayısı bilinmez). Araç dış doğrulama olduğunu varsaymaz.</p>
 <h3>Veri</h3>

@@ -1882,13 +1882,13 @@ const { cellText } = __fb_r("core/table.js");
 const { classIndex } = __fb_r("stand/calc.js");
 const { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } = __fb_r("core/stats.js");
 // Model Evaluation: pure logic (no DOM). Definitions: docs/METHODS.md §7.
-// Sign convention everywhere: e = predicted − observed.
+// Sign convention everywhere: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 
 
 
 
 
-const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.1' };
+const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.2' };
 const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
@@ -1918,7 +1918,7 @@ function metrics(obs, pred, norm = null, w = null) {
   if (!n) { out.r2Reason = 'n0'; return out; }
   let W = 0, se = 0, sa = 0, ss = 0, so = 0, sp = 0, eMin = Infinity, eMax = -Infinity, oMin = Infinity, oMax = -Infinity;
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], wi = w ? w[i] : 1;
+    const e = obs[i] - pred[i], wi = w ? w[i] : 1;
     W += wi; se += wi * e; sa += wi * Math.abs(e); ss += wi * e * e; so += wi * obs[i]; sp += wi * pred[i];
     if (e < eMin) eMin = e; if (e > eMax) eMax = e; if (obs[i] < oMin) oMin = obs[i]; if (obs[i] > oMax) oMax = obs[i];
   }
@@ -1945,7 +1945,7 @@ function relative(m, norm, obs, oMin, oMax) {
 
 /* ---------------- inference on the mean error (unweighted pairs) ---------------- */
 /**
- * e: errors ŷ − y of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
+ * e: errors y − ŷ of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
  * Interval for the bias: ē ± t(1 − (1 − level)/2; n − 1)·s/√n, s with divisor n − 1.
  * Equivalence (Robinson and Froese 2004): the null hypothesis is dissimilarity, |μ_e| ≥ δ; rejecting it means the
  * mean error is shown to lie within ±δ. δ is in data units ('abs') or δ = ε·s ('rel'). Two tests:
@@ -1979,7 +1979,7 @@ function inference(e, opts = {}) {
 /** bias, MAE, RMSE, R² of the pairs listed in idx (R² NaN when the observed values in idx are all equal). */
 function quick(obs, pred, idx) {
   const n = idx.length; let se = 0, sa = 0, ss = 0, so = 0, oMin = Infinity, oMax = -Infinity;
-  for (const i of idx) { const e = pred[i] - obs[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
+  for (const i of idx) { const e = obs[i] - pred[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
   const mo = so / n; let sst = 0; for (const i of idx) sst += (obs[i] - mo) ** 2;
   return [se / n, sa / n, Math.sqrt(ss / n), oMax > oMin && sst > 0 ? 1 - ss / sst : NaN];
 }
@@ -2009,11 +2009,11 @@ function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}) {
   }
   // jackknife: each pair left out once; sums updated in O(1) per pair (R² from deviations about the full mean)
   const jack = BOOT_STATS.map(() => new Array(n));
-  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = pred[i] - obs[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
+  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = obs[i] - pred[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
   const mo = so / n; let Q = 0; for (let i = 0; i < n; i++) Q += (obs[i] - mo) ** 2;
   const count = new Map(); for (const y of obs) count.set(y, (count.get(y) || 0) + 1);
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
+    const e = obs[i] - pred[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
     jack[0][i] = (SE - e) / m; jack[1][i] = (SA - Math.abs(e)) / m; jack[2][i] = Math.sqrt(Math.max(0, ss) / m);
     const constant = count.size === 1 || (count.size === 2 && count.get(obs[i]) === 1);
     const sst = Q - c * c - c * c / m;
@@ -2104,7 +2104,7 @@ function evaluate(table, spec) {
       labels = key === 'dclass' ? g.dclassOrder.filter(l => by.has(l)).concat(by.has('') ? [''] : []) : labels.sort(natural);
       groups[key] = labels.map(lab => ({ label: lab, ...metrics(by.get(lab).map(i => obs[i].value), by.get(lab).map(i => p[i].value), spec.norm, wOf(by.get(lab))) }));
     }
-    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(q.map((x, j) => x - o[j]), spec.infer);
+    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(o.map((x, j) => x - q[j]), spec.infer);
     if (infer && !wt && spec.infer.boot) infer.boot = bootstrapCI(o, q, { ...spec.infer.boot, level: spec.infer.level || 0.95 });
     return { ...m, index: k, acc, idx, obs: o, pred: q, w, overall: metrics(o, q, spec.norm, w), groups, infer };
   });
@@ -2474,7 +2474,7 @@ const { metrics } = __fb_r("eval/calc.js");
 
 
 
-const TOOL = { id: 'hacim-denklemleri', version: '1.0.0-beta.1' };
+const TOOL = { id: 'hacim-denklemleri', version: '1.0.0-beta.2' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /**
@@ -2600,11 +2600,11 @@ const T = makeT({
     'f.note': 'Ağırlık hacim ölçeğindeki biçimler içindir: hata varyansı X^k ile orantılı (Parresol 1999, Denklem 12), k boş bırakılırsa en küçük kareler artıklarından ln e² = a₁ + k·ln X ile kestirilir (Denklem 15). Logaritmik biçimlerde ağırlık yoktur; geri dönüşümde Baskerville düzeltmesi seçimliktir.',
     'p.forms': 'En az bir biçim seçin', 'p.k': 'k bir sayı olmalı ya da boş bırakılmalı',
     'r.cmp': 'Karşılaştırma (hacim ölçeğinde)', 'r.form': 'Biçim', 'r.n': 'n', 'r.s': 's (fit etme ölçeği)', 'r.rmse': 'RMSE (m³)', 'r.bias': 'Yanlılık (m³)', 'r.mae': 'MAE (m³)', 'r.r2': 'R²', 'r.w': 'Ağırlık', 'r.cf': 'Düzeltme',
-    'r.cmpnote': 'Ölçütler Model Başarısı aracıyla aynı tanımlarla, hacim ölçeğinde (e = tahmin − gözlenen; R² = 1 − SSE/SST). Logaritmik biçimlerin s değeri ln ölçeğindedir; biçimler arası karşılaştırma için hacim ölçeğindeki ölçütleri kullanın.',
+    'r.cmpnote': 'Ölçütler Model Başarısı aracıyla aynı tanımlarla, hacim ölçeğinde (e = gözlenen − tahmin; R² = 1 − SSE/SST). Logaritmik biçimlerin s değeri ln ölçeğindedir; biçimler arası karşılaştırma için hacim ölçeğindeki ölçütleri kullanın.',
     'r.coef': 'Katsayılar', 'r.term': 'Katsayı', 'r.est': 'Tahmin', 'r.se': 'Standart hata', 'r.lnnote': 'Logaritmik biçimde regresyon ln ölçeğindedir: ilk satır ln b ve standart hatası; b = exp(ln b) ayrıca yazılır.',
     'r.drop': p => `${p.n} ağaç dışarıda bırakıldı (eksik ya da geçersiz değer): satırlar ${p.rows}.`, 'r.bad': p => `Fit edilemedi: ${p.why}.`,
     'e.n.few': 'katsayı sayısına göre ağaç çok az', 'e.singular': 'denklem sistemi tekil', 'e.weight.k': 'varyans üssü kestirilemedi', 'e.weight.log': 'logaritmik biçimde ağırlık yok', 'e.correction': 'geçersiz düzeltme', 'e.form.unknown': 'bilinmeyen biçim',
-    'r.k.est': 'kestirildi', 'ch.res': p => `${p.f}: artıklar (tahmin − gözlenen)`, 'ch.x': 'Tahmin V (m³)', 'ch.y': 'Artık (m³)', 'ch.obs': p => `${p.f}: gözlenen–tahmin`, 'ch.xo': 'Gözlenen V (m³)', 'ch.yo': 'Tahmin V (m³)', 'ch.svg': 'Grafik (SVG)',
+    'r.k.est': 'kestirildi', 'ch.res': p => `${p.f}: artıklar (gözlenen − tahmin)`, 'ch.x': 'Tahmin V (m³)', 'ch.y': 'Artık (m³)', 'ch.obs': p => `${p.f}: gözlenen–tahmin`, 'ch.xo': 'Gözlenen V (m³)', 'ch.yo': 'Tahmin V (m³)', 'ch.svg': 'Grafik (SVG)',
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.form': 'Biçim', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi kesim verimiz, 2026, n = 38', 'save.sp': 'Tür (isteğe bağlı)', 'save.btn': 'Seti kaydet', 'save.ok': 'Set kaydedildi; Katsayı Kütüphanesi\'nde görünür.', 'save.cit.miss': 'Kaynak/açıklama alanını doldurun.',
     'ev.h': 'Model Başarısı aracına aktar', 'ev.sub': 'Gözlenen ve fit edilen biçimlerin tahmin ettiği hacimler bir tablo olarak Model Başarısı aracına aktarılır; araç açıldığında sütunlar seçili gelir. Tahminler fit etme verisindendir (eğitim).', 'ev.btn': 'Aktar ve Model Başarısı aracını aç',
     'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Ağaçlar ve tahminler (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.',
@@ -2629,11 +2629,11 @@ const T = makeT({
     'f.note': 'Weights are for the forms on the volume scale: error variance proportional to X^k (Parresol 1999, Eq. 12); if k is left empty it is estimated from the least-squares residuals by ln e² = a₁ + k·ln X (Eq. 15). Logarithmic forms have no weights; the Baskerville correction of the back-transformation is optional.',
     'p.forms': 'Choose at least one form', 'p.k': 'k must be a number or left empty',
     'r.cmp': 'Comparison (volume scale)', 'r.form': 'Form', 'r.n': 'n', 'r.s': 's (fit scale)', 'r.rmse': 'RMSE (m³)', 'r.bias': 'Bias (m³)', 'r.mae': 'MAE (m³)', 'r.r2': 'R²', 'r.w': 'Weight', 'r.cf': 'Correction',
-    'r.cmpnote': 'Measures with the Model Evaluation tool\'s definitions, on the volume scale (e = predicted − observed; R² = 1 − SSE/SST). The s of logarithmic forms is on the ln scale; compare forms by the volume-scale measures.',
+    'r.cmpnote': 'Measures with the Model Evaluation tool\'s definitions, on the volume scale (e = observed − predicted; R² = 1 − SSE/SST). The s of logarithmic forms is on the ln scale; compare forms by the volume-scale measures.',
     'r.coef': 'Coefficients', 'r.term': 'Coefficient', 'r.est': 'Estimate', 'r.se': 'Standard error', 'r.lnnote': 'Logarithmic forms are regressions on the ln scale: the first row is ln b and its standard error; b = exp(ln b) is written as well.',
     'r.drop': p => `${p.n} tree(s) left out (missing or invalid value): rows ${p.rows}.`, 'r.bad': p => `Not fitted: ${p.why}.`,
     'e.n.few': 'too few trees for the number of coefficients', 'e.singular': 'the system is singular', 'e.weight.k': 'the variance exponent could not be estimated', 'e.weight.log': 'no weights on a logarithmic form', 'e.correction': 'invalid correction', 'e.form.unknown': 'unknown form',
-    'r.k.est': 'estimated', 'ch.res': p => `${p.f}: residuals (predicted − observed)`, 'ch.x': 'Predicted V (m³)', 'ch.y': 'Residual (m³)', 'ch.obs': p => `${p.f}: observed–predicted`, 'ch.xo': 'Observed V (m³)', 'ch.yo': 'Predicted V (m³)', 'ch.svg': 'Chart (SVG)',
+    'r.k.est': 'estimated', 'ch.res': p => `${p.f}: residuals (observed − predicted)`, 'ch.x': 'Predicted V (m³)', 'ch.y': 'Residual (m³)', 'ch.obs': p => `${p.f}: observed–predicted`, 'ch.xo': 'Observed V (m³)', 'ch.yo': 'Predicted V (m³)', 'ch.svg': 'Chart (SVG)',
     'save.h': 'Save to the coefficient library', 'save.form': 'Form', 'save.cit': 'Source / description (required)', 'save.cit.ph': 'e.g. Our own felling data, 2026, n = 38', 'save.sp': 'Species (optional)', 'save.btn': 'Save the set', 'save.ok': 'Set saved; it appears in the Coefficient Library.', 'save.cit.miss': 'Fill in the source/description.',
     'ev.h': 'Send to Model Evaluation', 'ev.sub': 'The observed volumes and the volumes predicted by the fitted forms go to the Model Evaluation tool as a table; the columns are chosen when it opens. The predictions are from the fitting data (training).', 'ev.btn': 'Send and open Model Evaluation',
     'x.h': 'Download', 'x.xlsx': 'Excel report', 'x.csv': 'Trees and predictions (CSV)', 'x.json': 'JSON', 'x.fail': 'The Excel library could not be loaded.',
@@ -2677,8 +2677,8 @@ function buildR(s, R, o) {
   out.push(header({ title: T('Hacim Denklemleri: R kodu', 'Volume Equations: R code'), tool: { id: 'hacim-denklemleri', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Biçimler (Kershaw ve ark. 2016, §6.2) doğrusal regresyon olarak lm ile fit edilir; logaritmik biçimler ln ölçeğinde. Ağırlık: σ² ∝ X^k, lm ağırlığı 1/X^k; k verilmemişse ağırlıksız artıklardan ln e² = a + k ln X (Parresol 1999).',
       'The forms (Kershaw et al. 2016, §6.2) are fitted as linear regressions by lm; the logarithmic forms on the ln scale. Weights: σ² ∝ X^k, the lm weight 1/X^k; when k is not given, from ln e² = a + k ln X on the unweighted residuals (Parresol 1999).'),
-    T('Logaritmik biçimlerde geri dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki kalıntı standart hatası. Ölçütler hacim ölçeğinde: hata = tahmin − gözlem, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
-      'Back-transformation correction of the log forms: none or Baskerville exp(s²/2), s the residual standard error on the ln scale. Measures on the volume scale: error = predicted − observed, RMSE = √(SSE/n), R² = 1 − SSE/SST.'),
+    T('Logaritmik biçimlerde geri dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki kalıntı standart hatası. Ölçütler hacim ölçeğinde: hata = gözlem − tahmin, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
+      'Back-transformation correction of the log forms: none or Baskerville exp(s²/2), s the residual standard error on the ln scale. Measures on the volume scale: error = observed − predicted, RMSE = √(SSE/n), R² = 1 − SSE/SST.'),
     ...(s.note ? [s.note] : [])] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -2691,7 +2691,7 @@ function buildR(s, R, o) {
     `  V = num(${s.map.V + 1}))   # ${hd(s.map.V)} (m³)`,
     `cat(${rStr(T('Ağaç: ', 'Trees: '))}, nrow(trees), "\\n")`, '');
   out.push(`fb_metrics <- function(obs, pred) {
-  e <- pred - obs; sse <- sum(e^2)
+  e <- obs - pred; sse <- sum(e^2)
   c(n = length(e), rmse = sqrt(sse / length(e)), bias = mean(e), mae = mean(abs(e)), r2 = 1 - sse / sum((obs - mean(obs))^2))
 }
 res <- list(); fits <- list()
@@ -2895,7 +2895,7 @@ function renderStep3() {
       ${names.map((n, i) => `<tr><th>${esc(n)}</th><td class="num" data-k="c${i}">${sig(x.coef[i])}</td><td class="num">${sig(x.se[i])}</td></tr>`).join('')}
       ${log ? `<tr><th>${esc(F.params[0])} = exp(ln ${esc(F.params[0])})</th><td class="num">${sig(x.params[F.params[0]])}</td><td></td></tr>` : ''}</tbody></table></div>${log ? `<p class="muted small">${T('r.lnnote')}</p>` : ''}
       <div class="charts2"><figure class="chartbox" id="ch-o-${x.id}">${scatterChart({ title: T('ch.obs', { f: formName(x.id) }), points: x.obs.map((o, i) => [o, x.pred[i]]), xLabel: T('ch.xo'), yLabel: T('ch.yo'), equal: true, fmt: v => fmtNum(v, 2), width: 420, height: 340 })}</figure>
-      <figure class="chartbox" id="ch-r-${x.id}">${scatterChart({ title: T('ch.res', { f: formName(x.id) }), points: x.pred.map((p, i) => [p, p - x.obs[i]]), xLabel: T('ch.x'), yLabel: T('ch.y'), hline: 0, fmt: v => fmtNum(v, 2), width: 420, height: 340 })}</figure></div></div>`;
+      <figure class="chartbox" id="ch-r-${x.id}">${scatterChart({ title: T('ch.res', { f: formName(x.id) }), points: x.pred.map((p, i) => [p, x.obs[i] - p]), xLabel: T('ch.x'), yLabel: T('ch.y'), hline: 0, fmt: v => fmtNum(v, 2), width: 420, height: 340 })}</figure></div></div>`;
   }
   if (ok.length) {
     h += `<div class="card" id="savecard"><h2>${T('save.h')}</h2><div class="lims"><label>${T('save.form')} <select id="sv-form">${ok.map(x => `<option value="${x.id}"${S.saveForm === x.id ? ' selected' : ''}>${esc(formName(x.id))}</option>`).join('')}</select></label>

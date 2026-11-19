@@ -18,7 +18,7 @@ const ref = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval.json'), 'utf
 /* 1. acceptance example */
 {
   const m = E.metrics([10, 20, 30], [12, 18, 33], 'mean');
-  near(m.bias, 1, 'bias = 1 (e = predicted − observed)');
+  near(m.bias, -1, 'bias = −1 (e = observed − predicted)');
   near(m.mae, 2.3333333333, 'MAE = 2.3333333333', 1e-10);
   near(m.mae, 7 / 3, 'MAE = 7/3');
   near(m.rmse, 2.3804761428, 'RMSE ≈ 2.3804761428', 1e-10);
@@ -32,7 +32,7 @@ const ref = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval.json'), 'utf
   const r = 0.9707253433941508;  // Pearson r from numpy.corrcoef; r² = 0.9423 ≠ R² = 0.915
   ok(Math.abs(m.r2 - r * r) > 0.02, 'R² differs from squared correlation');
   // sign: over-prediction gives positive bias
-  ok(E.metrics([10], [12]).bias === 2, 'positive bias = over-prediction');
+  ok(E.metrics([10], [12]).bias === -2, 'negative bias = over-prediction (e = y − ŷ)');
 }
 
 /* 2. perfect prediction, constant observed, negative R² */
@@ -109,9 +109,9 @@ const ri = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval_inference.jso
   // unit weights reproduce the unweighted measures
   const o = [10, 20, 30], q = [12, 18, 33], u = E.metrics(o, q, 'mean', [1, 1, 1]), plain = E.metrics(o, q, 'mean');
   for (const f of ['bias', 'mae', 'rmse', 'r2']) near(u[f], plain[f], `unit weights = unweighted ${f}`, 1e-15);
-  // a hand example: w = [1, 2, 1], e = [2, −2, 3] → bias = (2 − 4 + 3)/4 = 0.25, RMSE = √((4 + 8 + 9)/4)
+  // a hand example: w = [1, 2, 1], e = y − ŷ = [−2, 2, −3] → bias = (−2 + 4 − 3)/4 = −0.25, RMSE = √((4 + 8 + 9)/4)
   const h = E.metrics(o, q, null, [1, 2, 1]);
-  near(h.bias, 0.25, 'hand: weighted bias 0.25'); near(h.rmse, Math.sqrt(21 / 4), 'hand: weighted RMSE √(21/4)'); near(h.mae, 9 / 4, 'hand: weighted MAE (2 + 4 + 3)/4');
+  near(h.bias, -0.25, 'hand: weighted bias −0.25'); near(h.rmse, Math.sqrt(21 / 4), 'hand: weighted RMSE √(21/4)'); near(h.mae, 9 / 4, 'hand: weighted MAE (2 + 4 + 3)/4');
   near(h.r2, 1 - 21 / 200, 'hand: weighted R² = 1 − 21/200 (weighted mean of y is 20)');
   // weights: empty, unreadable, zero and negative weights leave the row out and are counted
   const t2 = tableFromText('y;p;w\n1;1,5;2\n2;2,5;\n3;2;x\n4;4,5;0\n5;5;-1\n6;6,5;1', { delim: ';' });
@@ -127,11 +127,11 @@ const ri = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval_inference.jso
     for (const f of ['mean', 'sd', 'se']) near(I[f], x[f], `${m.name}: ${f} = R`, 1e-12);
     near(I.ci.lo, x.ci95[0], `${m.name}: 95% interval lower = t.test`, 1e-11); near(I.ci.hi, x.ci95[1], `${m.name}: 95% interval upper = t.test`, 1e-11);
     for (const [lv, key] of [[0.9, 'ci90'], [0.99, 'ci99']]) {
-      const J = E.inference(m.pred.map((p, j) => p - m.obs[j]), { level: lv });
+      const J = E.inference(m.obs.map((o, j) => o - m.pred[j]), { level: lv });
       near(J.ci.lo, x[key][0], `${m.name}: ${key} lower = t.test`, 1e-11); near(J.ci.hi, x[key][1], `${m.name}: ${key} upper = t.test`, 1e-11);
     }
     for (const q of x.equiv) {
-      const J = E.inference(m.pred.map((p, j) => p - m.obs[j]), { level: 0.95, alpha: q.alpha, margin: { type: q.type, value: q.value } }), Q = J.equiv;
+      const J = E.inference(m.obs.map((o, j) => o - m.pred[j]), { level: 0.95, alpha: q.alpha, margin: { type: q.type, value: q.value } }), Q = J.equiv;
       const lab = `${m.name} ${q.type} ${q.value} α=${q.alpha}`;
       near(Q.delta, q.delta, `${lab}: δ`, 1e-12); near(Q.eps, q.eps, `${lab}: ε`, 1e-12);
       near(Q.tost.lo, q.tost_lo, `${lab}: TOST interval lower = t.test(1 − 2α)`, 1e-11); near(Q.tost.hi, q.tost_hi, `${lab}: TOST upper`, 1e-11);

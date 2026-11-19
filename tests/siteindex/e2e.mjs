@@ -83,7 +83,7 @@ const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-cs
 ok((await readFile(await dc.path(), 'utf8')).split('\n').length >= 5, 'CSV downloads');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dj.path(), 'utf8'));
-ok(js.tool.version === '1.0.0-beta.3' && js.model.baseAge === 100 && js.model.ageType === 'total' && js.set.source.citation === 'Test, not a real equation' && js.results.length === 4, 'JSON: model, set with source, results');
+ok(js.tool.version === '1.0.0-beta.4' && js.model.baseAge === 100 && js.model.ageType === 'total' && js.set.source.citation === 'Test, not a real equation' && js.results.length === 4, 'JSON: model, set with source, results');
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]); ok((await dx.suggestedFilename()).endsWith('.xlsx'), 'Excel report');
 
 // 4. approved data: H0 by the Plot & Stand definition (shared code), mean recorded age

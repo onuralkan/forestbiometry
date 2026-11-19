@@ -1955,13 +1955,13 @@ const { cellText } = __fb_r("core/table.js");
 const { classIndex } = __fb_r("stand/calc.js");
 const { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } = __fb_r("core/stats.js");
 // Model Evaluation: pure logic (no DOM). Definitions: docs/METHODS.md §7.
-// Sign convention everywhere: e = predicted − observed.
+// Sign convention everywhere: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 
 
 
 
 
-const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.1' };
+const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.2' };
 const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
@@ -1991,7 +1991,7 @@ function metrics(obs, pred, norm = null, w = null) {
   if (!n) { out.r2Reason = 'n0'; return out; }
   let W = 0, se = 0, sa = 0, ss = 0, so = 0, sp = 0, eMin = Infinity, eMax = -Infinity, oMin = Infinity, oMax = -Infinity;
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], wi = w ? w[i] : 1;
+    const e = obs[i] - pred[i], wi = w ? w[i] : 1;
     W += wi; se += wi * e; sa += wi * Math.abs(e); ss += wi * e * e; so += wi * obs[i]; sp += wi * pred[i];
     if (e < eMin) eMin = e; if (e > eMax) eMax = e; if (obs[i] < oMin) oMin = obs[i]; if (obs[i] > oMax) oMax = obs[i];
   }
@@ -2018,7 +2018,7 @@ function relative(m, norm, obs, oMin, oMax) {
 
 /* ---------------- inference on the mean error (unweighted pairs) ---------------- */
 /**
- * e: errors ŷ − y of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
+ * e: errors y − ŷ of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
  * Interval for the bias: ē ± t(1 − (1 − level)/2; n − 1)·s/√n, s with divisor n − 1.
  * Equivalence (Robinson and Froese 2004): the null hypothesis is dissimilarity, |μ_e| ≥ δ; rejecting it means the
  * mean error is shown to lie within ±δ. δ is in data units ('abs') or δ = ε·s ('rel'). Two tests:
@@ -2052,7 +2052,7 @@ function inference(e, opts = {}) {
 /** bias, MAE, RMSE, R² of the pairs listed in idx (R² NaN when the observed values in idx are all equal). */
 function quick(obs, pred, idx) {
   const n = idx.length; let se = 0, sa = 0, ss = 0, so = 0, oMin = Infinity, oMax = -Infinity;
-  for (const i of idx) { const e = pred[i] - obs[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
+  for (const i of idx) { const e = obs[i] - pred[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
   const mo = so / n; let sst = 0; for (const i of idx) sst += (obs[i] - mo) ** 2;
   return [se / n, sa / n, Math.sqrt(ss / n), oMax > oMin && sst > 0 ? 1 - ss / sst : NaN];
 }
@@ -2082,11 +2082,11 @@ function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}) {
   }
   // jackknife: each pair left out once; sums updated in O(1) per pair (R² from deviations about the full mean)
   const jack = BOOT_STATS.map(() => new Array(n));
-  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = pred[i] - obs[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
+  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = obs[i] - pred[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
   const mo = so / n; let Q = 0; for (let i = 0; i < n; i++) Q += (obs[i] - mo) ** 2;
   const count = new Map(); for (const y of obs) count.set(y, (count.get(y) || 0) + 1);
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
+    const e = obs[i] - pred[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
     jack[0][i] = (SE - e) / m; jack[1][i] = (SA - Math.abs(e)) / m; jack[2][i] = Math.sqrt(Math.max(0, ss) / m);
     const constant = count.size === 1 || (count.size === 2 && count.get(obs[i]) === 1);
     const sst = Q - c * c - c * c / m;
@@ -2177,7 +2177,7 @@ function evaluate(table, spec) {
       labels = key === 'dclass' ? g.dclassOrder.filter(l => by.has(l)).concat(by.has('') ? [''] : []) : labels.sort(natural);
       groups[key] = labels.map(lab => ({ label: lab, ...metrics(by.get(lab).map(i => obs[i].value), by.get(lab).map(i => p[i].value), spec.norm, wOf(by.get(lab))) }));
     }
-    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(q.map((x, j) => x - o[j]), spec.infer);
+    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(o.map((x, j) => x - q[j]), spec.infer);
     if (infer && !wt && spec.infer.boot) infer.boot = bootstrapCI(o, q, { ...spec.infer.boot, level: spec.infer.level || 0.95 });
     return { ...m, index: k, acc, idx, obs: o, pred: q, w, overall: metrics(o, q, spec.norm, w), groups, infer };
   });
@@ -2214,7 +2214,7 @@ const { metrics } = __fb_r("eval/calc.js");
 // σ̂²ψ + z(b)ᵀs²(b)z(b) (Eq. 11); coefficient intervals b ± t·SE ("in an analogous manner to linear least squares").
 // Ready-made forms: the growth forms of SQ-03 (METHODS §18, with their reading status) and the power forms a·x^b and
 // a·x1^b·x2^c (Parresol 2001 Eq. 15). Fit measures: the Model Evaluation tool's own definitions (eval/calc.js metrics,
-// METHODS §7; bias = mean(ŷ − y)). AIC (tool rule): Gaussian likelihood with variance σ²ψ_t, σ² at its maximum S/n,
+// METHODS §7; bias = mean(y − ŷ)). AIC (tool rule): Gaussian likelihood with variance σ²ψ_t, σ² at its maximum S/n,
 // AIC = 2k − 2 ln L, k = number of coefficients + 1 (θ of an estimated weight not counted; stated).
 
 
@@ -2222,7 +2222,7 @@ const { metrics } = __fb_r("eval/calc.js");
 
 
 
-const TOOL = { id: 'dogrusal-olmayan-regresyon', version: '1.0.0-beta.1' };
+const TOOL = { id: 'dogrusal-olmayan-regresyon', version: '1.0.0-beta.2' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /** Ready-made forms: expression, variables, parameters, reading status of the source (METHODS §26). */
@@ -2425,14 +2425,14 @@ const T = makeT({
     'px.empty': 'formül boş', 'px.long': 'formül 500 karakteri aşıyor', 'px.deep': 'çok fazla iç içe ayraç', 'px.log': '"log" belirsiz: ln ya da log10 yazın', 'px.func': p => `bilinmeyen işlev ${p.name}`, 'px.funcname': p => `${p.name} bir işlevdir, ayraçla yazın`, 'px.args': 'işlevler tek bağımsız değişken alır',
     'c.params.none': 'formülde katsayı yok', 'c.vars.none': 'en az bir ad bir sütunla eşlenmeli', 'c.params.many': 'en çok 12 katsayı', 'c.var.absent': 'sütun adı formülde yok',
     'r.cmp': 'Karşılaştırma', 'r.model': 'Model', 'r.n': 'n', 'r.p': 'p', 'r.rmse': 'RMSE', 'r.bias': 'Yanlılık', 'r.r2': 'R²', 'r.aic': 'AIC', 'r.s': 'σ̂', 'r.w': 'Ağırlık', 'r.st': 'Durum',
-    'r.cmpnote': 'Ölçütler Model Başarısı aracıyla aynı tanımlarla, y ölçeğinde ve ağırlıksız artıklarla (e = tahmin − gözlenen; R² = 1 − SSE/SST). AIC = 2k − 2 ln L, Gauss olabilirliği, varyans σ²ψ, k = katsayı sayısı + 1 (kestirilen θ sayılmaz); yalnız aynı veriye fit edilmiş modeller arasında karşılaştırılır. σ̂² = S/(n − p), S ağırlıklı artık kareler toplamı.',
+    'r.cmpnote': 'Ölçütler Model Başarısı aracıyla aynı tanımlarla, y ölçeğinde ve ağırlıksız artıklarla (e = gözlenen − tahmin; R² = 1 − SSE/SST). AIC = 2k − 2 ln L, Gauss olabilirliği, varyans σ²ψ, k = katsayı sayısı + 1 (kestirilen θ sayılmaz); yalnız aynı veriye fit edilmiş modeller arasında karşılaştırılır. σ̂² = S/(n − p), S ağırlıklı artık kareler toplamı.',
     'r.drop': p => `${p.n} satır dışarıda bırakıldı (kullanılan bir sütunda eksik ya da geçersiz değer; ağırlık sütunlarında pozitif olmayan): satırlar ${p.rows}.`,
     'st.ok': 'yakınsadı', 'st.noconverge': 'yakınsamadı', 'st.singular': 'kovaryans hesaplanamadı (tekil)', 'st.bad': 'fit edilemedi',
     'e.n.few': 'katsayı sayısına göre gözlem çok az', 'e.start.none': 'veriden başlangıç değeri bulunamadı; başlangıç değerlerini girin', 'e.start.missing': 'başlangıç değerleri eksik', 'e.start.invalid': 'model başlangıç değerlerinde tanımsız',
     'e.weight.var': 'ağırlık değişkeni pozitif olmalı', 'e.weight.col': 'ağırlık sütunu pozitif olmalı', 'e.weight.theta': 'θ kestirilemedi', 'e.weight.unweighted': 'θ için ağırlıksız fit etme yakınsamadı',
     'r.coef': 'Katsayılar', 'r.term': 'Katsayı', 'r.est': 'Tahmin', 'r.se': 'Standart hata', 'r.ci': p => `%${p.l} güven aralığı`, 'r.cinote': p => `Aralıklar b ± t·SH, t = ${p.t} (sd ${p.df}). Standart hatalar asimptotiktir (σ̂²[ZᵀΨ⁻¹Z]⁻¹, Parresol 2001 Denklem 9a).`,
     'r.wtxt': p => p.kind === 'none' ? 'yok' : p.kind === 'column' ? `ψ = ${p.col}` : `ψ = ${p.col}^${p.theta}${p.est ? ' (kestirildi)' : ''}`,
-    'ch.obs': p => `${p.m}: gözlenen–tahmin`, 'ch.res': p => `${p.m}: artıklar (tahmin − gözlenen)`, 'ch.xo': 'Gözlenen y', 'ch.yo': 'Tahmin y', 'ch.x': 'Tahmin y', 'ch.y': 'Artık',
+    'ch.obs': p => `${p.m}: gözlenen–tahmin`, 'ch.res': p => `${p.m}: artıklar (gözlenen − tahmin)`, 'ch.xo': 'Gözlenen y', 'ch.yo': 'Tahmin y', 'ch.x': 'Tahmin y', 'ch.y': 'Artık',
     'iv.h': 'Güven ve tahmin aralığı', 'iv.model': 'Model', 'iv.psi': p => `Ağırlık değişkeni ${p.v}`, 'iv.go': 'Hesapla', 'iv.bad': 'Modelin bütün değişkenleri için (ve ağırlık değişkeni için) pozitif bir değer girin.',
     'iv.y': 'ŷ', 'iv.ci': 'Ortalama için güven aralığı', 'iv.pi': 'Yeni gözlem için tahmin aralığı', 'iv.note': p => `%95, t = ${p.t} (sd ${p.df}); ortalama: zᵀVz (Parresol 2001 Denklem 10), yeni gözlem: σ̂²ψ + zᵀVz (Denklem 11).`, 'iv.out': 'Değerlerden biri fit etme verisinin aralığı dışında.',
     'save.h': 'Katsayı kütüphanesine kaydet', 'save.model': 'Model', 'save.cit': 'Kaynak / açıklama (zorunlu)', 'save.cit.ph': 'ör. Kendi ölçümlerimiz, 2026, n = 60', 'save.sp': 'Tür (isteğe bağlı)', 'save.unit': p => `${p.v} birimi`, 'save.btn': 'Seti kaydet',
@@ -2462,14 +2462,14 @@ const T = makeT({
     'px.empty': 'the formula is empty', 'px.long': 'the formula exceeds 500 characters', 'px.deep': 'too many nested parentheses', 'px.log': '"log" is ambiguous: write ln or log10', 'px.func': p => `unknown function ${p.name}`, 'px.funcname': p => `${p.name} is a function; write it with parentheses`, 'px.args': 'functions take one argument',
     'c.params.none': 'the formula has no coefficients', 'c.vars.none': 'at least one name must be mapped to a column', 'c.params.many': 'at most 12 coefficients', 'c.var.absent': 'a column name is not in the formula',
     'r.cmp': 'Comparison', 'r.model': 'Model', 'r.n': 'n', 'r.p': 'p', 'r.rmse': 'RMSE', 'r.bias': 'Bias', 'r.r2': 'R²', 'r.aic': 'AIC', 'r.s': 'σ̂', 'r.w': 'Weight', 'r.st': 'Status',
-    'r.cmpnote': 'Measures with the Model Evaluation tool\'s definitions, on the y scale with unweighted residuals (e = predicted − observed; R² = 1 − SSE/SST). AIC = 2k − 2 ln L, Gaussian likelihood with variance σ²ψ, k = number of coefficients + 1 (an estimated θ is not counted); compare only models fitted to the same data. σ̂² = S/(n − p), S the weighted residual sum of squares.',
+    'r.cmpnote': 'Measures with the Model Evaluation tool\'s definitions, on the y scale with unweighted residuals (e = observed − predicted; R² = 1 − SSE/SST). AIC = 2k − 2 ln L, Gaussian likelihood with variance σ²ψ, k = number of coefficients + 1 (an estimated θ is not counted); compare only models fitted to the same data. σ̂² = S/(n − p), S the weighted residual sum of squares.',
     'r.drop': p => `${p.n} row(s) left out (missing or invalid value in a column used; non-positive in a weight column): rows ${p.rows}.`,
     'st.ok': 'converged', 'st.noconverge': 'did not converge', 'st.singular': 'covariance not computable (singular)', 'st.bad': 'not fitted',
     'e.n.few': 'too few observations for the number of coefficients', 'e.start.none': 'no starting values from the data; enter them', 'e.start.missing': 'starting values missing', 'e.start.invalid': 'the model is undefined at the starting values',
     'e.weight.var': 'the weight variable must be positive', 'e.weight.col': 'the weight column must be positive', 'e.weight.theta': 'θ could not be estimated', 'e.weight.unweighted': 'the unweighted fit for θ did not converge',
     'r.coef': 'Coefficients', 'r.term': 'Coefficient', 'r.est': 'Estimate', 'r.se': 'Standard error', 'r.ci': p => `${p.l}% confidence interval`, 'r.cinote': p => `Intervals b ± t·SE, t = ${p.t} (df ${p.df}). The standard errors are asymptotic (σ̂²[ZᵀΨ⁻¹Z]⁻¹, Parresol 2001 Eq. 9a).`,
     'r.wtxt': p => p.kind === 'none' ? 'none' : p.kind === 'column' ? `ψ = ${p.col}` : `ψ = ${p.col}^${p.theta}${p.est ? ' (estimated)' : ''}`,
-    'ch.obs': p => `${p.m}: observed–predicted`, 'ch.res': p => `${p.m}: residuals (predicted − observed)`, 'ch.xo': 'Observed y', 'ch.yo': 'Predicted y', 'ch.x': 'Predicted y', 'ch.y': 'Residual',
+    'ch.obs': p => `${p.m}: observed–predicted`, 'ch.res': p => `${p.m}: residuals (observed − predicted)`, 'ch.xo': 'Observed y', 'ch.yo': 'Predicted y', 'ch.x': 'Predicted y', 'ch.y': 'Residual',
     'iv.h': 'Confidence and prediction intervals', 'iv.model': 'Model', 'iv.psi': p => `Weight variable ${p.v}`, 'iv.go': 'Compute', 'iv.bad': 'Enter a positive value for every variable of the model (and for the weight variable).',
     'iv.y': 'ŷ', 'iv.ci': 'Confidence interval for the mean', 'iv.pi': 'Prediction interval for a new observation', 'iv.note': p => `95%, t = ${p.t} (df ${p.df}); mean: zᵀVz (Parresol 2001 Eq. 10), new observation: σ̂²ψ + zᵀVz (Eq. 11).`, 'iv.out': 'A value is outside the range of the fitting data.',
     'save.h': 'Save to the coefficient library', 'save.model': 'Model', 'save.cit': 'Source / description (required)', 'save.cit.ph': 'e.g. Our own measurements, 2026, n = 60', 'save.sp': 'Species (optional)', 'save.unit': p => `unit of ${p.v}`, 'save.btn': 'Save the set',
@@ -2491,7 +2491,7 @@ const { header, readBlock, fbModel, FB_NUM, FB_OUT, rStr, rNum, rComment } = __f
 // settings: the same rows (every column a model or weight uses must be a number, weight columns > 0), each model's
 // formula translated to R, fitted from the starting values the tool's solution came from, the same weights (Parresol
 // 2001: ψ = X^θ with θ fixed or estimated from the unweighted residuals, or ψ from a column; nls weights = 1/ψ), the same
-// fit measures (e = predicted − observed), standard errors, t intervals, AIC, and the interval at the point the page
+// fit measures (e = observed − predicted), standard errors, t intervals, AIC, and the interval at the point the page
 // shows. No DOM.
 
 
@@ -2533,8 +2533,8 @@ function buildR(s, R, iv, o) {
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Ağırlık (Parresol 2001): Var(e) = σ²ψ; nls ağırlığı 1/ψ. ψ = X^θ (θ verilmişse o, verilmemişse ağırlıksız fit artıklarından ln e² = ln σ² + θ ln X ile) ya da ψ bir sütundan.',
       'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.'),
-    T('Hata = tahmin − gözlem; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
-      'Error = predicted − observed; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
+    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
+      'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   // the columns every model and weight uses: a number in each (weight columns > 0), as the tool compares models on the same rows
@@ -2563,7 +2563,7 @@ function buildR(s, R, iv, o) {
   f
 }
 fb_report <- function(id, f, data, level, se_ok) {
-  th <- coef(f); pred <- fitted(f); e <- pred - data$.y; sse <- sum(e^2)
+  th <- coef(f); pred <- fitted(f); e <- data$.y - pred; sse <- sum(e^2)
   out <- list(); out[paste0(id, ".", names(th))] <- as.list(unname(th))
   m <- c(n = length(e), rmse = sqrt(sse / length(e)), bias = mean(e), mae = mean(abs(e)), r2 = 1 - sse / sum((data$.y - mean(data$.y))^2), sigma = summary(f)$sigma, aic = AIC(f))
   for (k in names(m)) out[[paste0(id, ".", k)]] <- unname(m[[k]])
@@ -2833,7 +2833,7 @@ function renderStep3() {
       ${q.c.params.map((p, j) => `<tr><th><code>${esc(p)}</code></th><td class="num" data-k="b${j}">${sig(x.theta[j])}</td><td class="num">${sig(x.se[j])}</td><td class="num">${sig(x.ci[j][0])} – ${sig(x.ci[j][1])}</td></tr>`).join('')}</tbody></table></div>
       <p class="muted small">${T('r.cinote', { t: fmtNum(x.t, 4), df: x.df })}</p>
       <div class="charts2"><figure class="chartbox">${scatterChart({ title: T('ch.obs', { m: q.label }), points: R.y.map((o, i) => [o, x.pred[i]]), xLabel: T('ch.xo'), yLabel: T('ch.yo'), equal: true, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure>
-      <figure class="chartbox">${scatterChart({ title: T('ch.res', { m: q.label }), points: x.pred.map((p, i) => [p, p - R.y[i]]), xLabel: T('ch.x'), yLabel: T('ch.y'), hline: 0, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure></div></div>`;
+      <figure class="chartbox">${scatterChart({ title: T('ch.res', { m: q.label }), points: x.pred.map((p, i) => [p, R.y[i] - p]), xLabel: T('ch.x'), yLabel: T('ch.y'), hline: 0, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure></div></div>`;
   }
   if (ok.length) {
     const iq = R.fits[S.ivIdx], ivars = iq.fit.status === 'ok' ? [...iq.c.vars.map(v => ({ key: v, label: `${v} (${colName(iq.md.map[v])})` })), ...(iq.wcol != null && !iq.c.vars.some(v => iq.md.map[v] === iq.wcol) ? [{ key: '__w', label: T('iv.psi', { v: colName(iq.wcol) }) }] : [])] : [];

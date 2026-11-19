@@ -1903,7 +1903,7 @@ const { rng, normQuantile } = __fb_r("core/stats.js");
 
 
 
-const TOOL = { id: 'bonitet', version: '1.0.0-beta.3' };
+const TOOL = { id: 'bonitet', version: '1.0.0-beta.4' };
 const AGE_TYPES = ['total', 'bh'];                         // total age, breast-height age (K8: never converted)
 
 /** ln(1 − e^(−x)) for x > 0 without cancellation (log(−expm1(−x)) below ln 2, log1p(−e^(−x)) above). */
@@ -2089,7 +2089,7 @@ function sse(id, theta, pairs) { let s = 0; for (const x of pairs) { const v = p
 /**
  * Fits a form to pairs by Levenberg–Marquardt (core/nls.js). start: [θ] or null (grid). Returns { status, params, se,
  * seNote, start, startFrom, iter, reason, n, nSeries, rmse, bias, sigma, residuals: [{ id, A1, A2, H2, pred, e }] }.
- * e = predicted − observed (Model Evaluation definitions: bias = mean e, RMSE = √(Σe²/n)). A converged fit whose
+ * e = observed − predicted (Model Evaluation definitions: bias = mean e, RMSE = √(Σe²/n)). A converged fit whose
  * parameters break the form's rules (e.g. b1 ≤ 0) is reported as 'invalid', never as a usable set.
  */
 function fitPairs(id, pairs, { start = null, nSeries = null } = {}) {
@@ -2106,7 +2106,7 @@ function fitPairs(id, pairs, { start = null, nSeries = null } = {}) {
   const params = Object.fromEntries(f.params.map((k, i) => [k, r.theta[i]]));
   const bad = f.check(params);
   if (bad.length) return { ...out, status: 'invalid', params, problems: bad };
-  const residuals = pairs.map(x => { const pred = predictTheta(id, r.theta, x); return { id: x.id, A1: x.A1, H1: x.H1, A2: x.A2, H2: x.H2, pred, e: pred - x.H2 }; });
+  const residuals = pairs.map(x => { const pred = predictTheta(id, r.theta, x); return { id: x.id, A1: x.A1, H1: x.H1, A2: x.A2, H2: x.H2, pred, e: x.H2 - pred }; });
   const n = pairs.length, bias = residuals.reduce((a, q) => a + q.e, 0) / n, rmse = Math.sqrt(r.sse / n);
   const cov = n > p ? covariance(model, r.theta, pairs, r.sse) : null;
   return { ...out, status: 'ok', params, theta: r.theta, sse: r.sse, rmse, bias, sigma: Math.sqrt(r.sse / (n - p)),
@@ -2270,9 +2270,9 @@ const tr = {
   'fit.fail': p => `Fit etme sonuç vermedi: ${p.why}. Başka bir başlangıç ya da biçim deneyin; sonuç katsayı kaydına yazılamaz.`,
   'fit.sum': p => `${p.n} çift, ${p.s} dizi, eşleştirme: ${p.pair}; Levenberg–Marquardt ${p.it} yineleme; başlangıç ${p.start} (${p.from}).`,
   'fit.par': 'Katsayı', 'fit.est': 'Tahmin', 'fit.se': 'Standart hata*', 'fit.senote': '* Gözlemler bağımsız varsayımıyla (σ̂²(JᵀJ)⁻¹). Aynı dizinin gözlemleri bağımsız değildir; gerçek belirsizlik daha büyük olabilir.',
-  'fit.gof': p => `RMSE ${p.rmse} m, yanlılık ${p.bias} m (tahmin − gözlenen; Model Başarısı aracıyla aynı tanımlar), σ̂ ${p.sigma} m.`,
+  'fit.gof': p => `RMSE ${p.rmse} m, yanlılık ${p.bias} m (gözlenen − tahmin; Model Başarısı aracıyla aynı tanımlar), σ̂ ${p.sigma} m.`,
   'fit.ch.curves': 'Fit edilen eğriler ve gözlemler', 'fit.ch.note': 'Her dizinin eğrisi o dizinin en yaşlı gözleminden geçer (ilk 30 dizi).', 'fit.ch.lines': 'dizilerin eğrileri', 'fit.ch.age': 'Yaş (yıl)', 'fit.ch.h': 'Boy (m)',
-  'fit.ch.res': 'Artıklar ve tahmin yaşı', 'fit.ch.age2': 'Tahmin edilen yaş A₂ (yıl)', 'fit.ch.e': 'Artık e = tahmin − gözlenen (m)',
+  'fit.ch.res': 'Artıklar ve tahmin yaşı', 'fit.ch.age2': 'Tahmin edilen yaş A₂ (yıl)', 'fit.ch.e': 'Artık e = gözlenen − tahmin (m)',
   'fit.save.h': 'Katsayı kaydına yaz', 'fit.save.sub': 'Kayıt, kökeni "fit edilen" olan bir set olur; fit etme özeti (veri, çift ve dizi sayısı, eşleştirme, RMSE, yanlılık), verinin yaş ve boy aralığı (geçerlilik aralığı olarak) ve sizin verdiğiniz kaynak künyesiyle saklanır.',
   'fit.cit': 'Kaynak künyesi (zorunlu)', 'fit.cit.ph': 'ör. Kendi gövde analizi verim, 2026, yayımlanmamış', 'fit.save': 'Seti kaydet', 'fit.saved': 'Set kaydedildi ve seçildi.',
   'fit.miss': p => `Eksik: ${p.list}.`,
@@ -2340,9 +2340,9 @@ const en = {
   'fit.fail': p => `The fit gave no result: ${p.why}. Try another start or form; the result cannot be written to the library.`,
   'fit.sum': p => `${p.n} pairs, ${p.s} series, pairing: ${p.pair}; Levenberg–Marquardt ${p.it} iterations; start ${p.start} (${p.from}).`,
   'fit.par': 'Coefficient', 'fit.est': 'Estimate', 'fit.se': 'Standard error*', 'fit.senote': '* Assuming independent observations (σ̂²(JᵀJ)⁻¹). Observations of one series are not independent; the real uncertainty may be larger.',
-  'fit.gof': p => `RMSE ${p.rmse} m, bias ${p.bias} m (predicted − observed; the definitions of the Model Evaluation tool), σ̂ ${p.sigma} m.`,
+  'fit.gof': p => `RMSE ${p.rmse} m, bias ${p.bias} m (observed − predicted; the definitions of the Model Evaluation tool), σ̂ ${p.sigma} m.`,
   'fit.ch.curves': 'Fitted curves and observations', 'fit.ch.note': 'The curve of each series passes through its oldest observation (first 30 series).', 'fit.ch.lines': 'curves of the series', 'fit.ch.age': 'Age (years)', 'fit.ch.h': 'Height (m)',
-  'fit.ch.res': 'Residuals and predicted age', 'fit.ch.age2': 'Predicted age A₂ (years)', 'fit.ch.e': 'Residual e = predicted − observed (m)',
+  'fit.ch.res': 'Residuals and predicted age', 'fit.ch.age2': 'Predicted age A₂ (years)', 'fit.ch.e': 'Residual e = observed − predicted (m)',
   'fit.save.h': 'Write to the coefficient library', 'fit.save.sub': 'The record becomes a set of origin "fitted"; it keeps the fit summary (data, numbers of pairs and series, pairing, RMSE, bias), the age and height range of the data (as its validity range) and the citation you give.',
   'fit.cit': 'Citation (required)', 'fit.cit.ph': 'e.g. Own stem analysis data, 2026, unpublished', 'fit.save': 'Save the set', 'fit.saved': 'Set saved and chosen.',
   'fit.miss': p => `Missing: ${p.list}.`,

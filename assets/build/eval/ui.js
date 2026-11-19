@@ -1444,13 +1444,13 @@ const { cellText } = __fb_r("core/table.js");
 const { classIndex } = __fb_r("stand/calc.js");
 const { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } = __fb_r("core/stats.js");
 // Model Evaluation: pure logic (no DOM). Definitions: docs/METHODS.md §7.
-// Sign convention everywhere: e = predicted − observed.
+// Sign convention everywhere: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 
 
 
 
 
-const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.1' };
+const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.2' };
 const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
@@ -1480,7 +1480,7 @@ function metrics(obs, pred, norm = null, w = null) {
   if (!n) { out.r2Reason = 'n0'; return out; }
   let W = 0, se = 0, sa = 0, ss = 0, so = 0, sp = 0, eMin = Infinity, eMax = -Infinity, oMin = Infinity, oMax = -Infinity;
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], wi = w ? w[i] : 1;
+    const e = obs[i] - pred[i], wi = w ? w[i] : 1;
     W += wi; se += wi * e; sa += wi * Math.abs(e); ss += wi * e * e; so += wi * obs[i]; sp += wi * pred[i];
     if (e < eMin) eMin = e; if (e > eMax) eMax = e; if (obs[i] < oMin) oMin = obs[i]; if (obs[i] > oMax) oMax = obs[i];
   }
@@ -1507,7 +1507,7 @@ function relative(m, norm, obs, oMin, oMax) {
 
 /* ---------------- inference on the mean error (unweighted pairs) ---------------- */
 /**
- * e: errors ŷ − y of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
+ * e: errors y − ŷ of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
  * Interval for the bias: ē ± t(1 − (1 − level)/2; n − 1)·s/√n, s with divisor n − 1.
  * Equivalence (Robinson and Froese 2004): the null hypothesis is dissimilarity, |μ_e| ≥ δ; rejecting it means the
  * mean error is shown to lie within ±δ. δ is in data units ('abs') or δ = ε·s ('rel'). Two tests:
@@ -1541,7 +1541,7 @@ function inference(e, opts = {}) {
 /** bias, MAE, RMSE, R² of the pairs listed in idx (R² NaN when the observed values in idx are all equal). */
 function quick(obs, pred, idx) {
   const n = idx.length; let se = 0, sa = 0, ss = 0, so = 0, oMin = Infinity, oMax = -Infinity;
-  for (const i of idx) { const e = pred[i] - obs[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
+  for (const i of idx) { const e = obs[i] - pred[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
   const mo = so / n; let sst = 0; for (const i of idx) sst += (obs[i] - mo) ** 2;
   return [se / n, sa / n, Math.sqrt(ss / n), oMax > oMin && sst > 0 ? 1 - ss / sst : NaN];
 }
@@ -1571,11 +1571,11 @@ function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}) {
   }
   // jackknife: each pair left out once; sums updated in O(1) per pair (R² from deviations about the full mean)
   const jack = BOOT_STATS.map(() => new Array(n));
-  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = pred[i] - obs[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
+  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = obs[i] - pred[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
   const mo = so / n; let Q = 0; for (let i = 0; i < n; i++) Q += (obs[i] - mo) ** 2;
   const count = new Map(); for (const y of obs) count.set(y, (count.get(y) || 0) + 1);
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
+    const e = obs[i] - pred[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
     jack[0][i] = (SE - e) / m; jack[1][i] = (SA - Math.abs(e)) / m; jack[2][i] = Math.sqrt(Math.max(0, ss) / m);
     const constant = count.size === 1 || (count.size === 2 && count.get(obs[i]) === 1);
     const sst = Q - c * c - c * c / m;
@@ -1666,7 +1666,7 @@ function evaluate(table, spec) {
       labels = key === 'dclass' ? g.dclassOrder.filter(l => by.has(l)).concat(by.has('') ? [''] : []) : labels.sort(natural);
       groups[key] = labels.map(lab => ({ label: lab, ...metrics(by.get(lab).map(i => obs[i].value), by.get(lab).map(i => p[i].value), spec.norm, wOf(by.get(lab))) }));
     }
-    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(q.map((x, j) => x - o[j]), spec.infer);
+    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(o.map((x, j) => x - q[j]), spec.infer);
     if (infer && !wt && spec.infer.boot) infer.boot = bootstrapCI(o, q, { ...spec.infer.boot, level: spec.infer.level || 0.95 });
     return { ...m, index: k, acc, idx, obs: o, pred: q, w, overall: metrics(o, q, spec.norm, w), groups, infer };
   });
@@ -1716,7 +1716,7 @@ const tr = {
   'norm.h': 'Bağıl ölçütler (isteğe bağlı)', 'norm.none': 'Hesaplama', 'norm.mean': 'Gözlenen ortalamaya göre (%)', 'norm.range': 'Gözlenen aralığa (max − min) göre (%)', 'norm.sd': 'Gözlenen standart sapmaya göre (%)',
   'need.obs': 'Gözlenen sütunu seçin.', 'need.model': 'En az bir tahmin sütunu seçin.', 'same.col': 'Tahmin sütunu gözlenen sütunla aynı olamaz.',
   'tab.summary': 'Özet', 'tab.charts': 'Grafikler', 'tab.groups': 'Gruplar', 'tab.export': 'İndir',
-  'sign': 'İşaret kuralı: e = tahmin − gözlenen. Pozitif yanlılık, modelin ortalamada fazla tahmin ettiğini gösterir.',
+  'sign': 'İşaret kuralı: e = gözlenen − tahmin. Negatif yanlılık, modelin ortalamada fazla tahmin ettiğini gösterir.',
   'noinf': 'Bu araç yalnızca gözlenen ve tahmin edilen değerleri görür. Model parametreleri, serbestlik dereceleri ve kalıntı yapısı bilinmediği için AIC, parametre güven aralıkları veya modelin istatistiksel anlamlılığı hesaplanmaz.',
   'm.model': 'Model', 'm.role': 'Kaynak', 'm.n': 'n', 'm.bias': 'Yanlılık ē', 'm.mae': 'MAE', 'm.rmse': 'RMSE', 'm.r2': 'R² (1 − SSE/SST)',
   'm.rbias': 'Yanlılık %', 'm.rmae': 'MAE %', 'm.rrmse': 'RMSE %', 'm.den': 'Payda', 'm.mobs': 'Gözlenen ort.', 'm.mpred': 'Tahmin ort.',
@@ -1731,20 +1731,20 @@ const tr = {
   'ov.h': 'Ortak satır sayısı (model × model)',
   'role.note': p => `Kaynak beyanı: ${p.list}.`, 'role.warn.training': 'Eğitim verisi üzerindeki başarı, yeni veriler için beklenen başarıdan genellikle iyimserdir.',
   'role.warn.unknown': 'Kaynağı belirtilmeyen tahminler dış doğrulama olarak yorumlanmamalıdır.',
-  'ch.pick': 'Model', 'ch.op': p => `${p.m}: gözlenen ve tahmin edilen (kesikli çizgi 1:1)`, 'ch.rp': p => `${p.m}: artık e = tahmin − gözlenen, tahmine karşı`,
-  'ch.obs': 'Gözlenen', 'ch.pred': 'Tahmin edilen', 'ch.res': 'e = tahmin − gözlenen', 'ch.svg': 'Grafiği indir (SVG)', 'ch.n': p => `${p.n} nokta`,
+  'ch.pick': 'Model', 'ch.op': p => `${p.m}: gözlenen ve tahmin edilen (kesikli çizgi 1:1)`, 'ch.rp': p => `${p.m}: artık e = gözlenen − tahmin, tahmine karşı`,
+  'ch.obs': 'Gözlenen', 'ch.pred': 'Tahmin edilen', 'ch.res': 'e = gözlenen − tahmin', 'ch.svg': 'Grafiği indir (SVG)', 'ch.n': p => `${p.n} nokta`,
   'g.pick': 'Gruplama', 'g.none': 'Grup sütunu seçilmedi (Sütunlar ve ayarlar adımında seçebilirsiniz).', 'g.label': 'Grup', 'g.blank': '(boş)',
   'ex.h': 'Sonuçları indir', 'ex.xlsx': 'Tam rapor (Excel)', 'ex.metrics': 'Ölçüt tablosu (CSV)', 'ex.groups': 'Grup tablosu (CSV)', 'ex.rows': 'Satır bazında artıklar (CSV)',
   'ex.note': 'CSV: her iki dilde "," sütun ayırıcı ve ondalık nokta. Başlıklar seçili dilde yazılır.',
   'sheet.info': 'Bilgi', 'sheet.metrics': 'Olcutler', 'sheet.acc': 'Satir sayimi', 'sheet.groups': 'Gruplar', 'sheet.rows': 'Artiklar',
   'x.k': 'Ayar', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.src': 'Veri', 'x.obs': 'Gözlenen sütun', 'x.rs': 'Satır kümesi', 'x.norm': 'Bağıl ölçüt paydası', 'x.dec': 'Ondalık ayırıcı',
-  'x.def': 'Tanımlar: e = tahmin − gözlenen; yanlılık = ort(e); MAE = ort(|e|); RMSE = √(ort(e²)), payda n; R² = 1 − SSE/SST (sabit gözlenende tanımsız, negatif olabilir)',
+  'x.def': 'Tanımlar: e = gözlenen − tahmin; yanlılık = ort(e); MAE = ort(|e|); RMSE = √(ort(e²)), payda n; R² = 1 − SSE/SST (sabit gözlenende tanımsız, negatif olabilir)',
   'x.row': 'Satır', 'x.obsv': 'Gözlenen', 'x.pred': 'Tahmin', 'x.e': 'e', 'x.group': 'Grup türü',
   'tab.infer': 'Çıkarım',
   'w.h': 'Ağırlık (isteğe bağlı)', 'w.sub': 'Bir ağırlık sütunu seçilirse yanlılık, MAE, RMSE, R² ve ortalamalar ağırlıklı hesaplanır: her ortalama Σw·(…)/Σw olur (ör. örnekleme ağırlığı ya da hektara çevirme katsayısı). Ağırlık boş, okunamayan, sıfır veya negatifse satır dışarıda kalır ve sayılır.',
   'w.col': 'Ağırlık sütunu', 'w.same': 'Ağırlık sütunu gözlenen ya da tahmin sütunlarından biri olamaz.',
   'w.note': p => `Ölçütler "${p.col}" sütunuyla ağırlıklıdır. n çift sayısıdır; ağırlık toplamı ayrıca kaydedilir.`,
-  'inf.h': 'Yanlılık için çıkarım', 'inf.sub': 'Hataların (e = tahmin − gözlenen) ortalaması için güven aralığı ve isteğe bağlı eşdeğerlik testleri. Çiftlerin birbirinden bağımsız olduğu varsayılır; aynı örnek alandaki ağaçlar gibi gruplanmış verilerde aralık gerçekte olduğundan dar çıkabilir.',
+  'inf.h': 'Yanlılık için çıkarım', 'inf.sub': 'Hataların (e = gözlenen − tahmin) ortalaması için güven aralığı ve isteğe bağlı eşdeğerlik testleri. Çiftlerin birbirinden bağımsız olduğu varsayılır; aynı örnek alandaki ağaçlar gibi gruplanmış verilerde aralık gerçekte olduğundan dar çıkabilir.',
   'inf.weighted': 'Ağırlık seçiliyken güven aralığı ve eşdeğerlik testleri hesaplanmaz; bu yöntemler ağırlıksız çiftler için tanımlıdır.',
   'inf.level': 'Güven düzeyi', 'inf.n': 'n < 2', 'inf.margin': 'eşdeğerlik sınırı pozitif bir sayı olmalı', 'inf.sd-zero': 'hataların standart sapması 0',
   'eq.h': 'Eşdeğerlik testi (isteğe bağlı)', 'eq.sub': 'Sıfır hipotezi "model yanlı": |ortalama hata| ≥ δ. Bu hipotez reddedilirse ortalama hatanın ±δ içinde olduğu gösterilmiş olur; yük modeldedir (Robinson ve Froese 2004). δ sizin seçiminizdir ve sonucu belirler.',
@@ -1798,7 +1798,7 @@ const en = {
   'norm.h': 'Relative measures (optional)', 'norm.none': 'Do not compute', 'norm.mean': 'Relative to the observed mean (%)', 'norm.range': 'Relative to the observed range (max − min) (%)', 'norm.sd': 'Relative to the observed standard deviation (%)',
   'need.obs': 'Choose the observed column.', 'need.model': 'Choose at least one prediction column.', 'same.col': 'A prediction column cannot be the observed column.',
   'tab.summary': 'Summary', 'tab.charts': 'Charts', 'tab.groups': 'Groups', 'tab.export': 'Download',
-  'sign': 'Sign convention: e = predicted − observed. A positive bias means the model over-predicts on average.',
+  'sign': 'Sign convention: e = observed − predicted. A negative bias means the model over-predicts on average.',
   'noinf': 'This tool sees only observed and predicted values. Model parameters, degrees of freedom and residual structure are unknown, so AIC, parameter confidence intervals and model significance are not computed.',
   'm.model': 'Model', 'm.role': 'Source', 'm.n': 'n', 'm.bias': 'Bias ē', 'm.mae': 'MAE', 'm.rmse': 'RMSE', 'm.r2': 'R² (1 − SSE/SST)',
   'm.rbias': 'Bias %', 'm.rmae': 'MAE %', 'm.rrmse': 'RMSE %', 'm.den': 'Denominator', 'm.mobs': 'Observed mean', 'm.mpred': 'Predicted mean',
@@ -1813,20 +1813,20 @@ const en = {
   'ov.h': 'Shared rows (model × model)',
   'role.note': p => `Stated source: ${p.list}.`, 'role.warn.training': 'Performance on the training data is usually optimistic compared with performance on new data.',
   'role.warn.unknown': 'Predictions of unstated origin should not be read as external validation.',
-  'ch.pick': 'Model', 'ch.op': p => `${p.m}: observed vs predicted (dashed line 1:1)`, 'ch.rp': p => `${p.m}: residual e = predicted − observed vs predicted`,
-  'ch.obs': 'Observed', 'ch.pred': 'Predicted', 'ch.res': 'e = predicted − observed', 'ch.svg': 'Download chart (SVG)', 'ch.n': p => `${p.n} points`,
+  'ch.pick': 'Model', 'ch.op': p => `${p.m}: observed vs predicted (dashed line 1:1)`, 'ch.rp': p => `${p.m}: residual e = observed − predicted vs predicted`,
+  'ch.obs': 'Observed', 'ch.pred': 'Predicted', 'ch.res': 'e = observed − predicted', 'ch.svg': 'Download chart (SVG)', 'ch.n': p => `${p.n} points`,
   'g.pick': 'Grouping', 'g.none': 'No group column chosen (you can choose one in the columns and settings step).', 'g.label': 'Group', 'g.blank': '(blank)',
   'ex.h': 'Download results', 'ex.xlsx': 'Full report (Excel)', 'ex.metrics': 'Measures table (CSV)', 'ex.groups': 'Group table (CSV)', 'ex.rows': 'Residuals by row (CSV)',
   'ex.note': 'CSV: "," column separator and decimal point in both languages. Headers are written in the chosen language.',
   'sheet.info': 'Info', 'sheet.metrics': 'Measures', 'sheet.acc': 'Row accounting', 'sheet.groups': 'Groups', 'sheet.rows': 'Residuals',
   'x.k': 'Setting', 'x.v': 'Value', 'x.tool': 'Tool', 'x.date': 'Date', 'x.src': 'Data', 'x.obs': 'Observed column', 'x.rs': 'Row set', 'x.norm': 'Relative measure denominator', 'x.dec': 'Decimal separator',
-  'x.def': 'Definitions: e = predicted − observed; bias = mean(e); MAE = mean(|e|); RMSE = √(mean(e²)), denominator n; R² = 1 − SSE/SST (undefined for constant observed values, can be negative)',
+  'x.def': 'Definitions: e = observed − predicted; bias = mean(e); MAE = mean(|e|); RMSE = √(mean(e²)), denominator n; R² = 1 − SSE/SST (undefined for constant observed values, can be negative)',
   'x.row': 'Row', 'x.obsv': 'Observed', 'x.pred': 'Predicted', 'x.e': 'e', 'x.group': 'Grouping',
   'tab.infer': 'Inference',
   'w.h': 'Weight (optional)', 'w.sub': 'If a weight column is chosen, the bias, MAE, RMSE, R² and the means are weighted: every average becomes Σw·(…)/Σw (e.g. a sampling weight or a per-hectare expansion factor). A row with an empty, unreadable, zero or negative weight is left out and counted.',
   'w.col': 'Weight column', 'w.same': 'The weight column cannot be the observed column or one of the prediction columns.',
   'w.note': p => `The measures are weighted by the column "${p.col}". n is the number of pairs; the sum of weights is recorded separately.`,
-  'inf.h': 'Inference on the bias', 'inf.sub': 'A confidence interval for the mean of the errors (e = predicted − observed) and optional equivalence tests. The pairs are assumed independent; with grouped data such as trees on the same plot the interval can be narrower than it really is.',
+  'inf.h': 'Inference on the bias', 'inf.sub': 'A confidence interval for the mean of the errors (e = observed − predicted) and optional equivalence tests. The pairs are assumed independent; with grouped data such as trees on the same plot the interval can be narrower than it really is.',
   'inf.weighted': 'With a weight chosen, the confidence interval and the equivalence tests are not computed; these methods are defined for unweighted pairs.',
   'inf.level': 'Confidence level', 'inf.n': 'n < 2', 'inf.margin': 'the equivalence margin must be a positive number', 'inf.sd-zero': 'standard deviation of the errors is 0',
   'eq.h': 'Equivalence test (optional)', 'eq.sub': 'The null hypothesis is "the model is biased": |mean error| ≥ δ. Rejecting it shows that the mean error lies within ±δ; the burden of proof is on the model (Robinson and Froese 2004). δ is your choice and decides the result.',
@@ -2145,7 +2145,7 @@ function bootHtml(pc) {
   return h + `<p class="muted small">${T('bt.note', { B: fmtNum(S.bootB, 0), seed: esc(S.seed) })}${edge ? ' ' + T('bt.edge') : ''}</p>`;
 }
 function tabCharts(p) {
-  const m = R.models[S.chartModel], pts = m.obs.map((o, i) => [o, m.pred[i]]), res = m.pred.map((q, i) => [q, q - m.obs[i]]);
+  const m = R.models[S.chartModel], pts = m.obs.map((o, i) => [o, m.pred[i]]), res = m.pred.map((q, i) => [q, m.obs[i] - q]);
   const fmt = v => fmtNum(v, 3), nm = m.name.replace(/[^\p{L}\p{N}_-]+/gu, '_');
   p.innerHTML = `<label class="field inline"><span>${T('ch.pick')}</span><select id="cm">${R.models.map((x, i) => `<option value="${i}"${i === S.chartModel ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
     <p class="muted small">${T('ch.n', { n: fmtNum(pts.length, 0) })} · ${T('sign')}</p><div class="charts2">
@@ -2216,7 +2216,7 @@ function groupRows() {
 }
 function residualRows() {
   const out = [[T('x.row'), T('m.model'), T('x.obsv'), T('x.pred'), T('x.e'), ...(R.weighted ? [T('x.w')] : [])]];
-  for (const m of R.models) m.idx.forEach((i, k) => out.push([R.rowNumbers[i], m.name, m.obs[k], m.pred[k], m.pred[k] - m.obs[k], ...(R.weighted ? [m.w[k]] : [])]));
+  for (const m of R.models) m.idx.forEach((i, k) => out.push([R.rowNumbers[i], m.name, m.obs[k], m.pred[k], m.obs[k] - m.pred[k], ...(R.weighted ? [m.w[k]] : [])]));
   return out;
 }
 function infoRows() {

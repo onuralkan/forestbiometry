@@ -5,7 +5,7 @@ Written apart from assets/lab/volume/calc.js, standard library only (own Gauss-J
 Kershaw et al. 2016 §6.2: (6.22) V = b1 D^2 H, (6.23) V = b0 + b1 D^2 H, (6.25) ln V = ln b1 + b2 ln D + b3 ln H,
 local V = b0 + b1 D^2 and (6.29) ln V = ln b0 + b1 ln D. Weighted fits: sigma^2 proportional to X^k with k given or from
 the OLS residuals (slope of ln e^2 on ln X). Coefficients, standard errors s^2 (X'WX)^-1, Baskerville exp(s^2/2) on the
-ln forms, and on the volume scale bias, MAE, RMSE, R^2 = 1 - SSE/SST with e = predicted - observed.
+ln forms, and on the volume scale bias, MAE, RMSE, R^2 = 1 - SSE/SST with e = observed - predicted (19 Nov 2026).
 Writes tests/ref/volume_sv04.json.
 """
 import json, math, os, random
@@ -37,7 +37,7 @@ def slope(e, X):
     lx = [math.log(v) for v in X]; ly = [math.log(v * v) for v in e]; n = len(lx); mx = sum(lx) / n; my = sum(ly) / n
     return sum((a - mx) * (b - my) for a, b in zip(lx, ly)) / sum((a - mx) ** 2 for a in lx)
 def metr(o, p):
-    n = len(o); e = [p[i] - o[i] for i in range(n)]; mo = sum(o) / n
+    n = len(o); e = [o[i] - p[i] for i in range(n)]; mo = sum(o) / n
     sse = sum(x * x for x in e); sst = sum((x - mo) ** 2 for x in o)
     return {"bias": sum(e) / n, "mae": sum(abs(x) for x in e) / n, "rmse": math.sqrt(sse / n), "r2": 1 - sse / sst}
 F = {

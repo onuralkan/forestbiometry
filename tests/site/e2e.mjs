@@ -125,11 +125,11 @@ await cpg.goto(BASE + '/boy-cap.php?lang=tr'); await cpg.click('#citebtn');
 await cpg.waitForSelector('#citedlg[open] .cite-row');
 ok((await cpg.locator('#citedlg .cite-row').count()) === 8 && await cpg.isChecked('input[name="cscope"][value="tool"]'), 'cite: 8 formats, this tool chosen by default');
 const apaTR = await cpg.locator('.cite-row[data-f="apa"] .cite-text').textContent();
-ok(apaTR.startsWith('Alkan, O. (2026). Boy–Çap Modelleme (Sürüm 1.1.0) [Web uygulaması].') && apaTR.includes('https://forestbiometry.online/boy-cap.php adresinden erişildi'), 'cite: APA in Turkish with version and URL');
+ok(apaTR.startsWith('Alkan, O. (2026). Boy–Çap Modelleme (Sürüm 1.1.1) [Web uygulaması].') && apaTR.includes('https://forestbiometry.online/boy-cap.php adresinden erişildi'), 'cite: APA in Turkish with version and URL');
 ok((await cpg.locator('.cite-row[data-f="apa"] .cite-text i').textContent()) === 'Boy–Çap Modelleme', 'cite: title in italics');
 await cpg.check('input[name="clang"][value="en"]'); await cpg.fill('#cdate', '2026-03-05'); await cpg.locator('#cdate').dispatchEvent('change');
 const apaEN = await cpg.locator('.cite-row[data-f="apa"] .cite-text').textContent();
-ok(apaEN.includes('Height–Diameter Modelling (Version 1.1.0) [Web application]') && apaEN.includes('Retrieved March 5, 2026'), 'cite: English and chosen access date');
+ok(apaEN.includes('Height–Diameter Modelling (Version 1.1.1) [Web application]') && apaEN.includes('Retrieved March 5, 2026'), 'cite: English and chosen access date');
 await cpg.click('.cite-row[data-f="apa"] [data-copy]');
 await cpg.waitForFunction(() => document.querySelector('.cite-row[data-f="apa"] [data-copy]').textContent !== document.querySelector('.cite-row[data-f="mla"] [data-copy]').textContent, null, { timeout: 5000 }).catch(() => {});   // wait for the async write
 { const cb = await cpg.evaluate(() => navigator.clipboard.readText()); ok(cb === apaEN, 'cite: copy puts the citation on the clipboard: ' + JSON.stringify(cb).slice(0, 80)); }

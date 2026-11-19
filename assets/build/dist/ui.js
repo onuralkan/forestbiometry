@@ -3959,7 +3959,7 @@ const tr = {
   'st.need.terms': 'En az bir terim seçin.', 'st.need.col': p => `${p.k} sütununu seçin.`, 'st.need.xi': 'Johnson SB için ξ (alt sınır) girin.', 'st.need.a': 'Konum a için sıfır ya da pozitif bir değer girin.',
   'st.var.N': 'N (ağaç/ha)', 'st.var.H': 'H (m)', 'st.var.A': 'A (yıl)',
   'st.res.h': 'Eğitilen model', 'st.res.scope': p => `${p.u} birim, ${p.p} örnek alan.`, 'st.res.left': p => `${p.n} birim eğitime girmedi.`, 'st.res.leftlist': 'Eğitime girmeyen birimler ve nedenleri',
-  'st.resp': 'Yanıt', 'st.bias': 'Yanlılık', 'st.res.hcol': p => `H olarak kullanılan sütun: ${p.c}.`,
+  'st.resp': 'Yanıt', 'st.bias': 'Yanlılık (y − ŷ)', 'st.res.hcol': p => `H olarak kullanılan sütun: ${p.c}.`,
   'st.res.note.nls': 'Katsayılar ± asimptotik standart hata. RMSE ve yanlılık eğitim verisinde (orijinal ölçek); bağımsız başarı için doğrulama sonucuna bakın.', 'st.res.note.sur': 'Katsayılar SUR ile birlikte tahmin edildi. RMSE ve yanlılık eğitim verisinde.', 'st.res.note.logols': 'log-OLS katsayıları (ln y ölçeğinde). RMSE ve yanlılık orijinal ölçekte, seçilen geri dönüşle.',
   'st.res.sur': p => `SUR ${p.r} turda yakınsadı; denklemler arası artık korelasyonları: ${p.c}.`,
   'st.cv.h': p => `Örnek alan düzeyinde doğrulama (${p.k} kat)`, 'st.cv.sum': p => `${p.n} birimin ${p.ok} tanesi tahmin edildi, ${p.f} tanesi tahmin edilemedi; ağaç başına ortalama −ln L = ${p.nll}, ortalama KS D = ${p.ks}.`,
@@ -4365,7 +4365,7 @@ const en = {
   'st.need.terms': 'Choose at least one term.', 'st.need.col': p => `Choose the ${p.k} column.`, 'st.need.xi': 'Enter ξ (lower bound) for the Johnson SB.', 'st.need.a': 'Enter zero or a positive value for the location a.',
   'st.var.N': 'N (trees/ha)', 'st.var.H': 'H (m)', 'st.var.A': 'A (years)',
   'st.res.h': 'Trained model', 'st.res.scope': p => `${p.u} units, ${p.p} plots.`, 'st.res.left': p => `${p.n} units did not enter the training.`, 'st.res.leftlist': 'Units left out of the training and why',
-  'st.resp': 'Response', 'st.bias': 'Bias', 'st.res.hcol': p => `Column used as H: ${p.c}.`,
+  'st.resp': 'Response', 'st.bias': 'Bias (y − ŷ)', 'st.res.hcol': p => `Column used as H: ${p.c}.`,
   'st.res.note.nls': 'Coefficients ± asymptotic standard error. RMSE and bias on the training data (original scale); for independent performance see the validation.', 'st.res.note.sur': 'Coefficients estimated jointly by SUR. RMSE and bias on the training data.', 'st.res.note.logols': 'log-OLS coefficients (on the ln y scale). RMSE and bias on the original scale, with the chosen back-transformation.',
   'st.res.sur': p => `SUR converged in ${p.r} rounds; residual correlations between equations: ${p.c}.`,
   'st.cv.h': p => `Plot-level validation (${p.k} folds)`, 'st.cv.sum': p => `${p.ok} of ${p.n} units predicted, ${p.f} could not be predicted; mean −ln L per tree = ${p.nll}, mean KS D = ${p.ks}.`,
@@ -4926,7 +4926,7 @@ function buildStandR(s, cfg, model, x, pred, o, cv = null) {
     ...(model.fit === 'sur' ? ['cat("SUR rounds:", model$rounds, "\\n")'] : []),
     ...(model.fit === 'cdfr' || model.fit === 'mcdfr' ? ['print(model$cdf); res[["cdf.start"]] <- model$cdf[["start"]]; res[["cdf.objective"]] <- model$cdf[["objective"]]'] : []),
     `for (k in seq_len(ncol(B))) { pr <- exp(drop(model$Z %*% B[, k])) * model$back[k]; r <- model$Y[, k] - pr; key <- keys[k]`,
-    `  for (j in seq_len(nrow(B))) res[[paste0(key, ".b", j)]] <- unname(B[j, k]); res[[paste0(key, ".rmse")]] <- sqrt(mean(r^2)); res[[paste0(key, ".bias")]] <- -mean(r) }`, '');
+    `  for (j in seq_len(nrow(B))) res[[paste0(key, ".b", j)]] <- unname(B[j, k]); res[[paste0(key, ".rmse")]] <- sqrt(mean(r^2)); res[[paste0(key, ".bias")]] <- mean(r) }`, '');
   // cross-validation
   const plots = [...new Set((model.trainingUnits || []).map(u => u.plot))];
   const asg = cv && cv.assignment ? cv.assignment : null;
@@ -5730,7 +5730,7 @@ __fb_x(__fb_e, { "CONTRACT": () => CONTRACT, "DistError": () => DistError, "TOOL
 //              kind 'recover' parameters from summaries (mean, Dq, percentiles)
 //              kind 'stand'   prediction from stand variables
 //   solver     the numerical algorithm a method uses (bisection, Brent, …); reported, never a choice of "method"
-const TOOL = { id: 'cap-dagilimi', version: '2.2.0' };
+const TOOL = { id: 'cap-dagilimi', version: '2.2.1' };
 const CONTRACT = 'dist-result/1';
 
 /** Structured error: code + detail (never a number that looks like a result). */
@@ -6262,7 +6262,7 @@ function train(units, cfg) {
   }
   // fit statistics on the training data (original scale)
   for (const [j, e] of eq.entries()) { const pr = xs.map(x => predictKey({ ...base, equations: eq }, e, x)), res = Y.map((r, i) => r[j] - pr[i]);
-    e.rmse = Math.sqrt(res.reduce((s, v) => s + v * v, 0) / res.length); e.bias = -res.reduce((s, v) => s + v, 0) / res.length; }
+    e.rmse = Math.sqrt(res.reduce((s, v) => s + v * v, 0) / res.length); e.bias = res.reduce((s, v) => s + v, 0) / res.length; }
   return { ...base, status: 'ok', equations: eq, trainingUnits: rows.map(r => ({ plot: r.u.plot, period: r.u.period, x: r.u.x, targets: r.t })) };
 }
 const predictKey = (model, e, x) => { const z = design(x, model.terms), m = dot(e.beta, z); return model.fit === 'logols' && model.options.back === 'mean' ? Math.exp(m + e.s2Log / 2) : Math.exp(m); };
@@ -6408,7 +6408,7 @@ function trainCDF(units, cfg) {
   const m = asModel(r.theta), fin = thetas(r.theta);
   base.cdf.objective = cdfObjective(used, fin.ps, fit, width).value; base.cdf.iter = r.iter; base.cdf.units = inc.length;
   for (const e of m.equations) { const j = keys.indexOf(e.key), pr = used.map(u => predictKey(m, e, u.x)), res = start.trainingUnits.map((t, i) => t.targets[e.key] - pr[i]);
-    e.rmse = Math.sqrt(res.reduce((s2, v) => s2 + v * v, 0) / res.length); e.bias = -res.reduce((s2, v) => s2 + v, 0) / res.length; if (free.includes(e.key)) { e.se = null; e.fittedBy = fit; } else e.fittedBy = 'nls'; void j; }
+    e.rmse = Math.sqrt(res.reduce((s2, v) => s2 + v * v, 0) / res.length); e.bias = res.reduce((s2, v) => s2 + v, 0) / res.length; if (free.includes(e.key)) { e.se = null; e.fittedBy = fit; } else e.fittedBy = 'nls'; void j; }
   return { ...base, status: 'ok', equations: m.equations };
 }
 

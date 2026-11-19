@@ -1,4 +1,5 @@
 # Independent reference for the bootstrap intervals of Model Evaluation (1.2.0-beta.1): percentile and BCa
+# Sign convention: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 # (DiCiccio and Efron 1996, eqs. 2.2, 2.3, 2.8, 6.3, 6.6, 6.7), written here from the paper in base R. The draws use the
 # tool's generator mulberry32 (core/stats.js rng, u = k/2^32) so that the same seed gives the same bootstrap samples.
 # Percentile endpoints are also taken with quantile(type = 1) (inverse of the empirical c.d.f.; levels rounded to 12
@@ -16,7 +17,7 @@ shr32 <- function(a, n) u32(bitwShiftR(i32(a), n))
 imul32 <- function(a, b) { a <- u32(a); b <- u32(b); lo <- a %% 65536; hi <- (a - lo) / 65536; u32(lo * b + ((hi * b) %% 65536) * 65536) }
 fb_rng <- function(seed) { a <- u32(seed); function() { a <<- u32(a + 1831565813); t <- a
   t <- imul32(xor32(t, shr32(t, 15)), or32(t, 1)); t <- xor32(t, u32(t + imul32(xor32(t, shr32(t, 7)), or32(t, 61)))); xor32(t, shr32(t, 14)) / 4294967296 } }
-meas <- function(o, p) { e <- p - o; sst <- sum((o - mean(o))^2)
+meas <- function(o, p) { e <- o - p; sst <- sum((o - mean(o))^2)
   c(bias = mean(e), mae = mean(abs(e)), rmse = sqrt(mean(e^2)), r2 = if (diff(range(o)) > 0 && sst > 0) 1 - sum(e^2) / sst else NA) }
 Ginv <- function(t, alpha) { B <- length(t); k <- min(B, max(1, ceiling(alpha * B - 1e-9))); sort(t)[k] }
 bootci <- function(o, p, B, seed, level) {

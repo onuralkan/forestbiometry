@@ -4213,7 +4213,7 @@ __fb_x(__fb_e, { "CONTRACT": () => CONTRACT, "DistError": () => DistError, "TOOL
 //              kind 'recover' parameters from summaries (mean, Dq, percentiles)
 //              kind 'stand'   prediction from stand variables
 //   solver     the numerical algorithm a method uses (bisection, Brent, …); reported, never a choice of "method"
-const TOOL = { id: 'cap-dagilimi', version: '2.2.0' };
+const TOOL = { id: 'cap-dagilimi', version: '2.2.1' };
 const CONTRACT = 'dist-result/1';
 
 /** Structured error: code + detail (never a number that looks like a result). */
@@ -4516,7 +4516,7 @@ function train(units, cfg) {
   }
   // fit statistics on the training data (original scale)
   for (const [j, e] of eq.entries()) { const pr = xs.map(x => predictKey({ ...base, equations: eq }, e, x)), res = Y.map((r, i) => r[j] - pr[i]);
-    e.rmse = Math.sqrt(res.reduce((s, v) => s + v * v, 0) / res.length); e.bias = -res.reduce((s, v) => s + v, 0) / res.length; }
+    e.rmse = Math.sqrt(res.reduce((s, v) => s + v * v, 0) / res.length); e.bias = res.reduce((s, v) => s + v, 0) / res.length; }
   return { ...base, status: 'ok', equations: eq, trainingUnits: rows.map(r => ({ plot: r.u.plot, period: r.u.period, x: r.u.x, targets: r.t })) };
 }
 const predictKey = (model, e, x) => { const z = design(x, model.terms), m = dot(e.beta, z); return model.fit === 'logols' && model.options.back === 'mean' ? Math.exp(m + e.s2Log / 2) : Math.exp(m); };
@@ -4662,7 +4662,7 @@ function trainCDF(units, cfg) {
   const m = asModel(r.theta), fin = thetas(r.theta);
   base.cdf.objective = cdfObjective(used, fin.ps, fit, width).value; base.cdf.iter = r.iter; base.cdf.units = inc.length;
   for (const e of m.equations) { const j = keys.indexOf(e.key), pr = used.map(u => predictKey(m, e, u.x)), res = start.trainingUnits.map((t, i) => t.targets[e.key] - pr[i]);
-    e.rmse = Math.sqrt(res.reduce((s2, v) => s2 + v * v, 0) / res.length); e.bias = -res.reduce((s2, v) => s2 + v, 0) / res.length; if (free.includes(e.key)) { e.se = null; e.fittedBy = fit; } else e.fittedBy = 'nls'; void j; }
+    e.rmse = Math.sqrt(res.reduce((s2, v) => s2 + v * v, 0) / res.length); e.bias = res.reduce((s2, v) => s2 + v, 0) / res.length; if (free.includes(e.key)) { e.se = null; e.fittedBy = fit; } else e.fittedBy = 'nls'; void j; }
   return { ...base, status: 'ok', equations: m.equations };
 }
 
@@ -4780,13 +4780,13 @@ const { cellText } = __fb_r("core/table.js");
 const { classIndex } = __fb_r("stand/calc.js");
 const { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } = __fb_r("core/stats.js");
 // Model Evaluation: pure logic (no DOM). Definitions: docs/METHODS.md §7.
-// Sign convention everywhere: e = predicted − observed.
+// Sign convention everywhere: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 
 
 
 
 
-const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.1' };
+const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.2' };
 const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
@@ -4816,7 +4816,7 @@ function metrics(obs, pred, norm = null, w = null) {
   if (!n) { out.r2Reason = 'n0'; return out; }
   let W = 0, se = 0, sa = 0, ss = 0, so = 0, sp = 0, eMin = Infinity, eMax = -Infinity, oMin = Infinity, oMax = -Infinity;
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], wi = w ? w[i] : 1;
+    const e = obs[i] - pred[i], wi = w ? w[i] : 1;
     W += wi; se += wi * e; sa += wi * Math.abs(e); ss += wi * e * e; so += wi * obs[i]; sp += wi * pred[i];
     if (e < eMin) eMin = e; if (e > eMax) eMax = e; if (obs[i] < oMin) oMin = obs[i]; if (obs[i] > oMax) oMax = obs[i];
   }
@@ -4843,7 +4843,7 @@ function relative(m, norm, obs, oMin, oMax) {
 
 /* ---------------- inference on the mean error (unweighted pairs) ---------------- */
 /**
- * e: errors ŷ − y of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
+ * e: errors y − ŷ of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
  * Interval for the bias: ē ± t(1 − (1 − level)/2; n − 1)·s/√n, s with divisor n − 1.
  * Equivalence (Robinson and Froese 2004): the null hypothesis is dissimilarity, |μ_e| ≥ δ; rejecting it means the
  * mean error is shown to lie within ±δ. δ is in data units ('abs') or δ = ε·s ('rel'). Two tests:
@@ -4877,7 +4877,7 @@ function inference(e, opts = {}) {
 /** bias, MAE, RMSE, R² of the pairs listed in idx (R² NaN when the observed values in idx are all equal). */
 function quick(obs, pred, idx) {
   const n = idx.length; let se = 0, sa = 0, ss = 0, so = 0, oMin = Infinity, oMax = -Infinity;
-  for (const i of idx) { const e = pred[i] - obs[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
+  for (const i of idx) { const e = obs[i] - pred[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
   const mo = so / n; let sst = 0; for (const i of idx) sst += (obs[i] - mo) ** 2;
   return [se / n, sa / n, Math.sqrt(ss / n), oMax > oMin && sst > 0 ? 1 - ss / sst : NaN];
 }
@@ -4907,11 +4907,11 @@ function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}) {
   }
   // jackknife: each pair left out once; sums updated in O(1) per pair (R² from deviations about the full mean)
   const jack = BOOT_STATS.map(() => new Array(n));
-  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = pred[i] - obs[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
+  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = obs[i] - pred[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
   const mo = so / n; let Q = 0; for (let i = 0; i < n; i++) Q += (obs[i] - mo) ** 2;
   const count = new Map(); for (const y of obs) count.set(y, (count.get(y) || 0) + 1);
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
+    const e = obs[i] - pred[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
     jack[0][i] = (SE - e) / m; jack[1][i] = (SA - Math.abs(e)) / m; jack[2][i] = Math.sqrt(Math.max(0, ss) / m);
     const constant = count.size === 1 || (count.size === 2 && count.get(obs[i]) === 1);
     const sst = Q - c * c - c * c / m;
@@ -5002,7 +5002,7 @@ function evaluate(table, spec) {
       labels = key === 'dclass' ? g.dclassOrder.filter(l => by.has(l)).concat(by.has('') ? [''] : []) : labels.sort(natural);
       groups[key] = labels.map(lab => ({ label: lab, ...metrics(by.get(lab).map(i => obs[i].value), by.get(lab).map(i => p[i].value), spec.norm, wOf(by.get(lab))) }));
     }
-    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(q.map((x, j) => x - o[j]), spec.infer);
+    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(o.map((x, j) => x - q[j]), spec.infer);
     if (infer && !wt && spec.infer.boot) infer.boot = bootstrapCI(o, q, { ...spec.infer.boot, level: spec.infer.level || 0.95 });
     return { ...m, index: k, acc, idx, obs: o, pred: q, w, overall: metrics(o, q, spec.norm, w), groups, infer };
   });
@@ -5031,14 +5031,14 @@ const { cellText } = __fb_r("core/table.js");
 const { UNITS } = __fb_r("core/num.js");
 // Height–Diameter Modelling (fixed-effects version): pure logic (no DOM). Definitions and sources: docs/METHODS.md §10.
 // Units inside: d in cm, h in m, breast height bh in m. Every model is h = bh + f(d; θ); it is fitted to z = h − bh
-// by nonlinear least squares (Levenberg–Marquardt). Sign convention for errors everywhere: e = predicted − observed.
+// by nonlinear least squares (Levenberg–Marquardt). Sign convention for errors everywhere: e = observed − predicted (y − ŷ).
 
 
 
 
 
 
-const TOOL = { id: 'boy-cap', version: '1.1.0' };
+const TOOL = { id: 'boy-cap', version: '1.1.1' };
 const DIVERGE_FACTOR = 50;      // asymptote above 50 × the largest observed (h − bh): "not identified by the data" (tool rule)
 const CV_SEED = 20261109;       // fixed seed: folds are reproducible
 const CV_K = 10;                // folds for random tree-level CV and for grouped CV with many plots
@@ -5162,7 +5162,7 @@ function fitModel(m, d, z, opts = {}) {
   Object.assign(out, { theta: th, sse, iter: best.iter, asym: m.asym(th), start: bestStart });   // start: the values the solution came from (R code)
   if (blowup(th)) return { ...out, status: 'diverged' };
   if (!th.every(v => v > 0)) out.warn.push({ code: 'sign', params: m.names.filter((_, j) => !(th[j] > 0)) });
-  const e = d.map((v, i) => m.f(th, v) - z[i]);            // predicted − observed
+  const e = d.map((v, i) => z[i] - m.f(th, v));            // observed − predicted
   out.bias = e.reduce((s, v) => s + v, 0) / n; out.mae = e.reduce((s, v) => s + Math.abs(v), 0) / n; out.rmse = Math.sqrt(sse / n);
   out.sigma = Math.sqrt(sse / (n - m.p));                   // residual standard error, df = n − p
   out.df = n - m.p;
@@ -5209,7 +5209,7 @@ function predictMissing(prep, fit) {
 
 /* ---------------- residual diagnostics ---------------- */
 function residuals(prep, fit) {
-  return prep.fitRows.map(r => { const yhat = predict(fit, r.d, prep.bh); return { d: r.d, plot: r.plot, obs: r.h, fit: yhat, e: yhat - r.h }; });
+  return prep.fitRows.map(r => { const yhat = predict(fit, r.d, prep.bh); return { d: r.d, plot: r.plot, obs: r.h, fit: yhat, e: r.h - yhat }; });
 }
 /** Residual spread in thirds of the fitted values (informational; constant variance is an assumption of the intervals). */
 function spreadByThirds(res) {
@@ -5271,11 +5271,11 @@ function cvSummary(prep, folds) {
   const common = folds.filter(f => f.preds.every(p => p));
   const eModel = Array.from({ length: M }, () => []), eSel = [], eSelAll = [];
   let nOut = 0;
-  for (const f of common) f.test.forEach((i, j) => { for (let k = 0; k < M; k++) eModel[k].push(f.preds[k][j] - rows[i].h); if (f.outside[j]) nOut++; });
-  for (const f of folds) if (f.sel >= 0) f.test.forEach((i, j) => eSelAll.push(f.preds[f.sel][j] - rows[i].h));
-  for (const f of common) f.test.forEach((i, j) => eSel.push(f.preds[f.sel][j] - rows[i].h));
+  for (const f of common) f.test.forEach((i, j) => { for (let k = 0; k < M; k++) eModel[k].push(rows[i].h - f.preds[k][j]); if (f.outside[j]) nOut++; });
+  for (const f of folds) if (f.sel >= 0) f.test.forEach((i, j) => eSelAll.push(rows[i].h - f.preds[f.sel][j]));
+  for (const f of common) f.test.forEach((i, j) => eSel.push(rows[i].h - f.preds[f.sel][j]));
   const perFold = folds.map(f => ({ label: f.label, nTrain: f.nTrain, nTest: f.test.length, nOutside: f.outside.filter(Boolean).length, sel: f.sel,
-    status: f.status, rmse: f.preds.map(p => p ? errMetrics(p.map((v, j) => v - rows[f.test[j]].h)).rmse : null) }));
+    status: f.status, rmse: f.preds.map(p => p ? errMetrics(p.map((v, j) => rows[f.test[j]].h - v)).rmse : null) }));
   const chosen = MODELS.map((_, k) => folds.filter(f => f.sel === k).length);
   return { nFolds: folds.length, nCommonFolds: common.length, dropped: folds.filter(f => !f.preds.every(p => p)).map(f => f.label),
     nTest: eModel[0].length, nOutside: nOut, models: eModel.map(errMetrics), selection: errMetrics(eSel), selectionAll: errMetrics(eSelAll), chosen, perFold };

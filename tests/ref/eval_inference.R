@@ -1,4 +1,5 @@
 # Independent reference for Model Evaluation 1.2.0: weighted measures, the t interval for the bias and the
+# Sign convention: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 # equivalence tests of Robinson and Froese (2004). Base R only (weighted.mean, t.test, qf with ncp, pt) and jsonlite.
 # Run from the repository root: Rscript tests/ref/eval_inference.R  (writes tests/ref/eval_inference.json)
 library(jsonlite)
@@ -7,7 +8,7 @@ num <- function(s) suppressWarnings(ifelse(trimws(s) == "", NA, as.numeric(gsub(
 obs <- num(d$h_obs); m <- list(h_m1 = num(d$h_m1), h_m2 = num(d$h_m2)); w <- num(d$dbh)
 common <- !is.na(obs) & !is.na(m$h_m1) & !is.na(m$h_m2) & !is.na(w) & w > 0
 wmeasures <- function(o, p, w) {
-  e <- p - o; mo <- weighted.mean(o, w)
+  e <- o - p; mo <- weighted.mean(o, w)
   r <- list(n = length(o), sumW = sum(w), bias = weighted.mean(e, w), mae = weighted.mean(abs(e), w),
             rmse = sqrt(weighted.mean(e^2, w)), r2 = 1 - sum(w * e^2) / sum(w * (o - mo)^2), meanObs = mo, meanPred = weighted.mean(p, w))
   r$rel_mean <- lapply(r[c("bias", "mae", "rmse")], function(x) x / mo * 100)
@@ -24,7 +25,7 @@ equiv <- function(e, type, value, alpha) {
 }
 out <- list(R = R.version.string, weight = "dbh", weighted = list(), inference = list())
 for (k in names(m)) {
-  o <- obs[common]; p <- m[[k]][common]; e <- p - o
+  o <- obs[common]; p <- m[[k]][common]; e <- o - p
   out$weighted[[k]] <- wmeasures(o, p, w[common])
   ci <- lapply(c(0.9, 0.95, 0.99), function(l) as.numeric(t.test(e, conf.level = l)$conf.int))
   out$inference[[k]] <- list(n = length(e), mean = mean(e), sd = sd(e), se = sd(e) / sqrt(length(e)),

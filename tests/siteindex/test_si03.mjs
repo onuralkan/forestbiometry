@@ -28,10 +28,10 @@ for (const [id, rec] of Object.entries(R.forms)) {
     const f = S.fitPairs(id, P, { start: R.start[id], nSeries: rec.series.length });
     ok(f.status === 'ok', `${t}: converged (${f.status} ${f.reason})`);
     S.FORMS[id].params.forEach((k, i) => near(f.params[k], ref.theta[i], `${t}: ${k} = SciPy`, 1e-6));
-    near(f.sse, ref.sse, `${t}: SSE`, 1e-9); near(f.rmse, ref.rmse, `${t}: RMSE = √(SSE/n)`, 1e-9); near(f.bias, ref.bias, `${t}: bias = mean(pred − obs)`, 1e-5);
+    near(f.sse, ref.sse, `${t}: SSE`, 1e-9); near(f.rmse, ref.rmse, `${t}: RMSE = √(SSE/n)`, 1e-9); near(f.bias, ref.bias, `${t}: bias = mean(obs − pred)`, 1e-5);
     S.FORMS[id].params.forEach((k, i) => near(f.se[k], ref.se[i], `${t}: SE ${k} (finite-difference Jacobian in SciPy)`, 1e-4));
     eq([f.seNote, f.startFrom, f.n, f.nSeries], ['independent-observations', 'user', ref.n, rec.series.length], `${t}: record`);
-    ok(Math.abs(f.residuals.reduce((a, q) => a + q.e, 0) / f.n - f.bias) < 1e-12 && f.residuals.every(q => Math.abs(q.e - (q.pred - q.H2)) < 1e-12), `${t}: residual sign e = predicted − observed`);
+    ok(Math.abs(f.residuals.reduce((a, q) => a + q.e, 0) / f.n - f.bias) < 1e-12 && f.residuals.every(q => Math.abs(q.e - (q.H2 - q.pred)) < 1e-12), `${t}: residual sign e = observed − predicted`);
     /* the automatic start (grid) reaches the same optimum */
     const g = S.fitPairs(id, P, { nSeries: rec.series.length });
     ok(g.status === 'ok' && g.startFrom === 'grid' && Array.isArray(g.start), `${t}: grid start recorded`);

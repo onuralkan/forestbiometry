@@ -8,7 +8,7 @@
 // σ̂²ψ + z(b)ᵀs²(b)z(b) (Eq. 11); coefficient intervals b ± t·SE ("in an analogous manner to linear least squares").
 // Ready-made forms: the growth forms of SQ-03 (METHODS §18, with their reading status) and the power forms a·x^b and
 // a·x1^b·x2^c (Parresol 2001 Eq. 15). Fit measures: the Model Evaluation tool's own definitions (eval/calc.js metrics,
-// METHODS §7; bias = mean(ŷ − y)). AIC (tool rule): Gaussian likelihood with variance σ²ψ_t, σ² at its maximum S/n,
+// METHODS §7; bias = mean(y − ŷ)). AIC (tool rule): Gaussian likelihood with variance σ²ψ_t, σ² at its maximum S/n,
 // AIC = 2k − 2 ln L, k = number of coefficients + 1 (θ of an estimated weight not counted; stated).
 import { levenbergMarquardt, covariance, solve } from '../core/nls.js';
 import { tQuantile } from '../core/stats.js';
@@ -16,7 +16,7 @@ import { registerForm, form as formOf } from '../core/coef.js';
 import { parse, evaluate, evalGrad, toText } from '../core/expr.js';
 import { metrics } from '../eval/calc.js';
 
-export const TOOL = { id: 'dogrusal-olmayan-regresyon', version: '1.0.0-beta.1' };
+export const TOOL = { id: 'dogrusal-olmayan-regresyon', version: '1.0.0-beta.2' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /** Ready-made forms: expression, variables, parameters, reading status of the source (METHODS §26). */

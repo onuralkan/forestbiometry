@@ -2,7 +2,7 @@
 // settings: the same rows (every column a model or weight uses must be a number, weight columns > 0), each model's
 // formula translated to R, fitted from the starting values the tool's solution came from, the same weights (Parresol
 // 2001: ψ = X^θ with θ fixed or estimated from the unweighted residuals, or ψ from a column; nls weights = 1/ψ), the same
-// fit measures (e = predicted − observed), standard errors, t intervals, AIC, and the interval at the point the page
+// fit measures (e = observed − predicted), standard errors, t intervals, AIC, and the interval at the point the page
 // shows. No DOM.
 import { interval } from './calc.js';
 import { header, readBlock, fbModel, FB_NUM, FB_OUT, rStr, rNum, rComment } from '../core/rcode.js';
@@ -44,8 +44,8 @@ export function buildR(s, R, iv, o) {
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Ağırlık (Parresol 2001): Var(e) = σ²ψ; nls ağırlığı 1/ψ. ψ = X^θ (θ verilmişse o, verilmemişse ağırlıksız fit artıklarından ln e² = ln σ² + θ ln X ile) ya da ψ bir sütundan.',
       'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.'),
-    T('Hata = tahmin − gözlem; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
-      'Error = predicted − observed; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
+    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
+      'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   // the columns every model and weight uses: a number in each (weight columns > 0), as the tool compares models on the same rows
@@ -74,7 +74,7 @@ export function buildR(s, R, iv, o) {
   f
 }
 fb_report <- function(id, f, data, level, se_ok) {
-  th <- coef(f); pred <- fitted(f); e <- pred - data$.y; sse <- sum(e^2)
+  th <- coef(f); pred <- fitted(f); e <- data$.y - pred; sse <- sum(e^2)
   out <- list(); out[paste0(id, ".", names(th))] <- as.list(unname(th))
   m <- c(n = length(e), rmse = sqrt(sse / length(e)), bias = mean(e), mae = mean(abs(e)), r2 = 1 - sse / sum((data$.y - mean(data$.y))^2), sigma = summary(f)$sigma, aic = AIC(f))
   for (k in names(m)) out[[paste0(id, ".", k)]] <- unname(m[[k]])

@@ -34,6 +34,6 @@ ok(VOL.fitForm('ln', R.trees, { weight: { kind: 'power', k: null } }).code === '
   ok(validateCoef(set).length === 0 && near(VOL.predict(set, R.trees[0].D, R.trees[0].H), f.pred[0], 1e-12), 'saved ln set with Baskerville SEE predicts the fitted volume');
   const c = VOL.fitForm('cf', R.trees), sc = { ...blankSet('volume.cf'), id: 'c', params: c.params, source: { citation: 'test' }, origin: 'fitted', fit: {} };
   ok(near(VOL.predict(sc, 30, 22), c.params.b1 * 900 * 22, 1e-15) && VOL.predict(sc, 30, null) === null, 'constant form factor set: V = b1·D²H; no height, no volume'); }
-ok(VOL.TOOL.id === 'hacim-denklemleri' && VOL.TOOL.version === '1.0.0-beta.1', 'tool id and first version (K4)');
+ok(VOL.TOOL.id === 'hacim-denklemleri' && VOL.TOOL.version === '1.0.0-beta.2', 'tool id and version (K4; beta.2: sign y − ŷ)');
 console.log(`SV-04 volume equations: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

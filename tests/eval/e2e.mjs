@@ -41,13 +41,13 @@ async function pasteRun(text, lang = 'en') {
 // 1. acceptance example (EN)
 await pasteRun('obs\tpred\n10\t12\n20\t18\n30\t33\n');
 let s = await summary();
-ok(s[0][1] === '3' && s[0][2] === '1' && s[0][3] === '2.3333' && s[0][4] === '2.3805' && s[0][5] === '0.915', 'acceptance: n=3, bias 1, MAE 2.3333, RMSE 2.3805, R² 0.915: ' + s[0].join('|'));
+ok(s[0][1] === '3' && s[0][2] === '-1' && s[0][3] === '2.3333' && s[0][4] === '2.3805' && s[0][5] === '0.915', 'acceptance: n=3, bias −1, MAE 2.3333, RMSE 2.3805, R² 0.915: ' + s[0].join('|'));
 await page.click('#tab-export');
 const [d1] = await Promise.all([page.waitForEvent('download'), page.click('#x-m')]);
 const csv = (await readFile(await d1.path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
 ok(csv[0].startsWith('Source,Model,n,Bias'), 'EN CSV headers in English');
 const v = csv[1].split(',');
-ok(v[3] === '1' && Math.abs(+v[4] - 7 / 3) < 1e-15 && Math.abs(+v[5] - Math.sqrt(17 / 3)) < 1e-15 && Math.abs(+v[6] - 0.915) < 1e-12, 'EN CSV full precision');
+ok(v[3] === '-1' && Math.abs(+v[4] - 7 / 3) < 1e-15 && Math.abs(+v[5] - Math.sqrt(17 / 3)) < 1e-15 && Math.abs(+v[6] - 0.915) < 1e-12, 'EN CSV full precision');
 await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('#tab-summary');
 await page.click('#tab-summary');
 s = await summary();
@@ -107,7 +107,7 @@ const [d4] = await Promise.all([page.waitForEvent('download'), page.click('#x-xl
 const wb = XLSX.read(await readFile(await d4.path()));
 ok(wb.SheetNames.join(',') === 'Bilgi,Olcutler,Satir sayimi,Cikarim,Gruplar,Artiklar', 'XLSX sheets: ' + wb.SheetNames.join(','));
 const resid = XLSX.utils.sheet_to_json(wb.Sheets.Artiklar, { header: 1 });
-ok(resid.length === 1 + 57 + 54 && resid[1][4] === resid[1][3] - resid[1][2], 'residual sheet: e = predicted − observed');
+ok(resid.length === 1 + 57 + 54 && resid[1][4] === resid[1][2] - resid[1][3], 'residual sheet: e = observed − predicted');
 
 // 4b. inference: interval for the bias and equivalence tests (EN), values as in calc.js; then weights switch them off
 await pasteRun('obs\tpred\tw\n10\t12\t1\n20\t18\t2\n30\t33\t1\n');
@@ -119,7 +119,7 @@ await page.fill('#mvalue', '20'); await page.locator('#mvalue').dispatchEvent('c
 await page.check('#boot'); await page.fill('#seed', '7'); await page.locator('#seed').dispatchEvent('change'); await page.selectOption('#bootB', '1000');
 await page.click('#calc'); await page.waitForSelector('#panel table');
 await page.click('#tab-infer');
-const I = E.inference([2, -2, 3], { level: 0.9, alpha: 0.05, margin: { type: 'abs', value: 20 } });
+const I = E.inference([-2, 2, -3], { level: 0.9, alpha: 0.05, margin: { type: 'abs', value: 20 } });
 const fx = x => String(+x.toFixed(4));
 const rows = await page.evaluate(() => [...document.querySelectorAll('#panel table')].map(t => [...t.querySelectorAll('tbody tr')].map(tr => [...tr.children].map(td => td.textContent.trim()))));
 ok(rows[0][0][2] === fx(I.mean) && rows[0][0][6] === fx(I.ci.lo) && rows[0][0][7] === fx(I.ci.hi), `90% interval as calc.js: ${rows[0][0].join('|')}`);
@@ -141,7 +141,7 @@ await page.selectOption('#wcol', { label: 'w' });
 ok((await page.locator('.note.warn', { hasText: 'not computed' }).count()) === 1, 'weights: inference switched off, said in the settings');
 await page.click('#calc'); await page.waitForSelector('#panel table');
 s = await summary();
-ok(s[0][2] === '0.25' && (await page.locator('.note', { hasText: 'weighted by the column "w"' }).count()) === 1, 'weighted bias (2 − 4 + 3)/4 = 0.25: ' + s[0].join('|'));
+ok(s[0][2] === '-0.25' && (await page.locator('.note', { hasText: 'weighted by the column "w"' }).count()) === 1, 'weighted bias (−2 + 4 − 3)/4 = −0.25: ' + s[0].join('|'));
 await page.click('#tab-infer');
 ok((await page.locator('#panel .note.warn').count()) === 1, 'inference tab explains why nothing is computed');
 

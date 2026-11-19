@@ -14,7 +14,7 @@ import { registerForm, correctionFactor } from '../core/coef.js';
 import { inverse } from '../core/nls.js';
 import { metrics } from '../eval/calc.js';
 
-export const TOOL = { id: 'hacim-denklemleri', version: '1.0.0-beta.1' };
+export const TOOL = { id: 'hacim-denklemleri', version: '1.0.0-beta.2' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /**

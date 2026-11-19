@@ -62,7 +62,7 @@ for form, (f, _) in FORMS.items():
         res = optimize.least_squares(lambda th: f(th, P[:, 0], P[:, 1], P[:, 2]) - P[:, 3], START[form], method="lm", xtol=1e-15, ftol=1e-15, gtol=1e-15, max_nfev=100000)
         n, p = len(P), len(START[form]); sse = float(np.sum(res.fun ** 2)); s2 = sse / (n - p)
         J = res.jac; se = np.sqrt(np.diag(s2 * np.linalg.inv(J.T @ J)))
-        e = res.fun
+        e = -res.fun   # e = observed − predicted (19 Nov 2026); res.fun = predicted − observed
         rec["fits"][mode] = dict(n=int(n), theta=res.x.tolist(), sse=sse, rmse=float(np.sqrt(sse / n)), bias=float(np.mean(e)), se=se.tolist())
     out["forms"][form] = rec
 (here / "siteindex_si03.json").write_text(json.dumps(out, indent=1))

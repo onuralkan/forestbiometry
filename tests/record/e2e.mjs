@@ -52,12 +52,12 @@ const hd = await viaTab('/boy-cap.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#ptab', { timeout: 60000 }); await page.click('#tab-export');
 });
-ok(hd.obj.tool.version === '1.1.0' && hd.obj.tool.ids.includes('SM-01') && hd.obj.fits.length === 6 && hd.obj.settings.columns.d && hd.obj.crossValidation && hd.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/hd/ornek/ornek-boy-cap.csv')) && await sealOk(hd.obj), 'height–diameter 1.1.0: record with fits, CV, input fingerprint');
+ok(hd.obj.tool.version === '1.1.1' && hd.obj.tool.ids.includes('SM-01') && hd.obj.fits.length === 6 && hd.obj.settings.columns.d && hd.obj.crossValidation && hd.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/hd/ornek/ornek-boy-cap.csv')) && await sealOk(hd.obj), 'height–diameter 1.1.0: record with fits, CV, input fingerprint');
 const ev = await viaTab('/model-degerlendirme.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');
 });
-ok(ev.obj.tool.version === '1.2.0-beta.1' && ev.obj.models.length > 0 && ev.obj.models[0].overall && ev.obj.models[0].inference && ev.obj.models[0].inference.ci && ev.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/eval/ornek/ornek-tahminler.csv')) && await sealOk(ev.obj), 'model evaluation 1.2.0-beta.1: record with measures, bias interval and input fingerprint');
+ok(ev.obj.tool.version === '1.2.0-beta.2' && ev.obj.models.length > 0 && ev.obj.models[0].overall && ev.obj.models[0].inference && ev.obj.models[0].inference.ci && ev.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/eval/ornek/ornek-tahminler.csv')) && await sealOk(ev.obj), 'model evaluation 1.2.0-beta.1: record with measures, bias interval and input fingerprint');
 const rk = await viaTab('/nispi-siralama.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');

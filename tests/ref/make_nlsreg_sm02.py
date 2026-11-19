@@ -9,7 +9,7 @@ assets/lab/nlsreg/ornek/ornek-nls.csv (random test numbers, no species' values).
   pow2w   V = a D^b H^c, psi = D^theta, theta from ln e^2 = c + theta ln D on the unweighted residuals (Parresol 2001 Eq. 4)
   powc    V = a D^b H^c, psi = (D^2 H)^2 given as a weight column
 For each: coefficients, SE (sigma^2 (Z' Psi^-1 Z)^-1, sigma^2 = S/(n - p)), sigma^2, AIC (Gaussian, variance sigma^2 psi,
-k = p + 1), RMSE, bias (mean of yhat - y), R2 = 1 - SSE/SST, and intervals at D = 30 cm, H = 20 m with Student t
+k = p + 1), RMSE, bias (mean of y - yhat; 19 Nov 2026), R2 = 1 - SSE/SST, and intervals at D = 30 cm, H = 20 m with Student t
 (0.975, n - p): mean z' V z, new observation sigma^2 psi + z' V z. Writes tests/ref/nlsreg_sm02.json.
 """
 import json, math, os
@@ -72,7 +72,7 @@ def case(name, fmodel, fpoint, y, b0, psi, psi_point, theta=None):
     g = np.array([(fpoint(b + e * 1e-6 * max(abs(b[j]), 1e-8)) - fpoint(b - e * 1e-6 * max(abs(b[j]), 1e-8))) / (2e-6 * max(abs(b[j]), 1e-8)) for j, e in enumerate(np.eye(p))])
     S2 = g @ cov @ g; yhat = fpoint(b)
     cases[name] = {"theta": b.tolist(), "se": np.sqrt(np.diag(cov)).tolist(), "s2": s2, "aic": aic, "t": t,
-                   "rmse": float(np.sqrt(((yh - y) ** 2).mean())), "bias": float((yh - y).mean()), "r2": float(1 - ((y - yh) ** 2).sum() / ((y - y.mean()) ** 2).sum()),
+                   "rmse": float(np.sqrt(((yh - y) ** 2).mean())), "bias": float((y - yh).mean()), "r2": float(1 - ((y - yh) ** 2).sum() / ((y - y.mean()) ** 2).sum()),
                    "weight_theta": theta, "point": {"yhat": yhat, "S2": S2, "ci": [yhat - t * math.sqrt(S2), yhat + t * math.sqrt(S2)], "pi": [yhat - t * math.sqrt(S2 + s2 * psi_point), yhat + t * math.sqrt(S2 + s2 * psi_point)]}}
 
 one = np.ones(n)

@@ -1,6 +1,6 @@
 // Height–Diameter Modelling: the "R code" script (core/rcode.js). It redoes the run in base R (stats::nls) with the
 // tool's settings: the same rows (filter, species, units, decimal separator, breast height), the six models fitted to
-// z = h − bh from the starting values the tool's solution came from, the same error measures (e = predicted −
+// z = h − bh from the starting values the tool's solution came from, the same error measures (e = observed −
 // observed), the standard errors and t intervals when the tool gives them, cross-validation with the tool's folds (fold
 // of each tree written out, the seeded shuffle is the tool's), predictions of the chosen model. No DOM.
 import { MODELS, LEVEL } from './calc.js';
@@ -29,7 +29,7 @@ export function buildR(s, R, nd, o) {
   out.push(header({ title: T('Boy–Çap Modelleme: R kodu', 'Height–Diameter Modelling: R code'), tool: { id: 'boy-cap', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Hata = tahmin − gözlem. RMSE = √(SSE/n); kalıntı standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = predicted − observed. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
+    T('Hata = gözlem − tahmin. RMSE = √(SSE/n); kalıntı standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
@@ -66,7 +66,7 @@ export function buildR(s, R, nd, o) {
   f
 }
 fb_metrics <- function(f, data) {
-  e <- fitted(f) - data$z; n <- nrow(data); sse <- sum(e^2)
+  e <- data$z - fitted(f); n <- nrow(data); sse <- sum(e^2)
   c(n = n, sse = sse, bias = mean(e), mae = mean(abs(e)), rmse = sqrt(sse / n), sigma = summary(f)$sigma, aic = AIC(f), bic = BIC(f))
 }
 `);
@@ -104,7 +104,7 @@ for (k in seq_along(cv_starts)) {
   for (id in names(cv_err)) { st <- cv_starts[[k]][[id]]; if (is.null(st)) next
     f <- fb_fit(id, as.list(st$start), as.list(st$tool), tr_); if (is.null(f)) next
     pr[[id]] <- bh + predict(f, newdata = te_); aic[id] <- AIC(f) }
-  if (length(pr) == length(cv_err)) { for (id in names(pr)) cv_err[[id]] <- c(cv_err[[id]], pr[[id]] - te_$h)
+  if (length(pr) == length(cv_err)) { for (id in names(pr)) cv_err[[id]] <- c(cv_err[[id]], te_$h - pr[[id]])
     sel_err <- c(sel_err, pr[[names(which.min(aic))]] - te_$h) }
 }
 for (id in names(cv_err)) { e <- cv_err[[id]]; res[[paste0("cv.", id, ".rmse")]] <- sqrt(mean(e^2)); res[[paste0("cv.", id, ".bias")]] <- mean(e); res[[paste0("cv.", id, ".mae")]] <- mean(abs(e)) }

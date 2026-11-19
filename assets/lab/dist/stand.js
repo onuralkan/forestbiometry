@@ -186,7 +186,7 @@ export function train(units, cfg) {
   }
   // fit statistics on the training data (original scale)
   for (const [j, e] of eq.entries()) { const pr = xs.map(x => predictKey({ ...base, equations: eq }, e, x)), res = Y.map((r, i) => r[j] - pr[i]);
-    e.rmse = Math.sqrt(res.reduce((s, v) => s + v * v, 0) / res.length); e.bias = -res.reduce((s, v) => s + v, 0) / res.length; }
+    e.rmse = Math.sqrt(res.reduce((s, v) => s + v * v, 0) / res.length); e.bias = res.reduce((s, v) => s + v, 0) / res.length; }
   return { ...base, status: 'ok', equations: eq, trainingUnits: rows.map(r => ({ plot: r.u.plot, period: r.u.period, x: r.u.x, targets: r.t })) };
 }
 const predictKey = (model, e, x) => { const z = design(x, model.terms), m = dot(e.beta, z); return model.fit === 'logols' && model.options.back === 'mean' ? Math.exp(m + e.s2Log / 2) : Math.exp(m); };
@@ -332,7 +332,7 @@ function trainCDF(units, cfg) {
   const m = asModel(r.theta), fin = thetas(r.theta);
   base.cdf.objective = cdfObjective(used, fin.ps, fit, width).value; base.cdf.iter = r.iter; base.cdf.units = inc.length;
   for (const e of m.equations) { const j = keys.indexOf(e.key), pr = used.map(u => predictKey(m, e, u.x)), res = start.trainingUnits.map((t, i) => t.targets[e.key] - pr[i]);
-    e.rmse = Math.sqrt(res.reduce((s2, v) => s2 + v * v, 0) / res.length); e.bias = -res.reduce((s2, v) => s2 + v, 0) / res.length; if (free.includes(e.key)) { e.se = null; e.fittedBy = fit; } else e.fittedBy = 'nls'; void j; }
+    e.rmse = Math.sqrt(res.reduce((s2, v) => s2 + v * v, 0) / res.length); e.bias = res.reduce((s2, v) => s2 + v, 0) / res.length; if (free.includes(e.key)) { e.se = null; e.fittedBy = fit; } else e.fittedBy = 'nls'; void j; }
   return { ...base, status: 'ok', equations: m.equations };
 }
 

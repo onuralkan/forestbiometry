@@ -1683,13 +1683,13 @@ const { cellText } = __fb_r("core/table.js");
 const { classIndex } = __fb_r("stand/calc.js");
 const { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } = __fb_r("core/stats.js");
 // Model Evaluation: pure logic (no DOM). Definitions: docs/METHODS.md §7.
-// Sign convention everywhere: e = predicted − observed.
+// Sign convention everywhere: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 
 
 
 
 
-const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.1' };
+const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.2' };
 const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
@@ -1719,7 +1719,7 @@ function metrics(obs, pred, norm = null, w = null) {
   if (!n) { out.r2Reason = 'n0'; return out; }
   let W = 0, se = 0, sa = 0, ss = 0, so = 0, sp = 0, eMin = Infinity, eMax = -Infinity, oMin = Infinity, oMax = -Infinity;
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], wi = w ? w[i] : 1;
+    const e = obs[i] - pred[i], wi = w ? w[i] : 1;
     W += wi; se += wi * e; sa += wi * Math.abs(e); ss += wi * e * e; so += wi * obs[i]; sp += wi * pred[i];
     if (e < eMin) eMin = e; if (e > eMax) eMax = e; if (obs[i] < oMin) oMin = obs[i]; if (obs[i] > oMax) oMax = obs[i];
   }
@@ -1746,7 +1746,7 @@ function relative(m, norm, obs, oMin, oMax) {
 
 /* ---------------- inference on the mean error (unweighted pairs) ---------------- */
 /**
- * e: errors ŷ − y of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
+ * e: errors y − ŷ of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
  * Interval for the bias: ē ± t(1 − (1 − level)/2; n − 1)·s/√n, s with divisor n − 1.
  * Equivalence (Robinson and Froese 2004): the null hypothesis is dissimilarity, |μ_e| ≥ δ; rejecting it means the
  * mean error is shown to lie within ±δ. δ is in data units ('abs') or δ = ε·s ('rel'). Two tests:
@@ -1780,7 +1780,7 @@ function inference(e, opts = {}) {
 /** bias, MAE, RMSE, R² of the pairs listed in idx (R² NaN when the observed values in idx are all equal). */
 function quick(obs, pred, idx) {
   const n = idx.length; let se = 0, sa = 0, ss = 0, so = 0, oMin = Infinity, oMax = -Infinity;
-  for (const i of idx) { const e = pred[i] - obs[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
+  for (const i of idx) { const e = obs[i] - pred[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
   const mo = so / n; let sst = 0; for (const i of idx) sst += (obs[i] - mo) ** 2;
   return [se / n, sa / n, Math.sqrt(ss / n), oMax > oMin && sst > 0 ? 1 - ss / sst : NaN];
 }
@@ -1810,11 +1810,11 @@ function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}) {
   }
   // jackknife: each pair left out once; sums updated in O(1) per pair (R² from deviations about the full mean)
   const jack = BOOT_STATS.map(() => new Array(n));
-  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = pred[i] - obs[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
+  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = obs[i] - pred[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
   const mo = so / n; let Q = 0; for (let i = 0; i < n; i++) Q += (obs[i] - mo) ** 2;
   const count = new Map(); for (const y of obs) count.set(y, (count.get(y) || 0) + 1);
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
+    const e = obs[i] - pred[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
     jack[0][i] = (SE - e) / m; jack[1][i] = (SA - Math.abs(e)) / m; jack[2][i] = Math.sqrt(Math.max(0, ss) / m);
     const constant = count.size === 1 || (count.size === 2 && count.get(obs[i]) === 1);
     const sst = Q - c * c - c * c / m;
@@ -1905,7 +1905,7 @@ function evaluate(table, spec) {
       labels = key === 'dclass' ? g.dclassOrder.filter(l => by.has(l)).concat(by.has('') ? [''] : []) : labels.sort(natural);
       groups[key] = labels.map(lab => ({ label: lab, ...metrics(by.get(lab).map(i => obs[i].value), by.get(lab).map(i => p[i].value), spec.norm, wOf(by.get(lab))) }));
     }
-    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(q.map((x, j) => x - o[j]), spec.infer);
+    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(o.map((x, j) => x - q[j]), spec.infer);
     if (infer && !wt && spec.infer.boot) infer.boot = bootstrapCI(o, q, { ...spec.infer.boot, level: spec.infer.level || 0.95 });
     return { ...m, index: k, acc, idx, obs: o, pred: q, w, overall: metrics(o, q, spec.norm, w), groups, infer };
   });
@@ -1934,14 +1934,14 @@ const { cellText } = __fb_r("core/table.js");
 const { UNITS } = __fb_r("core/num.js");
 // Height–Diameter Modelling (fixed-effects version): pure logic (no DOM). Definitions and sources: docs/METHODS.md §10.
 // Units inside: d in cm, h in m, breast height bh in m. Every model is h = bh + f(d; θ); it is fitted to z = h − bh
-// by nonlinear least squares (Levenberg–Marquardt). Sign convention for errors everywhere: e = predicted − observed.
+// by nonlinear least squares (Levenberg–Marquardt). Sign convention for errors everywhere: e = observed − predicted (y − ŷ).
 
 
 
 
 
 
-const TOOL = { id: 'boy-cap', version: '1.1.0' };
+const TOOL = { id: 'boy-cap', version: '1.1.1' };
 const DIVERGE_FACTOR = 50;      // asymptote above 50 × the largest observed (h − bh): "not identified by the data" (tool rule)
 const CV_SEED = 20261109;       // fixed seed: folds are reproducible
 const CV_K = 10;                // folds for random tree-level CV and for grouped CV with many plots
@@ -2065,7 +2065,7 @@ function fitModel(m, d, z, opts = {}) {
   Object.assign(out, { theta: th, sse, iter: best.iter, asym: m.asym(th), start: bestStart });   // start: the values the solution came from (R code)
   if (blowup(th)) return { ...out, status: 'diverged' };
   if (!th.every(v => v > 0)) out.warn.push({ code: 'sign', params: m.names.filter((_, j) => !(th[j] > 0)) });
-  const e = d.map((v, i) => m.f(th, v) - z[i]);            // predicted − observed
+  const e = d.map((v, i) => z[i] - m.f(th, v));            // observed − predicted
   out.bias = e.reduce((s, v) => s + v, 0) / n; out.mae = e.reduce((s, v) => s + Math.abs(v), 0) / n; out.rmse = Math.sqrt(sse / n);
   out.sigma = Math.sqrt(sse / (n - m.p));                   // residual standard error, df = n − p
   out.df = n - m.p;
@@ -2112,7 +2112,7 @@ function predictMissing(prep, fit) {
 
 /* ---------------- residual diagnostics ---------------- */
 function residuals(prep, fit) {
-  return prep.fitRows.map(r => { const yhat = predict(fit, r.d, prep.bh); return { d: r.d, plot: r.plot, obs: r.h, fit: yhat, e: yhat - r.h }; });
+  return prep.fitRows.map(r => { const yhat = predict(fit, r.d, prep.bh); return { d: r.d, plot: r.plot, obs: r.h, fit: yhat, e: r.h - yhat }; });
 }
 /** Residual spread in thirds of the fitted values (informational; constant variance is an assumption of the intervals). */
 function spreadByThirds(res) {
@@ -2174,11 +2174,11 @@ function cvSummary(prep, folds) {
   const common = folds.filter(f => f.preds.every(p => p));
   const eModel = Array.from({ length: M }, () => []), eSel = [], eSelAll = [];
   let nOut = 0;
-  for (const f of common) f.test.forEach((i, j) => { for (let k = 0; k < M; k++) eModel[k].push(f.preds[k][j] - rows[i].h); if (f.outside[j]) nOut++; });
-  for (const f of folds) if (f.sel >= 0) f.test.forEach((i, j) => eSelAll.push(f.preds[f.sel][j] - rows[i].h));
-  for (const f of common) f.test.forEach((i, j) => eSel.push(f.preds[f.sel][j] - rows[i].h));
+  for (const f of common) f.test.forEach((i, j) => { for (let k = 0; k < M; k++) eModel[k].push(rows[i].h - f.preds[k][j]); if (f.outside[j]) nOut++; });
+  for (const f of folds) if (f.sel >= 0) f.test.forEach((i, j) => eSelAll.push(rows[i].h - f.preds[f.sel][j]));
+  for (const f of common) f.test.forEach((i, j) => eSel.push(rows[i].h - f.preds[f.sel][j]));
   const perFold = folds.map(f => ({ label: f.label, nTrain: f.nTrain, nTest: f.test.length, nOutside: f.outside.filter(Boolean).length, sel: f.sel,
-    status: f.status, rmse: f.preds.map(p => p ? errMetrics(p.map((v, j) => v - rows[f.test[j]].h)).rmse : null) }));
+    status: f.status, rmse: f.preds.map(p => p ? errMetrics(p.map((v, j) => rows[f.test[j]].h - v)).rmse : null) }));
   const chosen = MODELS.map((_, k) => folds.filter(f => f.sel === k).length);
   return { nFolds: folds.length, nCommonFolds: common.length, dropped: folds.filter(f => !f.preds.every(p => p)).map(f => f.label),
     nTest: eModel[0].length, nOutside: nOut, models: eModel.map(errMetrics), selection: errMetrics(eSel), selectionAll: errMetrics(eSelAll), chosen, perFold };
@@ -2252,7 +2252,7 @@ const tr = {
   'w.sign': p => `Beklenen işaret dışında (> 0 beklenir): ${p.params}.`, 'w.singular': 'JᵀJ tekil: standart hata hesaplanamadı.',
   'w.corr': p => `${p.a} ile ${p.b} arasındaki tahmin korelasyonu ${p.r}: parametreler birbirinden zor ayrılıyor.`,
   'c.fit.h': 'Fit etme verisinde başarı (bütün modeller aynı ağaçlarla)', 'c.rmse': 'RMSE (m)', 'c.mae': 'MAE (m)', 'c.bias': 'Yanlılık (m)', 'c.sigma': 'Artık std. hatası σ̂ (m)', 'c.aic': 'AIC', 'c.daic': 'ΔAIC', 'c.bic': 'BIC', 'c.ll': 'ln L',
-  'c.fit.note': 'e = tahmin − ölçülen. RMSE = √(SSE/n) (Model Başarısı Değerlendiricisi ile aynı tanım); σ̂ = √(SSE/(n − p)). Fit etme verisindeki hatalar iyimserdir; genelleme için çapraz doğrulamaya bakın.',
+  'c.fit.note': 'e = ölçülen − tahmin. RMSE = √(SSE/n) (Model Başarısı Değerlendiricisi ile aynı tanım); σ̂ = √(SSE/(n − p)). Fit etme verisindeki hatalar iyimserdir; genelleme için çapraz doğrulamaya bakın.',
   'c.aic.note': 'AIC/BIC: normal, bağımsız ve sabit varyanslı hata olabilirliği; σ dahil k = p + 1 parametre. Bütün modeller aynı ağaçlara ve aynı yanıt ölçeğine (h, m) fit edildiği için karşılaştırılabilir. ΔAIC en küçük AIC\'ye göredir.',
   'c.aic.off': 'AIC/BIC verilmez: veri birden çok örnek alandan geliyor ve bağımsız hata olabilirliği bu veriye uymuyor.',
   'c.cv.h': 'Çapraz doğrulama (dışarıda tutulan ağaçlarda)', 'c.cv.none': 'Çapraz doğrulama seçilmedi.',
@@ -2265,7 +2265,7 @@ const tr = {
   'c.cv.sel.note': 'Seçim süreci satırı, model seçimini de katın içinde yapar: her katta yalnızca eğitim ağaçlarına göre AIC\'si en küçük model seçilir ve dışarıdaki ağaçlar onunla tahmin edilir. En küçük çapraz doğrulama hatasına bakarak seçilen modelin kendi satırındaki hata iyimserdir; seçilmiş bir modelin beklenen hatası için bu satıra bakın.',
   'c.cv.folds': 'Katlar', 'c.cv.fold': 'Kat', 'c.cv.ntr': 'Eğitim', 'c.cv.nte': 'Dışarıda', 'c.cv.nout': 'Aralık dışı', 'c.cv.selm': 'Seçilen',
   'ch.pick': 'Ayrıntılı grafik ve tahmin modeli', 'ch.pick.none': '— model seçin —', 'ch.need': 'Artık grafikleri ve tahminler için bir model seçin.',
-  'ch.data': p => `Ölçülen boylar ve fit edilen eğriler (${p.n} ağaç)`, 'ch.d': 'Çap d (cm)', 'ch.h': 'Boy h (m)', 'ch.e': 'e = tahmin − ölçülen (m)', 'ch.fit': 'Tahmin edilen boy (m)',
+  'ch.data': p => `Ölçülen boylar ve fit edilen eğriler (${p.n} ağaç)`, 'ch.d': 'Çap d (cm)', 'ch.h': 'Boy h (m)', 'ch.e': 'e = ölçülen − tahmin (m)', 'ch.fit': 'Tahmin edilen boy (m)',
   'ch.resfit': p => `Artıklar ve tahmin edilen boy, ${p.m}`, 'ch.resd': p => `Artıklar ve çap, ${p.m}`,
   'ch.bands': 'Seçili model için kesikli çizgiler ortalama eğrinin %95 güven aralığını, noktalı çizgiler tek ağacın %95 tahmin aralığını gösterir.',
   'ch.range': 'Eğriler yalnızca fit etme verisinin çap aralığında çizilir.', 'ch.svg': 'Grafiği indir (SVG)', 'ch.models': 'Gösterilen modeller',
@@ -2386,7 +2386,7 @@ const { MODELS, LEVEL } = __fb_r("hd/calc.js");
 const { header, readBlock, FB_NUM, FB_OUT, rStr, rNum, rVec, rComment } = __fb_r("core/rcode.js");
 // Height–Diameter Modelling: the "R code" script (core/rcode.js). It redoes the run in base R (stats::nls) with the
 // tool's settings: the same rows (filter, species, units, decimal separator, breast height), the six models fitted to
-// z = h − bh from the starting values the tool's solution came from, the same error measures (e = predicted −
+// z = h − bh from the starting values the tool's solution came from, the same error measures (e = observed −
 // observed), the standard errors and t intervals when the tool gives them, cross-validation with the tool's folds (fold
 // of each tree written out, the seeded shuffle is the tool's), predictions of the chosen model. No DOM.
 
@@ -2415,7 +2415,7 @@ function buildR(s, R, nd, o) {
   out.push(header({ title: T('Boy–Çap Modelleme: R kodu', 'Height–Diameter Modelling: R code'), tool: { id: 'boy-cap', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın tahminlerinden başlar ve bunu yazar.',
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Hata = tahmin − gözlem. RMSE = √(SSE/n); kalıntı standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = predicted − observed. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
+    T('Hata = gözlem − tahmin. RMSE = √(SSE/n); kalıntı standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
@@ -2452,7 +2452,7 @@ function buildR(s, R, nd, o) {
   f
 }
 fb_metrics <- function(f, data) {
-  e <- fitted(f) - data$z; n <- nrow(data); sse <- sum(e^2)
+  e <- data$z - fitted(f); n <- nrow(data); sse <- sum(e^2)
   c(n = n, sse = sse, bias = mean(e), mae = mean(abs(e)), rmse = sqrt(sse / n), sigma = summary(f)$sigma, aic = AIC(f), bic = BIC(f))
 }
 `);
@@ -2490,7 +2490,7 @@ for (k in seq_along(cv_starts)) {
   for (id in names(cv_err)) { st <- cv_starts[[k]][[id]]; if (is.null(st)) next
     f <- fb_fit(id, as.list(st$start), as.list(st$tool), tr_); if (is.null(f)) next
     pr[[id]] <- bh + predict(f, newdata = te_); aic[id] <- AIC(f) }
-  if (length(pr) == length(cv_err)) { for (id in names(pr)) cv_err[[id]] <- c(cv_err[[id]], pr[[id]] - te_$h)
+  if (length(pr) == length(cv_err)) { for (id in names(pr)) cv_err[[id]] <- c(cv_err[[id]], te_$h - pr[[id]])
     sel_err <- c(sel_err, pr[[names(which.min(aic))]] - te_$h) }
 }
 for (id in names(cv_err)) { e <- cv_err[[id]]; res[[paste0("cv.", id, ".rmse")]] <- sqrt(mean(e^2)); res[[paste0("cv.", id, ".bias")]] <- mean(e); res[[paste0("cv.", id, ".mae")]] <- mean(abs(e)) }

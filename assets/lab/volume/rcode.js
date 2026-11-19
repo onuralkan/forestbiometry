@@ -26,8 +26,8 @@ export function buildR(s, R, o) {
   out.push(header({ title: T('Hacim Denklemleri: R kodu', 'Volume Equations: R code'), tool: { id: 'hacim-denklemleri', version: o.version }, created: o.created, lang: o.lang, packages: [],
     notes: [T('Biçimler (Kershaw ve ark. 2016, §6.2) doğrusal regresyon olarak lm ile fit edilir; logaritmik biçimler ln ölçeğinde. Ağırlık: σ² ∝ X^k, lm ağırlığı 1/X^k; k verilmemişse ağırlıksız artıklardan ln e² = a + k ln X (Parresol 1999).',
       'The forms (Kershaw et al. 2016, §6.2) are fitted as linear regressions by lm; the logarithmic forms on the ln scale. Weights: σ² ∝ X^k, the lm weight 1/X^k; when k is not given, from ln e² = a + k ln X on the unweighted residuals (Parresol 1999).'),
-    T('Logaritmik biçimlerde geri dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki kalıntı standart hatası. Ölçütler hacim ölçeğinde: hata = tahmin − gözlem, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
-      'Back-transformation correction of the log forms: none or Baskerville exp(s²/2), s the residual standard error on the ln scale. Measures on the volume scale: error = predicted − observed, RMSE = √(SSE/n), R² = 1 − SSE/SST.'),
+    T('Logaritmik biçimlerde geri dönüşüm düzeltmesi: yok ya da Baskerville exp(s²/2), s ln ölçeğindeki kalıntı standart hatası. Ölçütler hacim ölçeğinde: hata = gözlem − tahmin, RMSE = √(SSE/n), R² = 1 − SSE/SST.',
+      'Back-transformation correction of the log forms: none or Baskerville exp(s²/2), s the residual standard error on the ln scale. Measures on the volume scale: error = observed − predicted, RMSE = √(SSE/n), R² = 1 − SSE/SST.'),
     ...(s.note ? [s.note] : [])] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
@@ -40,7 +40,7 @@ export function buildR(s, R, o) {
     `  V = num(${s.map.V + 1}))   # ${hd(s.map.V)} (m³)`,
     `cat(${rStr(T('Ağaç: ', 'Trees: '))}, nrow(trees), "\\n")`, '');
   out.push(`fb_metrics <- function(obs, pred) {
-  e <- pred - obs; sse <- sum(e^2)
+  e <- obs - pred; sse <- sum(e^2)
   c(n = length(e), rmse = sqrt(sse / length(e)), bias = mean(e), mae = mean(abs(e)), r2 = 1 - sse / sum((obs - mean(obs))^2))
 }
 res <- list(); fits <- list()

@@ -67,7 +67,7 @@ def jac_cd(f, t, d):
 
 def summarise(name, f, p, d, z, inference=True):
     th, sse = fit(name, f, p, d, z)
-    n = len(d); e = f(th, d) - z
+    n = len(d); e = z - f(th, d)   # e = observed − predicted (19 Nov 2026)
     out = dict(theta=list(map(float, th)), sse=sse, n=n, rmse=float(np.sqrt(sse/n)), mae=float(np.mean(np.abs(e))), bias=float(np.mean(e)),
                sigma=float(np.sqrt(sse/(n-p))))
     ll = -n/2*(np.log(2*np.pi) + np.log(sse/n) + 1); k = p + 1
@@ -125,8 +125,8 @@ def cv(d, z, plots, mode):
     allE = [[] for _ in MODELS]; selE = []
     for fo in per:
         for j, i in enumerate(fo['test']):
-            for k in range(len(MODELS)): allE[k].append(fo['preds'][k][j] - (z[i] + BH))
-            selE.append(fo['preds'][fo['sel']][j] - (z[i] + BH))
+            for k in range(len(MODELS)): allE[k].append((z[i] + BH) - fo['preds'][k][j])
+            selE.append((z[i] + BH) - fo['preds'][fo['sel']][j])
     met = lambda e: dict(n=len(e), bias=float(np.mean(e)), mae=float(np.mean(np.abs(e))), rmse=float(np.sqrt(np.mean(np.square(e)))))
     return dict(models=[met(np.array(e)) for e in allE], selection=met(np.array(selE)), sel=[fo['sel'] for fo in per],
                 nOutside=sum(fo['nOutside'] for fo in per), nFolds=len(per))

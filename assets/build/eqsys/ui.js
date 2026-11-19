@@ -2738,13 +2738,13 @@ const { cellText } = __fb_r("core/table.js");
 const { classIndex } = __fb_r("stand/calc.js");
 const { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } = __fb_r("core/stats.js");
 // Model Evaluation: pure logic (no DOM). Definitions: docs/METHODS.md §7.
-// Sign convention everywhere: e = predicted − observed.
+// Sign convention everywhere: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 
 
 
 
 
-const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.1' };
+const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.2' };
 const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
@@ -2774,7 +2774,7 @@ function metrics(obs, pred, norm = null, w = null) {
   if (!n) { out.r2Reason = 'n0'; return out; }
   let W = 0, se = 0, sa = 0, ss = 0, so = 0, sp = 0, eMin = Infinity, eMax = -Infinity, oMin = Infinity, oMax = -Infinity;
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], wi = w ? w[i] : 1;
+    const e = obs[i] - pred[i], wi = w ? w[i] : 1;
     W += wi; se += wi * e; sa += wi * Math.abs(e); ss += wi * e * e; so += wi * obs[i]; sp += wi * pred[i];
     if (e < eMin) eMin = e; if (e > eMax) eMax = e; if (obs[i] < oMin) oMin = obs[i]; if (obs[i] > oMax) oMax = obs[i];
   }
@@ -2801,7 +2801,7 @@ function relative(m, norm, obs, oMin, oMax) {
 
 /* ---------------- inference on the mean error (unweighted pairs) ---------------- */
 /**
- * e: errors ŷ − y of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
+ * e: errors y − ŷ of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
  * Interval for the bias: ē ± t(1 − (1 − level)/2; n − 1)·s/√n, s with divisor n − 1.
  * Equivalence (Robinson and Froese 2004): the null hypothesis is dissimilarity, |μ_e| ≥ δ; rejecting it means the
  * mean error is shown to lie within ±δ. δ is in data units ('abs') or δ = ε·s ('rel'). Two tests:
@@ -2835,7 +2835,7 @@ function inference(e, opts = {}) {
 /** bias, MAE, RMSE, R² of the pairs listed in idx (R² NaN when the observed values in idx are all equal). */
 function quick(obs, pred, idx) {
   const n = idx.length; let se = 0, sa = 0, ss = 0, so = 0, oMin = Infinity, oMax = -Infinity;
-  for (const i of idx) { const e = pred[i] - obs[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
+  for (const i of idx) { const e = obs[i] - pred[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
   const mo = so / n; let sst = 0; for (const i of idx) sst += (obs[i] - mo) ** 2;
   return [se / n, sa / n, Math.sqrt(ss / n), oMax > oMin && sst > 0 ? 1 - ss / sst : NaN];
 }
@@ -2865,11 +2865,11 @@ function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}) {
   }
   // jackknife: each pair left out once; sums updated in O(1) per pair (R² from deviations about the full mean)
   const jack = BOOT_STATS.map(() => new Array(n));
-  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = pred[i] - obs[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
+  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = obs[i] - pred[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
   const mo = so / n; let Q = 0; for (let i = 0; i < n; i++) Q += (obs[i] - mo) ** 2;
   const count = new Map(); for (const y of obs) count.set(y, (count.get(y) || 0) + 1);
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
+    const e = obs[i] - pred[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
     jack[0][i] = (SE - e) / m; jack[1][i] = (SA - Math.abs(e)) / m; jack[2][i] = Math.sqrt(Math.max(0, ss) / m);
     const constant = count.size === 1 || (count.size === 2 && count.get(obs[i]) === 1);
     const sst = Q - c * c - c * c / m;
@@ -2960,7 +2960,7 @@ function evaluate(table, spec) {
       labels = key === 'dclass' ? g.dclassOrder.filter(l => by.has(l)).concat(by.has('') ? [''] : []) : labels.sort(natural);
       groups[key] = labels.map(lab => ({ label: lab, ...metrics(by.get(lab).map(i => obs[i].value), by.get(lab).map(i => p[i].value), spec.norm, wOf(by.get(lab))) }));
     }
-    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(q.map((x, j) => x - o[j]), spec.infer);
+    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(o.map((x, j) => x - q[j]), spec.infer);
     if (infer && !wt && spec.infer.boot) infer.boot = bootstrapCI(o, q, { ...spec.infer.boot, level: spec.infer.level || 0.95 });
     return { ...m, index: k, acc, idx, obs: o, pred: q, w, overall: metrics(o, q, spec.norm, w), groups, infer };
   });
@@ -2997,7 +2997,7 @@ const { metrics } = __fb_r("eval/calc.js");
 // σ̂²ψ + z(b)ᵀs²(b)z(b) (Eq. 11); coefficient intervals b ± t·SE ("in an analogous manner to linear least squares").
 // Ready-made forms: the growth forms of SQ-03 (METHODS §18, with their reading status) and the power forms a·x^b and
 // a·x1^b·x2^c (Parresol 2001 Eq. 15). Fit measures: the Model Evaluation tool's own definitions (eval/calc.js metrics,
-// METHODS §7; bias = mean(ŷ − y)). AIC (tool rule): Gaussian likelihood with variance σ²ψ_t, σ² at its maximum S/n,
+// METHODS §7; bias = mean(y − ŷ)). AIC (tool rule): Gaussian likelihood with variance σ²ψ_t, σ² at its maximum S/n,
 // AIC = 2k − 2 ln L, k = number of coefficients + 1 (θ of an estimated weight not counted; stated).
 
 
@@ -3005,7 +3005,7 @@ const { metrics } = __fb_r("eval/calc.js");
 
 
 
-const TOOL = { id: 'dogrusal-olmayan-regresyon', version: '1.0.0-beta.1' };
+const TOOL = { id: 'dogrusal-olmayan-regresyon', version: '1.0.0-beta.2' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /** Ready-made forms: expression, variables, parameters, reading status of the source (METHODS §26). */
@@ -3189,7 +3189,7 @@ const { header, readBlock, fbModel, FB_NUM, FB_OUT, rStr, rNum, rComment } = __f
 // settings: the same rows (every column a model or weight uses must be a number, weight columns > 0), each model's
 // formula translated to R, fitted from the starting values the tool's solution came from, the same weights (Parresol
 // 2001: ψ = X^θ with θ fixed or estimated from the unweighted residuals, or ψ from a column; nls weights = 1/ψ), the same
-// fit measures (e = predicted − observed), standard errors, t intervals, AIC, and the interval at the point the page
+// fit measures (e = observed − predicted), standard errors, t intervals, AIC, and the interval at the point the page
 // shows. No DOM.
 
 
@@ -3231,8 +3231,8 @@ function buildR(s, R, iv, o) {
       'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
     T('Ağırlık (Parresol 2001): Var(e) = σ²ψ; nls ağırlığı 1/ψ. ψ = X^θ (θ verilmişse o, verilmemişse ağırlıksız fit artıklarından ln e² = ln σ² + θ ln X ile) ya da ψ bir sütundan.',
       'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.'),
-    T('Hata = tahmin − gözlem; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
-      'Error = predicted − observed; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
+    T('Hata = gözlem − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı kalıntı kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; tahmin edilen θ sayılmaz), aracınkiyle aynı.',
+      'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   // the columns every model and weight uses: a number in each (weight columns > 0), as the tool compares models on the same rows
@@ -3261,7 +3261,7 @@ function buildR(s, R, iv, o) {
   f
 }
 fb_report <- function(id, f, data, level, se_ok) {
-  th <- coef(f); pred <- fitted(f); e <- pred - data$.y; sse <- sum(e^2)
+  th <- coef(f); pred <- fitted(f); e <- data$.y - pred; sse <- sum(e^2)
   out <- list(); out[paste0(id, ".", names(th))] <- as.list(unname(th))
   m <- c(n = length(e), rmse = sqrt(sse / length(e)), bias = mean(e), mae = mean(abs(e)), r2 = 1 - sse / sum((data$.y - mean(data$.y))^2), sigma = summary(f)$sigma, aic = AIC(f))
   for (k in names(m)) out[[paste0(id, ".", k)]] <- unname(m[[k]])

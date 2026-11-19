@@ -187,7 +187,7 @@ function renderStep3() {
       ${q.c.params.map((p, j) => `<tr><th><code>${esc(p)}</code></th><td class="num" data-k="b${j}">${sig(x.theta[j])}</td><td class="num">${sig(x.se[j])}</td><td class="num">${sig(x.ci[j][0])} – ${sig(x.ci[j][1])}</td></tr>`).join('')}</tbody></table></div>
       <p class="muted small">${T('r.cinote', { t: fmtNum(x.t, 4), df: x.df })}</p>
       <div class="charts2"><figure class="chartbox">${scatterChart({ title: T('ch.obs', { m: q.label }), points: R.y.map((o, i) => [o, x.pred[i]]), xLabel: T('ch.xo'), yLabel: T('ch.yo'), equal: true, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure>
-      <figure class="chartbox">${scatterChart({ title: T('ch.res', { m: q.label }), points: x.pred.map((p, i) => [p, p - R.y[i]]), xLabel: T('ch.x'), yLabel: T('ch.y'), hline: 0, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure></div></div>`;
+      <figure class="chartbox">${scatterChart({ title: T('ch.res', { m: q.label }), points: x.pred.map((p, i) => [p, R.y[i] - p]), xLabel: T('ch.x'), yLabel: T('ch.y'), hline: 0, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure></div></div>`;
   }
   if (ok.length) {
     const iq = R.fits[S.ivIdx], ivars = iq.fit.status === 'ok' ? [...iq.c.vars.map(v => ({ key: v, label: `${v} (${colName(iq.md.map[v])})` })), ...(iq.wcol != null && !iq.c.vars.some(v => iq.md.map[v] === iq.wcol) ? [{ key: '__w', label: T('iv.psi', { v: colName(iq.wcol) }) }] : [])] : [];

@@ -2380,13 +2380,13 @@ const { cellText } = __fb_r("core/table.js");
 const { classIndex } = __fb_r("stand/calc.js");
 const { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } = __fb_r("core/stats.js");
 // Model Evaluation: pure logic (no DOM). Definitions: docs/METHODS.md §7.
-// Sign convention everywhere: e = predicted − observed.
+// Sign convention everywhere: e = observed − predicted (y − ŷ; 19 Nov 2026, user decision).
 
 
 
 
 
-const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.1' };
+const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.2' };
 const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
@@ -2416,7 +2416,7 @@ function metrics(obs, pred, norm = null, w = null) {
   if (!n) { out.r2Reason = 'n0'; return out; }
   let W = 0, se = 0, sa = 0, ss = 0, so = 0, sp = 0, eMin = Infinity, eMax = -Infinity, oMin = Infinity, oMax = -Infinity;
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], wi = w ? w[i] : 1;
+    const e = obs[i] - pred[i], wi = w ? w[i] : 1;
     W += wi; se += wi * e; sa += wi * Math.abs(e); ss += wi * e * e; so += wi * obs[i]; sp += wi * pred[i];
     if (e < eMin) eMin = e; if (e > eMax) eMax = e; if (obs[i] < oMin) oMin = obs[i]; if (obs[i] > oMax) oMax = obs[i];
   }
@@ -2443,7 +2443,7 @@ function relative(m, norm, obs, oMin, oMax) {
 
 /* ---------------- inference on the mean error (unweighted pairs) ---------------- */
 /**
- * e: errors ŷ − y of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
+ * e: errors y − ŷ of one model. opts = { level, alpha, margin: null | { type: 'abs' | 'rel', value } }.
  * Interval for the bias: ē ± t(1 − (1 − level)/2; n − 1)·s/√n, s with divisor n − 1.
  * Equivalence (Robinson and Froese 2004): the null hypothesis is dissimilarity, |μ_e| ≥ δ; rejecting it means the
  * mean error is shown to lie within ±δ. δ is in data units ('abs') or δ = ε·s ('rel'). Two tests:
@@ -2477,7 +2477,7 @@ function inference(e, opts = {}) {
 /** bias, MAE, RMSE, R² of the pairs listed in idx (R² NaN when the observed values in idx are all equal). */
 function quick(obs, pred, idx) {
   const n = idx.length; let se = 0, sa = 0, ss = 0, so = 0, oMin = Infinity, oMax = -Infinity;
-  for (const i of idx) { const e = pred[i] - obs[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
+  for (const i of idx) { const e = obs[i] - pred[i], y = obs[i]; se += e; sa += Math.abs(e); ss += e * e; so += y; if (y < oMin) oMin = y; if (y > oMax) oMax = y; }
   const mo = so / n; let sst = 0; for (const i of idx) sst += (obs[i] - mo) ** 2;
   return [se / n, sa / n, Math.sqrt(ss / n), oMax > oMin && sst > 0 ? 1 - ss / sst : NaN];
 }
@@ -2507,11 +2507,11 @@ function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}) {
   }
   // jackknife: each pair left out once; sums updated in O(1) per pair (R² from deviations about the full mean)
   const jack = BOOT_STATS.map(() => new Array(n));
-  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = pred[i] - obs[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
+  let SE = 0, SA = 0, SS = 0, so = 0; for (let i = 0; i < n; i++) { const e = obs[i] - pred[i]; SE += e; SA += Math.abs(e); SS += e * e; so += obs[i]; }
   const mo = so / n; let Q = 0; for (let i = 0; i < n; i++) Q += (obs[i] - mo) ** 2;
   const count = new Map(); for (const y of obs) count.set(y, (count.get(y) || 0) + 1);
   for (let i = 0; i < n; i++) {
-    const e = pred[i] - obs[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
+    const e = obs[i] - pred[i], c = obs[i] - mo, m = n - 1, ss = SS - e * e;
     jack[0][i] = (SE - e) / m; jack[1][i] = (SA - Math.abs(e)) / m; jack[2][i] = Math.sqrt(Math.max(0, ss) / m);
     const constant = count.size === 1 || (count.size === 2 && count.get(obs[i]) === 1);
     const sst = Q - c * c - c * c / m;
@@ -2602,7 +2602,7 @@ function evaluate(table, spec) {
       labels = key === 'dclass' ? g.dclassOrder.filter(l => by.has(l)).concat(by.has('') ? [''] : []) : labels.sort(natural);
       groups[key] = labels.map(lab => ({ label: lab, ...metrics(by.get(lab).map(i => obs[i].value), by.get(lab).map(i => p[i].value), spec.norm, wOf(by.get(lab))) }));
     }
-    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(q.map((x, j) => x - o[j]), spec.infer);
+    const infer = !spec.infer ? null : wt ? { n: o.length, reason: 'weighted' } : inference(o.map((x, j) => x - q[j]), spec.infer);
     if (infer && !wt && spec.infer.boot) infer.boot = bootstrapCI(o, q, { ...spec.infer.boot, level: spec.infer.level || 0.95 });
     return { ...m, index: k, acc, idx, obs: o, pred: q, w, overall: metrics(o, q, spec.norm, w), groups, infer };
   });
@@ -3143,7 +3143,7 @@ const { metrics } = __fb_r("eval/calc.js");
 // σ̂²ψ + z(b)ᵀs²(b)z(b) (Eq. 11); coefficient intervals b ± t·SE ("in an analogous manner to linear least squares").
 // Ready-made forms: the growth forms of SQ-03 (METHODS §18, with their reading status) and the power forms a·x^b and
 // a·x1^b·x2^c (Parresol 2001 Eq. 15). Fit measures: the Model Evaluation tool's own definitions (eval/calc.js metrics,
-// METHODS §7; bias = mean(ŷ − y)). AIC (tool rule): Gaussian likelihood with variance σ²ψ_t, σ² at its maximum S/n,
+// METHODS §7; bias = mean(y − ŷ)). AIC (tool rule): Gaussian likelihood with variance σ²ψ_t, σ² at its maximum S/n,
 // AIC = 2k − 2 ln L, k = number of coefficients + 1 (θ of an estimated weight not counted; stated).
 
 
@@ -3151,7 +3151,7 @@ const { metrics } = __fb_r("eval/calc.js");
 
 
 
-const TOOL = { id: 'dogrusal-olmayan-regresyon', version: '1.0.0-beta.1' };
+const TOOL = { id: 'dogrusal-olmayan-regresyon', version: '1.0.0-beta.2' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /** Ready-made forms: expression, variables, parameters, reading status of the source (METHODS §26). */
@@ -3342,7 +3342,7 @@ const { rng, normQuantile } = __fb_r("core/stats.js");
 
 
 
-const TOOL = { id: 'bonitet', version: '1.0.0-beta.3' };
+const TOOL = { id: 'bonitet', version: '1.0.0-beta.4' };
 const AGE_TYPES = ['total', 'bh'];                         // total age, breast-height age (K8: never converted)
 
 /** ln(1 − e^(−x)) for x > 0 without cancellation (log(−expm1(−x)) below ln 2, log1p(−e^(−x)) above). */
@@ -3528,7 +3528,7 @@ function sse(id, theta, pairs) { let s = 0; for (const x of pairs) { const v = p
 /**
  * Fits a form to pairs by Levenberg–Marquardt (core/nls.js). start: [θ] or null (grid). Returns { status, params, se,
  * seNote, start, startFrom, iter, reason, n, nSeries, rmse, bias, sigma, residuals: [{ id, A1, A2, H2, pred, e }] }.
- * e = predicted − observed (Model Evaluation definitions: bias = mean e, RMSE = √(Σe²/n)). A converged fit whose
+ * e = observed − predicted (Model Evaluation definitions: bias = mean e, RMSE = √(Σe²/n)). A converged fit whose
  * parameters break the form's rules (e.g. b1 ≤ 0) is reported as 'invalid', never as a usable set.
  */
 function fitPairs(id, pairs, { start = null, nSeries = null } = {}) {
@@ -3545,7 +3545,7 @@ function fitPairs(id, pairs, { start = null, nSeries = null } = {}) {
   const params = Object.fromEntries(f.params.map((k, i) => [k, r.theta[i]]));
   const bad = f.check(params);
   if (bad.length) return { ...out, status: 'invalid', params, problems: bad };
-  const residuals = pairs.map(x => { const pred = predictTheta(id, r.theta, x); return { id: x.id, A1: x.A1, H1: x.H1, A2: x.A2, H2: x.H2, pred, e: pred - x.H2 }; });
+  const residuals = pairs.map(x => { const pred = predictTheta(id, r.theta, x); return { id: x.id, A1: x.A1, H1: x.H1, A2: x.A2, H2: x.H2, pred, e: x.H2 - pred }; });
   const n = pairs.length, bias = residuals.reduce((a, q) => a + q.e, 0) / n, rmse = Math.sqrt(r.sse / n);
   const cov = n > p ? covariance(model, r.theta, pairs, r.sse) : null;
   return { ...out, status: 'ok', params, theta: r.theta, sse: r.sse, rmse, bias, sigma: Math.sqrt(r.sse / (n - p)),
@@ -3709,9 +3709,9 @@ const tr = {
   'fit.fail': p => `Fit etme sonuç vermedi: ${p.why}. Başka bir başlangıç ya da biçim deneyin; sonuç katsayı kaydına yazılamaz.`,
   'fit.sum': p => `${p.n} çift, ${p.s} dizi, eşleştirme: ${p.pair}; Levenberg–Marquardt ${p.it} yineleme; başlangıç ${p.start} (${p.from}).`,
   'fit.par': 'Katsayı', 'fit.est': 'Tahmin', 'fit.se': 'Standart hata*', 'fit.senote': '* Gözlemler bağımsız varsayımıyla (σ̂²(JᵀJ)⁻¹). Aynı dizinin gözlemleri bağımsız değildir; gerçek belirsizlik daha büyük olabilir.',
-  'fit.gof': p => `RMSE ${p.rmse} m, yanlılık ${p.bias} m (tahmin − gözlenen; Model Başarısı aracıyla aynı tanımlar), σ̂ ${p.sigma} m.`,
+  'fit.gof': p => `RMSE ${p.rmse} m, yanlılık ${p.bias} m (gözlenen − tahmin; Model Başarısı aracıyla aynı tanımlar), σ̂ ${p.sigma} m.`,
   'fit.ch.curves': 'Fit edilen eğriler ve gözlemler', 'fit.ch.note': 'Her dizinin eğrisi o dizinin en yaşlı gözleminden geçer (ilk 30 dizi).', 'fit.ch.lines': 'dizilerin eğrileri', 'fit.ch.age': 'Yaş (yıl)', 'fit.ch.h': 'Boy (m)',
-  'fit.ch.res': 'Artıklar ve tahmin yaşı', 'fit.ch.age2': 'Tahmin edilen yaş A₂ (yıl)', 'fit.ch.e': 'Artık e = tahmin − gözlenen (m)',
+  'fit.ch.res': 'Artıklar ve tahmin yaşı', 'fit.ch.age2': 'Tahmin edilen yaş A₂ (yıl)', 'fit.ch.e': 'Artık e = gözlenen − tahmin (m)',
   'fit.save.h': 'Katsayı kaydına yaz', 'fit.save.sub': 'Kayıt, kökeni "fit edilen" olan bir set olur; fit etme özeti (veri, çift ve dizi sayısı, eşleştirme, RMSE, yanlılık), verinin yaş ve boy aralığı (geçerlilik aralığı olarak) ve sizin verdiğiniz kaynak künyesiyle saklanır.',
   'fit.cit': 'Kaynak künyesi (zorunlu)', 'fit.cit.ph': 'ör. Kendi gövde analizi verim, 2026, yayımlanmamış', 'fit.save': 'Seti kaydet', 'fit.saved': 'Set kaydedildi ve seçildi.',
   'fit.miss': p => `Eksik: ${p.list}.`,
@@ -3779,9 +3779,9 @@ const en = {
   'fit.fail': p => `The fit gave no result: ${p.why}. Try another start or form; the result cannot be written to the library.`,
   'fit.sum': p => `${p.n} pairs, ${p.s} series, pairing: ${p.pair}; Levenberg–Marquardt ${p.it} iterations; start ${p.start} (${p.from}).`,
   'fit.par': 'Coefficient', 'fit.est': 'Estimate', 'fit.se': 'Standard error*', 'fit.senote': '* Assuming independent observations (σ̂²(JᵀJ)⁻¹). Observations of one series are not independent; the real uncertainty may be larger.',
-  'fit.gof': p => `RMSE ${p.rmse} m, bias ${p.bias} m (predicted − observed; the definitions of the Model Evaluation tool), σ̂ ${p.sigma} m.`,
+  'fit.gof': p => `RMSE ${p.rmse} m, bias ${p.bias} m (observed − predicted; the definitions of the Model Evaluation tool), σ̂ ${p.sigma} m.`,
   'fit.ch.curves': 'Fitted curves and observations', 'fit.ch.note': 'The curve of each series passes through its oldest observation (first 30 series).', 'fit.ch.lines': 'curves of the series', 'fit.ch.age': 'Age (years)', 'fit.ch.h': 'Height (m)',
-  'fit.ch.res': 'Residuals and predicted age', 'fit.ch.age2': 'Predicted age A₂ (years)', 'fit.ch.e': 'Residual e = predicted − observed (m)',
+  'fit.ch.res': 'Residuals and predicted age', 'fit.ch.age2': 'Predicted age A₂ (years)', 'fit.ch.e': 'Residual e = observed − predicted (m)',
   'fit.save.h': 'Write to the coefficient library', 'fit.save.sub': 'The record becomes a set of origin "fitted"; it keeps the fit summary (data, numbers of pairs and series, pairing, RMSE, bias), the age and height range of the data (as its validity range) and the citation you give.',
   'fit.cit': 'Citation (required)', 'fit.cit.ph': 'e.g. Own stem analysis data, 2026, unpublished', 'fit.save': 'Save the set', 'fit.saved': 'Set saved and chosen.',
   'fit.miss': p => `Missing: ${p.list}.`,
@@ -4952,7 +4952,7 @@ const { metrics } = __fb_r("eval/calc.js");
 
 
 
-const TOOL = { id: 'hacim-denklemleri', version: '1.0.0-beta.1' };
+const TOOL = { id: 'hacim-denklemleri', version: '1.0.0-beta.2' };
 const fin = x => typeof x === 'number' && Number.isFinite(x);
 
 /**

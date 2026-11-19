@@ -151,7 +151,7 @@ function renderStep3() {
       ${names.map((n, i) => `<tr><th>${esc(n)}</th><td class="num" data-k="c${i}">${sig(x.coef[i])}</td><td class="num">${sig(x.se[i])}</td></tr>`).join('')}
       ${log ? `<tr><th>${esc(F.params[0])} = exp(ln ${esc(F.params[0])})</th><td class="num">${sig(x.params[F.params[0]])}</td><td></td></tr>` : ''}</tbody></table></div>${log ? `<p class="muted small">${T('r.lnnote')}</p>` : ''}
       <div class="charts2"><figure class="chartbox" id="ch-o-${x.id}">${scatterChart({ title: T('ch.obs', { f: formName(x.id) }), points: x.obs.map((o, i) => [o, x.pred[i]]), xLabel: T('ch.xo'), yLabel: T('ch.yo'), equal: true, fmt: v => fmtNum(v, 2), width: 420, height: 340 })}</figure>
-      <figure class="chartbox" id="ch-r-${x.id}">${scatterChart({ title: T('ch.res', { f: formName(x.id) }), points: x.pred.map((p, i) => [p, p - x.obs[i]]), xLabel: T('ch.x'), yLabel: T('ch.y'), hline: 0, fmt: v => fmtNum(v, 2), width: 420, height: 340 })}</figure></div></div>`;
+      <figure class="chartbox" id="ch-r-${x.id}">${scatterChart({ title: T('ch.res', { f: formName(x.id) }), points: x.pred.map((p, i) => [p, x.obs[i] - p]), xLabel: T('ch.x'), yLabel: T('ch.y'), hline: 0, fmt: v => fmtNum(v, 2), width: 420, height: 340 })}</figure></div></div>`;
   }
   if (ok.length) {
     h += `<div class="card" id="savecard"><h2>${T('save.h')}</h2><div class="lims"><label>${T('save.form')} <select id="sv-form">${ok.map(x => `<option value="${x.id}"${S.saveForm === x.id ? ' selected' : ''}>${esc(formName(x.id))}</option>`).join('')}</select></label>

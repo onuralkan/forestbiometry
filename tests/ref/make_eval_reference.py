@@ -15,7 +15,7 @@ def num(s):
     except ValueError: return None
 
 def measures(o, p):
-    o = np.asarray(o, float); p = np.asarray(p, float); e = p - o
+    o = np.asarray(o, float); p = np.asarray(p, float); e = o - p   # observed − predicted (19 Nov 2026)
     r = {'n': int(o.size), 'bias': float(e.mean()), 'mae': float(mean_absolute_error(o, p)), 'rmse': float(root_mean_squared_error(o, p))}
     # sklearn's r2_score returns a finite placeholder for constant y_true; the definition says undefined
     r['r2'] = None if np.ptp(o) == 0 else float(r2_score(o, p))

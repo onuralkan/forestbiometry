@@ -270,7 +270,7 @@ function bootHtml(pc) {
   return h + `<p class="muted small">${T('bt.note', { B: fmtNum(S.bootB, 0), seed: esc(S.seed) })}${edge ? ' ' + T('bt.edge') : ''}</p>`;
 }
 function tabCharts(p) {
-  const m = R.models[S.chartModel], pts = m.obs.map((o, i) => [o, m.pred[i]]), res = m.pred.map((q, i) => [q, q - m.obs[i]]);
+  const m = R.models[S.chartModel], pts = m.obs.map((o, i) => [o, m.pred[i]]), res = m.pred.map((q, i) => [q, m.obs[i] - q]);
   const fmt = v => fmtNum(v, 3), nm = m.name.replace(/[^\p{L}\p{N}_-]+/gu, '_');
   p.innerHTML = `<label class="field inline"><span>${T('ch.pick')}</span><select id="cm">${R.models.map((x, i) => `<option value="${i}"${i === S.chartModel ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
     <p class="muted small">${T('ch.n', { n: fmtNum(pts.length, 0) })} · ${T('sign')}</p><div class="charts2">
@@ -341,7 +341,7 @@ function groupRows() {
 }
 function residualRows() {
   const out = [[T('x.row'), T('m.model'), T('x.obsv'), T('x.pred'), T('x.e'), ...(R.weighted ? [T('x.w')] : [])]];
-  for (const m of R.models) m.idx.forEach((i, k) => out.push([R.rowNumbers[i], m.name, m.obs[k], m.pred[k], m.pred[k] - m.obs[k], ...(R.weighted ? [m.w[k]] : [])]));
+  for (const m of R.models) m.idx.forEach((i, k) => out.push([R.rowNumbers[i], m.name, m.obs[k], m.pred[k], m.obs[k] - m.pred[k], ...(R.weighted ? [m.w[k]] : [])]));
   return out;
 }
 function infoRows() {

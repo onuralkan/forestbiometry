@@ -1,13 +1,13 @@
 // Height–Diameter Modelling (fixed-effects version): pure logic (no DOM). Definitions and sources: docs/METHODS.md §10.
 // Units inside: d in cm, h in m, breast height bh in m. Every model is h = bh + f(d; θ); it is fitted to z = h − bh
-// by nonlinear least squares (Levenberg–Marquardt). Sign convention for errors everywhere: e = predicted − observed.
+// by nonlinear least squares (Levenberg–Marquardt). Sign convention for errors everywhere: e = observed − predicted (y − ŷ).
 import { levenbergMarquardt, covariance, quadForm, ols } from '../core/nls.js';
 import { tQuantile, shuffle } from '../core/stats.js';
 import { readNum } from '../eval/calc.js';
 import { cellText } from '../core/table.js';
 import { UNITS } from '../core/num.js';
 
-export const TOOL = { id: 'boy-cap', version: '1.1.0' };
+export const TOOL = { id: 'boy-cap', version: '1.1.1' };
 export const DIVERGE_FACTOR = 50;      // asymptote above 50 × the largest observed (h − bh): "not identified by the data" (tool rule)
 export const CV_SEED = 20261109;       // fixed seed: folds are reproducible
 export const CV_K = 10;                // folds for random tree-level CV and for grouped CV with many plots
@@ -131,7 +131,7 @@ export function fitModel(m, d, z, opts = {}) {
   Object.assign(out, { theta: th, sse, iter: best.iter, asym: m.asym(th), start: bestStart });   // start: the values the solution came from (R code)
   if (blowup(th)) return { ...out, status: 'diverged' };
   if (!th.every(v => v > 0)) out.warn.push({ code: 'sign', params: m.names.filter((_, j) => !(th[j] > 0)) });
-  const e = d.map((v, i) => m.f(th, v) - z[i]);            // predicted − observed
+  const e = d.map((v, i) => z[i] - m.f(th, v));            // observed − predicted
   out.bias = e.reduce((s, v) => s + v, 0) / n; out.mae = e.reduce((s, v) => s + Math.abs(v), 0) / n; out.rmse = Math.sqrt(sse / n);
   out.sigma = Math.sqrt(sse / (n - m.p));                   // residual standard error, df = n − p
   out.df = n - m.p;
@@ -178,7 +178,7 @@ export function predictMissing(prep, fit) {
 
 /* ---------------- residual diagnostics ---------------- */
 export function residuals(prep, fit) {
-  return prep.fitRows.map(r => { const yhat = predict(fit, r.d, prep.bh); return { d: r.d, plot: r.plot, obs: r.h, fit: yhat, e: yhat - r.h }; });
+  return prep.fitRows.map(r => { const yhat = predict(fit, r.d, prep.bh); return { d: r.d, plot: r.plot, obs: r.h, fit: yhat, e: r.h - yhat }; });
 }
 /** Residual spread in thirds of the fitted values (informational; constant variance is an assumption of the intervals). */
 export function spreadByThirds(res) {
@@ -240,11 +240,11 @@ export function cvSummary(prep, folds) {
   const common = folds.filter(f => f.preds.every(p => p));
   const eModel = Array.from({ length: M }, () => []), eSel = [], eSelAll = [];
   let nOut = 0;
-  for (const f of common) f.test.forEach((i, j) => { for (let k = 0; k < M; k++) eModel[k].push(f.preds[k][j] - rows[i].h); if (f.outside[j]) nOut++; });
-  for (const f of folds) if (f.sel >= 0) f.test.forEach((i, j) => eSelAll.push(f.preds[f.sel][j] - rows[i].h));
-  for (const f of common) f.test.forEach((i, j) => eSel.push(f.preds[f.sel][j] - rows[i].h));
+  for (const f of common) f.test.forEach((i, j) => { for (let k = 0; k < M; k++) eModel[k].push(rows[i].h - f.preds[k][j]); if (f.outside[j]) nOut++; });
+  for (const f of folds) if (f.sel >= 0) f.test.forEach((i, j) => eSelAll.push(rows[i].h - f.preds[f.sel][j]));
+  for (const f of common) f.test.forEach((i, j) => eSel.push(rows[i].h - f.preds[f.sel][j]));
   const perFold = folds.map(f => ({ label: f.label, nTrain: f.nTrain, nTest: f.test.length, nOutside: f.outside.filter(Boolean).length, sel: f.sel,
-    status: f.status, rmse: f.preds.map(p => p ? errMetrics(p.map((v, j) => v - rows[f.test[j]].h)).rmse : null) }));
+    status: f.status, rmse: f.preds.map(p => p ? errMetrics(p.map((v, j) => rows[f.test[j]].h - v)).rmse : null) }));
   const chosen = MODELS.map((_, k) => folds.filter(f => f.sel === k).length);
   return { nFolds: folds.length, nCommonFolds: common.length, dropped: folds.filter(f => !f.preds.every(p => p)).map(f => f.label),
     nTest: eModel[0].length, nOutside: nOut, models: eModel.map(errMetrics), selection: errMetrics(eSel), selectionAll: errMetrics(eSelAll), chosen, perFold };

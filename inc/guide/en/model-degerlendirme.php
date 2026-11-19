@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('model-degerlendirme', 'Model Evaluation') ?>
-<p>Compares observed values with the predictions of one or more models: bias (ē), MAE, RMSE and prediction R² (1 − SSE/SST); observed–predicted and residual plots; tables by plot, species, diameter class and validation fold. The error sign is <b>e = predicted − observed</b> everywhere; a positive bias means the model over-predicts on average. R² is not the squared correlation and can be negative.</p>
+<p>Compares observed values with the predictions of one or more models: bias (ē), MAE, RMSE and prediction R² (1 − SSE/SST); observed–predicted and residual plots; tables by plot, species, diameter class and validation fold. The error sign is <b>e = observed − predicted</b> everywhere; a negative bias means the model over-predicts on average. R² is not the squared correlation and can be negative.</p>
 <p>Optionally, the measures are weighted by a weight column, and a confidence interval for the mean error (bias), equivalence tests (Robinson and Froese 2004) and bootstrap confidence intervals for the bias, MAE, RMSE and R² (percentile and BCa; DiCiccio and Efron 1996) are given.</p>
 <p><b>What it does not do:</b> AIC, adjusted R², parameter confidence intervals and model significance are not computed (the number of parameters is not known). The tool does not assume external validation.</p>
 <h3>Data</h3>
