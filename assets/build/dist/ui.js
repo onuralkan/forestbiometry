@@ -1287,11 +1287,13 @@ function trigamma(x) {
 
 // ---- assets/lab/core/stats.js
 __fb_m["core/stats.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "betaInc": () => betaInc, "betaIncInvLower": () => betaIncInvLower, "gammaP": () => gammaP, "gammaPInv": () => gammaPInv, "gammaQ": () => gammaQ, "lnBetaInc": () => lnBetaInc, "lnGammaP": () => lnGammaP, "lnGammaQ": () => lnGammaQ, "logNormCdf": () => logNormCdf, "logNormSf": () => logNormSf, "normCdf": () => normCdf, "normQuantile": () => normQuantile, "normSf": () => normSf, "rng": () => rng, "shuffle": () => shuffle, "tCdf": () => tCdf, "tQuantile": () => tQuantile });
+__fb_x(__fb_e, { "absNcTCdf": () => absNcTCdf, "betaInc": () => betaInc, "betaIncInvLower": () => betaIncInvLower, "gammaP": () => gammaP, "gammaPInv": () => gammaPInv, "gammaQ": () => gammaQ, "lnBetaInc": () => lnBetaInc, "lnGammaP": () => lnGammaP, "lnGammaQ": () => lnGammaQ, "logNormCdf": () => logNormCdf, "logNormSf": () => logNormSf, "ncF1Quantile": () => ncF1Quantile, "normCdf": () => normCdf, "normQuantile": () => normQuantile, "normSf": () => normSf, "rng": () => rng, "shuffle": () => shuffle, "tCdf": () => tCdf, "tQuantile": () => tQuantile });
 const { lnGamma } = __fb_r("core/special.js");
 const { brent } = __fb_r("core/roots.js");
+const { gaussLegendre } = __fb_r("core/quad.js");
 // Small statistics core (no DOM): regularised incomplete beta and gamma, normal and Student t distributions and quantiles,
 // a seeded random generator and a stable shuffle. Checked against SciPy in tests/hd/test_hd.mjs.
+
 
 
 
@@ -1474,6 +1476,39 @@ function shuffle(arr, seed) {
   const a = arr.slice(), r = rng(seed);
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
+}
+
+/**
+ * P(|T| ≤ c) for T ~ non-central t with ν degrees of freedom and non-centrality δ, i.e. P(F ≤ c²) for F ~ non-central
+ * F(1, ν, δ²). T = (Z + δ)/√(V/ν) with V ~ χ²_ν, so the probability is E_V[Φ(c√(V/ν) − δ) − Φ(−c√(V/ν) − δ)]; the
+ * expectation is taken over x = ln V (density exp(kx − eˣ/2 − k ln 2 − lnΓ(k)), k = ν/2) by composite Gauss–Legendre
+ * on a range outside which the density is below e⁻⁴⁰ of its peak. Used by the equivalence test (Model Evaluation, §7).
+ */
+function absNcTCdf(c, nu, delta) {
+  if (!(c > 0)) return 0;
+  if (!(nu > 0) || !Number.isFinite(c) || !Number.isFinite(delta)) return NaN;
+  const k = nu / 2, x0 = Math.log(nu), sd = Math.sqrt(2 / nu), lnC = -k * Math.LN2 - lnGamma(k);
+  const lo = x0 - Math.max(40 / k + 2, 12 * sd), hi = x0 + Math.max(Math.log(40 / k + 2) + 2, 12 * sd);
+  const P = 400, h = (hi - lo) / P, { x, w } = gaussLegendre(16);
+  let sum = 0;
+  for (let i = 0; i < P; i++) {
+    const a = lo + i * h, m = a + h / 2;
+    for (let j = 0; j < x.length; j++) {
+      const t = m + h / 2 * x[j], dens = Math.exp(k * t - Math.exp(t) / 2 + lnC);
+      if (!(dens > 0)) continue;
+      const s = c * Math.sqrt(Math.exp(t) / nu);
+      sum += w[j] * h / 2 * dens * (normCdf(s - delta) - normCdf(-s - delta));
+    }
+  }
+  return Math.min(1, Math.max(0, sum));
+}
+/** Quantile of the non-central F(1, ν, λ) distribution: the q with P(F ≤ q) = p (0 < p < 1, λ ≥ 0). */
+function ncF1Quantile(p, nu, lambda) {
+  if (!(p > 0 && p < 1) || !(nu > 0) || !(lambda >= 0)) return NaN;
+  const d = Math.sqrt(lambda), g = c => absNcTCdf(c, nu, d) - p;
+  let hi = d + 4; while (g(hi) < 0) { hi *= 2; if (hi > 1e8) return Infinity; }
+  const r = brent(g, 0, hi, { xtol: 1e-13 });
+  return r.status === 'ok' ? r.root * r.root : NaN;
 }
 };
 

@@ -57,7 +57,7 @@ const ev = await viaTab('/model-degerlendirme.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');
 });
-ok(ev.obj.tool.version === '1.1.0' && ev.obj.models.length > 0 && ev.obj.models[0].overall && ev.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/eval/ornek/ornek-tahminler.csv')) && await sealOk(ev.obj), 'model evaluation 1.1.0: record with measures and input fingerprint');
+ok(ev.obj.tool.version === '1.2.0-beta.1' && ev.obj.models.length > 0 && ev.obj.models[0].overall && ev.obj.models[0].inference && ev.obj.models[0].inference.ci && ev.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/eval/ornek/ornek-tahminler.csv')) && await sealOk(ev.obj), 'model evaluation 1.2.0-beta.1: record with measures, bias interval and input fingerprint');
 const rk = await viaTab('/nispi-siralama.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');
@@ -101,7 +101,7 @@ ok(await page.locator('#seal[data-seal="bad"]').count() === 1 && (await page.tex
 await shot('di07-2-bozuk');
 // an older version and a pre-DI-07 file
 const old = await R.seal({ ...g1.obj, tool: { ...g1.obj.tool, version: '0.9.0' }, build: { commit: 'a'.repeat(40), site: g1.obj.build.site } }); const op = path.join(tmp, 'old.json'); await writeFile(op, JSON.stringify(old));
-await page.setInputFiles('#recfile', op); await page.waitForSelector('#vernote');
+await page.setInputFiles('#recfile', op); await page.waitForSelector('#vernote[data-ver="changed"]');
 ok(await page.getAttribute('#vernote', 'data-ver') === 'changed' && await page.getAttribute('#seal', 'data-seal') === 'ok' && (await page.getAttribute('#sumkv a[target="_blank"]', 'href')).endsWith('/commit/' + 'a'.repeat(40)), 'verifier: older version reported, commit linked');
 const lg = path.join(tmp, 'legacy.json'); await writeFile(lg, JSON.stringify({ tool: { id: 'bonitet', version: '1.0.0-beta.3' }, created: '2026-11-12T10:00:00Z', results: [] }));
 await page.setInputFiles('#recfile', lg); await page.waitForSelector('#kindnote');

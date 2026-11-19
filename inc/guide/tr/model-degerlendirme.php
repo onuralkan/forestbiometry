@@ -1,6 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('model-degerlendirme', 'Model Başarısı Değerlendiricisi') ?>
 <p>Gözlenen değerleri bir ya da daha fazla modelin tahminleriyle karşılaştırır: yanlılık (ē), MAE, RMSE ve tahmin R² (1 − SSE/SST); gözlenen–tahmin ve artık grafikleri; örnek alan, tür, çap sınıfı ve doğrulama katına göre tablolar. Hata işareti her yerde <b>e = tahmin − gözlenen</b>; pozitif yanlılık modelin ortalamada fazla tahmin ettiğini gösterir. R² ilişki katsayısının karesi değildir, negatif olabilir.</p>
+<p>İsteğe bağlı olarak ölçütler bir ağırlık sütunuyla ağırlıklı hesaplanır; ortalama hata (yanlılık) için güven aralığı ve eşdeğerlik testleri (Robinson ve Froese 2004) verilir.</p>
 <p><b>Yapmadıkları:</b> AIC, düzeltilmiş R², parametre güven aralıkları ve model anlamlılığı hesaplanmaz (parametre sayısı bilinmez). Araç dış doğrulama olduğunu varsaymaz.</p>
 <h3>Veri</h3>
 <p>Her satır bir gözlem: gözlenen değer ve bir ya da daha fazla modelin tahmini. Örnek alan, tür, çap ve doğrulama katı sütunları isteğe bağlıdır. Tablo dosyadan, yapıştırarak ya da "Onaylanmış veriden al" ile Denetçi'nin onayladığı veriden gelebilir (eşleşmemiş sütunlar tahmin adayı olur).</p>
@@ -10,13 +11,18 @@
 <li><b>Gruplar</b>: örnek alan, tür, doğrulama katı, çap sütunu ve çap sınıfı sınırları.</li>
 <li><b>Hangi satırlar?</b> Varsayılan "ortak geçerli satırlar": bütün modellerin ve gözlenen değerin dolu olduğu satırlar; modeller aynı örneklemle karşılaştırılır. "Her model kendi geçerli satırlarıyla" seçilirse örneklemler farklı olabilir ve karşılaştırma doğrudan yapılamaz.</li>
 <li><b>Bağıl ölçütler</b> (isteğe bağlı): gözlenen ortalamaya, aralığa ya da standart sapmaya göre yüzde.</li>
+<li><b>Ağırlık</b> (isteğe bağlı): ör. örnekleme ağırlığı ya da hektara çevirme katsayısı. Her ortalama Σw·(…)/Σw olur. Ağırlığı boş, okunamayan, sıfır ya da negatif satırlar dışarıda kalır ve sayılır. Ağırlıklıyken standart sapmaya göre bağıl ölçüt tanımsızdır; güven aralığı ve eşdeğerlik testleri hesaplanmaz.</li>
+<li><b>Yanlılık için çıkarım</b>: güven düzeyi (%90, %95, %99) ve isteğe bağlı eşdeğerlik testi. Eşdeğerlik sınırı ya veri biriminde (δ, ör. 0,5 m) ya da hataların standart sapmasına oranla (ε, ör. 0,25) girilir; test büyüklüğü α 0,01, 0,05 ya da 0,10.</li>
 </ul>
 <h3>Sonuçlar ve indirme</h3>
-<p><b>Özet</b> (ölçütler, kaynak beyanı, satır hesabı: boş, okunamayan, kullanılan satırlar), <b>Grafikler</b> (gözlenen–tahmin, 1:1 çizgisiyle; artık–tahmin), <b>Gruplar</b> ve <b>İndir</b>: tam rapor (Excel), ölçüt tablosu, grup tablosu ve satır başına artıklar (CSV).</p>
+<p><b>Özet</b> (ölçütler, kaynak beyanı, satır hesabı: boş, okunamayan, kullanılan satırlar), <b>Çıkarım</b> (yanlılık için güven aralığı ve eşdeğerlik testleri), <b>Grafikler</b> (gözlenen–tahmin, 1:1 çizgisiyle; artık–tahmin), <b>Gruplar</b> ve <b>İndir</b>: tam rapor (Excel), ölçüt tablosu, çıkarım tablosu, grup tablosu ve satır başına artıklar (CSV).</p>
+<h3>Eşdeğerlik testi nasıl okunur?</h3>
+<p>Klasik testte sıfır hipotezi "fark yok"tur; küçük ya da gürültülü bir örneklem bu hipotezi reddedemez ve model yanlışlıkla başarılı görünür. Eşdeğerlik testinde sıfır hipotezi "model yanlı"dır (|ortalama hata| ≥ δ); eşdeğerlik ancak veri bunu gösterirse kabul edilir. İki test verilir: <b>TOST</b> (1 − 2α güven aralığı ±δ içinde mi?) ve daha güçlü olan <b>eşdeğerlik için eşleştirilmiş t testi</b> (|t| &lt; C). "Gösterilemedi" modelin yanlı olduğunu kanıtlamaz; güç sütunu, gerçek yanlılık sıfırken eşdeğerliğin gösterilme olasılığıdır. Sonuç seçtiğiniz δ'ya bağlıdır; δ'yı veriye bakmadan, kullanım amacına göre belirleyin.</p>
 <h3>Sık karşılaşılanlar</h3>
 <ul>
 <li>Kaynak "eğitim verisi" ya da "belirtilmedi" ise uyarı çıkar: eğitim verisindeki başarı yeni verideki başarıdan genellikle iyimserdir; kaynağı belirtilmemiş tahminler dış doğrulama gibi okunmamalıdır.</li>
 <li>Gözlenen değerler sabitse R² tanımsızdır; bağıl ölçüt paydası sıfır ya da negatifse bağıl ölçüt tanımsız yazılır.</li>
+<li>Güven aralığı ve testler çiftlerin bağımsız olduğunu varsayar; aynı örnek alandaki ağaçlar birbirine benzediği için aralık gerçekte olduğundan dar çıkabilir.</li>
 <li>Bir satır birden çok nedenle dışarıda kalabilir; satır hesabındaki sayılar bu yüzden toplanmaz.</li>
 </ul>
 </section>

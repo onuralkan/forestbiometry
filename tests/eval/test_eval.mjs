@@ -6,6 +6,7 @@ import path from 'node:path';
 import * as E from '../../assets/lab/eval/calc.js';
 import { tableFromText } from '../../assets/lab/core/table.js';
 import { classesFromBreaks } from '../../assets/lab/stand/calc.js';
+import { ncF1Quantile, tCdf } from '../../assets/lab/core/stats.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url)), root = path.resolve(here, '../..');
 let pass = 0, fail = 0;
@@ -86,6 +87,82 @@ const spec = rowSet => ({ obs: col('h_obs'), decimal: ',', rowSet, norm: 'mean',
   const t = { headers: ['o', 'p'], rowNumbers: [2, 3, 4], rows: [[{ t: 'n', v: 10 }, { t: 'n', v: 12 }], [{ t: 's', v: '1.234' }, { t: 's', v: '1,5' }], [{ t: 's', v: '' }, { t: 'n', v: 3 }]] };
   const r = E.evaluate(t, { obs: 0, decimal: ',', rowSet: 'common', norm: null, models: [{ col: 1, name: 'p', role: 'unknown' }], groups: {} });
   eq([r.models[0].acc.obsBad, r.models[0].acc.obsEmpty, r.models[0].acc.used], [1, 1, 1], '"1.234" under comma setting is unreadable, not 1234');
+}
+
+/* 1.2.0: weighted measures, interval for the bias, equivalence tests (reference: tests/ref/eval_inference.R, base R) */
+const ri = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval_inference.json'), 'utf8'));
+{
+  // weights = dbh column; common rows of both models
+  const sp = { ...spec('common'), weight: col('dbh') };
+  const r = E.evaluate(tb, sp);
+  ok(r.weighted, 'weighted run flagged');
+  r.models.forEach((m, k) => {
+    const x = ri.weighted[k ? 'h_m2' : 'h_m1'], o = m.overall;
+    eq(o.n, x.n, `weighted ${m.name}: n`);
+    for (const f of ['sumW', 'bias', 'mae', 'rmse', 'r2', 'meanObs', 'meanPred']) near(o[f], x[f], `weighted ${m.name}: ${f} = R`, 1e-12);
+    for (const f of ['bias', 'mae', 'rmse']) near(o.rel[f], x.rel_mean[f], `weighted ${m.name}: relative ${f} (weighted mean) = R`, 1e-12);
+    eq(m.infer, null, 'no inference without spec.infer');
+  });
+  const rr = E.evaluate(tb, { ...sp, norm: 'range' });
+  for (const f of ['bias', 'mae', 'rmse']) near(rr.models[0].overall.rel[f], ri.weighted.h_m1.rel_range[f], `weighted relative ${f} (range) = R`, 1e-12);
+  eq(E.evaluate(tb, { ...sp, norm: 'sd' }).models[0].overall.rel.reason, 'sd-weighted', 'relative to SD undefined under weights');
+  // unit weights reproduce the unweighted measures
+  const o = [10, 20, 30], q = [12, 18, 33], u = E.metrics(o, q, 'mean', [1, 1, 1]), plain = E.metrics(o, q, 'mean');
+  for (const f of ['bias', 'mae', 'rmse', 'r2']) near(u[f], plain[f], `unit weights = unweighted ${f}`, 1e-15);
+  // a hand example: w = [1, 2, 1], e = [2, −2, 3] → bias = (2 − 4 + 3)/4 = 0.25, RMSE = √((4 + 8 + 9)/4)
+  const h = E.metrics(o, q, null, [1, 2, 1]);
+  near(h.bias, 0.25, 'hand: weighted bias 0.25'); near(h.rmse, Math.sqrt(21 / 4), 'hand: weighted RMSE √(21/4)'); near(h.mae, 9 / 4, 'hand: weighted MAE (2 + 4 + 3)/4');
+  near(h.r2, 1 - 21 / 200, 'hand: weighted R² = 1 − 21/200 (weighted mean of y is 20)');
+  // weights: empty, unreadable, zero and negative weights leave the row out and are counted
+  const t2 = tableFromText('y;p;w\n1;1,5;2\n2;2,5;\n3;2;x\n4;4,5;0\n5;5;-1\n6;6,5;1', { delim: ';' });
+  const r2 = E.evaluate(t2, { obs: 0, models: [{ col: 1, name: 'P', role: 'test' }], decimal: ',', rowSet: 'common', norm: null, weight: 2, infer: { level: 0.95 } });
+  eq([r2.models[0].acc.wEmpty, r2.models[0].acc.wBad, r2.models[0].acc.used, r2.models[0].acc.dropped], [1, 3, 2, 4], 'weights: 1 empty, 3 unreadable or ≤ 0, 2 used');
+  eq(r2.models[0].infer.reason, 'weighted', 'inference not computed under weights');
+}
+{
+  const r = E.evaluate(tb, { ...spec('common'), infer: { level: 0.95, alpha: 0.05, margin: null } });
+  r.models.forEach((m, k) => {
+    const x = ri.inference[k ? 'h_m2' : 'h_m1'], I = m.infer;
+    eq(I.n, x.n, `${m.name}: n`);
+    for (const f of ['mean', 'sd', 'se']) near(I[f], x[f], `${m.name}: ${f} = R`, 1e-12);
+    near(I.ci.lo, x.ci95[0], `${m.name}: 95% interval lower = t.test`, 1e-11); near(I.ci.hi, x.ci95[1], `${m.name}: 95% interval upper = t.test`, 1e-11);
+    for (const [lv, key] of [[0.9, 'ci90'], [0.99, 'ci99']]) {
+      const J = E.inference(m.pred.map((p, j) => p - m.obs[j]), { level: lv });
+      near(J.ci.lo, x[key][0], `${m.name}: ${key} lower = t.test`, 1e-11); near(J.ci.hi, x[key][1], `${m.name}: ${key} upper = t.test`, 1e-11);
+    }
+    for (const q of x.equiv) {
+      const J = E.inference(m.pred.map((p, j) => p - m.obs[j]), { level: 0.95, alpha: q.alpha, margin: { type: q.type, value: q.value } }), Q = J.equiv;
+      const lab = `${m.name} ${q.type} ${q.value} α=${q.alpha}`;
+      near(Q.delta, q.delta, `${lab}: δ`, 1e-12); near(Q.eps, q.eps, `${lab}: ε`, 1e-12);
+      near(Q.tost.lo, q.tost_lo, `${lab}: TOST interval lower = t.test(1 − 2α)`, 1e-11); near(Q.tost.hi, q.tost_hi, `${lab}: TOST upper`, 1e-11);
+      eq(Q.tost.equivalent, q.tost_equivalent, `${lab}: TOST decision`);
+      near(Q.wellek.psi2, q.psi2, `${lab}: ψ²`, 1e-12); near(Q.wellek.C, q.C, `${lab}: cut-off C = √qf(α, 1, n − 1, ψ²)`, 1e-8);
+      near(Q.wellek.t, q.t, `${lab}: t`, 1e-12); eq(Q.wellek.equivalent, q.wellek_equivalent, `${lab}: equivalence decision`);
+      near(Q.wellek.power, q.power, `${lab}: power = 2·pt(C) − 1`, 1e-8);
+    }
+  });
+  // Robinson and Froese (2004), Table 1 (n = 3393 trees, s = 1.9 cm; n = 549 plots, s = 10.6 m³/ha; α = 0.01):
+  // the cut-offs printed to two decimals (absolute criteria within 0.05: the paper divides by the unrounded s), and the same
+  // values from R to full precision. The printed 27.77 for diameter 50 % is not reproduced (R and this code: 26.68).
+  const T1 = [['d_abs025', 3393, 0.25 / 1.9, 5.33], ['d_abs050', 3393, 0.5 / 1.9, 12.96], ['d_rel10', 3393, 0.1, 3.50], ['d_rel25', 3393, 0.25, 12.21],
+    ['d_rel50', 3393, 0.5, null], ['v_abs1', 549, 1 / 10.6, 0.14], ['v_abs5', 549, 5 / 10.6, 8.69], ['v_rel10', 549, 0.1, 0.19], ['v_rel25', 549, 0.25, 3.52], ['v_rel50', 549, 0.5, 9.30]];
+  for (const [key, n, e, paper] of T1) {
+    const C = Math.sqrt(ncF1Quantile(0.01, n - 1, n * e * e));
+    near(C, ri.table1[key][0], `Table 1 ${key}: cut-off = R`, 1e-8);
+    if (paper != null) ok(Math.abs(C - paper) <= (key.includes('abs') ? 0.05 : 0.0051), `Table 1 ${key}: cut-off ${C.toFixed(4)} ≈ printed ${paper}`);
+    near(2 * tCdf(C, n - 1) - 1, ri.table1[key][1], `Table 1 ${key}: power = R`, 1e-8);
+  }
+  // printed power 0.11 and 0.15 for the two low-power volume rows
+  ok(Math.abs(2 * tCdf(Math.sqrt(ncF1Quantile(0.01, 548, 549 / 10.6 ** 2)), 548) - 1 - 0.11) < 0.005, 'Table 1 volume 1 m³/ha: power ≈ 0.11');
+  ok(Math.abs(2 * tCdf(Math.sqrt(ncF1Quantile(0.01, 548, 549 * 0.01)), 548) - 1 - 0.15) < 0.005, 'Table 1 volume 10 %: power ≈ 0.15');
+  // the decisions of Table 1 for diameter (mean −0.19, s 1.9, n 3393: t = −5.72 to two decimals)
+  const tD = -0.19 / (1.9 / Math.sqrt(3393));
+  ok(Math.abs(tD + 5.82) < 0.01, 'Table 1: t from the rounded mean and s (−5.82; the paper prints −5.72 from unrounded values)');
+  // undefined cases
+  eq(E.inference([1]).reason, 'n', 'n < 2: nothing');
+  eq(E.inference([1, 1, 1], { margin: { type: 'abs', value: 1 } }).equiv.reason, 'sd-zero', 's = 0: equivalence undefined');
+  eq(E.inference([1, 2, 4], { margin: { type: 'abs', value: 0 } }).equiv.reason, 'margin', 'margin must be positive');
+  eq(E.inference([1, 2, 4], { margin: { type: 'abs', value: -1 } }).equiv.reason, 'margin', 'negative margin rejected');
 }
 
 console.log(`eval: ${pass} passed, ${fail} failed`);

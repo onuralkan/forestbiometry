@@ -3079,5 +3079,76 @@
       "METHODS §23 TM-03 (1/k)"
     ],
     "note": "incomplete: 'Zöhrer ve ark. (1973)' (et al.); via van Laar & Akça 2007; no marker"
+  },
+  {
+    "key": "efron1993",
+    "type": "book",
+    "authors": [
+      "Efron, B.",
+      "Tibshirani, R. J."
+    ],
+    "year": "1993",
+    "title": "An Introduction to the Bootstrap",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Chapman & Hall",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §7 (bootstrap intervals: out of scope until the source arrives)"
+    ],
+    "note": "only chapter 17 (cross-validation and other estimates of prediction error, pp. 237–257) was in the file read on 19 Nov 2026; the percentile interval (chapter 13) was not"
+  },
+  {
+    "key": "robinson2004",
+    "type": "article",
+    "authors": [
+      "Robinson, A. P.",
+      "Froese, R. E."
+    ],
+    "year": "2004",
+    "title": "Model validation using equivalence tests",
+    "container": "Ecological Modelling",
+    "edition": null,
+    "volume": "176",
+    "issue": null,
+    "pages": "349–358",
+    "publisher": null,
+    "doi": "10.1016/j.ecolmodel.2004.01.013",
+    "url": null,
+    "version": null,
+    "status": "B",
+    "tools": [
+      "METHODS §7 (equivalence tests)"
+    ],
+    "note": null
+  },
+  {
+    "key": "wellek2003",
+    "type": "book",
+    "authors": [
+      "Wellek, S."
+    ],
+    "year": "2003",
+    "title": "Testing Statistical Hypotheses of Equivalence",
+    "container": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "publisher": "Chapman & Hall",
+    "doi": null,
+    "url": null,
+    "version": null,
+    "status": "D",
+    "tools": [
+      "METHODS §7 (paired t-test for equivalence, cited through Robinson and Froese 2004)"
+    ],
+    "note": "not read; the test is applied as given by Robinson and Froese (2004)"
   }
 ]

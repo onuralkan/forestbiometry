@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const XLSX = require(path.join(root, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
+const E = await import(path.join(root, 'assets/lab/eval/calc.js'));
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null;
 const URL = BASE + '/model-degerlendirme.php';
 let pass = 0, fail = 0;
@@ -104,9 +105,37 @@ await shot('ev-6-farkli-satirlar');
 await page.click('#tab-export');
 const [d4] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 const wb = XLSX.read(await readFile(await d4.path()));
-ok(wb.SheetNames.join(',') === 'Bilgi,Olcutler,Satir sayimi,Gruplar,Artiklar', 'XLSX sheets: ' + wb.SheetNames.join(','));
+ok(wb.SheetNames.join(',') === 'Bilgi,Olcutler,Satir sayimi,Cikarim,Gruplar,Artiklar', 'XLSX sheets: ' + wb.SheetNames.join(','));
 const resid = XLSX.utils.sheet_to_json(wb.Sheets.Artiklar, { header: 1 });
 ok(resid.length === 1 + 57 + 54 && resid[1][4] === resid[1][3] - resid[1][2], 'residual sheet: e = predicted − observed');
+
+// 4b. inference: interval for the bias and equivalence tests (EN), values as in calc.js; then weights switch them off
+await pasteRun('obs\tpred\tw\n10\t12\t1\n20\t18\t2\n30\t33\t1\n');
+await page.click('#steps [data-go="2"]');
+await page.selectOption('#level', '0.9');
+await page.check('input[name="mtype"][value="abs"]');
+ok(await page.locator('#calc').isDisabled(), 'equivalence chosen without a margin: Calculate disabled');
+await page.fill('#mvalue', '20'); await page.locator('#mvalue').dispatchEvent('change');
+await page.click('#calc'); await page.waitForSelector('#panel table');
+await page.click('#tab-infer');
+const I = E.inference([2, -2, 3], { level: 0.9, alpha: 0.05, margin: { type: 'abs', value: 20 } });
+const fx = x => String(+x.toFixed(4));
+const rows = await page.evaluate(() => [...document.querySelectorAll('#panel table')].map(t => [...t.querySelectorAll('tbody tr')].map(tr => [...tr.children].map(td => td.textContent.trim()))));
+ok(rows[0][0][2] === fx(I.mean) && rows[0][0][6] === fx(I.ci.lo) && rows[0][0][7] === fx(I.ci.hi), `90% interval as calc.js: ${rows[0][0].join('|')}`);
+ok(rows[1][0][3] === fx(I.equiv.tost.lo) && rows[1][0][5] === 'Yes' && rows[1][0][7] === fx(I.equiv.wellek.C) && rows[1][0][9] === (I.equiv.wellek.equivalent ? 'Yes' : 'Not shown'), `equivalence row as calc.js: ${rows[1][0].join('|')}`);
+await shot('ev-8-cikarim-en');
+await page.click('#tab-export');
+const [d5] = await Promise.all([page.waitForEvent('download'), page.click('#x-i')]);
+const ic = (await readFile(await d5.path(), 'utf8')).replace(/^\uFEFF/, '').split('\r\n');
+ok(ic[0].startsWith('Model,n,Bias') && Math.abs(+ic[1].split(',')[7] - I.ci.lo) < 1e-12, 'inference CSV at full precision');
+await page.click('#steps [data-go="2"]');
+await page.selectOption('#wcol', { label: 'w' });
+ok((await page.locator('.note.warn', { hasText: 'not computed' }).count()) === 1, 'weights: inference switched off, said in the settings');
+await page.click('#calc'); await page.waitForSelector('#panel table');
+s = await summary();
+ok(s[0][2] === '0.25' && (await page.locator('.note', { hasText: 'weighted by the column "w"' }).count()) === 1, 'weighted bias (2 − 4 + 3)/4 = 0.25: ' + s[0].join('|'));
+await page.click('#tab-infer');
+ok((await page.locator('#panel .note.warn').count()) === 1, 'inference tab explains why nothing is computed');
 
 // 5. phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
