@@ -1,6 +1,6 @@
 # PROGRESS.md: Durum, kontroller, eksikler, sıradaki adım
 
-Son güncelleme: 18 Kasım 2026, sürüm v2026.11.2 hazırlandı; tarayıcı testleri CI'da; ana sayfa yeniden tasarlandı (kullanıcı kararları)
+Son güncelleme: 19 Kasım 2026: R kodu yedi model aracında tamamlandı ve yayında; Denklem Sistemleri 1.0.0-beta.2; çalışma planı güncellendi (kullanıcı kararları, aşağıda "Sıradaki adım")
 
 ## Tamamlananlar
 | Bölüm | Durum | Kontroller |
@@ -154,7 +154,15 @@ Son güncelleme: 18 Kasım 2026, sürüm v2026.11.2 hazırlandı; tarayıcı tes
 ## Sıradaki adım
 Durum (18 Kasım 2026): 24 araç, 8 modül; planlı araç yok (P8). Sürüm **v2026.11.2** hazırlandı: notlar `docs/releases/v2026.11.2.md`, `CITATION.cff` 2026.11.2 (18 Kasım 2026), `.zenodo.json` güncel. **Yayımlandı (18 Kasım 2026, kullanıcı GitHub'da):** Zenodo sürüm DOI'si **10.5281/zenodo.24339226** (kayıt doğrulandı: sürüm v2026.11.2, kavram DOI'si 10.5281/zenodo.24135603); `CITATION.cff` ve README'de. Önceki ayrıntılar (çap dağılımı revizyonu sırası, DI modülü sırası, TOOLS_SPEC aşamaları) tamamlandı; geçmişleri yukarıdaki tabloda ve git geçmişinde.
 
-Açık işler (18 Kasım 2026 değerlendirmesi, öncelik sırasıyla):
+**Çalışma planı (19 Kasım 2026, kullanıcı kararları):**
+- Uzun bir süre **yeni sürüm yayımlanmaz** (son sürüm v2026.11.2); değişiklikler siteye yayın akışıyla çıkmaya devam eder.
+- **Kaynakça künyeleri en sona** bırakıldı; zamanını kullanıcı söyleyecek.
+- **Araç eksiklerine** başlanır; **Örnekleme kategorisine yeni araç ya da tasarım eklenmez**, o haliyle kalır.
+- Küçük tutarlılık işlerinden **erişilebilirlik sonraya** bırakıldı; **Nispi Sıralama, Model Başarısı'nın yanına** (model değerlendirme altına) taşınacak.
+- **Türkçe terminoloji denetimi** sonraya bırakıldı ve bir kez yapılacak (yeni şeyler eklendikçe yinelenmez); talimatı `docs/TERMINOLOJI_DENETIMI_PROMPT.md` (kullanıcının belgesi, 19 Kasım 2026). Yalnız rapor üretir, uygulamada değişiklik yapmaz.
+- **Minör revizyonlar:** kullanıcı sitede gezinirken notları `docs/MINOR_REVIZYONLAR.md`'de biriktirir (MR-001…); ara ara kullanıcının seçtiği maddeler uygulanır, belgedeki yönergeye göre (belirsiz olanlarda önce öneri).
+
+Açık işler (18 Kasım 2026 değerlendirmesi, öncelik sırasıyla; 19 Kasım 2026 kararlarıyla güncel):
 1. **Bilimsel doğrulama:** U, Donnelly ve Hegyi R paketleriyle doğrulandı (18 Kasım 2026; `test_ss02_r` 12/12); U ve Donnelly [P], özgün kaynakları gelirse [B]. METHODS'ta 61 [D] işareti var; hesapta kullanılanlar ayıklanmadı. KAYNAK_LISTESI'nde 46 ☐, 24 ☑. Kaynak bekleyen yöntemler: gövde boyunca kabuk modelleri, tepe oranı regresyonları, Korf (büyüme, ikinci kaynak).
 2. **Kaynakça künyeleri:** 129 künyenin çoğunda alan eksik (123'ünde DOI, 112'sinde yayıncı, 72'sinde sayfa); kural gereği boş bırakıldı, kullanıcı tamamlayacak.
 3. **Araç eksikleri** (yukarıdaki 9–16. maddeler; bir kısmı sonradan gelen araçlarla kısmen karşılandı, yeniden gözden geçirilmeli): Model Değerlendirme'de güven aralığı ve ağırlıklı ölçüt, Boy–Çap'ta karma etki (ayrı Karma Etkili Modeller aracı var, bağlı değil) ve değişen varyans, Örnekleme'de t ve tabakalı/sistematik/kümeli tasarımlar, Nispi Sıralama'da ağırlık ve belirsizlik; Kayıt Doğrulayıcı'da kaydı araçta yeniden açıp hesabı tekrarlama; "R kodunu da ver" düğmesi (PROJECT §9).
