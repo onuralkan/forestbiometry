@@ -15,6 +15,7 @@ import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { createUnitNav } from '../core/unitnav.js';
 import { buildR, buildBootR } from './rcode.js';
 import { buildRecoverR } from './rcode-rec.js';
+import { buildStandR } from './rcode-stand.js';
 import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:cap-dagilimi-2';
@@ -1055,12 +1056,19 @@ function drawStandTrain() {
       <details class="more"><summary>${T('st.cv.units')}</summary><div class="tscroll tall"><table class="grid cvtab"><thead><tr><th>${T('x.plot')}</th><th>${T('x.period')}</th><th>${T('st.cv.fold')}</th><th>n</th><th>−ln L</th><th>KS D</th><th>${T('t.status')}</th></tr></thead><tbody>
       ${cv.units.map(u => `<tr data-status="${u.status}"><td>${esc(u.plot)}</td><td>${esc(perLabel(u.period))}</td><td class="num">${u.fold + 1}</td><td class="num">${u.n ?? '–'}</td><td class="num">${u.status === 'ok' ? f(u.nll, 3) : '–'}</td><td class="num">${u.status === 'ok' ? f(u.ks, 4) : '–'}</td><td class="small">${esc(T('st.cv.st.' + u.status))}</td></tr>`).join('')}</tbody></table></div></details></div>`;
   }
-  h += `<div class="exports"><button type="button" class="btn" id="st-json">${T('st.dl')}</button><button type="button" class="btn ghost" id="st-cvcsv"${cv ? '' : ' disabled'}>${T('st.dlcv')}</button><button type="button" class="btn ghost" id="st-go">${T('st.topredict')}</button></div>`;
+  h += `<div class="exports"><button type="button" class="btn" id="st-json">${T('st.dl')}</button><button type="button" class="btn ghost" id="st-cvcsv"${cv ? '' : ' disabled'}>${T('st.dlcv')}</button><button type="button" class="btn ghost" id="st-go">${T('st.topredict')}</button><button type="button" class="btn ghost" id="st-r"${m.fit === 'cdfr' || m.fit === 'mcdfr' ? ' disabled' : ''}>${T('ex.r')}</button></div><p class="muted small">${T('ex.r.stand')}</p>`;
   out.innerHTML = h;
   $('st-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-mescere-modeli-${stamp()}.json`, m));
   $('st-cvcsv').addEventListener('click', () => downloadCSV(fname('cap-dagilimi-mescere-dogrulama', 'diameter-distribution-stand-validation', 'csv'),
     [[T('x.plot'), T('x.period'), 'fold', 'n', 'neg_log_lik', 'neg_log_lik_per_tree', 'ks_d', 'status'], ...cv.units.map(u => [u.plot, u.period, u.fold + 1, u.n ?? null, u.status === 'ok' ? u.nll : null, u.status === 'ok' ? u.nllPerTree : null, u.status === 'ok' ? u.ks : null, u.status])]));
   $('st-go').addEventListener('click', () => { S.st.tab = 'predict'; S.st.src = 'trained'; save(); renderStand(); });
+  $('st-r').addEventListener('click', () => {
+    const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
+    const x = Object.fromEntries(['N', 'H', 'A'].map(k => [k, num(q.x[k])])), withX = q.src === 'trained' && q.pdone && D.stand.needs(m.terms).every(k => x[k] > 0);
+    download(fname('cap-dagilimi-mescere-modeli', 'diameter-distribution-stand-model', 'R'), buildStandR({ imp, src: S.src, decimal: standDecimal(), unit: S.unit, dcol: S.dcol, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval,
+      cols: { N: q.ncol, H: q.hcol, A: q.acol } }, standCfg(), m, withX ? x : null, withX ? D.stand.predict(m, x) : null, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    if (!file) download(csvName(imp), tableCsv(S.src, cellText, standDecimal()), 'text/csv;charset=utf-8');
+  });
 }
 function standModel() { const q = S.st; return q.src === 'imported' ? q.imported : q.model && q.model.status === 'ok' ? q.model : null; }
 function standPredict(el) {

@@ -46,6 +46,18 @@ export function buildRecoverR(card, summary, opts, results, o) {
   out.push(FB_OUT, '', `res <- list()`);
   const okR = (results || []).filter(r => r.status === 'ok' || r.status === 'multiple');
   for (const r of (results || []).filter(x => !okR.includes(x))) out.push(rComment(T(`${r.method}: araçta sonuç yok (${r.status}${r.problems && r.problems[0] ? ', ' + r.problems[0].code : ''}); R'da da hesaplanmaz.`, `${r.method}: no result in the tool (${r.status}${r.problems && r.problems[0] ? ', ' + r.problems[0].code : ''}); not computed in R either.`)));
+  out.push(...recoverBody(card, summary, opts, okR, T));
+  out.push('', `fb_out(res)`, '');
+  return out.join('\n');
+}
+
+/**
+ * The R lines of a recovery after the header: the summary `s`, the method's code and its results written into `res`
+ * (also used by the stand-model scripts, stage 3b, with the predicted responses as the summary). okR: the results to
+ * redo ({ method } of status 'ok' or 'multiple'), T: the language picker.
+ */
+export function recoverBody(card, summary, opts, okR, T, sExpr = null) {
+  const out = [], sb = card === 'parresol' || card === 'fonseca';
   if (card === 'mom') {
     const s = summary || {};
     out.push(rComment(T('Özet: ortalama ve varyans (bölen n ya da n − 1, n − 1 ise n gerekir) ya da Dq; varyans moment varyansına çevrilir v = s²(n − 1)/n, Dq\'dan v = Dq² − m².', 'Summary: the mean and the variance (divisor n or n − 1, which needs n) or Dq; the variance becomes the moment variance v = s²(n − 1)/n, from Dq v = Dq² − m².')),
@@ -62,7 +74,7 @@ export function buildRecoverR(card, summary, opts, results, o) {
     const s = summary || {}, loc = opts && opts.loc === 'user' ? { loc: 'user', a: opts.a } : { loc: 'half-dmin' };
     out.push(rComment(T('Hedefler (Poudel ve Cao 2013): ortalama, varyans (moment varyansı; n − 1 ile verildiyse çevrilir), Dq, yüzdelikler Q25…Q95, en küçük çap Dmin, ağaç sayısı n. G_r(c) = Γ(1 + r/c), A_p = −ln(1 − p).',
       'Targets (Poudel and Cao 2013): mean, variance (moment variance; converted if given with n − 1), Dq, percentiles Q25…Q95, the smallest diameter Dmin, number of trees n. G_r(c) = Γ(1 + r/c), A_p = −ln(1 − p).')),
-      `s <- ${rList({ mean: s.mean, variance: s.variance, varDivisor: s.variance != null ? (s.varDivisor || 'n') : null, n: s.n, dq: s.dq, q25: s.q25, q31: s.q31, q63: s.q63, q50: s.q50, q95: s.q95, dmin: s.dmin })}`,
+      `s <- ${sExpr ?? rList({ mean: s.mean, variance: s.variance, varDivisor: s.variance != null ? (s.varDivisor || 'n') : null, n: s.n, dq: s.dq, q25: s.q25, q31: s.q31, q63: s.q63, q50: s.q50, q95: s.q95, dmin: s.dmin })}`,
       `if (!is.null(s$variance) && identical(s$varDivisor, "n-1")) s$variance <- s$variance * (s$n - 1) / s$n`,
       `a <- ${loc.loc === 'user' ? rNum(loc.a) + `   # ${T('konum: kullanıcının değeri', 'location: the user\'s value')}` : `0.5 * s$dmin   # ${T('konum: kaynağın kuralı a = Dmin/2 (M2–M9)', 'location: the source\'s rule a = Dmin/2 (M2–M9)')}`}`,
       `G <- function(r, c) gamma(1 + r / c)
@@ -91,7 +103,7 @@ report <- function(id, a, cs, scale) { b <- sapply(cs, scale); ok <- b > 0; cs <
     const s = summary || {};
     out.push(rComment(T('Girdiler: ξ (verilen alt sınır), ortalama m, medyan M, Dq (doğrudan ya da N ve G\'den: Dq² = G/(K·N), K = π/40000). Bilinmeyenler λ = (M − ξ) + e^s, δ = e^t; γ = δ ln[(ξ + λ − M)/(M − ξ)] (medyan tam tutar). Denklemler ölçekli: ortalama/m − 1, ikinci moment/Dq² − 1.',
       'Inputs: ξ (the given lower bound), mean m, median M, Dq (given, or from N and G: Dq² = G/(K·N), K = π/40000). Unknowns λ = (M − ξ) + e^s, δ = e^t; γ = δ ln[(ξ + λ − M)/(M − ξ)] (the median is matched exactly). Scaled equations: mean/m − 1, second moment/Dq² − 1.')),
-      `s <- ${rList({ xi: s.xi, mean: s.mean, median: s.median, dq: s.dq, nha: s.nha, g: s.g })}`,
+      `s <- ${sExpr ?? rList({ xi: s.xi, mean: s.mean, median: s.median, dq: s.dq, nha: s.nha, g: s.g })}`,
       `q <- if (!is.null(s$dq)) s$dq else sqrt(s$g / (pi / 40000 * s$nha))`, R_SB,
       `par_of <- function(x) { lambda <- (s$median - s$xi) + exp(x[1]); delta <- exp(x[2]); c(xi = s$xi, lambda = lambda, gamma = delta * log((s$xi + lambda - s$median) / (s$median - s$xi)), delta = delta) }`,
       `F <- function(x) { p <- par_of(x); u1 <- fb_sbY(p[["gamma"]], p[["delta"]], 1); u2 <- fb_sbY(p[["gamma"]], p[["delta"]], 2)
@@ -112,6 +124,5 @@ report <- function(id, a, cs, scale) { b <- sapply(cs, scale); ok <- b > 0; cs <
   if (sb) out.push(`cat(length(sols), ${rStr(T(' çözüm\\n', ' solution(s)\\n'))}); for (p in sols) { print(p); print(fb_sb_back(p[["xi"]], p[["lambda"]], p[["gamma"]], p[["delta"]])) }`,
     `res[["solutions"]] <- length(sols); if (length(sols) == 1) for (k in names(sols[[1]])) res[[k]] <- sols[[1]][[k]]`,
     rComment(T('Birden çok çözüm: yöntem tek başına seçemez (araç da sonucu "birden çok" olarak verir).', 'Several solutions: the method alone cannot choose (the tool reports "multiple" too).')));
-  out.push('', `fb_out(res)`, '');
-  return out.join('\n');
+  return out;
 }

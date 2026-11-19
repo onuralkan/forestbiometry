@@ -11,7 +11,7 @@ import { family as famOf } from './registry.js';
 import { header, readBlock, FB_NUM, FB_OUT, rStr, rNum, rVec, rComment } from '../core/rcode.js';
 
 /** Families in R: density (with log), distribution function, quantile, raw moments of order 1 and 2 (for mme). */
-const R_FAMILIES = String.raw`# ---- families with the tool's parameters (docs/METHODS.md §12); an invalid parameter gives density 0 ----
+export const R_FAMILIES = String.raw`# ---- families with the tool's parameters (docs/METHODS.md §12); an invalid parameter gives density 0 ----
 fb_bad <- function(x, log) rep(if (log) -Inf else 0, length(x))
 dfb_weibull <- function(x, a, b, c, log = FALSE) if (isTRUE(b > 0 && c > 0)) dweibull(x - a, shape = c, scale = b, log = log) else fb_bad(x, log)
 pfb_weibull <- function(q, a, b, c) pweibull(q - a, shape = c, scale = b)
@@ -63,7 +63,7 @@ fb_pars <- list(weibull = c("a", "b", "c"), normal = c("mu", "sigma"), lognormal
 `;
 
 /** Methods in R: fitdistrplus where it has the method, the rest written out; statistics and the result writer. */
-const R_METHODS = String.raw`# ---- methods ----
+export const R_METHODS = String.raw`# ---- methods ----
 fb_ctl <- list(reltol = 1e-15, maxit = 20000)   # Nelder–Mead (optim) as fitdistrplus calls it, with a tight tolerance
 fb_fn <- function(fam, kind) get(paste0(kind, "fb_", fam))
 fb_call <- function(f, x, par) do.call(f, c(list(x), as.list(par)))
@@ -138,7 +138,7 @@ const rList = obj => `list(${Object.entries(obj).map(([k, v]) => `${k} = ${Array
 const sig2 = v => Number(Number(v).toPrecision(2));
 
 /** The settings and data part of a script: the same rows, units and diameters (or classes) as the page. */
-function dataBlock(s, R, T, hd, pool, f, g) {
+export function dataBlock(s, R, T, hd, pool, f, g) {
   const out = [];
   out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
     `dec <- ${rStr(s.decimal)}; f_unit <- ${rNum(f)}   # ${T('ondalık ayırıcı; ', 'decimal separator; ')}${s.unit === 'mm' ? 'mm → cm' : 'cm'}`,
