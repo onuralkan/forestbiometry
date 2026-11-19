@@ -1024,7 +1024,7 @@ __fb_m["biomass/ui.js"] = function (__fb_e) {
 __fb_x(__fb_e, {  });
 const B = __fb_r("biomass/calc.js");
 const { T } = __fb_r("biomass/i18n.js");
-const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
+const { lang, fmtNum, esc, LIST_SEP } = __fb_r("core/i18n.js");
 const { put, get, del } = __fb_r("core/store.js");
 const { listCoefs, saveCoef, blankSet, form: formOf } = __fb_r("core/coef.js");
 const { mountCoefEditor } = __fb_r("core/coef-ui.js");
@@ -1340,7 +1340,7 @@ function renderSysOutNL() {
     <div class="tscroll"><table class="grid" id="sy-stat"><thead><tr><th>${T('sy.eq')}</th><th>${T('sy.w')}</th><th>Se (kg) NSUR</th><th>${T('sy.bias')}</th><th>FI</th><th>Se (kg) ${T('sy.sep')}</th><th>FI</th></tr></thead><tbody>
     ${SR.equations.map(e => `<tr data-eq="${esc(e.key)}"><th>${esc(name(e))}</th><td class="small">${esc(wtxt(e))}</td>
       <td class="num">${fmtNum(e.nsur.stats.Se, 3)}</td><td class="num">${fmtNum(e.nsur.stats.bias, 3)}</td><td class="num" data-k="fi">${fmtNum(e.nsur.stats.FI, 4)}</td><td class="num">${fmtNum(e.single.stats.Se, 3)}</td><td class="num">${fmtNum(e.single.stats.FI, 4)}</td></tr>`).join('')}</tbody></table></div>
-    <p class="small" id="sy-s2">σ̂²<sub>NSUR</sub> = ${sig(SR.s2)} (${T('sn.df')} ${SR.df}). ${T('sy.corr')}: ${SR.equations.map((e, i) => SR.equations.slice(i + 1).map((g, j) => `${esc(name(e))}–${esc(name(g))} ${fmtNum(SR.corr[i][i + 1 + j], 2)}`).join(', ')).filter(Boolean).join(', ')}</p>
+    <p class="small" id="sy-s2">σ̂²<sub>NSUR</sub> = ${sig(SR.s2)} (${T('sn.df')} ${SR.df}). ${T('sy.corr')}: ${SR.equations.map((e, i) => SR.equations.slice(i + 1).map((g, j) => `${esc(name(e))}–${esc(name(g))} ${fmtNum(SR.corr[i][i + 1 + j], 2)}`).join(LIST_SEP)).filter(Boolean).join(LIST_SEP)}</p>
     <p class="muted small">${T('sn.method.' + SR.method)}</p>
     <h3>${T('sn.iv.h')}</h3><div class="lims"><label>D (cm) <input type="text" inputmode="decimal" size="6" id="sy-pD" value="${esc(Y.pD)}"></label>${SR.range.H ? `<label>H (m) <input type="text" inputmode="decimal" size="6" id="sy-pH" value="${esc(Y.pH)}"></label>` : ''}<button type="button" class="btn ghost small" id="sy-iv">${T('sn.iv.go')}</button></div><div id="sy-ivout"></div>
     <h3>${T('sy.save.h')}</h3><div class="lims"><label>${T('m.sp')} <input type="text" size="14" id="sy-sp" value="${esc(Y.species)}"></label></div>
@@ -1377,7 +1377,7 @@ function renderSysOut() {
     <div class="tscroll"><table class="grid" id="sy-stat"><thead><tr><th>${T('sy.eq')}</th><th>${T('sy.w')}</th><th>Se (kg) ${T('sy.sur')}</th><th>${T('sy.bias')}</th><th>FI</th><th>Se (kg) ${T('sy.sep')}</th><th>FI</th></tr></thead><tbody>
     ${SR.equations.map(e => `<tr><th>${esc(name(e))}</th><td>${e.weight.kind === 'none' ? T('sy.w.none') : `σ² ∝ ${SUR.TERMS[e.weight.v].label}^${fmtNum(e.weight.k, 4)}${e.weight.estimated ? ' (' + T('sy.k.est') + ')' : ''}`}</td>
       <td class="num">${fmtNum(e.sur.stats.Se, 3)}</td><td class="num">${fmtNum(e.sur.stats.bias, 3)}</td><td class="num">${fmtNum(e.sur.stats.FI, 4)}</td><td class="num">${fmtNum(e.single.stats.Se, 3)}</td><td class="num">${fmtNum(e.single.stats.FI, 4)}</td></tr>`).join('')}</tbody></table></div>
-    <p class="small">${T('sy.corr')}: ${SR.equations.map((e, i) => SR.equations.slice(i + 1).map((g, j) => `${esc(name(e))}–${esc(name(g))} ${fmtNum(SR.corr[i][i + 1 + j], 2)}`).join(', ')).filter(Boolean).join(', ')}</p>
+    <p class="small">${T('sy.corr')}: ${SR.equations.map((e, i) => SR.equations.slice(i + 1).map((g, j) => `${esc(name(e))}–${esc(name(g))} ${fmtNum(SR.corr[i][i + 1 + j], 2)}`).join(LIST_SEP)).filter(Boolean).join(LIST_SEP)}</p>
     <p class="muted small">${T('sy.method')}</p>
     <h3>${T('sy.save.h')}</h3><div class="lims"><label>${T('m.sp')} <input type="text" size="14" id="sy-sp" value="${esc(Y.species)}"></label><label class="chk small"><input type="checkbox" id="sy-tot"${Y.saveTotal ? ' checked' : ''}> ${T('sy.save.tot')}</label></div>
     <label class="field"><span>${T('sy.cit')}</span><input type="text" id="sy-cit" value="${esc(Y.cit)}" placeholder="${esc(T('sy.cit.ph'))}"></label>
@@ -2427,7 +2427,7 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
+__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
 // Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
 // languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
 const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
@@ -2439,20 +2439,25 @@ function makeT(dict) {
   };
 }
 /**
- * The one number formatter for screens, charts and texts: decimal point '.', no thousands separator, at most
- * maxDigits decimals (trailing zeros dropped), the same rounding as before (Intl, half away from zero) and
- * independent of the interface language. '−' is not used: negative numbers keep the ASCII minus so they can be
- * copied. Data files are never formatted with this (exports write full precision).
+ * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
+ * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
+ * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
+ * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
+/** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
+const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+/** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
+const LIST_SEP = lang === 'tr' ? '; ' : ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : s;
+  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
 }
-/** Decimal separator used everywhere on screen and in CSV exports. */
+/** Decimal separator of CSV exports (both languages). */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };

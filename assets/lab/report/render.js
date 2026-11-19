@@ -2,7 +2,10 @@
 // as a standalone file). The report language is chosen apart from the interface language, so its words live here.
 import { plotChart, barChart } from '../core/chart.js';
 import { cite, plain } from '../core/citation.js';
-import { num } from './calc.js';
+import { num as num0 } from './calc.js';
+// Numbers in the report follow its language: decimal comma in Turkish, point in English (19 Nov 2026, user decision).
+let DEC = '.';
+const num = x => { const t = num0(x); return DEC === ',' && typeof x === 'number' ? String(t).replace('.', ',') : t; };
 
 const RT = {
   tr: {
@@ -55,7 +58,8 @@ const COMMIT = c => typeof c === 'string' && /^[0-9a-f]{40}$/.test(c) ? c : null
  * → HTML of the report body (<article>).
  */
 export function renderReport(m) {
-  const L = m.lang === 'en' ? 'en' : 'tr', t = RT[L], T = (k, p) => typeof t[k] === 'function' ? t[k](p) : t[k], S = m.sections, M = m.meta;
+  const L = m.lang === 'en' ? 'en' : 'tr'; DEC = L === 'tr' ? ',' : '.';
+  const t = RT[L], T = (k, p) => typeof t[k] === 'function' ? t[k](p) : t[k], S = m.sections, M = m.meta;
   const day = m.generated.at.slice(0, 10);
   let h = `<article class="report" lang="${L}"><header class="r-head"><h1>${e(M.title || T('untitled'))}</h1>`;
   h += dl([[T('by'), M.author], [T('org'), M.org], [T('date'), M.date]].filter(([, v]) => v));

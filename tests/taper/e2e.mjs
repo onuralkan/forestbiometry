@@ -18,7 +18,7 @@ const { blankSet } = await import('../../assets/lab/core/coef.js');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/govde-profili.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
-const num = s => Number(String(s).trim());
+const num = s => Number(String(s).trim().replace(',', '.'));
 const errors = [];
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
@@ -71,7 +71,7 @@ ok(Math.abs(num(row[4]) - m.total) <= 5e-3 && Math.abs(num(row[5]) - m.hTop) <= 
 ok(await page.locator('#ch-prof svg path.ch-line').count() === 1 && (await page.textContent('#used')).includes('e2e: benzetim örneği'), 'profile chart, coefficient source written');
 await page.evaluate(() => { document.querySelector('#ptab').closest('details').open = true; });
 const pr = await page.$$eval('#ptab tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
-ok(pr.length === 25 && pr.every(([h, d]) => { const e = TP.diameterAt(set, 30, 24, Number(h)).d; return d === '–' ? e == null : Math.abs(Number(d) - e) <= 5e-3; }), 'profile table (1 m step, 25 rows) = engine');
+ok(pr.length === 25 && pr.every(([h, d]) => { const e = TP.diameterAt(set, 30, 24, num(h)).d; return d === '–' ? e == null : Math.abs(num(d) - e) <= 5e-3; }), 'profile table (1 m step, 25 rows) = engine');
 // downloads
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 const wb = XLSX.read(await readFile(await dx.path()), { type: 'buffer' });

@@ -556,7 +556,7 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
+__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
 // Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
 // languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
 const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
@@ -568,20 +568,25 @@ function makeT(dict) {
   };
 }
 /**
- * The one number formatter for screens, charts and texts: decimal point '.', no thousands separator, at most
- * maxDigits decimals (trailing zeros dropped), the same rounding as before (Intl, half away from zero) and
- * independent of the interface language. '−' is not used: negative numbers keep the ASCII minus so they can be
- * copied. Data files are never formatted with this (exports write full precision).
+ * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
+ * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
+ * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
+ * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
+/** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
+const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+/** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
+const LIST_SEP = lang === 'tr' ? '; ' : ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : s;
+  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
 }
-/** Decimal separator used everywhere on screen and in CSV exports. */
+/** Decimal separator of CSV exports (both languages). */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -1863,7 +1868,7 @@ const T = makeT({
     'h.sign': 'Açılar yataydan ölçülür: yukarı artı, aşağı eksi. Dip gözün altındaysa dibe açı eksidir (çoğu alette ayrı ölçekte okunur: eksi işaretle girin).',
     'h.sum': p => `${p.n} okuma; ortalama boy ${p.mean} m (en küçük ${p.min}, en büyük ${p.max}, açıklık ${p.range} m).`,
     'h.rules': 'Kurallar: boy, tepe ile dip arasındaki düşey uzaklıktır; eğimde dip, ağacın üst tarafındaki zemindir (Hamilton 1975). Tepe ve dip açıkça görülecek bir yerde, ağacın boyu kadar ya da biraz daha uzakta durun (Graves 1906: boy kadar, az değil çok; Hamilton: 1–1½ katı); eğimde dipten yukarıda durun. Eğik ağaçta eğikliğe dik yönde durun: sonuç gövde uzunluğu değil düşey boydur. İki üç okuma alıp ortalayın (Hamilton).',
-    'w.distance.short': p => `uzaklık boydan küçük (oran ${p.ratio.toFixed(2)})`, 'w.top.steep': p => `tepeye bakış dik (${p.deg.toFixed(0)}°)`,
+    'w.distance.short': p => `uzaklık boydan küçük (oran ${p.ratio.toFixed(2).replace('.', ',')})`, 'w.top.steep': p => `tepeye bakış dik (${p.deg.toFixed(0).replace('.', ',')}°)`,
     'p.order': 'tepe dipten aşağıda okunmuş', 'p.distance.bad': 'uzaklık > 0 olmalı', 'p.top.missing': 'tepe açısı yok', 'p.base.missing': 'dip açısı yok', 'p.top.range': 'tepe açısı ±90° içinde olmalı', 'p.base.range': 'dip açısı ±90° içinde olmalı',
     'p.point.range': 'noktaya açı geçersiz', 'p.shadow.bad': 'üç uzunluk da > 0 olmalı', 'p.poles.bad': 'uzunluklar > 0 ve AC > Ac olmalı', 'p.slope.bad': 'zemin eğimi geçersiz',
     'd.h': 'Tek gövde', 'd.sub': 'Bir ya da birkaç okuma: çap (kumpas) ya da çevre (şerit). Birden çok çap ortalanır.',
@@ -1876,9 +1881,9 @@ const T = makeT({
     'd.sum': p => `${p.N} ağaç; toplam göğüs yüzeyi ${p.G} m²; ortalama göğüs yüzeyi ${p.gm} m²; aritmetik ortalama çap ${p.dm} cm; ortalama göğüs yüzeyli ağacın çapı ${p.dg} cm${p.skip ? `; ${p.skip} satır okunamadı (satır ${p.rows})` : ''}.`,
     'd.sample': 'Örnek listeyi yükle', 'd.sample.note': 'Örnek benzetimdir (gerçek ölçüm değildir).',
     'd.rules.h': 'Göğüs çapı ölçme kuralları (Hamilton 1975; Graves 1906)',
-    'd.rules': ['Çap zeminden 1.3 m yükseklikte ölçülür; şerit gergin ve gövdeye dik, kumpas gövdeye dik tutulur.', 'Eğimli zeminde 1.3 m, ağacın üst tarafındaki zeminden ölçülür.', 'Düz zeminde eğik ağaçta 1.3 m alt taraftan, gövde eksenine paralel ölçülür.', 'Sürülmüş ya da tümsekli zeminde kök boğazı ya da zemin, hangisi yüksekse oradan ölçülür.', '1.3 m\'de şişkinlik varsa çap, şişkinliğin altında en ince yerde ölçülür (Graves: üstünde ya da altında, ya da ikisinin ortalaması).', 'Gövde 1.3 m\'nin altında çatallanıyorsa her kol ayrı ağaçtır; 1.3 m\'de çatallanıyorsa tek ağaçtır, çap çatalın altında en ince yerde ölçülür.', 'Çevre şeridi düzensizlikleri de sardığı için kumpastan genellikle büyük ölçer (Graves); dairesel olmayan gövdede dik iki çap ölçüp ortalayın.'],
+    'd.rules': ['Çap zeminden 1,3 m yükseklikte ölçülür; şerit gergin ve gövdeye dik, kumpas gövdeye dik tutulur.', 'Eğimli zeminde 1,3 m, ağacın üst tarafındaki zeminden ölçülür.', 'Düz zeminde eğik ağaçta 1,3 m alt taraftan, gövde eksenine paralel ölçülür.', 'Sürülmüş ya da tümsekli zeminde kök boğazı ya da zemin, hangisi yüksekse oradan ölçülür.', '1,3 m\'de şişkinlik varsa çap, şişkinliğin altında en ince yerde ölçülür (Graves: üstünde ya da altında, ya da ikisinin ortalaması).', 'Gövde 1,3 m\'nin altında çatallanıyorsa her kol ayrı ağaçtır; 1,3 m\'de çatallanıyorsa tek ağaçtır, çap çatalın altında en ince yerde ölçülür.', 'Çevre şeridi düzensizlikleri de sardığı için kumpastan genellikle büyük ölçer (Graves); dairesel olmayan gövdede dik iki çap ölçüp ortalayın.'],
     'f.ff': 'Biçim sayısı F = V/(B·H)', 'f.V': 'Hacim V (m³)', 'f.d': 'Çap (cm)', 'f.H': 'Boy H (m)', 'f.kind': 'Tür',
-    'f.k.breast': 'göğüs yüksekliği (çap 1.3 m\'de)', 'f.k.absolute': 'mutlak (çap dipte)', 'f.k.absolute-above-bh': '1.3 m üstü mutlak (V: 1.3 m üstündeki hacim, çap 1.3 m\'de)', 'f.k.normal': 'normal (çap boyun 1/20\'sinde; Pressler)',
+    'f.k.breast': 'göğüs yüksekliği (çap 1,3 m\'de)', 'f.k.absolute': 'mutlak (çap dipte)', 'f.k.absolute-above-bh': '1,3 m üstü mutlak (V: 1,3 m üstündeki hacim, çap 1,3 m\'de)', 'f.k.normal': 'normal (çap boyun 1/20\'sinde; Pressler)',
     'f.ff.res': p => `F = ${p.F}; biçim yüksekliği F·H = ${p.fh} m; göğüs yüzeyi ${p.B} m².`, 'f.ff.note': 'Hangi hacmi girerseniz (gövde, kullanılabilir, ağaç) biçim sayısı odur (Graves 1906 §91).',
     'f.ex': 'Biçim üssü', 'f.ex.sub': 'Gövdede iki çap ve bu noktaların tepeye uzaklıkları: y² = p·xʳ (Graves 1906 §97).', 'f.d1': 'Alttaki çap d₁', 'f.x1': 'Tepeye uzaklığı x₁ (m)', 'f.d2': 'Üstteki çap d₂', 'f.x2': 'Tepeye uzaklığı x₂ (m)', 'f.exH': 'Boy H (m; göğüs yüksekliği biçim sayısı için, isteğe bağlı)',
     'f.ex.res': p => `r = ${p.r}${p.body ? ` (${p.body})` : ''}; mutlak biçim sayısı 1/(r + 1) = ${p.abs}${p.bh != null ? `; göğüs yüksekliği biçim sayısı ${p.bh}` : ''}.`,
@@ -1886,7 +1891,7 @@ const T = makeT({
     'f.q': 'Biçim bölümü q = d/D', 'f.dMid': 'Gövdenin ortasındaki çap d (cm)', 'f.D': 'Göğüs çapı D (cm)', 'f.c': 'Türe özgü sabit c (isteğe bağlı; kaynağınızdan)',
     'f.q.res': p => `q = ${p.q}${p.F != null ? `; F = q − c = ${p.F}` : ''}.`, 'f.q.note': 'F = q − c ilişkisindeki c türe özgüdür; site hazır değer vermez, kaynağınızdaki değeri girin (Graves 1906 §100).',
     'w.factor.above-one': 'F > 1: girdileri denetleyin', 'w.quotient.above-one': 'q > 1: girdileri denetleyin',
-    'p.volume.bad': 'hacim > 0 olmalı', 'p.diameter.bad': 'çap > 0 olmalı', 'p.height.bad': 'boy > 0 olmalı', 'p.height.below-bh': 'boy 1.3 m\'den büyük olmalı', 'p.exponent.input': 'çaplar ve uzaklıklar > 0, x₁ > x₂ olmalı', 'p.quotient.input': 'iki çap da > 0 olmalı',
+    'p.volume.bad': 'hacim > 0 olmalı', 'p.diameter.bad': 'çap > 0 olmalı', 'p.height.bad': 'boy > 0 olmalı', 'p.height.below-bh': 'boy 1,3 m\'den büyük olmalı', 'p.exponent.input': 'çaplar ve uzaklıklar > 0, x₁ > x₂ olmalı', 'p.quotient.input': 'iki çap da > 0 olmalı',
     'p.reading.bad': 'okunamayan değer', 'p.ellipse.two': 'elips için tam iki çap gerekir',
     'tab.b': 'Kabuk', 'x.b': 'Kabuk',
     'b.pt.h': 'Kabuk kalınlığı ve kabuksuz çap', 'b.pt.sub': 'Bir noktada (ör. göğüs yüksekliği ya da bir tomruğun ortası) kabuk ölçümünden kabuk kalınlığı, kabuksuz çap, kabuk alanı ve payı.',
@@ -1946,7 +1951,7 @@ const T = makeT({
     'a.nog.h': 'Halkası olmayan ağaç', 'a.gD': 'Çap', 'a.gMai': 'Yıllık ortalama çap artımı (aynı birimde)',
     'a.age.note': 'Yanlış (çift) halkalar yaşı büyütür, eksik halkalar küçültür; burgu örneği öze ulaşmazsa halka sayısı alt sınırdır (van Laar ve Akça 2007).',
     'a.core.h': 'Burgu örneği', 'a.core.sub': 'Göğüs yüksekliğinden alınan örnekte halka genişlikleri, kabuktan öze doğru (en son yıl önce), mm. Boşluk, satır ya da ; ile ayırın; ondalık için nokta ya da virgül.',
-    'a.cD': 'Şimdiki çap (cm)', 'a.cBark': 'Çift kabuk kalınlığı (cm; çap kabukluysa)', 'a.cToBh': '1.3 m\'ye ulaşma süresi (yıl)', 'a.cPith': 'Örnek öze ulaşıyor', 'a.cW': 'Halka genişlikleri (mm, kabuktan öze)',
+    'a.cD': 'Şimdiki çap (cm)', 'a.cBark': 'Çift kabuk kalınlığı (cm; çap kabukluysa)', 'a.cToBh': '1,3 m\'ye ulaşma süresi (yıl)', 'a.cPith': 'Örnek öze ulaşıyor', 'a.cW': 'Halka genişlikleri (mm, kabuktan öze)',
     'a.core.res': p => `${p.rings} halka; yaş ${p.age} yıl; kabuksuz çap ${p.dib} cm; ölçülen yarıçap ${p.rad} cm.`,
     'a.cN': 'Pressler için yıl (n)', 'a.pres.res': p => `${p.n} yıl önce kabuksuz çap ${p.d} cm; periyodik yıllık çap artımı ${p.pai} cm/yıl; Pressler artım yüzdesi ${p.p} %/yıl.`,
     'a.c.ago': 'Kaç yıl önce', 'a.c.age': 'Yaş', 'a.c.d': 'Kabuksuz çap (cm)', 'a.c.g': 'Göğüs yüzeyi (m²)',
@@ -1958,7 +1963,7 @@ const T = makeT({
     'a.gp.h': 'Artım yüzdesi', 'a.gp.sub': 'Aynı büyüklüğün (hacim, göğüs yüzeyi…) şimdiki ve n yıl önceki değeri (Graves 1906).', 'a.gNow': 'Şimdiki değer V', 'a.gThen': 'n yıl önceki değer v', 'a.gYears': 'Yıl (n)',
     'a.p.past': 'Geçmiş değere göre 100(V − v)/(v·n)', 'a.p.present': 'Şimdiki değere göre 100(V − v)/(V·n)', 'a.p.mean': 'Ortalamaya göre (Pressler) 200/n·(V − v)/(V + v)',
     'a.mai.h': 'Ortalama yıllık artım', 'a.mTotal': 'Toplam büyüklük', 'a.mAge': 'Yaş (yıl)', 'a.mai.res': p => `Ortalama yıllık artım ${p.m} / yıl.`,
-    'w.core.longer': p => `halka genişlikleri yarıçaptan ${p.excess.toFixed(2)} cm uzun`, 'w.core.short': p => `öze ${p.left.toFixed(2)} cm çap kaldı: örnek öze ulaşmamış olabilir`, 'w.core.no-pith': 'örnek öze ulaşmıyor: halka sayısı ve yaş alt sınırdır', 'w.growth.negative': 'şimdiki değer öncekinden küçük',
+    'w.core.longer': p => `halka genişlikleri yarıçaptan ${p.excess.toFixed(2).replace('.', ',')} cm uzun`, 'w.core.short': p => `öze ${p.left.toFixed(2).replace('.', ',')} cm çap kaldı: örnek öze ulaşmamış olabilir`, 'w.core.no-pith': 'örnek öze ulaşmıyor: halka sayısı ve yaş alt sınırdır', 'w.growth.negative': 'şimdiki değer öncekinden küçük',
     'p.age.input': 'halka sayısı tam sayı, süre ≥ 0 olmalı', 'p.widths.bad': 'halka genişlikleri okunamadı', 'p.bark.bad': 'kabuk kalınlığı ≥ 0 ve çaptan küçük olmalı', 'p.growth.input': 'değerler ve yıl > 0 olmalı', 'p.groups.empty': 'grup yok',
     'x.a': 'Yaş ve artım', 'x.core': 'Burgu',
     'x.excel': 'Excel', 'x.json': 'JSON', 'x.info': 'Bilgi', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.lang': 'Dil', 'x.h': 'Boy', 'x.d': 'Gövde', 'x.list': 'Ağaç listesi', 'x.f': 'Biçim', 'x.src': 'Kaynaklar',

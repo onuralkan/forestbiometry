@@ -36,7 +36,7 @@ const rows = await page.$$eval('#ctab tbody tr', rs => rs.map(r => ({ form: r.da
 ok(rows.length === 6, 'one comparison row per form');
 for (const r of rows) {
   const e = E[r.form], d = e.status === 'ok' ? G.derived(r.form, e.theta, tMax) : null;
-  const near = (s, v, dig) => s === '–' ? v == null : Math.abs(Number(s.replace(' ★', '')) - v) <= 0.5 * 10 ** -dig + 1e-9;
+  const near = (s, v, dig) => s === '–' ? v == null : Math.abs(Number(s.replace(' ★', '').replace(',', '.')) - v) <= 0.5 * 10 ** -dig + 1e-9;
   ok(e.status === 'ok' && near(r.cells[3], e.rmse, 3) && near(r.cells[6], e.aic, 2) && near(r.cells[7], d.asymptote, 2) && near(r.cells[8], d.inflection, 1) && near(r.cells[9], d.maiCulmination, 1),
     `${r.form}: RMSE, AIC, asymptote, inflection and MAI culmination on screen = engine`);
 }
@@ -46,7 +46,7 @@ ok(await page.locator('#ch-curves svg path.ch-line').count() === 6 && await page
 ok(await page.locator('#ch-inc svg path.ch-line').count() === 2 && (await page.textContent('#derived')).includes('Asimptot'), 'CAI and MAI chart, derived quantities');
 await page.selectOption('#selform', 'gomp'); await page.waitForFunction(() => document.querySelector('#selform').value === 'gomp');
 await page.evaluate(() => { document.querySelector('#ttab').closest('details').open = true; });
-const tr1 = await page.$$eval('#ttab tbody tr', rs => rs.map(r => [...r.children].map(c => Number(c.textContent))));
+const tr1 = await page.$$eval('#ttab tbody tr', rs => rs.map(r => [...r.children].map(c => Number(c.textContent.replace(',', '.')))));
 const F = G.FORMS.gomp, th = E.gomp.theta;
 ok(tr1.length > 10 && tr1.every(([t, y, cai, mai]) => Math.abs(y - F.f(th, t)) <= 5e-4 && Math.abs(cai - F.dy(th, t)) <= 5e-5 && Math.abs(mai - F.f(th, t) / t) <= 5e-5), 'Gompertz curve table (y, CAI, MAI) = engine');
 await page.click('#savecoef'); ok((await page.textContent('#status')).includes('kaynak'), 'saving a curve needs a citation');

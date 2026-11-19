@@ -719,7 +719,7 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
+__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
 // Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
 // languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
 const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
@@ -731,20 +731,25 @@ function makeT(dict) {
   };
 }
 /**
- * The one number formatter for screens, charts and texts: decimal point '.', no thousands separator, at most
- * maxDigits decimals (trailing zeros dropped), the same rounding as before (Intl, half away from zero) and
- * independent of the interface language. '−' is not used: negative numbers keep the ASCII minus so they can be
- * copied. Data files are never formatted with this (exports write full precision).
+ * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
+ * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
+ * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
+ * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
+/** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
+const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+/** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
+const LIST_SEP = lang === 'tr' ? '; ' : ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : s;
+  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
 }
-/** Decimal separator used everywhere on screen and in CSV exports. */
+/** Decimal separator of CSV exports (both languages). */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -2731,7 +2736,7 @@ const T = makeT({
     'fit.cit': 'Kaynak (zorunlu; ör. "kendi gövde analizim, 2025, yayımlanmamış")', 'fit.save': 'Katsayı kütüphanesine kaydet', 'fit.saved': 'Fit edilen set kütüphaneye kaydedildi ve seçildi.', 'fit.cit.need': 'Kaydetmek için kaynak yazın.',
     'fit.method.nls-d': 'çap üzerinde NLS', 'fit.method.nls-y': 'd²/D² üzerinde NLS', 'fit.method.ols-lnd': 'ln d üzerinde doğrusal EKK',
     'tr.h': 'Ağaçlar', 'tr.mode': 'Girdi', 'tr.single': 'Tek ağaç', 'tr.table': 'Ağaç tablosu', 'tr.D': 'Göğüs çapı D (cm, kabuklu)', 'tr.H': 'Toplam boy H (m)',
-    'tr.col.plot': 'Örnek alan', 'tr.col.tree': 'Ağaç', 'tr.col.D': 'Göğüs çapı (cm)', 'tr.col.H': 'Boy (m)', 'tr.need': 'Göğüs çapı ve boy sütunlarını seçin.', 'tr.bad': 'D > 0 ve H > 1.3 m olmalı.',
+    'tr.col.plot': 'Örnek alan', 'tr.col.tree': 'Ağaç', 'tr.col.D': 'Göğüs çapı (cm)', 'tr.col.H': 'Boy (m)', 'tr.need': 'Göğüs çapı ve boy sütunlarını seçin.', 'tr.bad': 'D > 0 ve H > 1,3 m olmalı.',
     'lg.on': 'Tomruk boyu sınırı (kullanılabilir hacim tam tomruklara indirgenir)', 'lg.L': 'Tomruk boyu (m)', 'lg.trim': 'Kesim payı (cm, her tomrukta)', 'lg.min': 'En kısa tomruk (m, isteğe bağlı)', 'lg.short': 'Kalan kısa parça',
     'lg.short.drop': 'sayılmaz', 'lg.short.keep': 'en kısa tomruktan uzunsa sayılır',
     'lg.note': 'Kural: kesim yüksekliğinden tepe sınırına (tepe çapı yüksekliği; tepe çapı yoksa tepe) kadar uzunluk, tomruk boyu + kesim payına bölünür ve tam tomruklar sayılır (Kershaw, Ducey, Beers, Husch 2016, §6.4.1, s. 168–169; kesim payı §7.4.1, en kısa tomruk §7.4.3). Değerler sizin: kitaptaki örnekler (16 ft tomruk, 0,3 ft kesim payı, 8 ft en kısa tomruk) varsayılan değildir.',
@@ -2744,14 +2749,14 @@ const T = makeT({
     'tr.opts': 'Hacim ayarları', 'tr.stump': 'Kesim yüksekliği (m)', 'tr.dtop': 'Tepe çapı (cm; boş: yalnızca toplam hacim)', 'tr.step': 'Profil tablosu adımı (m)',
     'tr.opts.note': 'Toplam hacim kesim yüksekliğinden tepeye; tepe çapı girilirse çapın o değere en son indiği yüksekliğe kadar kullanılabilir hacim de verilir. Değerler araç ayarıdır, literatür değeri değildir.',
     'tr.opts.bad': 'Kesim yüksekliği ≥ 0, tepe çapı > 0, adım > 0 olmalı.',
-    'res.trees': 'Ağaçlar', 'res.tree': 'Ağaç', 'res.D': 'D (cm)', 'res.H': 'H (m)', 'res.bark': 'Kabuk', 'res.total': 'Toplam hacim (m³)', 'res.hTop': 'Tepe çapı yüksekliği (m)', 'res.merch': 'Kullanılabilir hacim (m³)', 'res.d13': 'd(1.3) (cm)', 'res.notes': 'Notlar',
+    'res.trees': 'Ağaçlar', 'res.tree': 'Ağaç', 'res.D': 'D (cm)', 'res.H': 'H (m)', 'res.bark': 'Kabuk', 'res.total': 'Toplam hacim (m³)', 'res.hTop': 'Tepe çapı yüksekliği (m)', 'res.merch': 'Kullanılabilir hacim (m³)', 'res.d13': 'd(1,3) (cm)', 'res.notes': 'Notlar',
     'res.detail': 'Ayrıntı', 'res.sel': 'Ağaç', 'res.profile': 'Gövde profili', 'res.ptab': 'Profil tablosu', 'res.h': 'Yükseklik (m)', 'res.d': 'Çap (cm)',
     'res.used': p => `Kullanıcı katsayılarıyla üretildi: ${p.list}.`, 'res.excel': 'Excel', 'res.csv': 'CSV', 'res.json': 'JSON', 'res.svg': 'SVG',
     'bark.ob': 'kabuklu', 'bark.ib': 'kabuksuz',
     'n.valid.outside': p => `${p.key} = ${p.value} setin geçerlilik aralığı dışında (${p.min ?? '–'}–${p.max ?? '–'})`, 'n.profile.negative': 'katsayılar bazı yüksekliklerde çap vermiyor (d²/D² < 0)',
     'n.tip.nonfinite': 'tepede çap yok (üs ≤ 0)', 'n.below-at-stump': 'kesimdeki çap tepe çapından küçük: kullanılabilir hacim 0', 'n.multiple': 'tepe çapına birden çok yükseklikte iniyor; en üstteki kullanıldı',
     'n.none': 'tepe çapına inilmiyor', 'n.negative': 'aralıkta çap tanımsız: hacim yok', 'n.nonfinite': 'hacim sonlu değil',
-    'p.tree.D': 'göğüs çapı eksik ya da ≤ 0', 'p.tree.H': 'boy eksik ya da ≤ 1.3 m', 'p.bark.missing': 'setin kabuk tarafı seçilmemiş', 'p.source.missing': 'setin kaynağı yok', 'p.param.join': 'ek noktaları (a1, a2) 0 ile 1 arasında olmalı',
+    'p.tree.D': 'göğüs çapı eksik ya da ≤ 0', 'p.tree.H': 'boy eksik ya da ≤ 1,3 m', 'p.bark.missing': 'setin kabuk tarafı seçilmemiş', 'p.source.missing': 'setin kaynağı yok', 'p.param.join': 'ek noktaları (a1, a2) 0 ile 1 arasında olmalı',
     'b.h': 'Ürün bölme (sortiman; isteğe bağlı)', 'b.on': 'Gövdeyi ürünlere böl',
     'b.sub': 'Ürünleri siz tanımlarsınız; site hazır ürün, boy, çap sınırı ya da fiyat vermez. Kesim yüksekliği ve tepe çapı yukarıdaki hacim ayarlarından alınır.',
     'b.bark': 'Ürünlerin çap tarafı', 'b.method': 'Yöntem', 'b.method.value': 'en yüksek değer (dinamik programlama)', 'b.method.priority': 'öncelik sırası (dipten yukarı, sığan en yüksek öncelikli ürün)',

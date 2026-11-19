@@ -1,7 +1,7 @@
 // Systems of equations (SM-04): user interface. All arithmetic in calc.js (tested in tests/eqsys/).
 import * as Q from './calc.js';
 import { T } from './i18n.js';
-import { lang, fmtNum, esc } from '../core/i18n.js';
+import { lang, fmtNum, esc, LIST_SEP } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { saveCoef, blankSet } from '../core/coef.js';
 import { parse } from '../core/expr.js';
@@ -142,7 +142,7 @@ function renderStep3() {
       <h3>${T('r.eqh')}</h3><div class="tscroll"><table class="grid" id="eqtab"><thead><tr><th>${T('r.eq')}</th><th>${T('r.r2')}</th><th>${T('r.ssr')}</th><th>${T('r.s')}</th></tr></thead><tbody>
       ${x.eq.map((e, i) => `<tr><th>${esc(R.eqs[i].label)} (${esc(R.eqs[i].y)})</th><td class="num" data-k="r2">${f(e.r2, 5)}</td><td class="num">${sig(e.ssr)}</td><td class="num">${sig(Math.sqrt(x.residCov[i][i]))}</td></tr>`).join('')}</tbody></table></div>
       <p class="small" id="r-sys">${esc(T('r.sys', { ols: f(x.olsR2, 5), mc: f(x.mcelroy, 5), ll: f(x.logLik, 4), df: x.df }))}</p>
-      <p class="small">${T('r.corr')}: ${x.eq.map((_, i) => x.eq.slice(i + 1).map((__, k) => { const j = i + 1 + k; return `${i + 1}–${j + 1} ${f(x.residCov[i][j] / Math.sqrt(x.residCov[i][i] * x.residCov[j][j]), 3)}`; }).join(', ')).filter(Boolean).join(', ')}</p>
+      <p class="small">${T('r.corr')}: ${x.eq.map((_, i) => x.eq.slice(i + 1).map((__, k) => { const j = i + 1 + k; return `${i + 1}–${j + 1} ${f(x.residCov[i][j] / Math.sqrt(x.residCov[i][i] * x.residCov[j][j]), 3)}`; }).join(LIST_SEP)).filter(Boolean).join(LIST_SEP)}</p>
       <p class="muted small">${T('r.note')}</p>
       <div class="charts2">${x.eq.map((e, i) => `<figure class="chartbox">${scatterChart({ title: T('ch.obs', { e: `${R.eqs[i].label} (${R.eqs[i].y})` }), points: e.fitted.map((p, t) => [p + e.resid[t], p]), xLabel: T('ch.xo'), yLabel: T('ch.yo'), equal: true, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure>`).join('')}</div></div>
       ${sys.shared.length ? `<div class="card" id="lrtcard"><h2>${T('lrt.h')}</h2><p class="muted small">${T('lrt.sub')}</p><button type="button" class="btn ghost" id="lrt-go">${T('lrt.go')}</button><div id="lrt-out"></div></div>` : ''}

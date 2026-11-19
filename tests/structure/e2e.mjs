@@ -27,7 +27,7 @@ const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const rows = id => page.evaluate(id => [...document.querySelectorAll(`#${id} tbody tr`)].map(tr => [...tr.children].map(x => x.textContent.trim())), id);
-const num = s => parseFloat(String(s).replace(/\s/g, ''));
+const num = s => parseFloat(String(String(s).replace(/\s/g, '')).replace(',', '.'));
 const close = (a, b, rel = 2e-3) => Number.isFinite(a) && Math.abs(a - b) <= rel * Math.max(1, Math.abs(b));
 
 // engine on the sample data

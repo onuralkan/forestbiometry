@@ -15,7 +15,7 @@
 <h3>4. Sonuçlar</h3>
 <ul>
 <li><b>Hatalar</b> (onayı engeller): okunamayan sayı, boş zorunlu alan, sıfır ya da negatif değer, mükerrer kayıt (aynı ağacın farklı dönemleri mükerrer değildir), örnek alan tablosunda olmayan alan, aynı alan için farklı büyüklük ya da tabaka, büyüklüğü olmayan alan.</li>
-<li><b>Uyarılar</b>: baştaki ya da sondaki boşluk, farklı yazılmış aynı tür kodu, dönemler arasında değişen tür, sınır dışı çap, boy ya da incelik, çapı ölçülmüş ama 1.3 m'den kısa ağaç.</li>
+<li><b>Uyarılar</b>: baştaki ya da sondaki boşluk, farklı yazılmış aynı tür kodu, dönemler arasında değişen tür, sınır dışı çap, boy ya da incelik, çapı ölçülmüş ama 1,3 m'den kısa ağaç.</li>
 <li><b>Bilgi</b>: ağacı olmayan örnek alan (hektarda 0 ağaçla veride kalır).</li>
 </ul>
 <p><b>Sorunlar</b> sekmesinde her satır için: Düzelt, öneriyi uygula, kaydı dışla (silinmez), geri al, uyarıyı kabul et, çelişkide değer seç, alan büyüklüğü gir. Her işlem bir gerekçe ister ve <b>Değişiklik günlüğü</b>ne yazılır; ham değerler korunur. <b>Veri</b> sekmesinde hücreye tıklayarak da düzeltilir.</p>

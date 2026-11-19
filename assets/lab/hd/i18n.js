@@ -17,7 +17,7 @@ const tr = {
   'dec.v.dot': 'Ondalık nokta kullanılmış görünüyor.', 'dec.v.comma': 'Ondalık virgül kullanılmış görünüyor.', 'dec.v.none': 'Metin olarak yazılmış ondalıklı sayı yok; varsayılan nokta seçildi.',
   'dec.v.ambiguous': p => `Belirsiz: ${p.ex} gibi değerler ondalık da binlik ayırıcılı tam sayı da olabilir; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.`, 'dec.v.conflict': 'Çelişkili: nokta ve virgül birlikte kullanılmış; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.',
   'bh.h': 'Göğüs yüksekliği', 'bh.label': 'Göğüs yüksekliği bh (m)',
-  'bh.sub': 'Çap, yerden bh yüksekliğinde ölçülmüş kabul edilir. Bütün modeller h = bh + f(d) biçimindedir: d → 0 iken boy bh\'ye iner. Türkiye ve Avrupa\'da genellikle 1.30 m; ABD\'de 4.5 ft = 1.37 m. Boyu bh\'ye eşit veya küçük ağaçların göğüs çapı olamaz; fit işlemine alınmaz ve sayıları raporlanır.',
+  'bh.sub': 'Çap, yerden bh yüksekliğinde ölçülmüş kabul edilir. Bütün modeller h = bh + f(d) biçimindedir: d → 0 iken boy bh\'ye iner. Türkiye ve Avrupa\'da genellikle 1,30 m; ABD\'de 4,5 ft = 1,37 m. Boyu bh\'ye eşit veya küçük ağaçların göğüs çapı olamaz; fit işlemine alınmaz ve sayıları raporlanır.',
   'bh.bad': 'Göğüs yüksekliği 0 ile 3 m arasında bir sayı olmalı.',
   'cv.h': 'Çapraz doğrulama', 'cv.plot': 'Örnek alan bazında: bir örnek alanın bütün ağaçları birlikte dışarıda tutulur (yeni örnek alanlara genelleme)',
   'cv.tree': 'Ağaç bazında: ağaçlar rastgele 10 kata ayrılır (aynı örnek alanlardaki yeni ağaçlar; yeni örnek alanlara genellemeyi ölçmez)', 'cv.none': 'Yapma',

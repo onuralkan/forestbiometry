@@ -387,7 +387,7 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
+__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
 // Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
 // languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
 const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
@@ -399,20 +399,25 @@ function makeT(dict) {
   };
 }
 /**
- * The one number formatter for screens, charts and texts: decimal point '.', no thousands separator, at most
- * maxDigits decimals (trailing zeros dropped), the same rounding as before (Intl, half away from zero) and
- * independent of the interface language. '−' is not used: negative numbers keep the ASCII minus so they can be
- * copied. Data files are never formatted with this (exports write full precision).
+ * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
+ * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
+ * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
+ * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
+/** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
+const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+/** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
+const LIST_SEP = lang === 'tr' ? '; ' : ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : s;
+  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
 }
-/** Decimal separator used everywhere on screen and in CSV exports. */
+/** Decimal separator of CSV exports (both languages). */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -1571,7 +1576,7 @@ const tr = {
   // dominant trees, age
   'dom.title': 'Baskın çap ve üst boy (D0, H0)',
   'more': 'Nasıl hesaplanır?', 'dom.hnote.h': 'H0 ve yaş nasıl hesaplanır?',
-  'dom.sub': p => `D0: hektardaki en kalın ${p.n} ağacın ortalama çapı; H0 (üst boy): hektardaki en uzun ${p.n} ağacın ortalama boyu. Her örnek alanda k = ${p.n} × A / 10000 ağaç seçilir (ör. 700 m² → 7, 1250 m² → 12.5). k kesirliyse ilk ⌊k⌋ ağaç tam, sıradaki ağaç kesir kadar ağırlıkla girer; sınırda eşit değerli ağaçlar bu ağırlığı eşit paylaşır, sonuç satır sırasına bağlı olmaz. Örnek alanda k'dan az ağaç varsa hepsi kullanılır.`,
+  'dom.sub': p => `D0: hektardaki en kalın ${p.n} ağacın ortalama çapı; H0 (üst boy): hektardaki en uzun ${p.n} ağacın ortalama boyu. Her örnek alanda k = ${p.n} × A / 10000 ağaç seçilir (ör. 700 m² → 7, 1250 m² → 12,5). k kesirliyse ilk ⌊k⌋ ağaç tam, sıradaki ağaç kesir kadar ağırlıkla girer; sınırda eşit değerli ağaçlar bu ağırlığı eşit paylaşır, sonuç satır sırasına bağlı olmaz. Örnek alanda k'dan az ağaç varsa hepsi kullanılır.`,
   'dom.def': 'D0 (baskın çap): hektardaki en kalın 100 ağacın ortalama çapı. H0 (üst boy): hektardaki en uzun 100 ağacın ortalama boyu.',
   'dom.hnote': 'H0 yalnızca ölçülmüş boylarla hesaplanır: en uzun ağaçların seçilebilmesi için örnek alandaki bütün ağaçların boyu ölçülmüş olmalıdır; değilse o örnek alanda H0 verilmez.',
   'dom.agenote': 'Yaş: örnek alanda yaşı ölçülen ağaçların ortalaması (hepsi ölçülmediyse ölçülenlerin).',

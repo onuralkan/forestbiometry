@@ -106,7 +106,7 @@ const tr = {
   'm.num.nonpos': 'Sıfır veya negatif olamaz.',
   'm.text.space': 'Başında veya sonunda boşluk var; "001 " ile "001" farklı kimlik sayılır.',
   'm.dbh.range': p => `Çap ${n(p.value)} cm, kontrol aralığının (${n(p.min)}–${n(p.max)} cm) dışında.`,
-  'm.h.belowbh': p => `Boy ${n(p.value)} m, göğüs yüksekliğinin (1.3 m) altında ama çap ölçülmüş.`,
+  'm.h.belowbh': p => `Boy ${n(p.value)} m, göğüs yüksekliğinin (1,3 m) altında ama çap ölçülmüş.`,
   'm.h.range': p => `Boy ${n(p.value)} m, kontrol aralığının (${n(p.min)}–${n(p.max)} m) dışında.`,
   'm.sl.range': p => `İncelik h/d = ${n(p.value, 1)} (h ${n(p.h)} m, d ${n(p.d)} cm), kontrol aralığının (${n(p.min)}–${n(p.max)}) dışında.`,
   'm.key.dup': p => `Mükerrer ölçüm anahtarı (${p.keyFields.map(k => tr['f.' + k]).join(' + ')} = ${p.key.map(x => x ?? '∅').join(' / ')}); aynı anahtar satır ${rows(p.rows)} için de var.`,

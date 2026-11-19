@@ -2,7 +2,7 @@
 // own functions (stand/calc.js), not a copy (TOOLS_T00 §2).
 import * as S from './calc.js';
 import { T } from './i18n.js';
-import { lang, fmtNum, esc } from '../core/i18n.js';
+import { lang, fmtNum, esc, LIST_SEP } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
@@ -72,7 +72,7 @@ function renderStep1() {
       ${S0.cls.mode === 'equal' ? `<div class="lims">${[['start', 'cls.start'], ['width', 'cls.width'], ['n', 'cls.n']].map(([k, l]) => `<label>${T(l)} <input type="text" inputmode="decimal" size="6" id="cls-${k}" value="${esc(S0.cls[k])}"></label>`).join('')}</div>` : ''}
       ${S0.cls.mode === 'breaks' ? `<label class="field"><span>${T('cls.list')}</span><input type="text" id="cls-list" value="${esc(S0.cls.list)}"></label>` : ''}
       ${S0.cls.mode !== 'none' ? `<div class="radios"><span class="small">${T('cls.order')}:</span> ${['desc', 'asc'].map(o => `<label class="small"><input type="radio" name="clsorder" value="${o}"${S0.cls.order === o ? ' checked' : ''}> ${T('cls.order.' + o)}</label>`).join(' ')}</div>
-        ${cd.problems.length ? `<p class="note err small">${T('cls.bad')}</p>` : cd.classes.length ? `<p class="small" id="clsprev">${esc(T('cls.preview', { list: cd.classes.slice().reverse().map(k => `${k.name}: ${fmtNum(k.lo, 2)}–${fmtNum(k.hi, 2)}`).join(', ') }))}</p>` : ''}` : ''}
+        ${cd.problems.length ? `<p class="note err small">${T('cls.bad')}</p>` : cd.classes.length ? `<p class="small" id="clsprev">${esc(T('cls.preview', { list: cd.classes.slice().reverse().map(k => `${k.name}: ${fmtNum(k.lo, 2)}–${fmtNum(k.hi, 2)}`).join(LIST_SEP) }))}</p>` : ''}` : ''}
       <p class="muted small">${T('cls.note')}</p></div>`;
     const pr = modelProblems();
     h += `<div class="nav"><button type="button" class="btn ghost" id="reset">${T('reset')}</button><button type="button" class="btn" id="to2"${pr.length ? ' disabled' : ''}>${T('next')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div>`;
@@ -143,7 +143,7 @@ function drawFit() {
   let h = '';
   if (FR.readProblems && FR.readProblems.length) h += `<p class="note warn small" id="fitread">${esc(T('fit.read', { n: FR.readProblems.length, rows: FR.readProblems.slice(0, 12).map(p => p.row).join(', ') }))}</p>`;
   if (FR.status !== 'ok') { out.innerHTML = h + `<p class="note err" id="fitstate">${esc(T('fit.fail', { why: (FR.problems || []).map(p => T('c.' + p.code, p)).join('; ') || FR.status }))}</p>`; return; }
-  h += `<p class="small" id="fitsum">${esc(T('fit.sum', { n: FR.n, s: FR.nSeries, pair: T('fit.pair.' + FR.pairing), it: FR.iter, start: FR.start.map(v => fmtNum(v, 6)).join(', '), from: T('fit.start.' + FR.startFrom) }))}</p>
+  h += `<p class="small" id="fitsum">${esc(T('fit.sum', { n: FR.n, s: FR.nSeries, pair: T('fit.pair.' + FR.pairing), it: FR.iter, start: FR.start.map(v => fmtNum(v, 6)).join(LIST_SEP), from: T('fit.start.' + FR.startFrom) }))}</p>
     <div class="tscroll"><table class="grid" id="fittab"><thead><tr><th>${T('fit.par')}</th><th>${T('fit.est')}</th><th>${T('fit.se')}</th></tr></thead><tbody>
     ${fm.params.map(k => `<tr><th>${k}</th><td class="num">${fmtNum(FR.params[k], 8)}</td><td class="num">${f(FR.se && FR.se[k], 6)}</td></tr>`).join('')}</tbody></table></div>
     <p class="muted small">${T('fit.senote')}</p>

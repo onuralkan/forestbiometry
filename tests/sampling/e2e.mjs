@@ -31,7 +31,7 @@ await page.check('input[name="src"][value="manual"]');
 ok((await page.locator('#c-res li', { hasText: 'CV yok' }).count()) === 1, 'missing CV reported, no number shown');
 await page.fill('#cv', '30');
 ok(await tile('t-n') === '35' && (await page.locator('#nofpc').count()) === 1 && (await page.locator('#calc1').count()) === 0, '35 plots; no finite correction applied');
-ok((await page.locator('#calc0').textContent()).includes('1.96') && (await page.locator('#calc0').textContent()).includes('34.573'), 'calculation shown with numbers (decimal point)');
+ok((await page.locator('#calc0').textContent()).includes('1,96') && (await page.locator('#calc0').textContent()).includes('34,573'), 'calculation shown with numbers (decimal comma)');
 // E smaller → n larger; the table and chart
 await page.fill('#e', '5');
 ok(+await tile('t-n') === REF.grid_cv30_95['5'].inf.n && +await tile('t-n') > 35, 'E = 5 % → more plots: ' + await tile('t-n'));

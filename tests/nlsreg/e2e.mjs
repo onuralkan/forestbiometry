@@ -21,7 +21,8 @@ page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if 
 const shot = async n => { if (SHOTS) await page.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const csv = (await readFile(path.join(ROOT, 'assets/lab/nlsreg/ornek/ornek-nls.csv'), 'utf8')).trim().split('\n').slice(1).map(l => l.split(';').slice(1).map(c => +c.replace(',', '.')));
 const D = csv.map(r => r[0]), H = csv.map(r => r[1]), V = csv.map(r => r[2]);
-const nums = async sel => (await page.locator(sel).allTextContents()).map(s => +s.replace(/\s/g, '').replace('−', '-'));
+const dot = s => String(s).replace(/(\d),(\d)/g, '$1.$2');   // Turkish screens: decimal comma (19 Nov 2026)
+const nums = async sel => (await page.locator(sel).allTextContents()).map(s => +s.replace(/\s/g, '').replace('−', '-').replace(',', '.'));
 const fit = async () => { await page.click('#calc'); await page.waitForSelector('#cmptab'); };
 const s2 = async () => { await page.click('[data-go="2"]'); await page.waitForSelector('#ysel'); };
 
@@ -39,7 +40,7 @@ const aic = await nums('#cmptab [data-k="aic"]');
 ok(Math.abs(aic[0] - F1.aic) < 1e-3 && Math.abs(aic[1] - F2.aic) < 1e-3, `AIC in the comparison: ${aic.join(', ')}`);
 await page.fill('[data-iv="x"]', '30'); await page.click('#iv-go'); await page.waitForSelector('#iv-tab');
 const iv = N.interval(CR, F1, { x: 30 }, 1), ivs = await nums('#iv-tab [data-k="y"]');
-ok(Math.abs(ivs[0] - iv.yhat) < 1e-5 && (await page.textContent('#iv-tab [data-k="pi"]')).includes(String(Number(iv.pi[0].toPrecision(7)))), 'intervals at D = 30 as calc.js');
+ok(Math.abs(ivs[0] - iv.yhat) < 1e-5 && dot(await page.textContent('#iv-tab [data-k="pi"]')).includes(String(Number(iv.pi[0].toPrecision(7)))), 'intervals at D = 30 as calc.js');
 await shot('nl-1');
 
 // volume models: response V, a weighted ready-made power form and a formula with names equal to the column headings
@@ -58,13 +59,13 @@ const P2 = N.compile({ kind: 'ready', ready: 'pow2' }), W = N.fitModel(P2, csv.m
 const PF = N.compile({ kind: 'formula', expr: 'a*D_cm^b*H_m^c', vars: ['D_cm', 'H_m'] }), U = N.fitModel(PF, csv.map(r => [r[0], r[1]]), V, { start: [6e-5, 2, 1] });
 const w0 = await nums('[data-coef="0"] [data-k^="b"]'), w1 = await nums('[data-coef="1"] [data-k^="b"]');
 ok(w0.every((v, j) => Math.abs(v / W.theta[j] - 1) < 1e-5) && w1.every((v, j) => Math.abs(v / U.theta[j] - 1) < 1e-5), 'weighted power form and formula on screen = calc.js');
-ok((await page.textContent('#cmptab tr[data-m="0"]')).includes(`ψ = D_cm^${W.weight.theta.toFixed(4).replace(/0+$/, '')}`.slice(0, 14)) && (await page.textContent('#cmptab')).includes('kestirildi'), 'estimated weight exponent shown');
+ok(dot(await page.textContent('#cmptab tr[data-m="0"]')).includes(`ψ = D_cm^${W.weight.theta.toFixed(4).replace(/0+$/, '')}`.slice(0, 14)) && (await page.textContent('#cmptab')).includes('kestirildi'), 'estimated weight exponent shown');
 // interval of the weighted model asks for the weight variable only when it is not a model variable
 await page.selectOption('#iv-m', '0'); await page.waitForSelector('[data-iv="x1"]');
 ok(!(await page.locator('[data-iv="__w"]').count()), 'weight variable is a model variable: not asked again');
 await page.fill('[data-iv="x1"]', '30'); await page.fill('[data-iv="x2"]', '20'); await page.click('#iv-go'); await page.waitForSelector('#iv-tab');
 const ivw = N.interval(P2, W, { x1: 30, x2: 20 }, 30 ** W.weight.theta);
-ok((await page.textContent('#iv-tab [data-k="pi"]')).includes(String(Number(ivw.pi[1].toPrecision(7)))), 'weighted prediction interval uses ψ = D^θ at the point');
+ok(dot(await page.textContent('#iv-tab [data-k="pi"]')).includes(String(Number(ivw.pi[1].toPrecision(7)))), 'weighted prediction interval uses ψ = D^θ at the point');
 { const [rd] = await Promise.all([page.waitForEvent('download'), page.click('#x-r')]), rs = await readFile(await rd.path(), 'utf8');
   ok(rd.suggestedFilename().endsWith('.R') && rs.includes('data_file <- "ornek-nls.csv"') && rs.includes('dec <- ","') && rs.includes('m1 <- fb_model(quote(a * x1^b * x2^c)') && rs.includes('m1_theta <- unname(coef(lm(')
     && rs.includes('pt <- list(x1 = 30, x2 = 20)') && rs.includes('fb_out(res)'), 'R code: a .R file reading the user\'s file, the formulas, the estimated weight exponent, the interval point (its numbers are checked in R by scripts/rcode-check.sh)'); }

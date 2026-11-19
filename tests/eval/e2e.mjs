@@ -51,7 +51,7 @@ ok(v[3] === '-1' && Math.abs(+v[4] - 7 / 3) < 1e-15 && Math.abs(+v[5] - Math.sqr
 await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('#tab-summary');
 await page.click('#tab-summary');
 s = await summary();
-ok(s[0][3] === '2.3333' && s[0][5] === '0.915', 'TR: same values, decimal point as in English');
+ok(s[0][3] === '2,3333' && s[0][5] === '0,915', 'TR: same values with a decimal comma');
 await page.click('#tab-export');
 const [d2] = await Promise.all([page.waitForEvent('download'), page.click('#x-m')]);
 const csvTr = (await readFile(await d2.path(), 'utf8')).replace(/^﻿/, '').split('\r\n');

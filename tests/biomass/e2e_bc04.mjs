@@ -25,7 +25,7 @@ const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async n => { if (SHOTS) await page.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const dl = async sel => { const [d] = await Promise.all([page.waitForEvent('download'), page.click(sel)]); return d; };
-const n = s => s.trim() === '–' ? null : +s.trim();
+const n = s => s.trim() === '–' ? null : +s.trim().replace(',', '.');
 
 const REF = JSON.parse(await readFile(path.join(ROOT, 'tests/ref/biomass_bc04.json'), 'utf8'));
 const tmp = await mkdtemp(path.join(os.tmpdir(), 'bc04-'));

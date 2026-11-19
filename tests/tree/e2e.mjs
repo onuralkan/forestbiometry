@@ -20,10 +20,15 @@ const { TOOL } = await import('../../assets/lab/tree/calc.js');
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/agac-olcumu.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
-const num = s => Number(String(s).trim());
+const num = s => Number(String(s).trim().replace(',', '.'));
 const errors = [];
 const browser = await chromium.launch();
 const page = await (await browser.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true })).newPage();
+
+// Turkish screens show a decimal comma (19 Nov 2026, user decision); the checks below compare numbers written with a
+// point, so text read from the page has its decimal commas turned into points (a comma between two digits).
+const _tc = page.textContent.bind(page), dotNum = s => s == null ? s : s.replace(/(\d),(\d)/g, '$1.$2');
+page.textContent = async (...a) => dotNum(await _tc(...a));
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const type = async (sel, v) => { await page.fill(sel, v); await page.press(sel, 'Tab'); };
 
@@ -89,14 +94,14 @@ await page.fill('#a-cW', W.slice(0, 10).join(' ') + '\n' + W.slice(10).map(x => 
 const cs = Ag.coreSeries({ widths: W, D: 11.6, doubleBark: 0.6, yearsToBh: 6, reachesPith: false }), pr10 = Ag.presslerDiameter(cs.dib, cs.series[10].d, 10);
 ok((await page.textContent('#coreres')).includes(`20 halka; yaş 26 yıl; kabuksuz çap 11 cm`) && (await page.textContent('#app')).includes('öze ulaşmıyor') && !(await page.textContent('#app')).includes('yarıçaptan'), 'increment core: 20 rings (spaces, new line, ; and decimal commas), age 26, inside-bark 11 cm, no-pith warning');
 const rowsC = await page.$$eval('#coretab tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
-ok(rowsC.length === 3 && rowsC.every(r => !r[2].startsWith('-')) && rowsC.every((r, k) => Math.abs(Number(r[2]) - cs.decades[k].d) < 0.006 && Number(r[1]) === cs.decades[k].age), 'decade table (0, 10, 20 years ago) = engine');
+ok(rowsC.length === 3 && rowsC.every(r => !r[2].startsWith('-')) && rowsC.every((r, k) => Math.abs(num(r[2]) - cs.decades[k].d) < 0.006 && num(r[1]) === cs.decades[k].age), 'decade table (0, 10, 20 years ago) = engine');
 ok((await page.textContent('#presres')).includes(String(Number(pr10.toFixed(2)))), `Pressler growth percent over 10 years ${pr10.toFixed(2)} % = engine`);
 await type('[data-grow="0"][data-k="a"]', '60'); await type('[data-grow="0"][data-k="n"]', '120'); await type('[data-grow="0"][data-k="b"]', '4.2'); await type('[data-grow="0"][data-k="v"]', '38');
 await page.click('#a-gadd'); await type('[data-grow="1"][data-k="a"]', '85'); await type('[data-grow="1"][data-k="n"]', '40'); await type('[data-grow="1"][data-k="b"]', '6.1'); await type('[data-grow="1"][data-k="v"]', '71');
 const G = [{ a: 60, n: 120, b: 4.2, v: 38 }, { a: 85, n: 40, b: 6.1, v: 71 }], sres = await page.$$eval('#standres tr', rs => rs.map(r => r.children[1].textContent.trim()));
-ok(['arithmetic', 'number', 'basal', 'volume'].every((m, k) => Math.abs(Number(sres[k]) - Ag.standAge(G, m).A) < 0.051), `stand mean ages (arithmetic, number, basal, volume) = engine: ${sres.join(', ')}`);
+ok(['arithmetic', 'number', 'basal', 'volume'].every((m, k) => Math.abs(num(sres[k]) - Ag.standAge(G, m).A) < 0.051), `stand mean ages (arithmetic, number, basal, volume) = engine: ${sres.join(', ')}`);
 await type('#a-gNow', '0.84'); await type('#a-gThen', '0.61'); await type('#a-gYears', '10');
-const gp = await page.$$eval('#gpres tr', rs => rs.map(r => Number(r.children[1].textContent.replace('%', '').trim())));
+const gp = await page.$$eval('#gpres tr', rs => rs.map(r => Number(r.children[1].textContent.replace('%', '').trim().replace(',', '.'))));
 ok(['past', 'present', 'mean'].every((pp, k) => Math.abs(gp[k] - Ag.growthPercent({ now: 0.84, then: 0.61, n: 10, principal: pp }).p) < 0.0006), 'growth percent with three principals = engine');
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'tree-age.png'), fullPage: true });
 
@@ -146,7 +151,7 @@ ok((await page.textContent('#cres')).includes(`${fx(cd.areaCircle, 3)} m²`) && 
 await type('#c-H', '24'); await type('#c-base', '9'); await type('#c-dbh', '32');
 ok((await page.textContent('#clen')).includes('Tepe uzunluğu 15 m; tepe oranı %62.5') && (await page.textContent('#clen')).includes(fx(5.7 / 0.32, 2)), 'crown length 15 m, ratio 62.5 %, crown diameter / dbh');
 const sol = await page.$$eval('#csol tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
-ok(sol.length === 3 && Cr.SHAPES.every((sh, k) => { const q = Cr.crownSolid(sh, 5.7, 15); return Math.abs(Number(sol[k][1]) - q.S) < 0.0006 && Math.abs(Number(sol[k][2]) - q.V) < 0.0006; }), 'cone, paraboloid, cylinder: surface and volume = engine');
+ok(sol.length === 3 && Cr.SHAPES.every((sh, k) => { const q = Cr.crownSolid(sh, 5.7, 15); return Math.abs(num(sol[k][1]) - q.S) < 0.0006 && Math.abs(num(sol[k][2]) - q.V) < 0.0006; }), 'cone, paraboloid, cylinder: surface and volume = engine');
 await page.fill('#c-widths', '4 5,5 6\n3 x'); await page.press('#c-widths', 'Tab'); await type('#c-plot', '50');
 const cc = Cr.crownCover([4, 5.5, 6, 3, NaN], 50);
 ok((await page.textContent('#ccov')).includes(`tepe örtüsü ${fx(cc.cover, 3)}`) && (await page.textContent('#panel')).includes('sıra: 5') && (await page.textContent('#panel')).includes("1'den büyük"), `crown cover ${cc.cover.toFixed(3)} (overlap note), unreadable value reported`);

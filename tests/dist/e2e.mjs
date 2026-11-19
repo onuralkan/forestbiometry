@@ -20,6 +20,13 @@ const errors = [];
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } });
 const page = await ctx.newPage();
+
+// Turkish screens show a decimal comma (19 Nov 2026, user decision); the checks below compare numbers written with a
+// point, so text read from the page has its decimal commas turned into points (a comma between two digits).
+const _tc = page.textContent.bind(page), dotNum = s => s == null ? s : s.replace(/(\d),(\d)/g, '$1.$2');
+page.textContent = async (...a) => dotNum(await _tc(...a));
+const deepDot = v => typeof v === 'string' ? dotNum(v) : Array.isArray(v) ? v.map(deepDot) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deepDot(x)])) : v;
+const _ev = page.evaluate.bind(page); page.evaluate = async (...a) => deepDot(await _ev(...a));
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const rowsOf = (fam = 'weibull') => page.evaluate(fam => [...document.querySelectorAll(`table.ptab[data-fam="${fam}"] tbody tr`)].map(tr => ({ m: tr.dataset.method, s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })), fam);
@@ -63,24 +70,24 @@ ok(ns.list.join() === 'A,B,C' && ns.on === 'A' && ns.pers === 2 && ns.per === '2
 let rows = await rowsOf();
 ok(rows.length === 6 && rows.map(r => r.m).join() === 'weibull.ml,weibull.ml,weibull.mom,weibull.mom,weibull.pct,weibull.pct' && rows.every(r => r.s === 'ok'), 'ML, moments and percentiles, each with a = 0 and a = 5');
 const ml0 = W.fitML(d1, 0), ml5 = W.fitML(d1, 5, 'fixed'), mo0 = F.fitMoments(d1, { a: 0 }).params, pc5 = F.fitPercentiles(d1, { a: 5 }).params;
-const cell = (r, k) => parseFloat(rows[r].c[k]);
+const cell = (r, k) => parseFloat(String(rows[r].c[k]).replace(',', '.'));
 ok(Math.abs(cell(0, 3) - ml0.b) < 6e-5 && Math.abs(cell(0, 4) - ml0.c) < 6e-5 && Math.abs(cell(1, 3) - ml5.b) < 6e-5 && Math.abs(cell(2, 4) - mo0.c) < 6e-5 && Math.abs(cell(5, 3) - pc5.b) < 6e-5 && Math.abs(cell(5, 4) - pc5.c) < 6e-5, 'ML equals the published tool; moments (divisor n) and percentiles equal the engine: ' + rows[0].c.slice(2, 5).join(' '));
 ok(rows[0].c[1] === 'a = 0' && rows[1].c[1] === 'a = 5 (kullanıcı)' && rows[0].c[5] === '12', 'fixed parameter and n shown');
 ok(rows[0].c[7] !== '–' && rows[2].c[7] === '–' && rows[4].c[7] === '–' && rows[2].c[6] !== '–' && rows[4].c[6] !== '–', 'AIC only for maximum likelihood; ln L for all');
-ok(rows[2].c[0] === 'Momentler (ortalama ve varyans) · varyans: n bölen' && rows[4].c[0] === 'İki yüzdelik · p = 0.24, r = 0.93' && rows[4].c[12] === 'kapalı biçim · 0', 'settings named in the method cell; closed form solver: ' + rows[4].c[0] + ' | ' + rows[4].c[12]);
+ok(rows[2].c[0] === 'Momentler (ortalama ve varyans) · varyans: n bölen' && rows[4].c[0] === 'İki yüzdelik · p = 0.24; r = 0.93' && rows[4].c[12] === 'kapalı biçim · 0', 'settings named in the method cell; closed form solver: ' + rows[4].c[0] + ' | ' + rows[4].c[12]);
 ok(rows[0].c[12].startsWith('ikiye bölme') && rows.every(r => !r.c.slice(2).join(' ').includes(',')), 'solver named; decimal point everywhere');
 ok((await page.locator('ul.notes li', { hasText: 'n − 1' }).count()) === 0, 'default divisor n: no n − 1 note');
 await shot('dist-1-parametreler');
 { // normal and lognormal tables
   const E = await import('../../assets/lab/dist/index.js');
   const nr = await rowsOf('normal'), lr = await rowsOf('lognormal'), no = E.runMethod('normal.ml', { d: d1 }), lm = E.runMethod('lognormal.ml', { d: d1 }), lo = E.runMethod('lognormal.mom', { d: d1 });
-  ok(nr.length === 1 && Math.abs(parseFloat(nr[0].c[2]) - no.params.mu) < 6e-5 && Math.abs(parseFloat(nr[0].c[3]) - no.params.sigma) < 6e-5 && nr[0].c[6] !== '–', 'normal: one row (ML = moments), values, AIC');
-  ok(lr.length === 2 && Math.abs(parseFloat(lr[0].c[2]) - lm.params.mu) < 6e-5 && Math.abs(parseFloat(lr[1].c[3]) - lo.params.sigma) < 6e-5 && lr[0].c[6] !== '–' && lr[1].c[6] === '–', 'lognormal: ML and moments, AIC only for ML');
+  ok(nr.length === 1 && Math.abs(parseFloat(String(nr[0].c[2]).replace(',', '.')) - no.params.mu) < 6e-5 && Math.abs(parseFloat(String(nr[0].c[3]).replace(',', '.')) - no.params.sigma) < 6e-5 && nr[0].c[6] !== '–', 'normal: one row (ML = moments), values, AIC');
+  ok(lr.length === 2 && Math.abs(parseFloat(String(lr[0].c[2]).replace(',', '.')) - lm.params.mu) < 6e-5 && Math.abs(parseFloat(String(lr[1].c[3]).replace(',', '.')) - lo.params.sigma) < 6e-5 && lr[0].c[6] !== '–' && lr[1].c[6] === '–', 'lognormal: ML and moments, AIC only for ML');
   const heads = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="lognormal"] thead th')].map(x => x.textContent));
   ok(heads.includes('μ (ln cm)') && heads.includes('σ (log ölçek)'), 'lognormal μ and σ labelled as log scale: ' + heads.join('|'));
   const gr = await rowsOf('gamma'), gm = E.runMethod('gamma.ml', { d: d1 }), gmo = E.runMethod('gamma.mom', { d: d1 });
   const gh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="gamma"] thead th')].map(x => x.textContent));
-  ok(gr.length === 2 && Math.abs(parseFloat(gr[0].c[2]) - gm.params.k) < 6e-5 && Math.abs(parseFloat(gr[0].c[3]) - gm.params.theta) < 6e-5 && Math.abs(parseFloat(gr[1].c[2]) - gmo.params.k) < 6e-5 && gr[0].c[6] !== '–' && gr[1].c[6] === '–' && gr[0].c[11].startsWith('Brent'), 'gamma: ML (Brent) and moments, AIC only for ML');
+  ok(gr.length === 2 && Math.abs(parseFloat(String(gr[0].c[2]).replace(',', '.')) - gm.params.k) < 6e-5 && Math.abs(parseFloat(String(gr[0].c[3]).replace(',', '.')) - gm.params.theta) < 6e-5 && Math.abs(parseFloat(String(gr[1].c[2]).replace(',', '.')) - gmo.params.k) < 6e-5 && gr[0].c[6] !== '–' && gr[1].c[6] === '–' && gr[0].c[11].startsWith('Brent'), 'gamma: ML (Brent) and moments, AIC only for ML');
   ok(gh.includes('k') && gh.includes('θ (cm)') && (await page.locator('#panel').textContent()).includes('Gamma (iki parametreli)'), 'gamma: shape k without unit, scale θ in cm: ' + gh.join('|'));
   ok((await page.locator('ul.notes li', { hasText: 'negatif çap olasılığı Φ(−μ/σ)' }).count()) === 1, 'normal: probability of a negative diameter shown');
   ok(await page.evaluate(() => [...document.querySelectorAll('.tile span')].some(x => x.textContent.includes('n − 1'))), 'both variances shown (n and n − 1)');
@@ -186,7 +193,7 @@ ok(await page.isVisible('#steps') && await page.isHidden('#recover'), 'back to t
 // 2c. beta: bounds entered by the user, never taken from the data; observations outside or on a bound refused
 await page.click('#steps [data-go="2"]'); await page.check('[data-m="beta.ml"]'); await page.check('[data-m="beta.mom"]');
 ok(await page.isDisabled('#calc') && (await page.locator('#bnd-beta .note.err', { hasText: 'beta için L ve U girin' }).count()) === 1 && (await page.inputValue('#b-L')) === '' && (await page.inputValue('#b-U')) === '', 'beta chosen: bounds empty (no automatic suggestion), cannot calculate');
-ok((await page.locator('#bnd-beta', { hasText: 'en küçük çap 9.4 cm, en büyük 45 cm (sınır değildir)' }).count()) === 1, 'observed min/max shown as information only');
+ok((await page.locator('#bnd-beta', { hasText: 'en küçük çap 9,4 cm, en büyük 45 cm (sınır değildir)' }).count()) === 1, 'observed min/max shown as information only');
 const setB = async (L, U) => { for (const [k, v] of [['L', L], ['U', U]]) { await page.fill('#b-' + k, v); await page.locator('#b-' + k).dispatchEvent('change'); } };
 await setB('50', '10'); ok(await page.isDisabled('#calc') && (await page.locator('#bnd-beta', { hasText: "U, L'den büyük olmalı" }).count()) === 1, 'U ≤ L refused');
 await setB('10', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]', { state: 'attached' });
@@ -197,7 +204,7 @@ ok((await page.locator('ul.notes li', { hasText: 'tam sınırın üzerinde' }).c
 await page.click('#steps [data-go="2"]'); await setB('5', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], bm = E.runMethod('beta.ml', { d: pool }, { L: 5, U: 50 }), bo = E.runMethod('beta.mom', { d: pool }, { L: 5, U: 50 });
   br = await rowsOf('beta'); const bh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="beta"] thead th')].map(x => x.textContent));
-  ok(br.every(r => r.s === 'ok') && br[0].c[1] === 'L = 5 (kullanıcı), U = 50 (kullanıcı)' && Math.abs(parseFloat(br[0].c[4]) - bm.params.alpha) < 6e-5 && Math.abs(parseFloat(br[1].c[5]) - bo.params.beta) < 6e-5 && br[0].c[8] !== '–' && br[1].c[8] === '–', 'beta with L = 5, U = 50: ML and moments equal the engine, bounds shown as user-fixed: ' + JSON.stringify(br.map(r => r.c.slice(0, 9))));
+  ok(br.every(r => r.s === 'ok') && br[0].c[1] === 'L = 5 (kullanıcı); U = 50 (kullanıcı)' && Math.abs(parseFloat(String(br[0].c[4]).replace(',', '.')) - bm.params.alpha) < 6e-5 && Math.abs(parseFloat(String(br[1].c[5]).replace(',', '.')) - bo.params.beta) < 6e-5 && br[0].c[8] !== '–' && br[1].c[8] === '–', 'beta with L = 5, U = 50: ML and moments equal the engine, bounds shown as user-fixed: ' + JSON.stringify(br.map(r => r.c.slice(0, 9))));
   ok(bh.includes('L (cm)') && bh.includes('U (cm)') && bh.includes('α') && bh.includes('β') && br[0].c[13].startsWith('Newton'), 'beta header and solver'); }
 
 // 2d. Johnson SB: ξ and λ by the user; CML, moments, KB 50/95 and a user pair
@@ -212,8 +219,8 @@ await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="john
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], o = { xi: 5, lambda: 45 };
   const exp = [E.runMethod('johnsonsb.cml', { d: pool }, o), E.runMethod('johnsonsb.mom', { d: pool }, o), E.runMethod('johnsonsb.kb', { d: pool }, o), E.runMethod('johnsonsb.pct', { d: pool }, { ...o, p: 0.1, r: 0.9 })];
   const sr = await rowsOf('johnsonsb'), sh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="johnsonsb"] thead th')].map(x => x.textContent));
-  ok(sr.length === 4 && sr.every(r => r.s === 'ok') && sr.every((r, i) => Math.abs(parseFloat(r.c[4]) - exp[i].params.gamma) < 6e-5 && Math.abs(parseFloat(r.c[5]) - exp[i].params.delta) < 6e-5), 'SB: four methods equal the engine: ' + JSON.stringify(sr.map(r => r.c.slice(0, 6))));
-  ok(sh.includes('ξ (cm)') && sh.includes('λ (cm)') && sh.includes('γ') && sh.includes('δ') && sr[0].c[1] === 'ξ = 5 (kullanıcı), λ = 45 (kullanıcı)' && sr[0].c[8] !== '–' && sr[1].c[8] === '–' && sr[3].c[0].includes('p = 0.1, r = 0.9'), 'SB header, user-fixed bounds, AIC only for CML, user pair named: ' + JSON.stringify([sh, sr.map(r => r.c.slice(0, 9))])); }
+  ok(sr.length === 4 && sr.every(r => r.s === 'ok') && sr.every((r, i) => Math.abs(parseFloat(String(r.c[4]).replace(',', '.')) - exp[i].params.gamma) < 6e-5 && Math.abs(parseFloat(String(r.c[5]).replace(',', '.')) - exp[i].params.delta) < 6e-5), 'SB: four methods equal the engine: ' + JSON.stringify(sr.map(r => r.c.slice(0, 6))));
+  ok(sh.includes('ξ (cm)') && sh.includes('λ (cm)') && sh.includes('γ') && sh.includes('δ') && sr[0].c[1] === 'ξ = 5 (kullanıcı); λ = 45 (kullanıcı)' && sr[0].c[8] !== '–' && sr[1].c[8] === '–' && sr[3].c[0].includes('p = 0.1; r = 0.9'), 'SB header, user-fixed bounds, AIC only for CML, user pair named: ' + JSON.stringify([sh, sr.map(r => r.c.slice(0, 9))])); }
 await page.click('#steps [data-go="2"]'); await page.fill('#b-xi', '9.4'); await page.locator('#b-xi').dispatchEvent('change'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="johnsonsb"]', { state: 'attached' });
 ok((await rowsOf('johnsonsb')).every(r => r.s === 'invalid') && (await page.locator('ul.notes li', { hasText: 'tam sınırın üzerinde' }).count()) >= 1, 'SB: observation on ξ refused');
 
@@ -230,10 +237,10 @@ await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="logl
   const er = await rowsOf('exponential'), lr = await rowsOf('loglogistic');
   const eh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="exponential"] thead th')].map(x => x.textContent));
   const lh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="loglogistic"] thead th')].map(x => x.textContent));
-  ok(er.length === 2 && er.every(r => r.s === 'ok') && er[0].c[1] === 'a = 0' && er[1].c[1] === 'a = 5 (kullanıcı)' && Math.abs(parseFloat(er[0].c[3]) - e0.params.r) < 6e-5 && Math.abs(parseFloat(er[1].c[3]) - e5.params.r) < 6e-5 && er[0].c[7] !== '–', 'exponential: a = 0 and the user a; rate equals the engine; AIC (ML): ' + JSON.stringify(er.map(r => r.c.slice(0, 8))));
-  ok(eh.includes('r (1/cm)') && eh.includes('a (cm)') && (await page.locator('ul.notes li', { hasText: 'ölçek 1/r = ' + e0.diagnostics.scale.toFixed(4).replace(/0+$/, '') }).count()) === 1, 'rate r (1/cm) in the table, scale 1/r written separately: ' + eh.join('|'));
-  ok(lr.length === 3 && lr.every(r => r.s === 'ok') && lr.every((r, i) => Math.abs(parseFloat(r.c[2]) - lx[i].params.b) < 6e-5 && Math.abs(parseFloat(r.c[3]) - lx[i].params.c) < 6e-5) && lr[0].c[6] !== '–' && lr[1].c[6] === '–' && lr[2].c[6] === '–', 'log-logistic: three methods equal the engine; AIC only for ML: ' + JSON.stringify(lr.map(r => r.c.slice(0, 7))));
-  ok(lh.includes('b (cm)') && lh.includes('c') && lr[0].c[11].startsWith('Newton') && lr[1].c[0].includes('p = 0.25, r = 0.75'), 'log-logistic header, Newton solver, pair named'); }
+  ok(er.length === 2 && er.every(r => r.s === 'ok') && er[0].c[1] === 'a = 0' && er[1].c[1] === 'a = 5 (kullanıcı)' && Math.abs(parseFloat(String(er[0].c[3]).replace(',', '.')) - e0.params.r) < 6e-5 && Math.abs(parseFloat(String(er[1].c[3]).replace(',', '.')) - e5.params.r) < 6e-5 && er[0].c[7] !== '–', 'exponential: a = 0 and the user a; rate equals the engine; AIC (ML): ' + JSON.stringify(er.map(r => r.c.slice(0, 8))));
+  ok(eh.includes('r (1/cm)') && eh.includes('a (cm)') && (await page.locator('ul.notes li', { hasText: 'ölçek 1/r = ' + e0.diagnostics.scale.toFixed(4).replace(/0+$/, '').replace('.', ',') }).count()) === 1, 'rate r (1/cm) in the table, scale 1/r written separately: ' + eh.join('|'));
+  ok(lr.length === 3 && lr.every(r => r.s === 'ok') && lr.every((r, i) => Math.abs(parseFloat(String(r.c[2]).replace(',', '.')) - lx[i].params.b) < 6e-5 && Math.abs(parseFloat(String(r.c[3]).replace(',', '.')) - lx[i].params.c) < 6e-5) && lr[0].c[6] !== '–' && lr[1].c[6] === '–' && lr[2].c[6] === '–', 'log-logistic: three methods equal the engine; AIC only for ML: ' + JSON.stringify(lr.map(r => r.c.slice(0, 7))));
+  ok(lh.includes('b (cm)') && lh.includes('c') && lr[0].c[11].startsWith('Newton') && lr[1].c[0].includes('p = 0.25; r = 0.75'), 'log-logistic header, Newton solver, pair named'); }
 await shot('dist-2e-p10');
 
 // 2f. Weibull recovery, Poudel and Cao M2–M5 (summary workflow): §8.2 targets, location policy, only the needed fields, targets from raw data
@@ -271,7 +278,7 @@ await page.locator('#wbcard .wbfill summary').click(); await page.selectOption('
 ok((await page.locator('#w-from').textContent()).includes('n = 25') && await page.isChecked('input[name="w-origin"][value="measured"]'), 'targets from the raw data (pooled 2019, n = 25), origin measured');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], ex = ['m2', 'm3', 'm4', 'm5'].map(m => E.runMethod('weibull.' + m, { type: 'raw', d: pool }));
-  ok(wr.every((r, i) => r.s === 'ok' && Math.abs(parseFloat(r.c[2]) - ex[i].params.b) < 6e-7 && Math.abs(parseFloat(r.c[3]) - ex[i].params.c) < 6e-7) && wr[0].c[1].includes('Dmin = 9.4'), 'raw-data targets: the same results as the engine on the diameters: ' + JSON.stringify(wr.map(r => r.c.slice(1, 4))));
+  ok(wr.every((r, i) => r.s === 'ok' && Math.abs(parseFloat(String(r.c[2]).replace(',', '.')) - ex[i].params.b) < 6e-7 && Math.abs(parseFloat(String(r.c[3]).replace(',', '.')) - ex[i].params.c) < 6e-7) && wr[0].c[1].includes('Dmin = 9.4'), 'raw-data targets: the same results as the engine on the diameters: ' + JSON.stringify(wr.map(r => r.c.slice(1, 4))));
   ok((await page.locator('p.small', { hasText: 'yüklü ham veriden hesaplandı' }).count()) === 1, 'record says the targets were computed from the data'); }
 await fillW('#w-q50', '30');
 ok((await page.locator('#w-from').count()) === 0, 'a target changed by hand: no longer "computed from the data"');
@@ -326,8 +333,8 @@ await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weib
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], ex = E.runMethod('weibull.tml', { d: pool }, { a: 0, trunc: { lower: 9, upper: null } });
   const G = E.trunc.truncated(E.family('weibull'), ex.params, ex.truncation), ks = E.gof.ks(G, ex.params, pool);
   const wt = await rowsOf('weibull');
-  ok(wt.length >= 1 && wt[0].m === 'weibull.tml' && wt[0].s === 'ok' && Math.abs(parseFloat(wt[0].c[3]) - ex.params.b) < 6e-5 && Math.abs(parseFloat(wt[0].c[4]) - ex.params.c) < 6e-5, 'Weibull conditional ML equals the engine: ' + JSON.stringify(wt[0].c.slice(0, 6)));
-  ok(Math.abs(parseFloat(wt[0].c[9]) - ks) < 6e-5 && wt[0].c[12].startsWith('Nelder–Mead'), 'KS against the conditional distribution; solver named');
+  ok(wt.length >= 1 && wt[0].m === 'weibull.tml' && wt[0].s === 'ok' && Math.abs(parseFloat(String(wt[0].c[3]).replace(',', '.')) - ex.params.b) < 6e-5 && Math.abs(parseFloat(String(wt[0].c[4]).replace(',', '.')) - ex.params.c) < 6e-5, 'Weibull conditional ML equals the engine: ' + JSON.stringify(wt[0].c.slice(0, 6)));
+  ok(Math.abs(parseFloat(String(wt[0].c[9]).replace(',', '.')) - ks) < 6e-5 && wt[0].c[12].startsWith('Nelder–Mead'), 'KS against the conditional distribution; solver named');
   ok((await page.locator('ul.notes li', { hasText: 'eşik 9 ≤ d ≤ ∞ cm' }).count()) >= 1 && (await page.locator('.tile span', { hasText: 'eşik içinde' }).count()) === 1, 'threshold, mass and implied total stated; n labelled as measured inside the threshold');
   const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), fits = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Fit islemleri'], { header: 1 }), H = fits[0], w = fits.find(r => r[5] === 'weibull.tml');
   ok(w && w[H.indexOf('Alt eşik (cm)')] === 9 && w[H.indexOf('Üst eşik (cm)')] == null && Math.abs(w[H.indexOf('P(eşik içinde)')] - ex.truncation.mass) < 1e-7 && w[H.indexOf('N (seçilen kapsam)')] === 25, 'Excel: thresholds, mass and N (observed) columns: ' + JSON.stringify(w && [H.indexOf('Alt eşik (cm)'), w[H.indexOf('Alt eşik (cm)')], w[H.indexOf('Üst eşik (cm)')], w[H.indexOf('P(eşik içinde)')], ex.truncation.mass, w[H.indexOf('N (seçilen kapsam)')]])); }
@@ -349,7 +356,7 @@ await page.click('#tab-classes'); await page.waitForSelector('table.ctab');
   const rows = await page.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
   const tot = rows.find(r => r[0] === 'Toplam'), cl = E.classes.makeClasses({ start: 8, width: 8, max: 45 }), pool = [...d1, ...d2, 20, 20, 20], cnt = E.classes.countRaw(cl, pool);
   ok(rows[0][0] === '8 cm altı' && rows.length === cl.length + 3 && rows.slice(1, cl.length + 1).map(r => +r[1]).join() === cnt.counts.join(), 'observed counts per class from the same edges: ' + rows.map(r => r[0] + ':' + r[1]).join(' '));
-  ok(tot && tot[2] === '1' && Math.abs(parseFloat(tot[3]) - 25) < 1e-3 && tot[1] === '25' && tot[4] === '625' && Math.abs(parseFloat(tot[5]) - 625) < 0.05, 'totals: probability 1, expected = n, N/ha = 25 × 10000/400: ' + tot);
+  ok(tot && tot[2] === '1' && Math.abs(parseFloat(String(tot[3]).replace(',', '.')) - 25) < 1e-3 && tot[1] === '25' && tot[4] === '625' && Math.abs(parseFloat(String(tot[5]).replace(',', '.')) - 625) < 0.05, 'totals: probability 1, expected = n, N/ha = 25 × 10000/400: ' + tot);
   ok((await page.locator('#panel', { hasText: 'Σ|gözlenen − beklenen|' }).count()) === 1, 'sum of absolute differences and EI per hectare');
   const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#tab-params').then(() => page.click('#x-xlsx'))]);
   const cs = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Siniflar, { header: 1 });
@@ -362,16 +369,16 @@ await page.click('#tab-params'); await page.waitForSelector('table.cmptab');
     desc: [...g.querySelectorAll('table[data-kind="desc"] tbody tr')].map(tr => [tr.dataset.method, ...[...tr.children].map(x => x.textContent.trim())]), mlHead: [...g.querySelectorAll('table[data-kind="ml"] th')].map(x => x.textContent), descHead: [...g.querySelectorAll('table[data-kind="desc"] th')].map(x => x.textContent) })));
   ok(t.length === 1 && t[0].h.includes('ölçüm eşiği yok') && t[0].ml.every(r => /\.ml$|\.cml$/.test(r[0])) && t[0].desc.every(r => !/\.ml$|\.cml$/.test(r[0])), 'one process group; likelihood fits apart from the descriptive ones: ' + JSON.stringify(t.map(g => [g.ml.map(r => r[0]), g.desc.map(r => r[0])])));
   ok(t[0].mlHead.includes('AIC') && t[0].mlHead.includes('ΔAIC') && t[0].mlHead.includes('AICc') && t[0].mlHead.includes('CvM W²') && !t[0].descHead.includes('AIC') && t[0].descHead.includes('ln L (log-skor)'), 'AIC columns only for likelihood fits; CvM shown; descriptive ln L labelled as log-score');
-  const aicCol = t[0].mlHead.indexOf('AIC'), aics = t[0].ml.map(r => parseFloat(r[aicCol + 1]));
+  const aicCol = t[0].mlHead.indexOf('AIC'), aics = t[0].ml.map(r => parseFloat(String(r[aicCol + 1]).replace(',', '.')));
   ok(aics.every((v, i) => !i || v >= aics[i - 1]) && (await page.locator('.sortnote', { hasText: 'Sıralama: AIC (küçük daha iyi)' }).count()) >= 1, 'sorted by AIC, the criterion shown: ' + aics);
   ok(t[0].ml[0][t[0].mlHead.indexOf('ΔAIC') + 1] === '0', 'ΔAIC of the first row is 0');
   ok((await page.locator('#panel', { hasText: 'p değeri verilmez' }).count()) === 1 && (await page.locator('#panel', { hasText: /p[ -]değeri\s*[=:]\s*\d|p-value\s*[=:]/ }).count()) === 0, 'no p-values');
   await page.selectOption('#cmp-sort', 'cvm');
-  const cv = await page.evaluate(() => { const tb = document.querySelector('table[data-kind="ml"]'), hd = [...tb.querySelectorAll('th')].map(x => x.textContent), c = hd.indexOf('CvM W²'); return [...tb.querySelectorAll('tbody tr')].map(tr => parseFloat(tr.children[c].textContent)); });
+  const cv = await page.evaluate(() => { const tb = document.querySelector('table[data-kind="ml"]'), hd = [...tb.querySelectorAll('th')].map(x => x.textContent), c = hd.indexOf('CvM W²'); return [...tb.querySelectorAll('tbody tr')].map(tr => parseFloat(String(tr.children[c].textContent).replace(',', '.'))); });
   ok(cv.every((v, i) => !i || v >= cv[i - 1]) && (await page.locator('.sortnote', { hasText: 'Sıralama: CvM W²' }).count()) >= 1, 'user switches the criterion: sorted by CvM: ' + cv);
   const pool = [...d1, ...d2, 20, 20, 20], wm = E.runMethod('weibull.ml', { d: pool }, { a: 0 }), cvRef = E.gof.cvm(E.family('weibull'), wm.params, pool);
   const wrow = await page.evaluate(() => { const tb = document.querySelector('table[data-kind="ml"]'), hd = [...tb.querySelectorAll('th')].map(x => x.textContent); return { c: hd.indexOf('CvM W²'), r: [...tb.querySelectorAll('tbody tr')].filter(tr => tr.dataset.method === 'weibull.ml').map(tr => [...tr.children].map(x => x.textContent.trim())).find(r => r[3] === 'a = 0') }; });
-  ok(Math.abs(parseFloat(wrow.r[wrow.c]) - cvRef) < 6e-5, 'CvM of the Weibull ML equals the engine');
+  ok(Math.abs(parseFloat(String(wrow.r[wrow.c]).replace(',', '.')) - cvRef) < 6e-5, 'CvM of the Weibull ML equals the engine');
   await page.selectOption('#cmp-sort', 'aic');
   // charts: Q–Q, P–P, counts on the class edges
   await page.click('#tab-charts');
@@ -385,19 +392,19 @@ await page.click('#tab-boot'); await page.waitForSelector('#bt-gof');
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20];
   await page.selectOption('#bt-fit', { index: 0 }); await page.selectOption('#bt-B', '99');
   const fitKey = await page.inputValue('#bt-fit');
-  ok(fitKey.startsWith('weibull.ml|') && (await page.locator('#bt-round option[value="auto"]').textContent()).includes('0.1 cm'), 'fit chosen; rounding detected from the data (0.1 cm): ' + fitKey);
+  ok(fitKey.startsWith('weibull.ml|') && (await page.locator('#bt-round option[value="auto"]').textContent()).includes('0,1 cm'), 'fit chosen; rounding detected from the data (0.1 cm): ' + fitKey);
   await page.click('#bt-gof'); await page.waitForSelector('#bt-gof-out table.bttab', { timeout: 120000 });
   const got = await page.evaluate(() => [...document.querySelectorAll('#bt-gof-out tr[data-stat]')].map(tr => [tr.dataset.stat, ...[...tr.children].slice(1).map(x => x.textContent.trim())]));
   const r0 = E.runMethod('weibull.ml', { d: pool }, { a: 0 }), ref = E.boot.bootstrapGOF({ result: r0, input: { d: pool }, opts: { a: 0 }, B: 99, seed: 20261111, step: 'auto' });
-  ok(got.length === 3 && got.every(([k, t0, ge, pv]) => +ge === ref.stats[k].ge && Math.abs(parseFloat(pv) - ref.stats[k].p) < 6e-5), 'worker result = engine (same seed, same counts and p): ' + JSON.stringify(got) + ' vs ' + JSON.stringify(Object.fromEntries(Object.entries(ref.stats).map(([k, v]) => [k, [v.ge, v.p]]))));
-  ok((await page.locator('#bt-gof-out .bt-meta').textContent()).includes('Seed 20261111; istenen 99, tamamlanan') && (await page.locator('#bt-gof-out .bt-meta').textContent()).includes('yuvarlama: 0.1 cm'), 'seed, requested and completed replicates, failures and rounding recorded');
+  ok(got.length === 3 && got.every(([k, t0, ge, pv]) => +ge === ref.stats[k].ge && Math.abs(parseFloat(String(pv).replace(',', '.')) - ref.stats[k].p) < 6e-5), 'worker result = engine (same seed, same counts and p): ' + JSON.stringify(got) + ' vs ' + JSON.stringify(Object.fromEntries(Object.entries(ref.stats).map(([k, v]) => [k, [v.ge, v.p]]))));
+  ok((await page.locator('#bt-gof-out .bt-meta').textContent()).includes('Seed 20261111; istenen 99, tamamlanan') && (await page.locator('#bt-gof-out .bt-meta').textContent()).includes('yuvarlama: 0,1 cm'), 'seed, requested and completed replicates, failures and rounding recorded');
   const first = await page.locator('#bt-gof-out table').innerHTML(); await page.click('#bt-gof'); await page.waitForFunction(() => !document.querySelector('#bt-gof').disabled, null, { timeout: 120000 });
   ok((await page.locator('#bt-gof-out table').innerHTML()) === first, 'same seed again → identical table');
   await page.selectOption('#bt-B', '999'); await page.evaluate(() => { document.getElementById('bt-ci').click(); document.getElementById('bt-cancel').click(); });   // start and cancel at once (999 replicates can finish within a second)
   await page.waitForTimeout(1500);
   ok((await page.locator('#status', { hasText: 'iptal edildi' }).count()) === 1 && (await page.locator('#bt-ci-out table').count()) === 0, 'cancel: no partial result shown');
   await page.selectOption('#bt-B', '199'); await page.click('#bt-ci'); await page.waitForSelector('#bt-ci-out table.bttab', { timeout: 120000 });
-  const ci = await page.evaluate(() => [...document.querySelectorAll('#bt-ci-out tr[data-q]')].map(tr => [tr.dataset.q, ...[...tr.children].slice(1).map(x => parseFloat(x.textContent))]));
+  const ci = await page.evaluate(() => [...document.querySelectorAll('#bt-ci-out tr[data-q]')].map(tr => [tr.dataset.q, ...[...tr.children].slice(1).map(x => parseFloat(String(x.textContent).replace(',', '.')))]));
   const rci = E.boot.bootstrapCI({ result: r0, input: { d: pool }, opts: { a: 0 }, B: 199, seed: 20261111, step: 'auto', scheme: 'parametric' });
   ok(ci.length === 6 && ci.every(([k, est, lo, hi]) => Math.abs(lo - rci.intervals[k].lo) < 6e-5 && Math.abs(hi - rci.intervals[k].hi) < 6e-5 && lo <= est && est <= hi), 'intervals for b, c and Q25–Q95 = engine; estimate inside: ' + JSON.stringify(ci.map(x => x.slice(0, 4)))); }
   const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#bt-r')]), rs = await readFile(await dr.path(), 'utf8');
@@ -436,17 +443,17 @@ await page.waitForSelector('#panel .srcs');
   ok((await g.locator('[data-m$=".gml"]').count()) === 10 && (await g.locator('[data-m="weibull.ml"]').count()) === 0 && (await g.locator('#trcard').count()) === 0, 'only grouped ML offered; no threshold card');
   await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const gr = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
-  ok(gr[0].s === 'ok' && Math.abs(parseFloat(gr[0].c[3]) - cw.params.b) < 6e-5 && Math.abs(parseFloat(gr[0].c[4]) - cw.params.c) < 6e-5 && gr[0].c[5] === String(cw.n.reduce((a, b) => a + b, 0)) && gr[0].c[7] !== '–' && gr[0].c[9] === '–', 'grouped Weibull ML = SciPy; n = Σ n_j; AIC given; no KS on classes: ' + gr[0].c.slice(2, 10));
+  ok(gr[0].s === 'ok' && Math.abs(parseFloat(String(gr[0].c[3]).replace(',', '.')) - cw.params.b) < 6e-5 && Math.abs(parseFloat(String(gr[0].c[4]).replace(',', '.')) - cw.params.c) < 6e-5 && gr[0].c[5] === String(cw.n.reduce((a, b) => a + b, 0)) && gr[0].c[7] !== '–' && gr[0].c[9] === '–', 'grouped Weibull ML = SciPy; n = Σ n_j; AIC given; no KS on classes: ' + gr[0].c.slice(2, 10));
   await g.click('#tab-charts'); ok((await g.locator('#ch-h svg rect.ch-bar').count()) === 7, 'histogram bars are the closed classes (open last not drawn)');
   await g.click('#tab-classes'); await g.waitForSelector('table.ctab');
   const ct = await g.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
   ok(ct.length === 10 && ct[1][1] === String(cw.n[0]) && ct.find(r => r[0] === 'Toplam')[2] === '1', 'class table from the data classes; total probability 1');
   await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="perha"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const gp = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-  ok(Math.abs(parseFloat(gp[0][3]) - cw.params.b) < 6e-5 && gp[0][6] === '–' && gp[0][7] === '–' && (await g.locator('ul.notes li', { hasText: 'ağaç sayısı bilinmediği için' }).count()) >= 1, 'per-hectare frequencies: same parameters, no ln L or AIC, reason stated');
+  ok(Math.abs(parseFloat(String(gp[0][3]).replace(',', '.')) - cw.params.b) < 6e-5 && gp[0][6] === '–' && gp[0][7] === '–' && (await g.locator('ul.notes li', { hasText: 'ağaç sayısı bilinmediği için' }).count()) >= 1, 'per-hectare frequencies: same parameters, no ln L or AIC, reason stated');
   await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="count"]'); await g.check('input[name="outside"][value="unrecorded"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const cu = RG.cases.find(x => x.family === 'weibull' && x.outside === 'unrecorded'), gu = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-  ok(Math.abs(parseFloat(gu[0][4]) - cu.params.c) < 6e-5, 'outside "not recorded": conditional grouped ML = SciPy');
+  ok(Math.abs(parseFloat(String(gu[0][4]).replace(',', '.')) - cu.params.c) < 6e-5, 'outside "not recorded": conditional grouped ML = SciPy');
   await g.click('#tab-boot'); await g.waitForSelector('#bt-gof'); await g.selectOption('#bt-B', '99'); await g.click('#bt-gof'); await g.waitForSelector('#bt-gof-out table.bttab', { timeout: 120000 });
   ok((await g.locator('#bt-gof-out tr[data-stat="x2"]').count()) === 1 && (await g.locator('input[name="bt-scheme"][value="nonparametric"]').isDisabled()), 'grouped data: Pearson X² bootstrap; non-parametric scheme disabled');
   await g.click('#steps [data-go="2"]'); await g.check('input[name="outside"][value="zero"]'); await g.click('#calc'); await g.waitForSelector('table.ptab', { state: 'attached' }); await g.click('#tab-boot');
@@ -500,13 +507,13 @@ await page.waitForSelector('#panel .srcs');
   ok(await q.inputValue('#st-ncol') === '3' && await q.inputValue('#st-hcol') === '4' && await q.inputValue('#st-acol') === '5' && await q.inputValue('#st-pcol') === '0', 'sample: diameter, plot, N, H and age columns recognised');
   await q.click('#st-train-btn'); await q.waitForSelector('table.sttab');
   const ref = E.stand.train(XS.units, { set: 'ppm.weibull', terms: E.stand.TERMS, fit: 'nls', hColumn: 'H_m' }), refCv = E.stand.crossValidate(XS.units, { set: 'ppm.weibull', terms: E.stand.TERMS, fit: 'nls' }, 5);
-  const rowsS = await q.evaluate(() => [...document.querySelectorAll('table.sttab tbody tr')].map(tr => [tr.dataset.key, ...[...tr.children].slice(1).map(td => parseFloat(td.textContent))]));
+  const rowsS = await q.evaluate(() => [...document.querySelectorAll('table.sttab tbody tr')].map(tr => [tr.dataset.key, ...[...tr.children].slice(1).map(td => parseFloat(String(td.textContent).replace(',', '.')))]));
   ok(rowsS.length === 2 && rowsS.every((r, j) => r.slice(1, 6).every((v, i) => Math.abs(v - ref.equations[j].beta[i]) < 6e-7 * Math.max(1, Math.abs(ref.equations[j].beta[i])))), 'PPM NLS coefficients = engine: ' + JSON.stringify(rowsS));
   ok((await q.locator('#st-cvsum').textContent()).includes(`${refCv.summary.units} birimin ${refCv.summary.ok} tanesi`) && (await q.locator('#st-train', { hasText: 'H olarak kullanılan sütun: H_m' }).count()) === 1, 'validation summary and the H column recorded');
   await q.check('input[name="st-fit"][value="sur"]'); await q.click('#st-train-btn'); await q.waitForSelector('table.sttab');
   ok((await q.locator('#st-out', { hasText: 'SUR' }).count()) >= 1 && (await q.locator('#st-out', { hasText: 'artık korelasyonları' }).count()) === 1, 'SUR: rounds and residual correlations between equations reported');
   await q.check('input[name="st-fit"][value="mcdfr"]'); await q.click('#st-train-btn'); await q.waitForSelector('#st-cdf', { timeout: 120000 });
-  { const mc = E.stand.train(XS.units, { set: 'ppm.weibull', terms: E.stand.TERMS, fit: 'mcdfr', width: 2 }), txt = await q.locator('#st-cdf').textContent();
+  { const mc = E.stand.train(XS.units, { set: 'ppm.weibull', terms: E.stand.TERMS, fit: 'mcdfr', width: 2 }), txt = dotNum(await q.locator('#st-cdf').textContent());
     ok(txt.includes(fmt6(mc.cdf.objective)) && txt.includes('sınıf genişliği 2 cm') && txt.includes('son sınıf yalnızca amaç fonksiyonundan çıkarıldı'), 'modified CDFR in the worker: objective = engine, class width and last-class rule stated: ' + txt); }
   await q.check('input[name="st-fit"][value="sur"]'); await q.click('#st-train-btn'); await q.waitForSelector('table.sttab', { timeout: 120000 });
   const [dm] = await Promise.all([q.waitForEvent('download'), q.click('#st-json')]), file = await dm.path(), mj = JSON.parse(await readFile(file, 'utf8'));
@@ -516,7 +523,7 @@ await page.waitForSelector('#panel .srcs');
   await q.click('#stt-predict'); await q.check('input[name="st-src"][value="imported"]'); await q.setInputFiles('#st-file', file); await q.waitForSelector('#st-msum');
   for (const [k, v] of [['N', '800'], ['H', '20'], ['A', '40']]) { await q.fill('#st-x-' + k, v); await q.locator('#st-x-' + k).dispatchEvent('change'); }
   await q.click('#st-pred'); await q.waitForSelector('#st-params');
-  const pe = E.stand.predict(E.stand.importModel(mj).model, { N: 800, H: 20, A: 40 }), shown = await q.locator('#st-params').textContent();
+  const pe = E.stand.predict(E.stand.importModel(mj).model, { N: 800, H: 20, A: 40 }), shown = dotNum(await q.locator('#st-params').textContent());
   ok(shown.includes(fmt4(pe.params.b)) && shown.includes(fmt4(pe.params.c)) && (await q.locator('#ch-st svg path').count()) >= 1 && (await q.locator('#st-outside').count()) === 0, 'imported model: prediction = engine, density drawn: ' + shown);
   await q.fill('#st-x-N', '5000'); await q.locator('#st-x-N').dispatchEvent('change'); await q.click('#st-pred'); await q.waitForSelector('#st-pout');
   ok((await q.locator('#st-outside', { hasText: 'aralığı dışında' }).count()) === 1, 'outside the training range: extrapolation stated');
@@ -540,7 +547,7 @@ await page.waitForSelector('#panel .srcs');
   const rq = E.runMethod('gamma.qme', { d: dd }, { probs: [0.25, 0.5, 0.75], weights: [1, 2, 1] }), rm = E.runMethod('gamma.mge', { d: dd }, { gof: 'ks' }), rl = E.runMethod('gamma.lmom', { d: dd });
   const fam = await q.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="gamma"] tbody tr')].map(tr => ({ m: tr.dataset.method, c: [...tr.children].map(x => x.textContent.trim()) })));
   const cell = id => fam.find(r => r.m === id);
-  ok(Math.abs(parseFloat(cell('gamma.qme').c[2]) - rq.params.k) < 6e-5 * rq.params.k && Math.abs(parseFloat(cell('gamma.mge').c[2]) - rm.params.k) < 6e-5 * rm.params.k && Math.abs(parseFloat(cell('gamma.lmom').c[2]) - rl.params.k) < 6e-5 * rl.params.k, 'QME (probabilities and weights from the interface), MGE (KS) and L-moments = engine');
+  ok(Math.abs(parseFloat(String(cell('gamma.qme').c[2]).replace(',', '.')) - rq.params.k) < 6e-5 * rq.params.k && Math.abs(parseFloat(String(cell('gamma.mge').c[2]).replace(',', '.')) - rm.params.k) < 6e-5 * rm.params.k && Math.abs(parseFloat(String(cell('gamma.lmom').c[2]).replace(',', '.')) - rl.params.k) < 6e-5 * rl.params.k, 'QME (probabilities and weights from the interface), MGE (KS) and L-moments = engine');
   ok(cell('gamma.qme').c[0].includes('olasılıklar 0.25, 0.5, 0.75') && cell('gamma.qme').c[0].includes('ağırlıklar 1, 2, 1') && cell('gamma.mge').c[0].includes('KS ile'), 'probabilities, weights and the minimised criterion shown with the method');
   await q.selectOption('#cmp-sort', 'ks');
   const desc = await q.evaluate(() => [...document.querySelectorAll('table[data-kind="desc"] tbody tr')].map(tr => [tr.dataset.method, tr.querySelector('.selfcrit') != null]));
@@ -556,7 +563,7 @@ await page.waitForSelector('#panel .srcs');
   for (const k of ['mean', 'median', 'dq', 'dg']) { await q.fill('#f-' + k, String(S0[k])); await q.locator('#f-' + k).dispatchEvent('change'); }
   await q.click('#f-calc'); await q.waitForSelector('table.fnstab', { timeout: 60000 });
   const row = await q.evaluate(() => { const tr = document.querySelector('table.fnstab tbody tr'); return { s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) }; });
-  ok(row.s === 'ok' && Math.abs(parseFloat(row.c[1]) - 4) < 1e-5 && Math.abs(parseFloat(row.c[2]) - 40) < 1e-5 && Math.abs(parseFloat(row.c[3]) - 0.8) < 1e-5 && Math.abs(parseFloat(row.c[4]) - 1.4) < 1e-5, 'four parameters recovered (ξ = 4, λ = 40, γ = 0.8, δ = 1.4): ' + row.c.slice(1, 5));
+  ok(row.s === 'ok' && Math.abs(parseFloat(String(row.c[1]).replace(',', '.')) - 4) < 1e-5 && Math.abs(parseFloat(String(row.c[2]).replace(',', '.')) - 40) < 1e-5 && Math.abs(parseFloat(String(row.c[3]).replace(',', '.')) - 0.8) < 1e-5 && Math.abs(parseFloat(String(row.c[4]).replace(',', '.')) - 1.4) < 1e-5, 'four parameters recovered (ξ = 4, λ = 40, γ = 0.8, δ = 1.4): ' + row.c.slice(1, 5));
   ok((await q.locator('#f-out', { hasText: 'm₃ = d̄_G × Dq²' }).count()) === 1 && (await q.locator('#f-out .srcs li[data-ref="R17"]').count()) === 1 && row.c[7].includes('koşul sayısı'), 'm3 shown, source [R17] listed, condition number reported');
   await q.click('#rt-prs'); ok(await q.inputValue('#p-median') === String(S0.median), 'median shared with the Parresol tab');
   await q.click('#rt-fns'); await q.fill('#f-median', String(S0.mean)); await q.locator('#f-median').dispatchEvent('change'); await q.click('#f-calc'); await q.waitForSelector('table.fnstab');
@@ -575,7 +582,7 @@ await page.waitForSelector('#panel .srcs');
   await q.click('#calc'); await q.waitForSelector('table.cmptab');
   const rg = E.runMethod('gengamma.ml', { d: dd });
   const row = await q.evaluate(() => { const tr = document.querySelector('table.ptab[data-fam="gengamma"] tbody tr'); return [...tr.children].map(x => x.textContent.trim()); });
-  ok(['a', 'b', 'c'].every((k, i) => Math.abs(parseFloat(row[2 + i]) - rg.params[k]) < 6e-5 * rg.params[k]), 'generalized gamma a, b, c = engine: ' + row.slice(2, 5));
+  ok(['a', 'b', 'c'].every((k, i) => Math.abs(parseFloat(String(row[2 + i]).replace(',', '.')) - rg.params[k]) < 6e-5 * rg.params[k]), 'generalized gamma a, b, c = engine: ' + row.slice(2, 5));
   ok((await q.locator('table[data-kind="ml"] tbody tr').count()) === 2 && (await q.locator('.cmpgroup .kdiff').count()) === 1, 'gamma and generalized gamma in one AIC table, with the note that more parameters is not a better biological model');
   await c9.close(); }
 
@@ -590,7 +597,7 @@ await page.waitForSelector('#panel .srcs');
   for (const m of ['gumbel.ml', 'gumbel.mom']) await q.check(`[data-m="${m}"]`);
   await q.click('#calc'); await q.waitForSelector('table.cmptab');
   const r = E.runMethod('gumbel.ml', { d: dd }), row = await q.evaluate(() => { const tr = document.querySelector('table.ptab[data-fam="gumbel"] tbody tr[data-method="gumbel.ml"]'); return [...tr.children].map(x => x.textContent.trim()); });
-  ok(Math.abs(parseFloat(row[2]) - r.params.mu) < 6e-5 * r.params.mu && Math.abs(parseFloat(row[3]) - r.params.beta) < 6e-5 * r.params.beta, 'Gumbel μ, β = engine: ' + row.slice(2, 4));
+  ok(Math.abs(parseFloat(String(row[2]).replace(',', '.')) - r.params.mu) < 6e-5 * r.params.mu && Math.abs(parseFloat(String(row[3]).replace(',', '.')) - r.params.beta) < 6e-5 * r.params.beta, 'Gumbel μ, β = engine: ' + row.slice(2, 4));
   ok((await q.locator('ul.notes li', { hasText: 'F(0) = exp[−exp(μ/β)]' }).count()) >= 1, 'negative-diameter probability F(0) listed in the notes');
   await c10.close(); }
 
@@ -601,12 +608,12 @@ await page.waitForSelector('#panel .srcs');
   await q.waitForSelector('#impbox .fname'); await q.click('#to2'); await q.click('#calc'); await q.waitForSelector('table.ptab', { state: 'attached' });
   const before = await (async () => { await q.click('#tab-classes'); await q.waitForSelector('table.ctab'); return q.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => tr.children[1].textContent)); })();
   const pc = E.basal.baPercentiles(dd), cells = await q.evaluate(() => [...document.querySelectorAll('table.batab tbody td')].map(x => x.textContent.trim()));
-  ok(cells.length === 12 && cells.every((c, i) => Math.abs(parseFloat(c.replace(',', '.')) - pc.d[i]) < 1e-9) && new RegExp(`dgM = ${pc.dgM}(\\.0+)? cm`).test(await q.textContent('#ba-dgm')), 'basal area percentiles 0…100 % and dgM = engine: ' + cells.join(' '));
+  ok(cells.length === 12 && cells.every((c, i) => Math.abs(parseFloat(String(c.replace(',', '.')).replace(',', '.')) - pc.d[i]) < 1e-9) && new RegExp(`dgM = ${pc.dgM}(\\.0+)? cm`).test(await q.textContent('#ba-dgm')), 'basal area percentiles 0…100 % and dgM = engine: ' + cells.join(' '));
   ok((await q.locator('#ch-ba svg').count()) === 1 && (await q.locator('.bacard', { hasText: 'F_G(d) ≥ p' }).count()) === 1, 'cumulative distributions by number and by basal area drawn; percentile definition stated');
   await q.fill('#cl-area', '250'); await q.locator('#cl-area').dispatchEvent('change'); await q.waitForSelector('table.bactab', { state: 'attached' });
   const tot = await q.evaluate(() => [...document.querySelector('table.bactab tr.tot').children].map(x => x.textContent.trim()));
   const G = dd.reduce((a, v) => a + Math.PI * v * v / 40000, 0) * 40;
-  ok(Math.abs(parseFloat(tot[2]) - G) < 1e-4 && tot[1] === tot[4] && parseFloat(tot[1]) === 600, `class table: Σ G = ${G.toFixed(4)} m²/ha, Σ f = Σ N = 600 trees/ha: ` + tot);
+  ok(Math.abs(parseFloat(String(tot[2]).replace(',', '.')) - G) < 1e-4 && tot[1] === tot[4] && parseFloat(String(tot[1]).replace(',', '.')) === 600, `class table: Σ G = ${G.toFixed(4)} m²/ha, Σ f = Σ N = 600 trees/ha: ` + tot);
   const after = await q.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => tr.children[1].textContent));
   ok(after.length === before.length && after.every((v, i) => v === before[i]), 'tree-number class table unchanged');
   await q.setViewportSize({ width: 390, height: 844 });

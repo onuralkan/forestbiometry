@@ -719,7 +719,7 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
+__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
 // Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
 // languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
 const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
@@ -731,20 +731,25 @@ function makeT(dict) {
   };
 }
 /**
- * The one number formatter for screens, charts and texts: decimal point '.', no thousands separator, at most
- * maxDigits decimals (trailing zeros dropped), the same rounding as before (Intl, half away from zero) and
- * independent of the interface language. '−' is not used: negative numbers keep the ASCII minus so they can be
- * copied. Data files are never formatted with this (exports write full precision).
+ * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
+ * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
+ * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
+ * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
+/** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
+const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+/** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
+const LIST_SEP = lang === 'tr' ? '; ' : ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : s;
+  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
 }
-/** Decimal separator used everywhere on screen and in CSV exports. */
+/** Decimal separator of CSV exports (both languages). */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -2378,7 +2383,7 @@ __fb_m["siteindex/ui.js"] = function (__fb_e) {
 __fb_x(__fb_e, {  });
 const S = __fb_r("siteindex/calc.js");
 const { T } = __fb_r("siteindex/i18n.js");
-const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
+const { lang, fmtNum, esc, LIST_SEP } = __fb_r("core/i18n.js");
 const { put, get, del } = __fb_r("core/store.js");
 const { cellText } = __fb_r("core/table.js");
 const { parseNumber, detectDecimal, defaultDecimal } = __fb_r("core/num.js");
@@ -2465,7 +2470,7 @@ function renderStep1() {
       ${S0.cls.mode === 'equal' ? `<div class="lims">${[['start', 'cls.start'], ['width', 'cls.width'], ['n', 'cls.n']].map(([k, l]) => `<label>${T(l)} <input type="text" inputmode="decimal" size="6" id="cls-${k}" value="${esc(S0.cls[k])}"></label>`).join('')}</div>` : ''}
       ${S0.cls.mode === 'breaks' ? `<label class="field"><span>${T('cls.list')}</span><input type="text" id="cls-list" value="${esc(S0.cls.list)}"></label>` : ''}
       ${S0.cls.mode !== 'none' ? `<div class="radios"><span class="small">${T('cls.order')}:</span> ${['desc', 'asc'].map(o => `<label class="small"><input type="radio" name="clsorder" value="${o}"${S0.cls.order === o ? ' checked' : ''}> ${T('cls.order.' + o)}</label>`).join(' ')}</div>
-        ${cd.problems.length ? `<p class="note err small">${T('cls.bad')}</p>` : cd.classes.length ? `<p class="small" id="clsprev">${esc(T('cls.preview', { list: cd.classes.slice().reverse().map(k => `${k.name}: ${fmtNum(k.lo, 2)}–${fmtNum(k.hi, 2)}`).join(', ') }))}</p>` : ''}` : ''}
+        ${cd.problems.length ? `<p class="note err small">${T('cls.bad')}</p>` : cd.classes.length ? `<p class="small" id="clsprev">${esc(T('cls.preview', { list: cd.classes.slice().reverse().map(k => `${k.name}: ${fmtNum(k.lo, 2)}–${fmtNum(k.hi, 2)}`).join(LIST_SEP) }))}</p>` : ''}` : ''}
       <p class="muted small">${T('cls.note')}</p></div>`;
     const pr = modelProblems();
     h += `<div class="nav"><button type="button" class="btn ghost" id="reset">${T('reset')}</button><button type="button" class="btn" id="to2"${pr.length ? ' disabled' : ''}>${T('next')}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}</div>`;
@@ -2536,7 +2541,7 @@ function drawFit() {
   let h = '';
   if (FR.readProblems && FR.readProblems.length) h += `<p class="note warn small" id="fitread">${esc(T('fit.read', { n: FR.readProblems.length, rows: FR.readProblems.slice(0, 12).map(p => p.row).join(', ') }))}</p>`;
   if (FR.status !== 'ok') { out.innerHTML = h + `<p class="note err" id="fitstate">${esc(T('fit.fail', { why: (FR.problems || []).map(p => T('c.' + p.code, p)).join('; ') || FR.status }))}</p>`; return; }
-  h += `<p class="small" id="fitsum">${esc(T('fit.sum', { n: FR.n, s: FR.nSeries, pair: T('fit.pair.' + FR.pairing), it: FR.iter, start: FR.start.map(v => fmtNum(v, 6)).join(', '), from: T('fit.start.' + FR.startFrom) }))}</p>
+  h += `<p class="small" id="fitsum">${esc(T('fit.sum', { n: FR.n, s: FR.nSeries, pair: T('fit.pair.' + FR.pairing), it: FR.iter, start: FR.start.map(v => fmtNum(v, 6)).join(LIST_SEP), from: T('fit.start.' + FR.startFrom) }))}</p>
     <div class="tscroll"><table class="grid" id="fittab"><thead><tr><th>${T('fit.par')}</th><th>${T('fit.est')}</th><th>${T('fit.se')}</th></tr></thead><tbody>
     ${fm.params.map(k => `<tr><th>${k}</th><td class="num">${fmtNum(FR.params[k], 8)}</td><td class="num">${f(FR.se && FR.se[k], 6)}</td></tr>`).join('')}</tbody></table></div>
     <p class="muted small">${T('fit.senote')}</p>

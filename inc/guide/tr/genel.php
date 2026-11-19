@@ -10,7 +10,7 @@
 <li>Sütunlar başlık adlarından önerilir (ör. <code>cap_cm</code>, <code>dbh</code>, <code>alan_no</code>, <code>plot</code>); öneriyi her zaman denetleyin.</li>
 </ul>
 <h3>Ondalık ayırıcı</h3>
-<p>Ondalık ayırıcı arayüz dilinden bağımsızdır. Araç metin hücrelerine bakıp nokta mı virgül mü kullanıldığını söyler, ama kararı size bırakır: <b>Nokta (24.5)</b> ya da <b>Virgül (24,5)</b>. "1.234" gibi hem ondalık hem binlik ayırıcı olabilecek değerler "belirsiz" diye bildirilir. Seçiminize uymayan değerler okunamaz sayılır ve satır numaralarıyla raporlanır; hiçbir değer sessizce atlanmaz. Excel'in sayı hücreleri bu ayardan etkilenmez.</p>
+<p>Ekranda sayılar Türkçede ondalık virgülle, İngilizcede noktayla gösterilir; dosyalardaki sayıların okunması ise arayüz dilinden bağımsızdır. Araç metin hücrelerine bakıp nokta mı virgül mü kullanıldığını söyler, ama kararı size bırakır: <b>Nokta (24.5)</b> ya da <b>Virgül (24,5)</b>. "1.234" gibi hem ondalık hem binlik ayırıcı olabilecek değerler "belirsiz" diye bildirilir. Seçiminize uymayan değerler okunamaz sayılır ve satır numaralarıyla raporlanır; hiçbir değer sessizce atlanmaz. Excel'in sayı hücreleri bu ayardan etkilenmez.</p>
 <h3>Örnek veri</h3>
 <p>Her araçta bir örnek veri düğmesi vardır. Örnek veriler benzetimdir (rastgele sayılarla üretilmiştir), gerçek ölçüm değildir; aracı denemek ve sınır durumlarını görmek içindir.</p>
 <h3>Dışa aktarma</h3>

@@ -46,7 +46,7 @@ await sel('[data-sw="0"]', 'd2h'); await sel('[data-sw="total"]', 'd2h');
 await page.fill('[data-sk="total"]', '1.8'); await page.locator('[data-sk="total"]').dispatchEvent('change'); await page.waitForSelector('#systab');
 await page.click('#sy-fit'); await page.waitForSelector('#sy-coef');
 ok((await page.textContent('#sy-sum')).includes(`${ENG.n} ağaç, 4 denklem, 4 toplamsallık kısıtı`) && (await page.textContent('#sy-drop')).includes('satırlar 7'), 'summary, tree without height left out with its row');
-const shown = (await page.locator('#sy-coef [data-k="b"]').allTextContents()).map(s => +s.replace(/\s/g, '')), want = ENG.equations.flatMap(e => e.sur.b);
+const shown = (await page.locator('#sy-coef [data-k="b"]').allTextContents()).map(s => +s.replace(/\s/g, '').replace(',', '.')), want = ENG.equations.flatMap(e => e.sur.b);
 ok(shown.length === want.length && shown.every((v, k) => Math.abs(v - want[k]) <= 5e-6 * Math.max(1, Math.abs(want[k]))), 'restricted SUR coefficients on screen = sur.js: ' + shown.join(' '));
 ok((await page.textContent('#sy-stat')).includes('kestirildi') && (await page.textContent('#sy-stat')).includes('^1,8') || (await page.textContent('#sy-stat')).includes('^1.8'), 'weights: estimated and given exponents shown');
 await shot('bc02s-1-sistem');

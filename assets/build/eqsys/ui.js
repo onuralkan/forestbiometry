@@ -659,7 +659,7 @@ function toText(n) {
 
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
+__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
 // Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
 // languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
 const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
@@ -671,20 +671,25 @@ function makeT(dict) {
   };
 }
 /**
- * The one number formatter for screens, charts and texts: decimal point '.', no thousands separator, at most
- * maxDigits decimals (trailing zeros dropped), the same rounding as before (Intl, half away from zero) and
- * independent of the interface language. '−' is not used: negative numbers keep the ASCII minus so they can be
- * copied. Data files are never formatted with this (exports write full precision).
+ * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
+ * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
+ * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
+ * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
+/** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
+const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+/** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
+const LIST_SEP = lang === 'tr' ? '; ' : ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : s;
+  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
 }
-/** Decimal separator used everywhere on screen and in CSV exports. */
+/** Decimal separator of CSV exports (both languages). */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -2474,7 +2479,7 @@ __fb_m["eqsys/ui.js"] = function (__fb_e) {
 __fb_x(__fb_e, {  });
 const Q = __fb_r("eqsys/calc.js");
 const { T } = __fb_r("eqsys/i18n.js");
-const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
+const { lang, fmtNum, esc, LIST_SEP } = __fb_r("core/i18n.js");
 const { put, get, del } = __fb_r("core/store.js");
 const { saveCoef, blankSet } = __fb_r("core/coef.js");
 const { parse } = __fb_r("core/expr.js");
@@ -2630,7 +2635,7 @@ function renderStep3() {
       <h3>${T('r.eqh')}</h3><div class="tscroll"><table class="grid" id="eqtab"><thead><tr><th>${T('r.eq')}</th><th>${T('r.r2')}</th><th>${T('r.ssr')}</th><th>${T('r.s')}</th></tr></thead><tbody>
       ${x.eq.map((e, i) => `<tr><th>${esc(R.eqs[i].label)} (${esc(R.eqs[i].y)})</th><td class="num" data-k="r2">${f(e.r2, 5)}</td><td class="num">${sig(e.ssr)}</td><td class="num">${sig(Math.sqrt(x.residCov[i][i]))}</td></tr>`).join('')}</tbody></table></div>
       <p class="small" id="r-sys">${esc(T('r.sys', { ols: f(x.olsR2, 5), mc: f(x.mcelroy, 5), ll: f(x.logLik, 4), df: x.df }))}</p>
-      <p class="small">${T('r.corr')}: ${x.eq.map((_, i) => x.eq.slice(i + 1).map((__, k) => { const j = i + 1 + k; return `${i + 1}–${j + 1} ${f(x.residCov[i][j] / Math.sqrt(x.residCov[i][i] * x.residCov[j][j]), 3)}`; }).join(', ')).filter(Boolean).join(', ')}</p>
+      <p class="small">${T('r.corr')}: ${x.eq.map((_, i) => x.eq.slice(i + 1).map((__, k) => { const j = i + 1 + k; return `${i + 1}–${j + 1} ${f(x.residCov[i][j] / Math.sqrt(x.residCov[i][i] * x.residCov[j][j]), 3)}`; }).join(LIST_SEP)).filter(Boolean).join(LIST_SEP)}</p>
       <p class="muted small">${T('r.note')}</p>
       <div class="charts2">${x.eq.map((e, i) => `<figure class="chartbox">${scatterChart({ title: T('ch.obs', { e: `${R.eqs[i].label} (${R.eqs[i].y})` }), points: e.fitted.map((p, t) => [p + e.resid[t], p]), xLabel: T('ch.xo'), yLabel: T('ch.yo'), equal: true, fmt: v => fmtNum(v, 3), width: 420, height: 340 })}</figure>`).join('')}</div></div>
       ${sys.shared.length ? `<div class="card" id="lrtcard"><h2>${T('lrt.h')}</h2><p class="muted small">${T('lrt.sub')}</p><button type="button" class="btn ghost" id="lrt-go">${T('lrt.go')}</button><div id="lrt-out"></div></div>` : ''}

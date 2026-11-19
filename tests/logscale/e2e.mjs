@@ -19,7 +19,7 @@ const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, a
 const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const dl = async sel => { const [d] = await Promise.all([page.waitForEvent('download'), page.click(sel)]); return d; };
-const n = s => Number(String(s).trim());
+const n = s => Number(String(s).trim().replace(',', '.'));
 const csv = (await readFile(path.join(ROOT, 'assets/lab/logscale/ornek/ornek-tomruk.csv'), 'utf8')).trim().split('\n').slice(1);
 const logs = csv.map(l => { const [id, ds, db, dm, L] = l.split(';').map(x => Number(x.replace(',', '.'))); return { id: String(id), ds, db, dm, Lm: L }; });
 

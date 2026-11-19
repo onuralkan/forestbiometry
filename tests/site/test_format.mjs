@@ -1,4 +1,5 @@
-// Shared number display and the decimal-separator defaults are independent of the interface language.
+// Shared number display: decimal comma on Turkish screens, point in English (19 Nov 2026, user decision); CSV and
+// the import defaults are independent of the interface language.
 //   node tests/site/test_format.mjs
 let pass = 0, fail = 0;
 const eq = (a, b, m) => { const A = JSON.stringify(a), B = JSON.stringify(b); if (A === B) pass++; else { fail++; console.log('FAIL', m, 'got', A, 'expected', B); } };
@@ -17,15 +18,16 @@ eq([tr.lang, en.lang], ['tr', 'en'], 'two separate language instances');
 const cases = [[24.5, 2, '24.5'], [1234567.891, 2, '1234567.89'], [0.12345, 3, '0.123'], [2.675, 2, '2.68'], [-0.0001, 2, '0'],
   [-12.3456, 1, '-12.3'], [1e-7, 3, '0'], [100, 0, '100'], [0.5, 0, '1'], [1.30, 2, '1.3'], [NaN, 2, '–'], [null, 2, '–'], [Infinity, 2, '–']];
 for (const [x, d, want] of cases) {
-  eq(tr.fmtNum(x, d), want, `fmtNum TR ${x},${d}`);
+  eq(tr.fmtNum(x, d), want.replace('.', ','), `fmtNum TR ${x},${d}`);
   eq(en.fmtNum(x, d), want, `fmtNum EN ${x},${d}`);
 }
-for (let i = 0; i < 500; i++) {                                         // random values: identical in both languages
+for (let i = 0; i < 500; i++) {                                         // random values: Turkish = English with the comma
   const x = (Math.random() - 0.5) * 10 ** (Math.random() * 8 - 2), d = i % 6;
-  const a = tr.fmtNum(x, d);
-  if (a !== en.fmtNum(x, d) || a.includes(',')) { eq(a, en.fmtNum(x, d), 'random ' + x); continue; }
+  const a = tr.fmtNum(x, d), b = en.fmtNum(x, d);
+  if (a !== b.replace('.', ',') || b.includes(',') || (a.match(/,/g) || []).length > 1) { eq(a, b.replace('.', ','), 'random ' + x); continue; }
   pass++;
 }
+eq([tr.SCREEN_DECIMAL, en.SCREEN_DECIMAL, tr.LIST_SEP, en.LIST_SEP], [',', '.', '; ', ', '], 'screen decimal and list separator by language');
 eq([tr.DECIMAL, en.DECIMAL], ['.', '.'], 'DECIMAL constant');
 
 const rows = [['plot', 'd'], ['001', 24.5], ['002', 1234.125]];

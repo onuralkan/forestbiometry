@@ -96,7 +96,7 @@ const tr = {
   // dominant trees, age
   'dom.title': 'Baskın çap ve üst boy (D0, H0)',
   'more': 'Nasıl hesaplanır?', 'dom.hnote.h': 'H0 ve yaş nasıl hesaplanır?',
-  'dom.sub': p => `D0: hektardaki en kalın ${p.n} ağacın ortalama çapı; H0 (üst boy): hektardaki en uzun ${p.n} ağacın ortalama boyu. Her örnek alanda k = ${p.n} × A / 10000 ağaç seçilir (ör. 700 m² → 7, 1250 m² → 12.5). k kesirliyse ilk ⌊k⌋ ağaç tam, sıradaki ağaç kesir kadar ağırlıkla girer; sınırda eşit değerli ağaçlar bu ağırlığı eşit paylaşır, sonuç satır sırasına bağlı olmaz. Örnek alanda k'dan az ağaç varsa hepsi kullanılır.`,
+  'dom.sub': p => `D0: hektardaki en kalın ${p.n} ağacın ortalama çapı; H0 (üst boy): hektardaki en uzun ${p.n} ağacın ortalama boyu. Her örnek alanda k = ${p.n} × A / 10000 ağaç seçilir (ör. 700 m² → 7, 1250 m² → 12,5). k kesirliyse ilk ⌊k⌋ ağaç tam, sıradaki ağaç kesir kadar ağırlıkla girer; sınırda eşit değerli ağaçlar bu ağırlığı eşit paylaşır, sonuç satır sırasına bağlı olmaz. Örnek alanda k'dan az ağaç varsa hepsi kullanılır.`,
   'dom.def': 'D0 (baskın çap): hektardaki en kalın 100 ağacın ortalama çapı. H0 (üst boy): hektardaki en uzun 100 ağacın ortalama boyu.',
   'dom.hnote': 'H0 yalnızca ölçülmüş boylarla hesaplanır: en uzun ağaçların seçilebilmesi için örnek alandaki bütün ağaçların boyu ölçülmüş olmalıdır; değilse o örnek alanda H0 verilmez.',
   'dom.agenote': 'Yaş: örnek alanda yaşı ölçülen ağaçların ortalaması (hepsi ölçülmediyse ölçülenlerin).',

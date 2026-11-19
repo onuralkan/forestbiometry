@@ -24,7 +24,7 @@ page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const dl = async btn => { const [d] = await Promise.all([page.waitForEvent('download'), page.click(btn)]); return d; };
 const csvOf = async btn => (await readFile(await (await dl(btn)).path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
-const trNum = s => { const t = String(s).trim(); if (/\d,\d/.test(t)) throw new Error('comma decimal on screen: ' + t); return parseFloat(t); };   // the screen uses a decimal point in both languages
+const trNum = s => { const t = String(s).trim(); if (/\d\.\d/.test(t)) throw new Error('decimal point on the Turkish screen: ' + t); return parseFloat(t.replace(',', '.')); };   // Turkish screens use a decimal comma (19 Nov 2026)
 const cellsOf = async (sel) => page.evaluate(s => [...document.querySelectorAll(s)].map(tr => [...tr.children].map(td => td.textContent.trim())), sel);
 const tab = async t => { await page.click('#tab-' + t); await page.waitForSelector(`#panel[aria-labelledby="tab-${t}"]`); };
 

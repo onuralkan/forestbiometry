@@ -60,7 +60,7 @@ ok((await page.textContent('#sy-stat')).includes('(D²H)^2.114') && (await page.
 await page.fill('#sy-pD', '20'); await page.fill('#sy-pH', '17'); await page.click('#sy-iv'); await page.waitForSelector('#sy-ivtab');
 const iv = NS.intervals(ENG, 20, 17), ys = await nums('#sy-ivtab [data-k="y"]');
 ok(ys.length === 4 && Math.abs(ys[3] - 264.23) < 0.01 && Math.abs(ys[1] - 34.67) < 0.01, 'intervals table: bark 34.7, total 264.2 kg');
-ok((await page.textContent('#sy-ivtab tr[data-eq="total"]')).includes(iv.rows[3].pi[0].toFixed(2)), 'prediction interval as nsur.js (Student t, 153 df)');
+ok((await page.textContent('#sy-ivtab tr[data-eq="total"]')).includes(iv.rows[3].pi[0].toFixed(2).replace('.', ',')), 'prediction interval as nsur.js (Student t, 153 df)');
 await shot('bc02n-1-nsur');
 // ln scale
 await page.check('input[name="synlm"][value="log"]'); await page.waitForSelector('#systab');

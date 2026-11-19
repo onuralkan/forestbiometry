@@ -21,7 +21,7 @@ const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async n => { if (SHOTS) await page.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const dl = async sel => { const [d] = await Promise.all([page.waitForEvent('download'), page.click(sel)]); return d; };
-const n = s => Number(String(s).trim().replace(/\s/g, ''));
+const n = s => Number(String(s).trim().replace(/\s/g, '').replace(',', '.'));
 
 // the sample in Node (rows numbered as the importer does: header = row 1)
 const csv = (await readFile(path.join(ROOT, 'assets/lab/volume/ornek/ornek-hacim.csv'), 'utf8')).trim().split('\n').slice(1);

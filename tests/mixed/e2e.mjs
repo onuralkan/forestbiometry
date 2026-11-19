@@ -19,7 +19,7 @@ const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async n => { if (SHOTS) await page.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const REF = JSON.parse(await readFile(path.join(ROOT, 'tests/ref/mixed_sm03.json'), 'utf8'));
-const nums = async sel => (await page.locator(sel).allTextContents()).map(s => +s.replace(/\s/g, '').replace('−', '-'));
+const nums = async sel => (await page.locator(sel).allTextContents()).map(s => +s.replace(/\s/g, '').replace('−', '-').replace(',', '.'));
 const close = (a, b, r) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= r * Math.abs(b[i]));
 
 await page.goto(BASE + '/karma-modeller.php?lang=tr'); await page.waitForSelector('#sample');

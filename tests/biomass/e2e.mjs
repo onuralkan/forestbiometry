@@ -67,7 +67,7 @@ await page.waitForSelector('#calc:not([disabled])'); await shot('bc02-1-ayarlar'
 await page.click('#calc'); await page.waitForSelector('#utab');
 
 // 3. results against the engine
-const n = s => s === '–' ? null : +s;
+const n = s => s === '–' ? null : +String(s).replace(',', '.');
 for (const u of ENG.units) {
   const row = page.locator(`#utab tr[data-u="${u.plot_id}|"]`);
   const c1 = n(await row.locator('[data-k="c1"]').textContent()), B = n(await row.locator('[data-k="B"]').textContent());

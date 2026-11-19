@@ -79,7 +79,7 @@ for (const [file, pairs] of Object.entries(L)) {
 // numbers the guide states, against the code
 const chk = await rd('assets/lab/checker/calc.js'), hd = await rd('assets/lab/hd/ui.js'), smp = await rd('assets/lab/sampling/ui.js');
 ok(/dbhMin: 1, dbhMax: 200, hMin: 2, hMax: 60, slMin: 15, slMax: 200/.test(chk) && G.tr.includes('1–200 cm') && G.en.includes('1–200 cm'), 'checker default diameter limits 1–200 cm');
-ok(/bh:\s*'1\.3'|bh: 1\.3|'1\.3'/.test(hd) && G.tr.includes('1.3 m') && G.en.includes('1.3 m'), 'breast height default 1.3 m');
+ok(/bh:\s*'1\.3'|bh: 1\.3|'1\.3'/.test(hd) && G.tr.includes('1,3 m') && G.en.includes('1.3 m'), 'breast height default 1.3 m');
 ok(/eText:\s*'10'/.test(smp) && /level(Text)?:\s*'95'/.test(smp), 'sampling defaults E = 10 %, 95 %');
 console.log(`guide: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -387,7 +387,7 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
+__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
 // Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
 // languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
 const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
@@ -399,20 +399,25 @@ function makeT(dict) {
   };
 }
 /**
- * The one number formatter for screens, charts and texts: decimal point '.', no thousands separator, at most
- * maxDigits decimals (trailing zeros dropped), the same rounding as before (Intl, half away from zero) and
- * independent of the interface language. '−' is not used: negative numbers keep the ASCII minus so they can be
- * copied. Data files are never formatted with this (exports write full precision).
+ * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
+ * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
+ * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
+ * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
+/** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
+const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+/** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
+const LIST_SEP = lang === 'tr' ? '; ' : ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : s;
+  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
 }
-/** Decimal separator used everywhere on screen and in CSV exports. */
+/** Decimal separator of CSV exports (both languages). */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -3693,7 +3698,7 @@ const tr = {
   'bt.round.auto': p => `veriden (${p.s} cm)`, 'bt.round.none': 'yok', 'bt.round.value': 'değer gir',
   'bt.note': 'Parametrik bootstrap her tekrarda fit edilen gözlem modelinden (eşik varsa koşullu, sınıflı veride sınıf sayıları) aynı büyüklükte veri üretir, aynı yuvarlamayı uygular ve aynı yöntem ve seçeneklerle yeniden tahmin eder; kullanıcının sabitlediği sınırlar sabit kalır. Yeniden tahmin edilemeyen tekrarlar durumlarıyla sayılır ve dışarıda bırakılır.',
   'bt.gof.h': 'Uyum testi p değerleri (parametrik bootstrap)', 'bt.gof.sub': 'p = (1 + T ≥ T₀ olan tekrar sayısı)/(tamamlanan tekrar + 1). Ham veride KS, AD, CvM; sınıflı veride Pearson X².',
-  'bt.ci.h': 'Parametre ve yüzdelik aralıkları (%95, yüzdelik yöntemi)', 'bt.ci.sub': 'Tahmin edilen parametreler ve fit edilen dağılımın çap yüzdelikleri (Q25, Q50, Q75, Q95) için tekrarların %2.5 ve %97.5 yüzdelikleri (tip 7) ile bootstrap standart hatası.',
+  'bt.ci.h': 'Parametre ve yüzdelik aralıkları (%95, yüzdelik yöntemi)', 'bt.ci.sub': 'Tahmin edilen parametreler ve fit edilen dağılımın çap yüzdelikleri (Q25, Q50, Q75, Q95) için tekrarların %2,5 ve %97,5 yüzdelikleri (tip 7) ile bootstrap standart hatası.',
   'bt.scheme.parametric': 'Parametrik (fit edilen modelden)', 'bt.scheme.nonparametric': 'Parametrik olmayan (birim içinde ağaçlar iadeli yeniden örneklenir)',
   'bt.run': 'Hesapla', 'bt.cancel': 'İptal', 'bt.cancelled': 'Bootstrap iptal edildi; sonuç verilmedi.', 'bt.prog': p => `${p.k} / ${p.B} tekrar`, 'bt.err': p => `Bootstrap hatası: ${p.m}`,
   'bt.badseed': 'Seed sıfır ya da pozitif bir tam sayı olmalı.', 'bt.badstep': 'Yuvarlama adımı pozitif bir sayı olmalı.',
@@ -3704,14 +3709,14 @@ const tr = {
   'bt.warn': p => `Tekrarların %${p.r}'i yeniden tahmin edilemedi: sonuçlar bu tekrarlar dışarıda bırakılarak hesaplandı ve yanlı olabilir.`,
   'bt.few': p => `Tamamlanan tekrar ${p.m}'den az: sonuç verilmedi.`,
   'bt.stat': 'İstatistik', 'bt.ge': 'T ≥ T₀ olan tekrar', 'bt.p': 'p (bootstrap)', 'bt.mcse': 'Monte Carlo SH', 'bt.s.ks': 'KS D', 'bt.s.ad': 'AD A²', 'bt.s.cvm': 'CvM W²', 'bt.s.x2': 'Pearson X²',
-  'bt.q': 'Büyüklük', 'bt.est': 'Tahmin', 'bt.lo': 'Alt %2.5', 'bt.hi': 'Üst %97.5', 'bt.se': 'Bootstrap SH', 'bt.pct': p => `Q${p.q} (cm)`,
+  'bt.q': 'Büyüklük', 'bt.est': 'Tahmin', 'bt.lo': 'Alt %2,5', 'bt.hi': 'Üst %97,5', 'bt.se': 'Bootstrap SH', 'bt.pct': p => `Q${p.q} (cm)`,
   'bt.ci.note': p => `Şema: ${p.s}. Çok alanlı meşcere modellerinde örnek alan düzeyinde yeniden örnekleme ayrı bir şemadır, burada yapılmaz. Wald aralığı verilmez.`,
   
   'tab.compare': 'Karşılaştırma', 'sheet.cmp': 'Karsilastirma',
   'ch.scale.density': 'Yoğunluk (1/cm)', 'ch.scale.count': 'Sayı (ağaç) ve beklenen sınıf sayıları', 'ch.histn': p => `Sınıf sayıları ve beklenen sayılar, ${p.u}`, 'ch.count': 'Ağaç sayısı',
   'ch.bins2': 'Histogram "Sınıflar" sekmesindeki sınıf kenarlarıyla çizilir (yoğunluk = sayı/(n × genişlik)); eğriler olasılık yoğunluğudur.', 'ch.binsn': 'Çubuklar gözlenen sınıf sayılarıdır; noktalar n × [F(üst) − F(alt)], aynı sınıf kenarlarıyla.',
-  'ch.diag': 'Tanı grafikleri', 'ch.qq': 'Q–Q grafiği', 'ch.qq.x': 'Kuramsal yüzdelik (cm)', 'ch.qq.y': 'Gözlenen çap (cm)', 'ch.pp': 'P–P grafiği', 'ch.pp.x': 'Kuramsal F(d)', 'ch.pp.y': 'Ampirik oran (i − 0.5)/n',
-  'ch.diag.note': 'Konum (i − 0.5)/n. Ölçüm eşikli fit işlemlerinde kuramsal değerler koşullu dağılımdandır. Noktaların 1:1 doğrusundan sapması uyumsuzluğu gösterir; bu grafikler test değildir.',
+  'ch.diag': 'Tanı grafikleri', 'ch.qq': 'Q–Q grafiği', 'ch.qq.x': 'Kuramsal yüzdelik (cm)', 'ch.qq.y': 'Gözlenen çap (cm)', 'ch.pp': 'P–P grafiği', 'ch.pp.x': 'Kuramsal F(d)', 'ch.pp.y': 'Ampirik oran (i − 0,5)/n',
+  'ch.diag.note': 'Konum (i − 0,5)/n. Ölçüm eşikli fit işlemlerinde kuramsal değerler koşullu dağılımdandır. Noktaların 1:1 doğrusundan sapması uyumsuzluğu gösterir; bu grafikler test değildir.',
   'cmp.sort': 'Sırala', 'cmp.note': 'Sonuçlar gözlem sürecine göre ayrı tablolardadır; farklı veri ya da gözlem süreçleri aynı sırada karışmaz. Bileşik bir "en iyi model" puanı yoktur: tablo yalnızca seçtiğiniz ölçüte göre sıralanır. KS, AD ve CvM için standart tablolardan p değeri verilmez (parametreler aynı veriden tahmin edildi); bootstrap p değerleri "Belirsizlik" sekmesindedir. Sınıf hataları "Sınıflar" sekmesindeki ortak sınıf kenarlarıyla, kuyruklar dışında hesaplanır.',
   'cmp.sorted': p => `Sıralama: ${p.c} (${p.d})`, 'cmp.asc': 'küçük daha iyi', 'cmp.desc': 'büyük daha iyi',
   'cmp.c.aic': 'AIC', 'cmp.c.bic': 'BIC', 'cmp.c.aicc': 'AICc', 'cmp.c.logLik': 'ln L', 'cmp.c.ks': 'KS D', 'cmp.c.ad': 'AD A²', 'cmp.c.cvm': 'CvM W²', 'cmp.c.l1': 'Σ|O − E| (ağaç)', 'cmp.c.ei': 'EI (ağaç/ha)',
@@ -3832,8 +3837,8 @@ const tr = {
   'mnote.weibull.m2': 'b = (ortalama − a)/Γ₁, b²(Γ₂ − Γ₁²) = v denklemi c için çözülür (Γ_r = Γ(1 + r/c)).',
   'mnote.weibull.m3': 'b = [−aΓ₁ + √(a²Γ₁² + Γ₂(Dq² − a²))]/Γ₂ (pozitif kök), b²(Γ₂ − Γ₁²) = v denklemi c için çözülür. Ortalama kullanılmaz.',
   'mnote.weibull.m4': 'c = ln(A.63/A.31) / ln[(Q63 − a)/(Q31 − a)], b = (Q31 − a)/A.31^(1/c), A_p = −ln(1 − p); kapalı biçim.',
-  'mnote.weibull.m5': 'Aynı formül, p = 0.50 ve r = 0.95 ile; kapalı biçim.',
-  'wb.loc.h': 'Konum a', 'wb.loc.half-dmin': 'a = 0.5 × Dmin (Poudel ve Cao\'nun M2–M9 için politikası)', 'wb.loc.user': 'a\'yı kendim veriyorum (0 = iki parametreli biçim; kaynağın politikası değildir)',
+  'mnote.weibull.m5': 'Aynı formül, p = 0,50 ve r = 0,95 ile; kapalı biçim.',
+  'wb.loc.h': 'Konum a', 'wb.loc.half-dmin': 'a = 0,5 × Dmin (Poudel ve Cao\'nun M2–M9 için politikası)', 'wb.loc.user': 'a\'yı kendim veriyorum (0 = iki parametreli biçim; kaynağın politikası değildir)',
   'wb.dmin': 'Dmin, meşcerenin en küçük çapı (cm)', 'wb.a': 'Sabit a (cm)',
   'wb.dmin.note': 'Dmin, Poudel ve Cao\'da D0 olarak geçer; bu platformda D0 baskın çapın adıdır. Dmin bir hedef değerdir (ölçülmüş ya da tahmin edilmiş en küçük çap); dağılımın kuramsal sıfırıncı yüzdeliği Q(0) = a ile aynı şey değildir.',
   'wb.a.note': 'Verdiğiniz a bütün yöntemlerde sabit tutulur; ortalama, Dq ve yüzdelikler a\'dan büyük olmalıdır. Bu, ölçüm eşiğiyle aynı şey değildir.',
@@ -3844,12 +3849,12 @@ const tr = {
   'wb.fill.unit': 'Birim', 'wb.fill.btn': 'Hedefleri doldur', 'wb.fill.none': 'Ham veri yüklenmedi: "Ölçülmüş çaplara fit etme" sekmesinde bir tablo yükleyip çap sütununu seçin.',
   'wb.from': p => `Hedefler ham veriden hesaplandı: ${p.u}, n = ${p.n}; varyans n bölen, yüzdelikler tip 7. Bir hedefi değiştirirseniz kayıt "elle girildi" olur.`,
   'wb.t.loc': 'Konum a', 'wb.t.targets': 'Hedef → geri hesaplanan',
-  'wb.fx.half': p => `a = ${p.a} (0.5 × Dmin, Dmin = ${p.d})`, 'wb.fx.user': p => `a = ${p.a} (kullanıcı)`,
+  'wb.fx.half': p => `a = ${p.a} (0,5 × Dmin, Dmin = ${p.d})`, 'wb.fx.user': p => `a = ${p.a} (kullanıcı)`,
   'wb.roots': p => `${p.k} kök, c ∈ [${p.lo}, ${p.hi}]`,
   'wb.used': p => `Hedeflerin kaynağı: ${p.o}; ${p.src}${p.div ? `; ${p.div}` : ''}.`, 'wb.src.raw': 'yüklü ham veriden hesaplandı', 'wb.src.typed': 'elle girildi',
   'wb.p.note': 'Geri hesaplanan değerler hedeflere eşit olmalıdır (geri kazanımın denetimi; uyum ölçütü değildir). Ham veri olmadığından olabilirlik hesaplanmaz.', 'wb.chart': 'Geri kazanılan Weibull yoğunlukları',
   'st.multiple': 'birden çok çözüm',
-  'pr.wsum.missing': p => `${p.key} girilmedi ya da pozitif değil`, 'pr.wsum.dmin': 'Dmin girin (a = 0.5 × Dmin politikası)',
+  'pr.wsum.missing': p => `${p.key} girilmedi ya da pozitif değil`, 'pr.wsum.dmin': 'Dmin girin (a = 0,5 × Dmin politikası)',
   'pr.wsum.meanbelow': p => `ortalama (${p.mean} cm) a = ${p.a} cm'den büyük olmalı`, 'pr.wsum.dqbelow': p => `Dq (${p.dq} cm) a = ${p.a} cm'den büyük olmalı`,
   'pr.wsum.qbelow': p => `${p.key} (${p.q} cm) a = ${p.a} cm'den büyük olmalı`, 'pr.wsum.qorder': p => `üst yüzdelik (${p.qr} cm) alttakinden (${p.qp} cm) büyük olmalı`,
   'pr.wsum.noroot': p => `şekil c için ${p.lo}–${p.hi} aralığında çözüm yok (hedefler bu konumla bir Weibull'a karşılık gelmiyor)`,
@@ -3860,7 +3865,7 @@ const tr = {
   'dg.scale': p => `ölçek 1/r = ${p.s} cm`,
   'fam.loglogistic': 'Log-lojistik (Fisk)', 'm.loglogistic.ml': 'En çok olabilirlik', 'm.loglogistic.pct': 'İki yüzdelik', 'm.loglogistic.logmom': 'Log-momentler (sıradan momentler değil)',
   'mnote.loglogistic.ml': 'Kapalı biçimi yoktur; y = ln d, z = c·y − c ln b için log-olabilirlik (β = c ln b, c) üzerinde içbükeydir, tek en büyük vardır. Newton adımları (kesin Hessian, adım yarılama) log-moment tahmininden başlar. ln L çap ölçeğindedir (Jacobian −Σ ln d dahil).',
-  'opt.note.loglogistic.pct': 'c = [logit(r) − logit(p)] / ln(Q_r/Q_p), b = Q_p/[p/(1 − p)]^(1/c); kapalı biçim. Örnek yüzdelikleri tip 7. Varsayılan 0.25 ve 0.75 (çeyrekler) araç kuralıdır, kaynaktan alınmış bir en iyi çift değildir; 0 < p < r < 1.',
+  'opt.note.loglogistic.pct': 'c = [logit(r) − logit(p)] / ln(Q_r/Q_p), b = Q_p/[p/(1 − p)]^(1/c); kapalı biçim. Örnek yüzdelikleri tip 7. Varsayılan 0,25 ve 0,75 (çeyrekler) araç kuralıdır, kaynaktan alınmış bir en iyi çift değildir; 0 < p < r < 1.',
   'mnote.loglogistic.logmom': 'ln D lojistik dağılır: b = exp[ortalama(ln d)], c = π/√[3·var_n(ln d)] (n bölen). Çapların ortalama ve varyansını değil, logaritmalarının ortalama ve varyansını eşler; sıradan momentler yöntemi değildir.',
   'fnote.loglogistic': 'F(d) = 1/[1 + (b/d)^c], d > 0; b ölçek ve aynı zamanda medyandır (cm), c şekildir. Ortalama çap yalnızca c > 1, varyans yalnızca c > 2 için vardır; bu yüzden sıradan momentler yöntemi sunulmaz. Konum parametresi yok.',
   'dg.ll.nomean': p => `c = ${p.c} ≤ 1: bu dağılımın ortalaması ve varyansı yoktur (sonsuz); ortalama çap ya da Dq bu modelden hesaplanamaz`,
@@ -3891,10 +3896,10 @@ const tr = {
   'sheet.ba': 'GY dagilimi', 'ba.x.kind': 'Tablo', 'ba.x.what': 'Satır', 'ba.x.d': 'Çap (cm)', 'ba.x.b': 'G', 'ba.x.share': 'G payı', 'ba.x.gobs': 'ḡ gözlenen (m²)', 'ba.x.fobs': 'f = G/ḡ gözlenen', 'ba.x.fmid': 'f = G/g(orta çap), yaklaşık', 'ba.x.unit': 'G birimi', 'ba.x.pct': 'göğüs yüzeyi yüzdeliği', 'ba.x.cls': 'sınıf',
   'w.ll.boundary': 'şekil c 10⁶\'yı aştı (çaplar neredeyse eşit); parametre verilmedi', 'w.ll.noconverge': 'Newton adımları yakınsamadı; parametre verilmedi',
   'fam.johnsonsb': 'Johnson SB (sabit ξ ve λ)', 'm.johnsonsb.cml': 'Koşullu en çok olabilirlik (ξ, λ sabit)', 'm.johnsonsb.mom': 'Momentler (sayısal)',
-  'm.johnsonsb.kb': 'Yüzdelikler 0.50 ve 0.95 (Knoebel–Burkhart)', 'm.johnsonsb.pct': 'İki yüzdelik (kullanıcı çifti)',
+  'm.johnsonsb.kb': 'Yüzdelikler 0,50 ve 0,95 (Knoebel–Burkhart)', 'm.johnsonsb.pct': 'İki yüzdelik (kullanıcı çifti)',
   'mnote.johnsonsb.cml': 't = ln[(d − ξ)/(ξ + λ − d)] ile δ = 1/s_t, γ = −ortalama(t)/s_t; s_t² n bölenli. Bu, ξ ve λ verildiğinde γ ve δ\'nın en çok olabilirlik tahminidir; dört parametrenin birlikte tahmini değildir.',
   'opt.note.johnsonsb.mom': 'E[D] ve Var[D] örnek ortalaması ve varyansına sayısal olarak eşlenir (normal ağırlıklı integraller Gauss–Legendre ile; δ sabitken γ, sonra δ için Brent). v varsayılan n bölen, n − 1 seçenek.',
-  'mnote.johnsonsb.kb': 'δ = (z_r − z_p)/(t_r − t_p), γ = z_p − δ t_p; t_q = logit[(Q_q − ξ)/λ], z_q = Φ⁻¹(q); p = 0.50, r = 0.95. Kaynak: Knoebel ve Burkhart (1991) yaklaşımı; ForestFit paketindeki "KB" seçeneği. Örnek yüzdelikleri tip 7.',
+  'mnote.johnsonsb.kb': 'δ = (z_r − z_p)/(t_r − t_p), γ = z_p − δ t_p; t_q = logit[(Q_q − ξ)/λ], z_q = Φ⁻¹(q); p = 0,50; r = 0,95. Kaynak: Knoebel ve Burkhart (1991) yaklaşımı; ForestFit paketindeki "KB" seçeneği. Örnek yüzdelikleri tip 7.',
   'opt.note.johnsonsb.pct': 'Aynı formül, sizin seçtiğiniz 0 < p < r < 1 çiftiyle (genel yüzdelik yöntemi). Örnek yüzdelikleri tip 7.',
   'fnote.johnsonsb': 'z = γ + δ ln[(d − ξ)/(ξ + λ − d)], F(d) = Φ(z); destek ξ < d < ξ + λ. ξ (alt sınır) ve λ (aralık) sizin girdiğiniz sabit değerlerdir; yalnızca γ ve δ tahmin edilir. Seçmek için ξ ve λ girin.',
   'role.range': 'aralık',
@@ -3951,7 +3956,7 @@ const tr = {
   'st.model.h': 'Model', 'st.set': 'Yaklaşım ve yanıtlar',
   'st.set.ppm.weibull': 'PPM, Weibull: b ve c (a = 0)', 'st.set.prm.weibull.m2': 'PRM, Weibull M2: ortalama ve varyans', 'st.set.prm.weibull.m3': 'PRM, Weibull M3: Dq ve varyans', 'st.set.prm.weibull.m4': 'PRM, Weibull M4: Q31 ve Q63', 'st.set.prm.weibull.m5': 'PRM, Weibull M5: Q50 ve Q95',
   'st.set.prm.weibull.m6': 'PRM, Weibull M6: Dq, Q25 ve Q95', 'st.set.prm.weibull.m7': 'PRM, Weibull M7: Dq, Q31 ve Q63', 'st.set.prm.weibull.m8': 'PRM, Weibull M8: ortalama ve Q95', 'st.set.prm.weibull.m9': 'PRM, Weibull M9: Dq ve Q95', 'st.set.prm.parresol': 'PRM, Johnson SB (Parresol): ortalama, medyan, Dq',
-  'st.loc.half-dmin': 'a = 0.5 × tahmin edilen Dmin (Dmin de bir yanıt olur; kaynağın politikası)', 'st.loc.user': 'a\'yı kendim veriyorum',
+  'st.loc.half-dmin': 'a = 0,5 × tahmin edilen Dmin (Dmin de bir yanıt olur; kaynağın politikası)', 'st.loc.user': 'a\'yı kendim veriyorum',
   'st.terms': 'Terimler:', 'st.term.RS': 'RS', 'st.term.lnN': 'ln N', 'st.term.lnH': 'ln H', 'st.term.invA': '1/A',
   'st.fit': 'Regresyon yöntemi', 'st.fit.nls': 'NLS (her yanıt ayrı, orijinal ölçek)', 'st.fit.sur': 'SUR (yanıtlar birlikte, denklemler arası kovaryans)', 'st.fit.logols': 'log-OLS (ln y üzerinde; farklı amaç fonksiyonu)',
   'st.back.median': 'Geri dönüş: medyan exp(Zβ)', 'st.back.mean': 'Geri dönüş: ortalama exp(Zβ + s²/2)', 'st.K': 'Doğrulama kat sayısı',
@@ -3977,11 +3982,11 @@ const tr = {
   'st.pr.stand.xi': 'Johnson SB için ξ gerekir.', 'st.pr.stand.fit': 'Regresyon yakınsamadı.', 'st.pr.stand.order': p => `tahmin edilen ${p.hi}, ${p.lo}'dan büyük değil`, 'st.pr.stand.dq': 'tahmin edilen Dq ortalama çaptan büyük değil',
   'st.pr.stand.dmin': 'tahmin edilen Dmin en küçük yüzdelikten küçük değil', 'st.pr.stand.cv.few': 'Doğrulama için en az 2 örnek alan gerekir.',
   'st.fit.cdfr': 'CDFR (Poudel ve Cao: alanlar arası ortak katsayılar, birikimli dağılım uzaklığı)', 'st.fit.mcdfr': 'Modified CDFR (Poudel ve Cao: çap sınıflarıyla)', 'st.width': 'Sınıf genişliği (cm)',
-  'st.ppmloc.zero': 'Konum a = 0', 'st.ppmloc.half-dmin': 'Konum a = 0.5 × tahmin edilen Dmin (Dmin denklemi NLS ile, sabit)',
+  'st.ppmloc.zero': 'Konum a = 0', 'st.ppmloc.half-dmin': 'Konum a = 0,5 × tahmin edilen Dmin (Dmin denklemi NLS ile, sabit)',
   'st.need.width': 'Sınıf genişliği için pozitif bir değer girin.', 'st.need.cdfwb': 'CDFR ve modified CDFR yalnızca Weibull yolları içindir.', 'st.busy': 'Model eğitiliyor ve doğrulanıyor…', 'st.cancelled': 'Eğitim iptal edildi.',
   'st.res.cdf': p => `Amaç fonksiyonu NLS başlangıcında ${p.s}, sonda ${p.o} (${p.i} yineleme; geri kazanımı çözülemeyen ${p.r} adım reddedildi)${p.w}.`, 'st.res.width': p => `; sınıf genişliği ${p.w} cm, son sınıf yalnızca amaç fonksiyonundan çıkarıldı`,
   'st.res.oneclass': p => `${p.n} birim tek sınıfa düştüğü için bu amaç fonksiyonuna girmedi.`, 'st.res.dminfixed': 'Dmin denklemi NLS ile kestirildi ve sabit tutuldu.',
-  'st.res.note.cdfr': 'Katsayılar, bütün alanlar için ortak; birikimli dağılımlar arasındaki uzaklığı en küçüklüyor (alan başına 1/n ağırlığı, (j − 0.5)/n konumları). Standart hata verilmez. RMSE ve yanlılık hedefler üzerinde, eğitim verisinde.',
+  'st.res.note.cdfr': 'Katsayılar, bütün alanlar için ortak; birikimli dağılımlar arasındaki uzaklığı en küçüklüyor (alan başına 1/n ağırlığı, (j − 0,5)/n konumları). Standart hata verilmez. RMSE ve yanlılık hedefler üzerinde, eğitim verisinde.',
   'st.res.note.mcdfr': 'Katsayılar, bütün alanlar için ortak; sınıf üst sınırlarında birikimli oranlarla uzaklığı en küçüklüyor (alan başına 1/(m − 1) ağırlığı). Standart hata verilmez. RMSE ve yanlılık hedefler üzerinde, eğitim verisinde.',
   'st.pr.stand.cdf.startfail': p => `NLS başlangıcında geri kazanım bazı birimlerde çözülemedi (${Object.entries(p.fails || {}).map(([k, v]) => `${k}: ${v}`).join(', ')}); birden çok çözüm bir kuralla seçilmez, model eğitilmedi.`,
   'st.pr.stand.cdf.start': 'NLS başlangıcı bulunamadı.', 'st.pr.stand.cdf.family': 'CDFR yalnızca Weibull yolları içindir.', 'st.pr.stand.cdf.oneclass': 'tek sınıf',
@@ -4010,7 +4015,7 @@ const tr = {
   'fns.n.sym': 'Simetrik dağılımda medyan = ortalama olur ve yöntem üç denkleme iner (kaynak); bu durumda ve zayıf belirlenen girdilerde tek çözüm verilmez.',
   'fns.fill.h': 'Hedefleri yüklü ham veriden hesapla (d̄_G = Σd³/Σd²)', 'fns.cond': p => `koşul sayısı ${p.c}`,
   'fns.used': p => `Kullanılan üçüncü ham moment: m₃ = d̄_G × Dq² = ${p.dg} × ${p.dq}² = ${p.m3}.`, 'fns.p.note': 'Parametreler, girilen medyan, ortalama, Dq ve d̄_G\'yi birlikte sağlar (geri hesaplanan değerler gösterilir). Birden çok çözüm ya da zayıf belirlenen bir çözüm parametre vermez.',
-  'fns.chart': 'Geri kazanılan Johnson SB yoğunluğu', 'pr.fns.m3': p => `d̄_G, Dq²/ortalama = ${p.min.toFixed(4)} cm değerinden büyük olmalı (pozitif bir değişkende m₃·m₁ > m₂²)`,
+  'fns.chart': 'Geri kazanılan Johnson SB yoğunluğu', 'pr.fns.m3': p => `d̄_G, Dq²/ortalama = ${p.min.toFixed(4).replace('.', ',')} cm değerinden büyük olmalı (pozitif bir değişkende m₃·m₁ > m₂²)`,
   'pr.fns.symmetric': 'medyan ortalamaya eşit (simetrik): yöntem üç denkleme iner, dört parametre tek başına belirlenmez', 'pr.fns.weak': p => `çözüm zayıf belirlenmiş (Jacobian koşul sayısı ${p.cond.toExponential(1)} > 10⁸); tek bir sonuç verilmez`,
   'rg.h': 'Elinizdeki özetlerle hangi yöntem?', 'rg.have': 'Elinizdeki özetler', 'rg.get': 'Kullanılabilecek yöntemler', 'rg.tabs': 'Yöntem grubu',
   'rg.in.mom': 'Ortalama çap ve varyans ya da Dq', 'rg.out.mom': 'Normal, lognormal, gamma (sekme 1); Weibull M2 (ortalama + varyans), M3 (Dq + varyans) (sekme 2)',
@@ -4033,7 +4038,7 @@ const tr = {
   'opt.varDivisor': 'Varyans böleni', 'opt.varDivisor.n': 'n (moment varyansı, varsayılan)', 'opt.varDivisor.n-1': 'n − 1 (örnek varyansı s²)',
   'opt.p': 'Alt yüzdelik p', 'opt.r': 'Üst yüzdelik r',
   'opt.note.weibull.mom': 'Varsayılan n bölen: v = Σ(d − ortalama)²/n, momentlerin kuramsal tanımıyla tutarlıdır (Dq² = ortalama² + v). n − 1 seçeneği aracın yalnızca Weibull içeren 1.0.0 sürümüyle hesaplanmış sonuçları birebir yeniden üretir; ikisinin farkı yalnızca varyanstaki (n − 1)/n etkenidir.',
-  'opt.note.weibull.pct': 'c = ln(A_r/A_p) / ln[(Q_r − a)/(Q_p − a)], b = (Q_p − a)/A_p^(1/c), A_q = −ln(1 − q); kapalı biçim, yineleme yok. Örnek yüzdelikleri Hyndman ve Fan tip 7 ile (R varsayılanı). Varsayılan 0.24 ve 0.93: Dubey (1967), ölçek ve şeklin birlikte tahmini için en verimli çift (yuvarlanmış). 0 < p < r < 1.',
+  'opt.note.weibull.pct': 'c = ln(A_r/A_p) / ln[(Q_r − a)/(Q_p − a)], b = (Q_p − a)/A_p^(1/c), A_q = −ln(1 − q); kapalı biçim, yineleme yok. Örnek yüzdelikleri Hyndman ve Fan tip 7 ile (R varsayılanı). Varsayılan 0,24 ve 0,93: Dubey (1967), ölçek ve şeklin birlikte tahmini için en verimli çift (yuvarlanmış). 0 < p < r < 1.',
   'set.varDivisor': p => `varyans: ${p.v === 'n' ? 'n' : 'n − 1'} bölen`, 'set.p': p => `p = ${p.v}`, 'set.r': p => `r = ${p.v}`, 'sol.bisection': 'ikiye bölme (geometrik)', 'sol.closed form': 'kapalı biçim',
   'loc.h': 'Sabit konum a (Weibull, üstel)', 'loc.sub': 'Konum tahmin edilmez; Weibull ve üstel dağılım aynı a ile hesaplanır. a = 0 (iki parametreli biçim) her zaman hesaplanır; bir değer yazarsanız o sabit konumla da hesaplanır. Sabit a bütün çaplardan küçük olmalıdır. Bu, ölçüm eşiğiyle aynı şey değildir.',
   'loc.label': 'Sabit a (cm, isteğe bağlı)', 'loc.bad': 'Konum sıfır veya pozitif bir sayı olmalı.',
@@ -4052,7 +4057,7 @@ const tr = {
   'pr.n.few': p => `en az 2 ağaç gerekir (n = ${p.n})`, 'pr.constant': p => `bütün çaplar eşit (${p.value} cm)`, 'pr.a.bad': 'konum sayı değil',
   'pr.a.notbelow': p => `sabit konum a = ${p.a} en küçük çaptan (${p.min} cm) küçük değil`, 'pr.a.negative': 'konum negatif olamaz',
   'w.few.unique': p => `yalnızca ${p.unique} farklı çap değeri var (n = ${p.n})`, 'w.looks.grouped': p => `çaplar sınıflara yuvarlanmış görünüyor (${p.unique} farklı değer, n = ${p.n}); sınıflı veri yöntemi henüz yok`,
-  'w.c.boundary': 'şekil çözümü arama aralığının (0.01–1000) sınırında kaldı; parametre verilmedi', 'w.c.noconverge': 'şekil denklemi yakınsamadı; parametre verilmedi',
+  'w.c.boundary': 'şekil çözümü arama aralığının (0,01–1000) sınırında kaldı; parametre verilmedi', 'w.c.noconverge': 'şekil denklemi yakınsamadı; parametre verilmedi',
   'pr.pr.range': 'p ve r 0 ile 1 arasında bir sayı olmalı', 'pr.pr.order': 'p, r\'den küçük olmalı',
   'pr.q.tied': p => `iki örnek yüzdeliği eşit (Q = ${p.q} cm); şekil hesaplanamaz, başka bir yüzdelik çifti deneyin`,
   'w.var.n1': 'varyans n − 1 bölenle (seçenek)',
@@ -6523,7 +6528,7 @@ __fb_m["dist/ui.js"] = function (__fb_e) {
 __fb_x(__fb_e, {  });
 const D = __fb_r("dist/index.js");
 const { T } = __fb_r("dist/i18n.js");
-const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
+const { lang, fmtNum, esc, LIST_SEP } = __fb_r("core/i18n.js");
 const { put, get, del } = __fb_r("core/store.js");
 const { download, downloadJSON, downloadCSV, xlsxBlob, loadXLSX } = __fb_r("core/export.js");
 const { downloadRecord, recordOption } = __fb_r("core/record-ui.js");
@@ -6664,7 +6669,7 @@ function methodOpts(m) {
   if (!bad.length && m.checkOptions) bad.push(...m.checkOptions(opts));
   return bad.length ? { bad: bad.slice(0, 1) } : { opts };
 }
-const setLabel = r => Object.entries(r.settings || {}).filter(([k]) => !['quantile', 'boundPolicy', 'pair', 'truncLower', 'truncUpper', 'nScope'].includes(k)).map(([k, v]) => T('set.' + k, { v: typeof v === 'number' ? fmtNum(v, 4) : v })).join(', ');
+const setLabel = r => Object.entries(r.settings || {}).filter(([k]) => !['quantile', 'boundPolicy', 'pair', 'truncLower', 'truncUpper', 'nScope'].includes(k)).map(([k, v]) => T('set.' + k, { v: typeof v === 'number' ? fmtNum(v, 4) : v })).join(LIST_SEP);
 const methodName = r => { const sl = setLabel(r); return T('m.' + r.method) + (sl ? ` · ${sl}` : ''); };
 const needsLocation = () => chosenMethods().some(m => (m.options || []).some(o => o.key === 'a'));
 function settingsProblems() {
@@ -6800,7 +6805,7 @@ function fixSel() {
   S.selPlot = u ? u.plot : null; S.selPer = u ? u.period : null;
 }
 const unitLabel = u => `${u.plot === D.POOL ? T('unit.pool') : T('unit.plot', { p: u.plot })}${u.period != null ? ` / ${u.period}` : ''}`;
-const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', '); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
+const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(LIST_SEP); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
 
 /* ---------------- step 3: results ---------------- */
 const TABS = ['params', 'charts', 'classes', 'boot'];
@@ -6953,11 +6958,11 @@ function tabParams(p) {
     const rs = u.results.filter(r => r.family === fa.id); if (!rs.length) continue;
     fam += `<h3>${esc(T('fam.' + fa.id))}</h3><div class="tscroll"><table class="grid ptab" data-fam="${fa.id}"><thead><tr><th>${T('t.method')}</th><th>${T('t.fixed')}</th>
       ${fa.params.map(q => `<th title="${esc(T('role.' + q.role) + (q.scale === 'log' ? ', ' + T('unit.logscale') : ''))}">${esc(parHead(q))}</th>`).join('')}<th>${T('t.n')}</th><th>${T('t.ll')}</th><th>${T('t.aic')}</th><th>${T('t.bic')}</th><th>${T('t.ks')}</th><th>${T('t.ad')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
-      ${rs.map(r => { const okr = r.status === 'ok', g = r.gof || {}, fx = Object.entries(r.fixed).map(([k, v]) => T('fixed.' + (v.origin === 'zero' ? 'zero' : 'user'), { k: parLabel(r.family, k), v: f(v.value, 4) })).join(', ') || T('fixed.none');
+      ${rs.map(r => { const okr = r.status === 'ok', g = r.gof || {}, fx = Object.entries(r.fixed).map(([k, v]) => T('fixed.' + (v.origin === 'zero' ? 'zero' : 'user'), { k: parLabel(r.family, k), v: f(v.value, 4) })).join(LIST_SEP) || T('fixed.none');
         return `<tr class="${okr ? '' : 'st-bad'}" data-method="${r.method}" data-status="${r.status}"><th>${esc(methodName(r))}</th><td>${esc(fx)}</td>${fa.params.map(q => `<td class="num">${okr ? f(r.params[q.key], 4) : '–'}</td>`).join('')}
           <td class="num">${fmtNum(r.data.n, 0)}</td><td class="num">${okr ? f(r.logLik, 3) : '–'}</td><td class="num">${g.aic != null ? f(g.aic, 2) : '–'}</td><td class="num">${g.bic != null ? f(g.bic, 2) : '–'}</td>
           <td class="num">${okr ? f(g.ks, 4) : '–'}</td><td class="num">${okr ? f(g.ad, 3) : '–'}</td><td>${T('st.' + r.status)}</td><td class="small">${esc(T('sol.' + r.convergence.solver))}${r.convergence.iter != null ? ` · ${r.convergence.iter}` : ''}</td></tr>`; }).join('')}</tbody></table></div>`;
-    const notes = rs.flatMap(r => notesOf(r).map(x => `${methodName(r)}${Object.values(r.fixed).some(v => v.origin !== 'zero') ? ` (${Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ')})` : ''}: ${x}`));
+    const notes = rs.flatMap(r => notesOf(r).map(x => `${methodName(r)}${Object.values(r.fixed).some(v => v.origin !== 'zero') ? ` (${Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(LIST_SEP)})` : ''}: ${x}`));
     allNotes.push(...notes.map(x => `${T('fam.' + fa.id)} · ${x}`));
   }
   h += compareHtml(u);
@@ -7132,7 +7137,7 @@ const CMP_OPT = new Set(['fixed', 'k', 'bic', 'dBIC', 'aicc', 'cvm', 'l1', 'ei',
 function compareHtml(u) {
   const groups = D.compare.compareUnit(u.results, r => classErr(u, r)), crit = S.cmpSort;
   const parTxt = r => D.family(r.family).params.filter(q => !(r.fixed || {})[q.key]).map(q => `${q.label ?? q.key} = ${f(r.params[q.key], 4)}`).join('; ');
-  const fixTxt = r => Object.entries(r.fixed || {}).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ') || '–';
+  const fixTxt = r => Object.entries(r.fixed || {}).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(LIST_SEP) || '–';
   const cols = ml => [['dist', ''], ['method', ''], ['params', ''], ['fixed', ''], ['n', ''], ...(ml ? [['k', ''], ['logLik', 'ln L'], ['aic', 'AIC'], ['dAIC', 'ΔAIC'], ['bic', 'BIC'], ['dBIC', 'ΔBIC'], ['aicc', 'AICc']] : [['logLik', T('cmp.logscore')]]), ['ks', 'KS D'], ['ad', 'AD A²'], ['cvm', 'CvM W²'], ['l1', T('cmp.l1')], ['ei', T('cmp.ei')], ['conv', T('t.solver')]];
   const cell = (x, c) => { const r = x.r;
     switch (c) { case 'dist': return esc(T('fam.' + r.family)); case 'method': return esc(methodName(r)); case 'params': return esc(parTxt(r)); case 'fixed': return esc(fixTxt(r));
@@ -7461,7 +7466,7 @@ function drawPrs() {
   const out = $('p-out'); if (!out || !RP) return;
   const r = RP[0], okr = r.status === 'ok', g = r.diagnostics || {}, tg = r.targets || {}, fam = D.family('johnsonsb');
   const why = [...(r.problems || []).map(p => T('pr.' + p.code, { ...p, key: p.key ? T('prs.k.' + p.key) : p.key })), ...(r.warnings || []).map(w => T('w.' + w.code, w))].join('; ');
-  const cands = r.status === 'multiple' ? (g.candidates || []).map(c => fam.params.map(q => `${q.label} = ${f(c[q.key], 4)}`).join(', ')).join(' | ') : '';
+  const cands = r.status === 'multiple' ? (g.candidates || []).map(c => fam.params.map(q => `${q.label} = ${f(c[q.key], 4)}`).join(LIST_SEP)).join(' | ') : '';
   const back = okr ? [['mean', 'backMean'], ['median', 'backMedian'], ['dq', 'backDq']].map(([k, b]) => `<span style="white-space:nowrap">${T('prs.k.' + k)}: ${f(tg[k], 4)} → ${f(g[b], 4)}</span>`).join('<br>') : '–';
   let h = `<div class="tscroll"><table class="grid ptab prtab"><thead><tr><th>${T('t.method')}</th>${fam.params.map(q => `<th>${esc(parHead(q))}</th>`).join('')}<th>${T('wb.t.targets')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
     <tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('m.' + r.method))}</th>${fam.params.map(q => `<td class="num">${okr ? f(r.params[q.key], 6) : q.key === 'xi' && tg.xi != null ? f(tg.xi, 4) : '–'}</td>`).join('')}
@@ -7589,7 +7594,7 @@ function drawStandTrain() {
   h += `<div class="tscroll"><table class="grid sttab"><thead><tr><th>${T('st.resp')}</th>${betaHead(m.terms).map(x => `<th>${esc(x)}</th>`).join('')}<th>RMSE</th><th>${T('st.bias')}</th></tr></thead><tbody>
     ${m.equations.map(e => `<tr data-key="${e.key}"><th>${esc(stKey(e.key))}</th>${e.beta.map((b, i) => `<td class="num">${f(b, 6)}${e.se ? `<br><span class="muted small">± ${f(e.se[i], 4)}</span>` : ''}</td>`).join('')}<td class="num">${f(e.rmse, 4)}</td><td class="num">${f(e.bias, 4)}</td></tr>`).join('')}</tbody></table></div>
     ${m.cdf ? `<p class="small" id="st-cdf">${T('st.res.cdf', { s: f(m.cdf.start, 6), o: f(m.cdf.objective, 6), i: m.cdf.iter, r: m.cdf.rejected, w: m.cdf.width == null ? '' : T('st.res.width', { w: m.cdf.width }) })}${m.cdf.excludedUnits.length ? ' ' + T('st.res.oneclass', { n: m.cdf.excludedUnits.length }) : ''}${m.cdf.dmin ? ' ' + T('st.res.dminfixed') : ''}</p>` : ''}
-    <p class="muted small">${T('st.res.note.' + m.fit)}${m.sur ? ' ' + T('st.res.sur', { r: m.sur.rounds, c: m.sur.corr.map((r, a) => r.slice(a + 1).map((v, b) => `${stKey(m.keys[a])}–${stKey(m.keys[a + b + 1])}: ${f(v, 3)}`)).flat().join(', ') }) : ''}${m.hColumn ? ' ' + T('st.res.hcol', { c: esc(m.hColumn) }) : ''}</p></div>`;
+    <p class="muted small">${T('st.res.note.' + m.fit)}${m.sur ? ' ' + T('st.res.sur', { r: m.sur.rounds, c: m.sur.corr.map((r, a) => r.slice(a + 1).map((v, b) => `${stKey(m.keys[a])}–${stKey(m.keys[a + b + 1])}: ${f(v, 3)}`)).flat().join(LIST_SEP) }) : ''}${m.hColumn ? ' ' + T('st.res.hcol', { c: esc(m.hColumn) }) : ''}</p></div>`;
   if (cv && cv.status === 'ok') {
     const s = cv.summary;
     h += `<div class="card"><h3>${T('st.cv.h', { k: cv.K })}</h3><p class="small" id="st-cvsum">${T('st.cv.sum', { ok: s.ok, n: s.units, f: s.failed, nll: f(s.nllPerTree, 4), ks: f(s.ks, 4) })}</p><p class="muted small">${T('st.cv.note')}</p>
@@ -7639,7 +7644,7 @@ function drawStandPred() {
   if (p.outside && p.outside.length) h += `<p class="note warn small" id="st-outside">${T('st.p.outside', { k: p.outside.map(k => T('st.var.' + k)).join(', ') })}</p>`;
   if (p.status !== 'ok') h += `<p class="note err" id="st-pbad">${T('st.p.fail')}: ${esc([...p.problems.map(q2 => T('st.pr.' + q2.code, { ...q2, lo: q2.lo ? stKey(q2.lo) : '', hi: q2.hi ? stKey(q2.hi) : '', keys: (q2.keys || []).map(k => T('st.var.' + k)).join(', ') })), ...(p.recovery ? notesOf(p.recovery) : [])].join(' '))}</p>`;
   else {
-    h += `<p id="st-params"><b>${esc(T('fam.' + m.family))}</b>: ${fam.params.map(qq => `${esc(qq.label ?? qq.key)} = ${f(p.params[qq.key], 4)}`).join(', ')}</p>`;
+    h += `<p id="st-params"><b>${esc(T('fam.' + m.family))}</b>: ${fam.params.map(qq => `${esc(qq.label ?? qq.key)} = ${f(p.params[qq.key], 4)}`).join(LIST_SEP)}</p>`;
     const lo = Math.max(0, fam.quantile(0.0005, p.params)), hi = fam.quantile(0.9995, p.params), xs = Array.from({ length: 401 }, (_, i) => lo + (hi - lo) * i / 400);
     h += `<figure class="chartbox" id="ch-st">${plotChart({ title: T('st.p.chart'), xmin: lo, xmax: hi, lines: [{ name: T('fam.' + m.family), k: 0, pts: xs.map(v => [v, fam.pdf(v, p.params)]) }], xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-st-svg">${T('ch.svg')}</button></figcaption></figure>`;
@@ -7683,7 +7688,7 @@ function drawFns() {
   const out = $('f-out'); if (!out || !RF) return;
   const r = RF[0], okr = r.status === 'ok', g = r.diagnostics || {}, tg = r.targets || {}, fam = D.family('johnsonsb');
   const why = [...(r.problems || []).map(p => T('pr.' + p.code, { ...p, key: p.key ? T('fns.k.' + p.key) : p.key })), ...(r.warnings || []).map(w => T('w.' + w.code, w))].join('; ');
-  const cands = (r.status === 'multiple' || (r.problems || []).some(p => p.code === 'fns.weak')) && g.candidates ? g.candidates.map(c => fam.params.map(qq => `${qq.label} = ${f(c[qq.key], 4)}`).join(', ')).join(' | ') : '';
+  const cands = (r.status === 'multiple' || (r.problems || []).some(p => p.code === 'fns.weak')) && g.candidates ? g.candidates.map(c => fam.params.map(qq => `${qq.label} = ${f(c[qq.key], 4)}`).join(LIST_SEP)).join(' | ') : '';
   const back = okr ? [['mean', 'backMean'], ['median', 'backMedian'], ['dq', 'backDq'], ['dg', 'backDg']].map(([k, b]) => `<span style="white-space:nowrap">${T('fns.k.' + k)}: ${f(tg[k], 4)} → ${f(g[b], 4)}</span>`).join('<br>') : '–';
   let h = `<div class="tscroll"><table class="grid ptab fnstab"><thead><tr><th>${T('t.method')}</th>${fam.params.map(qq => `<th>${esc(parHead(qq))}</th>`).join('')}<th>${T('wb.t.targets')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
     <tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('m.' + r.method))}</th>${fam.params.map(qq => `<td class="num">${okr ? f(r.params[qq.key], 6) : '–'}</td>`).join('')}

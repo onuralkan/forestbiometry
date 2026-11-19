@@ -452,7 +452,7 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
+__fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
 // Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
 // languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
 const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
@@ -464,20 +464,25 @@ function makeT(dict) {
   };
 }
 /**
- * The one number formatter for screens, charts and texts: decimal point '.', no thousands separator, at most
- * maxDigits decimals (trailing zeros dropped), the same rounding as before (Intl, half away from zero) and
- * independent of the interface language. '−' is not used: negative numbers keep the ASCII minus so they can be
- * copied. Data files are never formatted with this (exports write full precision).
+ * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
+ * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
+ * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
+ * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
+/** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
+const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+/** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
+const LIST_SEP = lang === 'tr' ? '; ' : ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : s;
+  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
 }
-/** Decimal separator used everywhere on screen and in CSV exports. */
+/** Decimal separator of CSV exports (both languages). */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -1546,7 +1551,7 @@ const tr = {
   'dec.v.dot': 'Ondalık nokta kullanılmış görünüyor.', 'dec.v.comma': 'Ondalık virgül kullanılmış görünüyor.', 'dec.v.none': 'Metin olarak yazılmış ondalıklı sayı yok; varsayılan nokta seçildi.',
   'dec.v.ambiguous': p => `Belirsiz: ${p.ex} gibi değerler ondalık da binlik ayırıcılı tam sayı da olabilir; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.`, 'dec.v.conflict': 'Hem nokta hem virgül var; doğru olanı seçin, öteki değerler okunamaz olarak raporlanır.',
   'm.h': 'Yöntem ve veri düzeni', 'm.layout': 'Ölçüm noktaları nerede?',
-  'lay.ends': 'Seksiyon sınırlarında (uçlarda)', 'lay.mids': 'Seksiyon ortalarında', 'lay.triples': 'Uç, orta, uç sırasıyla (her seksiyonda üç nokta)', 'lay.hohenadl': '0.1H, 0.3H, 0.5H, 0.7H ve 0.9H yüksekliklerinde (Hohenadl)',
+  'lay.ends': 'Seksiyon sınırlarında (uçlarda)', 'lay.mids': 'Seksiyon ortalarında', 'lay.triples': 'Uç, orta, uç sırasıyla (her seksiyonda üç nokta)', 'lay.hohenadl': '0,1H, 0,3H, 0,5H, 0,7H ve 0,9H yüksekliklerinde (Hohenadl)',
   'm.note': 'Veri düzenini siz seçersiniz; araç noktaların nasıl alındığını tahmin etmez. Yalnızca seçilen düzene uyan yöntemler listelenir.',
   'meth.huber': 'Huber', 'meth.smalian': 'Smalian', 'meth.newton': 'Newton', 'meth.hohenadl': 'Hohenadl (5 seksiyon)',
   'm.need': 'En az bir yöntem seçin.',
@@ -1555,12 +1560,12 @@ const tr = {
   'stump.inc': 'Dip kütük hacmini toplama kat', 'dtop': 'Kullanılabilir tepe çapı (cm, isteğe bağlı)', 'dtop.bad': 'Tepe çapı pozitif bir sayı olmalı.',
   'area.h': 'Hektara genişletme', 'area.none': 'Yapma (yalnızca ağaç hacimleri)', 'area.col': 'Tablodaki örnek alan büyüklüğü sütunundan', 'area.const': 'Bütün örnek alanlar aynı büyüklükte:', 'area.ds': 'Onaylanmış veriden',
   'area.bad': 'Örnek alan büyüklüğü pozitif bir sayı (m²) olmalı.', 'area.nocol': 'Örnek alan büyüklüğü sütununu seçin.',
-  'adv.h': 'Kontrol eşikleri (araç kuralları)', 'adv.buttress': 'Kök şişkinliği bölgesi üst sınırı (m)', 'adv.dbhtol': '1.30 m çapı ile dbh arası en büyük fark (%)', 'adv.midtol': 'Orta nokta toleransı (m)', 'adv.hohtol': 'Hohenadl yükseklik toleransı (m)',
+  'adv.h': 'Kontrol eşikleri (araç kuralları)', 'adv.buttress': 'Kök şişkinliği bölgesi üst sınırı (m)', 'adv.dbhtol': '1,30 m çapı ile dbh arası en büyük fark (%)', 'adv.midtol': 'Orta nokta toleransı (m)', 'adv.hohtol': 'Hohenadl yükseklik toleransı (m)',
   'adv.bad': 'Eşikler pozitif sayı olmalı.',
   'adv.topshare': 'Uç seksiyonun hacimdeki payı için uyarı eşiği (%)',
-  'q.h': 'Veri kalitesi', 'q.sum': p => `${p.n} ağaçtan: ${p.inc} ağaçta kök şişkinliği bölgesi dışında yükseklikle artan çap, ${p.top} ağaçta uç seksiyon payı eşiğin üstünde, ${p.dbh} ağaçta 1.30 m çapı dbh'den farklı, ${p.err} ağaç veri hatası yüzünden hesaplanmadı.`,
-  'q.thr': p => `Eşikler (araç kuralları, Ayarlar → Kontrol eşikleri): kök şişkinliği bölgesi ${p.b} m'ye kadar; 1.30 m çapı ile dbh farkı en çok %${p.d}; uç seksiyon payı en çok %${p.t}.`,
-  'q.table': 'Ağaç başına kalite tablosu', 'q.np': 'Nokta', 'q.inc': 'Artan çap', 'q.lmin': 'En kısa seksiyon (m)', 'q.lmean': 'Ortalama seksiyon (m)', 'q.lmax': 'En uzun seksiyon (m)', 'q.top': 'Uç seksiyon payı (%)', 'q.dbh': '1.30 m çapı − dbh (%)', 'q.flags': 'Uyarılar',
+  'q.h': 'Veri kalitesi', 'q.sum': p => `${p.n} ağaçtan: ${p.inc} ağaçta kök şişkinliği bölgesi dışında yükseklikle artan çap, ${p.top} ağaçta uç seksiyon payı eşiğin üstünde, ${p.dbh} ağaçta 1,30 m çapı dbh'den farklı, ${p.err} ağaç veri hatası yüzünden hesaplanmadı.`,
+  'q.thr': p => `Eşikler (araç kuralları, Ayarlar → Kontrol eşikleri): kök şişkinliği bölgesi ${p.b} m'ye kadar; 1,30 m çapı ile dbh farkı en çok %${p.d}; uç seksiyon payı en çok %${p.t}.`,
+  'q.table': 'Ağaç başına kalite tablosu', 'q.np': 'Nokta', 'q.inc': 'Artan çap', 'q.lmin': 'En kısa seksiyon (m)', 'q.lmean': 'Ortalama seksiyon (m)', 'q.lmax': 'En uzun seksiyon (m)', 'q.top': 'Uç seksiyon payı (%)', 'q.dbh': '1,30 m çapı − dbh (%)', 'q.flags': 'Uyarılar',
   'q.f.d.increase': 'artan çap', 'q.f.top.share': 'uç payı yüksek', 'q.f.dbh.mismatch': 'dbh farkı', 'q.f.tree.error': 'hesaplanmadı',
   'q.topnote': 'Uç seksiyon payı yüksekse hacim, seçilen uç cismine (koni, paraboloit, neiloit) duyarlıdır; o ağaçlarda tepeye daha yakın ölçüm ya da toplam boy denetimi önerilir.',
   'c.h': 'Yöntemler arası fark', 'c.sum': p => `Her yöntemle hesaplanan ${p.n} ağaç (${p.all} ağaçtan) üzerinde, ${p.ref} hacmine göre yüzde; ${p.bark}. Referans yalnızca paydadır, "doğru" yöntem değildir.`,
@@ -1594,7 +1599,7 @@ const tr = {
   'c.h.neg': 'yükseklik negatif', 'c.d.nonpos': 'çap sıfır ya da negatif', 'c.tree.nonpos': p => `${p.field} sıfır ya da negatif`, 'c.bark.neg': 'kabuk kalınlığı negatif', 'c.bark.thick': p => `kabuk kalınlığı (${p.bark_t} mm) çaptan (${p.d} cm) kalın`,
   'c.bark.bad': p => `kabuk kodu "${p.text}" ob ya da ib değil`, 'c.tree.conflict': p => `aynı ağacın satırlarında farklı ${p.field} (${p.a} / ${p.b})`, 'c.h.dup': p => `aynı yükseklik (${p.h} m) iki kez`,
   'c.h.abovetop': p => `ölçüm (${p.h} m) toplam boydan (${p.height} m) yüksek`, 'c.stump.abovetop': 'kesim yüksekliği toplam boydan küçük değil', 'c.tree.single': 'tek ölçüm noktası: hacim hesaplanamaz',
-  'c.bark.mixed': 'aynı ağaçta kabuklu ve kabuksuz noktalar', 'c.d.increase': p => `${p.h} m'deki çap (${p.d} cm) alttakinden (${p.below} cm) büyük`, 'c.dbh.mismatch': p => `1.30 m'deki çap (${p.d} cm) dbh'den (${p.dbh} cm) çok farklı`,
+  'c.bark.mixed': 'aynı ağaçta kabuklu ve kabuksuz noktalar', 'c.d.increase': p => `${p.h} m'deki çap (${p.d} cm) alttakinden (${p.below} cm) büyük`, 'c.dbh.mismatch': p => `1,30 m'deki çap (${p.d} cm) dbh'den (${p.dbh} cm) çok farklı`,
   'c.tree.nomatch': 'onaylanmış ağaç listesinde yok', 'c.tree.error': 'veri hatası yüzünden hesaplanmadı', 'c.map.need': 'zorunlu sütunlar seçilmedi',
   'c.layout.method': 'yöntem bu veri düzenine uymuyor', 'c.ends.few': 'en az iki nokta gerekir', 'c.triples.count': p => `uç–orta–uç düzeni tek sayıda (≥ 3) nokta ister (${p.n} nokta)`,
   'c.triples.mid': p => `orta nokta (${p.h} m) seksiyonun ortasında (${p.expected} m) değil`, 'c.mids.nostump': 'orta ölçümlerinde kesim yüksekliği gerekir', 'c.mids.order': p => `orta nokta ${p.h} m önceki sınırın (${p.boundary} m) üstünde değil`,
@@ -1604,7 +1609,7 @@ const tr = {
   'c.area.bad': p => `örnek alan büyüklüğü okunamadı ya da pozitif değil ("${p.text}")`, 'c.area.conflict': p => `aynı örnek alan için farklı büyüklükler (${p.a} / ${p.b} m²)`, 'c.area.none': 'örnek alan büyüklüğü yok: hektar değeri hesaplanmadı',
   'c.merch.nosec': 'seksiyon yok: kullanılabilir hacim hesaplanamadı', 'c.merch.hoh': 'Hohenadl beş eşit seksiyonla hesaplar; tepe çapına göre kullanılabilir hacim verilmez', 'c.base.split': p => `kesim yüksekliğinin (${p.cut} m) altındaki ${p.n} nokta seksiyonlara katılmadı; o kısım dip kütüktür`,
   'c.base.below': p => `kesim yüksekliğinde (${p.cut} m) ölçüm yok ve seksiyonlar ${p.first} m'den başlıyor: kütük ayrılamadı, gövde hacmi bu noktadan itibarendir`,
-  'dtop.hoh': 'Hohenadl beş eşit seksiyonla hesaplar; tepe çapına göre kullanılabilir hacim verilmez.', 'd.bounds': 'seksiyon sınırları', 'd.fq': p => `Gerçek biçim bölümleri η (0.1H, 0.3H … 0.9H yerden; d₀.₁H'ye göre): ${p.eta}; gerçek silindirik biçim sayısı λ₀.₉ = 0.2·Ση² = ${p.l} (Heger 1965, Hohenadl'a göre).`, 'x.fail': 'Excel kitaplığı yüklenemedi; sayfayı yenileyip yeniden deneyin.',
+  'dtop.hoh': 'Hohenadl beş eşit seksiyonla hesaplar; tepe çapına göre kullanılabilir hacim verilmez.', 'd.bounds': 'seksiyon sınırları', 'd.fq': p => `Gerçek biçim bölümleri η (0,1H, 0,3H … 0,9H yerden; d₀,₁H'ye göre): ${p.eta}; gerçek silindirik biçim sayısı λ₀,₉ = 0,2·Ση² = ${p.l} (Heger 1965, Hohenadl'a göre).`, 'x.fail': 'Excel kitaplığı yüklenemedi; sayfayı yenileyip yeniden deneyin.',
   'c.ob.none': 'kabuklu çap yok', 'c.ib.none': 'kabuksuz çap yok (kabuk kalınlığı girilmemiş)', 'c.merch.notop': 'tepe çapına ölçülmüş gövdede inilmiyor ve uç seksiyon yok', 'c.merch.nod': 'tepe çapı için aradeğer yapılamadı',
 };
 const en = {
@@ -1694,7 +1699,7 @@ __fb_m["secvol/ui.js"] = function (__fb_e) {
 __fb_x(__fb_e, {  });
 const V = __fb_r("secvol/calc.js");
 const { T } = __fb_r("secvol/i18n.js");
-const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
+const { lang, fmtNum, esc, LIST_SEP } = __fb_r("core/i18n.js");
 const { put, get, del } = __fb_r("core/store.js");
 const { cellText } = __fb_r("core/table.js");
 const { detectDecimal, defaultDecimal } = __fb_r("core/num.js");
@@ -1974,7 +1979,7 @@ function drawDetail() {
     ${sides.length > 1 ? `<span class="radios"><span class="small">${T('d.bark')}:</span> ${sides.map(s => `<label class="small"><input type="radio" name="dbark" value="${s}"${S.bark === s ? ' checked' : ''}> ${T('d.' + s)}</label>`).join(' ')}</span>` : ''}</div>`;
   h += `<h3>${T('d.sec')} (${esc(mName(R.ref))})</h3><div class="tscroll"><table class="grid" id="sectab"><thead><tr><th>${T('d.kind')}</th><th>${T('d.lo')}</th><th>${T('d.hi')}</th><th>${T('d.L')}</th><th>${T('d.dlo')}</th><th>${T('d.dmid')}</th><th>${T('d.dhi')}</th><th>${T('d.v')}</th></tr></thead><tbody>
     ${part.sections.map(q => `<tr><td>${q.kind === 'top' ? T('kind.top', { s: T('top.' + q.solid).replace(/ \(.*\)$/, '').toLocaleLowerCase(LOC) }) : T('kind.' + q.kind)}</td><td class="num">${f(q.lo, 2)}</td><td class="num">${f(q.hi, 2)}</td><td class="num">${f(q.L, 2)}</td><td class="num">${f(q.d.lo, 1)}</td><td class="num">${f(q.d.mid, 1)}</td><td class="num">${f(q.d.hi, 1)}</td><td class="num">${f(q.v, 5)}</td></tr>`).join('')}</tbody></table></div>`;
-  if (part.formQuotients) h += `<p class="small" id="hohfq">${T('d.fq', { eta: part.formQuotients.eta.map(x => fmtNum(x, 3)).join(', '), l: fmtNum(part.formQuotients.lambda09, 4) })}</p>`;
+  if (part.formQuotients) h += `<p class="small" id="hohfq">${T('d.fq', { eta: part.formQuotients.eta.map(x => fmtNum(x, 3)).join(LIST_SEP), l: fmtNum(part.formQuotients.lambda09, 4) })}</p>`;
   const T0 = R.st.trees.find(t => t.key === S.selTree), dOf = p => S.bark === 'ob' ? p.d : p.d_ib, pts = T0.points.filter(p => dOf(p) != null).map(p => [p.h, dOf(p)]);
   const lines = [{ name: T('d.' + S.bark), k: 0, pts }], top = part.sections.find(q => q.kind === 'top');
   if (top) { const r = V.SOLIDS[top.solid]; lines.push({ name: T('kind.top', { s: T('top.' + top.solid).replace(/ \(.*\)$/, '').toLocaleLowerCase(LOC) }), k: 0, dash: true, pts: Array.from({ length: 41 }, (_, i) => { const t = top.L * i / 40; return [top.lo + t, top.d.lo * (1 - t / top.L) ** (r / 2)]; }) }); }

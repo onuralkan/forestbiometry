@@ -20,7 +20,7 @@ const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const rows = () => page.evaluate(() => [...document.querySelectorAll('#rtab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-const num = s => parseFloat(s);
+const num = s => parseFloat(String(s).replace(',', '.'));
 const fillC = async (id, v) => { await page.fill(id, v); await page.locator(id).dispatchEvent('change'); };
 
 // 0. listed under its category
@@ -115,16 +115,16 @@ ok(await page.inputValue('#fm-series') === '0' && await page.inputValue('#fm-A')
 await page.check('input[name="fstart"][value="user"]'); await fillC('#fs-b1', String(REF.start['cr.ada.b0'][0])); await fillC('#fs-b2', String(REF.start['cr.ada.b0'][1]));
 for (const mode of ['all', 'consecutive']) {
   await page.check(`input[name="fpair"][value="${mode}"]`); await page.click('#f-run'); await page.waitForSelector('#fittab');
-  const ref = rec.fits[mode], est = await page.evaluate(() => [...document.querySelectorAll('#fittab tbody tr')].map(tr => parseFloat(tr.children[1].textContent)));
+  const ref = rec.fits[mode], est = await page.evaluate(() => [...document.querySelectorAll('#fittab tbody tr')].map(tr => parseFloat(String(tr.children[1].textContent).replace(',', '.'))));
   near(est[0], ref.theta[0], 1e-7, `${mode}: b1 = SciPy least_squares`); near(est[1], ref.theta[1], 1e-7, `${mode}: b2 = SciPy`);
   ok((await page.locator('#fitsum').textContent()).startsWith(`${ref.n} çift, 25 dizi`), `${mode}: ${ref.n} pairs`);
-  near(num((await page.locator('#fitgof').textContent()).match(/RMSE ([\d.]+)/)[1]), ref.rmse, 6e-4, `${mode}: RMSE`);
+  near(num((await page.locator('#fitgof').textContent()).match(/RMSE ([\d.,]+)/)[1]), ref.rmse, 6e-4, `${mode}: RMSE`);
 }
 ok((await page.locator('#fitbox', { hasText: 'Gözlemler bağımsız varsayımıyla' }).count()) === 1 && (await page.locator('#ch-fit svg').count()) === 1 && (await page.locator('#ch-res svg').count()) === 1, 'SE label, curve and residual charts');
 // series-level bootstrap (SI04): the same seed and B as the Python reference → the same percentile intervals
 const R4 = JSON.parse(await readFile(new globalThis.URL('../ref/siteindex_si04.json', import.meta.url), 'utf8')), c4 = R4.cases.find(c => c.form === 'cr.ada.b0');
 await fillC('#bt-B', String(R4.B)); await fillC('#bt-seed', String(R4.seed)); await page.click('#bt-run'); await page.waitForSelector('#bt-tab');
-{ const iv = await page.evaluate(() => [...document.querySelectorAll('#bt-tab tbody tr')].map(tr => tr.children[2].textContent.split('–').map(x => parseFloat(x))));
+{ const iv = await page.evaluate(() => [...document.querySelectorAll('#bt-tab tbody tr')].map(tr => tr.children[2].textContent.split('–').map(x => parseFloat(String(x).replace(',', '.')))));
   iv.forEach(([lo, hi], i) => { near(lo, c4.lo[i], 1e-7, `bootstrap ${['b1', 'b2'][i]} lower = Python`); near(hi, c4.hi[i], 1e-7, `bootstrap ${['b1', 'b2'][i]} upper = Python`); });
   ok((await page.locator('#bt-res').textContent()).includes(`B = ${R4.B}, tohum ${R4.seed}: ${R4.B} tekrar başarılı, 0 başarısız`), 'B, seed and failures shown'); }
 await page.click('#fx-save'); ok((await page.locator('#fx-msg').textContent()).includes('Eksik') && (await page.locator('#fx-msg').textContent()).includes('Kaynak künyesi'), 'saving needs age type, top height definition and a citation');

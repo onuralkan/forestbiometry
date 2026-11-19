@@ -1,7 +1,7 @@
 // Stem Section Volume: user interface. All arithmetic lives in calc.js and core/stems.js.
 import * as V from './calc.js';
 import { T } from './i18n.js';
-import { lang, fmtNum, esc } from '../core/i18n.js';
+import { lang, fmtNum, esc, LIST_SEP } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
@@ -267,7 +267,7 @@ function drawDetail() {
     ${sides.length > 1 ? `<span class="radios"><span class="small">${T('d.bark')}:</span> ${sides.map(s => `<label class="small"><input type="radio" name="dbark" value="${s}"${S.bark === s ? ' checked' : ''}> ${T('d.' + s)}</label>`).join(' ')}</span>` : ''}</div>`;
   h += `<h3>${T('d.sec')} (${esc(mName(R.ref))})</h3><div class="tscroll"><table class="grid" id="sectab"><thead><tr><th>${T('d.kind')}</th><th>${T('d.lo')}</th><th>${T('d.hi')}</th><th>${T('d.L')}</th><th>${T('d.dlo')}</th><th>${T('d.dmid')}</th><th>${T('d.dhi')}</th><th>${T('d.v')}</th></tr></thead><tbody>
     ${part.sections.map(q => `<tr><td>${q.kind === 'top' ? T('kind.top', { s: T('top.' + q.solid).replace(/ \(.*\)$/, '').toLocaleLowerCase(LOC) }) : T('kind.' + q.kind)}</td><td class="num">${f(q.lo, 2)}</td><td class="num">${f(q.hi, 2)}</td><td class="num">${f(q.L, 2)}</td><td class="num">${f(q.d.lo, 1)}</td><td class="num">${f(q.d.mid, 1)}</td><td class="num">${f(q.d.hi, 1)}</td><td class="num">${f(q.v, 5)}</td></tr>`).join('')}</tbody></table></div>`;
-  if (part.formQuotients) h += `<p class="small" id="hohfq">${T('d.fq', { eta: part.formQuotients.eta.map(x => fmtNum(x, 3)).join(', '), l: fmtNum(part.formQuotients.lambda09, 4) })}</p>`;
+  if (part.formQuotients) h += `<p class="small" id="hohfq">${T('d.fq', { eta: part.formQuotients.eta.map(x => fmtNum(x, 3)).join(LIST_SEP), l: fmtNum(part.formQuotients.lambda09, 4) })}</p>`;
   const T0 = R.st.trees.find(t => t.key === S.selTree), dOf = p => S.bark === 'ob' ? p.d : p.d_ib, pts = T0.points.filter(p => dOf(p) != null).map(p => [p.h, dOf(p)]);
   const lines = [{ name: T('d.' + S.bark), k: 0, pts }], top = part.sections.find(q => q.kind === 'top');
   if (top) { const r = V.SOLIDS[top.solid]; lines.push({ name: T('kind.top', { s: T('top.' + top.solid).replace(/ \(.*\)$/, '').toLocaleLowerCase(LOC) }), k: 0, dash: true, pts: Array.from({ length: 41 }, (_, i) => { const t = top.L * i / 40; return [top.lo + t, top.d.lo * (1 - t / top.L) ** (r / 2)]; }) }); }

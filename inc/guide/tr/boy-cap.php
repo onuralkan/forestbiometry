@@ -6,7 +6,7 @@
 <ul>
 <li>Kaynak: dosya, yapıştırma, onaylanmış veri ya da örnek veri.</li>
 <li><b>Sütunlar ve birimler</b>: çap (cm/mm) ve boy (m/dm/cm) zorunlu; örnek alan, tür ve süzgeç isteğe bağlı. Çapı geçerli ama boy hücresi boş olan ağaçlar "boyu eksik" sayılır ve tahmin alır; okunamayan boylar dışarıda kalır.</li>
-<li><b>Göğüs yüksekliği bh</b>: varsayılan 1.3 m. Boyu bh'ye eşit ya da küçük ağaçlar fit işlemine girmez.</li>
+<li><b>Göğüs yüksekliği bh</b>: varsayılan 1,3 m. Boyu bh'ye eşit ya da küçük ağaçlar fit işlemine girmez.</li>
 <li><b>Çapraz doğrulama</b>: örnek alan bazında (en az 2 alan varsa varsayılan), ağaç bazında (10 kat) ya da yok.</li>
 </ul>
 <h3>Sonuçlar</h3>

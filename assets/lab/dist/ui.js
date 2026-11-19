@@ -2,7 +2,7 @@
 // comes from the registry (./index.js); adding a family there adds it here without changes to this file.
 import * as D from './index.js';
 import { T } from './i18n.js';
-import { lang, fmtNum, esc } from '../core/i18n.js';
+import { lang, fmtNum, esc, LIST_SEP } from '../core/i18n.js';
 import { put, get, del } from '../core/store.js';
 import { download, downloadJSON, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
@@ -124,7 +124,7 @@ function methodOpts(m) {
   if (!bad.length && m.checkOptions) bad.push(...m.checkOptions(opts));
   return bad.length ? { bad: bad.slice(0, 1) } : { opts };
 }
-const setLabel = r => Object.entries(r.settings || {}).filter(([k]) => !['quantile', 'boundPolicy', 'pair', 'truncLower', 'truncUpper', 'nScope'].includes(k)).map(([k, v]) => T('set.' + k, { v: typeof v === 'number' ? fmtNum(v, 4) : v })).join(', ');
+const setLabel = r => Object.entries(r.settings || {}).filter(([k]) => !['quantile', 'boundPolicy', 'pair', 'truncLower', 'truncUpper', 'nScope'].includes(k)).map(([k, v]) => T('set.' + k, { v: typeof v === 'number' ? fmtNum(v, 4) : v })).join(LIST_SEP);
 const methodName = r => { const sl = setLabel(r); return T('m.' + r.method) + (sl ? ` · ${sl}` : ''); };
 const needsLocation = () => chosenMethods().some(m => (m.options || []).some(o => o.key === 'a'));
 function settingsProblems() {
@@ -260,7 +260,7 @@ function fixSel() {
   S.selPlot = u ? u.plot : null; S.selPer = u ? u.period : null;
 }
 const unitLabel = u => `${u.plot === D.POOL ? T('unit.pool') : T('unit.plot', { p: u.plot })}${u.period != null ? ` / ${u.period}` : ''}`;
-const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', '); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
+const resName = r => { const fx = Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(LIST_SEP); const sl = setLabel(r); return `${T('fam.' + r.family)} · ${T('m.' + r.method)}${[fx, sl].filter(Boolean).length ? ` (${[fx, sl].filter(Boolean).join('; ')})` : ''}`; };
 
 /* ---------------- step 3: results ---------------- */
 const TABS = ['params', 'charts', 'classes', 'boot'];
@@ -413,11 +413,11 @@ function tabParams(p) {
     const rs = u.results.filter(r => r.family === fa.id); if (!rs.length) continue;
     fam += `<h3>${esc(T('fam.' + fa.id))}</h3><div class="tscroll"><table class="grid ptab" data-fam="${fa.id}"><thead><tr><th>${T('t.method')}</th><th>${T('t.fixed')}</th>
       ${fa.params.map(q => `<th title="${esc(T('role.' + q.role) + (q.scale === 'log' ? ', ' + T('unit.logscale') : ''))}">${esc(parHead(q))}</th>`).join('')}<th>${T('t.n')}</th><th>${T('t.ll')}</th><th>${T('t.aic')}</th><th>${T('t.bic')}</th><th>${T('t.ks')}</th><th>${T('t.ad')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
-      ${rs.map(r => { const okr = r.status === 'ok', g = r.gof || {}, fx = Object.entries(r.fixed).map(([k, v]) => T('fixed.' + (v.origin === 'zero' ? 'zero' : 'user'), { k: parLabel(r.family, k), v: f(v.value, 4) })).join(', ') || T('fixed.none');
+      ${rs.map(r => { const okr = r.status === 'ok', g = r.gof || {}, fx = Object.entries(r.fixed).map(([k, v]) => T('fixed.' + (v.origin === 'zero' ? 'zero' : 'user'), { k: parLabel(r.family, k), v: f(v.value, 4) })).join(LIST_SEP) || T('fixed.none');
         return `<tr class="${okr ? '' : 'st-bad'}" data-method="${r.method}" data-status="${r.status}"><th>${esc(methodName(r))}</th><td>${esc(fx)}</td>${fa.params.map(q => `<td class="num">${okr ? f(r.params[q.key], 4) : '–'}</td>`).join('')}
           <td class="num">${fmtNum(r.data.n, 0)}</td><td class="num">${okr ? f(r.logLik, 3) : '–'}</td><td class="num">${g.aic != null ? f(g.aic, 2) : '–'}</td><td class="num">${g.bic != null ? f(g.bic, 2) : '–'}</td>
           <td class="num">${okr ? f(g.ks, 4) : '–'}</td><td class="num">${okr ? f(g.ad, 3) : '–'}</td><td>${T('st.' + r.status)}</td><td class="small">${esc(T('sol.' + r.convergence.solver))}${r.convergence.iter != null ? ` · ${r.convergence.iter}` : ''}</td></tr>`; }).join('')}</tbody></table></div>`;
-    const notes = rs.flatMap(r => notesOf(r).map(x => `${methodName(r)}${Object.values(r.fixed).some(v => v.origin !== 'zero') ? ` (${Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ')})` : ''}: ${x}`));
+    const notes = rs.flatMap(r => notesOf(r).map(x => `${methodName(r)}${Object.values(r.fixed).some(v => v.origin !== 'zero') ? ` (${Object.entries(r.fixed).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(LIST_SEP)})` : ''}: ${x}`));
     allNotes.push(...notes.map(x => `${T('fam.' + fa.id)} · ${x}`));
   }
   h += compareHtml(u);
@@ -592,7 +592,7 @@ const CMP_OPT = new Set(['fixed', 'k', 'bic', 'dBIC', 'aicc', 'cvm', 'l1', 'ei',
 function compareHtml(u) {
   const groups = D.compare.compareUnit(u.results, r => classErr(u, r)), crit = S.cmpSort;
   const parTxt = r => D.family(r.family).params.filter(q => !(r.fixed || {})[q.key]).map(q => `${q.label ?? q.key} = ${f(r.params[q.key], 4)}`).join('; ');
-  const fixTxt = r => Object.entries(r.fixed || {}).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(', ') || '–';
+  const fixTxt = r => Object.entries(r.fixed || {}).map(([k, v]) => `${parLabel(r.family, k)} = ${f(v.value, 4)}`).join(LIST_SEP) || '–';
   const cols = ml => [['dist', ''], ['method', ''], ['params', ''], ['fixed', ''], ['n', ''], ...(ml ? [['k', ''], ['logLik', 'ln L'], ['aic', 'AIC'], ['dAIC', 'ΔAIC'], ['bic', 'BIC'], ['dBIC', 'ΔBIC'], ['aicc', 'AICc']] : [['logLik', T('cmp.logscore')]]), ['ks', 'KS D'], ['ad', 'AD A²'], ['cvm', 'CvM W²'], ['l1', T('cmp.l1')], ['ei', T('cmp.ei')], ['conv', T('t.solver')]];
   const cell = (x, c) => { const r = x.r;
     switch (c) { case 'dist': return esc(T('fam.' + r.family)); case 'method': return esc(methodName(r)); case 'params': return esc(parTxt(r)); case 'fixed': return esc(fixTxt(r));
@@ -921,7 +921,7 @@ function drawPrs() {
   const out = $('p-out'); if (!out || !RP) return;
   const r = RP[0], okr = r.status === 'ok', g = r.diagnostics || {}, tg = r.targets || {}, fam = D.family('johnsonsb');
   const why = [...(r.problems || []).map(p => T('pr.' + p.code, { ...p, key: p.key ? T('prs.k.' + p.key) : p.key })), ...(r.warnings || []).map(w => T('w.' + w.code, w))].join('; ');
-  const cands = r.status === 'multiple' ? (g.candidates || []).map(c => fam.params.map(q => `${q.label} = ${f(c[q.key], 4)}`).join(', ')).join(' | ') : '';
+  const cands = r.status === 'multiple' ? (g.candidates || []).map(c => fam.params.map(q => `${q.label} = ${f(c[q.key], 4)}`).join(LIST_SEP)).join(' | ') : '';
   const back = okr ? [['mean', 'backMean'], ['median', 'backMedian'], ['dq', 'backDq']].map(([k, b]) => `<span style="white-space:nowrap">${T('prs.k.' + k)}: ${f(tg[k], 4)} → ${f(g[b], 4)}</span>`).join('<br>') : '–';
   let h = `<div class="tscroll"><table class="grid ptab prtab"><thead><tr><th>${T('t.method')}</th>${fam.params.map(q => `<th>${esc(parHead(q))}</th>`).join('')}<th>${T('wb.t.targets')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
     <tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('m.' + r.method))}</th>${fam.params.map(q => `<td class="num">${okr ? f(r.params[q.key], 6) : q.key === 'xi' && tg.xi != null ? f(tg.xi, 4) : '–'}</td>`).join('')}
@@ -1049,7 +1049,7 @@ function drawStandTrain() {
   h += `<div class="tscroll"><table class="grid sttab"><thead><tr><th>${T('st.resp')}</th>${betaHead(m.terms).map(x => `<th>${esc(x)}</th>`).join('')}<th>RMSE</th><th>${T('st.bias')}</th></tr></thead><tbody>
     ${m.equations.map(e => `<tr data-key="${e.key}"><th>${esc(stKey(e.key))}</th>${e.beta.map((b, i) => `<td class="num">${f(b, 6)}${e.se ? `<br><span class="muted small">± ${f(e.se[i], 4)}</span>` : ''}</td>`).join('')}<td class="num">${f(e.rmse, 4)}</td><td class="num">${f(e.bias, 4)}</td></tr>`).join('')}</tbody></table></div>
     ${m.cdf ? `<p class="small" id="st-cdf">${T('st.res.cdf', { s: f(m.cdf.start, 6), o: f(m.cdf.objective, 6), i: m.cdf.iter, r: m.cdf.rejected, w: m.cdf.width == null ? '' : T('st.res.width', { w: m.cdf.width }) })}${m.cdf.excludedUnits.length ? ' ' + T('st.res.oneclass', { n: m.cdf.excludedUnits.length }) : ''}${m.cdf.dmin ? ' ' + T('st.res.dminfixed') : ''}</p>` : ''}
-    <p class="muted small">${T('st.res.note.' + m.fit)}${m.sur ? ' ' + T('st.res.sur', { r: m.sur.rounds, c: m.sur.corr.map((r, a) => r.slice(a + 1).map((v, b) => `${stKey(m.keys[a])}–${stKey(m.keys[a + b + 1])}: ${f(v, 3)}`)).flat().join(', ') }) : ''}${m.hColumn ? ' ' + T('st.res.hcol', { c: esc(m.hColumn) }) : ''}</p></div>`;
+    <p class="muted small">${T('st.res.note.' + m.fit)}${m.sur ? ' ' + T('st.res.sur', { r: m.sur.rounds, c: m.sur.corr.map((r, a) => r.slice(a + 1).map((v, b) => `${stKey(m.keys[a])}–${stKey(m.keys[a + b + 1])}: ${f(v, 3)}`)).flat().join(LIST_SEP) }) : ''}${m.hColumn ? ' ' + T('st.res.hcol', { c: esc(m.hColumn) }) : ''}</p></div>`;
   if (cv && cv.status === 'ok') {
     const s = cv.summary;
     h += `<div class="card"><h3>${T('st.cv.h', { k: cv.K })}</h3><p class="small" id="st-cvsum">${T('st.cv.sum', { ok: s.ok, n: s.units, f: s.failed, nll: f(s.nllPerTree, 4), ks: f(s.ks, 4) })}</p><p class="muted small">${T('st.cv.note')}</p>
@@ -1099,7 +1099,7 @@ function drawStandPred() {
   if (p.outside && p.outside.length) h += `<p class="note warn small" id="st-outside">${T('st.p.outside', { k: p.outside.map(k => T('st.var.' + k)).join(', ') })}</p>`;
   if (p.status !== 'ok') h += `<p class="note err" id="st-pbad">${T('st.p.fail')}: ${esc([...p.problems.map(q2 => T('st.pr.' + q2.code, { ...q2, lo: q2.lo ? stKey(q2.lo) : '', hi: q2.hi ? stKey(q2.hi) : '', keys: (q2.keys || []).map(k => T('st.var.' + k)).join(', ') })), ...(p.recovery ? notesOf(p.recovery) : [])].join(' '))}</p>`;
   else {
-    h += `<p id="st-params"><b>${esc(T('fam.' + m.family))}</b>: ${fam.params.map(qq => `${esc(qq.label ?? qq.key)} = ${f(p.params[qq.key], 4)}`).join(', ')}</p>`;
+    h += `<p id="st-params"><b>${esc(T('fam.' + m.family))}</b>: ${fam.params.map(qq => `${esc(qq.label ?? qq.key)} = ${f(p.params[qq.key], 4)}`).join(LIST_SEP)}</p>`;
     const lo = Math.max(0, fam.quantile(0.0005, p.params)), hi = fam.quantile(0.9995, p.params), xs = Array.from({ length: 401 }, (_, i) => lo + (hi - lo) * i / 400);
     h += `<figure class="chartbox" id="ch-st">${plotChart({ title: T('st.p.chart'), xmin: lo, xmax: hi, lines: [{ name: T('fam.' + m.family), k: 0, pts: xs.map(v => [v, fam.pdf(v, p.params)]) }], xLabel: T('ch.d'), yLabel: T('ch.dens'), fmt: v => fmtNum(v, 3) })}
       <figcaption><button type="button" class="btn ghost small" id="ch-st-svg">${T('ch.svg')}</button></figcaption></figure>`;
@@ -1143,7 +1143,7 @@ function drawFns() {
   const out = $('f-out'); if (!out || !RF) return;
   const r = RF[0], okr = r.status === 'ok', g = r.diagnostics || {}, tg = r.targets || {}, fam = D.family('johnsonsb');
   const why = [...(r.problems || []).map(p => T('pr.' + p.code, { ...p, key: p.key ? T('fns.k.' + p.key) : p.key })), ...(r.warnings || []).map(w => T('w.' + w.code, w))].join('; ');
-  const cands = (r.status === 'multiple' || (r.problems || []).some(p => p.code === 'fns.weak')) && g.candidates ? g.candidates.map(c => fam.params.map(qq => `${qq.label} = ${f(c[qq.key], 4)}`).join(', ')).join(' | ') : '';
+  const cands = (r.status === 'multiple' || (r.problems || []).some(p => p.code === 'fns.weak')) && g.candidates ? g.candidates.map(c => fam.params.map(qq => `${qq.label} = ${f(c[qq.key], 4)}`).join(LIST_SEP)).join(' | ') : '';
   const back = okr ? [['mean', 'backMean'], ['median', 'backMedian'], ['dq', 'backDq'], ['dg', 'backDg']].map(([k, b]) => `<span style="white-space:nowrap">${T('fns.k.' + k)}: ${f(tg[k], 4)} → ${f(g[b], 4)}</span>`).join('<br>') : '–';
   let h = `<div class="tscroll"><table class="grid ptab fnstab"><thead><tr><th>${T('t.method')}</th>${fam.params.map(qq => `<th>${esc(parHead(qq))}</th>`).join('')}<th>${T('wb.t.targets')}</th><th>${T('t.status')}</th><th>${T('t.solver')}</th></tr></thead><tbody>
     <tr data-method="${r.method}" data-status="${r.status}" class="${okr ? '' : 'st-bad'}"><th>${esc(T('m.' + r.method))}</th>${fam.params.map(qq => `<td class="num">${okr ? f(r.params[qq.key], 6) : '–'}</td>`).join('')}

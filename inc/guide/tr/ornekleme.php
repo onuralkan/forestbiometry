@@ -10,7 +10,7 @@
 <li><b>Mevcut örnek alanlar</b>: pilot alanlar aynı tasarımın parçasıysa yalnızca ek gereken sayı gösterilir.</li>
 </ol>
 <h3>Sonuç ve indirme</h3>
-<p>Gerekli örnek alan sayısı (yukarı yuvarlanmış), hesap satırları, farklı hata hedefleri tablosu ve grafiği; varsayımlar açılır kutuda. Örnek: CV = %30, E = %10, %95 güven, düzeltme yok → n₀ = 34.573, gereken 35 örnek alan. İndirme: <b>Varsayım özeti (TXT)</b>, hata hedefleri (CSV), tam rapor (Excel), grafik (SVG).</p>
+<p>Gerekli örnek alan sayısı (yukarı yuvarlanmış), hesap satırları, farklı hata hedefleri tablosu ve grafiği; varsayımlar açılır kutuda. Örnek: CV = %30, E = %10, %95 güven, düzeltme yok → n₀ = 34,573, gereken 35 örnek alan. İndirme: <b>Varsayım özeti (TXT)</b>, hata hedefleri (CSV), tam rapor (Excel), grafik (SVG).</p>
 <h3>Sık karşılaşılanlar</h3>
 <ul>
 <li>Aynı örnek alan kimliği birden çok satırda varsa hesaplanmaz; bir dönemi seçmek için süzgeci kullanın.</li>

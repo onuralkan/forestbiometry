@@ -43,12 +43,12 @@ ok(row[7] === '60' && Math.abs(+row[9] - 2.1991148575128552) < 1e-12 && Math.abs
 // language switch keeps state, values identical
 await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('#tab-units');
 await page.click('#tab-units');
-ok(await cell(['K', '–'], 6) === '2.199' && await cell(['K', '–'], 8) === '21.6', 'TR: same values, decimal point as in English');
+ok(await cell(['K', '–'], 6) === '2,199' && await cell(['K', '–'], 8) === '21,6', 'TR: same values with a decimal comma');
 // a single plot and period: no list, a plain bar without previous / next, the period shown as text
 await page.click('#tab-detail');
 ok((await page.locator('#unav').count()) === 0 && (await page.locator('.navbar.single').count()) === 1 && (await page.locator('#uprev, #unext').count()) === 0, 'single plot: no list, no previous / next');
 ok((await page.locator('.perswitch.single').count()) === 1 && (await page.locator('[data-per]').count()) === 0, 'single period: no switch');
-ok(await page.locator('.tiles .tile b').nth(2).textContent() === '2.199', 'TR detail tile: decimal point');
+ok(await page.locator('.tiles .tile b').nth(2).textContent() === '2,199', 'TR detail tile: decimal comma');
 await page.click('#tab-export');
 const [d2] = await Promise.all([page.waitForEvent('download'), page.click('#x-units')]);
 const rowTr = (await readFile(await d2.path(), 'utf8')).replace(/^﻿/, '').split('\r\n')[1].split(',');

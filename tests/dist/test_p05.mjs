@@ -134,8 +134,8 @@ eq([bisectMonotone(x => x - 0.001, 0.01, 1000).status, bisectMonotone(x => x - 5
 eq(bisectMonotone(x => x > 10 ? NaN : x - 2, 0.01, 1000).status, 'nonfinite', 'bisection: non-finite value reported');
 { const d = FX.w2, s = W.solveMonotone, f = c => c * c - 7; const a = bisectMonotone(f, 0.01, 1000), b = s(f, 0.01, 1000); ok(a.root === b.root && a.iter === b.iter, 'bisection identical to the published tool'); void d; }
 
-/* 8. display: decimal point in both languages (shared formatter) */
-{ const r = run('weibull.pct', FX.w2); ok(!fmtNum(r.params.b, 4).includes(',') && /^\d+\.\d{1,4}$/.test(fmtNum(r.params.c, 4)), 'fmtNum: decimal point'); }
+/* 8. display: the shared formatter (Node has no document: Turkish, decimal comma since 19 Nov 2026) */
+{ const r = run('weibull.pct', FX.w2); ok(!fmtNum(r.params.b, 4).includes('.') && /^\d+,\d{1,4}$/.test(fmtNum(r.params.c, 4)), 'fmtNum: decimal comma (Turkish)'); }
 
 console.log(`dist P05: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
