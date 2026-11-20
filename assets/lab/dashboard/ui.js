@@ -1,4 +1,4 @@
-// Visualization dashboard (DI-04): user interface. Counts, filters and record reading in calc.js; storage of the
+// Data visualization (DI-04): user interface. Counts, filters and record reading in calc.js; storage of the
 // packages in core/projects.js (DI-03). Nothing leaves the browser.
 import * as C from './calc.js';
 import { T } from './i18n.js';
@@ -110,7 +110,10 @@ function panelsHTML() {
       CSV['ch-map'] = [['x', 'y', 'dbh', T('f.species')], ...pos.map(p => [p.x, p.y, p.dbh, p.species])];
     } else charts += `<div class="chartbox" id="ch-map"><p class="muted small">${T('ch.map.none')}</p></div>`;
   }
-  return h + `<div class="charts2">${charts}</div></div>`;
+  // MR-001: a bar that stays on screen while the page scrolls and jumps to each chart; the chart in view is marked
+  const NAV = [['ch-hist', 'ch.hist'], ['ch-sp', 'ch.sp'], ['ch-N', 'ch.N'], ['ch-G', 'ch.G'], ['ch-hd', 'ch.hd'], ['ch-map', 'ch.map']].filter(([id]) => charts.includes(`id="${id}"`));
+  const nav = `<nav class="chnav" id="chnav" aria-label="${esc(T('nav.h'))}">${NAV.map(([id, k]) => `<button type="button" class="btn ghost small" data-go="${id}">${T(k)}</button>`).join('')}<button type="button" class="btn ghost small chnav-up" data-go="fcard">${T('nav.up')}</button></nav>`;
+  return h + nav + `<div class="charts2">${charts}</div></div>`;
 }
 
 function render() {
@@ -119,7 +122,29 @@ function render() {
   $('app').innerHTML = h;
   bind();
 }
+let navObs = null;
+function bindNav() {
+  if (navObs) { navObs.disconnect(); navObs = null; }
+  const btns = [...document.querySelectorAll('#chnav [data-go]')];
+  if (!btns.length) return;
+  const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  // the chosen chart is marked at once; the page end can stop the scroll before it reaches the top, so the marking
+  // from what is in view waits until the scroll has settled
+  let hold = 0;
+  const mark = id => btns.forEach(x => x.dataset.go !== 'fcard' && x.setAttribute('aria-current', String(x.dataset.go === id)));
+  btns.forEach(b => b.addEventListener('click', () => { const t = $(b.dataset.go); if (!t) return; hold = Date.now() + 1200; if (b.dataset.go !== 'fcard') mark(b.dataset.go); t.scrollIntoView({ block: 'start', behavior: smooth() }); }));
+  if (!('IntersectionObserver' in window)) return;
+  const seen = new Map();
+  navObs = new IntersectionObserver(es => {
+    for (const e of es) seen.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0);
+    if (Date.now() < hold) return;
+    let best = null, r = 0; for (const [id, v] of seen) if (v > r) { r = v; best = id; }
+    mark(best);
+  }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+  btns.forEach(b => { if (b.dataset.go !== 'fcard' && $(b.dataset.go)) navObs.observe($(b.dataset.go)); });
+}
 function bind() {
+  bindNav();
   $('pkg') && $('pkg').addEventListener('change', async e => { if (!e.target.value) return; S.pid = e.target.value; S.sample = false; save(); await loadPackage(); render(); });
   $('sample') && $('sample').addEventListener('click', async () => { S.sample = true; save(); await loadPackage(); render(); });
   document.querySelectorAll('[data-f]').forEach(s => s.addEventListener('change', () => { S.f[s.dataset.f] = s.value; save(); render(); }));

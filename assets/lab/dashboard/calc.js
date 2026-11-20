@@ -1,4 +1,4 @@
-// Visualization dashboard (DI-04): page logic without DOM. No new science: per-plot N/ha and G/ha come from the
+// Data visualization (DI-04): page logic without DOM. No new science: per-plot N/ha and G/ha come from the
 // Plot & Stand engine (stand/calc.js), fitted densities from the Diameter Distribution engine (dist/, the observed
 // model of a result: conditional inside thresholds), height curves from the Height–Diameter engine (hd/calc.js);
 // all three are tested against independent references in their own tests. Here: filters, counts, histogram bins,

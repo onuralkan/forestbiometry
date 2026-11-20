@@ -104,6 +104,11 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
           <li><a href="hakkinda.php"><?= site_icon('about') ?><?= $tr ? 'Hakkında ve atıf' : 'About and how to cite' ?></a></li>
         </ul>
       </section>
+      <section class="hm-help" id="hm-sessions" aria-labelledby="hm-sessions-h">
+        <h2 id="hm-sessions-h" class="hm-h"><?= $tr ? 'Araç oturumları' : 'Tool sessions' ?></h2>
+        <p class="muted small" id="hm-sessions-text"><?= $tr ? 'Her araç, yüklediğiniz tabloyu, ayarları ve sonuçları bu tarayıcıda oturum olarak saklar.' : 'Each tool keeps the table you loaded, its settings and results in this browser as a session.' ?></p>
+        <button type="button" class="btn ghost small" id="hm-sessions-reset"><?= $tr ? 'Tüm araç oturumlarını sıfırla' : 'Reset all tool sessions' ?></button>
+      </section>
     </aside>
   </div>
 
@@ -111,7 +116,7 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
 <?php
 ob_start(); ?>
 <script type="module">
-import { get, del } from './assets/lab/core/store.js';
+import { get, del, keys } from './assets/lab/core/store.js';
 const tr = document.documentElement.lang !== 'en', $ = id => document.getElementById(id);
 const D = JSON.parse($('hm-data').textContent);
 // ---- find a tool: words (all must occur; case, accents and Turkish ı/İ ignored), a module chip or a task
@@ -175,5 +180,22 @@ async function show() {
 }
 $('handoff-clear').addEventListener('click', async () => { await del('project:active'); await del('dataset:approved'); show(); });
 show();
+// ---- every tool session at once ('session:<tool>' keys, the same keys each tool's "Reset session" deletes). Data packages,
+// the coefficient library and downloaded files are other keys and stay.
+const sBtn = $('hm-sessions-reset'), sText = $('hm-sessions-text'), sBase = sText.textContent;
+async function sessions() {
+  const k = await keys('session:');
+  sText.textContent = sBase + ' ' + (k.length ? (tr ? `Kayıtlı oturum: ${k.length}.` : `Saved sessions: ${k.length}.`) : (tr ? 'Kayıtlı oturum yok.' : 'No saved sessions.'));
+  sBtn.disabled = !k.length; return k;
+}
+sBtn.addEventListener('click', async () => {
+  const k = await sessions(); if (!k.length) return;
+  if (!confirm(tr ? `Bütün araçların kayıtlı oturumları (${k.length}) silinecek: yüklenen tablolar, ayarlar ve sonuçlar. Her araç başlangıç durumunda açılır.\n\nVeri paketleri (Envanter Verisi Yöneticisi), Katsayı Kütüphanesi ve indirdiğiniz dosyalar silinmez. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç oturumunu yeniden kaydeder.\n\nDevam edilsin mi?`
+                  : `The saved sessions of all tools (${k.length}) will be deleted: loaded tables, settings and results. Every tool opens in its starting state.\n\nData packages (Inventory Data Manager), the Coefficient Library and files you downloaded are not deleted. Close any tool open in another tab first; otherwise it saves its session again.\n\nContinue?`)) return;
+  for (const x of k) await del(x);
+  await sessions();
+  sText.textContent += ' ' + (tr ? `${k.length} oturum sıfırlandı.` : `${k.length} session(s) reset.`);
+});
+sessions();
 </script>
 <?php site_bottom(ob_get_clean());

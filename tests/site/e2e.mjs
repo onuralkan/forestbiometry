@@ -183,6 +183,23 @@ await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide
     else ok(un.length === 0 && im > 0, `${f || 'index.php'}: ${mods} scripts and styles, all versioned (import map of ${im} modules)${un.length ? '; unversioned: ' + un.join(' ') : ''}`); }
   await q.close(); }
 
+// 8. home page: reset every tool session at once (MR-003); a cancelled confirmation deletes nothing; packages and coefficient sets stay
+{ const h = await browser.newPage(); h.on('pageerror', e => errors.push(e.message));
+  await h.goto(BASE + '/?lang=tr');
+  const kv = (op, ...a) => h.evaluate(async ([op, a]) => { const s = await import('./assets/lab/core/store.js'); return s[op](...a); }, [op, a]);
+  await kv('put', 'session:test-a', { v: 1 }); await kv('put', 'session:test-b', { v: 1 }); await kv('put', 'coef:test', { keep: 1 }); await kv('put', 'project:test', { keep: 1 });
+  await h.reload(); await h.waitForFunction(() => /Kayıtlı oturum: \d+/.test(document.getElementById('hm-sessions-text').textContent));
+  const n0 = (await kv('keys', 'session:')).length;
+  ok(n0 >= 2 && (await h.textContent('#hm-sessions-text')).includes(`Kayıtlı oturum: ${n0}.`) && await h.isEnabled('#hm-sessions-reset'), `home: ${n0} saved tool sessions shown`);
+  let msg = ''; h.once('dialog', d => { msg = d.message(); d.dismiss(); }); await h.click('#hm-sessions-reset'); await h.waitForTimeout(200);
+  ok(msg.includes('Katsayı Kütüphanesi') && (await kv('keys', 'session:')).length === n0, 'home: the confirmation names what stays; cancelling deletes nothing');
+  h.once('dialog', d => d.accept()); await h.click('#hm-sessions-reset'); await h.waitForFunction(() => /oturum sıfırlandı/.test(document.getElementById('hm-sessions-text').textContent));
+  ok((await kv('keys', 'session:')).length === 0 && (await kv('get', 'coef:test')) && (await kv('get', 'project:test')) && await h.isDisabled('#hm-sessions-reset'), 'home: all tool sessions reset; coefficient sets and data packages kept');
+  await kv('del', 'coef:test'); await kv('del', 'project:test');
+  await h.goto(BASE + '/?lang=en'); await h.waitForFunction(() => /No saved sessions/.test(document.getElementById('hm-sessions-text').textContent));
+  ok((await h.textContent('#hm-sessions-reset')).trim() === 'Reset all tool sessions', 'home: English button');
+  await h.close(); }
+
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();
 console.log(`site e2e: ${pass} passed, ${fail} failed`);

@@ -1,4 +1,4 @@
-// Browser test for the Visualization Dashboard (pano.php; DI-04). Packages: the sample package of Plot & Stand
+// Browser test for Data Visualization (pano.php; DI-04). Packages: the sample package of Plot & Stand
 // Metrics (made up). Records: a Diameter Distribution record made in Node with the distribution engine on that
 // package, and a Height–Diameter record with arbitrary test coefficients.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/dashboard/e2e.mjs http://127.0.0.1:8092 [shots-dir]
@@ -44,6 +44,19 @@ ok(await page.locator('#samplenote').count() === 1, 'sample package marked as ma
 const all = C.plotTable(sample, C.blankFilter(), 'unmeasured');
 ok(+await tile('t-rec') === sample.trees.length && +await tile('t-plots') === all.rows.length && await tile('t-N') === String(Math.round(all.mean.Nha * 10) / 10).replace(/\.0$/, ''), `tiles: ${sample.trees.length} records, ${all.rows.length} plot × period, mean N/ha`);
 ok(await page.locator('#ch-hist svg rect.ch-bar').count() > 3 && await page.locator('#ch-sp svg').count() === 1 && await page.locator('#ch-N svg').count() === 1 && await page.locator('#ch-hd svg circle').count() > 0, 'panels drawn: histogram, species, N/ha, height–diameter');
+// chart navigation (MR-001): one button per chart drawn, jumps to it, stays under the top bar, marks the chart in view
+{ const go = await page.locator('#chnav [data-go]').evaluateAll(b => b.map(x => x.dataset.go));
+  ok(go.join() === 'ch-hist,ch-sp,ch-N,ch-G,ch-hd,ch-map,fcard', 'chart navigation: one button per chart and back to the filters: ' + go.join());
+  await page.emulateMedia({ reducedMotion: 'reduce' });   // jump at once (smooth scrolling is the default)
+  await page.click('#chnav [data-go="ch-hd"]');
+  await page.waitForFunction(() => { const r = document.getElementById('ch-hd').getBoundingClientRect(), n = document.getElementById('chnav').getBoundingClientRect(); return r.top >= n.bottom - 1 && r.top < innerHeight - 100; }, null, { timeout: 4000 });
+  const nav = await page.evaluate(() => { const n = document.getElementById('chnav').getBoundingClientRect(), t = document.querySelector('.b-top').getBoundingClientRect(), hd = document.getElementById('ch-hd').getBoundingClientRect();
+    return { top: n.top, under: t.bottom, clear: hd.top >= n.bottom - 1 }; });
+  ok(Math.abs(nav.top - nav.under) <= 1 && nav.clear, `chart navigation: the bar stays under the top bar (${nav.top} px) and the chart is not hidden by it`);
+  await page.waitForFunction(() => document.querySelector('#chnav [data-go="ch-hd"]').getAttribute('aria-current') === 'true', null, { timeout: 4000 }).then(() => ok(true, 'chart navigation: chosen chart marked'), () => ok(false, 'chart navigation: chart in view marked'));
+  await page.click('#chnav [data-go="fcard"]');
+  await page.waitForFunction(() => { const r = document.getElementById('fcard').getBoundingClientRect(); return r.top >= 0 && r.top < 250; }, null, { timeout: 4000 }).then(() => ok(true, 'chart navigation: back to the filters'), () => ok(false, 'chart navigation: back to the filters'));
+  await page.evaluate(() => scrollTo(0, 0)); await page.emulateMedia({ reducedMotion: null }); }
 // filters
 await page.selectOption('[data-f="period"]', '2024'); await page.waitForSelector('#t-rec');
 ok(+await tile('t-rec') === d24.length, 'period filter: 2024 records only');
@@ -87,10 +100,13 @@ ok(await page.inputValue('[data-f="period"]') === '2024' && await page.locator('
 
 // 4. English, phone
 await page.goto(BASE + '/pano.php?lang=en'); await page.waitForSelector('#panels');
-ok((await page.textContent('h1')).includes('Visualization Dashboard') && (await page.textContent('#fcard')).includes('Filters'), 'English');
+ok((await page.textContent('h1')).includes('Data Visualization') && (await page.textContent('#fcard')).includes('Filters'), 'English');
 const phone = await ctx.newPage(); await phone.setViewportSize({ width: 390, height: 800 });
 await phone.goto(URL); await phone.waitForSelector('#panels');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
+await phone.click('#chnav [data-go="ch-map"]');
+ok(await phone.waitForFunction(() => { const r = document.getElementById('ch-map').getBoundingClientRect(), n = document.getElementById('chnav').getBoundingClientRect(); return r.top >= n.bottom - 1 && r.top < innerHeight - 100; }, null, { timeout: 4000 }).then(() => true, () => false)
+  && await phone.evaluate(() => { const n = document.getElementById('chnav'); return n.scrollWidth >= n.clientWidth && document.documentElement.scrollWidth <= innerWidth + 1; }), 'phone: the chart bar scrolls sideways on its own and reaches the last chart');
 if (SHOTS) await phone.screenshot({ path: path.join(SHOTS, 'di04-2-telefon.png'), fullPage: true });
 
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));

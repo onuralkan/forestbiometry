@@ -1,12 +1,12 @@
 <section class="card guide-sec">
 <?= $sec('rapor', 'Report Generator') ?>
 <p>Gathers a data package and the tools' run records in one report. The report is previewed on the page; it goes to paper or, with "Save as PDF", to PDF through the browser's print dialog, and to a standalone file with <b>Download HTML</b>. The package, records and notes never leave the browser.</p>
-<p><b>What it does not do:</b> it computes nothing new (values are taken as they are from the package, the dashboard's computation and the records); it adds no reference that is not in the records; it writes no Word or other file format.</p>
+<p><b>What it does not do:</b> it computes nothing new (values are taken as they are from the package, the computation of Data Visualization and the records); it adds no reference that is not in the records; it writes no Word or other file format.</p>
 <h3>Content</h3>
 <ul>
 <li><b>Report details</b>: title, prepared by, institution, date, introduction and the <b>Report language</b> (Turkish or English, apart from the interface language).</li>
-<li><b>Data package</b>: a package of the Inventory Data Manager (or the simulated sample package); the filters are those of the Visualization Dashboard and affect only the charts.</li>
-<li><b>Run records</b>: <b>Add records (.json)</b> or <b>Take the dashboard's records</b>; their order can be changed. For each record the tool, version, seal, origin of the data, settings and result tables (the first 60 rows of long tables) are written.</li>
+<li><b>Data package</b>: a package of the Inventory Data Manager (or the simulated sample package); the filters are those of Data Visualization and affect only the charts.</li>
+<li><b>Run records</b>: <b>Add records (.json)</b> or <b>Take the records from Data Visualization</b>; their order can be changed. For each record the tool, version, seal, origin of the data, settings and result tables (the first 60 rows of long tables) are written.</li>
 </ul>
 <h3>Sections and output</h3>
 <ul>

@@ -1648,7 +1648,7 @@ const { observedModel } = __fb_r("dist/bootstrap.js");
 const { POOL } = __fb_r("dist/data.js");
 const { predict, modelById } = __fb_r("hd/calc.js");
 const { verifyRecord } = __fb_r("core/record.js");
-// Visualization dashboard (DI-04): page logic without DOM. No new science: per-plot N/ha and G/ha come from the
+// Data visualization (DI-04): page logic without DOM. No new science: per-plot N/ha and G/ha come from the
 // Plot & Stand engine (stand/calc.js), fitted densities from the Diameter Distribution engine (dist/, the observed
 // model of a result: conditional inside thresholds), height curves from the Height–Diameter engine (hd/calc.js);
 // all three are tested against independent references in their own tests. Here: filters, counts, histogram bins,
@@ -1789,7 +1789,7 @@ const grid = (a, b, n = 160) => Array.from({ length: n }, (_, i) => a + (b - a) 
 __fb_m["dashboard/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "T": () => T });
 const { makeT } = __fb_r("core/i18n.js");
-// Visualization dashboard (DI-04): TR/EN texts.
+// Data visualization (DI-04): TR/EN texts.
 
 
 const T = makeT({
@@ -1816,6 +1816,7 @@ const T = makeT({
     'ch.N': 'Hektarda ağaç sayısı', 'ch.G': 'Hektarda göğüs yüzeyi', 'ch.plot': 'Örnek alan', 'ch.Nha': 'N (ağaç/ha)', 'ch.Gha': 'G (m²/ha)',
     'ch.hd': 'Boy–çap', 'ch.h': 'Boy (m)', 'ch.hd.note': p => `${p.m} ölçülmüş boy${p.e ? `, ${p.e} tahmini boy ${p.show ? 'dahil' : 'gösterilmiyor'}` : ''}.`, 'ch.hd.curves': p => `Kayıttan eğriler: ${p.list} (★ seçilen model).`,
     'ch.map': 'Ağaç haritası', 'ch.x': 'x (m)', 'ch.y': 'y (m)', 'ch.map.need': 'Harita için tek bir örnek alan seçin; o alanın ağaçlarında x, y koordinatı olmalı.', 'ch.map.none': 'Bu örnek alanda koordinatlı ağaç yok.',
+    'nav.h': 'Grafiklere git', 'nav.up': '↑ Süzgeçler',
     'ch.empty': 'Bu süzgeçte kayıt yok.', svg: 'SVG', csv: 'CSV', 'ch.n': 'kayıt',
     'x.class': 'Sınıf alt sınırı (cm)', 'x.classhi': 'Sınıf üst sınırı (cm)', 'x.count': 'Sayı', 'x.dens': 'Yoğunluk',
   },
@@ -1842,6 +1843,7 @@ const T = makeT({
     'ch.N': 'Stems per hectare', 'ch.G': 'Basal area per hectare', 'ch.plot': 'Plot', 'ch.Nha': 'N (trees/ha)', 'ch.Gha': 'G (m²/ha)',
     'ch.hd': 'Height–diameter', 'ch.h': 'Height (m)', 'ch.hd.note': p => `${p.m} measured height(s)${p.e ? `, ${p.e} estimated height(s) ${p.show ? 'included' : 'not shown'}` : ''}.`, 'ch.hd.curves': p => `Curves from records: ${p.list} (★ chosen model).`,
     'ch.map': 'Tree map', 'ch.x': 'x (m)', 'ch.y': 'y (m)', 'ch.map.need': 'Choose a single plot for the map; its trees need x, y coordinates.', 'ch.map.none': 'No trees with coordinates in this plot.',
+    'nav.h': 'Go to a chart', 'nav.up': '↑ Filters',
     'ch.empty': 'No records for this filter.', svg: 'SVG', csv: 'CSV', 'ch.n': 'records',
     'x.class': 'Class lower (cm)', 'x.classhi': 'Class upper (cm)', 'x.count': 'Count', 'x.dens': 'Density',
   },
@@ -1859,7 +1861,7 @@ const { listProjects, activeId, adoptApproved } = __fb_r("core/projects.js");
 const { sha256JSON } = __fb_r("core/record.js");
 const { download, downloadCSV } = __fb_r("core/export.js");
 const { plotChart, barChart, scatterChart, svgForDownload } = __fb_r("core/chart.js");
-// Visualization dashboard (DI-04): user interface. Counts, filters and record reading in calc.js; storage of the
+// Data visualization (DI-04): user interface. Counts, filters and record reading in calc.js; storage of the
 // packages in core/projects.js (DI-03). Nothing leaves the browser.
 
 
@@ -1971,7 +1973,10 @@ function panelsHTML() {
       CSV['ch-map'] = [['x', 'y', 'dbh', T('f.species')], ...pos.map(p => [p.x, p.y, p.dbh, p.species])];
     } else charts += `<div class="chartbox" id="ch-map"><p class="muted small">${T('ch.map.none')}</p></div>`;
   }
-  return h + `<div class="charts2">${charts}</div></div>`;
+  // MR-001: a bar that stays on screen while the page scrolls and jumps to each chart; the chart in view is marked
+  const NAV = [['ch-hist', 'ch.hist'], ['ch-sp', 'ch.sp'], ['ch-N', 'ch.N'], ['ch-G', 'ch.G'], ['ch-hd', 'ch.hd'], ['ch-map', 'ch.map']].filter(([id]) => charts.includes(`id="${id}"`));
+  const nav = `<nav class="chnav" id="chnav" aria-label="${esc(T('nav.h'))}">${NAV.map(([id, k]) => `<button type="button" class="btn ghost small" data-go="${id}">${T(k)}</button>`).join('')}<button type="button" class="btn ghost small chnav-up" data-go="fcard">${T('nav.up')}</button></nav>`;
+  return h + nav + `<div class="charts2">${charts}</div></div>`;
 }
 
 function render() {
@@ -1980,7 +1985,29 @@ function render() {
   $('app').innerHTML = h;
   bind();
 }
+let navObs = null;
+function bindNav() {
+  if (navObs) { navObs.disconnect(); navObs = null; }
+  const btns = [...document.querySelectorAll('#chnav [data-go]')];
+  if (!btns.length) return;
+  const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  // the chosen chart is marked at once; the page end can stop the scroll before it reaches the top, so the marking
+  // from what is in view waits until the scroll has settled
+  let hold = 0;
+  const mark = id => btns.forEach(x => x.dataset.go !== 'fcard' && x.setAttribute('aria-current', String(x.dataset.go === id)));
+  btns.forEach(b => b.addEventListener('click', () => { const t = $(b.dataset.go); if (!t) return; hold = Date.now() + 1200; if (b.dataset.go !== 'fcard') mark(b.dataset.go); t.scrollIntoView({ block: 'start', behavior: smooth() }); }));
+  if (!('IntersectionObserver' in window)) return;
+  const seen = new Map();
+  navObs = new IntersectionObserver(es => {
+    for (const e of es) seen.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0);
+    if (Date.now() < hold) return;
+    let best = null, r = 0; for (const [id, v] of seen) if (v > r) { r = v; best = id; }
+    mark(best);
+  }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+  btns.forEach(b => { if (b.dataset.go !== 'fcard' && $(b.dataset.go)) navObs.observe($(b.dataset.go)); });
+}
 function bind() {
+  bindNav();
   $('pkg') && $('pkg').addEventListener('change', async e => { if (!e.target.value) return; S.pid = e.target.value; S.sample = false; save(); await loadPackage(); render(); });
   $('sample') && $('sample').addEventListener('click', async () => { S.sample = true; save(); await loadPackage(); render(); });
   document.querySelectorAll('[data-f]').forEach(s => s.addEventListener('change', () => { S.f[s.dataset.f] = s.value; save(); render(); }));

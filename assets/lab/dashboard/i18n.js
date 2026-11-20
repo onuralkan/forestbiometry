@@ -1,4 +1,4 @@
-// Visualization dashboard (DI-04): TR/EN texts.
+// Data visualization (DI-04): TR/EN texts.
 import { makeT } from '../core/i18n.js';
 
 export const T = makeT({
@@ -25,6 +25,7 @@ export const T = makeT({
     'ch.N': 'Hektarda ağaç sayısı', 'ch.G': 'Hektarda göğüs yüzeyi', 'ch.plot': 'Örnek alan', 'ch.Nha': 'N (ağaç/ha)', 'ch.Gha': 'G (m²/ha)',
     'ch.hd': 'Boy–çap', 'ch.h': 'Boy (m)', 'ch.hd.note': p => `${p.m} ölçülmüş boy${p.e ? `, ${p.e} tahmini boy ${p.show ? 'dahil' : 'gösterilmiyor'}` : ''}.`, 'ch.hd.curves': p => `Kayıttan eğriler: ${p.list} (★ seçilen model).`,
     'ch.map': 'Ağaç haritası', 'ch.x': 'x (m)', 'ch.y': 'y (m)', 'ch.map.need': 'Harita için tek bir örnek alan seçin; o alanın ağaçlarında x, y koordinatı olmalı.', 'ch.map.none': 'Bu örnek alanda koordinatlı ağaç yok.',
+    'nav.h': 'Grafiklere git', 'nav.up': '↑ Süzgeçler',
     'ch.empty': 'Bu süzgeçte kayıt yok.', svg: 'SVG', csv: 'CSV', 'ch.n': 'kayıt',
     'x.class': 'Sınıf alt sınırı (cm)', 'x.classhi': 'Sınıf üst sınırı (cm)', 'x.count': 'Sayı', 'x.dens': 'Yoğunluk',
   },
@@ -51,6 +52,7 @@ export const T = makeT({
     'ch.N': 'Stems per hectare', 'ch.G': 'Basal area per hectare', 'ch.plot': 'Plot', 'ch.Nha': 'N (trees/ha)', 'ch.Gha': 'G (m²/ha)',
     'ch.hd': 'Height–diameter', 'ch.h': 'Height (m)', 'ch.hd.note': p => `${p.m} measured height(s)${p.e ? `, ${p.e} estimated height(s) ${p.show ? 'included' : 'not shown'}` : ''}.`, 'ch.hd.curves': p => `Curves from records: ${p.list} (★ chosen model).`,
     'ch.map': 'Tree map', 'ch.x': 'x (m)', 'ch.y': 'y (m)', 'ch.map.need': 'Choose a single plot for the map; its trees need x, y coordinates.', 'ch.map.none': 'No trees with coordinates in this plot.',
+    'nav.h': 'Go to a chart', 'nav.up': '↑ Filters',
     'ch.empty': 'No records for this filter.', svg: 'SVG', csv: 'CSV', 'ch.n': 'records',
     'x.class': 'Class lower (cm)', 'x.classhi': 'Class upper (cm)', 'x.count': 'Count', 'x.dens': 'Density',
   },

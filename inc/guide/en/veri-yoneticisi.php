@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('veri-yoneticisi', 'Inventory Data Manager') ?>
-<p>Keeps the data packages (<code>forest-dataset/1</code>) you approved in the Data Checker in this browser as projects. One package is <b>active</b>: Plot &amp; Stand Metrics, Stand Structure, Height–Diameter, Site Index, Section Volume, Volume Equations, Biomass &amp; Carbon and Model Evaluation read the active package as approved data; the Visualization Dashboard and the Report Generator also open the active package first. Packages are stored in this browser only.</p>
+<p>Keeps the data packages (<code>forest-dataset/1</code>) you approved in the Data Checker in this browser as projects. One package is <b>active</b>: Plot &amp; Stand Metrics, Stand Structure, Height–Diameter, Site Index, Section Volume, Volume Equations, Biomass &amp; Carbon and Model Evaluation read the active package as approved data; Data Visualization and the Report Generator also open the active package first. Packages are stored in this browser only.</p>
 <p><b>What it does not do:</b> it does not change tree or plot records (measurement corrections are made in the Data Checker, with a reason, and approved again); it does not merge two packages; it does not carry packages to another device by itself (a backup file does).</p>
 <h3>Packages</h3>
 <ul>

@@ -1,4 +1,4 @@
-// Visualization dashboard (DI-04): assets/lab/dashboard/calc.js.
+// Data visualization (DI-04): assets/lab/dashboard/calc.js.
 //   node tests/dashboard/test_di04.mjs
 // References: counts and class frequencies by hand on a small package; per-plot N/ha and G/ha by hand
 // (N = n · 10000/A, G = Σ π d²/40000 · 10000/A); the Weibull density in closed form, f(x) = (c/b)(x/b)^(c−1)

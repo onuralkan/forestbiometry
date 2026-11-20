@@ -1,6 +1,6 @@
 <section class="card guide-sec">
 <?= $sec('veri-yoneticisi', 'Envanter Verisi Yöneticisi') ?>
-<p>Veri Denetçisi'nde onayladığınız veri paketlerini (<code>forest-dataset/1</code>) bu tarayıcıda proje olarak tutar. Paketlerden biri <b>etkin</b>dir: Örnek Alan ve Meşcere, Meşcere Yapısı, Boy–Çap, Bonitet, Seksiyon Hacmi, Hacim Denklemleri, Biyokütle ve Karbon ve Model Başarısı araçları onaylanmış veri olarak etkin paketi okur; Görselleştirme Panosu ve Rapor Üretici de ilk olarak etkin paketi açar. Paketler yalnızca bu tarayıcıda saklanır.</p>
+<p>Veri Denetçisi'nde onayladığınız veri paketlerini (<code>forest-dataset/1</code>) bu tarayıcıda proje olarak tutar. Paketlerden biri <b>etkin</b>dir: Örnek Alan ve Meşcere, Meşcere Yapısı, Boy–Çap, Bonitet, Seksiyon Hacmi, Hacim Denklemleri, Biyokütle ve Karbon ve Model Başarısı araçları onaylanmış veri olarak etkin paketi okur; Veri Görselleştirme ve Rapor Üretici de ilk olarak etkin paketi açar. Paketler yalnızca bu tarayıcıda saklanır.</p>
 <p><b>Yapmadıkları:</b> ağaç ve örnek alan kayıtlarını değiştirmez (ölçüm düzeltmeleri Veri Denetçisi'nde gerekçesiyle yapılır ve yeniden onaylanır); iki paketi birleştirmez; paketleri başka bir cihaza kendiliğinden taşımaz (yedek dosyasıyla taşınır).</p>
 <h3>Paketler</h3>
 <ul>
