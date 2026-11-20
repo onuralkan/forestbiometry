@@ -11,9 +11,9 @@
 
 | ID | Alan / sayfa | Kısa talep | Öncelik | Durum |
 |---|---|---|---|---|
-| MR-001 | Dashboard | Grafikler arasında gezinmek için navigasyon düğmeleri eklenmesi | Orta | Uygulandı |
-| MR-002 | Dashboard | Sayfa adının Data Visualization / Veri Görselleştirme olarak değiştirilmesi | Düşük | Uygulandı |
-| MR-003 | Anasayfa / araç oturumları | Tüm araç oturumlarını sıfırlayan genel düğme eklenmesi | Orta | Uygulandı |
+| MR-001 | Dashboard | Grafikler arasında gezinmek için navigasyon düğmeleri eklenmesi | Orta | Doğrulandı |
+| MR-002 | Dashboard | Sayfa adının Data Visualization / Veri Görselleştirme olarak değiştirilmesi | Düşük | Doğrulandı |
+| MR-003 | Anasayfa / araç oturumları | Tüm araç oturumlarını sıfırlayan genel düğme eklenmesi | Orta | Doğrulandı |
 
 ## Revizyon ayrıntıları
 
@@ -22,7 +22,7 @@
 - **Alan / sayfa:** Dashboard
 - **Tür:** Kullanılabilirlik / arayüz iyileştirmesi
 - **Öncelik:** Orta
-- **Durum:** Uygulandı (20 Kasım 2026; gezinme modeli kullanıcı seçimi: yapışkan atlama çubuğu)
+- **Durum:** Doğrulandı (kullanıcı onayı, 20 Kasım 2026; uygulandı 20 Kasım 2026; gezinme modeli kullanıcı seçimi: yapışkan atlama çubuğu)
 - **Mevcut durum / gözlem:** Dashboard sayfasındaki grafikler (*plotlar*) arasında gezinmeyi kolaylaştıracak navigasyon düğmeleri isteniyor. Mevcut gezinme davranışı henüz ayrıntılı olarak tanımlanmadı.
 - **İstenen revizyon:** Kullanıcının dashboard üzerindeki grafikler arasında daha kolay geçiş yapabilmesi için uygun navigasyon düğmeleri eklenmesi.
 - **Beklenen davranış / kabul ölçütleri:**
@@ -40,7 +40,7 @@
 - **Alan / sayfa:** Dashboard
 - **Tür:** Arayüz metni / yerelleştirme
 - **Öncelik:** Düşük
-- **Durum:** Uygulandı (20 Kasım 2026)
+- **Durum:** Doğrulandı (kullanıcı onayı, 20 Kasım 2026; uygulandı 20 Kasım 2026)
 - **Mevcut durum / gözlem:** Dashboard adı, grafik inceleme sayfası için genel bakış veya kontrol paneli beklentisi yaratabiliyor.
 - **İstenen revizyon:** Sayfanın görünen adını İngilizcede **Data Visualization**, Türkçede **Veri Görselleştirme** olarak değiştir.
 - **Beklenen davranış / kabul ölçütleri:**
@@ -55,7 +55,7 @@
 - **Alan / sayfa:** Anasayfa / araç oturumları
 - **Tür:** Küçük işlevsel iyileştirme
 - **Öncelik:** Orta
-- **Durum:** Uygulandı (20 Kasım 2026)
+- **Durum:** Doğrulandı (kullanıcı onayı, 20 Kasım 2026; uygulandı 20 Kasım 2026)
 - **İstenen revizyon:** Anasayfaya **Tüm Araç Oturumlarını Sıfırla** (EN: **Reset All Tool Sessions**) düğmesi ekle.
 - **Beklenen davranış / kabul ölçütleri:**
   - Düğme, araçları tek tek açmaya gerek kalmadan tüm araç oturumlarını başlangıç durumuna döndürmeli. Her araç için mevcut sıfırlama davranışı esas alınmalı.
