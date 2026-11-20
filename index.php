@@ -16,7 +16,8 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
 ?>
   <section class="hm-intro" aria-labelledby="hero-h">
     <div class="hm-intro-text">
-      <h1 id="hero-h"><?= $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools' ?></h1>
+      <h1 id="hero-h" class="hm-brand"><?= site_mark('hm-logo', 48) ?><span>Forest Biometry</span></h1>
+      <p class="hm-sub"><?= $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools' ?></p>
       <p class="hm-lede"><?= $tr ? 'Orman envanteri ve ağaç ölçümleri için hesap ve modelleme araçları: veri denetimi, ağaç ve meşcere değerleri, hacim, biyokütle, çap dağılımları, bonitet ve istatistiksel modeller. Araştırmacılar, mühendisler ve öğrenciler için.'
                                      : 'Calculation and modelling tools for forest inventory and tree measurements: data checking, tree and stand values, volume, biomass, diameter distributions, site index and statistical models. For researchers, forest engineers and students.' ?></p>
       <ul class="hm-facts">

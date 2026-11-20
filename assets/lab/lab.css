@@ -37,9 +37,9 @@ code { font: 13px var(--mono); background: var(--sunk); border: 1px solid var(--
 /* shell: top bar, sidebar (wide / narrow on desktop, drawer on small screens), main */
 .b-top { position: sticky; top: 0; z-index: 30; height: 54px; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
 .b-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 600 18px/1.1 var(--head); min-width: 0; }
-.b-brand > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.b-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r); background: var(--acc); color: var(--acc-ink); flex: none; }
-.b-mark .ico { width: 20px; height: 20px; }
+.b-brand-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -.005em; }
+/* Forest Biometry mark (assets/brand/; 20 Nov 2026): accent colour on the page background, no tile behind it */
+.b-logo { width: 28px; height: 28px; flex: none; color: var(--acc); }
 .b-nav { display: flex; gap: 16px; margin-left: 18px; }
 .b-nav a { font-weight: 600; color: var(--muted); text-decoration: none; font-size: 14px; }
 .b-nav a:hover, .b-nav a[aria-current] { color: var(--acc); }
@@ -101,7 +101,7 @@ code { font: 13px var(--mono); background: var(--sunk); border: 1px solid var(--
   .side-narrow .b-group:not(:has(.b-live)) { display: block; }
   .b-brand { font-size: 16px; }
 }
-@media (max-width: 420px) { .b-brand > span:last-child { display: none; } }
+@media (max-width: 420px) { .b-brand-name { display: none; } .b-logo { width: 30px; height: 30px; } }   /* the link keeps its name (aria-label) */
 
 .b-main { width: 100%; max-width: 1280px; margin: 0 auto; padding: 22px 24px 44px; min-width: 0; }
 @media (max-width: 640px) { .b-main { padding: 18px 16px 36px; } }
@@ -499,6 +499,9 @@ ol.refs li { padding-left: 2em; text-indent: -2em; margin: 0 0 10px; line-height
    tool as a compact card by module; a side column with tasks and help on wide screens. Plain surfaces, no decoration. */
 .hm-intro { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; padding: 4px 0 20px; border-bottom: 1px solid var(--line); }
 .hm-intro h1 { font: 600 30px/1.15 var(--head); letter-spacing: -.01em; margin: 0 0 8px; }
+.hm-intro h1.hm-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2px; }
+.hm-logo { width: 44px; height: 44px; flex: none; color: var(--acc); }
+.hm-sub { margin: 0 0 10px 56px; color: var(--muted); font-weight: 600; font-size: 15px; }
 .hm-lede { font-size: 16px; line-height: 1.55; margin: 0 0 12px; max-width: 70ch; }
 .hm-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--muted); }
 .hm-facts li { position: relative; padding-left: 14px; } .hm-facts li::before { content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
@@ -563,6 +566,7 @@ a.hm-tool:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
 }
 @media (max-width: 760px) {
   .hm-intro { grid-template-columns: minmax(0, 1fr); gap: 14px; } .hm-intro h1 { font-size: 24px; } .hm-lede { font-size: 15px; }
+  .hm-logo { width: 34px; height: 34px; } .hm-intro h1.hm-brand { gap: 10px; } .hm-sub { margin-left: 44px; font-size: 14px; }
   .hm-start { flex-direction: row; flex-wrap: wrap; padding: 0; border: 0; background: none; } .hm-start-h, .hm-start p.muted { display: none; }
   .hm-find { top: 54px; padding-top: 10px; } .hm-kbd { display: none; }
   .hm-chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; } .hm-chip { flex: none; }

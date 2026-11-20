@@ -21,8 +21,8 @@ site_top([
     'lede'  => $k ? '' : ($tr ? 'Araçların ne yaptığı, hangi veriyi beklediği ve sonuçların nasıl okunacağı. Elinizdeki işe göre başlayın ya da soldaki listeden bir araç seçin. Formüller ve kaynaklar her aracın "Ayrıntılar" bölümlerinde ve yöntem belgesindedir.'
                               : 'What each tool does, which data it expects and how to read the results. Start from what you want to do, or choose a tool from the list on the left. Formulas and sources are in each tool\'s "Details" disclosures and in the methods document.'),
     'desc'  => $k ? ($tr ? 'Kullanım kılavuzu: ' : 'User guide: ') . $titleOf($k)
-                  : ($tr ? 'Ormancılık Biyometrisi Araçları kullanım kılavuzu: veri hazırlama, ağaç ve meşcere ölçüleri, modeller, katsayılar, tekrarlanabilirlik.'
-                         : 'User guide of the Forest Biometrics Tools: data checking, tree and stand measures, models, coefficients, reproducibility.'),
+                  : ($tr ? 'Forest Biometry (Ormancılık Biyometrisi Araçları) kullanım kılavuzu: veri hazırlama, ağaç ve meşcere ölçüleri, modeller, katsayılar, tekrarlanabilirlik.'
+                         : 'User guide of Forest Biometry: data checking, tree and stand measures, models, coefficients, reproducibility.'),
     'query' => $k ? 'k=' . $k : '',
 ]);
 $V = []; foreach ($byId as $id => $t) $V[$id] = $t['v'];   // versions shown next to each tool's heading

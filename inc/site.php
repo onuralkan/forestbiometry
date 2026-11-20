@@ -37,7 +37,8 @@ function site_ctx(): array {
     if ($c) return $c;
     $L = lang(); $tr = $L === 'tr';
     $c = ['L' => $L, 'tr' => $tr, 'other' => $tr ? 'en' : 'tr',
-          'site' => $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools'];
+          // brand (20 Nov 2026, user decision): "Forest Biometry" in both languages; the descriptive subtitle stays
+          'site' => 'Forest Biometry', 'sub' => $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools'];
     return $c;
 }
 
@@ -169,6 +170,18 @@ function site_icon(string $name, string $cls = 'ico'): string {
     return '<svg class="' . $cls . '" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="' . ($P[$name] ?? '') . '"/></svg>';
 }
 
+/**
+ * The Forest Biometry mark (assets/brand/): two open corners of a sample plot and three trees that read as data points.
+ * Inline, in currentColor, hidden from screen readers (the brand name is always written next to it or on the link).
+ * $grid 24: the version for 20–28 px (top bar), 48: the full drawing for 32 px and up.
+ */
+function site_mark(string $cls = 'b-logo', int $grid = 24): string {
+    $inner = $grid === 48
+        ? '<path d="M5.5 17V9A3.5 3.5 0 0 1 9 5.5H19M42.5 31V39A3.5 3.5 0 0 1 39 42.5H29" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 25V38.5M24 14V37M34 20V35.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="14" cy="24.6" r="4.7" fill="currentColor"/><circle cx="24" cy="13.4" r="5.6" fill="currentColor"/><circle cx="34" cy="19.8" r="4.7" fill="currentColor"/>'
+        : '<path d="M2.6 8.6V4.4A1.8 1.8 0 0 1 4.4 2.6H8.6M21.4 15.4V19.6A1.8 1.8 0 0 1 19.6 21.4H15.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.6 12V19.4M12 7V18.9M17.4 10.4V18.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="6.6" cy="12" r="2.5" fill="currentColor"/><circle cx="12" cy="6.9" r="2.9" fill="currentColor"/><circle cx="17.4" cy="10.4" r="2.5" fill="currentColor"/>';
+    return '<svg class="' . $cls . '" viewBox="0 0 ' . $grid . ' ' . $grid . '" aria-hidden="true" focusable="false">' . $inner . '</svg>';
+}
+
 /** The tool whose page is being shown (null on the home and About pages). */
 function site_current_tool(): ?array {
     $here = basename($_SERVER['SCRIPT_NAME'] ?? '');
@@ -178,7 +191,7 @@ function site_current_tool(): ?array {
 
 function site_top(array $o = []): void {
     $c = site_ctx(); $tr = $c['tr'];
-    $pageTitle = ($o['title'] ?? '') !== '' && $o['title'] !== $c['site'] ? $o['title'] . ' | ' . $c['site'] : $c['site'] . ' | forestbiometry.online';
+    $pageTitle = ($o['title'] ?? '') !== '' && $o['title'] !== $c['site'] ? $o['title'] . ' | ' . $c['site'] : $c['site'] . ' | ' . $c['sub'];
     $q = $_GET; $q['lang'] = $c['other']; $langHref = '?' . http_build_query($q);
     $here = basename($_SERVER['SCRIPT_NAME'] ?? ''); $cur = site_current_tool();
     $tools = site_tools();
@@ -198,14 +211,16 @@ function site_top(array $o = []): void {
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="assets/lab/lab.css?v=<?= site_ver('assets/lab/lab.css') ?>">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230969da'/><circle cx='16' cy='16' r='10.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-dasharray='3 2.4'/><circle cx='13' cy='14' r='3' fill='%23fff'/><circle cx='19.5' cy='19' r='2' fill='%23fff'/></svg>">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="assets/brand/favicon.svg?v=<?= site_ver('assets/brand/favicon.svg') ?>" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png?v=<?= site_ver('assets/brand/apple-touch-icon.png') ?>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
 <body class="bench">
 <a class="skip" href="#main"><?= $tr ? 'İçeriğe geç' : 'Skip to content' ?></a>
 <header class="b-top">
   <button type="button" class="b-iconbtn b-menu" id="navopen" aria-controls="side" aria-expanded="false" aria-label="<?= $tr ? 'Araç menüsünü aç' : 'Open the tools menu' ?>"><?= site_icon('menu') ?></button>
-  <a class="b-brand" href="./"><span class="b-mark" aria-hidden="true"><?= site_icon('home') ?></span><span><?= h($c['site']) ?></span></a>
+  <a class="b-brand" href="./" aria-label="<?= h($c['site']) ?>, <?= $tr ? 'ana sayfa' : 'home page' ?>"><?= site_mark() ?><span class="b-brand-name"><?= h($c['site']) ?></span></a>
   <nav class="b-nav" aria-label="<?= $tr ? 'Site' : 'Site' ?>">
     <a href="./"<?= $here === 'index.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Araçlar' : 'Tools' ?></a>
     <a href="kilavuz.php"<?= $here === 'kilavuz.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Kılavuz' : 'Guide' ?></a>
@@ -333,7 +348,7 @@ function site_bottom(string $script = ''): void {
 </main>
 </div>
 <footer class="b-foot">
-  <span>forestbiometry.online · © <?= date('Y') ?> · <?= $tr ? 'Yazar ve sorumlu' : 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
+  <span><?= h($c['site']) ?> · forestbiometry.online · © <?= date('Y') ?> · <?= $tr ? 'Yazar ve sorumlu' : 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
   <span><a href="./"><?= $tr ? 'Araçlar dizini' : 'Tools index' ?></a> · <a href="kilavuz.php"><?= $tr ? 'Kılavuz' : 'Guide' ?></a> · <a href="hakkinda.php"><?= $tr ? 'Hakkında' : 'About' ?></a> · <a href="kaynakca.php"><?= $tr ? 'Kaynakça' : 'References' ?></a></span>
 </footer>
 <script>

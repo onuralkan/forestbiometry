@@ -23,7 +23,20 @@ const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path
 
 // 1. tools index is the home page; every ready tool link opens
 await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('h1').textContent()).trim() === 'Ormancılık Biyometrisi Araçları', 'home page is the tools index (TR)');
+ok((await page.locator('h1').textContent()).trim() === 'Forest Biometry' && (await page.textContent('.hm-sub')).trim() === 'Ormancılık Biyometrisi Araçları' && (await page.title()) === 'Forest Biometry | Ormancılık Biyometrisi Araçları', 'home page is the tools index (TR): brand Forest Biometry, Turkish subtitle, title');
+{ // brand (20 Nov 2026): the mark is a drawing in the page (no image, no tile), hidden from screen readers; the home link has a name;
+  // favicon files exist; tool pages are titled "<tool> | Forest Biometry"
+  const br = await page.evaluate(() => { const a = document.querySelector('.b-brand'), svg = a.querySelector('svg.b-logo');
+    return { label: a.getAttribute('aria-label'), name: a.querySelector('.b-brand-name').textContent, hidden: svg && svg.getAttribute('aria-hidden') === 'true', shapes: svg ? svg.querySelectorAll('path, circle').length : 0, img: a.querySelectorAll('img, image').length,
+      icons: [...document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]')].map(l => l.getAttribute('href').split('?')[0]) }; });
+  ok(br.label === 'Forest Biometry, ana sayfa' && br.name === 'Forest Biometry' && br.hidden && br.shapes === 5 && br.img === 0, 'top bar: Forest Biometry mark (vector shapes, aria-hidden) and wordmark; home link named');
+  ok(br.icons.join() === 'favicon.ico,assets/brand/favicon.svg,assets/brand/apple-touch-icon.png', 'favicon links: ' + br.icons.join(', '));
+  for (const f of br.icons) { const r = await page.request.get(BASE + '/' + f); ok(r.status() === 200 && (await r.body()).length > 200, f + ' served'); }
+  const tp = await browser.newPage(); await tp.goto(BASE + '/boy-cap.php?lang=en'); ok((await tp.title()) === 'Height–Diameter Modelling | Forest Biometry', 'tool page title: ' + await tp.title());
+  await tp.setViewportSize({ width: 360, height: 700 });
+  ok(await tp.evaluate(() => { const b = document.querySelector('.b-brand').getBoundingClientRect(), t = document.querySelector('.b-tools').getBoundingClientRect(), l = document.querySelector('.b-logo').getBoundingClientRect();
+    return b.right <= t.left && l.width > 20 && getComputedStyle(document.querySelector('.b-brand-name')).display === 'none' && document.querySelector('.b-brand').getAttribute('aria-label') === 'Forest Biometry, home page' && document.documentElement.scrollWidth <= innerWidth + 1; }), 'phone: mark only, no overlap with the controls, link name kept');
+  await tp.close(); }
 const links = await page.locator('.hm-item a.hm-tool').evaluateAll(a => a.map(x => x.getAttribute('href')));
 ok(links.length === N_TOOLS && N_TOOLS >= 7, `${N_TOOLS} ready tools listed: ` + links.join(', '));
 for (const l of links) { const r = await page.request.get(BASE + '/' + l); ok(r.status() === 200, l + ' opens'); }
