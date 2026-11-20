@@ -11,7 +11,6 @@ $nTools = array_sum(array_map(function ($m) { return count($m['tools']); }, $dir
 $titleOf = []; foreach ($dir as $m) foreach ($m['tools'] as $t) $titleOf[$t['file']] = $t['short'];
 site_top([
     'title' => $tr ? 'Araçlar' : 'Tools',
-    'side'  => false,
     'desc'  => $tr ? 'Forest Biometry araç dizini: modüllere ve görevlere göre bütün araçlar, araç ve yöntem araması.'
                    : 'Forest Biometry tools index: every tool by module and by task, with a tool and method search.',
     'lede'  => $tr ? 'Bütün araçlar modüllere göre. Bir araç ya da yöntem adıyla arayın, modüle ya da göreve göre süzün.'

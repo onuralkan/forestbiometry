@@ -11,7 +11,6 @@ if (isset($_GET['q']) || isset($_GET['m']) || isset($_GET['task'])) {        // 
 }
 $tr = site_ctx()['tr'];
 site_top([
-    'side' => false,
     'desc' => $tr ? 'Forest Biometry: orman envanteri ve ağaç ölçümleri için tarayıcıda çalışan hesap ve modelleme araçları; yöntemleri, varsayımları ve kaynaklarıyla.'
                   : 'Forest Biometry: browser-based calculation and modelling tools for forest inventory and tree measurements, with their methods, assumptions and sources.',
 ]);

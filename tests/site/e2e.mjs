@@ -22,10 +22,10 @@ const CATALOG = [...CAT.matchAll(/\['([A-Z]{2}-\d\d)', '(live|dev|planned|out)',
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 
 // 1. home page (20 Nov 2026, user decision): short intro, a search over every tool, six direct links, the way to the
-//    tools index (araclar.php), first steps, scientific basis; no sidebar beside it, no bulk reset on it
+//    tools index (araclar.php), first steps, scientific basis; the sidebar as on every page (user correction), no bulk reset on it
 await page.goto(BASE + '/?lang=tr');
 ok((await page.locator('h1').textContent()).trim() === 'Orman ölçümleriniz için hesaplama ve modelleme.' && (await page.title()) === 'Forest Biometry | Ormancılık Biyometrisi Araçları', 'home page: short intro heading, title "Forest Biometry | <subtitle>"');
-ok(!(await page.locator('#side').isVisible()) && await page.locator('#navopen').isVisible() && (await page.locator('.b-resetall, #hm-sessions, .hm-reset').count()) === 0, 'home: no sidebar beside the content (menu drawer), no bulk reset box or button');
+ok(await page.locator('#side').isVisible() && (await page.locator('#side .b-live a').count()) === N_TOOLS && (await page.locator('.b-resetall, #hm-sessions, .hm-reset').count()) === 0, 'home: the sidebar as on the other pages; no bulk reset box or button');
 ok((await page.textContent('.hp-data')).includes('Verileriniz sunucuya gönderilmez.') && (await page.locator('text=/Yerleşik katsayı yok/').count()) === 0, 'home: the data note; "no built-in coefficients" is not a headline');
 { const res = () => page.$$eval('.hp-res .hm-item:not([hidden]) a', a => a.map(x => x.getAttribute('href')));
   ok((await page.locator('label[for="tool-q"]').textContent()).trim() === 'Araç veya yöntem bulun' && (await page.getAttribute('#tool-q', 'placeholder')) === 'Örn. Weibull, bonitet, RMSE' && await page.isHidden('#hp-results'), 'home search: visible label, placeholder, no results before typing');
@@ -58,9 +58,9 @@ ok((await page.textContent('.hp-data')).includes('Verileriniz sunucuya gönderil
   await page.goto(BASE + '/?lang=tr&task=agac'); ok(page.url().includes('araclar.php') && (await page.getAttribute('.hm-task[data-task="agac"]', 'aria-pressed')) === 'true', 'old link ?task=agac: tools index with the task filter');
   await page.goto(BASE + '/?lang=tr&q=weibull'); ok(page.url().includes('araclar.php') && (await page.inputValue('#tool-q')) === 'weibull', 'old link ?q=: tools index with the search');
   await page.goto(BASE + '/?lang=tr#mod-SQ'); await page.waitForURL(/araclar\.php\?m=SQ/); ok((await page.getAttribute('.hm-chip[data-mod="SQ"]', 'aria-pressed')) === 'true', 'old link #mod-SQ: tools index with the module filter'); }
-// tools index: every tool, by module, with search and module and task filters; no sidebar beside it
+// tools index: every tool, by module, with search and module and task filters; the sidebar as on the other pages
 await page.goto(BASE + '/araclar.php?lang=tr');
-ok((await page.locator('h1').textContent()).trim() === 'Araçlar' && !(await page.locator('#side').isVisible()) && (await page.locator('.b-nav a[href="araclar.php"]').getAttribute('aria-current')) === 'page', 'tools index: own page, no sidebar beside the catalogue, "Araçlar" marked in the top menu');
+ok((await page.locator('h1').textContent()).trim() === 'Araçlar' && await page.locator('#side').isVisible() && (await page.locator('.b-nav a[href="araclar.php"]').getAttribute('aria-current')) === 'page', 'tools index: own page with the sidebar, "Araçlar" marked in the top menu');
 ok((await page.locator('.b-brand').getAttribute('href')) === './', 'the logo leads to the home page, "Araçlar" to the tools index');
 { // brand (20 Nov 2026): the mark is a drawing in the page (no image, no tile), hidden from screen readers; the home link has a name;
   // favicon files exist; tool pages are titled "<tool> | Forest Biometry"
