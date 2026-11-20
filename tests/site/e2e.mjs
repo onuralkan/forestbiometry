@@ -184,7 +184,7 @@ await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide
   await q.close(); }
 
 // 8. home page: reset every tool session and the active data package at once (MR-003); a cancelled confirmation deletes
-//    nothing; other kept packages and coefficient sets stay; the box sits under "New here?" and the button is red
+//    nothing; other kept packages and coefficient sets stay; the box sits above the task list and the button is red
 { const h = await browser.newPage(); h.on('pageerror', e => errors.push(e.message));
   await h.goto(BASE + '/?lang=tr');
   const kv = (op, ...a) => h.evaluate(async ([op, a]) => { const s = await import('./assets/lab/core/store.js'); return s[op](...a); }, [op, a]);
@@ -194,9 +194,9 @@ await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide
   await kv('put', 'project:active', 'test'); await kv('put', 'dataset:approved', ds);
   await h.reload(); await h.waitForFunction(() => /Etkin veri paketi: "Deneme paketi"/.test(document.getElementById('hm-sessions-text').textContent));
   const n0 = (await kv('keys', 'session:')).length;
-  const where = await h.evaluate(() => { const r = document.getElementById('hm-sessions').getBoundingClientRect(), st = document.querySelector('.hm-start').getBoundingClientRect(), b = getComputedStyle(document.getElementById('hm-sessions-reset'));
-    return { under: r.top >= st.bottom - 1 && Math.abs(r.left - st.left) < 2 && r.top < innerHeight, bg: b.backgroundColor }; });
-  ok(where.under && /^rgb\(209, 36, 47\)$/.test(where.bg), `home: the reset box is under "New here?", in view, the button red (${where.bg})`);
+  const where = await h.evaluate(() => { const r = document.getElementById('hm-sessions').getBoundingClientRect(), t = document.querySelector('.hm-tasks').getBoundingClientRect(), b = getComputedStyle(document.getElementById('hm-sessions-reset'));
+    return { above: r.bottom <= t.top + 1 && Math.abs(r.left - t.left) < 2 && !!document.querySelector('.hm-aside #hm-sessions'), bg: b.backgroundColor }; });
+  ok(where.above && /^rgb\(209, 36, 47\)$/.test(where.bg), `home: the reset box sits above "What do you want to do?", the button red (${where.bg})`);
   ok(n0 >= 2 && (await h.textContent('#hm-sessions-text')).includes(`Kayıtlı oturum: ${n0}.`) && await h.isVisible('#handoff'), `home: ${n0} saved tool sessions and the active package shown`);
   let msg = ''; h.once('dialog', d => { msg = d.message(); d.dismiss(); }); await h.click('#hm-sessions-reset'); await h.waitForTimeout(200);
   ok(msg.includes('Katsayı Kütüphanesi') && msg.includes('"Deneme paketi"') && msg.includes('SİLİNECEK') && (await kv('keys', 'session:')).length === n0 && (await kv('get', 'project:active')) === 'test', 'home: the confirmation names the package to delete and what stays; cancelling deletes nothing');

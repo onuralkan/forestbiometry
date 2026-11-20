@@ -504,8 +504,7 @@ ol.refs li { padding-left: 2em; text-indent: -2em; margin: 0 0 10px; line-height
 .hm-facts li { position: relative; padding-left: 14px; } .hm-facts li::before { content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
 .hm-facts b { color: var(--ink); font-weight: 600; }
 .hm-start { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--sunk); }
-.hm-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.hm-reset { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--err); border-radius: 8px; background: var(--err-bg); }
+.hm-reset { display: flex; flex-direction: column; gap: 8px; margin: 0 0 18px; padding: 14px 16px; border: 1px solid var(--err); border-radius: 8px; background: var(--err-bg); }
 .hm-reset .btn { justify-content: center; } .hm-reset p { margin: 0; } .hm-reset-h { font-weight: 600; font-size: 14px; }
 .btn.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .btn.danger:not(:disabled):hover { filter: brightness(.92); }

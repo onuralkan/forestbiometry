@@ -26,18 +26,11 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
         <li><?= $tr ? '<b>Açık kaynak</b>' : '<b>Open source</b>' ?><?php if (SITE_DOI !== ''): ?> · <a href="https://doi.org/<?= h(SITE_DOI) ?>">DOI <?= h(SITE_DOI) ?></a><?php endif; ?></li>
       </ul>
     </div>
-    <div class="hm-side">
     <div class="hm-start">
       <p class="hm-start-h"><?= $tr ? 'İlk kez mi kullanıyorsunuz?' : 'New here?' ?></p>
       <a class="btn" href="veri-denetcisi.php"><?= site_icon('checker') ?><?= $tr ? 'Veriyi denetleyerek başlayın' : 'Start by checking your data' ?></a>
       <a class="btn ghost" href="kilavuz.php"><?= site_icon('guide') ?><?= $tr ? 'Kullanım kılavuzu' : 'User guide' ?></a>
       <p class="muted small"><?= $tr ? 'Her araç kendi başına da çalışır; tablonuzu doğrudan araca yükleyebilirsiniz.' : 'Every tool also works on its own; you can load your table straight into a tool.' ?></p>
-    </div>
-    <section class="hm-reset" id="hm-sessions" aria-labelledby="hm-sessions-h">
-      <p class="hm-reset-h" id="hm-sessions-h"><?= $tr ? 'Baştan başlamak mı istiyorsunuz?' : 'Start over?' ?></p>
-      <p class="muted small" id="hm-sessions-text"><?= $tr ? 'Araçlar tablonuzu, ayarları ve sonuçları bu tarayıcıda saklar; onaylanmış veri paketi araçlara etkin paket olarak gider.' : 'The tools keep your table, settings and results in this browser; an approved data package goes to the tools as the active package.' ?></p>
-      <button type="button" class="btn danger" id="hm-sessions-reset"><?= site_icon('delete') ?><?= $tr ? 'Tüm araç oturumlarını sıfırla' : 'Reset all tool sessions' ?></button>
-    </section>
     </div>
   </section>
 
@@ -93,6 +86,11 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
     </div>
 
     <aside class="hm-aside" aria-labelledby="hm-tasks-h">
+      <section class="hm-reset" id="hm-sessions" aria-labelledby="hm-sessions-h">
+        <p class="hm-reset-h" id="hm-sessions-h"><?= $tr ? 'Baştan başlamak mı istiyorsunuz?' : 'Start over?' ?></p>
+        <p class="muted small" id="hm-sessions-text"><?= $tr ? 'Araçlar tablonuzu, ayarları ve sonuçları bu tarayıcıda saklar; onaylanmış veri paketi araçlara etkin paket olarak gider.' : 'The tools keep your table, settings and results in this browser; an approved data package goes to the tools as the active package.' ?></p>
+        <button type="button" class="btn danger" id="hm-sessions-reset"><?= site_icon('delete') ?><?= $tr ? 'Tüm araç oturumlarını sıfırla' : 'Reset all tool sessions' ?></button>
+      </section>
       <section class="hm-tasks">
         <h2 id="hm-tasks-h" class="hm-h"><?= $tr ? 'Ne yapmak istiyorsunuz?' : 'What do you want to do?' ?></h2>
         <p class="muted small hm-tasks-sub"><?= $tr ? 'Bir göreve tıklayın: ona uyan araçlar süzülür.' : 'Pick a task to see the tools for it.' ?></p>
