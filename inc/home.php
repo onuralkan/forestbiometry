@@ -88,3 +88,34 @@ function home_tasks(bool $tr): array {
         return $f ? ['id' => $c['id'], 'title' => $c['title'], 'text' => $c['text'], 'files' => $f] : null;
     }, guide_cards($tr))));
 }
+
+/**
+ * The home page's direct links (20 Nov 2026, user decision): three groups, six tools that stand for different basic
+ * tasks. An editorial choice, not a ranking: there are no usage data. Names and pages come from site_tools(); only the
+ * one-line scope (what it computes, from what input) is written here.
+ */
+function home_picks(bool $tr): array {
+    $g = [
+        [$tr ? 'Meşcere ve dağılım' : 'Stands and distributions', [
+            'ornek-alan.php' => $tr ? 'Sabit alanlı örnek alanların ağaç listesinden hektarda ağaç sayısı ve göğüs yüzeyi, çap sınıfları, tasarıma dayalı kestirim.'
+                                    : 'From tree lists of fixed-area plots: stems and basal area per hectare, diameter classes, design-based estimate.',
+            'cap-dagilimi.php' => $tr ? 'Çap ölçümlerine Weibull ve yedi dağılım daha fit eder; parametre geri kazanımı ve meşcere modelleri.'
+                                      : 'Fits Weibull and seven more distributions to measured diameters; parameter recovery and stand models.']],
+        [$tr ? 'Hacim ve verim gücü' : 'Volume and site productivity', [
+            'seksiyon-hacmi.php' => $tr ? 'Ölçülmüş seksiyon çaplarından Huber, Smalian, Newton ve Hohenadl ile gövde hacmi; ağaç ve hektar toplamı.'
+                                        : 'Stem volume from measured section diameters by Huber, Smalian, Newton and Hohenadl; tree and per-hectare totals.',
+            'bonitet.php' => $tr ? 'Üst boy ve yaştan bonitet endeksi; kaynağıyla girdiğiniz katsayı setiyle ya da verinizden kestirilen katsayılarla.'
+                                 : 'Site index from top height and age, with a coefficient set you enter with its source or coefficients estimated from your data.']],
+        [$tr ? 'Modelleme ve değerlendirme' : 'Modelling and evaluation', [
+            'boy-cap.php' => $tr ? 'Ölçülmüş boy ve çaplara altı doğrusal olmayan modeli fit eder ve karşılaştırır; çapraz doğrulama, eksik boylar için tahmin.'
+                                 : 'Fits and compares six nonlinear models on measured heights and diameters; cross-validation, predictions for missing heights.',
+            'model-degerlendirme.php' => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE ve tahmin R²; güven aralıkları ve artık grafikleri.'
+                                             : 'Bias, MAE, RMSE and prediction R² from observed and predicted values; intervals and residual plots.']],
+    ];
+    $byFile = []; foreach (site_tools() as $t) $byFile[$t['file']] = $t;
+    return array_map(function ($x) use ($byFile) {
+        return ['title' => $x[0], 'tools' => array_values(array_filter(array_map(function ($f, $d) use ($byFile) {
+            return isset($byFile[$f]) ? ['file' => $f, 'name' => $byFile[$f]['short'], 'icon' => $byFile[$f]['icon'], 'desc' => $d] : null;
+        }, array_keys($x[1]), $x[1])))];
+    }, $g);
+}

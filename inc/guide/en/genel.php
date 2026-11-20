@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('genel', 'General') ?>
 <h3>Your data</h3>
-<p>All calculations run in your browser. The files you load are not sent to the server, and the server keeps no user data. Each tool's session (the loaded table and the settings) is kept only in this browser (IndexedDB) and opens with the message "Previous session restored" when you come back. The <b>Reset session</b> button in each tool deletes that tool's record. Another browser or computer does not see these records.</p>
+<p>All calculations run in your browser. The files you load are not sent to the server, and the server keeps no user data. Each tool's session (the loaded table and the settings) is kept only in this browser (IndexedDB) and opens with the message "Previous session restored" when you come back. The <b>Reset session</b> button in each tool deletes that tool's record; the red <b>Reset all tool sessions</b> button next to it deletes, after a confirmation, the saved sessions of all tools and the active data package if there is one (the button then reads <b>Delete all sessions and the active package</b>); other packages in the Inventory Data Manager and the Coefficient Library stay. Another browser or computer does not see these records.</p>
 <h3>Loading data</h3>
 <ul>
 <li><b>Choose a file</b>: CSV, TXT, TSV and Excel (XLSX). The old .xls format is not read; save as .xlsx in Excel. Formulas and macros in an Excel file are not run, only the last saved values are read; if there are several worksheets you can choose one.</li>

@@ -3,7 +3,7 @@
 // Every page in both languages (?lang=tr, ?lang=en) with its hreflang alternates.
 require __DIR__ . '/inc/site.php';
 header('Content-Type: application/xml; charset=utf-8');
-$pages = [''];
+$pages = ['', 'araclar.php'];
 foreach (site_tools(true) as $t) if (!empty($t['file'])) $pages[] = $t['file'];
 $pages[] = 'kilavuz.php';
 foreach (array_merge(['genel', 'is-akisi', 'sorun-giderme'], array_map(function ($t) { return basename($t['file'], '.php'); }, site_tools(true))) as $id) if (is_file(__DIR__ . "/inc/guide/tr/$id.php")) $pages[] = 'kilavuz.php?k=' . $id;   // one guide page per section

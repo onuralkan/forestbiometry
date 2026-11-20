@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('genel', 'Genel') ?>
 <h3>Verileriniz</h3>
-<p>Bütün hesaplar tarayıcınızda yapılır. Yüklediğiniz dosyalar sunucuya gönderilmez, sunucuda kullanıcı verisi tutulmaz. Her aracın oturumu (yüklenen tablo, ayarlar) yalnızca bu tarayıcıda (IndexedDB) saklanır ve sayfaya döndüğünüzde "Önceki oturum geri yüklendi" iletisiyle açılır. Her araçtaki <b>Oturumu sıfırla</b> düğmesi o aracın kaydını siler. Başka bir tarayıcı ya da bilgisayar bu kayıtları görmez.</p>
+<p>Bütün hesaplar tarayıcınızda yapılır. Yüklediğiniz dosyalar sunucuya gönderilmez, sunucuda kullanıcı verisi tutulmaz. Her aracın oturumu (yüklenen tablo, ayarlar) yalnızca bu tarayıcıda (IndexedDB) saklanır ve sayfaya döndüğünüzde "Önceki oturum geri yüklendi" iletisiyle açılır. Her araçtaki <b>Oturumu sıfırla</b> düğmesi o aracın kaydını siler; yanındaki kırmızı <b>Tüm araç oturumlarını sıfırla</b> düğmesi bütün araçların kayıtlı oturumlarını, etkin bir veri paketi varsa onu da (düğme o zaman <b>Tüm oturumları ve etkin paketi sil</b> der) onaydan sonra siler; Envanter Verisi Yöneticisi'ndeki öteki paketler ve Katsayı Kütüphanesi kalır. Başka bir tarayıcı ya da bilgisayar bu kayıtları görmez.</p>
 <h3>Veri yükleme</h3>
 <ul>
 <li><b>Dosya seç</b>: CSV, TXT, TSV ve Excel (XLSX). Eski .xls biçimi okunmaz; Excel'de .xlsx olarak kaydedin. Excel dosyasındaki formüller ve makrolar çalıştırılmaz, yalnızca kayıtlı son değerler okunur; birden çok çalışma sayfası varsa sayfayı seçebilirsiniz.</li>

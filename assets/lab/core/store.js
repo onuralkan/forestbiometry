@@ -49,6 +49,8 @@ async function tx(mode, fn) {
   });
 }
 export async function put(key, value) {
+  // all tool sessions are being reset from this page (core/reset-all.js): no session is written back before the reload
+  if (globalThis.__fbSessionsHeld && typeof key === 'string' && key.startsWith('session:')) return;
   try { const d = await db(); if (!d) { mem.set(key, value); return; } await tx('readwrite', s => s.put(value, key)); }
   catch (e) { mem.set(key, value); }
 }

@@ -1,5 +1,6 @@
 // "Cite" dialog (all pages). Data come from the page (#cite-data, written by inc/site.php); strings from citation.js.
 import { FORMATS, NAMES, cite, plain } from './citation.js';
+import './reset-all.js';   // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
 const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';

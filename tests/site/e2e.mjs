@@ -21,9 +21,47 @@ const N_TOOLS = (SITE.match(/'file' => '[a-z0-9-]+\.php', 'v' =>/g) || []).lengt
 const CATALOG = [...CAT.matchAll(/\['([A-Z]{2}-\d\d)', '(live|dev|planned|out)', '[^']*', '[^']*'(?:, '([a-z-]+\.php)')?\]/g)].map(m => ({ id: m[1], status: m[2], page: m[3] || null }));
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 
-// 1. tools index is the home page; every ready tool link opens
+// 1. home page (20 Nov 2026, user decision): short intro, a search over every tool, six direct links, the way to the
+//    tools index (araclar.php), first steps, scientific basis; no sidebar beside it, no bulk reset on it
 await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('h1').textContent()).trim() === 'Forest Biometry' && (await page.textContent('.hm-sub')).trim() === 'Ormancılık Biyometrisi Araçları' && (await page.title()) === 'Forest Biometry | Ormancılık Biyometrisi Araçları', 'home page is the tools index (TR): brand Forest Biometry, Turkish subtitle, title');
+ok((await page.locator('h1').textContent()).trim() === 'Orman ölçümleriniz için hesaplama ve modelleme.' && (await page.title()) === 'Forest Biometry | Ormancılık Biyometrisi Araçları', 'home page: short intro heading, title "Forest Biometry | <subtitle>"');
+ok(!(await page.locator('#side').isVisible()) && await page.locator('#navopen').isVisible() && (await page.locator('.b-resetall, #hm-sessions, .hm-reset').count()) === 0, 'home: no sidebar beside the content (menu drawer), no bulk reset box or button');
+ok((await page.textContent('.hp-data')).includes('Verileriniz sunucuya gönderilmez.') && (await page.locator('text=/Yerleşik katsayı yok/').count()) === 0, 'home: the data note; "no built-in coefficients" is not a headline');
+{ const res = () => page.$$eval('.hp-res .hm-item:not([hidden]) a', a => a.map(x => x.getAttribute('href')));
+  ok((await page.locator('label[for="tool-q"]').textContent()).trim() === 'Araç veya yöntem bulun' && (await page.getAttribute('#tool-q', 'placeholder')) === 'Örn. Weibull, bonitet, RMSE' && await page.isHidden('#hp-results'), 'home search: visible label, placeholder, no results before typing');
+  ok((await page.locator('.hp-res .hm-item').count()) === N_TOOLS, `home search covers all ${N_TOOLS} tools, not only the six direct links`);
+  await page.fill('#tool-q', 'weibull'); ok((await res()).includes('cap-dagilimi.php') && (await res()).includes('boy-cap.php'), 'home search by method: Weibull finds Diameter Distribution and Height–Diameter: ' + (await res()).join(', '));
+  await page.fill('#tool-q', 'RMSE'); ok((await res()).includes('model-degerlendirme.php'), 'home search: RMSE finds Model Evaluation');
+  await page.fill('#tool-q', 'GOVDE PROFILI'); ok((await res())[0] === 'govde-profili.php' && (await page.textContent('#tool-count')).includes(`${N_TOOLS} araçtan`), 'home search: Turkish letters and case ignored; the tool named so first: ' + (await res()).join(', '));
+  await page.press('#tool-q', 'Enter'); ok(await page.evaluate(() => document.activeElement.getAttribute('href')) === 'govde-profili.php', 'home search: Enter moves to the first result');
+  await page.fill('#tool-q', 'zzzz'); ok(await page.isVisible('#hm-none') && (await res()).length === 0, 'home search without a match says so');
+  await page.focus('#tool-q'); await page.press('#tool-q', 'Escape'); ok((await page.inputValue('#tool-q')) === '' && await page.isHidden('#hp-results'), 'home search: Escape clears');
+  const picks = await page.$$eval('.hp-group a', a => a.map(x => x.getAttribute('href')));
+  ok(picks.join() === 'ornek-alan.php,cap-dagilimi.php,seksiyon-hacmi.php,bonitet.php,boy-cap.php,model-degerlendirme.php' && (await page.locator('.hp-group').count()) === 3 && (await page.$$eval('.hp-group p', p => p.every(x => x.textContent.length > 40))), 'home: six direct links in three groups, each with its scope');
+  ok((await page.locator('.hp-picks .hm-ti, .hp-picks code').count()) === 0 && (await page.locator('text=/popüler|en çok kullanılan|most used|popular/i').count()) === 0, 'home: no catalogue codes in the direct links, no popularity claim');
+  ok((await page.getAttribute('.hp-all', 'href')) === 'araclar.php' && (await page.textContent('.hp-all')).includes(`(${N_TOOLS})`), 'home: "Tüm araçları incele" leads to the tools index');
+  const tasks = await page.$$eval('.hp-tasks a', a => a.map(x => x.getAttribute('href')));
+  ok(tasks.length >= 5 && tasks.every(h => /^araclar\.php\?task=[a-z]+$/.test(h)) && (await page.textContent('.hp-start')).includes('doğrudan bir araca yükleyebilirsiniz'), 'home: "which tool suits my data" leads to the task filters; the Data Checker is not a required first step');
+  const sci = await page.$$eval('.hp-sci li > a', a => a.map(x => x.getAttribute('href')));
+  ok(sci.join() === 'kilavuz.php,hakkinda.php#h-tests,hakkinda.php#h-cite', 'home: scientific basis links: guide, how tests are done, how to cite');
+  for (const h of sci.filter(x => x.includes('#'))) { await page.goto(BASE + '/' + h.replace('#', '?lang=tr#')); ok(await page.locator('#' + h.split('#')[1]).count() === 1, h + ' exists'); }
+  ok((await page.locator('section', { has: page.locator('#h-tests') }).textContent()).includes('uygun olduğunu göstermez'), 'About: tests are told apart from the method suiting the data'); }
+{ // recently used: only real history, at most four, next to the search
+  const c = await browser.newContext(), r = await c.newPage(); await r.goto(BASE + '/?lang=tr');
+  ok(await r.isHidden('#hm-recent'), 'recently used: hidden without history (no placeholders)');
+  for (const t of ['bonitet', 'boy-cap', 'pano', 'rapor', 'ornekleme']) await r.goto(BASE + '/' + t + '.php?lang=tr');
+  await r.goto(BASE + '/?lang=tr'); const rec = await r.$$eval('#hm-recent-list a', a => a.map(x => x.getAttribute('href')));
+  ok(await r.isVisible('#hm-recent') && rec.join() === 'ornekleme.php,rapor.php,pano.php,boy-cap.php' && !(await r.textContent('#hm-recent')).match(/devam|continue/i), 'recently used: the last four tools, plain links: ' + rec.join(', '));
+  await c.close(); }
+{ // old links of the home page: ?q=, ?m=, ?task= and #mod-XX go to the tools index with the same meaning
+  await page.goto(BASE + '/?m=SV&lang=tr'); ok(page.url().includes('araclar.php?m=SV') && (await page.getAttribute('.hm-chip[data-mod="SV"]', 'aria-pressed')) === 'true', 'old link ?m=SV: tools index with the module filter');
+  await page.goto(BASE + '/?lang=tr&task=agac'); ok(page.url().includes('araclar.php') && (await page.getAttribute('.hm-task[data-task="agac"]', 'aria-pressed')) === 'true', 'old link ?task=agac: tools index with the task filter');
+  await page.goto(BASE + '/?lang=tr&q=weibull'); ok(page.url().includes('araclar.php') && (await page.inputValue('#tool-q')) === 'weibull', 'old link ?q=: tools index with the search');
+  await page.goto(BASE + '/?lang=tr#mod-SQ'); await page.waitForURL(/araclar\.php\?m=SQ/); ok((await page.getAttribute('.hm-chip[data-mod="SQ"]', 'aria-pressed')) === 'true', 'old link #mod-SQ: tools index with the module filter'); }
+// tools index: every tool, by module, with search and module and task filters; no sidebar beside it
+await page.goto(BASE + '/araclar.php?lang=tr');
+ok((await page.locator('h1').textContent()).trim() === 'Araçlar' && !(await page.locator('#side').isVisible()) && (await page.locator('.b-nav a[href="araclar.php"]').getAttribute('aria-current')) === 'page', 'tools index: own page, no sidebar beside the catalogue, "Araçlar" marked in the top menu');
+ok((await page.locator('.b-brand').getAttribute('href')) === './', 'the logo leads to the home page, "Araçlar" to the tools index');
 { // brand (20 Nov 2026): the mark is a drawing in the page (no image, no tile), hidden from screen readers; the home link has a name;
   // favicon files exist; tool pages are titled "<tool> | Forest Biometry"
   const br = await page.evaluate(() => { const a = document.querySelector('.b-brand'), svg = a.querySelector('svg.b-logo');
@@ -33,9 +71,10 @@ ok((await page.locator('h1').textContent()).trim() === 'Forest Biometry' && (awa
   ok(br.icons.join() === 'favicon.ico,assets/brand/favicon.svg,assets/brand/apple-touch-icon.png', 'favicon links: ' + br.icons.join(', '));
   for (const f of br.icons) { const r = await page.request.get(BASE + '/' + f); ok(r.status() === 200 && (await r.body()).length > 200, f + ' served'); }
   const tp = await browser.newPage(); await tp.goto(BASE + '/boy-cap.php?lang=en'); ok((await tp.title()) === 'Height–Diameter Modelling | Forest Biometry', 'tool page title: ' + await tp.title());
-  await tp.setViewportSize({ width: 360, height: 700 });
-  ok(await tp.evaluate(() => { const b = document.querySelector('.b-brand').getBoundingClientRect(), t = document.querySelector('.b-tools').getBoundingClientRect(), l = document.querySelector('.b-logo').getBoundingClientRect();
-    return b.right <= t.left && l.width > 20 && getComputedStyle(document.querySelector('.b-brand-name')).display === 'none' && document.querySelector('.b-brand').getAttribute('aria-label') === 'Forest Biometry, home page' && document.documentElement.scrollWidth <= innerWidth + 1; }), 'phone: mark only, no overlap with the controls, link name kept');
+  for (const [w, name] of [[360, true], [340, false]]) { await tp.setViewportSize({ width: w, height: 700 });
+    ok(await tp.evaluate(n => { const b = document.querySelector('.b-brand').getBoundingClientRect(), t = document.querySelector('.b-tools').getBoundingClientRect(), l = document.querySelector('.b-logo').getBoundingClientRect();
+      return b.right <= t.left && l.width > 20 && (getComputedStyle(document.querySelector('.b-brand-name')).display !== 'none') === n && document.querySelector('.b-brand').getAttribute('aria-label') === 'Forest Biometry, home page' && document.documentElement.scrollWidth <= innerWidth + 1; }, name),
+      `phone ${w} px: ${name ? 'mark and name' : 'mark only'}, no overlap with the controls, link name kept`); }
   await tp.close(); }
 const links = await page.locator('.hm-item a.hm-tool').evaluateAll(a => a.map(x => x.getAttribute('href')));
 ok(links.length === N_TOOLS && N_TOOLS >= 7, `${N_TOOLS} ready tools listed: ` + links.join(', '));
@@ -80,7 +119,7 @@ for (const u of ['/?lang=tr', '/hakkinda.php?lang=tr']) {
 await shot('site-3-telefon-koyu', phone);
 
 // 6. sidebar: categories, current tool, narrow mode remembered, drawer on phones; stem map labelled as illustration
-await page.goto(BASE + '/?lang=tr');
+await page.goto(BASE + '/araclar.php?lang=tr');
 ok((await page.locator('#side .b-cat').count()) === N_CATS && N_CATS === 8 && (await page.locator('#side .b-live a').count()) === N_TOOLS, `sidebar: ${N_CATS} modules, ${N_TOOLS} tool pages`);
 ok((await page.locator('.hm-mod').count()) === N_CATS && (await page.locator('.hm-mod[hidden], .hm-item[hidden]').count()) === 0, `home directory: ${N_CATS} modules, every tool visible without a click`);
 { const vis = () => page.$$eval('.hm-item:not([hidden]) a', a => a.map(x => x.getAttribute('href')));
@@ -100,11 +139,13 @@ ok((await page.locator('.hm-mod').count()) === N_CATS && (await page.locator('.h
   const titles = await page.locator('#side .b-pl .b-planned').evaluateAll(a => a.map(x => x.getAttribute('title')));
   ok(!out.some(c => titles.some(t => t.startsWith(c.id + ' '))), 'out-of-scope tools are not shown');
   ok(CATALOG.filter(c => c.page).every(c => TOOL_IDS.includes(c.page.replace('.php', ''))), 'every catalogue page exists in site_tools()'); }
+await page.goto(BASE + '/ornekleme.php?lang=tr');   // the sidebar beside the content: tool pages
 { const g = page.locator('#side .b-group[data-mod="TM"]'), b = g.locator('.b-cat');
   const was = await b.getAttribute('aria-expanded'); await b.click();
   ok((await b.getAttribute('aria-expanded')) !== was && (await g.evaluate(x => x.classList.contains('collapsed'))) === (was === 'true'), 'a module opens and closes from its heading');
   await page.reload(); ok((await page.locator('#side .b-group[data-mod="TM"] .b-cat').getAttribute('aria-expanded')) !== was, 'the state of the module is remembered in this browser'); }
-{ // home: no decorative showcase or tool-count figures; module filters count the tools of each module
+await page.goto(BASE + '/araclar.php?lang=tr');
+{ // tools index: no decorative showcase or tool-count figures; module filters count the tools of each module
   ok((await page.locator('.hz-show, .hz-stats').count()) === 0, 'no decorative showcase or tool-count figures on the home page');
   const counts = await page.locator('.hm-chip[data-mod]:not([data-mod=""])').evaluateAll(cs => cs.map(c => [c.dataset.mod, +c.querySelector('span').textContent]));
   const real = await page.locator('.hm-mod').evaluateAll(ms => ms.map(m => [m.dataset.mod, m.querySelectorAll('.hm-item:not(.hm-planned)').length]));
@@ -114,7 +155,7 @@ ok((await page.locator('.hm-mod').count()) === N_CATS && (await page.locator('.h
   await q.goto(BASE + '/'); ok(await q.getAttribute('html', 'lang') === 'en', 'default language is English even for a Turkish browser');
   await q.goto(BASE + '/?lang=tr'); await q.goto(BASE + '/'); ok(await q.getAttribute('html', 'lang') === 'tr', 'Turkish once chosen is remembered (cookie)');
   await c.close(); }
-await page.click('#side a[href="boy-cap.php"]'); await page.waitForURL(/boy-cap/);
+await page.click('.hm-item a[href="boy-cap.php"]'); await page.waitForURL(/boy-cap/);
 ok((await page.locator('#side a[aria-current="page"]').getAttribute('href')) === 'boy-cap.php' && (await page.locator('.b-headico svg').count()) === 1, 'current tool marked in the sidebar, icon in the page head');
 await page.click('#sidenarrow'); await page.reload();
 ok(await page.evaluate(() => document.documentElement.classList.contains('side-narrow')) && (await page.locator('#sidenarrow').getAttribute('aria-pressed')) === 'true', 'narrow sidebar remembered after reload');
@@ -184,7 +225,7 @@ await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide
 // module loading: every script and style of every page carries a version tag (import map from inc/site.php), so that
 // versioned files can be cached for long; a module missing from the graph would be requested without a tag
 { const site = (await import('node:fs')).readFileSync(new URL('../../inc/site.php', import.meta.url), 'utf8');
-  const files = ['', 'kilavuz.php', 'hakkinda.php', 'kaynakca.php', ...[...site.matchAll(/'file' => '([a-z-]+\.php)', 'v' =>/g)].map(m => m[1])];
+  const files = ['', 'araclar.php', 'kilavuz.php', 'hakkinda.php', 'kaynakca.php', ...[...site.matchAll(/'file' => '([a-z-]+\.php)', 'v' =>/g)].map(m => m[1])];
   const q = await browser.newPage(); q.on('pageerror', e => errors.push(e.message));
   for (const f of files) { const un = []; let mods = 0; const h = r => { const u = r.url(); if (/\.(m?js|css)(\?|$)/.test(u)) { mods++; if (!/[?&]v=/.test(u)) un.push(u.replace(BASE, '')); } };
     q.on('request', h); await q.goto(BASE + '/' + f, { waitUntil: 'networkidle' }); q.off('request', h);
@@ -196,34 +237,82 @@ await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide
     else ok(un.length === 0 && im > 0, `${f || 'index.php'}: ${mods} scripts and styles, all versioned (import map of ${im} modules)${un.length ? '; unversioned: ' + un.join(' ') : ''}`); }
   await q.close(); }
 
-// 8. home page: reset every tool session and the active data package at once (MR-003); a cancelled confirmation deletes
-//    nothing; other kept packages and coefficient sets stay; the box sits above the task list and the button is red
-{ const h = await browser.newPage(); h.on('pageerror', e => errors.push(e.message));
-  await h.goto(BASE + '/?lang=tr');
+// contrast (20 Nov 2026): button texts and small texts of the home page and the reset buttons, light and dark, ≥ 4.5:1
+{ const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  for (const scheme of ['light', 'dark']) { const p = await c.newPage(); await p.emulateMedia({ colorScheme: scheme });
+    const bad = [];
+    for (const [u, sel] of [['/?lang=tr', '.hp-all, .hp-data, .hp-group p, .hp-group h3, .hp-group a, .hp-sci li p, .hp-tasks a, .hp-qlabel, .hp-keep'], ['/boy-cap.php?lang=tr', '#reset, .b-resetall, .b-nav a, .b-kicker']]) {
+      await p.goto(BASE + u); await p.waitForSelector(sel.split(',')[0]);
+      await p.evaluate(() => { const b = document.querySelector('.b-resetall'); if (b) b.disabled = false; });
+      bad.push(...await p.evaluate(sel => {
+        const rgb = c => (c.match(/[\d.]+/g) || []).map(Number), lum = ([r, g, b]) => [r, g, b].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }).reduce((s, v, i) => s + v * [.2126, .7152, .0722][i], 0);
+        const bg = e => { for (let x = e; x; x = x.parentElement) { const c = rgb(getComputedStyle(x).backgroundColor); if (c.length === 3 || c[3] > .5) return c.slice(0, 3); } return [255, 255, 255]; };
+        return [...document.querySelectorAll(sel)].map(e => { const a = lum(rgb(getComputedStyle(e).color)), b = lum(bg(e)), r = (Math.max(a, b) + .05) / (Math.min(a, b) + .05); return [e.className || e.id || e.tagName, Math.round(r * 100) / 100]; }).filter(x => x[1] < 4.5);
+      }, sel).then(x => x.map(y => `${scheme} ${u} ${y.join(' ')}`))); }
+    ok(!bad.length, `contrast ≥ 4.5:1 (${scheme}): home texts, primary and reset buttons` + (bad.length ? ': ' + bad.join('; ') : ''));
+    await p.close(); }
+  await c.close(); }
+
+// 8. reset all tool sessions (MR-003; on the tool pages since 20 Nov 2026, user decision): a red button next to every
+//    tool's own "Reset session"; it deletes every tool session and the active data package (deactivated and deleted);
+//    other packages, coefficient sets and preferences stay; cancelling changes nothing; the open tool does not write
+//    its session back; after the reload the tool is in its starting state
+{ const c = await browser.newContext({ viewport: { width: 1280, height: 900 } }), h = await c.newPage(); h.on('pageerror', e => errors.push(e.message));
+  await h.goto(BASE + '/boy-cap.php?lang=tr'); await h.waitForSelector('.b-resetall');
   const kv = (op, ...a) => h.evaluate(async ([op, a]) => { const s = await import('./assets/lab/core/store.js'); return s[op](...a); }, [op, a]);
   const ds = { schema: 'forest-dataset/1', created: '2026-11-20T10:00:00Z', trees: [], plots: [] };
-  await kv('put', 'session:test-a', { v: 1 }); await kv('put', 'session:test-b', { v: 1 }); await kv('put', 'coef:test', { keep: 1 });
-  await kv('put', 'project:test', { schema: 'forest-project/1', id: 'test', name: 'Deneme paketi', dataset: ds }); await kv('put', 'project:keep', { keep: 1 });
-  await kv('put', 'project:active', 'test'); await kv('put', 'dataset:approved', ds);
-  await h.reload(); await h.waitForFunction(() => /Etkin veri paketi: "Deneme paketi"/.test(document.getElementById('hm-sessions-text').textContent));
-  const n0 = (await kv('keys', 'session:')).length;
-  const where = await h.evaluate(() => { const r = document.getElementById('hm-sessions').getBoundingClientRect(), t = document.querySelector('.hm-tasks').getBoundingClientRect(), b = getComputedStyle(document.getElementById('hm-sessions-reset'));
-    return { above: r.bottom <= t.top + 1 && Math.abs(r.left - t.left) < 2 && !!document.querySelector('.hm-aside #hm-sessions'), bg: b.backgroundColor }; });
-  ok(where.above && /^rgb\(209, 36, 47\)$/.test(where.bg), `home: the reset box sits above "What do you want to do?", the button red (${where.bg})`);
-  ok(n0 >= 2 && (await h.textContent('#hm-sessions-text')).includes(`Kayıtlı oturum: ${n0}.`) && await h.isVisible('#handoff'), `home: ${n0} saved tool sessions and the active package shown`);
-  let msg = ''; h.once('dialog', d => { msg = d.message(); d.dismiss(); }); await h.click('#hm-sessions-reset'); await h.waitForTimeout(200);
-  ok(msg.includes('Katsayı Kütüphanesi') && msg.includes('"Deneme paketi"') && msg.includes('SİLİNECEK') && (await kv('keys', 'session:')).length === n0 && (await kv('get', 'project:active')) === 'test', 'home: the confirmation names the package to delete and what stays; cancelling deletes nothing');
-  h.once('dialog', d => d.accept()); await h.click('#hm-sessions-reset'); await h.waitForFunction(() => /etkin veri paketi silindi/.test(document.getElementById('hm-sessions-text').textContent));
-  ok((await kv('keys', 'session:')).length === 0 && !(await kv('get', 'project:test')) && !(await kv('get', 'project:active')) && !(await kv('get', 'dataset:approved')),
-    'home: all tool sessions reset; the active package deactivated and deleted');
-  ok((await kv('get', 'coef:test')) && (await kv('get', 'project:keep')) && await h.isDisabled('#hm-sessions-reset') && await h.isHidden('#handoff'), 'home: other packages and coefficient sets kept; the active-package box gone');
+  const seed = async () => { await kv('put', 'session:test-a', { v: 1 }); await kv('put', 'session:test-b', { v: 1 });
+    await kv('put', 'project:test', { schema: 'forest-project/1', id: 'test', name: 'Deneme paketi', dataset: ds }); await kv('put', 'project:active', 'test'); await kv('put', 'dataset:approved', ds); };
+  await seed(); await kv('put', 'coef:test', { keep: 1 }); await kv('put', 'project:keep', { keep: 1 });
+  await h.evaluate(() => { localStorage.setItem('theme', 'light'); localStorage.setItem('recentTools', JSON.stringify(['bonitet.php'])); });
+  await h.reload(); await h.click('#sample'); await h.waitForSelector('#impbox .fname');
+  const own = 'session:' + (await h.evaluate(() => Object.keys(localStorage).length >= 0 && null) || 'boy-cap');
+  await h.waitForFunction(() => document.querySelector('.b-resetall').textContent === 'Tüm oturumları ve etkin paketi sil' && !document.querySelector('.b-resetall').disabled);
+  const keys0 = await kv('keys', 'session:');
+  const pos = await h.evaluate(() => { const r = document.getElementById('reset'), a = document.querySelector('.b-resetall'), rr = r.getBoundingClientRect(), ar = a.getBoundingClientRect();
+    return { group: r.parentElement === a.parentElement && r.nextElementSibling === a, side: Math.abs(rr.top - ar.top) < 2 && ar.left > rr.right && ar.left - rr.right < 20, bg: getComputedStyle(a).backgroundColor, n: document.querySelectorAll('.b-resetall').length }; });
+  ok(pos.group && pos.side && pos.n === 1 && pos.bg === 'rgb(209, 36, 47)' && keys0.length >= 3, `tool page: one red button right of "Oturumu sıfırla" in the same group (${pos.bg}); label names the active package`);
+  // cancel: nothing changes
+  let msg = ''; h.once('dialog', d => { msg = d.message(); d.dismiss(); }); await h.click('.b-resetall'); await h.waitForTimeout(200);
+  ok(msg.includes('"Deneme paketi"') && msg.includes('SİLİNECEK') && msg.includes('Katsayı Kütüphanesi') && msg.includes('geri alınamaz') && msg.includes('Başka bir sekmede') && msg.includes('yedek'),
+    'confirmation: sessions, the package by name, what stays, cannot be undone, backup and other tabs');
+  ok(JSON.stringify(await kv('keys', 'session:')) === JSON.stringify(keys0) && (await kv('get', 'project:active')) === 'test' && (await kv('get', 'dataset:approved')) && await h.locator('#impbox .fname').count() === 1, 'cancelled: no session, package or tool state changed');
+  // the tool's own reset: only its own session
+  const hdKey = keys0.find(k => !k.startsWith('session:test-'));
+  await h.click('#reset'); await h.waitForTimeout(300);
+  const k1 = await kv('keys', 'session:');
+  ok(!k1.includes(hdKey) && k1.includes('session:test-a') && k1.includes('session:test-b') && (await kv('get', 'project:active')) === 'test', `"Oturumu sıfırla" deletes only this tool's session (${hdKey})`);
+  // bulk reset, from a tool with loaded data that autosaves
+  await h.click('#sample'); await h.waitForSelector('#impbox .fname'); await h.waitForTimeout(300);
+  h.once('dialog', d => d.accept()); await Promise.all([h.waitForEvent('load'), h.click('.b-resetall')]);
+  await h.waitForSelector('#resetall-done'); await h.waitForTimeout(500);
+  const k2 = await kv('keys', 'session:'), left = k2.length ? await kv('get', k2[0]) : null;
+  ok(!k2.includes('session:test-a') && !k2.includes('session:test-b') && (await h.locator('#impbox .fname').count()) === 0 && (!k2.length || !JSON.stringify(left).includes('ornek')),
+    'bulk reset: every tool session gone; the open tool did not write its data back and opens in its starting state: ' + k2.join(','));
+  ok(!(await kv('get', 'project:test')) && !(await kv('get', 'project:active')) && !(await kv('get', 'dataset:approved')), 'bulk reset: the active package deactivated and deleted');
+  ok((await kv('get', 'coef:test')) && (await kv('get', 'project:keep')) && (await h.evaluate(() => localStorage.getItem('theme') === 'light' && localStorage.getItem('recentTools').includes('bonitet.php'))), 'bulk reset: other packages, coefficient sets, theme and recent tools kept');
+  ok((await h.textContent('#resetall-done')).includes('oturumu sıfırlandı, etkin veri paketi silindi'), 'after the reload: a note says what was reset');
+  await h.reload(); await h.waitForSelector('.b-resetall');
+  await h.waitForFunction(() => document.querySelector('.b-resetall').textContent === 'Tüm araç oturumlarını sıfırla');
+  const sess = await kv('keys', 'session:');
+  ok(sess.length > 0 || await h.isDisabled('.b-resetall'), 'without an active package: "Tüm araç oturumlarını sıfırla"; disabled when nothing is saved');
+  for (const k of await kv('keys', 'session:')) await kv('del', k);
+  await h.reload(); await h.waitForSelector('.b-resetall'); await h.waitForTimeout(400);
+  ok(await h.isDisabled('.b-resetall'), 'nothing to delete: the button is disabled');
   await kv('del', 'coef:test'); await kv('del', 'project:keep');
-  await h.goto(BASE + '/?lang=en'); await h.waitForFunction(() => /No saved sessions/.test(document.getElementById('hm-sessions-text').textContent));
-  ok((await h.textContent('#hm-sessions-reset')).trim() === 'Reset all tool sessions', 'home: English button');
-  const ph = await browser.newPage({ viewport: { width: 390, height: 800 } }); await ph.goto(BASE + '/?lang=tr');
-  ok(await ph.isVisible('#hm-sessions-reset') && await ph.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'home, phone: the reset box shows, no horizontal scroll');
-  if (SHOTS) { await h.goto(BASE + '/?lang=tr'); await shot('site-8-sifirla', h); await ph.screenshot({ path: path.join(SHOTS, 'site-8-telefon.png') }); }
-  await ph.close(); await h.close(); }
+  await h.goto(BASE + '/boy-cap.php?lang=en'); await h.waitForSelector('.b-resetall');
+  ok((await h.textContent('.b-resetall')) === 'Reset all tool sessions' && (await h.textContent('#reset')) === 'Reset session', 'English labels');
+  // every tool page of the catalogue: exactly one bulk button; next to "Reset session" where the tool has one, else at the end of the page
+  const where = [];
+  for (const id of TOOL_IDS) { await h.goto(`${BASE}/${id}.php?lang=tr`); await h.waitForSelector('.b-resetall', { timeout: 10000 }).catch(() => {});
+    where.push([id, await h.evaluate(() => { const r = document.getElementById('reset'), a = document.querySelectorAll('.b-resetall');
+      return a.length !== 1 ? 'missing' : r ? (r.nextElementSibling === a[0] ? 'next' : 'apart') : a[0].parentElement.classList.contains('b-resetrow') ? 'end' : 'other'; })]); }
+  ok(where.every(([, w]) => w === 'next' || w === 'end') && where.filter(([, w]) => w === 'next').length >= 19, 'every tool page has the bulk reset: ' + where.map(w => w.join(' ')).join(', '));
+  // phone: the two buttons stay in one group, texts not cut
+  await h.setViewportSize({ width: 360, height: 780 }); await h.goto(BASE + '/boy-cap.php?lang=tr'); await h.waitForSelector('.b-resetall');
+  ok(await h.evaluate(() => { const g = document.querySelector('.b-resetgrp'), bs = [...g.querySelectorAll('.btn')];
+    return bs.length === 2 && bs.every(b => b.scrollWidth <= b.clientWidth + 1 && b.getBoundingClientRect().right <= innerWidth) && document.documentElement.scrollWidth <= innerWidth + 1; }), 'phone: both reset buttons in one group, texts not cut, no horizontal scroll');
+  await c.close(); }
 
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();

@@ -195,8 +195,11 @@ function site_top(array $o = []): void {
     $q = $_GET; $q['lang'] = $c['other']; $langHref = '?' . http_build_query($q);
     $here = basename($_SERVER['SCRIPT_NAME'] ?? ''); $cur = site_current_tool();
     $tools = site_tools();
+    // 'side' => false: the home page and the tools index (20 Nov 2026): no sidebar beside the content; the tool menu is a
+    // drawer behind the menu button at every width. Tool pages keep the sidebar.
+    $side = $o['side'] ?? true;
     ?><!doctype html>
-<html lang="<?= $c['L'] ?>">
+<html lang="<?= $c['L'] ?>"<?= $side ? '' : ' class="no-side"' ?>>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -216,21 +219,21 @@ function site_top(array $o = []): void {
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png?v=<?= site_ver('assets/brand/apple-touch-icon.png') ?>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
-<body class="bench">
+<body class="bench"<?= $cur ? ' data-tool="' . h(basename($cur['file'], '.php')) . '"' : '' ?>>
 <a class="skip" href="#main"><?= $tr ? 'İçeriğe geç' : 'Skip to content' ?></a>
 <header class="b-top">
   <button type="button" class="b-iconbtn b-menu" id="navopen" aria-controls="side" aria-expanded="false" aria-label="<?= $tr ? 'Araç menüsünü aç' : 'Open the tools menu' ?>"><?= site_icon('menu') ?></button>
   <a class="b-brand" href="./" aria-label="<?= h($c['site']) ?>, <?= $tr ? 'ana sayfa' : 'home page' ?>"><?= site_mark() ?><span class="b-brand-name"><?= h($c['site']) ?></span></a>
   <nav class="b-nav" aria-label="<?= $tr ? 'Site' : 'Site' ?>">
-    <a href="./"<?= $here === 'index.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Araçlar' : 'Tools' ?></a>
+    <a href="araclar.php"<?= $here === 'araclar.php' || $cur ? ' aria-current="' . ($cur ? 'true' : 'page') . '"' : '' ?>><?= $tr ? 'Araçlar' : 'Tools' ?></a>
     <a href="kilavuz.php"<?= $here === 'kilavuz.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Kılavuz' : 'Guide' ?></a>
-    <a href="hakkinda.php"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Hakkında' : 'About' ?></a>
     <a href="kaynakca.php"<?= $here === 'kaynakca.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Kaynakça' : 'References' ?></a>
+    <a href="hakkinda.php"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Hakkında' : 'About' ?></a>
   </nav>
   <span class="b-tools">
     <button type="button" class="b-citebtn" id="citebtn" data-cite-open aria-haspopup="dialog"><?= site_icon('cite') ?><span><?= $tr ? 'Atıf' : 'Cite' ?></span></button>
     <button type="button" id="theme" class="b-iconbtn" aria-label="<?= $tr ? 'Koyu / açık tema' : 'Dark / light theme' ?>"><?= site_icon('theme') ?></button>
-    <a id="langlink" href="<?= h($langHref) ?>" hreflang="<?= $c['other'] ?>" lang="<?= $c['other'] ?>"><?= $c['other'] === 'en' ? 'English' : 'Türkçe' ?></a>
+    <a id="langlink" href="<?= h($langHref) ?>" hreflang="<?= $c['other'] ?>" lang="<?= $c['other'] ?>"><span class="ll-l"><?= $c['other'] === 'en' ? 'English' : 'Türkçe' ?></span><span class="ll-s"><?= $c['other'] === 'en' ? 'EN' : 'TR' ?></span></a>
   </span>
 </header>
 <div class="b-shell">
@@ -349,7 +352,7 @@ function site_bottom(string $script = ''): void {
 </div>
 <footer class="b-foot">
   <span><?= h($c['site']) ?> · forestbiometry.online · © <?= date('Y') ?> · <?= $tr ? 'Yazar ve sorumlu' : 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
-  <span><a href="./"><?= $tr ? 'Araçlar dizini' : 'Tools index' ?></a> · <a href="kilavuz.php"><?= $tr ? 'Kılavuz' : 'Guide' ?></a> · <a href="hakkinda.php"><?= $tr ? 'Hakkında' : 'About' ?></a> · <a href="kaynakca.php"><?= $tr ? 'Kaynakça' : 'References' ?></a></span>
+  <span><a href="araclar.php"><?= $tr ? 'Araçlar dizini' : 'Tools index' ?></a> · <a href="kilavuz.php"><?= $tr ? 'Kılavuz' : 'Guide' ?></a> · <a href="hakkinda.php"><?= $tr ? 'Hakkında' : 'About' ?></a> · <a href="kaynakca.php"><?= $tr ? 'Kaynakça' : 'References' ?></a></span>
 </footer>
 <script>
 (function () {
@@ -361,7 +364,7 @@ function site_bottom(string $script = ''): void {
   });
   // desktop: narrow (icons only) or wide sidebar, remembered in this browser
   var nb = $('sidenarrow'); nb.setAttribute('aria-pressed', root.classList.contains('side-narrow'));
-  nb.addEventListener('click', function () {
+  if (!root.classList.contains('no-side')) nb.addEventListener('click', function () {
     var on = root.classList.toggle('side-narrow'); nb.setAttribute('aria-pressed', on);
     try { localStorage.setItem('side', on ? 'narrow' : 'wide'); } catch (e) {}
   });

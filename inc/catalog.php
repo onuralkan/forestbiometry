@@ -9,7 +9,7 @@
 function site_modules(): array {
     $tr = site_ctx()['tr'];
     return [
-        ['id' => 'DI', 'title' => $tr ? 'Veri altyapısı' : 'Data infrastructure', 'desc' => $tr ? 'Ölçüm verisini denetleme, onaylama, saklama ve raporlama.' : 'Checking, approving, keeping and reporting measurement data.'],
+        ['id' => 'DI', 'title' => $tr ? 'Veri hazırlama ve yönetimi' : 'Data preparation and management', 'desc' => $tr ? 'Ölçüm verisini denetleme, onaylama, saklama ve raporlama.' : 'Checking, approving, keeping and reporting measurement data.'],
         ['id' => 'TM', 'title' => $tr ? 'Ağaç ölçümü' : 'Tree measurement', 'desc' => $tr ? 'Tek ağaç ölçümlerinden boy, çap, tepe tacı, yaş ve biçim.' : 'Height, diameter, crown, age and form from single-tree measurements.'],
         ['id' => 'SV', 'title' => $tr ? 'Gövde hacmi ve profili' : 'Stem volume and taper', 'desc' => $tr ? 'Seksiyon hacmi, gövde profili, ticari hacim ve boylama.' : 'Section volume, taper, merchantable volume and bucking.'],
         ['id' => 'BC', 'title' => $tr ? 'Biyokütle ve karbon' : 'Biomass and carbon', 'desc' => $tr ? 'Allometrik biyokütle, biyokütle genişletme faktörleri, karbon ve CO₂ (katsayılar sizden).' : 'Allometric biomass, expansion factors, carbon and CO₂ (coefficients are yours).'],

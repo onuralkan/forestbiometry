@@ -5,7 +5,7 @@
 <h3>Packages</h3>
 <ul>
 <li>Every approval in the Data Checker is added to the list and made active; the same package is not added twice (it is recognised by its SHA-256 fingerprint). Data approved before DI-03 are taken into the list as "earlier approval" on the first visit.</li>
-<li><b>Make active</b> hands the package to the tools; reload tool pages that are open. <b>Deactivate</b> on the tools index does not delete the package, it only stops the tools from seeing it.</li>
+<li><b>Make active</b> hands the package to the tools; reload tool pages that are open. <b>Deactivate</b> on the home page does not delete the package, it only stops the tools from seeing it.</li>
 <li><b>Details</b>: project details (name, inventory year, place, description, notes; the name is required, the year has four digits), a summary of the package (plots, periods, records, species, diameter range, measured and estimated heights, ages, coordinates, strata, warnings, excluded rows, change log, approval time, fingerprint) and record counts per plot × period.</li>
 <li><b>Copy</b> makes a new project with the same package; <b>Delete</b> asks first and cannot be undone. If the active package is deleted, the tools see no approved data.</li>
 </ul>
