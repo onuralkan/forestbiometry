@@ -4,7 +4,7 @@ import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
 import { tableFromText, tableFromSheet, detectDelimiter, decodeBytes, utf8Suspicious, cellText } from '../core/table.js';
 import { parseNumber, UNITS, defaultDecimal } from '../core/num.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { registerApproved } from '../core/projects.js';
 import { csvText, download, downloadCSV, downloadJSON, xlsxBlob, loadXLSX, XLSX_READ_OPTS } from '../core/export.js';
 
@@ -22,9 +22,9 @@ function blank() {
 }
 
 /* ---------------- persistence ---------------- */
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => {
   e.preventDefault(); const href = e.currentTarget.href; await flush(); location.href = href;
 });

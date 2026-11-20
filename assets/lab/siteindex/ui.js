@@ -3,7 +3,7 @@
 import * as S from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc, LIST_SEP } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
@@ -26,9 +26,9 @@ function blank() {
     fit: { imp: null, src: null, map: { series: null, plot: null, A: null, H: null }, decimal: null, decimalChosen: false, form: 'cr.ada.b0', pairing: 'consecutive', startMode: 'grid', start: {}, ageType: '', topDef: '', topNote: '', cit: '', open: false },
     mode: 'single', A: '', H: '', imp: null, src: null, map: { plot: null, period: null, A: null, H: null }, decimal: null, decimalChosen: false, dAge: null };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S0, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...S0, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 

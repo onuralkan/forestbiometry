@@ -2,7 +2,7 @@
 import * as C from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
@@ -20,9 +20,9 @@ function blank() {
   return { v: 1, step: 1, tab: 'table', imp: null, src: null, headerRow: 0, modelCol: 0, crit: {}, decimal: null, decimalChosen: false,
     excl: [], showVals: false, rd: { best: true, nb: 5, worst: true, nw: 5, extra: [] } };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 

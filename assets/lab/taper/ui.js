@@ -4,7 +4,7 @@ import * as FIT from './fit.js';
 import * as BK from './bucking.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
@@ -33,10 +33,9 @@ function blank() {
     opt: { stump: '0.3', dTop: '', step: '1', logOn: false, L: '', trim: '', minLen: '', shortTop: 'drop' }, sel: 0,
     buck: { on: false, method: 'value', objective: 'value', step: '0.1', bark: 'ib', currency: '', rows: [] } };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
-addEventListener('pagehide', () => { if (saveT) flush(); });   // a pending save is written when the page goes away
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const guess = (src, G) => { const H = src.headers.map(h => String(h).toLocaleLowerCase('tr').trim()), m = {}; for (const [k, names] of Object.entries(G)) { const i = H.findIndex(h => names.includes(h)); m[k] = i >= 0 ? i : null; } return m; };

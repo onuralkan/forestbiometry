@@ -3,7 +3,7 @@
 import * as B from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc, LIST_SEP } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { listCoefs, saveCoef, blankSet, form as formOf } from '../core/coef.js';
 import { mountCoefEditor } from '../core/coef-ui.js';
 import { EXTRA } from './coef-extra.js';
@@ -23,14 +23,14 @@ import { readDerived, volumeLookup, storeKey, KIND_VOLUME } from '../core/derive
 const BASE = './', KEY = 'session:' + B.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
-let S = blank(), R = null, sets = [], approved = null, saveT = null, dv = null, U = null;
+let S = blank(), R = null, sets = [], approved = null, dv = null, U = null;
 function blank() {
   return { v: 1, step: 1, tbl: null, ds: null, dsSrc: null, approach: 'allometric', comps: [{ key: 'c1', label: T('c.default'), CF: '' }], map: {}, total: {}, ec: 'unmeasured',
     sys: sysBlank(), mc: { B: String(MC.MC_DEFAULTS.B), seed: String(MC.MC_DEFAULTS.seed), level: '0.95' }, vol: { from: 'col', col: null, bark: 'ob', mode: 'bef', D: '', BEF: '', BCEF: '', R: '', fbark: 'ob', src: '', CF: '' } };
 }
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-function flush() { clearTimeout(saveT); saveT = null; return put(KEY, { ...S, saved: new Date().toISOString() }); }
-addEventListener('pagehide', () => { if (saveT) flush(); });
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const setsById = () => new Map(sets.map(s => [s.id, s]));
 const setLabel = s => { const fm = formOf(s.form); return `${fm ? (fm.formula[lang] || fm.formula.tr) : s.form}${[s.species, s.component].filter(Boolean).length ? ' · ' + [s.species, s.component].filter(Boolean).join(' · ') : ''} — ${s.source.citation}`; };

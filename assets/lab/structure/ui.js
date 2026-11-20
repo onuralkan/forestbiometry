@@ -7,7 +7,7 @@ import { listCoefs, saveCoef, blankSet } from '../core/coef.js';
 import { mountCoefEditor } from '../core/coef-ui.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { barChart, plotChart, svgForDownload } from '../core/chart.js';
@@ -30,9 +30,9 @@ function blank() {
     ccf: { all: '', bySp: {}, pairs: '', cit: '' },
     geo: { shape: 'circle-area', cx: '0', cy: '0', r: '', x0: '', y0: '', x1: '', y1: '', k: '4', edge: 'none', buffer: '5', wAngle: 'k', ciMode: 'knn', radius: '' } };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...st, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...st, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const hasXY = ds => !!ds && ds.trees.some(t => Number.isFinite(t.x) && Number.isFinite(t.y));

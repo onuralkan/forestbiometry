@@ -1548,7 +1548,7 @@ function attach(stemTrees, treeList) {
 
 // ---- assets/lab/core/store.js
 __fb_m["core/store.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
+__fb_x(__fb_e, { "autosave": () => autosave, "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
 // Browser-local storage for the tools section (IndexedDB, falls back to memory).
 // Nothing here leaves the browser. Keys in use:
 //   'session:<tool>'     autosaved working state of a tool (survives reloads and language switches)
@@ -1619,6 +1619,23 @@ async function keys(prefix = '') {
 }
 async function del(key) {
   try { const d = await db(); mem.delete(key); if (d) await tx('readwrite', s => s.delete(key)); } catch (e) { mem.delete(key); }
+}
+/**
+ * Autosave for a tool session. save() writes the state on the next task (so changes made in the same tick are included)
+ * and never postpones a pending write; calls made while a write is running are merged into one more write of the latest
+ * state. flush() resolves once the latest state is written. Debouncing (a timer restarted on every change) lost the last
+ * change when the page was reloaded or left within the delay: an IndexedDB write started on pagehide is not finished.
+ */
+function autosave(key, snapshot) {
+  let busy = null, dirty = false;
+  async function run() {
+    try { while (dirty) { dirty = false; await put(key, snapshot()); } }
+    finally { busy = null; }
+  }
+  return {
+    save() { dirty = true; if (!busy) busy = new Promise(r => setTimeout(r, 0)).then(run); },
+    flush() { dirty = true; return busy || (busy = run()); },
+  };
 }
 };
 
@@ -2862,7 +2879,7 @@ const FIT = __fb_r("taper/fit.js");
 const BK = __fb_r("taper/bucking.js");
 const { T } = __fb_r("taper/i18n.js");
 const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
-const { put, get, del } = __fb_r("core/store.js");
+const { put, get, del, autosave } = __fb_r("core/store.js");
 const { cellText } = __fb_r("core/table.js");
 const { parseNumber, detectDecimal, defaultDecimal } = __fb_r("core/num.js");
 const { download, downloadCSV, xlsxBlob, loadXLSX } = __fb_r("core/export.js");
@@ -2908,10 +2925,9 @@ function blank() {
     opt: { stump: '0.3', dTop: '', step: '1', logOn: false, L: '', trim: '', minLen: '', shortTop: 'drop' }, sel: 0,
     buck: { on: false, method: 'value', objective: 'value', step: '0.1', bark: 'ib', currency: '', rows: [] } };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
-addEventListener('pagehide', () => { if (saveT) flush(); });   // a pending save is written when the page goes away
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const guess = (src, G) => { const H = src.headers.map(h => String(h).toLocaleLowerCase('tr').trim()), m = {}; for (const [k, names] of Object.entries(G)) { const i = H.findIndex(h => names.includes(h)); m[k] = i >= 0 ? i : null; } return m; };

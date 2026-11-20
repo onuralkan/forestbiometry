@@ -2,7 +2,7 @@
 import * as C from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordButton } from '../core/record-ui.js';
 import { barChart, svgForDownload } from '../core/chart.js';
@@ -23,9 +23,9 @@ function blank() {
   return { v: 1, step: 1, tab: 'units', ds: null, dsSrc: null, scopeOk: false, status: null, emptyCombos: null,
     cls: null, design: { type: 'none', forestArea: '', strata: {} }, selPlot: null, selPer: null, nav: null, tbl: null };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const num = v => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : NaN; };

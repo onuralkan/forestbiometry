@@ -3,7 +3,7 @@ import * as MX from './calc.js';
 import * as NL from '../nlsreg/calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { saveCoef, blankSet } from '../core/coef.js';
 import { parse } from '../core/expr.js';
 import { renderImport, readImport } from '../core/importer.js';
@@ -19,12 +19,12 @@ const BASE = './', KEY = 'session:' + MX.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' 
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 function sig(x) { return x == null || !Number.isFinite(x) ? '–' : x === 0 ? '0' : Math.abs(x) >= 1e-4 && Math.abs(x) < 1e6 ? fmtNum(Number(x.toPrecision(7)), 14) : x.toExponential(6); }
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
-let S = blank(), R = null, saveT = null;
+let S = blank(), R = null;
 function blank() { return { v: 1, step: 1, tbl: null, g: null, y: null, models: [newModel()], cit: '', sp: '', saveIdx: 0, units: {}, cal: { idx: 0, text: '', pts: '', iterate: false }, lrt: [0, 1] }; }
 function newModel(kind = 'linear') { return { kind, method: 'REML', cov: 'diag', terms: [{ col: null, tf: 'ln' }], rInt: true, rTerms: [false], ready: 'cr', expr: '', map: {}, starts: {}, rpar: {}, vvar: '' }; }
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-function flush() { clearTimeout(saveT); saveT = null; return put(KEY, { ...S, saved: new Date().toISOString() }); }
-addEventListener('pagehide', () => { if (saveT) flush(); });
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const headers = () => S.tbl && S.tbl.src ? S.tbl.src.headers.map(h => String(h)) : [];
 const colName = c => c == null ? '–' : headers()[c] ?? '–';

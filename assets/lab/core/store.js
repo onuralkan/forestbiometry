@@ -69,3 +69,20 @@ export async function keys(prefix = '') {
 export async function del(key) {
   try { const d = await db(); mem.delete(key); if (d) await tx('readwrite', s => s.delete(key)); } catch (e) { mem.delete(key); }
 }
+/**
+ * Autosave for a tool session. save() writes the state on the next task (so changes made in the same tick are included)
+ * and never postpones a pending write; calls made while a write is running are merged into one more write of the latest
+ * state. flush() resolves once the latest state is written. Debouncing (a timer restarted on every change) lost the last
+ * change when the page was reloaded or left within the delay: an IndexedDB write started on pagehide is not finished.
+ */
+export function autosave(key, snapshot) {
+  let busy = null, dirty = false;
+  async function run() {
+    try { while (dirty) { dirty = false; await put(key, snapshot()); } }
+    finally { busy = null; }
+  }
+  return {
+    save() { dirty = true; if (!busy) busy = new Promise(r => setTimeout(r, 0)).then(run); },
+    flush() { dirty = true; return busy || (busy = run()); },
+  };
+}

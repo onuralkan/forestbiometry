@@ -1751,7 +1751,7 @@ function ncF1Quantile(p, nu, lambda) {
 
 // ---- assets/lab/core/store.js
 __fb_m["core/store.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
+__fb_x(__fb_e, { "autosave": () => autosave, "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
 // Browser-local storage for the tools section (IndexedDB, falls back to memory).
 // Nothing here leaves the browser. Keys in use:
 //   'session:<tool>'     autosaved working state of a tool (survives reloads and language switches)
@@ -1822,6 +1822,23 @@ async function keys(prefix = '') {
 }
 async function del(key) {
   try { const d = await db(); mem.delete(key); if (d) await tx('readwrite', s => s.delete(key)); } catch (e) { mem.delete(key); }
+}
+/**
+ * Autosave for a tool session. save() writes the state on the next task (so changes made in the same tick are included)
+ * and never postpones a pending write; calls made while a write is running are merged into one more write of the latest
+ * state. flush() resolves once the latest state is written. Debouncing (a timer restarted on every change) lost the last
+ * change when the page was reloaded or left within the delay: an IndexedDB write started on pagehide is not finished.
+ */
+function autosave(key, snapshot) {
+  let busy = null, dirty = false;
+  async function run() {
+    try { while (dirty) { dirty = false; await put(key, snapshot()); } }
+    finally { busy = null; }
+  }
+  return {
+    save() { dirty = true; if (!busy) busy = new Promise(r => setTimeout(r, 0)).then(run); },
+    flush() { dirty = true; return busy || (busy = run()); },
+  };
 }
 };
 
@@ -2638,7 +2655,7 @@ __fb_x(__fb_e, {  });
 const NL = __fb_r("nlsreg/calc.js");
 const { T } = __fb_r("nlsreg/i18n.js");
 const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
-const { put, get, del } = __fb_r("core/store.js");
+const { put, get, del, autosave } = __fb_r("core/store.js");
 const { saveCoef, blankSet } = __fb_r("core/coef.js");
 const { parse } = __fb_r("core/expr.js");
 const { renderImport, readImport } = __fb_r("core/importer.js");
@@ -2670,12 +2687,12 @@ const BASE = './', KEY = 'session:' + NL.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' 
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 function sig(x) { return x == null || !Number.isFinite(x) ? '–' : x === 0 ? '0' : Math.abs(x) >= 1e-4 && Math.abs(x) < 1e6 ? fmtNum(Number(x.toPrecision(7)), 14) : x.toExponential(6); }
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
-let S = blank(), R = null, saveT = null;
+let S = blank(), R = null;
 function blank() { return { v: 1, step: 1, tbl: null, y: null, models: [newModel()], cit: '', sp: '', saveIdx: 0, units: {}, ivIdx: 0, iv: {} }; }
 function newModel() { return { kind: 'ready', ready: 'cr', expr: '', map: {}, starts: {}, w: { kind: 'none', col: null, theta: '' } }; }
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-function flush() { clearTimeout(saveT); saveT = null; return put(KEY, { ...S, saved: new Date().toISOString() }); }
-addEventListener('pagehide', () => { if (saveT) flush(); });
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const headers = () => S.tbl && S.tbl.src ? S.tbl.src.headers.map(h => String(h)) : [];
 const colName = c => c == null ? '–' : headers()[c] ?? '–';

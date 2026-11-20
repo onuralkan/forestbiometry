@@ -3,7 +3,7 @@
 import * as D from './index.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc, LIST_SEP } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { download, downloadJSON, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
 import * as REP from './report.js';
@@ -43,9 +43,9 @@ function blank() {
     st: { tab: 'train', ncol: null, hcol: null, acol: null, set: 'ppm.weibull', terms: { RS: true, lnN: true, lnH: true, invA: true }, fit: 'nls', width: '2', ppmLoc: 'zero', back: 'median', loc: 'half-dmin', a: '0', xi: '', K: '5', done: false, model: null, cv: null, src: 'trained', imported: null, x: { N: '', H: '', A: '' }, pdone: false },
     trunc: { mode: 'none', L: '', U: '', nScope: 'observed' }, methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 

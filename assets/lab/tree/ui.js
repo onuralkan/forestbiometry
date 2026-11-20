@@ -12,7 +12,7 @@ import { mountCoefEditor } from '../core/coef-ui.js';
 import { TOOL } from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, xlsxBlob, loadXLSX } from '../core/export.js';
@@ -38,10 +38,9 @@ function blank() {
     c: { mode: 'radii', radii: '', d1: '', d2: '', H: '', base: '', dbh: '', widths: '', plot: '' },
     a: { rings: '', toH: '', ringsOut: '', coreAge: '', gD: '', gMai: '', cD: '', cBark: '', cToBh: '', cPith: true, cW: '', cN: '10', groups: [{ a: '', n: '', b: '', v: '' }], gNow: '', gThen: '', gYears: '', mTotal: '', mAge: '' } };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; const { src, ...d } = S.d; await put(KEY, { ...S, d, saved: new Date().toISOString() }); }
-addEventListener('pagehide', () => { if (saveT) flush(); });
+const AS = autosave(KEY, () => { const { src, ...d } = S.d; return { ...S, d, saved: new Date().toISOString() }; });
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const ptext = q => T('p.' + q.code, q);

@@ -1039,7 +1039,7 @@ function attach(stemTrees, treeList) {
 
 // ---- assets/lab/core/store.js
 __fb_m["core/store.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
+__fb_x(__fb_e, { "autosave": () => autosave, "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
 // Browser-local storage for the tools section (IndexedDB, falls back to memory).
 // Nothing here leaves the browser. Keys in use:
 //   'session:<tool>'     autosaved working state of a tool (survives reloads and language switches)
@@ -1110,6 +1110,23 @@ async function keys(prefix = '') {
 }
 async function del(key) {
   try { const d = await db(); mem.delete(key); if (d) await tx('readwrite', s => s.delete(key)); } catch (e) { mem.delete(key); }
+}
+/**
+ * Autosave for a tool session. save() writes the state on the next task (so changes made in the same tick are included)
+ * and never postpones a pending write; calls made while a write is running are merged into one more write of the latest
+ * state. flush() resolves once the latest state is written. Debouncing (a timer restarted on every change) lost the last
+ * change when the page was reloaded or left within the delay: an IndexedDB write started on pagehide is not finished.
+ */
+function autosave(key, snapshot) {
+  let busy = null, dirty = false;
+  async function run() {
+    try { while (dirty) { dirty = false; await put(key, snapshot()); } }
+    finally { busy = null; }
+  }
+  return {
+    save() { dirty = true; if (!busy) busy = new Promise(r => setTimeout(r, 0)).then(run); },
+    flush() { dirty = true; return busy || (busy = run()); },
+  };
 }
 };
 
@@ -1700,7 +1717,7 @@ __fb_x(__fb_e, {  });
 const V = __fb_r("secvol/calc.js");
 const { T } = __fb_r("secvol/i18n.js");
 const { lang, fmtNum, esc, LIST_SEP } = __fb_r("core/i18n.js");
-const { put, get, del } = __fb_r("core/store.js");
+const { put, get, del, autosave } = __fb_r("core/store.js");
 const { cellText } = __fb_r("core/table.js");
 const { detectDecimal, defaultDecimal } = __fb_r("core/num.js");
 const { download, downloadCSV, xlsxBlob, loadXLSX } = __fb_r("core/export.js");
@@ -1740,9 +1757,9 @@ function blank() {
     layout: 'ends', methods: { huber: true, smalian: true, newton: true, hohenadl: true }, top: 'cone', includeStump: false, dTop: '',
     areaMode: 'none', areaConst: '', useDs: false, adv: { buttressH: '1.3', dbhTol: '10', midTol: '0.01', hohTol: '0.05', topShare: '10' }, selTree: null, bark: 'ob' };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 

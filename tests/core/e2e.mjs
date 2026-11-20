@@ -71,6 +71,24 @@ ok((await en.locator('.coefcard', { hasText: 'contains no species or regional co
 await en.click('#cf-new'); await en.click('#cf-save');
 ok((await en.locator('#cf-msg').textContent()).includes('the citation is required'), 'English problem texts');
 ok(await en.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
+// session autosave (core/store.js): a change keeps being written while changes keep coming (a debounce restarted on
+// every change never wrote), flush() resolves with the latest state, and a reload right after a change keeps it
+{
+  const r = await page.evaluate(async () => {
+    const St = await import('/assets/lab/core/store.js'), st = { n: 0 }, A = St.autosave('test:autosave', () => ({ ...st }));
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    for (let i = 1; i <= 20; i++) { st.n = i; A.save(); await wait(40); }
+    const during = (await St.get('test:autosave'))?.n ?? null;
+    st.n = 99; A.save(); st.n = 100;           // a change made in the same tick after save() is included
+    await A.flush(); const flushed = (await St.get('test:autosave')).n;
+    st.n = 7; A.save(); await wait(30);
+    return { during, flushed, persistent: St.persistent };
+  });
+  ok(r.persistent && r.during >= 18 && r.flushed === 100, 'autosave writes during a stream of changes and flush writes the latest: ' + JSON.stringify(r));
+  await page.reload(); await page.waitForSelector('.coefcard');
+  const after = await page.evaluate(async () => { const St = await import('/assets/lab/core/store.js'), v = await St.get('test:autosave'); await St.del('test:autosave'); return v && v.n; });
+  ok(after === 7, 'state saved just before a reload is there after it: ' + after);
+}
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();
 console.log(`core e2e: ${pass} passed, ${fail} failed`);

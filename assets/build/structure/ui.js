@@ -1178,7 +1178,7 @@ const matchInputs = (inputs, fps) => inputs.map((x, i) => fps.includes(String(x.
 
 // ---- assets/lab/core/store.js
 __fb_m["core/store.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
+__fb_x(__fb_e, { "autosave": () => autosave, "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
 // Browser-local storage for the tools section (IndexedDB, falls back to memory).
 // Nothing here leaves the browser. Keys in use:
 //   'session:<tool>'     autosaved working state of a tool (survives reloads and language switches)
@@ -1249,6 +1249,23 @@ async function keys(prefix = '') {
 }
 async function del(key) {
   try { const d = await db(); mem.delete(key); if (d) await tx('readwrite', s => s.delete(key)); } catch (e) { mem.delete(key); }
+}
+/**
+ * Autosave for a tool session. save() writes the state on the next task (so changes made in the same tick are included)
+ * and never postpones a pending write; calls made while a write is running are merged into one more write of the latest
+ * state. flush() resolves once the latest state is written. Debouncing (a timer restarted on every change) lost the last
+ * change when the page was reloaded or left within the delay: an IndexedDB write started on pagehide is not finished.
+ */
+function autosave(key, snapshot) {
+  let busy = null, dirty = false;
+  async function run() {
+    try { while (dirty) { dirty = false; await put(key, snapshot()); } }
+    finally { busy = null; }
+  }
+  return {
+    save() { dirty = true; if (!busy) busy = new Promise(r => setTimeout(r, 0)).then(run); },
+    flush() { dirty = true; return busy || (busy = run()); },
+  };
 }
 };
 
@@ -2531,7 +2548,7 @@ const { listCoefs, saveCoef, blankSet } = __fb_r("core/coef.js");
 const { mountCoefEditor } = __fb_r("core/coef-ui.js");
 const { T } = __fb_r("structure/i18n.js");
 const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
-const { put, get, del } = __fb_r("core/store.js");
+const { put, get, del, autosave } = __fb_r("core/store.js");
 const { download, downloadCSV, xlsxBlob, loadXLSX } = __fb_r("core/export.js");
 const { downloadRecord, recordOption } = __fb_r("core/record-ui.js");
 const { barChart, plotChart, svgForDownload } = __fb_r("core/chart.js");
@@ -2572,9 +2589,9 @@ function blank() {
     ccf: { all: '', bySp: {}, pairs: '', cit: '' },
     geo: { shape: 'circle-area', cx: '0', cy: '0', r: '', x0: '', y0: '', x1: '', y1: '', k: '4', edge: 'none', buffer: '5', wAngle: 'k', ciMode: 'knn', radius: '' } };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...st, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...st, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const hasXY = ds => !!ds && ds.trees.some(t => Number.isFinite(t.x) && Number.isFinite(t.y));

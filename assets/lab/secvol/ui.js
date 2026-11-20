@@ -2,7 +2,7 @@
 import * as V from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc, LIST_SEP } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
@@ -28,9 +28,9 @@ function blank() {
     layout: 'ends', methods: { huber: true, smalian: true, newton: true, hohenadl: true }, top: 'cone', includeStump: false, dTop: '',
     areaMode: 'none', areaConst: '', useDs: false, adv: { buttressH: '1.3', dbhTol: '10', midTol: '0.01', hohTol: '0.05', topShare: '10' }, selTree: null, bark: 'ob' };
 }
-let saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-async function flush() { clearTimeout(saveT); saveT = null; await put(KEY, { ...S, saved: new Date().toISOString() }); }
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 $('langlink') && $('langlink').addEventListener('click', async e => { e.preventDefault(); const h = e.currentTarget.href; await flush(); location.href = h; });
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 

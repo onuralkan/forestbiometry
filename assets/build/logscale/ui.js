@@ -683,7 +683,7 @@ const matchInputs = (inputs, fps) => inputs.map((x, i) => fps.includes(String(x.
 
 // ---- assets/lab/core/store.js
 __fb_m["core/store.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
+__fb_x(__fb_e, { "autosave": () => autosave, "del": () => del, "get": () => get, "keys": () => keys, "persistent": () => persistent, "put": () => put });
 // Browser-local storage for the tools section (IndexedDB, falls back to memory).
 // Nothing here leaves the browser. Keys in use:
 //   'session:<tool>'     autosaved working state of a tool (survives reloads and language switches)
@@ -754,6 +754,23 @@ async function keys(prefix = '') {
 }
 async function del(key) {
   try { const d = await db(); mem.delete(key); if (d) await tx('readwrite', s => s.delete(key)); } catch (e) { mem.delete(key); }
+}
+/**
+ * Autosave for a tool session. save() writes the state on the next task (so changes made in the same tick are included)
+ * and never postpones a pending write; calls made while a write is running are merged into one more write of the latest
+ * state. flush() resolves once the latest state is written. Debouncing (a timer restarted on every change) lost the last
+ * change when the page was reloaded or left within the delay: an IndexedDB write started on pagehide is not finished.
+ */
+function autosave(key, snapshot) {
+  let busy = null, dirty = false;
+  async function run() {
+    try { while (dirty) { dirty = false; await put(key, snapshot()); } }
+    finally { busy = null; }
+  }
+  return {
+    save() { dirty = true; if (!busy) busy = new Promise(r => setTimeout(r, 0)).then(run); },
+    flush() { dirty = true; return busy || (busy = run()); },
+  };
 }
 };
 
@@ -1044,7 +1061,7 @@ __fb_x(__fb_e, {  });
 const LS = __fb_r("logscale/calc.js");
 const { T } = __fb_r("logscale/i18n.js");
 const { lang, fmtNum, esc } = __fb_r("core/i18n.js");
-const { put, get, del } = __fb_r("core/store.js");
+const { put, get, del, autosave } = __fb_r("core/store.js");
 const { renderImport, readImport } = __fb_r("core/importer.js");
 const { cellText } = __fb_r("core/table.js");
 const { parseNumber, detectDecimal, defaultDecimal } = __fb_r("core/num.js");
@@ -1064,14 +1081,14 @@ const { downloadRecord, recordOption } = __fb_r("core/record-ui.js");
 const BASE = './', KEY = 'session:' + LS.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = t => { const s = String(t ?? '').trim(); if (s === '') return null; const r = parseNumber(s.replace(',', '.'), '.'); return r.status === 'ok' ? r.value : NaN; };
-let S = blank(), R = null, saveT = null;
+let S = blank(), R = null;
 function blank() {
   return { v: 1, step: 1, mode: 'single', one: { ds: '', db: '', dm: '', L: '' }, tbl: null, logs: null,
     rules: { scribner: true, doyle: true, intl8: false, intl4: true }, o: { roundD: true, len: 'whole', max: '', round5: false } };
 }
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-function flush() { clearTimeout(saveT); saveT = null; return put(KEY, { ...S, saved: new Date().toISOString() }); }
-addEventListener('pagehide', () => { if (saveT) flush(); });
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 
 /* ---------------- step 1: logs ---------------- */

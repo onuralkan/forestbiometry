@@ -2,7 +2,7 @@
 import * as LS from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
-import { put, get, del } from '../core/store.js';
+import { put, get, del, autosave } from '../core/store.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
 import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
@@ -12,14 +12,14 @@ import { downloadRecord, recordOption } from '../core/record-ui.js';
 const BASE = './', KEY = 'session:' + LS.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = t => { const s = String(t ?? '').trim(); if (s === '') return null; const r = parseNumber(s.replace(',', '.'), '.'); return r.status === 'ok' ? r.value : NaN; };
-let S = blank(), R = null, saveT = null;
+let S = blank(), R = null;
 function blank() {
   return { v: 1, step: 1, mode: 'single', one: { ds: '', db: '', dm: '', L: '' }, tbl: null, logs: null,
     rules: { scribner: true, doyle: true, intl8: false, intl4: true }, o: { roundD: true, len: 'whole', max: '', round5: false } };
 }
-function save() { clearTimeout(saveT); saveT = setTimeout(flush, 250); }
-function flush() { clearTimeout(saveT); saveT = null; return put(KEY, { ...S, saved: new Date().toISOString() }); }
-addEventListener('pagehide', () => { if (saveT) flush(); });
+const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
+function save() { AS.save(); }
+function flush() { return AS.flush(); }
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 
 /* ---------------- step 1: logs ---------------- */
