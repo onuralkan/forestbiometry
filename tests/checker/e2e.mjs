@@ -31,35 +31,35 @@ async function act(rowText, btnText, reason, before) {
   await page.waitForSelector('#dlg', { state: 'hidden' });
 }
 
-// 1. sample data, TR
-await page.goto(URL + '?lang=tr');
+// 1. sample data
+await page.goto(URL);
 await page.click('#sample');
 await page.waitForSelector('.imp table.grid');
 ok((await page.locator('.imp[data-table="trees"] td').filter({ hasText: /^001$/ }).count()) > 0, 'preview keeps "001"');
 await shot('1-veri');
 await page.click('#to2');
 ok(await page.isChecked('input[name="dec"][value=","]'), 'comma pre-selected from unambiguous evidence');
-ok((await page.locator('.note', { hasText: 'ondalık virgül' }).count()) === 1, 'decimal evidence shown');
+ok((await page.locator('.note', { hasText: 'decimal comma' }).count()) === 1, 'decimal evidence shown');
 await shot('2-sutunlar');
 await page.click('#to3');
 await page.click('#run');
 await page.waitForSelector('.tiles');
-ok(await tileVal('Hata') === '4', 'summary: 4 errors');
-ok(await tileVal('Örnek alan') === '5', 'summary: 5 plots (001 and 1 distinct)');
+ok(await tileVal('Errors') === '4', 'summary: 4 errors');
+ok(await tileVal('Plots') === '5', 'summary: 5 plots (001 and 1 distinct)');
 await shot('3-ozet');
 
 // issues tab: fix, exclude, choose, suggestion, accept
 await page.click('#tab-issues');
 ok((await page.locator('table.issues tbody tr').count()) >= 8, 'issue list rendered');
 await shot('4-sorunlar');
-await act('27,x', 'Düzelt', 'Saha föyü kontrol edildi', () => page.fill('#dnew', '27,4'));
-await act('Mükerrer ölçüm anahtarı', 'Kaydı dışla', 'Boy 2,1 yazım hatası; diğer satır doğru');
-await act('farklı büyüklükler', 'Değer seç', 'Alan tablosuyla uyumlu');
-await act('farklı yazılmış', 'Öneriyi uygula', null);
+await act('27,x', 'Fix', 'Checked against the field sheet', () => page.fill('#dnew', '27,4'));
+await act('Duplicate measurement key', 'Exclude record', 'Height 2.1 is a typo; the other row is right');
+await act('has different sizes', 'Choose value', 'Agrees with the plot table');
+await act('spelled differently', 'Apply suggestion', null);
 await page.click('#tab-summary');
-ok(await tileVal('Hata') === '0', 'no errors after four logged actions');
+ok(await tileVal('Errors') === '0', 'no errors after four logged actions');
 await page.click('#tab-issues');
-await act('kontrol aralığının (1–200 cm)', 'Kabul et', 'Anıt ağaç, ölçüm doğrulandı');
+await act('outside the check range (1–200 cm)', 'Accept', 'Monumental tree, measurement verified');
 await page.click('#tab-log');
 ok((await page.locator('#panel tbody tr').count()) === 5, 'change log has 5 entries (edit, exclude, choice → row 16, suggestion, accept)');
 ok((await page.locator('#panel tbody tr', { hasText: '27,x' }).count()) === 1, 'old value kept in log');
@@ -84,30 +84,29 @@ ok(wb.SheetNames.length === 6, 'XLSX report with 6 sheets: ' + wb.SheetNames.joi
 const dataSheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[2]], { header: 1 });
 ok(dataSheet[1][1] === '001' && typeof dataSheet[1][6] === 'number', 'XLSX: ID stays text "001", dbh numeric');
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#x-data')]);
-const csvTr = (await (await import('node:fs/promises')).readFile(await dl2.path(), 'utf8')).replace(/^﻿/, '');
-ok(csvTr.split('\r\n')[1].startsWith('2,001,1,,2019,Pb,24.5,17.2'), 'TR CSV: "," and decimal point (language-independent)');
+const csv1 = (await (await import('node:fs/promises')).readFile(await dl2.path(), 'utf8')).replace(/^﻿/, '');
+ok(csv1.split('\r\n')[1].startsWith('2,001,1,,2019,Pb,24.5,17.2'), 'CSV: "," and decimal point');
 await shot('7-onay');
 
-// 2. language switch keeps state and numbers
+// 2. a reload keeps state and numbers
 await page.click('#tab-summary');
-const valsTr = await page.evaluate(() => [...document.querySelectorAll('.tile b')].map(b => b.textContent));
-await page.click('#langlink');
-await page.waitForURL(/lang=en/);
+const vals1 = await page.evaluate(() => [...document.querySelectorAll('.tile b')].map(b => b.textContent));
+await page.reload();
 await page.waitForSelector('.tabs');
 await page.click('#tab-summary');
-const valsEn = await page.evaluate(() => [...document.querySelectorAll('.tile b')].map(b => b.textContent));
-ok(valsTr.length === 7 && JSON.stringify(valsTr) === JSON.stringify(valsEn), 'summary numbers identical in TR and EN: ' + valsEn.join(','));
+const vals2 = await page.evaluate(() => [...document.querySelectorAll('.tile b')].map(b => b.textContent));
+ok(vals1.length === 7 && JSON.stringify(vals1) === JSON.stringify(vals2), 'summary numbers identical after a reload: ' + vals2.join(','));
 await page.click('#tab-approve');
-ok((await page.locator('.note.ok', { hasText: 'Approved: 17 records' }).count()) === 1, 'EN: approval still current after language switch');
+ok((await page.locator('.note.ok', { hasText: 'Approved: 17 records' }).count()) === 1, 'approval still current after a reload');
 const [dl3] = await Promise.all([page.waitForEvent('download'), page.click('#x-data')]);
-const csvEn = (await (await import('node:fs/promises')).readFile(await dl3.path(), 'utf8')).replace(/^﻿/, '');
-ok(csvEn.split('\r\n')[1].startsWith('2,001,1,,2019,Pb,24.5,17.2'), 'EN CSV: "," and decimal point, same values');
+const csv2 = (await (await import('node:fs/promises')).readFile(await dl3.path(), 'utf8')).replace(/^﻿/, '');
+ok(csv2.split('\r\n')[1].startsWith('2,001,1,,2019,Pb,24.5,17.2'), 'CSV after a reload: "," and decimal point, same values');
 await page.click('#tab-data');
-ok((await page.locator('.cellbtn', { hasText: '27,4' }).count()) === 1, 'EN view shows the source text unchanged (27,4)');
+ok((await page.locator('.cellbtn', { hasText: '27,4' }).count()) === 1, 'data view shows the source text unchanged (27,4)');
 await shot('8-en-veri');
 
 // 3. ambiguous decimals via paste: reported, the default point is pre-selected and can be changed
-await page.goto(URL + '?lang=tr');
+await page.goto(URL);
 await page.click('#steps [data-go="1"]');
 page.once('dialog', d => d.accept());
 await page.click('#reset');
@@ -115,12 +114,12 @@ await page.locator('.imp[data-table="trees"] details summary').click();
 await page.fill('.imp[data-table="trees"] textarea', 'plot\ttree\tspecies\tdbh\tarea\nA\t1\tPb\t1,250\t400\nA\t2\tPb\t2,500\t400\n');
 await page.click('.imp[data-table="trees"] [data-act="paste"]');
 await page.click('#to2');
-ok((await page.locator('.note.warn', { hasText: 'Belirsiz' }).count()) === 1, 'ambiguous decimals reported');
+ok((await page.locator('.note.warn', { hasText: 'Ambiguous' }).count()) === 1, 'ambiguous decimals reported');
 ok(!(await page.isDisabled('#to3')), 'can continue with the default');
 ok(await page.isChecked('input[name="dec"][value="."]') && !(await page.isChecked('input[name="dec"][value=","]')), 'point pre-selected by default');
 await page.check('input[name="dec"][value="."]');
 await page.click('#to3'); await page.click('#run');
-ok(await tileVal('Hata') === '2', 'dot chosen → "1,250" reported, not read as 1250');
+ok(await tileVal('Errors') === '2', 'dot chosen → "1,250" reported, not read as 1250');
 await shot('9-belirsiz');
 
 // 4a. XLSX upload: lazy-loaded reader, text IDs, dates, formula cached values only
@@ -132,13 +131,13 @@ await shot('9-belirsiz');
   await page.click('#steps [data-go="1"]'); page.once('dialog', d => d.accept()); await page.click('#reset');
   await page.setInputFiles('.imp[data-table="trees"] input[type=file]', { name: 'test.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: buf });
   await page.waitForSelector('.imp[data-table="trees"] .fname');
-  ok((await page.locator('.note', { hasText: 'formüller ve makrolar çalıştırılmaz' }).count()) === 1, 'XLSX: formula/macro note shown');
+  ok((await page.locator('.note', { hasText: 'macros in the Excel file are not run' }).count()) === 1, 'XLSX: formula/macro note shown');
   ok((await page.locator('.imp[data-table="trees"] td', { hasText: /^001$/ }).count()) === 1, 'XLSX: "001" kept in preview');
   ok((await page.locator('.imp[data-table="trees"] td', { hasText: '2024-07-01' }).count()) === 1, 'XLSX: date shown as ISO');
   await page.click('#to2');
   await page.check('input[name="dec"][value=","]');
   await page.click('#to3'); await page.click('#run');
-  ok(await tileVal('Hata') === '0' && await tileVal('Dönem') === '2', 'XLSX checked: no errors, two periods');
+  ok(await tileVal('Errors') === '0' && await tileVal('Periods') === '2', 'XLSX checked: no errors, two periods');
 }
 
 // 4. large table (10 000 rows)
@@ -152,18 +151,18 @@ const t0 = Date.now();
 await page.click('#to2'); await page.click('#to3'); await page.click('#run');
 await page.waitForSelector('.tiles');
 const dt = Date.now() - t0;
-ok(await tileVal('Ağaç kaydı') === '10000', '10 000 records loaded (no grouping)');
+ok(await tileVal('Tree records') === '10000', '10 000 records loaded (no grouping)');
 ok(dt < 5000, `10 000 rows checked in ${dt} ms`);
 await page.click('#tab-data');
 ok((await page.locator('table.data tbody tr').count()) === 200, 'data view paged (200)');
 
 // 5. tools index shows the handoff; phone and dark screenshots
-await page.goto(BASE + '/?lang=tr');
+await page.goto(BASE + '/');
 ok(await page.waitForSelector('#handoff:not([hidden])', { timeout: 5000 }).then(() => true, () => false), 'tools index shows the approved dataset');
 await shot('10-dizin');
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
 phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr');
+await phone.goto(URL);
 await phone.waitForSelector('.tabs, .imp');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
 await shot('11-telefon-koyu', phone);

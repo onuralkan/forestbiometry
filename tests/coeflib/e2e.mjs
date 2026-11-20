@@ -41,33 +41,33 @@ const seed = async sets => page.evaluate(async ([sets, bad]) => {
 }, [sets, BAD]);
 const count = () => page.locator('#libtab tbody tr[data-id]').count();
 
-await page.goto(URL + '?lang=tr'); await page.waitForSelector('#sumcard');
+await page.goto(URL); await page.waitForSelector('#sumcard');
 ok((await page.locator('.b-ids').textContent()).trim() === 'DI-02' && (await page.locator('.b-ver').textContent()).includes(L.TOOL.version), 'tool id DI-02 and version');
 ok(await page.locator('#sumnone').count() === 1 && await page.isDisabled('#b-backup'), 'empty library: explained, nothing to back up');
 
 // a set entered through the editor (growth, no extra fields)
 await page.selectOption('#e-tool', 'growth'); await page.waitForSelector('#cf-new'); await page.click('#cf-new');
 for (const [k, v] of Object.entries({ b0: '25', b1: '0.05', b2: '1.1' })) await page.fill('#cf-p-' + k, v);
-await page.click('#cf-save'); ok((await page.textContent('#cf-msg')).includes('kaynak'), 'editor: saving without a citation refused');
+await page.click('#cf-save'); ok((await page.textContent('#cf-msg')).includes('citation is required'), 'editor: saving without a citation refused');
 await page.fill('#cf-cit', 'editor e2e'); await page.click('#cf-save'); await page.waitForSelector('#libtab');
-ok(await count() === 1 && (await page.textContent('#sumline')).includes('1 set'), 'set saved from the editor appears in the list and the summary');
+ok(await count() === 1 && (await page.textContent('#sumline')).includes('1 set(s)'), 'set saved from the editor appears in the list and the summary');
 
 await seed(SETS); await page.reload(); await page.waitForSelector('#libtab');
-ok(await count() === 6 && (await page.textContent('#sumline')).includes('6 set'), 'six sets of three tools listed');
-ok((await page.textContent('#sumdup')).includes('1 grup') && (await page.textContent('#sumprob')).includes('1 set'), 'one duplicate group and one set with problems pointed out');
-ok((await page.textContent(`#libtab tr[data-id="${BAD.id}"]`)).includes('sorunlu') && (await page.textContent(`#libtab tr[data-id="${SETS[1].id}"]`)).includes('aynı katsayılı'), 'row states: problems, duplicate');
+ok(await count() === 6 && (await page.textContent('#sumline')).includes('6 set(s)'), 'six sets of three tools listed');
+ok((await page.textContent('#sumdup')).includes('1 group(s)') && (await page.textContent('#sumprob')).includes('1 set(s)'), 'one duplicate group and one set with problems pointed out');
+ok((await page.textContent(`#libtab tr[data-id="${BAD.id}"]`)).includes('has problems') && (await page.textContent(`#libtab tr[data-id="${SETS[1].id}"]`)).includes('a set with the same coefficients'), 'row states: problems, duplicate');
 // filters
 await page.selectOption('#f-tool', 'taper'); ok(await count() === 2, 'tool filter: two taper sets');
-await page.selectOption('#f-tool', ''); await page.fill('#f-q', 'ISPARTA'); ok(await count() === 1 && (await page.inputValue('#f-q')) === 'ISPARTA', 'search ignores case and Turkish I (ISPARTA → Isparta); the box keeps its text');
+await page.selectOption('#f-tool', ''); await page.fill('#f-q', 'ISPARTA'); ok(await count() === 1 && (await page.inputValue('#f-q')) === 'ISPARTA', 'search ignores case (ISPARTA → Isparta); the box keeps its text');
 await page.fill('#f-q', ''); await page.check('#f-prob'); ok(await count() === 1, 'only sets with problems'); await page.uncheck('#f-prob');
 // details at full precision, with the problem in words
 await page.click(`#libtab tr[data-id="${SETS[0].id}"] [data-act="more"]`);
 ok((await page.textContent(`[data-detail="${SETS[0].id}"]`)).includes(String(SETS[0].params.b0)) && String(SETS[0].params.b0).length >= 18, `details: coefficient as stored (full precision, ${SETS[0].params.b0})`);
 await page.click(`#libtab tr[data-id="${BAD.id}"] [data-act="more"]`);
-ok((await page.textContent(`[data-detail="${BAD.id}"]`)).includes('Kabuk'), "details: the tool's own missing field named (bark side)");
+ok((await page.textContent(`[data-detail="${BAD.id}"]`)).includes('Bark'), "details: the tool's own missing field named (bark side)");
 // copy, delete
 await page.click(`#libtab tr[data-id="${SETS[2].id}"] [data-act="copy"]`); await page.waitForFunction(() => document.querySelectorAll('#libtab tbody tr[data-id]').length === 7);
-ok((await page.textContent('#status')).includes('Kopya') && (await page.textContent('#sumdup')).includes('2 grup'), 'copy: a seventh set, now a second duplicate group');
+ok((await page.textContent('#status')).includes('Copy created') && (await page.textContent('#sumdup')).includes('2 group(s)'), 'copy: a seventh set, now a second duplicate group');
 await page.click(`#libtab tr[data-id="${BAD.id}"] [data-act="del"]`); await page.waitForFunction(() => document.querySelectorAll('#libtab tbody tr[data-id]').length === 6);
 ok(await page.locator('#sumprob').count() === 0, 'delete (confirmed): the set with problems is gone');
 // edit opens the tool's editor with its own fields; a change is saved
@@ -87,18 +87,18 @@ ok(rows.length === 7 && rows[0][0] === 'id', 'Excel listing: one row per set');
 await page.evaluate(async () => { const S = await import('/assets/lab/core/store.js'); for (const k of await S.keys('coef:')) await S.del(k); });
 await page.reload(); await page.waitForSelector('#sumnone');
 await page.setInputFiles('#b-restore', bfile); await page.waitForSelector('#rplan');
-ok((await page.textContent('#rsum')).includes('6 yeni') && await page.locator('#rtab tbody tr').count() === 6 && await page.locator('#libtab').count() === 0, 'restore preview: six new sets, nothing stored before Apply');
+ok((await page.textContent('#rsum')).includes('6 new') && await page.locator('#rtab tbody tr').count() === 6 && await page.locator('#libtab').count() === 0, 'restore preview: six new sets, nothing stored before Apply');
 await page.click('#r-apply'); await page.waitForSelector('#libtab');
-ok(await count() === 6 && (await page.textContent('#status')).includes('6 set yüklendi'), 'restore applied: six sets back');
+ok(await count() === 6 && (await page.textContent('#status')).includes('6 set(s) loaded'), 'restore applied: six sets back');
 await page.setInputFiles('#b-restore', bfile); await page.waitForSelector('#rplan');
-ok((await page.textContent('#rsum')).includes('6 aynı') && await page.isDisabled('#r-apply'), 'restoring the same file again: all identical, nothing to apply');
+ok((await page.textContent('#rsum')).includes('6 identical') && await page.isDisabled('#r-apply'), 'restoring the same file again: all identical, nothing to apply');
 await page.click('#r-cancel');
 await page.setInputFiles('#b-restore', { name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('{"schema":"other"}') }); await page.waitForSelector('#rbad');
 ok(true, 'a file that is not a library is refused');
-// English; phone
-await page.goto(URL + '?lang=en'); await page.waitForSelector('#libtab'); ok((await page.textContent('#sumcard')).includes('Download a backup') && (await page.textContent('#libtab')).includes('Stem Taper'), 'English page');
+// English page text; phone
+await page.goto(URL); await page.waitForSelector('#libtab'); ok((await page.textContent('#sumcard')).includes('Download a backup') && (await page.textContent('#libtab')).includes('Stem Taper'), 'English page');
 const ph = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' }); ph.on('pageerror', e => errors.push(e.message));
-await ph.goto(URL + '?lang=tr'); await ph.waitForSelector('#sumcard'); ok(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'phone: no horizontal scroll');
+await ph.goto(URL); await ph.waitForSelector('#sumcard'); ok(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'phone: no horizontal scroll');
 if (SHOTS) await ph.screenshot({ path: path.join(SHOTS, 'coeflib-phone.png'), fullPage: true });
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();

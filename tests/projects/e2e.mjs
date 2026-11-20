@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const P = await import('../../assets/lab/core/projects.js');
 const { sha256JSON } = await import('../../assets/lab/core/record.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/veri-yoneticisi.php?lang=tr';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/veri-yoneticisi.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -35,17 +35,17 @@ const small = { schema: 'forest-dataset/1', created: '2026-11-16T09:00:00.000Z',
 // 1. empty, then a package approved before DI-03 is adopted
 await page.goto(URL);
 await page.waitForSelector('#actnone');
-ok(await page.locator('#ptab').count() === 0 && (await page.textContent('#listline')).includes('paket yok'), 'empty: no active package, no list');
+ok(await page.locator('#ptab').count() === 0 && (await page.textContent('#listline')).includes('No packages'), 'empty: no active package, no list');
 await page.evaluate(async ds => { const S = await import('/assets/lab/core/store.js'); await S.put('dataset:approved', ds); }, small);
 await page.reload(); await page.waitForSelector('#ptab');
-ok(await rows() === 1 && await page.locator('#ptab tr[data-active="1"]').count() === 1 && (await page.textContent('#ptab')).includes('önceki onay'), 'an earlier approval adopted as a project and active');
-ok((await page.textContent('#actname')).includes('deneme-alan') && (await page.textContent('#actline')).includes('Kayıt: 2'), 'active package shown with its counts');
+ok(await rows() === 1 && await page.locator('#ptab tr[data-active="1"]').count() === 1 && (await page.textContent('#ptab')).includes('earlier approval'), 'an earlier approval adopted as a project and active');
+ok((await page.textContent('#actname')).includes('deneme-alan') && (await page.textContent('#actline')).includes('Records: 2'), 'active package shown with its counts');
 
 // 2. import the sample package: preview, apply; importing it again changes nothing
 await page.setInputFiles('#b-imp', sampleFile); await page.waitForSelector('#rplan');
 ok(await page.locator('#rplan li[data-act="add"]').count() === 1 && await rows() === 1, 'import preview: one new package, nothing changed yet');
 await page.click('#r-apply'); await page.waitForSelector('#ptab tbody tr[data-id] >> nth=1');
-ok(await rows() === 2 && (await page.textContent('#status')).includes('1 paket eklendi'), 'applied: two packages');
+ok(await rows() === 2 && (await page.textContent('#status')).includes('1 package(s) added'), 'applied: two packages');
 await page.setInputFiles('#b-imp', sampleFile); await page.waitForSelector('#rplan');
 ok(await page.locator('#rplan li[data-act="same"]').count() === 1 && await page.isDisabled('#r-apply'), 'the same package again: recognised, nothing to add');
 await page.click('#r-cancel');
@@ -55,13 +55,13 @@ ok(true, 'another kind of file reported');
 await page.click('#r-cancel').catch(() => {});
 
 // 3. make the sample active: the tools read it
-const sName = P.defaultName(sample, 'tr');
+const sName = P.defaultName(sample, 'en');
 await rowOf(sName).locator('[data-act="activate"]').click(); await page.waitForSelector(`#ptab tr[data-active="1"]:has-text("${sName}")`);
 ok((await rowOf(sName).getAttribute('data-active')) === '1' && (await idb('dataset:approved')).source.trees.name === sample.source.trees.name, 'activated: its package is handed to the tools');
 ok(await sha256JSON(await idb('dataset:approved')) === await sha256JSON(sample), 'the package handed over is unchanged');
-await page.goto(BASE + '/ornek-alan.php?lang=tr'); await page.waitForSelector('#useapp');
+await page.goto(BASE + '/ornek-alan.php'); await page.waitForSelector('#useapp');
 ok((await page.textContent('#step1')).includes(sample.source.trees.name), 'Plot & Stand Metrics offers the active package');
-await page.goto(BASE + '/?lang=tr'); await page.waitForSelector('#handoff:not([hidden])');
+await page.goto(BASE + '/'); await page.waitForSelector('#handoff:not([hidden])');
 ok((await page.textContent('#handoff-text')).includes(sName), 'tools index names the active project');
 
 // 4. details, editing, copy, download
@@ -73,14 +73,14 @@ ok((await page.textContent('.pdetail dl')).includes(String(s.records)), 'summary
 await page.fill('form.pmeta input[name="name"]', ''); await page.click('form.pmeta button[type="submit"]');
 ok(await page.locator('form.pmeta .mprob:not([hidden])').count() === 1, 'a name is required');
 await page.fill('form.pmeta input[name="name"]', 'Bolu Aladağ envanteri'); await page.fill('form.pmeta input[name="year"]', '20x4'); await page.click('form.pmeta button[type="submit"]');
-ok((await page.textContent('form.pmeta .mprob')).includes('dört haneli'), 'a bad year is refused');
+ok((await page.textContent('form.pmeta .mprob')).includes('four digits'), 'a bad year is refused');
 await page.fill('form.pmeta input[name="year"]', '2024'); await page.fill('form.pmeta input[name="location"]', 'Bolu'); await page.fill('form.pmeta textarea[name="notes"]', 'deneme notu');
 await page.click('form.pmeta button[type="submit"]'); await page.waitForSelector('#ptab tr:has-text("Bolu Aladağ envanteri")');
 ok((await rowOf('Bolu Aladağ envanteri').textContent()).includes('2024') && (await page.textContent('#actname')).includes('Bolu Aladağ envanteri'), 'details saved; list and active card updated');
 ok(await sha256JSON(await idb('dataset:approved')) === await sha256JSON(sample), 'editing details does not touch the package');
 await shot('di03-1-yonetici');
-await rowOf('Bolu Aladağ envanteri').locator('[data-act="copy"]').click(); await page.waitForSelector('#ptab tr:has-text("(kopya)")');
-ok(await rows() === 3 && (await page.textContent('#ptab')).includes('kopya'), 'copy added');
+await rowOf('Bolu Aladağ envanteri').locator('[data-act="copy"]').click(); await page.waitForSelector('#ptab tr:has-text("(copy)")');
+ok(await rows() === 3 && (await page.textContent('#ptab')).includes('(copy)'), 'copy added');
 const [d1] = await Promise.all([page.waitForEvent('download'), rowOf('deneme-alan').locator('[data-act="dl"]').click()]);
 ok(await sha256JSON(JSON.parse(await readFile(await d1.path(), 'utf8'))) === await sha256JSON(small), 'a package downloads as the data package itself');
 const [d2] = await Promise.all([page.waitForEvent('download'), page.click('#b-backup')]);
@@ -88,7 +88,7 @@ const lib = JSON.parse(await readFile(await d2.path(), 'utf8'));
 ok(lib.schema === 'forest-project-library/1' && lib.projects.length === 3 && lib.projects.some(p => p.name === 'Bolu Aladağ envanteri' && p.year === 2024 && p.notes === 'deneme notu'), 'backup holds every project with its details');
 
 // 5. delete: inactive first, then the active one
-await rowOf('(kopya)').locator('[data-act="del"]').click(); await page.waitForFunction(() => document.querySelectorAll('#ptab tbody tr[data-id]').length === 2);
+await rowOf('(copy)').locator('[data-act="del"]').click(); await page.waitForFunction(() => document.querySelectorAll('#ptab tbody tr[data-id]').length === 2);
 ok((await idb('dataset:approved')) !== null, 'deleting an inactive package keeps the active one');
 await rowOf('Bolu Aladağ envanteri').locator('[data-act="del"]').click(); await page.waitForSelector('#actnone');
 ok(await rows() === 1 && (await idb('dataset:approved')) === null && (await idb('project:active')) === null, 'deleting the active package: no package active');
@@ -100,15 +100,15 @@ await page.click('#r-apply'); await page.waitForFunction(() => document.querySel
 ok(await page.locator('#ptab tr:has-text("Bolu Aladağ envanteri")').count() === 1, 'restored with its details');
 
 // 6. tools index: deactivate keeps the package in the manager (the Data Checker's approval is tested in tests/checker/e2e.mjs)
-await page.goto(BASE + '/?lang=tr');
+await page.goto(BASE + '/');
 await page.evaluate(async () => { const P = await import('/assets/lab/core/projects.js'); const l = await P.listProjects(); await P.setActive(l[0].id); });
 await page.reload(); await page.waitForSelector('#handoff:not([hidden])');
 const nBefore = await page.evaluate(async () => (await (await import('/assets/lab/core/projects.js')).listProjects()).length);
 await page.click('#handoff-clear'); await page.waitForSelector('#handoff[hidden]', { state: 'attached' });
 ok((await idb('dataset:approved')) === null && await page.evaluate(async () => (await (await import('/assets/lab/core/projects.js')).listProjects()).length) === nBefore, 'tools index: deactivate keeps the package in the manager');
 
-// 7. English, phone
-await page.goto(BASE + '/veri-yoneticisi.php?lang=en'); await page.waitForSelector('#ptab');
+// 7. English page text, phone
+await page.goto(URL); await page.waitForSelector('#ptab');
 ok((await page.textContent('h1')).includes('Inventory Data Manager') && (await page.textContent('#actcard')).includes('No active package'), 'English');
 const phone = await ctx.newPage(); await phone.setViewportSize({ width: 390, height: 800 });
 await phone.goto(URL); await phone.waitForSelector('#ptab');

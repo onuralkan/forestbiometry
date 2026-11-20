@@ -24,12 +24,12 @@ page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const dl = async btn => { const [d] = await Promise.all([page.waitForEvent('download'), page.click(btn)]); return d; };
 const csvOf = async btn => (await readFile(await (await dl(btn)).path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
-const trNum = s => { const t = String(s).trim(); if (/\d\.\d/.test(t)) throw new Error('decimal point on the Turkish screen: ' + t); return parseFloat(t.replace(',', '.')); };   // Turkish screens use a decimal comma (19 Nov 2026)
+const enNum = s => { const t = String(s).trim(); if (/\d,\d/.test(t)) throw new Error('decimal comma on the English screen: ' + t); return parseFloat(t); };   // the English site uses a decimal point (20 Nov 2026)
 const cellsOf = async (sel) => page.evaluate(s => [...document.querySelectorAll(s)].map(tr => [...tr.children].map(td => td.textContent.trim())), sel);
 const tab = async t => { await page.click('#tab-' + t); await page.waitForSelector(`#panel[aria-labelledby="tab-${t}"]`); };
 
-// 1. sample (8 plots), TR: plot-based CV by default; no standard errors, intervals or AIC
-await page.goto(URL + '?lang=tr');
+// 1. sample (8 plots): plot-based CV by default; no standard errors, intervals or AIC
+await page.goto(URL + '?lang=en');
 await page.click('#sample'); await page.waitForSelector('#impbox .fname');
 await page.click('#to2');
 ok(await page.inputValue('#dcol') === '3' && await page.inputValue('#hcol') === '4' && await page.inputValue('#pcol') === '0' && await page.inputValue('#scol') === '2', 'columns recognised');
@@ -38,22 +38,22 @@ ok(await page.isChecked('input[name="cv"][value="plot"]'), 'plot-based CV chosen
 ok(await page.inputValue('#bh') === '1.3', 'breast height 1.3 m by default');
 await shot('hd-2-ayarlar');
 await page.click('#calc'); await page.waitForSelector('#ptab', { timeout: 60000 });
-ok((await page.locator('#ptab tbody tr').count()) === 6 && (await page.locator('#ptab td', { hasText: 'yakınsadı' }).count()) === 6, 'six models converged');
-ok((await page.locator('.statement', { hasText: '8 örnek alan' }).count()) === 1, 'multi-plot statement shown');
-ok((await page.locator('#ptab', { hasText: 'Standart hata' }).count()) === 0, 'no standard errors with 8 plots');
+ok((await page.locator('#ptab tbody tr').count()) === 6 && (await page.locator('#ptab td', { hasText: 'converged' }).count()) === 6, 'six models converged');
+ok((await page.locator('.statement', { hasText: 'The data contain 8 plots' }).count()) === 1, 'multi-plot statement shown');
+ok((await page.locator('#ptab', { hasText: 'Std. error' }).count()) === 0, 'no standard errors with 8 plots');
 const wRow = (await cellsOf('#ptab tr[data-model="weibull"]'))[0];
-ok(Math.abs(trNum(wRow[3].split('Std')[0]) - REF.all.fits.weibull.theta[0]) < 1e-5, 'Weibull a matches SciPy: ' + wRow[3]);
-ok((await page.locator('.small', { hasText: 'Boyu eksik (tahmin edilecek) ağaç' }).count()) === 1 && (await page.locator('.small.muted', { hasText: '1 okunamayan boy, 1 boyu bh' }).count()) === 1, 'exclusions reported');
+ok(Math.abs(enNum(wRow[3].split('Std')[0]) - REF.all.fits.weibull.theta[0]) < 1e-5, 'Weibull a matches SciPy: ' + wRow[3]);
+ok((await page.locator('.small', { hasText: 'Trees without height (to be predicted)' }).count()) === 1 && (await page.locator('.small.muted', { hasText: '1 unreadable heights, 1 heights at or below bh' }).count()) === 1, 'exclusions reported');
 await shot('hd-3-modeller');
 await tab('compare');
-ok((await page.locator('#ctab th', { hasText: 'AIC' }).count()) === 0 && (await page.locator('#panel', { hasText: 'AIC/BIC verilmez' }).count()) === 1, 'AIC withheld for multi-plot data, reason given');
-ok((await page.locator('#panel .note', { hasText: 'Örnek alan bazında; 8 kat' }).count()) === 1, 'CV labelled as plot-based');
-const cvRowsTR = await cellsOf('#cvtab tbody tr[data-model]');
-REF.all.cv_plot.models.forEach((m, k) => ok(Math.abs(trNum(cvRowsTR[k][1]) - m.rmse) < 6e-5, `CV RMSE ${cvRowsTR[k][0]} ${cvRowsTR[k][1]} vs ${m.rmse}`));
-ok(Math.abs(trNum((await cellsOf('#cvsel'))[0][1]) - REF.all.cv_plot.selection.rmse) < 6e-5, 'selection-procedure RMSE');
+ok((await page.locator('#ctab th', { hasText: 'AIC' }).count()) === 0 && (await page.locator('#panel', { hasText: 'No AIC/BIC' }).count()) === 1, 'AIC withheld for multi-plot data, reason given');
+ok((await page.locator('#panel .note', { hasText: 'By plot; 8 folds' }).count()) === 1, 'CV labelled as plot-based');
+const cvRows = await cellsOf('#cvtab tbody tr[data-model]');
+REF.all.cv_plot.models.forEach((m, k) => ok(Math.abs(enNum(cvRows[k][1]) - m.rmse) < 6e-5, `CV RMSE ${cvRows[k][0]} ${cvRows[k][1]} vs ${m.rmse}`));
+ok(Math.abs(enNum((await cellsOf('#cvsel'))[0][1]) - REF.all.cv_plot.selection.rmse) < 6e-5, 'selection-procedure RMSE');
 await shot('hd-4-karsilastirma');
 await tab('charts');
-ok((await page.locator('#panel .note', { hasText: 'bir model seçin' }).count()) === 1, 'charts ask for a model before residual plots');
+ok((await page.locator('#panel .note', { hasText: 'Choose a model for residual charts' }).count()) === 1, 'charts ask for a model before residual plots');
 await page.selectOption('#msel', 'weibull');
 ok((await page.locator('#ch-data circle').count()) === REF.all.n && (await page.locator('#ch-data path.ch-line').count()) === 6, 'data points and six curves');
 ok((await page.locator('#ch-data path.ch-dash, #ch-data path.ch-dot').count()) === 0, 'no interval bands with 8 plots');
@@ -66,49 +66,50 @@ ok((await page.locator('#mtab tbody tr').count()) === nMiss, `missing heights li
 ok((await page.locator('#mtab tr.tail').count()) === 2 && (await page.locator('#mtab tr.tail', { hasText: '95' }).count()) === 1, 'two predictions outside the diameter range flagged');
 await page.fill('#nd', '10; 30\n120');
 ok((await page.locator('#ndtab tbody tr').count()) === 3 && (await page.locator('#ndtab tr.tail').count()) === 1, 'new diameters: 120 cm flagged outside');
-ok((await page.locator('#ndtab th', { hasText: 'tahmin aralığı' }).count()) === 0 && (await page.locator('#ndout', { hasText: 'Aralık verilmez' }).count()) === 1, 'no intervals for multi-plot data, reason given');
+ok((await page.locator('#ndtab th', { hasText: 'prediction interval' }).count()) === 0 && (await page.locator('#ndout', { hasText: 'No intervals' }).count()) === 1, 'no intervals for multi-plot data, reason given');
 await shot('hd-6-tahmin');
 // export: measured and predicted heights kept apart
 await tab('export');
 const t = await csvOf('#x-t'), head = parseDelimited(t[0], ',')[0], rows = t.slice(1).filter(Boolean).map(l => parseDelimited(l, ',')[0]);
-ok(head.join() === 'satir,ornek_alan,tur,cap_kaynak,cap_cm,boy_kaynak,boy_olculen_m,durum,boy_tahmin_m,tahmin_modeli,cap_araligi_disinda,model_degeri_m,artik_olculen_eksi_tahmin_m', 'TR tree table headers');
-const iH = head.indexOf('boy_olculen_m'), iP = head.indexOf('boy_tahmin_m'), iS = head.indexOf('boy_kaynak'), iSt = head.indexOf('durum'), iO = head.indexOf('cap_araligi_disinda');
+ok(t[0] === 'row,plot,species,dbh_source,dbh_cm,height_source,height_measured_m,state,height_predicted_m,prediction_model,outside_dbh_range,model_value_m,residual_meas_minus_pred_m', 'EN tree table headers');
+const iH = head.indexOf('height_measured_m'), iP = head.indexOf('height_predicted_m'), iS = head.indexOf('height_source'), iSt = head.indexOf('state'), iO = head.indexOf('outside_dbh_range');
 ok(rows.length === FIX.length, 'every source row exported');
 ok(rows.every((r, k) => r[iS] === FIX[k][4]), 'source height text exported unchanged');
-ok(rows.filter(r => r[iSt] === 'ölçülen, fit işleminde').every(r => r[iP] === '' && r[iH] !== ''), 'measured rows: predicted column empty');
-ok(rows.filter(r => r[iSt] === 'boy eksik, tahmin').every(r => r[iH] === '' && r[iP] !== ''), 'missing rows: measured column empty, prediction filled');
+ok(rows.filter(r => r[iSt] === 'measured, fitted').every(r => r[iP] === '' && r[iH] !== ''), 'measured rows: predicted column empty');
+ok(rows.filter(r => r[iSt] === 'height missing, predicted').every(r => r[iH] === '' && r[iP] !== ''), 'missing rows: measured column empty, prediction filled');
 ok(rows.filter(r => r[iP] !== '').length === nMiss, 'predictions only for missing heights');
-ok(rows.find(r => r[4] === '95').at(iO) === 'evet' && rows.filter(r => r[iO] === 'evet').length === 2, 'out-of-range flag in export');
+ok(rows.find(r => r[4] === '95').at(iO) === 'yes' && rows.filter(r => r[iO] === 'yes').length === 2, 'out-of-range flag in export');
 ok(rows.find(r => r[1] === 'P1' && r[iS] === '1.2')[iSt].includes('≤ bh'), 'h ≤ bh row reported, not fitted');
 
 // 2. one plot (filter ornek_alan = P1): SE, intervals, AIC; plot-based CV refused
 await page.click('#steps [data-go="2"]');
 await page.selectOption('#fcol', '0'); await page.selectOption('#fval', 'P1');
-ok(await page.isDisabled('input[name="cv"][value="plot"]') && await page.isChecked('input[name="cv"][value="tree"]') && (await page.locator('.note', { hasText: 'en az 2 örnek alan' }).count()) === 1, 'one plot: plot-based CV not offered, tree-level chosen');
+ok(await page.isDisabled('input[name="cv"][value="plot"]') && await page.isChecked('input[name="cv"][value="tree"]') && (await page.locator('.note', { hasText: 'at least 2 plots' }).count()) === 1, 'one plot: plot-based CV not offered, tree-level chosen');
 await page.click('#calc'); await page.waitForSelector('#ptab');
-ok((await page.locator('.statement', { hasText: 'Tek örnek alan' }).count()) === 1, 'single-plot statement');
+ok((await page.locator('.statement', { hasText: 'Single plot' }).count()) === 1, 'single-plot statement');
 const w1 = (await cellsOf('#ptab tr[data-model="weibull"]'))[0][3];
-ok(Math.abs(trNum(w1.split('Standart hata')[1]) - REF.P1.fits.weibull.se[0]) < 1e-5, 'P1 Weibull SE(a) matches SciPy: ' + w1);
+ok(Math.abs(enNum(w1.split('Std. error')[1]) - REF.P1.fits.weibull.se[0]) < 1e-5, 'P1 Weibull SE(a) matches SciPy: ' + w1);
 await tab('compare');
 ok((await page.locator('#ctab th', { hasText: 'ΔAIC' }).count()) === 1, 'AIC shown for one plot');
 const aicW = (await cellsOf('#ctab tr[data-model="weibull"]'))[0][8];
-ok(Math.abs(trNum(aicW) - REF.P1.fits.weibull.aic) < 2e-3, 'AIC matches SciPy: ' + aicW);
-ok((await page.locator('#panel .note', { hasText: 'Ağaç bazında rastgele' }).count()) === 1, 'CV labelled tree-level, not plot-level');
+ok(Math.abs(enNum(aicW) - REF.P1.fits.weibull.aic) < 2e-3, 'AIC matches SciPy: ' + aicW);
+ok((await page.locator('#panel .note', { hasText: 'By tree, at random' }).count()) === 1, 'CV labelled tree-level, not plot-level');
 await tab('predict');
 await page.selectOption('#msel', 'weibull');
 await page.fill('#nd', '20');
-const nd1 = (await cellsOf('#ndtab tbody tr'))[0], ci = nd1[2].split('–').map(trNum), pi = nd1[3].split('–').map(trNum), ref20 = REF.P1.fits.weibull.at['20.0'];
+const nd1 = (await cellsOf('#ndtab tbody tr'))[0], ci = nd1[2].split('–').map(enNum), pi = nd1[3].split('–').map(enNum), ref20 = REF.P1.fits.weibull.at['20.0'];
 ok(Math.abs(ci[0] - ref20.ci[0]) < 2e-3 && Math.abs(ci[1] - ref20.ci[1]) < 2e-3 && Math.abs(pi[0] - ref20.pi[0]) < 2e-3 && Math.abs(pi[1] - ref20.pi[1]) < 2e-3, `CI ${nd1[2]} and PI ${nd1[3]} match SciPy`);
 ok(pi[0] < ci[0] && pi[1] > ci[1], 'prediction interval wider than the confidence interval');
 await shot('hd-7-tek-alan-tahmin');
 await tab('charts');
 ok((await page.locator('#ch-data path.ch-dash').count()) === 2 && (await page.locator('#ch-data path.ch-dot').count()) === 2, 'confidence and prediction bands drawn for one plot');
 
-// 3. language switch keeps the session; EN export headers
-await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('#tab-export');
+// 3. ?lang=tr redirects to the English page and keeps the session; Excel and R exports
+await page.goto(URL + '?lang=tr'); await page.waitForSelector('#tab-export');
+ok(!page.url().includes('lang='), 'English only: ?lang=tr redirects to the page without the lang parameter');
 await tab('export');
-const te = await csvOf('#x-t');
-ok(te[0] === 'row,plot,species,dbh_source,dbh_cm,height_source,height_measured_m,state,height_predicted_m,prediction_model,outside_dbh_range,model_value_m,residual_meas_minus_pred_m', 'EN tree table headers');
+const te = await csvOf('#x-t'), teRows = te.slice(1).filter(Boolean).map(l => parseDelimited(l, ',')[0]);
+ok(te[0] === t[0] && teRows.length === FIX.filter(r => r[0] === 'P1').length && teRows.every(r => r[1] === 'P1'), 'session kept after the redirect: the P1 filter still applies to the tree table');
 const xd = await dl('#x-xlsx'), wb = XLSX.read(await readFile(await xd.path()));
 ok(wb.SheetNames.join(',') === 'Info,Parameters,Cross-validation,Trees,New diameters', 'XLSX sheets: ' + wb.SheetNames.join(','));
 { const rd = await dl('#x-r'), rs = await readFile(await rd.path(), 'utf8');
@@ -133,7 +134,7 @@ await shot('hd-8-iraksama');
 // 5. phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
 phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr');
+await phone.goto(URL);
 await phone.click('#sample'); await phone.waitForSelector('#impbox .fname');
 await phone.click('#to2'); await phone.click('#calc'); await phone.waitForSelector('#ptab', { timeout: 60000 });
 await phone.click('#tab-charts'); await phone.selectOption('#msel', 'naslund');

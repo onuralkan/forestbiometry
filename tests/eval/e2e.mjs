@@ -48,14 +48,16 @@ const csv = (await readFile(await d1.path(), 'utf8')).replace(/^﻿/, '').split(
 ok(csv[0].startsWith('Source,Model,n,Bias'), 'EN CSV headers in English');
 const v = csv[1].split(',');
 ok(v[3] === '-1' && Math.abs(+v[4] - 7 / 3) < 1e-15 && Math.abs(+v[5] - Math.sqrt(17 / 3)) < 1e-15 && Math.abs(+v[6] - 0.915) < 1e-12, 'EN CSV full precision');
-await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('#tab-summary');
+// English only: ?lang=tr redirects to the English page; the session and the decimal point stay
+await page.goto(URL + '?lang=tr'); await page.waitForSelector('#tab-summary');
+ok(!page.url().includes('lang='), '?lang=tr redirects to the page without the lang parameter');
 await page.click('#tab-summary');
 s = await summary();
-ok(s[0][3] === '2,3333' && s[0][5] === '0,915', 'TR: same values with a decimal comma');
+ok(s[0][3] === '2.3333' && s[0][5] === '0.915', 'after the redirect: same values with a decimal point');
 await page.click('#tab-export');
 const [d2] = await Promise.all([page.waitForEvent('download'), page.click('#x-m')]);
-const csvTr = (await readFile(await d2.path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
-ok(csvTr[0].startsWith('Kaynak,Model,n,Yanlılık') && csvTr[1].split(',').slice(2).join() === v.slice(2).join(), 'TR CSV: Turkish headers, identical number rows');
+const csv2 = (await readFile(await d2.path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
+ok(csv2[0] === csv[0] && csv2[1].split(',').slice(2).join() === v.slice(2).join(), 'after the redirect: English CSV headers, identical number rows');
 
 // 2. perfect prediction
 await pasteRun('obs\tpred\n10\t10\n20\t20\n30\t30\n');
@@ -71,7 +73,7 @@ s = await summary();
 ok(s[0][5].startsWith('-'), 'negative R² not clipped: ' + s[0][5]);
 
 // 4. sample: missing / unreadable pairs, two models, common vs own rows, groups, charts
-await page.goto(URL + '?lang=tr');
+await page.goto(URL + '?lang=en');
 await page.click('#steps [data-go="1"]');
 await page.click('#sample'); await page.waitForSelector('#impbox .fname');
 await page.click('#to2');
@@ -82,8 +84,8 @@ await shot('ev-2-ayarlar');
 await page.click('#calc'); await page.waitForSelector('#panel table');
 s = await summary();
 ok(s[0][1] === '53' && s[1][1] === '53', 'common rows: both models n = 53');
-ok((await page.locator('#panel', { hasText: 'Ortak geçerli satır: 53 / 60' }).count()) === 1, 'dropped pairs reported');
-ok((await page.locator('.statement', { hasText: 'dış doğrulama' }).count()) === 1, 'no external validation assumed for unstated source');
+ok((await page.locator('#panel', { hasText: 'Common valid rows: 53 of 60' }).count()) === 1, 'dropped pairs reported');
+ok((await page.locator('.statement', { hasText: 'external validation' }).count()) === 1, 'no external validation assumed for unstated source');
 await shot('ev-3-ozet');
 await page.click('#tab-charts');
 ok((await page.locator('#ch-op .ch-ref').count()) === 1 && (await page.locator('#ch-op circle').count()) === 53, 'observed–predicted plot with 1:1 line, 53 points');
@@ -100,13 +102,13 @@ await page.check('input[name="rs"][value="own"]');
 await page.click('#calc'); await page.waitForSelector('#panel table');
 s = await summary();
 ok(s[0][1] === '57' && s[1][1] === '54', 'own rows: n = 57 and 54');
-ok((await page.locator('.note.warn', { hasText: 'doğrudan karşılaştırılamaz' }).count()) === 1, 'sample difference made visible');
+ok((await page.locator('.note.warn', { hasText: 'cannot be compared directly' }).count()) === 1, 'sample difference made visible');
 await shot('ev-6-farkli-satirlar');
 await page.click('#tab-export');
 const [d4] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 const wb = XLSX.read(await readFile(await d4.path()));
-ok(wb.SheetNames.join(',') === 'Bilgi,Olcutler,Satir sayimi,Cikarim,Gruplar,Artiklar', 'XLSX sheets: ' + wb.SheetNames.join(','));
-const resid = XLSX.utils.sheet_to_json(wb.Sheets.Artiklar, { header: 1 });
+ok(wb.SheetNames.join(',') === 'Info,Measures,Row accounting,Inference,Groups,Residuals', 'XLSX sheets: ' + wb.SheetNames.join(','));
+const resid = XLSX.utils.sheet_to_json(wb.Sheets.Residuals, { header: 1 });
 ok(resid.length === 1 + 57 + 54 && resid[1][4] === resid[1][2] - resid[1][3], 'residual sheet: e = observed − predicted');
 
 // 4b. inference: interval for the bias and equivalence tests (EN), values as in calc.js; then weights switch them off
@@ -148,7 +150,7 @@ ok((await page.locator('#panel .note.warn').count()) === 1, 'inference tab expla
 // 5. phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
 phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr');
+await phone.goto(URL);
 await phone.click('#sample'); await phone.waitForSelector('#impbox .fname');
 await phone.click('#to2'); await phone.click('#calc'); await phone.click('#tab-charts');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');

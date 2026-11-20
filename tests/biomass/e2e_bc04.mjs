@@ -15,7 +15,7 @@ const XLSX = require(path.join(ROOT, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const Bm = await import('../../assets/lab/biomass/calc.js');
 const M = await import('../../assets/lab/biomass/mc.js');
 const { blankSet } = await import('../../assets/lab/core/coef.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=tr';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=en';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -49,7 +49,7 @@ await page.setInputFiles('#tblbox input[type="file"]', file); await page.waitFor
 await page.click('#usetbl'); await page.waitForSelector('#dsinfo'); await page.click('#to2'); await page.waitForSelector('#maptab');
 // the coefficient editor offers the two uncertainty fields
 await page.locator('#coefbox [data-act="edit"]').first().click(); await page.waitForSelector('#cf-x-cov');
-ok(await page.locator('#cf-x-rse').count() === 1 && (await page.locator('#coefbox').textContent()).includes('Artık standart hatası'), 'the set editor has the covariance and residual standard error fields');
+ok(await page.locator('#cf-x-rse').count() === 1 && (await page.locator('#coefbox').textContent()).includes('Residual standard error'), 'the set editor has the covariance and residual standard error fields');
 await page.click('#cf-cancel');
 await page.fill('[data-cf="0"]', String(REF.comps[0][1])); await page.locator('[data-cf="0"]').dispatchEvent('change'); await page.waitForSelector('#maptab');
 await page.click('#cadd'); await page.waitForSelector('[data-cf="1"]');
@@ -65,12 +65,12 @@ for (const u of ENG.units) {
   const row = page.locator(`#mctab tr[data-u="${u.plot_id}|"]`), cells = (await row.locator('td.num').allTextContents()).map(n);
   ok(Math.abs(cells[1] - u.B.mean) < 5e-4 && Math.abs(cells[4] - u.B.lo) < 5e-4 && Math.abs(cells[5] - u.B.hi) < 5e-4 && Math.abs(cells[7] - u.CO2.mean) < 5e-4, `plot ${u.plot_id}: mean and 90 % limits as mc.js (${u.B.lo.toFixed(3)}–${u.B.hi.toFixed(3)} Mg/ha)`);
 }
-ok((await page.textContent('#mcset')).includes('500 tekrar, tohum 99, %90'), 'replicates, seed and level written');
-ok((await page.textContent('#mcparts li[data-set="sA"]')).includes('katsayı kovaryansı + artık') && (await page.textContent('#mcparts li[data-set="sB"]')).includes('katsayı kovaryansı') && (await page.textContent('#mcparts li[data-set="sD"]')).includes('bilgi yok'), 'what each set contributes is labelled');
-ok((await page.textContent('#mcfixed')).includes('1 sette') && (await page.textContent('#mcassume')).includes('bağımsızlık'), 'set without information held fixed, assumptions written');
+ok((await page.textContent('#mcset')).includes('500 replicates, seed 99, 90 %'), 'replicates, seed and level written');
+ok((await page.textContent('#mcparts li[data-set="sA"]')).includes('coefficient covariance + residual') && (await page.textContent('#mcparts li[data-set="sB"]')).includes('coefficient covariance') && (await page.textContent('#mcparts li[data-set="sD"]')).includes('no information'), 'what each set contributes is labelled');
+ok((await page.textContent('#mcfixed')).includes('1 set(s)') && (await page.textContent('#mcassume')).includes('independence'), 'set without information held fixed, assumptions written');
 await shot('bc04-1-belirsizlik');
 const xd = await dl('#x-xlsx'), wb = XLSX.read(await readFile(await xd.path()));
-const mu = XLSX.utils.sheet_to_json(wb.Sheets['Belirsizlik birimler'], { header: 1 }), mt = XLSX.utils.sheet_to_json(wb.Sheets['Belirsizlik ağaçlar'], { header: 1 });
+const mu = XLSX.utils.sheet_to_json(wb.Sheets['Uncertainty units'], { header: 1 }), mt = XLSX.utils.sheet_to_json(wb.Sheets['Uncertainty trees'], { header: 1 });
 ok(mu.length > 3 && Math.abs(mu[1][4] - ENG.units[0].B.mean) < 1e-9 && mt.length === REF.trees.length + 1 && Math.abs(mt[1][5] - ENG.trees[0].B.mean) < 1e-9, 'Excel: unit and tree uncertainty sheets with the engine values');
 const jd = await dl('#x-json'), rec = JSON.parse(await readFile(await jd.path(), 'utf8'));
 ok(rec.uncertainty && rec.uncertainty.seed === 99 && rec.uncertainty.B === 500 && rec.uncertainty.assumptions.length === 5 && rec.tool.ids.includes('BC-06'), 'run record: uncertainty with seed, replicates, assumptions; catalogue id BC-06');
@@ -79,12 +79,12 @@ ok(rec.uncertainty && rec.uncertainty.seed === 99 && rec.uncertainty.B === 500 &
 await page.evaluate(async sets => { const C = await import('/assets/lab/core/coef.js'); await import('/assets/lab/biomass/calc.js'); for (const s of sets) { const r = await C.saveCoef({ ...s, meta: {} }); if (!r.ok) throw new Error(JSON.stringify(r.problems)); } }, SETS);
 await page.reload(); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('#calc'); await page.click('#calc'); await page.waitForSelector('#mc-run');
 await page.click('#mc-run'); await page.waitForSelector('#mcnoinfo');
-ok((await page.textContent('#mcnoinfo')).includes('Belirsizlik bilgisi yok') && await page.locator('#mctab').count() === 0, 'no covariance and no residual: "no uncertainty information", nothing computed');
+ok((await page.textContent('#mcnoinfo')).includes('No uncertainty information') && await page.locator('#mctab').count() === 0, 'no covariance and no residual: "no uncertainty information", nothing computed');
 // a bad covariance is refused with the set named
 await page.evaluate(async s => { const C = await import('/assets/lab/core/coef.js'); await import('/assets/lab/biomass/calc.js'); const r = await C.saveCoef({ ...s, meta: { cov: '4 1; 2 4' } }); if (!r.ok) throw new Error(JSON.stringify(r.problems)); }, SETS.find(s => s.id === 'sB'));
 await page.reload(); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('#calc'); await page.click('#calc'); await page.waitForSelector('#mc-run');
 await page.click('#mc-run'); await page.waitForSelector('#mcbad');
-ok((await page.textContent('#mcbad')).includes('simetrik değil') && (await page.textContent('#mcbad')).includes('e2e test values sB'), 'asymmetric covariance refused, set named');
+ok((await page.textContent('#mcbad')).includes('not symmetric') && (await page.textContent('#mcbad')).includes('e2e test values sB'), 'asymmetric covariance refused, set named');
 // volume approach: no information
 await page.click('#back2'); await page.check('input[name="appr"][value="volume"]'); await page.waitForSelector('#vcol');
 // English

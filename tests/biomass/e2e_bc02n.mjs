@@ -12,7 +12,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const NS = await import('../../assets/lab/biomass/nsur.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=tr';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=en';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -50,7 +50,7 @@ await sel('[data-nw="2"]', 'd.h2'); await fill('[data-nth="2"]', '7.322 -0.00618
 await sel('[data-nw="total"]', 'dh'); await fill('[data-nth="total"]', '3.45');
 ok((await page.textContent('#systab')).includes('ψ = D^θ1·e^(θ2·H²)'), 'weight functions listed with θ');
 await page.click('#sy-fit'); await page.waitForSelector('#sy-coef');
-ok((await page.textContent('#sy-sum')).includes('40 ağaç, 4 denklem, 7 katsayı'), 'summary: 40 trees, 4 equations, 7 coefficients');
+ok((await page.textContent('#sy-sum')).includes('40 trees, 4 equations, 7 coefficients'), 'summary: 40 trees, 4 equations, 7 coefficients');
 const shown = await nums('#sy-coef [data-k="b"]');
 ok(shown.length === 7 && shown.every((v, k) => Math.abs(v - ENG.beta[k]) <= 1e-4 * Math.abs(ENG.beta[k])), 'NSUR coefficients on screen = nsur.js: ' + shown.join(' '));
 ok(Math.abs(shown[0] - 0.016245) < 6e-7 && Math.abs(shown[3] - 2.2112) < 6e-5, 'Table 3: b11 0.016245, b22 2.2112');
@@ -60,7 +60,7 @@ ok((await page.textContent('#sy-stat')).includes('(D²H)^2.114') && (await page.
 await page.fill('#sy-pD', '20'); await page.fill('#sy-pH', '17'); await page.click('#sy-iv'); await page.waitForSelector('#sy-ivtab');
 const iv = NS.intervals(ENG, 20, 17), ys = await nums('#sy-ivtab [data-k="y"]');
 ok(ys.length === 4 && Math.abs(ys[3] - 264.23) < 0.01 && Math.abs(ys[1] - 34.67) < 0.01, 'intervals table: bark 34.7, total 264.2 kg');
-ok((await page.textContent('#sy-ivtab tr[data-eq="total"]')).includes(iv.rows[3].pi[0].toFixed(2).replace('.', ',')), 'prediction interval as nsur.js (Student t, 153 df)');
+ok((await page.textContent('#sy-ivtab tr[data-eq="total"]')).includes(iv.rows[3].pi[0].toFixed(2)), 'prediction interval as nsur.js (Student t, 153 df)');
 await shot('bc02n-1-nsur');
 // ln scale
 await page.check('input[name="synlm"][value="log"]'); await page.waitForSelector('#systab');
@@ -69,7 +69,7 @@ await page.click('#sy-fit'); await page.waitForSelector('#sy-coef');
 const shownL = await nums('#sy-coef [data-k="b"]');
 ok(shownL.every((v, k) => Math.abs(v - ENGL.beta[k]) <= 1e-4 * Math.abs(ENGL.beta[k])), 'ln-scale NSUR on screen = nsur.js');
 await page.click('#sy-iv'); await page.waitForSelector('#sy-ivtab');
-ok((await page.textContent('#sy-ivout')).includes('simetrik değildir'), 'ln scale: asymmetric intervals noted');
+ok((await page.textContent('#sy-ivout')).includes('not symmetric'), 'ln scale: asymmetric intervals noted');
 // save: refused without a source, then three component sets as power forms
 await page.check('input[name="synlm"][value="weighted"]'); await page.waitForSelector('#systab'); await page.click('#sy-fit'); await page.waitForSelector('#sy-coef');
 await page.click('#sy-save'); await page.waitForSelector('#sy-msg .err');

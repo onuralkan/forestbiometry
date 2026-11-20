@@ -34,23 +34,23 @@ const trees = st.trees.map((T, i) => ({ row: i + 1, plot_id: T.plot_id, tree_id:
 trees.push({ row: trees.length + 1, plot_id: trees[0].plot_id, tree_id: 'olcusuz', stem_id: null, period: null, species: 'A', dbh: 22, height: 19, status: null, stratum: null, x: null, y: null, extra: {} });
 const plots = [...new Set(trees.map(t => t.plot_id))].map(p => ({ plot_id: p, plot_area: 400, stratum: null, area_source: 'plots', n_records: trees.filter(t => t.plot_id === p).length }));
 const DS = { schema: 'forest-dataset/1', created: '2026-11-17T00:00:00Z', tool: { id: 'e2e', version: '0' }, units: { dbh: 'cm', height: 'm', plot_area: 'm2', x: 'm', y: 'm' },
-  source: { trees: { name: 'e2e-paket', kind: 'csv', meta: {}, records: trees.length }, plots: null, mapping: { trees: {}, plots: {} }, settings: { decimal: '.' }, lang: 'tr' },
+  source: { trees: { name: 'e2e-paket', kind: 'csv', meta: {}, records: trees.length }, plots: null, mapping: { trees: {}, plots: {} }, settings: { decimal: '.' }, lang: 'en' },
   plots, trees, derived: { note: '', trees: [], plots: [] }, warnings: [], excluded: [], changelog: [] };
 const SET = { ...blankSet('biomass.pow.d'), id: 'e2eS', params: { a: 0.11, b: 2.37 }, transform: null, source: { citation: 'e2e test values S' }, origin: 'user-entered', created: '2026-11-17T00:00:00Z', modified: '2026-11-17T00:00:00Z' };
 
 // 1. Stem Section Volume without the approved data: the hand-off asks for it
-await page.goto(BASE + '/biyokutle-karbon.php?lang=tr'); await page.waitForSelector('#steps');
+await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps');
 await page.evaluate(async ({ ds, set }) => { const S = await import('/assets/lab/core/store.js'), C = await import('/assets/lab/core/coef.js'); await import('/assets/lab/biomass/calc.js'); await S.put('dataset:approved', ds); const r = await C.saveCoef(set, set.modified); if (!r.ok) throw new Error(JSON.stringify(r.problems)); }, { ds: DS, set: SET });
-await page.goto(BASE + '/seksiyon-hacmi.php?lang=tr'); await page.waitForSelector('#sample');
+await page.goto(BASE + '/seksiyon-hacmi.php?lang=en'); await page.waitForSelector('#sample');
 await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2'); await page.click('#calc'); await page.waitForSelector('#ttab');
 ok(await page.locator('#ho-need').count() === 1 && await page.locator('#ho-send').count() === 0, 'without the linked package the volumes cannot be sent');
 
 // 2. link the package, compute, send
 await page.click('#steps [data-go="1"]'); await page.click('#useds'); await page.waitForSelector('#dsinfo');
 await page.click('#to2'); await page.click('#calc'); await page.waitForSelector('#ho-send');
-await page.click('#ho-send'); await page.waitForFunction(() => (document.getElementById('ho-msg') || {}).textContent?.includes('aktarıldı'));
+await page.click('#ho-send'); await page.waitForFunction(() => (document.getElementById('ho-msg') || {}).textContent?.includes('volumes sent'));
 const msg = await page.textContent('#ho-msg');
-ok(msg.includes(`${st.trees.length} ağaç`) && msg.includes('karşılığı olmayan: 0'), 'sent: every stem tree matched to the package: ' + msg);
+ok(msg.includes(`${st.trees.length} trees`) && msg.includes('Without a tree in the package: 0'), 'sent: every stem tree matched to the package: ' + msg);
 await shot('bc03-1-aktar');
 const jd = await dl('#x-json'), svRec = JSON.parse(await readFile(await jd.path(), 'utf8'));
 const meth = svRec.settings.reference, svRes = svRec.results[meth];
@@ -61,41 +61,41 @@ let bits = 0, nb = 0; svRes.forEach(r => { const t = stored.rec.trees.find(x => 
 ok(bits === 0 && nb > 3, `stored volumes equal Stem Section Volume's own JSON export bit for bit (${nb} trees)`);
 
 // 3. Biomass: both approaches on the package; volumes from the hand-off
-await page.goto(BASE + '/biyokutle-karbon.php?lang=tr'); await page.waitForSelector('#useapp');
+await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#useapp');
 await page.click('#useapp'); await page.waitForSelector('#dsinfo'); await page.click('#to2'); await page.waitForSelector('input[name="appr"]');
 await page.check('input[name="appr"][value="both"]'); await page.waitForSelector('input[name="vfrom"]');
 await page.check('input[name="vfrom"][value="secvol"]'); await page.waitForSelector('#dvinfo');
-ok((await page.textContent('#dvinfo')).includes(`${st.trees.length} ağaç`) && await page.locator('#vcol').count() === 0, 'the sent volumes are found for this package; no column to choose');
+ok((await page.textContent('#dvinfo')).includes(`${st.trees.length} trees`) && await page.locator('#vcol').count() === 0, 'the sent volumes are found for this package; no column to choose');
 await page.fill('[data-cf="0"]', '0.5'); await page.locator('[data-cf="0"]').dispatchEvent('change'); await page.waitForSelector('#maptab');
 await page.selectOption('select[data-all="c1"]', 'e2eS'); await page.waitForSelector('#maptab');
 for (const [k, v] of [['D', '0.5'], ['BEF', '1.3'], ['R', '0.25'], ['CF', '0.47']]) { await page.fill(`[data-v="${k}"]`, v); await page.locator(`[data-v="${k}"]`).dispatchEvent('change'); await page.waitForSelector('#dvinfo'); }
 await page.fill('#vsrc', 'e2e factors'); await page.locator('#vsrc').dispatchEvent('change'); await page.waitForSelector('#calc:not([disabled])');
 await page.selectOption('[data-vs="bark"]', 'ib'); await page.waitForSelector('#s2prob');
-ok((await page.textContent('#s2prob')).includes('Kabuk tarafları farklı'), 'bark sides must match (volumes under bark, factors over bark): refused');
+ok((await page.textContent('#s2prob')).includes('Bark sides differ'), 'bark sides must match (volumes under bark, factors over bark): refused');
 await page.selectOption('[data-vs="bark"]', 'ob'); await page.waitForSelector('#calc:not([disabled])');
 await page.click('#calc'); await page.waitForSelector('#cmptab');
 const units = plots.length;
 ok(await page.locator('#cmptab tr[data-a="allometric"]').count() === units && await page.locator('#cmptab tr[data-a="volume"]').count() === units, 'one row per unit for each approach');
-ok(await page.locator('#utab-a').count() === 1 && await page.locator('#utab-v').count() === 1 && (await page.textContent('#vfrom-v')).includes('Seksiyon Hacmi'), 'each approach with its own tables; volume source written');
+ok(await page.locator('#utab-a').count() === 1 && await page.locator('#utab-v').count() === 1 && (await page.textContent('#vfrom-v')).includes('Stem Section Volume'), 'each approach with its own tables; volume source written');
 { const noV = trees.filter(t => { const x = stored.rec.trees.find(r => r.row === t.row); return !x || x.v_ob == null; }).map(t => t.row);
   ok((await page.textContent('#t-nov-v')) === String(noV.length) && (await page.textContent('#novnote-v')).includes(String(trees.length)), `trees without a sent volume (incl. the unmeasured package tree) counted with rows: ${noV.join(',')}`); }
 await shot('bc03-2-ikisi');
 const xd = await dl('#x-xlsx'), wb = XLSX.read(await readFile(await xd.path()));
-const tv = XLSX.utils.sheet_to_json(wb.Sheets['Ağaçlar V'], { header: 1 }), vi = tv[0].indexOf('V (m³)');
+const tv = XLSX.utils.sheet_to_json(wb.Sheets['Trees V'], { header: 1 }), vi = tv[0].indexOf('V (m³)');
 let vb = 0; for (const r of tv.slice(1)) { const t = stored.rec.trees.find(x => x.row === r[0]); const want = t ? t.v_ob : null; if (!Object.is(r[vi] ?? null, want)) vb++; }
 ok(vb === 0 && tv.length === trees.length + 1, 'Excel: V of every tree equals the sent volume bit for bit');
-const cmp = XLSX.utils.sheet_to_json(wb.Sheets['Karşılaştırma ağaçlar'], { header: 1 });
+const cmp = XLSX.utils.sheet_to_json(wb.Sheets['Comparison trees'], { header: 1 });
 ok(cmp.length === 2 * trees.length + 1 && cmp[1][0] === cmp[2][0] && cmp[1][6] !== cmp[2][6], 'Excel: comparison sheet with the same tree in two rows, one per approach');
-const info = XLSX.utils.sheet_to_json(wb.Sheets['Bilgi'], { header: 1 }).flat().join(' ');
+const info = XLSX.utils.sheet_to_json(wb.Sheets['Info'], { header: 1 }).flat().join(' ');
 ok(info.includes(stored.sha) && info.includes('e2e test values S') && info.includes('e2e factors'), 'Excel info: package fingerprint, set source, factor source');
 const bj = await dl('#x-json'), bRec = JSON.parse(await readFile(await bj.path(), 'utf8'));
 ok(bRec.settings.approach === 'both' && bRec.settings.volume.volumeFrom.kind === 'secvol' && bRec.settings.volume.volumeFrom.package === stored.sha && bRec.comparison.length === 2 * units && /^1\.0\.0-beta\.[2-9]$/.test(bRec.tool.version), 'run record: both approaches, volume source with the package fingerprint');
 
 // 4. another package: the old volumes are not used
 await page.evaluate(async ds => { const S = await import('/assets/lab/core/store.js'); await S.put('dataset:approved', { ...ds, created: '2026-11-18T00:00:00Z' }); }, DS);
-await page.goto(BASE + '/biyokutle-karbon.php?lang=tr'); await page.waitForSelector('#steps');
+await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps');
 await page.click('[data-go="1"]'); await page.click('#useapp'); await page.waitForSelector('#dsinfo'); await page.click('#to2'); await page.waitForSelector('#dvnone');
-ok(await page.isDisabled('#calc') && (await page.textContent('#s2prob')).includes('aktarılmış hacim yok'), 'a different package (other fingerprint): the earlier volumes are not used');
+ok(await page.isDisabled('#calc') && (await page.textContent('#s2prob')).includes('No volumes sent'), 'a different package (other fingerprint): the earlier volumes are not used');
 
 // 5. English
 await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('input[name="appr"]');

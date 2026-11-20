@@ -1,5 +1,5 @@
 // Browser test for Log Scaling (tomruk-olcumu.php; SV-05): one log against the book (Doyle, 20 in., 16 ft = 256 bf),
-// the simulated table against calc.js in Node, splitting, downloads, English, phone.
+// the simulated table against calc.js in Node, splitting, downloads, English only, phone.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/logscale/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
@@ -23,8 +23,8 @@ const n = s => Number(String(s).trim().replace(',', '.'));
 const csv = (await readFile(path.join(ROOT, 'assets/lab/logscale/ornek/ornek-tomruk.csv'), 'utf8')).trim().split('\n').slice(1);
 const logs = csv.map(l => { const [id, ds, db, dm, L] = l.split(';').map(x => Number(x.replace(',', '.'))); return { id: String(id), ds, db, dm, Lm: L }; });
 
-await page.goto(URL + '?lang=tr'); await page.waitForSelector('#steps');
-ok((await page.locator('h1').textContent()).includes('Tomruk Ölçümü') && (await page.locator('.b-ids').textContent()).trim() === 'SV-05' && (await page.locator('.b-ver').textContent()).includes(LS.TOOL.version), 'title, catalogue id SV-05, version');
+await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
+ok((await page.locator('h1').textContent()).includes('Log Scaling') && (await page.locator('.b-ids').textContent()).trim() === 'SV-05' && (await page.locator('.b-ver').textContent()).includes(LS.TOOL.version), 'title, catalogue id SV-05, version');
 // one log: 20 in. (50.8 cm), 16 ft (4.8768 m): Doyle (20 − 4)² = 256 bf (the book's rule of thumb)
 for (const [k, v] of [['ds', '50.8'], ['L', '4.8768']]) { await page.fill('#in-' + k, v); await page.locator('#in-' + k).dispatchEvent('change'); await page.waitForSelector('#in-ds'); }
 await page.click('#to2'); await page.waitForSelector('[data-rule]'); await page.click('#calc'); await page.waitForSelector('#ltab');
@@ -49,15 +49,16 @@ ok(bad === 0, `${logs.length} logs × 4 rules: board feet on screen = engine (or
 ok((await page.locator('#ltab [data-tot="intl8"]').textContent()).trim() === '–', 'a rule that could not scale every log shows no (partial) total');
 // downloads
 const x = await dl('#x-xlsx'), wb = XLSX.read(await readFile(await x.path()));
-const lr = XLSX.utils.sheet_to_json(wb.Sheets['Tomruklar'], { header: 1 }), ci = lr[0].indexOf('newton_m3');
-ok(['Bilgi', 'Tomruklar', 'Parçalar'].every(s => wb.SheetNames.includes(s)) && Math.abs(lr[1][ci] - LS.cubic(logs[0]).newton) < 1e-12, 'Excel: three sheets; Newton m³ at full precision');
+const lr = XLSX.utils.sheet_to_json(wb.Sheets['Logs'], { header: 1 }), ci = lr[0].indexOf('newton_m3');
+ok(['Info', 'Logs', 'Segments'].every(s => wb.SheetNames.includes(s)) && Math.abs(lr[1][ci] - LS.cubic(logs[0]).newton) < 1e-12, 'Excel: three sheets; Newton m³ at full precision');
 const jd = await dl('#x-json'), rec = JSON.parse(await readFile(await jd.path(), 'utf8'));
 ok(rec.format === 'run-record/1' && rec.tool.ids.includes('SV-05') && rec.units.rules.V === 'board feet' && rec.logs.length === logs.length, 'run record: catalogue id, units written, every log');
 if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'logscale.png'), fullPage: true });
-// English, phone
-await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
-ok((await page.locator('h1').textContent()).includes('Log Scaling'), 'English');
-const ph = await ctx.newPage(); await ph.setViewportSize({ width: 390, height: 800 }); await ph.goto(URL + '?lang=tr'); await ph.waitForSelector('#steps');
+// ?lang=tr redirects to the English page
+await page.goto(URL + '?lang=tr'); await page.waitForSelector('#steps');
+ok(!page.url().includes('lang=') && (await page.locator('h1').textContent()).includes('Log Scaling'), 'English only: ?lang=tr redirects to the English page');
+// phone
+const ph = await ctx.newPage(); await ph.setViewportSize({ width: 390, height: 800 }); await ph.goto(URL); await ph.waitForSelector('#steps');
 ok(await ph.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();

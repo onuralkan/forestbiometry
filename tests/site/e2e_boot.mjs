@@ -15,7 +15,7 @@ for (const f of PAGES) {
   const ctx = await browser.newContext();
   await ctx.addInitScript(() => { const o = indexedDB.open.bind(indexedDB); indexedDB.open = () => ({}); void o; });
   const p = await ctx.newPage(); const t0 = Date.now();
-  await p.goto(`${BASE}/${f}?lang=en`);
+  await p.goto(`${BASE}/${f}`);
   const drawn = await p.waitForSelector(box, { timeout: 8000 }).then(() => true, () => false);
   ok(drawn, `${f}: draws with a stalled IndexedDB`);
   ok(Date.now() - t0 < 8000, `${f}: within 8 s`);
@@ -27,18 +27,18 @@ for (const f of PAGES) {
   const ctx = await browser.newContext();
   await ctx.addInitScript(() => { const T = IDBDatabase.prototype.transaction; IDBDatabase.prototype.transaction = function (...a) { const t = T.apply(this, a); Object.defineProperty(t, 'oncomplete', { set() {}, get() { return null; } }); return t; }; });
   const p = await ctx.newPage();
-  await p.goto(`${BASE}/seksiyon-hacmi.php?lang=en`);
+  await p.goto(`${BASE}/seksiyon-hacmi.php`);
   ok(await p.waitForSelector(box, { timeout: 10000 }).then(() => true, () => false), 'hung transaction: draws');
   await ctx.close();
 }
-// 3. the tool module never arrives: a warning with a reload button after 10 s (TR text on a TR page)
+// 3. the tool module never arrives: a warning with a reload button after 10 s
 {
   const ctx = await browser.newContext(); const p = await ctx.newPage();
   await p.route('**/secvol/ui.js*', () => {}); // never answered
-  await p.goto(`${BASE}/seksiyon-hacmi.php?lang=tr`, { waitUntil: 'commit' });
+  await p.goto(`${BASE}/seksiyon-hacmi.php`, { waitUntil: 'commit' });
   const w = await p.waitForSelector('#bootwarn', { timeout: 13000 }).then(() => true, () => false);
   ok(w, 'hung module: warning shown');
-  ok(w && /yüklenemedi/.test(await p.textContent('#bootwarn')), 'warning in Turkish');
+  ok(w && /The tool did not load/.test(await p.textContent('#bootwarn')) && (await p.textContent('#bootwarn button')) === 'Reload', 'warning text and button label');
   ok(w && !!(await p.$('#bootwarn button')), 'reload button');
   await ctx.close();
 }
@@ -46,14 +46,14 @@ for (const f of PAGES) {
 {
   const ctx = await browser.newContext(); const p = await ctx.newPage();
   await p.route('**/secvol/ui.js*', r => r.fulfill({ status: 404, body: '' }));
-  await p.goto(`${BASE}/seksiyon-hacmi.php?lang=en`);
+  await p.goto(`${BASE}/seksiyon-hacmi.php`);
   ok(await p.waitForSelector('#bootwarn', { timeout: 4000 }).then(() => true, () => false), 'failed module: warning at once');
   await ctx.close();
 }
 // 5. a normal load shows no warning, even after the time limit
 {
   const ctx = await browser.newContext(); const p = await ctx.newPage();
-  await p.goto(`${BASE}/seksiyon-hacmi.php?lang=en`); await p.waitForSelector(box); await p.waitForTimeout(10500);
+  await p.goto(`${BASE}/seksiyon-hacmi.php`); await p.waitForSelector(box); await p.waitForTimeout(10500);
   ok(!(await p.$('#bootwarn')), 'normal load: no warning');
   await ctx.close();
 }

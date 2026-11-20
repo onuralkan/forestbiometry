@@ -11,7 +11,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const SUR = await import('../../assets/lab/biomass/sur.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=tr';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=en';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -45,10 +45,10 @@ await page.check('[data-ct="2"][value="h"]'); await page.waitForSelector('#systa
 await sel('[data-sw="0"]', 'd2h'); await sel('[data-sw="total"]', 'd2h');
 await page.fill('[data-sk="total"]', '1.8'); await page.locator('[data-sk="total"]').dispatchEvent('change'); await page.waitForSelector('#systab');
 await page.click('#sy-fit'); await page.waitForSelector('#sy-coef');
-ok((await page.textContent('#sy-sum')).includes(`${ENG.n} ağaç, 4 denklem, 4 toplanabilirlik kısıtı`) && (await page.textContent('#sy-drop')).includes('satırlar 7'), 'summary, tree without height left out with its row');
+ok((await page.textContent('#sy-sum')).includes(`${ENG.n} trees, 4 equations, 4 additivity restrictions`) && (await page.textContent('#sy-drop')).includes('rows 7'), 'summary, tree without height left out with its row');
 const shown = (await page.locator('#sy-coef [data-k="b"]').allTextContents()).map(s => +s.replace(/\s/g, '').replace(',', '.')), want = ENG.equations.flatMap(e => e.sur.b);
 ok(shown.length === want.length && shown.every((v, k) => Math.abs(v - want[k]) <= 5e-6 * Math.max(1, Math.abs(want[k]))), 'restricted SUR coefficients on screen = sur.js: ' + shown.join(' '));
-ok((await page.textContent('#sy-stat')).includes('kestirildi') && (await page.textContent('#sy-stat')).includes('^1,8') || (await page.textContent('#sy-stat')).includes('^1.8'), 'weights: estimated and given exponents shown');
+ok((await page.textContent('#sy-stat')).includes('estimated') && (await page.textContent('#sy-stat')).includes('^1.8'), 'weights: estimated and given exponents shown');
 await shot('bc02s-1-sistem');
 // save without a source: refused; with a source: 4 sets
 await page.click('#sy-save'); await page.waitForSelector('#sy-msg .err');
@@ -56,7 +56,7 @@ await page.fill('#sy-cit', 'e2e kesim verisi'); await page.locator('#sy-cit').di
 await page.click('#sy-save'); await page.waitForSelector('#sy-ok');
 const stored = await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js'); await import('/assets/lab/biomass/calc.js'); return (await C.listCoefs('biomass')).map(s => ({ id: s.id, form: s.form, component: s.component, origin: s.origin, cov: s.meta && s.meta.cov, rse: s.meta && s.meta.rse, valid: s.valid, b0: s.params.b0 })); });
 ok(stored.length === 4 && stored.every(s => s.origin === 'fitted' && s.cov && s.valid && s.valid.D) && stored.filter(s => s.rse > 0).length === 2, 'four fitted sets with covariance; residual standard error only for the unweighted equations');
-ok(stored.some(s => s.form === 'biomass.lt.d2h.h' && s.component === 'dal') && stored.some(s => s.form === 'biomass.lt.d2.d2h.h' && s.component === 'Toplam ağaç'), 'linear forms in the library: branches D²H + H, total D² + D²H + H');
+ok(stored.some(s => s.form === 'biomass.lt.d2h.h' && s.component === 'dal') && stored.some(s => s.form === 'biomass.lt.d2.d2h.h' && s.component === 'Total tree'), 'linear forms in the library: branches D²H + H, total D² + D²H + H');
 // apply: three components mapped to the fitted sets, the total as separate total equation → additivity difference 0
 const byComp = Object.fromEntries(stored.map(s => [s.component, s.id]));
 await page.fill('[data-cf="0"]', '0.5'); await page.locator('[data-cf="0"]').dispatchEvent('change'); await page.waitForSelector('#maptab');
@@ -64,7 +64,7 @@ for (const i of [1, 2]) { await page.click('#cadd'); await page.waitForSelector(
 const keys = await page.$$eval('#maptab thead th', ths => ths.length);
 const comps = await page.$$eval('select[data-ms="X"]', s => s.map(x => x.dataset.mc));
 await page.selectOption(`select[data-ms="X"][data-mc="${comps[0]}"]`, byComp.govde); await page.selectOption(`select[data-ms="X"][data-mc="${comps[1]}"]`, byComp.kabuk); await page.selectOption(`select[data-ms="X"][data-mc="${comps[2]}"]`, byComp.dal);
-await page.selectOption('select[data-ts="X"]', byComp['Toplam ağaç']);
+await page.selectOption('select[data-ts="X"]', byComp['Total tree']);
 await page.waitForSelector('#calc:not([disabled])'); await page.click('#calc'); await page.waitForSelector('#addnote');
 ok(/: -?0([.,]0+)? %/.test(await page.textContent('#addnote')), 'applied: total equation − component sum = 0 % (additive by construction): ' + await page.textContent('#addnote'));
 await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('#syscard');

@@ -135,7 +135,7 @@ function render() {
   dlg.innerHTML = `<div class="dlg-f cite"><div class="cite-head"><h2>${T.h}</h2><button type="button" class="b-iconbtn" id="citeclose" aria-label="${T.close}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg></button></div>
     <div class="cite-opts">${data.tool ? `<fieldset><legend>${T.scope}</legend><label><input type="radio" name="cscope" value="tool"${st.scope === 'tool' ? ' checked' : ''}> ${T.tool(data.tool[ui])} (v${data.tool.v})</label>
       <label><input type="radio" name="cscope" value="platform"${st.scope === 'platform' ? ' checked' : ''}> ${T.platform}</label></fieldset>` : ''}
-      <fieldset><legend>${T.lang}</legend><label><input type="radio" name="clang" value="tr"${st.lang === 'tr' ? ' checked' : ''}> Türkçe</label><label><input type="radio" name="clang" value="en"${st.lang === 'en' ? ' checked' : ''}> English</label></fieldset>
+
       <label class="cite-date">${T.date} <input type="date" id="cdate" value="${st.accessed}" max="${today()}"></label></div>
     <div class="cite-list">${blocks}</div><p class="muted small">${T.note}</p></div>`;
   dlg.querySelector('#citeclose').addEventListener('click', () => dlg.close());

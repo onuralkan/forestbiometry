@@ -27,11 +27,11 @@ const n = s => Number(String(s).trim().replace(/\s/g, '').replace(',', '.'));
 const csv = (await readFile(path.join(ROOT, 'assets/lab/volume/ornek/ornek-hacim.csv'), 'utf8')).trim().split('\n').slice(1);
 const trees = csv.map((l, i) => { const [id, D, H, V] = l.split(',').map(Number); return { row: i + 2, id: String(id), D, H, V }; });
 
-await page.goto(URL + '?lang=tr'); await page.waitForSelector('#steps');
-ok((await page.locator('h1').textContent()).includes('Hacim Denklemleri') && (await page.locator('.b-ids').textContent()).trim() === 'SV-04' && (await page.locator('.b-ver').textContent()).includes(VOL.TOOL.version), 'title, catalogue id SV-04, version');
+await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
+ok((await page.locator('h1').textContent()).includes('Volume Equations') && (await page.locator('.b-ids').textContent()).trim() === 'SV-04' && (await page.locator('.b-ver').textContent()).includes(VOL.TOOL.version), 'title, catalogue id SV-04, version');
 ok(await page.locator('#side a[href="hacim-denklemleri.php"]').count() === 1, 'listed in the sidebar');
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
-ok((await page.textContent('#dsinfo')).includes(`${trees.length} ağaç`), `sample: ${trees.length} trees`);
+ok((await page.textContent('#dsinfo')).includes(`${trees.length} trees`), `sample: ${trees.length} trees`);
 await page.click('#to2'); await page.waitForSelector('#ftab');
 ok(await page.isChecked('[data-form="cv"]') && await page.isChecked('[data-form="ln"]') && !(await page.isChecked('[data-form="cf"]')), 'defaults: combined variable and logarithmic forms');
 await page.check('[data-form="cf"]'); await page.waitForSelector('#ftab'); await page.check('[data-form="loc"]'); await page.waitForSelector('#ftab');
@@ -46,13 +46,13 @@ for (const [id, e] of Object.entries(E)) {
   const c0 = n(await page.locator(`[data-coef="${id}"] [data-k="c0"]`).textContent());
   ok(Math.abs(rmse - e.metrics.rmse) < 5e-6 && Math.abs(r2 - e.metrics.r2) < 5e-5 && Math.abs(c0 - e.coef[0]) <= 1e-7 * Math.abs(e.coef[0]), `${id}: RMSE ${rmse}, R² ${r2}, first coefficient ${c0} = engine`);
 }
-ok((await page.locator('#cmptab tr[data-form="cv"]').textContent()).includes('kestirildi') && (await page.locator('#cmptab tr[data-form="ln"]').textContent()).includes('Baskerville'), 'weight (estimated k) and Baskerville correction written');
+ok((await page.locator('#cmptab tr[data-form="cv"]').textContent()).includes('estimated') && (await page.locator('#cmptab tr[data-form="ln"]').textContent()).includes('Baskerville'), 'weight (estimated k) and Baskerville correction written');
 ok(await page.locator('[data-fit] .chartbox svg').count() === 8, 'observed–predicted and residual charts for each form');
 await shot('volume-1-results');
 // downloads
 const x = await dl('#x-xlsx'), wb = XLSX.read(await readFile(await x.path()));
-const tr = XLSX.utils.sheet_to_json(wb.Sheets['Ağaçlar'], { header: 1 }), j = tr[0].indexOf('V_ln_m3');
-ok(['Bilgi', 'Karşılaştırma', 'Katsayılar', 'Ağaçlar'].every(s => wb.SheetNames.includes(s)) && tr.length === trees.length + 1 && Math.abs(tr[1][j] - E.ln.pred[0]) < 1e-12, 'Excel: four sheets, predictions at full precision');
+const tr = XLSX.utils.sheet_to_json(wb.Sheets['Trees'], { header: 1 }), j = tr[0].indexOf('V_ln_m3');
+ok(['Info', 'Comparison', 'Coefficients', 'Trees'].every(s => wb.SheetNames.includes(s)) && tr.length === trees.length + 1 && Math.abs(tr[1][j] - E.ln.pred[0]) < 1e-12, 'Excel: four sheets, predictions at full precision');
 const jd = await dl('#x-json'), rec = JSON.parse(await readFile(await jd.path(), 'utf8'));
 ok(rec.format === 'run-record/1' && rec.tool.ids.includes('SV-04') && rec.fits.length === 4 && rec.inputs[0].kind === 'file', 'run record: catalogue id, four fits, input fingerprint');
 { const rd = await dl('#x-r'), rs = await readFile(await rd.path(), 'utf8');
@@ -60,16 +60,16 @@ ok(rec.format === 'run-record/1' && rec.tool.ids.includes('SV-04') && rec.fits.l
     'R code: a .R file reading the user\'s file, the forms as lm, the Baskerville correction (its numbers are checked in R by scripts/rcode-check.sh)'); }
 // save a set
 await page.selectOption('#sv-form', 'ln'); await page.click('#sv-save'); await page.waitForSelector('#sv-msg .err');
-await page.fill('#sv-cit', 'e2e benzetim örneği'); await page.locator('#sv-cit').dispatchEvent('change'); await page.click('#sv-save'); await page.waitForSelector('#sv-ok');
+await page.fill('#sv-cit', 'e2e simulated example'); await page.locator('#sv-cit').dispatchEvent('change'); await page.click('#sv-save'); await page.waitForSelector('#sv-ok');
 const sets = await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js'); await import('/assets/lab/volume/calc.js'); return C.listCoefs('volume'); });
 ok(sets.length === 1 && sets[0].form === 'volume.ln' && sets[0].origin === 'fitted' && sets[0].transform.correction === 'baskerville' && Math.abs(sets[0].transform.value - E.ln.s) < 1e-15 && sets[0].valid.D && sets[0].valid.H, 'set saved: log form, Baskerville SEE, validity range');
 ok(Math.abs(VOL.predict(sets[0], trees[0].D, trees[0].H) - E.ln.pred[0]) < 1e-12, 'the saved set predicts the fitted volume');
 // hand-off to Model Evaluation
 await page.click('#ev-send'); await page.waitForURL(/model-degerlendirme/); await page.waitForSelector('#obs');
-ok((await page.textContent('#status')).includes('aktarılan tablo') && (await page.locator('#obs option:checked').textContent()).trim() === 'V_obs_m3', 'Model Evaluation opens with the handed-over table and the observed column chosen');
+ok((await page.textContent('#status')).includes('handed over by another tool') && (await page.locator('#obs option:checked').textContent()).trim() === 'V_obs_m3', 'Model Evaluation opens with the handed-over table and the observed column chosen');
 await shot('volume-2-eval');
 // the volumes sent by Stem Section Volume (a package and a stem-volume record written into the store)
-await page.goto(URL + '?lang=tr'); await page.waitForSelector('#steps');
+await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
 await page.evaluate(async T => {
   const S = await import('/assets/lab/core/store.js'), R = await import('/assets/lab/core/record.js'), D = await import('/assets/lab/core/derived.js');
   const ds = { schema: 'forest-dataset/1', trees: T.map(t => ({ row: t.row, plot_id: '1', tree_id: t.id, period: null, species: 'X', dbh: t.D, height: t.H, extra: {} })), plots: [{ plot_id: '1', plot_area: 400 }] };
@@ -79,18 +79,18 @@ await page.evaluate(async T => {
 }, trees);
 await page.reload(); await page.waitForSelector('#steps'); await page.click('#steps [data-go="1"]'); await page.waitForSelector('#svinfo');
 await page.selectOption('#svside', 'ib'); await page.click('#svuse'); await page.waitForSelector('#dsinfo');
-ok((await page.textContent('#dsinfo')).includes('kabuksuz') && (await page.textContent('#dsinfo')).includes(`${trees.length} ağaç`), 'sent volumes used: under bark, every tree');
+ok((await page.textContent('#dsinfo')).includes('under bark') && (await page.textContent('#dsinfo')).includes(`${trees.length} trees`), 'sent volumes used: under bark, every tree');
 await page.click('#to2'); await page.click('#calc'); await page.waitForSelector('#cmptab');
 { const e = VOL.fitForm('cv', trees.map(t => ({ ...t, V: t.V * 0.9 })), { weight: { kind: 'power', k: null } }); ok(Math.abs(n(await page.locator('#cmptab tr[data-form="cv"] [data-k="rmse"]').textContent()) - e.metrics.rmse) < 5e-6, 'fit on the sent under-bark volumes = engine'); }
 { const got = []; page.on('download', d => got.push(d)); await page.click('#x-r'); await page.waitForFunction(() => true); for (let i = 0; i < 50 && got.length < 2; i++) await page.waitForTimeout(100);
   const csvD = got.find(d => d.suggestedFilename().endsWith('.csv')), rs = got.find(d => d.suggestedFilename().endsWith('.R'));
   const ct = csvD ? (await readFile(await csvD.path(), 'utf8')).trim().split('\n') : [], rt = rs ? await readFile(await rs.path(), 'utf8') : '';
-  ok(ct.length === trees.length + 1 && ct[0] === 'row,tree,D_cm,H_m,V_m3' && Math.abs(+ct[1].split(',')[4] - trees[0].V * 0.9) < 1e-15 && rt.includes('data_file <- "hacim-agaclari.csv"') && rt.includes('seksiyon-hacmi'),
+  ok(ct.length === trees.length + 1 && ct[0] === 'row,tree,D_cm,H_m,V_m3' && Math.abs(+ct[1].split(',')[4] - trees[0].V * 0.9) < 1e-15 && rt.includes('data_file <- "volume-trees.csv"') && rt.includes('seksiyon-hacmi'),
     'R code of the sent volumes: the script and the trees as CSV (full precision)'); }
-// English, phone
-await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
-ok((await page.locator('h1').textContent()).includes('Volume Equations'), 'English');
-const ph = await ctx.newPage(); await ph.setViewportSize({ width: 390, height: 800 }); await ph.goto(URL + '?lang=tr'); await ph.waitForSelector('#steps');
+// the old ?lang=tr link redirects to the English page; phone
+await page.goto(URL + '?lang=tr'); await page.waitForSelector('#steps');
+ok(!page.url().includes('lang=') && (await page.locator('h1').textContent()).includes('Volume Equations'), '?lang=tr redirects to the English page');
+const ph = await ctx.newPage(); await ph.setViewportSize({ width: 390, height: 800 }); await ph.goto(URL + '?lang=en'); await ph.waitForSelector('#steps');
 ok(await ph.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();

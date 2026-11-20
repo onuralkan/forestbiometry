@@ -36,14 +36,14 @@ const { ds } = tableToDataset(tableFromText(csv, { delim: ',' }), { plot: 0, tre
 const E = RUN.analyse(ds, { structure: {}, spatial: { k: 4, edge: 'none', buffer: 5 }, geometry: { shape: 'circle-area', cx: 0, cy: 0 }, competition: { mode: 'knn', k: 4, edge: 'none', buffer: 5 } });
 
 // 0. listed in the sidebar and the index under its module; the catalogue ids it covers in the header
-await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('#side a[href="mescere-yapisi.php"]').count()) === 1 && (await page.locator('#side .b-group[data-mod="SS"] a[href="mescere-yapisi.php"]').count()) === 1, 'sidebar: Meşcere Yapısı under "Meşcere yapısı ve sıklığı"');
-await page.goto(URL + '?lang=tr');
-ok((await page.locator('h1').textContent()).includes('Meşcere Yapısı') && (await page.locator('.b-ids').textContent()).trim() === 'SS-02 · SS-04 · SS-05 · SS-06 · SS-07' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SS-02, SS-04…SS-07, version ${VER}`);
+await page.goto(BASE + '/');
+ok((await page.locator('#side a[href="mescere-yapisi.php"]').count()) === 1 && (await page.locator('#side .b-group[data-mod="SS"] a[href="mescere-yapisi.php"]').count()) === 1, 'sidebar: Stand Structure under its module (SS)');
+await page.goto(URL + '?lang=en');
+ok((await page.locator('h1').textContent()).includes('Stand Structure') && (await page.locator('.b-ids').textContent()).trim() === 'SS-02 · SS-04 · SS-05 · SS-06 · SS-07' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SS-02, SS-04…SS-07, version ${VER}`);
 
 // 1. sample data
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
-ok((await page.textContent('#dsinfo')).includes('158 ağaç, 3 örnek alan, koordinatlı') && (await page.locator('.fname', { hasText: 'benzetim' }).count()) === 1, 'sample: simulated, 158 trees, 3 plots, coordinates found');
+ok((await page.textContent('#dsinfo')).includes('158 trees, 3 plots, with coordinates') && (await page.locator('.fname', { hasText: 'simulated' }).count()) === 1, 'sample: simulated, 158 trees, 3 plots, coordinates found');
 await page.click('#to2'); await page.waitForSelector('#geocard');
 ok(await page.isChecked('input[name="gwang"][value="k"]'), 'W standard angle: 360°/k by default (Pommerening 2002)');
 ok((await page.isChecked('input[name="gshape"][value="circle-area"]')) && (await page.isChecked('input[name="gedge"][value="none"]')) && (await page.inputValue('[data-set="sdiBeta"]')) === '1.605', 'defaults: circle from the plot area, no edge correction, β = 1.605');
@@ -53,11 +53,11 @@ await page.click('#calc'); await page.waitForSelector('#utab');
 // 2. the plots table = engine
 { const th = await page.evaluate(() => [...document.querySelectorAll('#utab thead th')].map(x => x.textContent.trim())), rr = await rows('utab'), col = h => th.indexOf(h);
   ok(rr.length === 3, 'one row per plot');
-  const checks = [['N/ha', u => u.st.Nha], ['G (m²/ha)', u => u.st.Gha], ['Dq (cm)', u => u.st.Dq], ['H0 (m)', u => u.st.H0], ['CV (değişim katsayısı)', u => u.st.measures.cv], ['Gini', u => u.st.measures.gini], ['Shannon (çap)', u => u.st.measures.shannonD], ['Simpson (1 − Σp²)', u => u.st.measures.simpson],
+  const checks = [['N/ha', u => u.st.Nha], ['G (m²/ha)', u => u.st.Gha], ['Dq (cm)', u => u.st.Dq], ['H0 (m)', u => u.st.H0], ['CV', u => u.st.measures.cv], ['Gini', u => u.st.measures.gini], ['Shannon (diameter)', u => u.st.measures.shannonD], ['Simpson (1 − Σp²)', u => u.st.measures.simpson],
     ['SDI', u => u.st.measures.sdi], ['Curtis RD', u => u.st.measures.rd], ['Clark–Evans R', u => u.sp.ce.R], ['R (Donnelly)', u => u.sp.ce.RD], ['W', u => u.sp.means.W], ['M', u => u.sp.means.M], ['T', u => u.sp.means.T]];
   for (const [h, g] of checks) ok(col(h) > 0 && E.units.every((u, i) => close(num(rr[i][col(h)]), g(u))), `${h} = engine (${E.units.map(g).map(v => v.toFixed(4)).join(', ')})`);
   await page.check('#allcols'); const th2 = await page.evaluate(() => [...document.querySelectorAll('#utab thead th')].map(x => x.textContent.trim()));
-  ok(['Çarpıklık', 'Fazla basıklık (basıklık − 3)', 'Shannon (tür)', 'Göreli aralık S%', 'U', 'Hegyi (ort.)'].every(h => th2.includes(h)), 'all columns: skewness, kurtosis, species Shannon, relative spacing, U, mean Hegyi'); }
+  ok(['Skewness', 'Kurtosis (excess)', 'Shannon (species)', 'Relative spacing S%', 'U', 'Hegyi (mean)'].every(h => th2.includes(h)), 'all columns: skewness, kurtosis, species Shannon, relative spacing, U, mean Hegyi'); }
 await shot('units');
 
 // 2b. crown competition factor (CCF): off by default; a line fitted to open-grown trees, saved as a set, applied
@@ -65,16 +65,16 @@ await shot('units');
   ok(!th0.includes('CCF'), 'CCF column absent until a set is chosen');
   await page.click('#steps [data-go="2"]'); await page.waitForSelector('#ccfcard');
   ok((await page.locator('#ccfcard #cf-none').count()) === 1 && (await page.inputValue('#ccf-all')) === '', 'CCF card: library inside it, no built-in sets (K1)');
-  await page.locator('#ccfcard details summary', { hasText: 'Açıkta' }).click();
+  await page.locator('#ccfcard details summary', { hasText: 'open-grown' }).click();
   const P = [[12, 3.1], [18, 4.0], [25, 5.4], [33, 6.6], [41, 8.1], [52, 9.7]];
   await page.fill('#ccf-pairs', P.map(([d, c]) => `${d}\t${String(c).replace('.', ',')}`).join('\n') + '\nx 4'); await page.locator('#ccf-pairs').dispatchEvent('change');
   const F = CF.fitCW([...P.map(([d, cw]) => ({ d, cw })), { d: NaN, cw: 4 }]);
-  ok((await page.textContent('#ccffit')).includes(String(F.b0)) && (await page.textContent('#ccfcard')).includes('dışarıda bırakıldı: 7'), `fit CW = ${F.b0.toFixed(3)} + ${F.b1.toFixed(4)}·d = engine (decimal commas; row 7 left out)`);
-  await page.click('#ccf-save'); ok((await page.textContent('#status')).includes('künye'), 'no citation: not saved');
+  ok((await page.textContent('#ccffit')).includes(String(F.b0)) && (await page.textContent('#ccfcard')).includes('left out: 7'), `fit CW = ${F.b0.toFixed(3)} + ${F.b1.toFixed(4)}·d = engine (decimal commas; row 7 left out)`);
+  await page.click('#ccf-save'); ok((await page.textContent('#status')).includes('citation'), 'no citation: not saved');
   await page.fill('#ccf-cit', 'Test, made-up open-grown trees'); await page.click('#ccf-save'); await page.waitForFunction(() => document.getElementById('ccf-all') && document.getElementById('ccf-all').value !== '');
   // the status line and the list are written after the store answers: wait for them, not only for the choice (CI flake, 18 Nov 2026)
-  await page.waitForFunction(() => document.getElementById('status').textContent.includes('kaydedildi') && document.querySelectorAll('#ccfcard #cf-list tbody tr').length === 1, null, { timeout: 5000 }).catch(() => {});
-  ok((await page.textContent('#status')).includes('kaydedildi') && (await page.locator('#ccfcard #cf-list tbody tr').count()) === 1, 'fitted line saved as a set, listed in the library and chosen for all species');
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('was saved') && document.querySelectorAll('#ccfcard #cf-list tbody tr').length === 1, null, { timeout: 5000 }).catch(() => {});
+  ok((await page.textContent('#status')).includes('was saved') && (await page.locator('#ccfcard #cf-list tbody tr').count()) === 1, 'fitted line saved as a set, listed in the library and chosen for all species');
   await page.click('#calc'); await page.waitForSelector('#utab');
   const set = { ...blankSet('ccf.cw'), params: { b0: F.b0, b1: F.b1 }, valid: { D: [F.min, F.max] }, origin: 'fitted', fit: {}, source: { citation: 'x' } };
   const E2 = RUN.analyse(ds, { structure: {}, ccf: { all: set, bySpecies: {} } });
@@ -103,27 +103,27 @@ await page.click('#calc'); await page.waitForSelector('#utab'); await page.click
 // 5. downloads
 await page.click('#tab-export');
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), wb = XLSX.read(await readFile(await dl.path()));
-  ok(wb.SheetNames.join() === 'Bilgi,Ornek alanlar,Agaclar,Siniflar,Turler', 'Excel sheets: ' + wb.SheetNames.join());
-  const tr = XLSX.utils.sheet_to_json(wb.Sheets.Agaclar, { header: 1 });
+  ok(wb.SheetNames.join() === 'Info,Plots,Trees,Classes,Species', 'Excel sheets: ' + wb.SheetNames.join());
+  const tr = XLSX.utils.sheet_to_json(wb.Sheets.Trees, { header: 1 });
   ok(tr[0].slice(0, 8).join() === 'alan,agac,tur,cap,boy,x,y,alan_buyuklugu' && tr[0].includes('BAL_m2_ha') && tr[0].includes('hegyi') && tr[0].includes('MCA_m2') && typeof tr[1][tr[0].indexOf('MCA_m2')] === 'number' && tr.length === 159 && tr[1][3] === '23.4' && typeof tr[1][tr[0].indexOf('BAL_m2_ha')] === 'number', 'tree sheet: the source rows exactly as read, competition columns and the MCA appended as numbers');
-  const info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 }); ok(info.some(r => String(r[1]).includes('"edge":"buffer"')) && info.some(r => r[0] === 'Araç' && r[1] === 'mescere-yapisi ' + VER), 'Info: tool and version, settings with the edge handling'); }
+  const info = XLSX.utils.sheet_to_json(wb.Sheets.Info, { header: 1 }); ok(info.some(r => String(r[1]).includes('"edge":"buffer"')) && info.some(r => r[0] === 'Tool' && r[1] === 'mescere-yapisi ' + VER), 'Info: tool and version, settings with the edge handling'); }
 
 // 6. data without coordinates: spatial part "–", the reason given
 { const q = await ctx.newPage(); q.on('pageerror', e => errors.push(e.message));
-  await q.goto(URL + '?lang=tr'); await q.click('#steps [data-go="1"]'); await q.click('#reset'); await q.locator('#tblbox details summary').click();
+  await q.goto(URL); await q.click('#steps [data-go="1"]'); await q.click('#reset'); await q.locator('#tblbox details summary').click();
   await q.fill('#tblbox textarea', ['alan\tcap\talan_buyuklugu', ...ds.trees.filter(t => t.plot_id === '2').map(t => `2\t${t.dbh}\t500`)].join('\n')); await q.click('#tblbox [data-act="paste"]');
   await q.waitForSelector('#usetbl'); await q.click('#usetbl'); await q.waitForSelector('#dsinfo'); await q.click('#to2');
-  ok((await q.locator('#geocard', { hasText: 'koordinat yok' }).count()) === 1, 'no coordinates: the spatial settings say so');
+  ok((await q.locator('#geocard', { hasText: 'no coordinates' }).count()) === 1, 'no coordinates: the spatial settings say so');
   await q.click('#calc'); await q.waitForSelector('#utab'); await q.check('#allcols');
   const th = await q.evaluate(() => [...document.querySelectorAll('#utab thead th')].map(x => x.textContent.trim())), r = (await q.evaluate(() => [...document.querySelector('#utab tbody tr').children].map(x => x.textContent.trim())));
-  ok(r[th.indexOf('Clark–Evans R')] === '–' && r[th.indexOf('Hegyi (ort.)')] === '–' && num(r[th.indexOf('Gini')]) > 0, 'spatial values "–", not zero; structure computed');
+  ok(r[th.indexOf('Clark–Evans R')] === '–' && r[th.indexOf('Hegyi (mean)')] === '–' && num(r[th.indexOf('Gini')]) > 0, 'spatial values "–", not zero; structure computed');
   await q.close(); }
 
-// 7. English, phone + dark
-const en = await ctx.newPage(); en.on('pageerror', e => errors.push(e.message)); await en.goto(URL + '?lang=en'); await en.click('#steps [data-go="1"]'); await en.click('#sample'); await en.waitForSelector('#dsinfo'); await en.click('#to2'); await en.click('#calc'); await en.waitForSelector('#utab');
-ok((await en.locator('#utab thead th', { hasText: 'Clark–Evans R' }).count()) === 1 && (await en.locator('h1').textContent()).includes('Stand Structure'), 'English');
+// 7. the old Turkish link opens the English page; phone + dark
+const en = await ctx.newPage(); en.on('pageerror', e => errors.push(e.message)); await en.goto(URL + '?lang=tr'); await en.click('#steps [data-go="1"]'); await en.click('#sample'); await en.waitForSelector('#dsinfo'); await en.click('#to2'); await en.click('#calc'); await en.waitForSelector('#utab');
+ok((await en.locator('#utab thead th', { hasText: 'Clark–Evans R' }).count()) === 1 && (await en.locator('h1').textContent()).includes('Stand Structure') && !en.url().includes('lang='), '?lang=tr redirects to the English page');
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' }); phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr'); await phone.click('#sample'); await phone.waitForSelector('#dsinfo'); await phone.click('#to2'); await phone.click('#calc'); await phone.waitForSelector('#utab');
+await phone.goto(URL); await phone.click('#sample'); await phone.waitForSelector('#dsinfo'); await phone.click('#to2'); await phone.click('#calc'); await phone.waitForSelector('#utab');
 await phone.click('#tab-detail'); await phone.waitForSelector('#ch-map');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll'); await shot('phone', phone);
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));

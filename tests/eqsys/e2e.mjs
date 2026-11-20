@@ -1,6 +1,6 @@
 // Browser test for Systems of Equations (SM-04): the simulated sample with the compatible height–volume system, fitted by
 // SUR on the page and compared with eqsys/calc.js in Node and with the Python reference; a linear system compared with
-// systemfit; sets saved and shown in the coefficient library; English.
+// systemfit; sets saved and shown in the coefficient library; results restored on reload.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/eqsys/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
@@ -20,19 +20,19 @@ const shot = async n => { if (SHOTS) await page.screenshot({ path: path.join(SHO
 const NL = JSON.parse(await readFile(path.join(ROOT, 'tests/ref/eqsys_sm04_nl.json'), 'utf8')), REF = JSON.parse(await readFile(path.join(ROOT, 'tests/ref/eqsys_sm04.json'), 'utf8'));
 const nums = async sel => (await page.locator(sel).allTextContents()).map(s => +s.replace(/\s/g, '').replace('−', '-').replace(',', '.'));
 
-await page.goto(BASE + '/denklem-sistemleri.php?lang=tr'); await page.waitForSelector('#sample');
+await page.goto(BASE + '/denklem-sistemleri.php?lang=en'); await page.waitForSelector('#sample');
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
-ok((await page.textContent('#dsinfo')).includes('80 satır'), 'sample read: 80 rows');
+ok((await page.textContent('#dsinfo')).includes('80 rows'), 'sample read: 80 rows');
 await page.click('#to2'); await page.waitForSelector('#ntab');
-ok((await page.textContent('#ntab')).includes('ortak') && await page.inputValue('[data-map="D_cm"]') === '1', 'compatible system: a, b, c marked shared; D_cm mapped to its column');
+ok((await page.textContent('#ntab')).includes('shared') && await page.inputValue('[data-map="D_cm"]') === '1', 'compatible system: a, b, c marked shared; D_cm mapped to its column');
 await page.click('#calc'); await page.waitForSelector('#coeftab');
 const b = await nums('#coeftab [data-k^="b"]'), R = NL.compatible_SUR;
 ok(b.length === 6 && b.every((v, j) => Math.abs(v - R.coef[j]) <= 1e-3 * R.se[j] + 1e-9 * Math.abs(R.coef[j])), 'compatible system by SUR on the page = Python reference: ' + b.join(' '));
-ok((await page.textContent('#r-sum')).includes('80 gözlem, 2 denklem, 6 katsayı'), 'summary: 80 observations, 2 equations, 6 coefficients');
+ok((await page.textContent('#r-sum')).includes('80 observations, 2 equations, 6 coefficients'), 'summary: 80 observations, 2 equations, 6 coefficients');
 ok((await page.locator('#cmptab tbody tr').count()) === 7, 'method comparison: six coefficients and log L');
 await page.click('#lrt-go'); await page.waitForSelector('#lrt-unrel', { timeout: 60000 });
 { const t = await page.textContent('#lrt-unrel');
-  ok(t.includes('p değeri verilmez') && t.includes('belirlenemiyor') && t.includes('uç değerlere') && /LR = [\d,.]+, sd = 3/.test(t) && !(await page.locator('#lrt-res').count()) && (await page.textContent('#lrtcard')).includes('a → a_1, a_2'),
+  ok(t.includes('no p-value is given') && t.includes('not identified') && t.includes('extreme values') && /LR = [\d,.]+, df = 3/.test(t) && !(await page.locator('#lrt-res').count()) && (await page.textContent('#lrtcard')).includes('a → a_1, a_2'),
     'likelihood-ratio test of the shared a, b, c on the sample: the unrestricted system is not identified, so no p-value; reasons and LR for information (1.0.0-beta.2)'); }
 { const [rd] = await Promise.all([page.waitForEvent('download'), page.click('#x-r')]), rs = await readFile(await rd.path(), 'utf8');
   ok(rd.suggestedFilename().endsWith('.R') && rs.includes('data_file <- "ornek-sistem.csv"') && rs.includes('rhs = quote(k * D_cm^p * (1.3 + a * (1 - exp(-b * D_cm))^c)^q)') && rs.includes('fit <- fb_fit(S, "SUR", resid_cov, start, ols_tool)')
@@ -46,16 +46,16 @@ for (const n of ['h0', 'h1', 'v0', 'v1', 'v2']) { await page.fill(`[data-start="
 await page.click('#calc'); await page.waitForSelector('#coeftab');
 ok(await page.locator('#coeftab tbody tr').count() === 5, 'a five-coefficient nonlinear system on the original scale also fits');
 // save the sets
-await page.fill('#sv-cit', 'e2e benzetim'); await page.locator('#sv-cit').dispatchEvent('change');
+await page.fill('#sv-cit', 'e2e simulated'); await page.locator('#sv-cit').dispatchEvent('change');
 await page.click('#sv-save'); await page.waitForSelector('#sv-msg .err');
 for (const [k, v] of [['c1', 'cm'], ['c2', 'm'], ['c3', 'm3']]) await page.fill(`[data-unit="${k}"]`, v);
 await page.click('#sv-save'); await page.waitForSelector('#sv-ok');
 const stored = await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js'); return (await C.listCoefs('eqsys')).map(s => ({ form: s.form, expr: s.fit.expr, system: s.fit.system, out: s.output })); });
 ok(stored.length === 2 && stored.every(s => /^eqsys\./.test(s.form)) && stored[0].system === stored[1].system && stored.some(s => s.out.name === 'V_m3' && s.out.unit === 'm3'), 'two sets saved with the same system id and units');
-await page.goto(BASE + '/katsayi-kutuphanesi.php?lang=tr'); await page.waitForFunction(() => document.body.textContent.includes('exp(h0)*D_cm^h1'));
-ok((await page.textContent('main')).includes('Denklem Sistemleri') && !/form\.unknown/.test(await page.textContent('main')), 'the coefficient library shows the sets, no unknown-form problem');
+await page.goto(BASE + '/katsayi-kutuphanesi.php?lang=en'); await page.waitForFunction(() => document.body.textContent.includes('exp(h0)*D_cm^h1'));
+ok((await page.textContent('main')).includes('Systems of Equations') && !/form\.unknown/.test(await page.textContent('main')), 'the coefficient library shows the sets, no unknown-form problem');
 await page.goto(BASE + '/denklem-sistemleri.php?lang=en'); await page.waitForSelector('#coeftab');
-ok((await page.textContent('main')).includes('Method comparison'), 'English, results restored');
+ok((await page.textContent('main')).includes('Method comparison'), 'results restored');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();
 console.log(`SM-04 e2e: ${pass} passed, ${fail} failed`);

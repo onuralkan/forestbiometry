@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
 const D = await import('../../assets/lab/dist/index.js');
 const { seal, sha256JSON } = await import('../../assets/lab/core/record.js');
 const C = await import('../../assets/lab/dashboard/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/pano.php?lang=tr';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/pano.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -29,8 +29,8 @@ const sample = JSON.parse(await readFile(path.join(ROOT, 'assets/lab/stand/ornek
 // records
 const d24 = sample.trees.filter(t => t.period === '2024').map(t => t.dbh);
 const res = [D.runMethod('weibull.ml', { d: d24, plot: D.POOL, period: '2024' }), D.runMethod('lognormal.ml', { d: d24, plot: D.POOL, period: '2024' })];
-const distRec = await seal({ format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.0', ids: ['SS-03'], page: 'cap-dagilimi.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:00:00Z', lang: 'tr', inputs: [{ role: 'data', kind: 'file', name: 'agaclar.csv', sha256: '00' }], results: res });
-const hdRec = await seal({ format: 'run-record/1', tool: { id: 'boy-cap', version: '1.1.0', ids: ['SM-01'], page: 'boy-cap.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:05:00Z', lang: 'tr',
+const distRec = await seal({ format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.0', ids: ['SS-03'], page: 'cap-dagilimi.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:00:00Z', lang: 'en', inputs: [{ role: 'data', kind: 'file', name: 'agaclar.csv', sha256: '00' }], results: res });
+const hdRec = await seal({ format: 'run-record/1', tool: { id: 'boy-cap', version: '1.1.0', ids: ['SM-01'], page: 'boy-cap.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:05:00Z', lang: 'en',
   inputs: [{ role: 'dataset', kind: 'dataset', sha256: sha }], settings: { breastHeight: 1.3, model: 'naslund' }, fits: [{ id: 'naslund', status: 'ok', theta: [1.9, 0.2] }, { id: 'michailoff', status: 'ok', theta: [30, 12] }] });
 const other = { format: 'run-record/1', tool: { id: 'bonitet', version: '1.0.0-beta.3' }, created: '2026-11-16T12:10:00Z', inputs: [] };
 const files = [['dist.json', distRec], ['hd.json', hdRec], ['bonitet.json', other], ['bozuk.json', null]];
@@ -67,7 +67,7 @@ const u24 = C.plotTable(sample, { ...C.blankFilter(), period: '2024' }, 'unmeasu
 ok(+await tile('t-plots') === u24.rows.length, `back to not measured: ${u24.rows.length} plot × period in 2024`);
 
 await page.selectOption('[data-f="plot"]', '001'); await page.waitForSelector('#ch-map');
-ok((await page.textContent('#ch-map')).includes('koordinatlı ağaç yok'), 'one plot: map panel says the sample has no coordinates');
+ok((await page.textContent('#ch-map')).includes('No trees with coordinates'), 'one plot: map panel says the sample has no coordinates');
 await page.selectOption('[data-f="plot"]', '*');
 
 // 2. records
@@ -76,10 +76,10 @@ ok(await page.locator('#rectab tbody tr').count() === 3 && (await page.textConte
 ok(await page.locator('#rectab tr[data-kind="dist"]').count() === 1 && await page.locator('#rectab tr[data-kind="hd"]').count() === 1 && await page.locator('#rectab tr[data-kind="other"] input[data-show]').count() === 0, 'record kinds: distribution, height, other (not drawn)');
 ok(await page.locator('#ch-hist path.ch-line').count() === 2 && (await page.textContent('#ch-hist figcaption')).includes('weibull'), '2024 pooled: Weibull and lognormal densities over the histogram');
 ok(await page.locator('#ch-hd path.ch-line').count() === 2 && (await page.textContent('#ch-hd figcaption')).includes('naslund ★'), 'height curves from the record, chosen model starred');
-ok((await page.textContent('#rectab tr[data-kind="dist"]')).includes('dosyadan'), 'distribution record made from a file: match unknown');
+ok((await page.textContent('#rectab tr[data-kind="dist"]')).includes('match unknown'), 'distribution record made from a file: match unknown');
 await shot('di04-1-pano');
 await page.selectOption('[data-f="period"]', '2019');
-ok(await page.locator('#ch-hist path.ch-line').count() === 0 && (await page.textContent('#ch-hist figcaption')).includes('çizilecek kayıt sonucu yok'), 'other period: no density, explained');
+ok(await page.locator('#ch-hist path.ch-line').count() === 0 && (await page.textContent('#ch-hist figcaption')).includes('No record result to draw'), 'other period: no density, explained');
 await page.selectOption('[data-f="period"]', '2024');
 await page.uncheck('#rectab tr[data-kind="dist"] input[data-show]');
 ok(await page.locator('#ch-hist path.ch-line').count() === 0, 'record hidden: densities removed');
@@ -91,15 +91,15 @@ const [ds2] = await Promise.all([page.waitForEvent('download'), page.click('[dat
 ok((await readFile(await ds2.path(), 'utf8')).startsWith('<?xml'), 'SVG download');
 
 // 3. a kept package: the height record is recognised as made from it; settings survive a reload
-await page.evaluate(async ds => { const P = await import('/assets/lab/core/projects.js'); await P.registerApproved(ds, 'tr'); }, sample);
+await page.evaluate(async ds => { const P = await import('/assets/lab/core/projects.js'); await P.registerApproved(ds, 'en'); }, sample);
 await page.reload(); await page.waitForSelector('#pkg');
 await page.selectOption('#pkg', { index: 0 });
 await page.waitForSelector('#rectab');
-ok((await page.textContent('#rectab tr[data-kind="hd"]')).includes('bu paketten') && await page.locator('#samplenote').count() === 0, 'package from the manager: height record made from this package');
+ok((await page.textContent('#rectab tr[data-kind="hd"]')).includes('this package') && await page.locator('#samplenote').count() === 0, 'package from the manager: height record made from this package');
 ok(await page.inputValue('[data-f="period"]') === '2024' && await page.locator('#rectab tbody tr').count() === 3, 'filters and records kept after a reload');
 
-// 4. English, phone
-await page.goto(BASE + '/pano.php?lang=en'); await page.waitForSelector('#panels');
+// 4. English page text, phone
+await page.goto(URL); await page.waitForSelector('#panels');
 ok((await page.textContent('h1')).includes('Data Visualization') && (await page.textContent('#fcard')).includes('Filters'), 'English');
 const phone = await ctx.newPage(); await phone.setViewportSize({ width: 390, height: 800 });
 await phone.goto(URL); await phone.waitForSelector('#panels');

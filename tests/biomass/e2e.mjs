@@ -17,7 +17,7 @@ const { blankSet } = await import('../../assets/lab/core/coef.js');
 const { tableFromText } = await import('../../assets/lab/core/table.js');
 const { tableToDataset } = await import('../../assets/lab/stand/calc.js');
 const { parseNumber, toInternal } = await import('../../assets/lab/core/num.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=tr';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=en';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -53,11 +53,11 @@ await page.evaluate(async sets => { const C = await import('/assets/lab/core/coe
 await page.reload();
 await page.setInputFiles('#tblbox input[type="file"]', file); await page.waitForSelector('#usetbl');
 await page.click('#usetbl'); await page.waitForSelector('#dsinfo');
-ok((await page.textContent('#dsinfo')).includes('7 ağaç kaydı'), 'table read: 7 trees');
+ok((await page.textContent('#dsinfo')).includes('7 tree records'), 'table read: 7 trees');
 await page.click('#to2'); await page.waitForSelector('#maptab');
 
 // 2. settings: two components, mapping, CF
-ok(await page.isDisabled('#calc') && (await page.textContent('#s2prob')).includes('karbon oranı'), 'computing waits for the carbon fraction and a mapping');
+ok(await page.isDisabled('#calc') && (await page.textContent('#s2prob')).includes('carbon fraction'), 'computing waits for the carbon fraction and a mapping');
 await page.fill('[data-cf="0"]', '0.5'); await page.locator('[data-cf="0"]').dispatchEvent('change'); await page.waitForSelector('#maptab');
 await page.click('#cadd'); await page.waitForSelector('[data-cf="1"]');
 await page.fill('[data-cf="1"]', '0.48'); await page.locator('[data-cf="1"]').dispatchEvent('change'); await page.waitForSelector('#maptab');
@@ -74,8 +74,8 @@ for (const u of ENG.units) {
   ok((u.comps.c1.perHa == null ? c1 === null : Math.abs(c1 - u.comps.c1.perHa) < 5e-3) && (u.B == null ? B === null : Math.abs(B - u.B) < 5e-3), `plot ${u.plot_id}: component and total Mg/ha as the engine (${c1} / ${u.comps.c1.perHa}, ${B} / ${u.B})`);
 }
 ok(ENG.units.every(u => u.B === null), 'the table has a missing tree in every plot: no plot total shown');
-ok((await page.textContent('[data-um="C"]')).includes('satırlar 5') && (await page.textContent('[data-um="B"]')).includes('satırlar 4, 7, 8'), 'unmapped species with their row numbers (C everywhere, B for the second component)');
-ok((await page.textContent('[data-noh="c2"]')).includes('satırlar 3'), 'tree without height: row number given');
+ok((await page.textContent('[data-um="C"]')).includes('rows 5') && (await page.textContent('[data-um="B"]')).includes('rows 4, 7, 8'), 'unmapped species with their row numbers (C everywhere, B for the second component)');
+ok((await page.textContent('[data-noh="c2"]')).includes('rows 3'), 'tree without height: row number given');
 ok((await page.textContent('#srcnote')).includes('e2e test values sA1'), 'results carry the sources of the sets');
 await shot('bc02-2-sonuc');
 // exports
@@ -92,10 +92,10 @@ await page.click('#back2'); await page.waitForSelector('input[name="appr"]');
 await page.check('input[name="appr"][value="volume"]'); await page.waitForSelector('#vcol');
 await page.selectOption('#vcol', 'hacim');
 for (const [k, v] of [['D', '0.5'], ['BEF', '1.3'], ['R', '0.25'], ['CF', '0.47']]) { await page.fill(`[data-v="${k}"]`, v); await page.locator(`[data-v="${k}"]`).dispatchEvent('change'); await page.waitForSelector('#vcol'); }
-ok(await page.isDisabled('#calc') && (await page.textContent('#s2prob')).includes('kaynağını'), 'factors need their source');
+ok(await page.isDisabled('#calc') && (await page.textContent('#s2prob')).includes('source of the factors'), 'factors need their source');
 await page.fill('#vsrc', 'e2e factors'); await page.locator('#vsrc').dispatchEvent('change'); await page.waitForSelector('#calc:not([disabled])');
 await page.selectOption('[data-vs="fbark"]', 'ib'); await page.waitForSelector('#s2prob');
-ok((await page.textContent('#s2prob')).includes('Kabuk tarafları farklı'), 'different bark sides refused');
+ok((await page.textContent('#s2prob')).includes('Bark sides differ'), 'different bark sides refused');
 await page.selectOption('[data-vs="fbark"]', 'ob'); await page.waitForSelector('#calc:not([disabled])');
 await page.click('#calc'); await page.waitForSelector('#utab');
 const vol = Bm.computeVolume(ds, t => [0.41, 0.80, 0.21, 1.30, 0.62, 1.05, null][ds.trees.indexOf(t)], { bark: 'ob', factors: { mode: 'bef', bark: 'ob', D: 0.5, BEF: 1.3, R: 0.25 }, CF: 0.47 });
@@ -105,8 +105,8 @@ ok((await page.locator('#utab tr[data-u="2|"] [data-k="B"]').textContent()) === 
 
 // 5. sample button, the coefficient library lists biomass sets, English, phone
 await page.click('[data-go="1"]'); await page.click('#sample'); await page.waitForFunction(() => (document.getElementById('dsinfo') || {}).textContent?.includes('ornek-mescere'));
-ok((await page.textContent('#dsinfo')).includes('benzetim'), 'simulated sample table loads');
-await page.goto(BASE + '/katsayi-kutuphanesi.php?lang=tr'); await page.waitForSelector('#libtab');
+ok((await page.textContent('#dsinfo')).includes('simulated'), 'simulated sample table loads');
+await page.goto(BASE + '/katsayi-kutuphanesi.php?lang=en'); await page.waitForSelector('#libtab');
 ok(await page.locator('#libtab tbody tr', { hasText: 'e2e test values sB1' }).count() === 1, 'the Coefficient Library lists the biomass sets');
 await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps');
 ok((await page.textContent('h1')).includes('Biomass and Carbon'), 'English');

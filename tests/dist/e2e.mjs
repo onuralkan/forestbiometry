@@ -21,12 +21,7 @@ const browser = await chromium.launch();
 const ctx = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } });
 const page = await ctx.newPage();
 
-// Turkish screens show a decimal comma (19 Nov 2026, user decision); the checks below compare numbers written with a
-// point, so text read from the page has its decimal commas turned into points (a comma between two digits).
-const _tc = page.textContent.bind(page), dotNum = s => s == null ? s : s.replace(/(\d),(\d)/g, '$1.$2');
-page.textContent = async (...a) => dotNum(await _tc(...a));
-const deepDot = v => typeof v === 'string' ? dotNum(v) : Array.isArray(v) ? v.map(deepDot) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deepDot(x)])) : v;
-const _ev = page.evaluate.bind(page); page.evaluate = async (...a) => deepDot(await _ev(...a));
+// The site is English only (20 Nov 2026): numbers on screen use a decimal point, read as they are.
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const rowsOf = (fam = 'weibull') => page.evaluate(fam => [...document.querySelectorAll(`table.ptab[data-fam="${fam}"] tbody tr`)].map(tr => ({ m: tr.dataset.method, s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })), fam);
@@ -34,13 +29,13 @@ const navState = () => page.evaluate(() => ({ bar: document.querySelector('.navl
   on: document.querySelector('#ulist .uitem.on .uid')?.textContent, list: [...document.querySelectorAll('#ulist .uid')].map(x => x.textContent) }));
 
 // 0. the engine version is the published tool: listed, indexed; the old development address redirects
-await page.goto(BASE + '/?lang=tr');
+await page.goto(BASE + '/?lang=en');
 ok((await page.locator('a[href*="cap-dagilimi-2"]').count()) === 0 && (await page.locator('a[href*="cap-dagilimi.php"]').count()) > 0, 'tool listed under its published address');
 await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
-await page.goto(URL + '?lang=tr');
+await page.goto(URL + '?lang=en');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').count()) === 0 && (await page.locator('.b-kicker .b-ver').textContent()).trim() === 'sürüm ' + E0.TOOL.version, 'version in the page header, no release-notes banner');
+ok((await page.locator('#devnote').count()) === 0 && (await page.locator('.b-kicker .b-ver').textContent()).trim() === 'version ' + E0.TOOL.version, 'version in the page header, no release-notes banner');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting
@@ -49,47 +44,47 @@ const lines = ['plot\tyear\tdbh', ...d1.map(v => `A\t2019\t${v}`), ...d3.map(v =
 await page.locator('#impbox details summary').click(); await page.fill('#impbox textarea', lines.join('\n')); await page.click('#impbox [data-act="paste"]');
 await page.waitForSelector('#impbox .fname'); await page.click('#to2');
 ok(await page.inputValue('#dcol') === '2' && await page.inputValue('#pcol') === '0' && await page.inputValue('#percol') === '1', 'diameter, plot and period columns recognised');
-ok(await page.isChecked('input[name="dec"][value="."]'), 'decimal point by default (Turkish interface)');
+ok(await page.isChecked('input[name="dec"][value="."]'), 'decimal point by default');
 const offered = await page.evaluate(() => ({ fams: [...document.querySelectorAll('fieldset.fam')].map(x => x.dataset.fam), ms: [...document.querySelectorAll('[data-m]')].map(x => x.dataset.m), on: [...document.querySelectorAll('[data-m]:checked')].map(x => x.dataset.m) }));
 ok(offered.fams.join() === 'weibull,normal,lognormal,gamma,beta,johnsonsb,exponential,loglogistic,gengamma,gumbel' && offered.ms.join() === 'weibull.ml,weibull.mom,weibull.pct,weibull.lmom,normal.ml,normal.qme,normal.mge,lognormal.ml,lognormal.mom,gamma.ml,gamma.mom,gamma.lmom,gamma.qme,gamma.mge,beta.ml,beta.mom,beta.qme,beta.mge,johnsonsb.cml,johnsonsb.mom,johnsonsb.kb,johnsonsb.pct,exponential.ml,loglogistic.ml,loglogistic.pct,loglogistic.logmom,gengamma.ml,gumbel.ml,gumbel.mom' && !offered.on.some(m => m.startsWith('beta.') || m.startsWith('johnsonsb.')) && (await page.locator('.bndcard').count()) === 0 && (await page.locator('[data-m*=".rec"]').count()) === 0, 'selector shows only registered families and methods: ' + JSON.stringify(offered));
 for (const m of offered.ms) await page.uncheck(`[data-m="${m}"]`);
 ok(await page.isDisabled('#calc') && (await page.locator('#atext').count()) === 0, 'no method chosen: cannot calculate, no location card');
 for (const m of offered.ms) if (!/^(beta|johnsonsb|exponential|loglogistic|gengamma|gumbel)\./.test(m) && !/\.(lmom|qme|mge)$/.test(m)) await page.check(`[data-m="${m}"]`);   // P18 methods are checked in 2o, P20 families in 2q   // P10 families are checked in 2e
-ok((await page.locator('#famcard .note', { hasText: 'kesilmemiş veri varsayar' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'aynı denklemlerdir' }).count()) === 1, 'truncation not supported: stated; normal ML = moments explained');
+ok((await page.locator('#famcard .note', { hasText: 'assume untruncated data' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'has the same equations' }).count()) === 1, 'truncation not supported: stated; normal ML = moments explained');
 ok(await page.isChecked('input[name="o-weibull.mom-varDivisor"][value="n"]') && await page.inputValue('#o-weibull-pct-p') === '0.24' && await page.inputValue('#o-weibull-pct-r') === '0.93', 'defaults: divisor n, percentiles 0.24 and 0.93 (Dubey)');
 await page.fill('#o-weibull-pct-p', '0.95'); await page.locator('#o-weibull-pct-p').dispatchEvent('change');
-ok(await page.isDisabled('#calc') && (await page.locator('[data-mopts="weibull.pct"] .note.err').textContent()).includes("r'den küçük"), 'p ≥ r: cannot calculate, reason shown');
+ok(await page.isDisabled('#calc') && (await page.locator('[data-mopts="weibull.pct"] .note.err').textContent()).includes('smaller than r'), 'p ≥ r: cannot calculate, reason shown');
 await page.fill('#o-weibull-pct-p', '1,5'); await page.locator('#o-weibull-pct-p').dispatchEvent('change');
 ok(await page.isDisabled('#calc'), 'p outside (0, 1): cannot calculate');
 await page.fill('#o-weibull-pct-p', '0.24'); await page.locator('#o-weibull-pct-p').dispatchEvent('change');
 await page.fill('#atext', '5'); await page.locator('#atext').dispatchEvent('change');
 await page.click('#calc'); await page.waitForSelector('table.ptab', { state: 'attached' });
-ok((await page.locator('#acc .note.warn').textContent()).includes('1 değer okunamadı') && (await page.locator('#acc').textContent()).includes('satırları: 36, 37'), 'unreadable and negative values reported with rows');
+ok((await page.locator('#acc .note.warn').textContent()).includes('1 values unreadable') && (await page.locator('#acc').textContent()).includes('source rows: 36, 37'), 'unreadable and negative values reported with rows');
 let ns = await navState();
 ok(ns.list.join() === 'A,B,C' && ns.on === 'A' && ns.pers === 2 && ns.per === '2019', 'plots listed; A has two periods: ' + JSON.stringify(ns));
 let rows = await rowsOf();
 ok(rows.length === 6 && rows.map(r => r.m).join() === 'weibull.ml,weibull.ml,weibull.mom,weibull.mom,weibull.pct,weibull.pct' && rows.every(r => r.s === 'ok'), 'ML, moments and percentiles, each with a = 0 and a = 5');
 const ml0 = W.fitML(d1, 0), ml5 = W.fitML(d1, 5, 'fixed'), mo0 = F.fitMoments(d1, { a: 0 }).params, pc5 = F.fitPercentiles(d1, { a: 5 }).params;
-const cell = (r, k) => parseFloat(String(rows[r].c[k]).replace(',', '.'));
+const cell = (r, k) => parseFloat(String(rows[r].c[k]));
 ok(Math.abs(cell(0, 3) - ml0.b) < 6e-5 && Math.abs(cell(0, 4) - ml0.c) < 6e-5 && Math.abs(cell(1, 3) - ml5.b) < 6e-5 && Math.abs(cell(2, 4) - mo0.c) < 6e-5 && Math.abs(cell(5, 3) - pc5.b) < 6e-5 && Math.abs(cell(5, 4) - pc5.c) < 6e-5, 'ML equals the published tool; moments (divisor n) and percentiles equal the engine: ' + rows[0].c.slice(2, 5).join(' '));
-ok(rows[0].c[1] === 'a = 0' && rows[1].c[1] === 'a = 5 (kullanıcı)' && rows[0].c[5] === '12', 'fixed parameter and n shown');
+ok(rows[0].c[1] === 'a = 0' && rows[1].c[1] === 'a = 5 (user)' && rows[0].c[5] === '12', 'fixed parameter and n shown');
 ok(rows[0].c[7] !== '–' && rows[2].c[7] === '–' && rows[4].c[7] === '–' && rows[2].c[6] !== '–' && rows[4].c[6] !== '–', 'AIC only for maximum likelihood; ln L for all');
-ok(rows[2].c[0] === 'Momentler (ortalama ve varyans) · varyans: n bölen' && rows[4].c[0] === 'İki yüzdelik · p = 0.24; r = 0.93' && rows[4].c[12] === 'kapalı biçim · 0', 'settings named in the method cell; closed form solver: ' + rows[4].c[0] + ' | ' + rows[4].c[12]);
-ok(rows[0].c[12].startsWith('ikiye bölme') && rows.every(r => !r.c.slice(2).join(' ').includes(',')), 'solver named; decimal point everywhere');
+ok(rows[2].c[0] === 'Moments (mean and variance) · variance: divisor n' && rows[4].c[0] === 'Two percentiles · p = 0.24, r = 0.93' && rows[4].c[12] === 'closed form · 0', 'settings named in the method cell; closed form solver: ' + rows[4].c[0] + ' | ' + rows[4].c[12]);
+ok(rows[0].c[12].startsWith('bisection') && rows.every(r => !r.c.slice(2).join(' ').includes(',')), 'solver named; decimal point everywhere');
 ok((await page.locator('ul.notes li', { hasText: 'n − 1' }).count()) === 0, 'default divisor n: no n − 1 note');
 await shot('dist-1-parametreler');
 { // normal and lognormal tables
   const E = await import('../../assets/lab/dist/index.js');
   const nr = await rowsOf('normal'), lr = await rowsOf('lognormal'), no = E.runMethod('normal.ml', { d: d1 }), lm = E.runMethod('lognormal.ml', { d: d1 }), lo = E.runMethod('lognormal.mom', { d: d1 });
-  ok(nr.length === 1 && Math.abs(parseFloat(String(nr[0].c[2]).replace(',', '.')) - no.params.mu) < 6e-5 && Math.abs(parseFloat(String(nr[0].c[3]).replace(',', '.')) - no.params.sigma) < 6e-5 && nr[0].c[6] !== '–', 'normal: one row (ML = moments), values, AIC');
-  ok(lr.length === 2 && Math.abs(parseFloat(String(lr[0].c[2]).replace(',', '.')) - lm.params.mu) < 6e-5 && Math.abs(parseFloat(String(lr[1].c[3]).replace(',', '.')) - lo.params.sigma) < 6e-5 && lr[0].c[6] !== '–' && lr[1].c[6] === '–', 'lognormal: ML and moments, AIC only for ML');
+  ok(nr.length === 1 && Math.abs(parseFloat(String(nr[0].c[2])) - no.params.mu) < 6e-5 && Math.abs(parseFloat(String(nr[0].c[3])) - no.params.sigma) < 6e-5 && nr[0].c[6] !== '–', 'normal: one row (ML = moments), values, AIC');
+  ok(lr.length === 2 && Math.abs(parseFloat(String(lr[0].c[2])) - lm.params.mu) < 6e-5 && Math.abs(parseFloat(String(lr[1].c[3])) - lo.params.sigma) < 6e-5 && lr[0].c[6] !== '–' && lr[1].c[6] === '–', 'lognormal: ML and moments, AIC only for ML');
   const heads = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="lognormal"] thead th')].map(x => x.textContent));
-  ok(heads.includes('μ (ln cm)') && heads.includes('σ (log ölçek)'), 'lognormal μ and σ labelled as log scale: ' + heads.join('|'));
+  ok(heads.includes('μ (ln cm)') && heads.includes('σ (log scale)'), 'lognormal μ and σ labelled as log scale: ' + heads.join('|'));
   const gr = await rowsOf('gamma'), gm = E.runMethod('gamma.ml', { d: d1 }), gmo = E.runMethod('gamma.mom', { d: d1 });
   const gh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="gamma"] thead th')].map(x => x.textContent));
-  ok(gr.length === 2 && Math.abs(parseFloat(String(gr[0].c[2]).replace(',', '.')) - gm.params.k) < 6e-5 && Math.abs(parseFloat(String(gr[0].c[3]).replace(',', '.')) - gm.params.theta) < 6e-5 && Math.abs(parseFloat(String(gr[1].c[2]).replace(',', '.')) - gmo.params.k) < 6e-5 && gr[0].c[6] !== '–' && gr[1].c[6] === '–' && gr[0].c[11].startsWith('Brent'), 'gamma: ML (Brent) and moments, AIC only for ML');
-  ok(gh.includes('k') && gh.includes('θ (cm)') && (await page.locator('#panel').textContent()).includes('Gama (iki parametreli)'), 'gamma: shape k without unit, scale θ in cm: ' + gh.join('|'));
-  ok((await page.locator('ul.notes li', { hasText: 'negatif çap olasılığı Φ(−μ/σ)' }).count()) === 1, 'normal: probability of a negative diameter shown');
+  ok(gr.length === 2 && Math.abs(parseFloat(String(gr[0].c[2])) - gm.params.k) < 6e-5 && Math.abs(parseFloat(String(gr[0].c[3])) - gm.params.theta) < 6e-5 && Math.abs(parseFloat(String(gr[1].c[2])) - gmo.params.k) < 6e-5 && gr[0].c[6] !== '–' && gr[1].c[6] === '–' && gr[0].c[11].startsWith('Brent'), 'gamma: ML (Brent) and moments, AIC only for ML');
+  ok(gh.includes('k') && gh.includes('θ (cm)') && (await page.locator('#panel').textContent()).includes('Gamma (two-parameter)'), 'gamma: shape k without unit, scale θ in cm: ' + gh.join('|'));
+  ok((await page.locator('ul.notes li', { hasText: 'probability of a negative diameter Φ(−μ/σ)' }).count()) === 1, 'normal: probability of a negative diameter shown');
   ok(await page.evaluate(() => [...document.querySelectorAll('.tile span')].some(x => x.textContent.includes('n − 1'))), 'both variances shown (n and n − 1)');
 }
 // divisor n − 1 reproduces the published tool; then back to n
@@ -104,7 +99,7 @@ ok((await navState()).per === '2024' && Math.abs(cell(0, 3) - ml24.b) < 6e-5, 'p
 await page.click('#unext'); ns = await navState(); rows = await rowsOf();
 ok(ns.on === 'B' && ns.pers === 0 && Math.abs(cell(0, 3) - W.fitML(d2, 0).b) < 6e-5 && rows[0].c[5] === '10', 'next plot B (one period): its own fit, n = 10 (bad values left out)');
 await page.click('#unext'); rows = await rowsOf();
-ok(rows.every(r => r.s === 'invalid' && r.c[3] === '–' && r.c[11] === 'hesaplanmadı') && (await page.locator('ul.notes li', { hasText: 'bütün çaplar eşit' }).count()) >= 1, 'plot C (equal diameters): no parameters, reason given');
+ok(rows.every(r => r.s === 'invalid' && r.c[3] === '–' && r.c[11] === 'not computed') && (await page.locator('ul.notes li', { hasText: 'all diameters are equal' }).count()) >= 1, 'plot C (equal diameters): no parameters, reason given');
 ok((await page.locator('#ulist .uitem.on .st-error').count()) === 1, 'plot C marked as a problem in the list');
 // charts
 await page.click('#ulist [data-u="A"]'); await page.click('#tab-charts');
@@ -112,7 +107,7 @@ ok((await page.locator('#ch-h svg rect').count()) > 3 && (await page.locator('#c
 await page.locator('[data-fit]').first().uncheck();
 ok((await page.locator('[data-fit]:checked').count()) === 10, 'a fit can be hidden (eleven fits: Weibull 3 × 2 locations, normal, lognormal 2, gamma 2)');
 await page.click('#ulist [data-u="C"]');
-ok((await page.locator('#panel .note.warn', { hasText: 'tamamlanmış fit işlemi yok' }).count()) === 1 && (await page.locator('#ch-h').count()) === 0, 'no chart for a unit without a fit');
+ok((await page.locator('#panel .note.warn', { hasText: 'No completed fit' }).count()) === 1 && (await page.locator('#ch-h').count()) === 0, 'no chart for a unit without a fit');
 await shot('dist-2-grafik');
 // result records (contract)
 await page.click('#tab-params');
@@ -124,31 +119,31 @@ ok(r0.params.b === ml0.b && r0.params.c === ml0.c && r0.fixed.a.origin === 'zero
 ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid' && r.params === null && r.problems[0].code === 'constant'), 'JSON: failed fits carry a status and a reason, no parameters');
 // Excel report and CSV files (all units)
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
-  ok(/^cap-dagilimi-\d{4}-\d{2}-\d{2}\.xlsx$/.test(dx.suggestedFilename()), 'Excel file name: ' + dx.suggestedFilename());
+  ok(/^diameter-distribution-\d{4}-\d{2}-\d{2}\.xlsx$/.test(dx.suggestedFilename()), 'Excel file name: ' + dx.suggestedFilename());
   const wb = XLSX.read(await readFile(await dx.path()));
-  ok(wb.SheetNames.join() === 'Bilgi,Fit islemleri,Parametreler,Ornek alanlar,Siniflar,GY dagilimi,Karsilastirma,Bootstrap,Kaynaklar', 'Excel sheets: ' + wb.SheetNames.join());
-  const fits = XLSX.utils.sheet_to_json(wb.Sheets['Fit islemleri'], { header: 1 }), H = fits[0], info = XLSX.utils.sheet_to_json(wb.Sheets.Bilgi, { header: 1 });
+  ok(wb.SheetNames.join() === 'Info,Fits,Parameters,Plots,Classes,BA distribution,Comparison,Bootstrap,Sources', 'Excel sheets: ' + wb.SheetNames.join());
+  const fits = XLSX.utils.sheet_to_json(wb.Sheets.Fits, { header: 1 }), H = fits[0], info = XLSX.utils.sheet_to_json(wb.Sheets.Info, { header: 1 });
   ok(fits.length === 45 && H[5] === 'method_id' && H[8] === 'status', 'Excel fits: 44 results + header');
   const f0 = fits.find(r => r[0] === 'A' && String(r[1]) === '2019' && r[5] === 'weibull.ml');
   ok(f0 && f0[13] === ml0.b && f0[15] === ml0.c && typeof f0[13] === 'number', 'Excel: Weibull b, c are numeric cells at full precision: ' + (f0 && [f0[13], f0[15]]));
-  ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('eşit')), 'Excel: plot C rows carry no parameters, the reason in words');
-  const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parametreler, { header: 1 });
+  ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('equal')), 'Excel: plot C rows carry no parameters, the reason in words');
+  const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parameters, { header: 1 });
   ok(pars.some(r => r[0] === 'A' && r[4] === 'gamma.ml' && r[6] === 'theta' && r[7] === E0.runMethod('gamma.ml', { d: d1 }).params.theta), 'Excel parameters: gamma θ exact');
-  ok(info.some(r => r[0] === 'Araç' && r[1] === 'cap-dagilimi 2.2.1') && info.some(r => r[0] === 'Analize girmeyen kaynak satırları' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
-  const units = XLSX.utils.sheet_to_json(wb.Sheets['Ornek alanlar'], { header: 1 });
+  ok(info.some(r => r[0] === 'Tool' && r[1] === 'cap-dagilimi 2.2.1') && info.some(r => r[0] === 'Source rows left out' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
+  const units = XLSX.utils.sheet_to_json(wb.Sheets.Plots, { header: 1 });
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
-  ok(/^cap-dagilimi-fit-islemleri-.*\.csv$/.test(dc.suggestedFilename()) && csv.charCodeAt(0) === 0xFEFF && csv.includes(',' + ml0.b + ',') && csv.split('\r\n').length === 45, 'fits CSV: BOM, comma separator, full-precision b, 45 lines');
-  const [dp] = await Promise.all([page.waitForEvent('download'), page.click('#x-params')]); ok(/parametreler/.test(dp.suggestedFilename()) && (await readFile(await dp.path(), 'utf8')).includes(',theta,'), 'parameters CSV');
+  ok(/^diameter-distribution-fits-.*\.csv$/.test(dc.suggestedFilename()) && csv.charCodeAt(0) === 0xFEFF && csv.includes(',' + ml0.b + ',') && csv.split('\r\n').length === 45, 'fits CSV: BOM, comma separator, full-precision b, 45 lines');
+  const [dp] = await Promise.all([page.waitForEvent('download'), page.click('#x-params')]); ok(/parameters/.test(dp.suggestedFilename()) && (await readFile(await dp.path(), 'utf8')).includes(',theta,'), 'parameters CSV');
   const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#x-r')]), rs = await readFile(await dr.path(), 'utf8');
-  ok(/^cap-dagilimi-.*\.R$/.test(dr.suggestedFilename()) && rs.includes('library(fitdistrplus)') && rs.includes('r <- fb_run(x, "weibull", "ml"') && rs.includes('fb_out(res)'),
+  ok(/^diameter-distribution-.*\.R$/.test(dr.suggestedFilename()) && rs.includes('library(fitdistrplus)') && rs.includes('r <- fb_run(x, "weibull", "ml"') && rs.includes('fb_out(res)'),
     'R code: a .R file with fitdistrplus and the fits of every unit (its numbers are checked in R by scripts/rcode-check.sh)'); }
 
-// 2. English keeps the values; comma setting; pooled mode
-await page.click('#ulist [data-u="A"]');
-await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('table.ptab', { state: 'attached' });
+// 2. ?lang=tr redirects to the English page and keeps the values; comma setting; pooled mode
+await page.click('#ulist [data-u="A"]'); await page.waitForTimeout(400);   // let the session be saved before the reload
+await page.goto(URL + '?lang=tr'); await page.waitForSelector('table.ptab', { state: 'attached' });
 rows = await rowsOf();
-ok(rows[1].c[1] === 'a = 5 (user)' && Math.abs(cell(0, 3) - ml0.b) < 6e-5 && rows[0].c[12].startsWith('bisection'), 'English: same values, translated labels');
+ok(!page.url().includes('lang=') && rows[1].c[1] === 'a = 5 (user)' && Math.abs(cell(0, 3) - ml0.b) < 6e-5 && rows[0].c[12].startsWith('bisection'), 'English only: ?lang=tr redirects, same values and labels: ' + page.url() + ' ' + JSON.stringify(rows.slice(0, 2).map(r => r.c.slice(0, 5))));
 await page.click('#steps [data-go="2"]'); await page.check('input[name="mode"][value="pool"]');
 ok((await page.locator('.note.warn', { hasText: 'not a per-hectare weighted' }).count()) === 1, 'pooling warning');
 await page.click('#calc'); await page.waitForSelector('table.ptab', { state: 'attached' });
@@ -158,7 +153,6 @@ rows = await rowsOf();
 ok(Math.abs(cell(0, 3) - W.fitML([...d1, ...d2, 20, 20, 20], 0).b) < 6e-5 && rows[0].c[5] === '25', 'pooled 2019 fit over 25 trees');
 
 // 2b. separate workflow: recovery from summaries
-await page.click('#langlink'); await page.waitForURL(/lang=tr/); await page.waitForSelector('table.ptab', { state: 'attached' });
 await page.click('#wf-summary');
 ok(await page.isHidden('#steps') && await page.isHidden('#step3') && await page.isVisible('#recover'), 'summary workflow replaces the steps');
 const fillS = async (id, v) => { await page.fill(id, v); await page.locator(id).dispatchEvent('change'); };
@@ -173,18 +167,18 @@ const js2 = JSON.parse(await readFile(await dl2.path(), 'utf8'));
 { const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#s-r')]), rs = await readFile(await dr.path(), 'utf8');
   ok(/\.R$/.test(dr.suggestedFilename()) && rs.includes('s <- list(mean = 20, dq = 21)') && rs.includes('lognormal') && rs.includes('fb_out(res)'), 'recovery R code: the typed summary and the three families (checked in R by scripts/rcode-check.sh)'); }
 ok(js2.results.length === 3 && js2.results[1].kind === 'recover' && js2.results[1].data.type === 'summary' && js2.results[1].targets.source === 'dq' && js2.results[1].logLik === null && js2.summary.dq === 21, 'recovery JSON: kind, data type, inputs, no likelihood');
-{ const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#s-xlsx')]), wb = XLSX.read(await readFile(await dx.path())), rows = XLSX.utils.sheet_to_json(wb.Sheets['Geri kazanim'], { header: 1 });
+{ const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#s-xlsx')]), wb = XLSX.read(await readFile(await dx.path())), rows = XLSX.utils.sheet_to_json(wb.Sheets.Recovery, { header: 1 });
   const ln = rows.find(r => r[2] === 'lognormal.rec'), H = rows[0];
-  ok(wb.SheetNames.join() === 'Bilgi,Geri kazanim,Kaynaklar' && rows.length === 4 && ln[7] === lr2.params.mu && ln[H.indexOf('Geri hesap: backDq')] === lr2.diagnostics.backDq, 'recovery Excel: exact μ and back-calculated Dq');
+  ok(wb.SheetNames.join() === 'Info,Recovery,Sources' && rows.length === 4 && ln[7] === lr2.params.mu && ln[H.indexOf('Back-calculated: backDq')] === lr2.diagnostics.backDq, 'recovery Excel: exact μ and back-calculated Dq');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#s-csv')]); ok((await readFile(await dc.path(), 'utf8')).includes(String(lr2.params.mu)), 'recovery CSV: full-precision μ'); }
 await fillS('#s-dq', '19'); await page.click('#s-calc'); await page.waitForSelector('table.rtab');
-ok((await page.locator('table.rtab tr[data-status="invalid"]').count()) === 3 && (await page.locator('table.rtab', { hasText: 'Dq ortalama çaptan büyük olmalı' }).count()) === 1, 'Dq ≤ mean: no parameters, reason given');
+ok((await page.locator('table.rtab tr[data-status="invalid"]').count()) === 3 && (await page.locator('table.rtab', { hasText: 'Dq must exceed the mean diameter' }).count()) === 1, 'Dq ≤ mean: no parameters, reason given');
 await page.check('input[name="s-which"][value="var"]'); await fillS('#s-v', '40'); await page.check('input[name="s-div"][value="n-1"]');
 await page.click('#s-calc'); await page.waitForSelector('table.rtab');
-ok((await page.locator('table.rtab', { hasText: 'ağaç sayısı n gerekir' }).count()) === 1, 'n − 1 variance without n: refused with a reason');
+ok((await page.locator('table.rtab', { hasText: 'the number of trees n is needed' }).count()) === 1, 'n − 1 variance without n: refused with a reason');
 await fillS('#s-n', '30'); await page.click('#s-calc'); await page.waitForSelector('table.rtab');
 rr = await page.evaluate(() => [...document.querySelectorAll('table.rtab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-ok(rr.every(r => r[4] === '38.6667' && r[2] === '20') && (await page.locator('p', { hasText: 'n − 1 bölen, n ile çevrildi' }).count()) === 1, 'n − 1 variance converted with n: v = 40·29/30');
+ok(rr.every(r => r[4] === '38.6667' && r[2] === '20') && (await page.locator('p', { hasText: 'divisor n − 1, converted with n' }).count()) === 1, 'n − 1 variance converted with n: v = 40·29/30');
 await page.waitForTimeout(600); await page.reload(); await page.waitForSelector('table.rtab');   // session writes are debounced (250 ms)
 ok(await page.inputValue('#s-n') === '30' && await page.isVisible('#recover'), 'summary workflow restored after reload');
 await page.click('#wf-raw'); await page.waitForSelector('table.ptab', { state: 'attached' });
@@ -192,44 +186,44 @@ ok(await page.isVisible('#steps') && await page.isHidden('#recover'), 'back to t
 
 // 2c. beta: bounds entered by the user, never taken from the data; observations outside or on a bound refused
 await page.click('#steps [data-go="2"]'); await page.check('[data-m="beta.ml"]'); await page.check('[data-m="beta.mom"]');
-ok(await page.isDisabled('#calc') && (await page.locator('#bnd-beta .note.err', { hasText: 'beta için L ve U girin' }).count()) === 1 && (await page.inputValue('#b-L')) === '' && (await page.inputValue('#b-U')) === '', 'beta chosen: bounds empty (no automatic suggestion), cannot calculate');
-ok((await page.locator('#bnd-beta', { hasText: 'en küçük çap 9,4 cm, en büyük 45 cm (sınır değildir)' }).count()) === 1, 'observed min/max shown as information only');
+ok(await page.isDisabled('#calc') && (await page.locator('#bnd-beta .note.err', { hasText: 'enter L and U for the beta' }).count()) === 1 && (await page.inputValue('#b-L')) === '' && (await page.inputValue('#b-U')) === '', 'beta chosen: bounds empty (no automatic suggestion), cannot calculate');
+ok((await page.locator('#bnd-beta', { hasText: 'smallest diameter in the data 9.4 cm, largest 45 cm (these are not bounds)' }).count()) === 1, 'observed min/max shown as information only');
 const setB = async (L, U) => { for (const [k, v] of [['L', L], ['U', U]]) { await page.fill('#b-' + k, v); await page.locator('#b-' + k).dispatchEvent('change'); } };
-await setB('50', '10'); ok(await page.isDisabled('#calc') && (await page.locator('#bnd-beta', { hasText: "U, L'den büyük olmalı" }).count()) === 1, 'U ≤ L refused');
+await setB('50', '10'); ok(await page.isDisabled('#calc') && (await page.locator('#bnd-beta', { hasText: 'U must be greater than L' }).count()) === 1, 'U ≤ L refused');
 await setB('10', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]', { state: 'attached' });
 let br = await rowsOf('beta');
-ok(br.length === 2 && br.every(r => r.s === 'invalid' && r.c[4] === '–') && (await page.locator('ul.notes li', { hasText: 'sınırların dışında (ör. 9.4 cm; L = 10, U = 50)' }).count()) >= 1, 'an observation below L: no beta estimate, reason given');
+ok(br.length === 2 && br.every(r => r.s === 'invalid' && r.c[4] === '–') && (await page.locator('ul.notes li', { hasText: 'outside the bounds (e.g. 9.4 cm; L = 10, U = 50)' }).count()) >= 1, 'an observation below L: no beta estimate, reason given');
 await page.click('#steps [data-go="2"]'); await setB('9.4', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]', { state: 'attached' });
-ok((await page.locator('ul.notes li', { hasText: 'tam sınırın üzerinde' }).count()) >= 1 && (await rowsOf('beta')).every(r => r.s === 'invalid'), 'an observation on L: refused, not moved');
+ok((await page.locator('ul.notes li', { hasText: 'exactly on a bound' }).count()) >= 1 && (await rowsOf('beta')).every(r => r.s === 'invalid'), 'an observation on L: refused, not moved');
 await page.click('#steps [data-go="2"]'); await setB('5', '50'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="beta"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], bm = E.runMethod('beta.ml', { d: pool }, { L: 5, U: 50 }), bo = E.runMethod('beta.mom', { d: pool }, { L: 5, U: 50 });
   br = await rowsOf('beta'); const bh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="beta"] thead th')].map(x => x.textContent));
-  ok(br.every(r => r.s === 'ok') && br[0].c[1] === 'L = 5 (kullanıcı); U = 50 (kullanıcı)' && Math.abs(parseFloat(String(br[0].c[4]).replace(',', '.')) - bm.params.alpha) < 6e-5 && Math.abs(parseFloat(String(br[1].c[5]).replace(',', '.')) - bo.params.beta) < 6e-5 && br[0].c[8] !== '–' && br[1].c[8] === '–', 'beta with L = 5, U = 50: ML and moments equal the engine, bounds shown as user-fixed: ' + JSON.stringify(br.map(r => r.c.slice(0, 9))));
+  ok(br.every(r => r.s === 'ok') && br[0].c[1] === 'L = 5 (user), U = 50 (user)' && Math.abs(parseFloat(String(br[0].c[4])) - bm.params.alpha) < 6e-5 && Math.abs(parseFloat(String(br[1].c[5])) - bo.params.beta) < 6e-5 && br[0].c[8] !== '–' && br[1].c[8] === '–', 'beta with L = 5, U = 50: ML and moments equal the engine, bounds shown as user-fixed: ' + JSON.stringify(br.map(r => r.c.slice(0, 9))));
   ok(bh.includes('L (cm)') && bh.includes('U (cm)') && bh.includes('α') && bh.includes('β') && br[0].c[13].startsWith('Newton'), 'beta header and solver'); }
 
 // 2d. Johnson SB: ξ and λ by the user; CML, moments, KB 50/95 and a user pair
 await page.click('#steps [data-go="2"]'); await page.uncheck('[data-m="beta.ml"]'); await page.uncheck('[data-m="beta.mom"]');
 for (const m of ['johnsonsb.cml', 'johnsonsb.mom', 'johnsonsb.kb', 'johnsonsb.pct']) await page.check(`[data-m="${m}"]`);
-ok(await page.isDisabled('#calc') && (await page.locator('#bnd-johnsonsb .note.err', { hasText: 'ξ ve λ girin' }).count()) === 1 && (await page.locator('#bnd-beta').count()) === 0, 'SB chosen: ξ and λ required, no automatic values');
-ok((await page.locator('#famcard [data-mnote]', { hasText: 'dört parametrenin birlikte kestirimi değildir' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'Knoebel ve Burkhart (1991)' }).count()) === 1, 'CML stated as conditional; KB source named');
+ok(await page.isDisabled('#calc') && (await page.locator('#bnd-johnsonsb .note.err', { hasText: 'enter ξ and λ' }).count()) === 1 && (await page.locator('#bnd-beta').count()) === 0, 'SB chosen: ξ and λ required, no automatic values');
+ok((await page.locator('#famcard [data-mnote]', { hasText: 'it is not a joint estimate of all four parameters' }).count()) === 1 && (await page.locator('#famcard [data-mnote]', { hasText: 'Knoebel and Burkhart (1991)' }).count()) === 1, 'CML stated as conditional; KB source named');
 for (const [k, v] of [['xi', '5'], ['lambda', '45']]) { await page.fill('#b-' + k, v); await page.locator('#b-' + k).dispatchEvent('change'); }
-ok((await page.locator('#bnd-johnsonsb', { hasText: 'Üst sınır ξ + λ = 50 cm' }).count()) === 1 && await page.isEnabled('#calc'), 'upper bound ξ + λ shown');
+ok((await page.locator('#bnd-johnsonsb', { hasText: 'Upper bound ξ + λ = 50 cm' }).count()) === 1 && await page.isEnabled('#calc'), 'upper bound ξ + λ shown');
 await page.fill('#o-johnsonsb-pct-p', '0.1'); await page.locator('#o-johnsonsb-pct-p').dispatchEvent('change'); await page.fill('#o-johnsonsb-pct-r', '0.9'); await page.locator('#o-johnsonsb-pct-r').dispatchEvent('change');
 await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="johnsonsb"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], o = { xi: 5, lambda: 45 };
   const exp = [E.runMethod('johnsonsb.cml', { d: pool }, o), E.runMethod('johnsonsb.mom', { d: pool }, o), E.runMethod('johnsonsb.kb', { d: pool }, o), E.runMethod('johnsonsb.pct', { d: pool }, { ...o, p: 0.1, r: 0.9 })];
   const sr = await rowsOf('johnsonsb'), sh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="johnsonsb"] thead th')].map(x => x.textContent));
-  ok(sr.length === 4 && sr.every(r => r.s === 'ok') && sr.every((r, i) => Math.abs(parseFloat(String(r.c[4]).replace(',', '.')) - exp[i].params.gamma) < 6e-5 && Math.abs(parseFloat(String(r.c[5]).replace(',', '.')) - exp[i].params.delta) < 6e-5), 'SB: four methods equal the engine: ' + JSON.stringify(sr.map(r => r.c.slice(0, 6))));
-  ok(sh.includes('ξ (cm)') && sh.includes('λ (cm)') && sh.includes('γ') && sh.includes('δ') && sr[0].c[1] === 'ξ = 5 (kullanıcı); λ = 45 (kullanıcı)' && sr[0].c[8] !== '–' && sr[1].c[8] === '–' && sr[3].c[0].includes('p = 0.1; r = 0.9'), 'SB header, user-fixed bounds, AIC only for CML, user pair named: ' + JSON.stringify([sh, sr.map(r => r.c.slice(0, 9))])); }
+  ok(sr.length === 4 && sr.every(r => r.s === 'ok') && sr.every((r, i) => Math.abs(parseFloat(String(r.c[4])) - exp[i].params.gamma) < 6e-5 && Math.abs(parseFloat(String(r.c[5])) - exp[i].params.delta) < 6e-5), 'SB: four methods equal the engine: ' + JSON.stringify(sr.map(r => r.c.slice(0, 6))));
+  ok(sh.includes('ξ (cm)') && sh.includes('λ (cm)') && sh.includes('γ') && sh.includes('δ') && sr[0].c[1] === 'ξ = 5 (user), λ = 45 (user)' && sr[0].c[8] !== '–' && sr[1].c[8] === '–' && sr[3].c[0].includes('p = 0.1, r = 0.9'), 'SB header, user-fixed bounds, AIC only for CML, user pair named: ' + JSON.stringify([sh, sr.map(r => r.c.slice(0, 9))])); }
 await page.click('#steps [data-go="2"]'); await page.fill('#b-xi', '9.4'); await page.locator('#b-xi').dispatchEvent('change'); await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="johnsonsb"]', { state: 'attached' });
-ok((await rowsOf('johnsonsb')).every(r => r.s === 'invalid') && (await page.locator('ul.notes li', { hasText: 'tam sınırın üzerinde' }).count()) >= 1, 'SB: observation on ξ refused');
+ok((await rowsOf('johnsonsb')).every(r => r.s === 'invalid') && (await page.locator('ul.notes li', { hasText: 'exactly on a bound' }).count()) >= 1, 'SB: observation on ξ refused');
 
 // 2e. exponential (same fixed location a as the Weibull) and log-logistic (ML, two percentiles, log-moments)
 await page.click('#steps [data-go="2"]');
 for (const m of ['johnsonsb.cml', 'johnsonsb.mom', 'johnsonsb.kb', 'johnsonsb.pct']) await page.uncheck(`[data-m="${m}"]`);
 for (const m of ['exponential.ml', 'loglogistic.ml', 'loglogistic.pct', 'loglogistic.logmom']) await page.check(`[data-m="${m}"]`);
-ok((await page.locator('#bnd-johnsonsb').count()) === 0 && (await page.locator('h2', { hasText: 'Sabit konum a (Weibull, üstel)' }).count()) === 1 && await page.isEnabled('#calc'), 'P10 families need no bounds; one location card for Weibull and exponential');
-ok(await page.inputValue('#o-loglogistic-pct-p') === '0.25' && await page.inputValue('#o-loglogistic-pct-r') === '0.75' && (await page.locator('#famcard [data-mnote]', { hasText: 'sıradan momentler yöntemi değildir' }).count()) === 1 && (await page.locator('#famcard', { hasText: 'Ters J' }).count()) === 1, 'defaults 0.25/0.75; log-moments named apart from ordinary moments; exponential as a reverse-J reference');
+ok((await page.locator('#bnd-johnsonsb').count()) === 0 && (await page.locator('h2', { hasText: 'Fixed location a (Weibull, exponential)' }).count()) === 1 && await page.isEnabled('#calc'), 'P10 families need no bounds; one location card for Weibull and exponential');
+ok(await page.inputValue('#o-loglogistic-pct-p') === '0.25' && await page.inputValue('#o-loglogistic-pct-r') === '0.75' && (await page.locator('#famcard [data-mnote]', { hasText: 'it is not the ordinary method of moments' }).count()) === 1 && (await page.locator('#famcard', { hasText: 'reverse-J' }).count()) === 1, 'defaults 0.25/0.75; log-moments named apart from ordinary moments; exponential as a reverse-J reference');
 await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="loglogistic"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20];
   const e0 = E.runMethod('exponential.ml', { d: pool }, { a: 0 }), e5 = E.runMethod('exponential.ml', { d: pool }, { a: 5 });
@@ -237,10 +231,10 @@ await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="logl
   const er = await rowsOf('exponential'), lr = await rowsOf('loglogistic');
   const eh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="exponential"] thead th')].map(x => x.textContent));
   const lh = await page.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="loglogistic"] thead th')].map(x => x.textContent));
-  ok(er.length === 2 && er.every(r => r.s === 'ok') && er[0].c[1] === 'a = 0' && er[1].c[1] === 'a = 5 (kullanıcı)' && Math.abs(parseFloat(String(er[0].c[3]).replace(',', '.')) - e0.params.r) < 6e-5 && Math.abs(parseFloat(String(er[1].c[3]).replace(',', '.')) - e5.params.r) < 6e-5 && er[0].c[7] !== '–', 'exponential: a = 0 and the user a; rate equals the engine; AIC (ML): ' + JSON.stringify(er.map(r => r.c.slice(0, 8))));
-  ok(eh.includes('r (1/cm)') && eh.includes('a (cm)') && (await page.locator('ul.notes li', { hasText: 'ölçek 1/r = ' + e0.diagnostics.scale.toFixed(4).replace(/0+$/, '').replace('.', ',') }).count()) === 1, 'rate r (1/cm) in the table, scale 1/r written separately: ' + eh.join('|'));
-  ok(lr.length === 3 && lr.every(r => r.s === 'ok') && lr.every((r, i) => Math.abs(parseFloat(String(r.c[2]).replace(',', '.')) - lx[i].params.b) < 6e-5 && Math.abs(parseFloat(String(r.c[3]).replace(',', '.')) - lx[i].params.c) < 6e-5) && lr[0].c[6] !== '–' && lr[1].c[6] === '–' && lr[2].c[6] === '–', 'log-logistic: three methods equal the engine; AIC only for ML: ' + JSON.stringify(lr.map(r => r.c.slice(0, 7))));
-  ok(lh.includes('b (cm)') && lh.includes('c') && lr[0].c[11].startsWith('Newton') && lr[1].c[0].includes('p = 0.25; r = 0.75'), 'log-logistic header, Newton solver, pair named'); }
+  ok(er.length === 2 && er.every(r => r.s === 'ok') && er[0].c[1] === 'a = 0' && er[1].c[1] === 'a = 5 (user)' && Math.abs(parseFloat(String(er[0].c[3])) - e0.params.r) < 6e-5 && Math.abs(parseFloat(String(er[1].c[3])) - e5.params.r) < 6e-5 && er[0].c[7] !== '–', 'exponential: a = 0 and the user a; rate equals the engine; AIC (ML): ' + JSON.stringify(er.map(r => r.c.slice(0, 8))));
+  ok(eh.includes('r (1/cm)') && eh.includes('a (cm)') && (await page.locator('ul.notes li', { hasText: 'scale 1/r = ' + e0.diagnostics.scale.toFixed(4).replace(/0+$/, '') }).count()) === 1, 'rate r (1/cm) in the table, scale 1/r written separately: ' + eh.join('|'));
+  ok(lr.length === 3 && lr.every(r => r.s === 'ok') && lr.every((r, i) => Math.abs(parseFloat(String(r.c[2])) - lx[i].params.b) < 6e-5 && Math.abs(parseFloat(String(r.c[3])) - lx[i].params.c) < 6e-5) && lr[0].c[6] !== '–' && lr[1].c[6] === '–' && lr[2].c[6] === '–', 'log-logistic: three methods equal the engine; AIC only for ML: ' + JSON.stringify(lr.map(r => r.c.slice(0, 7))));
+  ok(lh.includes('b (cm)') && lh.includes('c') && lr[0].c[11].startsWith('Newton') && lr[1].c[0].includes('p = 0.25, r = 0.75'), 'log-logistic header, Newton solver, pair named'); }
 await shot('dist-2e-p10');
 
 // 2f. Weibull recovery, Poudel and Cao M2–M5 (summary workflow): §8.2 targets, location policy, only the needed fields, targets from raw data
@@ -253,33 +247,33 @@ const fillW = async (id, v) => { await page.fill(id, v); await page.locator(id).
 const S82 = { mean: '22.745276350061506', v: '57.65867565204488', dq: '23.979288394210368', q31: '18.45269745606343', q63: '24.95393865551951', q50: '22.272698012047496', q95: '36.01924299565496' };
 for (const [k, v] of Object.entries(S82)) await fillW('#w-' + k, v);
 await fillW('#w-dmin', '10');
-ok((await page.locator('#wbcard', { hasText: 'Poudel ve Cao\'da D0 olarak geçer' }).count()) === 1 && (await page.locator('#wbcard', { hasText: 'Q(0) = a ile aynı şey değildir' }).count()) === 1, 'Dmin named, D0 of the source explained, not the zeroth percentile');
+ok((await page.locator('#wbcard', { hasText: 'Dmin is called D0 by Poudel and Cao' }).count()) === 1 && (await page.locator('#wbcard', { hasText: 'it is not the theoretical zeroth percentile Q(0) = a' }).count()) === 1, 'Dmin named, D0 of the source explained, not the zeroth percentile');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab');
 const wrows = () => page.evaluate(() => [...document.querySelectorAll('table.wtab tbody tr')].map(tr => ({ m: tr.dataset.method, s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
 let wr = await wrows();
 ok(wr.length === 4 && wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[3] === '2.5' && r.c[1].startsWith('a = 5 (0.5 × Dmin, Dmin = 10)')), '§8.2: a = 5, b = 20, c = 2.5 recovered by M2–M5 with a = 0.5 × Dmin: ' + JSON.stringify(wr.map(r => r.c.slice(0, 4))));
-ok(wr[0].c[6].includes('1 kök') && wr[2].c[6] === 'kapalı biçim' && (await page.locator('#ch-w svg path').count()) >= 4, 'roots and interval reported; densities drawn');
+ok(wr[0].c[6].includes('1 root(s)') && wr[2].c[6] === 'closed form' && (await page.locator('#ch-w svg path').count()) >= 4, 'roots and interval reported; densities drawn');
 await page.check('input[name="w-loc"][value="user"]'); await fillW('#w-a', '5'); await page.check('input[name="w-origin"][value="predicted"]');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
-ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (kullanıcı)'), 'user a = 5: the same parameters, labelled as the user\'s');
+ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (user)'), 'user a = 5: the same parameters, labelled as the user\'s');
 { const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#w-r')]), rs = await readFile(await dr.path(), 'utf8');
   ok(/\.R$/.test(dr.suggestedFilename()) && rs.includes('a <- 5') && rs.includes('report("m2"') && rs.includes('fb_out(res)'), 'Weibull recovery R code: the user location and the chosen methods'); }
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
   ok(j.tool.version === '2.2.1' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
-{ const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
+{ const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Recovery, { header: 1 });
   ok(rows.length === 5 && rows.slice(1).every(r => r[4] === 'ok' && r[7] === 5 && Math.abs(r[11] - 2.5) < 1e-9) && rows.slice(1).every(r => /origin = predicted/.test(r[r.length - 1])), 'Weibull recovery Excel: a = 5, c = 2.5, origin of the targets'); }
 for (const m of ['weibull.m2', 'weibull.m3']) await page.uncheck(`[data-wm="${m}"]`);
 ok((await page.locator('#w-mean').count()) === 0 && (await page.locator('#w-v').count()) === 0 && (await page.locator('#w-dq').count()) === 0 && (await page.locator('#w-q31').count()) === 1 && (await page.locator('#w-q95').count()) === 1, 'only the fields the chosen methods need');
 await fillW('#w-q63', '17'); await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
-ok(wr[0].s === 'invalid' && wr[0].c[2] === '–' && wr[0].c[5].includes('alttakinden') && wr[1].s === 'ok', 'Q63 ≤ Q31: no parameters, reason shown; M5 unaffected');
+ok(wr[0].s === 'invalid' && wr[0].c[2] === '–' && wr[0].c[5].includes('must exceed the lower') && wr[1].s === 'ok', 'Q63 ≤ Q31: no parameters, reason shown; M5 unaffected');
 for (const m of ['weibull.m2', 'weibull.m3']) await page.check(`[data-wm="${m}"]`);
 await page.check('input[name="w-loc"][value="half-dmin"]');
 await page.locator('#wbcard .wbfill summary').click(); await page.selectOption('#w-unit', '0'); await page.click('#w-fill');
 ok((await page.locator('#w-from').textContent()).includes('n = 25') && await page.isChecked('input[name="w-origin"][value="measured"]'), 'targets from the raw data (pooled 2019, n = 25), origin measured');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], ex = ['m2', 'm3', 'm4', 'm5'].map(m => E.runMethod('weibull.' + m, { type: 'raw', d: pool }));
-  ok(wr.every((r, i) => r.s === 'ok' && Math.abs(parseFloat(String(r.c[2]).replace(',', '.')) - ex[i].params.b) < 6e-7 && Math.abs(parseFloat(String(r.c[3]).replace(',', '.')) - ex[i].params.c) < 6e-7) && wr[0].c[1].includes('Dmin = 9.4'), 'raw-data targets: the same results as the engine on the diameters: ' + JSON.stringify(wr.map(r => r.c.slice(1, 4))));
-  ok((await page.locator('p.small', { hasText: 'yüklü ham veriden hesaplandı' }).count()) === 1, 'record says the targets were computed from the data'); }
+  ok(wr.every((r, i) => r.s === 'ok' && Math.abs(parseFloat(String(r.c[2])) - ex[i].params.b) < 6e-7 && Math.abs(parseFloat(String(r.c[3])) - ex[i].params.c) < 6e-7) && wr[0].c[1].includes('Dmin = 9.4'), 'raw-data targets: the same results as the engine on the diameters: ' + JSON.stringify(wr.map(r => r.c.slice(1, 4))));
+  ok((await page.locator('p.small', { hasText: 'computed from the loaded raw data' }).count()) === 1, 'record says the targets were computed from the data'); }
 await fillW('#w-q50', '30');
 ok((await page.locator('#w-from').count()) === 0, 'a target changed by hand: no longer "computed from the data"');
 // 2g. hybrids M6–M10 (P07): §8.2 targets; M8/M9 two roots, M10 own location; states told apart
@@ -290,59 +284,59 @@ ok((await page.locator('#w-q25').count()) === 1 && (await page.locator('#w-dmin'
 for (const [k, v] of Object.entries({ ...S82, q25: '17.150527008986376', dmin: '8.4545396024095', n: '125' })) if (k !== 'v') await fillW('#w-' + k, v);
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
 ok(wr.map(r => r.m + ':' + r.s).join() === 'weibull.m6:ok,weibull.m7:ok,weibull.m8:multiple,weibull.m9:multiple,weibull.m10:ok', 'states: M6, M7, M10 one solution; M8, M9 several: ' + wr.map(r => r.s));
-ok(wr[0].c[2] === '20' && wr[0].c[3] === '2.5' && wr[4].c[2] === '20' && wr[4].c[1].startsWith('a = 5 (M10 kuralı: Dmin = 8.4545, n = 125)'), 'M6 and M10 recover b = 20, c = 2.5; M10 location rule shown');
-ok(wr[2].c[2] === '–' && wr[2].c[5].includes('birden çok çözüm') && wr[2].c[5].includes('c = 0.1915') && wr[2].c[5].includes('c = 2.5') && wr[3].c[5].includes('c = 0.3986'), 'M8/M9: no single result, both candidates listed: ' + wr[2].c[5]);
-ok(wr[0].c[4].includes('Q25: 17.1505 → 17.1505 *') && (await page.locator('#w-out', { hasText: 'yapı gereği eşleştirilmez' }).count()) === 1, 'hybrid: targets not matched by construction marked, note shown');
+ok(wr[0].c[2] === '20' && wr[0].c[3] === '2.5' && wr[4].c[2] === '20' && wr[4].c[1].startsWith('a = 5 (M10 rule: Dmin = 8.4545, n = 125)'), 'M6 and M10 recover b = 20, c = 2.5; M10 location rule shown');
+ok(wr[2].c[2] === '–' && wr[2].c[5].includes('more than one solution') && wr[2].c[5].includes('c = 0.1915') && wr[2].c[5].includes('c = 2.5') && wr[3].c[5].includes('c = 0.3986'), 'M8/M9: no single result, both candidates listed: ' + wr[2].c[5]);
+ok(wr[0].c[4].includes('Q25: 17.1505 → 17.1505 *') && (await page.locator('#w-out', { hasText: 'not matched by construction' }).count()) === 1, 'hybrid: targets not matched by construction marked, note shown');
 await fillW('#w-n', '8'); await fillW('#w-dmin', '5'); await fillW('#w-q50', '15'); await fillW('#w-mean', '6');
 await page.click('#w-calc'); await page.waitForSelector('table.wtab'); wr = await wrows();
-ok(wr[4].s === 'invalid' && wr[4].c[5].includes('negatif bir a') && wr[2].s === 'invalid' && wr[2].c[5].includes('çözüm yok'), 'M10 negative location and M8 without a root: no result, reasons shown');
+ok(wr[4].s === 'invalid' && wr[4].c[5].includes('a negative a') && wr[2].s === 'invalid' && wr[2].c[5].includes('no solution'), 'M10 negative location and M8 without a root: no result, reasons shown');
 // 2h. Johnson SB, Parresol (2003): ξ fixed, λ, γ, δ recovered (DIST_SPEC §8.3)
 await page.click('#rt-prs');
 ok(await page.inputValue('#p-mean') === '6' && await page.isChecked('input[name="p-qmode"][value="dq"]'), 'mean and Dq shared with the Parresol group');
 await page.check('input[name="p-qmode"][value="ng"]');
 { const fillP = async (id, v) => { await page.fill(id, v); await page.locator(id).dispatchEvent('change'); };
-  ok((await page.locator('#prscard').count()) === 1 && (await page.locator('#prscard', { hasText: 'türe özgü regresyon katsayıları' }).count()) === 1, 'Parresol card; species-specific equations stated as not used');
+  ok((await page.locator('#prscard').count()) === 1 && (await page.locator('#prscard', { hasText: 'species-specific regression coefficients' }).count()) === 1, 'Parresol card; species-specific equations stated as not used');
   for (const [k, v] of [['xi', '5'], ['mean', '20.972673017674087'], ['median', '20.464836861498966'], ['nha', '500'], ['g', '18.979383683389663']]) await fillP('#p-' + k, v);
   await page.click('#p-calc'); await page.waitForSelector('table.prtab');
   let pr = await page.evaluate(() => [...document.querySelectorAll('table.prtab tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
   ok(pr.length === 1 && pr[0].s === 'ok' && pr[0].c.slice(1, 5).join('|') === '5|40|0.6|1.3', '§8.3: ξ = 5, λ = 40, γ = 0.6, δ = 1.3: ' + pr[0].c.slice(1, 5));
-  ok(pr[0].c[5].includes('ortalama: 20.9727 → 20.9727') && pr[0].c[5].includes('medyan: 20.4648 → 20.4648') && pr[0].c[5].includes('Dq: 21.9842 → 21.9842') && pr[0].c[7].includes('12 başlangıç, 1 çözüm'), 'mean, median, Dq re-checked; starts and solutions reported');
+  ok(pr[0].c[5].includes('mean: 20.9727 → 20.9727') && pr[0].c[5].includes('median: 20.4648 → 20.4648') && pr[0].c[5].includes('Dq: 21.9842 → 21.9842') && pr[0].c[7].includes('12 starts, 1 solution(s)'), 'mean, median, Dq re-checked; starts and solutions reported');
   ok((await page.locator('#ch-p svg path').count()) >= 1, 'density drawn');
-  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#p-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Geri kazanim'], { header: 1 });
+  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#p-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Recovery, { header: 1 });
   ok(rows.length === 2 && rows[1][2] === 'johnsonsb.parresol' && Math.abs(rows[1][9] - 40) < 1e-10 && Math.abs(rows[1][13] - 1.3) < 1e-10, 'Parresol Excel: λ and δ at full precision');
   await page.check('input[name="p-qmode"][value="both"]'); await fillP('#p-dq', '22.5'); await page.click('#p-calc'); await page.waitForSelector('table.prtab');
   pr = await page.evaluate(() => [...document.querySelectorAll('table.prtab tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
-  ok(pr[0].s === 'invalid' && pr[0].c[2] === '–' && pr[0].c[6].includes('tutarsız'), 'N, G and Dq disagree: no result, reason shown');
+  ok(pr[0].s === 'invalid' && pr[0].c[2] === '–' && pr[0].c[6].includes('disagrees'), 'N, G and Dq disagree: no result, reason shown');
   await page.check('input[name="p-qmode"][value="dq"]'); await fillP('#p-dq', '20.05'); await fillP('#p-mean', '20'); await fillP('#p-median', '30'); await fillP('#p-xi', '0');
   await page.click('#p-calc'); await page.waitForSelector('table.prtab');
   pr = await page.evaluate(() => [...document.querySelectorAll('table.prtab tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
-  ok(pr[0].s === 'noconverge' && pr[0].c[2] === '–' && pr[0].c[6].includes('başlangıçtan hiçbiri'), 'no SB with these moments: "did not converge", no parameters'); }
+  ok(pr[0].s === 'noconverge' && pr[0].c[2] === '–' && pr[0].c[6].includes('none of the'), 'no SB with these moments: "did not converge", no parameters'); }
 await page.click('#wf-raw');
 
 // 2i. measurement threshold (P11): conditional ML only, untruncated methods disabled, GOF on the conditional distribution
 await page.click('#steps [data-go="2"]');
 ok((await page.locator('#trcard').count()) === 1 && await page.isChecked('input[name="trmode"][value="none"]') && (await page.locator('[data-m$=".tml"]').count()) === 0, 'threshold card; no threshold by default; no truncated-ML rows without a threshold');
 await page.check('input[name="trmode"][value="lower"]');
-ok(await page.isDisabled('#calc') && (await page.locator('#trcard .note.err', { hasText: 'eşik değeri girin' }).count()) === 1, 'lower threshold chosen, value missing: cannot calculate');
+ok(await page.isDisabled('#calc') && (await page.locator('#trcard .note.err', { hasText: 'enter a threshold value' }).count()) === 1, 'lower threshold chosen, value missing: cannot calculate');
 await page.fill('#tr-L', '9'); await page.locator('#tr-L').dispatchEvent('change');
 { const st = await page.evaluate(() => ({ off: [...document.querySelectorAll('[data-m]:disabled')].map(x => x.dataset.m), tml: [...document.querySelectorAll('[data-m$=".tml"]')].map(x => [x.dataset.m, x.checked]) }));
   ok(st.off.includes('weibull.ml') && st.off.includes('normal.ml') && st.off.includes('gamma.mom') && !st.off.some(m => m.endsWith('.tml')), 'closed-form methods disabled with a threshold: ' + st.off.length);
   ok(st.tml.length === 10 && st.tml.filter(([m, c]) => c).map(([m]) => m).sort().join() === ['exponential.tml', 'gamma.tml', 'loglogistic.tml', 'lognormal.tml', 'normal.tml', 'weibull.tml'].sort().join(), 'truncated ML listed for every family; those needing bounds and the optional families not preselected: ' + JSON.stringify(st.tml)); }
-ok((await page.locator('#famcard .mnote', { hasText: 'kesilmiş veride geçerli değil' }).count()) > 5, 'reason shown under the disabled methods');
+ok((await page.locator('#famcard .mnote', { hasText: 'not valid for truncated data' }).count()) > 5, 'reason shown under the disabled methods');
 await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20], ex = E.runMethod('weibull.tml', { d: pool }, { a: 0, trunc: { lower: 9, upper: null } });
   const G = E.trunc.truncated(E.family('weibull'), ex.params, ex.truncation), ks = E.gof.ks(G, ex.params, pool);
   const wt = await rowsOf('weibull');
-  ok(wt.length >= 1 && wt[0].m === 'weibull.tml' && wt[0].s === 'ok' && Math.abs(parseFloat(String(wt[0].c[3]).replace(',', '.')) - ex.params.b) < 6e-5 && Math.abs(parseFloat(String(wt[0].c[4]).replace(',', '.')) - ex.params.c) < 6e-5, 'Weibull conditional ML equals the engine: ' + JSON.stringify(wt[0].c.slice(0, 6)));
-  ok(Math.abs(parseFloat(String(wt[0].c[9]).replace(',', '.')) - ks) < 6e-5 && wt[0].c[12].startsWith('Nelder–Mead'), 'KS against the conditional distribution; solver named');
-  ok((await page.locator('ul.notes li', { hasText: 'eşik 9 ≤ d ≤ ∞ cm' }).count()) >= 1 && (await page.locator('.tile span', { hasText: 'eşik içinde' }).count()) === 1, 'threshold, mass and implied total stated; n labelled as measured inside the threshold');
-  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), fits = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets['Fit islemleri'], { header: 1 }), H = fits[0], w = fits.find(r => r[5] === 'weibull.tml');
-  ok(w && w[H.indexOf('Alt eşik (cm)')] === 9 && w[H.indexOf('Üst eşik (cm)')] == null && Math.abs(w[H.indexOf('P(eşik içinde)')] - ex.truncation.mass) < 1e-7 && w[H.indexOf('N (seçilen kapsam)')] === 25, 'Excel: thresholds, mass and N (observed) columns: ' + JSON.stringify(w && [H.indexOf('Alt eşik (cm)'), w[H.indexOf('Alt eşik (cm)')], w[H.indexOf('Üst eşik (cm)')], w[H.indexOf('P(eşik içinde)')], ex.truncation.mass, w[H.indexOf('N (seçilen kapsam)')]])); }
+  ok(wt.length >= 1 && wt[0].m === 'weibull.tml' && wt[0].s === 'ok' && Math.abs(parseFloat(String(wt[0].c[3])) - ex.params.b) < 6e-5 && Math.abs(parseFloat(String(wt[0].c[4])) - ex.params.c) < 6e-5, 'Weibull conditional ML equals the engine: ' + JSON.stringify(wt[0].c.slice(0, 6)));
+  ok(Math.abs(parseFloat(String(wt[0].c[9])) - ks) < 6e-5 && wt[0].c[12].startsWith('Nelder–Mead'), 'KS against the conditional distribution; solver named');
+  ok((await page.locator('ul.notes li', { hasText: 'threshold 9 ≤ d ≤ ∞ cm' }).count()) >= 1 && (await page.locator('.tile span', { hasText: 'inside the threshold' }).count()) === 1, 'threshold, mass and implied total stated; n labelled as measured inside the threshold');
+  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), fits = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Fits, { header: 1 }), H = fits[0], w = fits.find(r => r[5] === 'weibull.tml');
+  ok(w && w[H.indexOf('Lower threshold (cm)')] === 9 && w[H.indexOf('Upper threshold (cm)')] == null && Math.abs(w[H.indexOf('P(inside the threshold)')] - ex.truncation.mass) < 1e-7 && w[H.indexOf('N (chosen scope)')] === 25, 'Excel: thresholds, mass and N (observed) columns: ' + JSON.stringify(w && [H.indexOf('Lower threshold (cm)'), w[H.indexOf('Lower threshold (cm)')], w[H.indexOf('Upper threshold (cm)')], w[H.indexOf('P(inside the threshold)')], ex.truncation.mass, w[H.indexOf('N (chosen scope)')]])); }
 await page.click('#steps [data-go="2"]'); await page.check('input[name="trn"][value="population"]'); await page.fill('#tr-L', '10'); await page.locator('#tr-L').dispatchEvent('change');
 await page.click('#calc'); await page.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
-ok((await rowsOf('weibull'))[0].s === 'invalid' && (await page.locator('ul.notes li', { hasText: 'bildirilen eşiğin dışında (ör. 9.4 cm)' }).count()) >= 1, 'a diameter below the declared threshold: refused, reason given');
+ok((await rowsOf('weibull'))[0].s === 'invalid' && (await page.locator('ul.notes li', { hasText: 'outside the declared threshold (e.g. 9.4 cm)' }).count()) >= 1, 'a diameter below the declared threshold: refused, reason given');
 await page.click('#wf-summary');
-ok((await page.locator('#wbcard', { hasText: 'ham veriden doldurma kapalı' }).count()) === 1 && (await page.locator('#w-fill').count()) === 0, 'recovery: filling from thresholded raw data disabled');
+ok((await page.locator('#wbcard', { hasText: 'Filling from raw data is disabled' }).count()) === 1 && (await page.locator('#w-fill').count()) === 0, 'recovery: filling from thresholded raw data disabled');
 await page.click('#wf-raw'); await page.click('#steps [data-go="2"]'); await page.check('input[name="trmode"][value="none"]');
 ok((await page.locator('[data-m="weibull.ml"]:disabled').count()) === 0 && (await page.locator('[data-m$=".tml"]').count()) === 0, 'threshold removed: untruncated methods back');
 
@@ -354,37 +348,37 @@ await page.click('#tab-classes'); await page.waitForSelector('table.ctab');
   await page.fill('#cl-area', '400'); await page.locator('#cl-area').dispatchEvent('change'); await page.waitForSelector('table.ctab');
   await page.selectOption('#cl-fit', { index: 0 });
   const rows = await page.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-  const tot = rows.find(r => r[0] === 'Toplam'), cl = E.classes.makeClasses({ start: 8, width: 8, max: 45 }), pool = [...d1, ...d2, 20, 20, 20], cnt = E.classes.countRaw(cl, pool);
-  ok(rows[0][0] === '8 cm altı' && rows.length === cl.length + 3 && rows.slice(1, cl.length + 1).map(r => +r[1]).join() === cnt.counts.join(), 'observed counts per class from the same edges: ' + rows.map(r => r[0] + ':' + r[1]).join(' '));
-  ok(tot && tot[2] === '1' && Math.abs(parseFloat(String(tot[3]).replace(',', '.')) - 25) < 1e-3 && tot[1] === '25' && tot[4] === '625' && Math.abs(parseFloat(String(tot[5]).replace(',', '.')) - 625) < 0.05, 'totals: probability 1, expected = n, N/ha = 25 × 10000/400: ' + tot);
-  ok((await page.locator('#panel', { hasText: 'Σ|gözlenen − beklenen|' }).count()) === 1, 'sum of absolute differences and EI per hectare');
+  const tot = rows.find(r => r[0] === 'Total'), cl = E.classes.makeClasses({ start: 8, width: 8, max: 45 }), pool = [...d1, ...d2, 20, 20, 20], cnt = E.classes.countRaw(cl, pool);
+  ok(rows[0][0] === 'below 8 cm' && rows.length === cl.length + 3 && rows.slice(1, cl.length + 1).map(r => +r[1]).join() === cnt.counts.join(), 'observed counts per class from the same edges: ' + rows.map(r => r[0] + ':' + r[1]).join(' '));
+  ok(tot && tot[2] === '1' && Math.abs(parseFloat(String(tot[3])) - 25) < 1e-3 && tot[1] === '25' && tot[4] === '625' && Math.abs(parseFloat(String(tot[5])) - 625) < 0.05, 'totals: probability 1, expected = n, N/ha = 25 × 10000/400: ' + tot);
+  ok((await page.locator('#panel', { hasText: 'Σ|observed − expected|' }).count()) === 1, 'sum of absolute differences and EI per hectare');
   const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#tab-params').then(() => page.click('#x-xlsx'))]);
-  const cs = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Siniflar, { header: 1 });
-  ok(cs.length > 20 && cs[0][4] === 'Sınıf (cm)' && cs.some(r => r[4] === '[8, 16)' && typeof r[8] === 'number' && r[10] != null), 'Excel class sheet: classes, probabilities, N/ha'); }
+  const cs = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Classes, { header: 1 });
+  ok(cs.length > 20 && cs[0][4] === 'Class (cm)' && cs.some(r => r[4] === '[8, 16)' && typeof r[8] === 'number' && r[10] != null), 'Excel class sheet: classes, probabilities, N/ha'); }
 
 // 2j'. comparison and diagnostics (P13)
 await page.click('#tab-params'); await page.waitForSelector('table.cmptab');
 { const E = await import('../../assets/lab/dist/index.js');
   const t = await page.evaluate(() => [...document.querySelectorAll('.cmpgroup')].map(g => ({ h: g.querySelector('h3').textContent, ml: [...g.querySelectorAll('table[data-kind="ml"] tbody tr')].map(tr => [tr.dataset.method, ...[...tr.children].map(x => x.textContent.trim())]),
     desc: [...g.querySelectorAll('table[data-kind="desc"] tbody tr')].map(tr => [tr.dataset.method, ...[...tr.children].map(x => x.textContent.trim())]), mlHead: [...g.querySelectorAll('table[data-kind="ml"] th')].map(x => x.textContent), descHead: [...g.querySelectorAll('table[data-kind="desc"] th')].map(x => x.textContent) })));
-  ok(t.length === 1 && t[0].h.includes('ölçüm eşiği yok') && t[0].ml.every(r => /\.ml$|\.cml$/.test(r[0])) && t[0].desc.every(r => !/\.ml$|\.cml$/.test(r[0])), 'one process group; likelihood fits apart from the descriptive ones: ' + JSON.stringify(t.map(g => [g.ml.map(r => r[0]), g.desc.map(r => r[0])])));
-  ok(t[0].mlHead.includes('AIC') && t[0].mlHead.includes('ΔAIC') && t[0].mlHead.includes('AICc') && t[0].mlHead.includes('CvM W²') && !t[0].descHead.includes('AIC') && t[0].descHead.includes('ln L (log-skor)'), 'AIC columns only for likelihood fits; CvM shown; descriptive ln L labelled as log-score');
-  const aicCol = t[0].mlHead.indexOf('AIC'), aics = t[0].ml.map(r => parseFloat(String(r[aicCol + 1]).replace(',', '.')));
-  ok(aics.every((v, i) => !i || v >= aics[i - 1]) && (await page.locator('.sortnote', { hasText: 'Sıralama: AIC (küçük daha iyi)' }).count()) >= 1, 'sorted by AIC, the criterion shown: ' + aics);
+  ok(t.length === 1 && t[0].h.includes('no measurement threshold') && t[0].ml.every(r => /\.ml$|\.cml$/.test(r[0])) && t[0].desc.every(r => !/\.ml$|\.cml$/.test(r[0])), 'one process group; likelihood fits apart from the descriptive ones: ' + JSON.stringify(t.map(g => [g.ml.map(r => r[0]), g.desc.map(r => r[0])])));
+  ok(t[0].mlHead.includes('AIC') && t[0].mlHead.includes('ΔAIC') && t[0].mlHead.includes('AICc') && t[0].mlHead.includes('CvM W²') && !t[0].descHead.includes('AIC') && t[0].descHead.includes('ln L (log-score)'), 'AIC columns only for likelihood fits; CvM shown; descriptive ln L labelled as log-score');
+  const aicCol = t[0].mlHead.indexOf('AIC'), aics = t[0].ml.map(r => parseFloat(String(r[aicCol + 1])));
+  ok(aics.every((v, i) => !i || v >= aics[i - 1]) && (await page.locator('.sortnote', { hasText: 'Sorted by: AIC (smaller is better)' }).count()) >= 1, 'sorted by AIC, the criterion shown: ' + aics);
   ok(t[0].ml[0][t[0].mlHead.indexOf('ΔAIC') + 1] === '0', 'ΔAIC of the first row is 0');
-  ok((await page.locator('#panel', { hasText: 'p değeri verilmez' }).count()) === 1 && (await page.locator('#panel', { hasText: /p[ -]değeri\s*[=:]\s*\d|p-value\s*[=:]/ }).count()) === 0, 'no p-values');
+  ok((await page.locator('#panel', { hasText: 'No p-values' }).count()) === 1 && (await page.locator('#panel', { hasText: /p[ -]values?\s*[=:]\s*\d/ }).count()) === 0, 'no p-values');
   await page.selectOption('#cmp-sort', 'cvm');
-  const cv = await page.evaluate(() => { const tb = document.querySelector('table[data-kind="ml"]'), hd = [...tb.querySelectorAll('th')].map(x => x.textContent), c = hd.indexOf('CvM W²'); return [...tb.querySelectorAll('tbody tr')].map(tr => parseFloat(String(tr.children[c].textContent).replace(',', '.'))); });
-  ok(cv.every((v, i) => !i || v >= cv[i - 1]) && (await page.locator('.sortnote', { hasText: 'Sıralama: CvM W²' }).count()) >= 1, 'user switches the criterion: sorted by CvM: ' + cv);
+  const cv = await page.evaluate(() => { const tb = document.querySelector('table[data-kind="ml"]'), hd = [...tb.querySelectorAll('th')].map(x => x.textContent), c = hd.indexOf('CvM W²'); return [...tb.querySelectorAll('tbody tr')].map(tr => parseFloat(String(tr.children[c].textContent))); });
+  ok(cv.every((v, i) => !i || v >= cv[i - 1]) && (await page.locator('.sortnote', { hasText: 'Sorted by: CvM W²' }).count()) >= 1, 'user switches the criterion: sorted by CvM: ' + cv);
   const pool = [...d1, ...d2, 20, 20, 20], wm = E.runMethod('weibull.ml', { d: pool }, { a: 0 }), cvRef = E.gof.cvm(E.family('weibull'), wm.params, pool);
   const wrow = await page.evaluate(() => { const tb = document.querySelector('table[data-kind="ml"]'), hd = [...tb.querySelectorAll('th')].map(x => x.textContent); return { c: hd.indexOf('CvM W²'), r: [...tb.querySelectorAll('tbody tr')].filter(tr => tr.dataset.method === 'weibull.ml').map(tr => [...tr.children].map(x => x.textContent.trim())).find(r => r[3] === 'a = 0') }; });
-  ok(Math.abs(parseFloat(String(wrow.r[wrow.c]).replace(',', '.')) - cvRef) < 6e-5, 'CvM of the Weibull ML equals the engine');
+  ok(Math.abs(parseFloat(String(wrow.r[wrow.c])) - cvRef) < 6e-5, 'CvM of the Weibull ML equals the engine');
   await page.selectOption('#cmp-sort', 'aic');
   // charts: Q–Q, P–P, counts on the class edges
   await page.click('#tab-charts');
   ok((await page.locator('#ch-q svg circle').count()) === pool.length && (await page.locator('#ch-p svg circle').count()) === pool.length, 'Q–Q and P–P: one point per tree');
   await page.check('input[name="hscale"][value="count"]');
-  ok((await page.locator('#ch-h', { hasText: 'Ağaç sayısı' }).count()) === 1 && (await page.locator('#ch-h', { hasText: 'Yoğunluk' }).count()) === 0, 'count scale: axis in trees, not density');
+  ok((await page.locator('#ch-h', { hasText: 'Number of trees' }).count()) === 1 && (await page.locator('#ch-h', { hasText: 'Density' }).count()) === 0, 'count scale: axis in trees, not density');
   await page.check('input[name="hscale"][value="density"]'); await page.click('#tab-params'); }
 
 // 2j''. bootstrap (P14): Web Worker, same result as the engine, same seed → same result, cancel
@@ -392,19 +386,19 @@ await page.click('#tab-boot'); await page.waitForSelector('#bt-gof');
 { const E = await import('../../assets/lab/dist/index.js'), pool = [...d1, ...d2, 20, 20, 20];
   await page.selectOption('#bt-fit', { index: 0 }); await page.selectOption('#bt-B', '99');
   const fitKey = await page.inputValue('#bt-fit');
-  ok(fitKey.startsWith('weibull.ml|') && (await page.locator('#bt-round option[value="auto"]').textContent()).includes('0,1 cm'), 'fit chosen; rounding detected from the data (0.1 cm): ' + fitKey);
+  ok(fitKey.startsWith('weibull.ml|') && (await page.locator('#bt-round option[value="auto"]').textContent()).includes('0.1 cm'), 'fit chosen; rounding detected from the data (0.1 cm): ' + fitKey);
   await page.click('#bt-gof'); await page.waitForSelector('#bt-gof-out table.bttab', { timeout: 120000 });
   const got = await page.evaluate(() => [...document.querySelectorAll('#bt-gof-out tr[data-stat]')].map(tr => [tr.dataset.stat, ...[...tr.children].slice(1).map(x => x.textContent.trim())]));
   const r0 = E.runMethod('weibull.ml', { d: pool }, { a: 0 }), ref = E.boot.bootstrapGOF({ result: r0, input: { d: pool }, opts: { a: 0 }, B: 99, seed: 20261111, step: 'auto' });
-  ok(got.length === 3 && got.every(([k, t0, ge, pv]) => +ge === ref.stats[k].ge && Math.abs(parseFloat(String(pv).replace(',', '.')) - ref.stats[k].p) < 6e-5), 'worker result = engine (same seed, same counts and p): ' + JSON.stringify(got) + ' vs ' + JSON.stringify(Object.fromEntries(Object.entries(ref.stats).map(([k, v]) => [k, [v.ge, v.p]]))));
-  ok((await page.locator('#bt-gof-out .bt-meta').textContent()).includes('Tohum 20261111; istenen 99, tamamlanan') && (await page.locator('#bt-gof-out .bt-meta').textContent()).includes('yuvarlama: 0,1 cm'), 'seed, requested and completed replicates, failures and rounding recorded');
+  ok(got.length === 3 && got.every(([k, t0, ge, pv]) => +ge === ref.stats[k].ge && Math.abs(parseFloat(String(pv)) - ref.stats[k].p) < 6e-5), 'worker result = engine (same seed, same counts and p): ' + JSON.stringify(got) + ' vs ' + JSON.stringify(Object.fromEntries(Object.entries(ref.stats).map(([k, v]) => [k, [v.ge, v.p]]))));
+  ok((await page.locator('#bt-gof-out .bt-meta').textContent()).includes('Seed 20261111; requested 99, completed') && (await page.locator('#bt-gof-out .bt-meta').textContent()).includes('rounding: 0.1 cm'), 'seed, requested and completed replicates, failures and rounding recorded');
   const first = await page.locator('#bt-gof-out table').innerHTML(); await page.click('#bt-gof'); await page.waitForFunction(() => !document.querySelector('#bt-gof').disabled, null, { timeout: 120000 });
   ok((await page.locator('#bt-gof-out table').innerHTML()) === first, 'same seed again → identical table');
   await page.selectOption('#bt-B', '999'); await page.evaluate(() => { document.getElementById('bt-ci').click(); document.getElementById('bt-cancel').click(); });   // start and cancel at once (999 replicates can finish within a second)
   await page.waitForTimeout(1500);
-  ok((await page.locator('#status', { hasText: 'iptal edildi' }).count()) === 1 && (await page.locator('#bt-ci-out table').count()) === 0, 'cancel: no partial result shown');
+  ok((await page.locator('#status', { hasText: 'cancelled' }).count()) === 1 && (await page.locator('#bt-ci-out table').count()) === 0, 'cancel: no partial result shown');
   await page.selectOption('#bt-B', '199'); await page.click('#bt-ci'); await page.waitForSelector('#bt-ci-out table.bttab', { timeout: 120000 });
-  const ci = await page.evaluate(() => [...document.querySelectorAll('#bt-ci-out tr[data-q]')].map(tr => [tr.dataset.q, ...[...tr.children].slice(1).map(x => parseFloat(String(x.textContent).replace(',', '.')))]));
+  const ci = await page.evaluate(() => [...document.querySelectorAll('#bt-ci-out tr[data-q]')].map(tr => [tr.dataset.q, ...[...tr.children].slice(1).map(x => parseFloat(String(x.textContent)))]));
   const rci = E.boot.bootstrapCI({ result: r0, input: { d: pool }, opts: { a: 0 }, B: 199, seed: 20261111, step: 'auto', scheme: 'parametric' });
   ok(ci.length === 6 && ci.every(([k, est, lo, hi]) => Math.abs(lo - rci.intervals[k].lo) < 6e-5 && Math.abs(hi - rci.intervals[k].hi) < 6e-5 && lo <= est && est <= hi), 'intervals for b, c and Q25–Q95 = engine; estimate inside: ' + JSON.stringify(ci.map(x => x.slice(0, 4)))); }
   const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#bt-r')]), rs = await readFile(await dr.path(), 'utf8');
@@ -416,10 +410,10 @@ await page.click('#tab-params');
 await page.waitForSelector('#panel .srcs');
 { const src = await page.evaluate(() => ({ m: [...document.querySelectorAll('#panel .srcs li[data-src]')].map(x => x.dataset.src), r: [...document.querySelectorAll('#panel .srcs li[data-ref]')].map(x => x.dataset.ref), t: document.querySelector('#panel .srcs').textContent }));
   const ms = await page.evaluate(() => [...new Set([...document.querySelectorAll('#panel table.ptab tbody tr')].map(tr => tr.dataset.method))]);
-  ok(src.m.join() === ms.join() && src.r.includes('R6') && src.r.includes('DUBEY') && src.r.includes('R10') && src.t.includes('METHODS.md §12 P05') && src.t.includes('d > a') && src.t.includes('okundu'), 'sources: every method with section, support and references; reading status: ' + src.r.join());
-  ok((await page.locator('.pstates').count()) === 1 && (await page.locator('.pstates').textContent()).includes('sonuç hesaplandı'), 'computed and failed results counted apart');
+  ok(src.m.join() === ms.join() && src.r.includes('R6') && src.r.includes('DUBEY') && src.r.includes('R10') && src.t.includes('METHODS.md §12 P05') && src.t.includes('d > a') && src.t.includes('read'), 'sources: every method with section, support and references; reading status: ' + src.r.join());
+  ok((await page.locator('.pstates').count()) === 1 && (await page.locator('.pstates').textContent()).includes('results computed'), 'computed and failed results counted apart');
   const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), wb = XLSX.read(await readFile(await dx.path()));
-  const bs = XLSX.utils.sheet_to_json(wb.Sheets.Bootstrap, { header: 1 }), ks = XLSX.utils.sheet_to_json(wb.Sheets.Kaynaklar, { header: 1 });
+  const bs = XLSX.utils.sheet_to_json(wb.Sheets.Bootstrap, { header: 1 }), ks = XLSX.utils.sheet_to_json(wb.Sheets.Sources, { header: 1 });
   ok(bs.length > 4 && bs.slice(1).every(r => r[7] === 20261111 && r[3] === 'weibull.ml') && bs.some(r => r[6] === 'gof' && typeof r[17] === 'number') && bs.some(r => r[6] === 'ci' && typeof r[20] === 'number'), 'Excel: bootstrap sheet with seed, numbers as numbers');
   ok(ks.some(r => r[0] === 'weibull.ml' && r[5] === 'METHODS.md §12 P05') && ks.some(r => r[0] === 'bootstrap') && ks.some(r => r[0] === 'R9' && String(r[1]).includes('goodness_of_fit')), 'Excel: sources sheet (methods, sections, references)');
   const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]), jj = JSON.parse(await readFile(await dj.path(), 'utf8'));
@@ -437,33 +431,33 @@ await page.waitForSelector('#panel .srcs');
   const E = await import('../../assets/lab/dist/index.js'), RG = JSON.parse(await readFile(path.join(root, 'tests/ref/dist_p12.json'), 'utf8'));
   const cw = RG.cases.find(x => x.family === 'weibull' && x.outside === 'zero' && !x.perha), ed = RG.edges;
   const lines = ['plot\tlo\thi\tn', ...cw.n.map((n, j) => `P1\t${ed[j]}\t${ed[j + 1] ?? ''}\t${n}`)];
-  await g.goto(URL + '?lang=tr'); await g.locator('#impbox details summary').click(); await g.fill('#impbox textarea', lines.join('\n')); await g.click('#impbox [data-act="paste"]');
+  await g.goto(URL + '?lang=en'); await g.locator('#impbox details summary').click(); await g.fill('#impbox textarea', lines.join('\n')); await g.click('#impbox [data-act="paste"]');
   await g.waitForSelector('#impbox .fname'); await g.click('#to2');
   ok(await g.isChecked('input[name="dtype"][value="classes"]') && await g.inputValue('#lcol') === '1' && await g.inputValue('#ucol') === '2' && await g.inputValue('#ncol') === '3', 'class table recognised: lower, upper, frequency columns');
   ok((await g.locator('[data-m$=".gml"]').count()) === 10 && (await g.locator('[data-m="weibull.ml"]').count()) === 0 && (await g.locator('#trcard').count()) === 0, 'only grouped ML offered; no threshold card');
   await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const gr = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => ({ s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) })));
-  ok(gr[0].s === 'ok' && Math.abs(parseFloat(String(gr[0].c[3]).replace(',', '.')) - cw.params.b) < 6e-5 && Math.abs(parseFloat(String(gr[0].c[4]).replace(',', '.')) - cw.params.c) < 6e-5 && gr[0].c[5] === String(cw.n.reduce((a, b) => a + b, 0)) && gr[0].c[7] !== '–' && gr[0].c[9] === '–', 'grouped Weibull ML = SciPy; n = Σ n_j; AIC given; no KS on classes: ' + gr[0].c.slice(2, 10));
+  ok(gr[0].s === 'ok' && Math.abs(parseFloat(String(gr[0].c[3])) - cw.params.b) < 6e-5 && Math.abs(parseFloat(String(gr[0].c[4])) - cw.params.c) < 6e-5 && gr[0].c[5] === String(cw.n.reduce((a, b) => a + b, 0)) && gr[0].c[7] !== '–' && gr[0].c[9] === '–', 'grouped Weibull ML = SciPy; n = Σ n_j; AIC given; no KS on classes: ' + gr[0].c.slice(2, 10));
   await g.click('#tab-charts'); ok((await g.locator('#ch-h svg rect.ch-bar').count()) === 7, 'histogram bars are the closed classes (open last not drawn)');
   await g.click('#tab-classes'); await g.waitForSelector('table.ctab');
   const ct = await g.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-  ok(ct.length === 10 && ct[1][1] === String(cw.n[0]) && ct.find(r => r[0] === 'Toplam')[2] === '1', 'class table from the data classes; total probability 1');
+  ok(ct.length === 10 && ct[1][1] === String(cw.n[0]) && ct.find(r => r[0] === 'Total')[2] === '1', 'class table from the data classes; total probability 1');
   await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="perha"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const gp = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-  ok(Math.abs(parseFloat(String(gp[0][3]).replace(',', '.')) - cw.params.b) < 6e-5 && gp[0][6] === '–' && gp[0][7] === '–' && (await g.locator('ul.notes li', { hasText: 'ağaç sayısı bilinmediği için' }).count()) >= 1, 'per-hectare frequencies: same parameters, no ln L or AIC, reason stated');
+  ok(Math.abs(parseFloat(String(gp[0][3])) - cw.params.b) < 6e-5 && gp[0][6] === '–' && gp[0][7] === '–' && (await g.locator('ul.notes li', { hasText: 'the number of trees is unknown' }).count()) >= 1, 'per-hectare frequencies: same parameters, no ln L or AIC, reason stated');
   await g.click('#steps [data-go="2"]'); await g.check('input[name="ctype"][value="count"]'); await g.check('input[name="outside"][value="unrecorded"]'); await g.click('#calc'); await g.waitForSelector('table.ptab[data-fam="weibull"]', { state: 'attached' });
   const cu = RG.cases.find(x => x.family === 'weibull' && x.outside === 'unrecorded'), gu = await g.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="weibull"] tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-  ok(Math.abs(parseFloat(String(gu[0][4]).replace(',', '.')) - cu.params.c) < 6e-5, 'outside "not recorded": conditional grouped ML = SciPy');
+  ok(Math.abs(parseFloat(String(gu[0][4])) - cu.params.c) < 6e-5, 'outside "not recorded": conditional grouped ML = SciPy');
   await g.click('#tab-boot'); await g.waitForSelector('#bt-gof'); await g.selectOption('#bt-B', '99'); await g.click('#bt-gof'); await g.waitForSelector('#bt-gof-out table.bttab', { timeout: 120000 });
   ok((await g.locator('#bt-gof-out tr[data-stat="x2"]').count()) === 1 && (await g.locator('input[name="bt-scheme"][value="nonparametric"]').isDisabled()), 'grouped data: Pearson X² bootstrap; non-parametric scheme disabled');
   await g.click('#steps [data-go="2"]'); await g.check('input[name="outside"][value="zero"]'); await g.click('#calc'); await g.waitForSelector('table.ptab', { state: 'attached' }); await g.click('#tab-boot');
-  ok((await g.locator('#panel', { hasText: 'desteklenmiyor' }).count()) === 1 && (await g.locator('#bt-gof').count()) === 0, 'unsupported combination stated, no button');
+  ok((await g.locator('#panel', { hasText: 'not supported (yet)' }).count()) === 1 && (await g.locator('#bt-gof').count()) === 0, 'unsupported combination stated, no button');
   await ctx2.close(); }
 
 // 2m. P15: sample data with all eight families, failed fits told apart, one unit across all tabs; empty data; load failure
 { const c3 = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } }), q = await c3.newPage();
   q.on('pageerror', e => errors.push(e.message));
-  await q.goto(URL + '?lang=tr'); await q.click('#sample'); await q.waitForSelector('#impbox .fname'); await q.click('#to2');
+  await q.goto(URL + '?lang=en'); await q.click('#sample'); await q.waitForSelector('#impbox .fname'); await q.click('#to2');
   for (const m of await q.evaluate(() => [...document.querySelectorAll('[data-m]')].map(x => x.dataset.m))) await q.check(`[data-m="${m}"]`);
   for (const [k, v] of [['L', '0'], ['U', '60'], ['xi', '0'], ['lambda', '60']]) { await q.fill('#b-' + k, v); await q.locator('#b-' + k).dispatchEvent('change'); }
   ok(!(await q.isDisabled('#calc')), 'sample: every method of the eight families can be calculated (bounds given)');
@@ -484,16 +478,16 @@ await page.waitForSelector('#panel .srcs');
   ok(new Set(bars).size === 1 && bars[0].includes(ids[1]), 'the chosen plot stays the same in every tab: ' + bars.join(' / '));
   await q.click('#tab-params'); await c3.close(); }
 { const c4 = await browser.newContext(), q = await c4.newPage(); q.on('pageerror', e => errors.push(e.message));
-  await q.goto(URL + '?lang=tr'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', 'plot;dbh\nA;\nA;x'); await q.click('#impbox [data-act="paste"]');
+  await q.goto(URL + '?lang=en'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', 'plot;dbh\nA;\nA;x'); await q.click('#impbox [data-act="paste"]');
   await q.waitForSelector('#impbox .fname'); await q.click('#to2'); await q.click('#calc'); await q.waitForSelector('#nodata');
-  ok((await q.locator('#nodata').textContent()).includes('Analize girecek çap yok') && (await q.locator('#acc').textContent()).includes('2 değer okunamadı') && (await q.locator('table.ptab').count()) === 0, 'empty/missing data: stated, no tables');
+  ok((await q.locator('#nodata').textContent()).includes('No diameters to analyse') && (await q.locator('#acc').textContent()).includes('2 values unreadable') && (await q.locator('table.ptab').count()) === 0, 'empty/missing data: stated, no tables');
   await c4.close(); }
 { const c5 = await browser.newContext(), q = await c5.newPage();
   await q.route('**/dist/ui.js*', r => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>One moment, please...</title>' }));
   await q.goto(URL + '?lang=en'); await q.waitForSelector('#bootwarn', { timeout: 20000 });
   ok((await q.locator('#bootwarn').textContent()).includes('did not load') && (await q.locator('#bootwarn button').count()) === 1, 'load failure (HTML instead of JavaScript): warning with a reload button');
   await c5.close(); }
-{ await page.goto(URL + '?lang=tr'); await page.waitForTimeout(11000);
+{ await page.goto(URL + '?lang=en'); await page.waitForTimeout(11000);
   ok((await page.locator('#bootwarn').count()) === 0, 'normal load: no warning after the watchdog time'); }
 
 // 2n. stand models (P16): sample data, training (NLS, SUR), plot-level validation, model file out and in, prediction
@@ -501,32 +495,32 @@ await page.waitForSelector('#panel .srcs');
   q.on('pageerror', e => errors.push(e.message));
   const E = await import('../../assets/lab/dist/index.js'), { tableFromText } = await import('../../assets/lab/core/table.js');
   const csvS = await readFile(path.join(root, 'assets/lab/dist/ornek/ornek-mescere.csv'), 'utf8'), XS = E.stand.extractStandUnits(tableFromText(csvS, { delim: ',' }), { dcol: 2, pcol: 0, percol: 1, decimal: '.', unit: 'cm', cols: { N: 3, H: 4, A: 5 } });
-  await q.goto(URL + '?lang=tr'); await q.click('#wf-stand'); await q.waitForSelector('#st-train');
-  ok(await q.isDisabled('#st-train-btn') && (await q.locator('#st-train', { hasText: 'Önce bir ağaç tablosu yükleyin' }).count()) >= 1, 'no data: cannot train, reason shown');
+  await q.goto(URL + '?lang=en'); await q.click('#wf-stand'); await q.waitForSelector('#st-train');
+  ok(await q.isDisabled('#st-train-btn') && (await q.locator('#st-train', { hasText: 'Load a tree table first' }).count()) >= 1, 'no data: cannot train, reason shown');
   await q.click('#st-sample'); await q.waitForSelector('#st-ncol');
   ok(await q.inputValue('#st-ncol') === '3' && await q.inputValue('#st-hcol') === '4' && await q.inputValue('#st-acol') === '5' && await q.inputValue('#st-pcol') === '0', 'sample: diameter, plot, N, H and age columns recognised');
   await q.click('#st-train-btn'); await q.waitForSelector('table.sttab');
   const ref = E.stand.train(XS.units, { set: 'ppm.weibull', terms: E.stand.TERMS, fit: 'nls', hColumn: 'H_m' }), refCv = E.stand.crossValidate(XS.units, { set: 'ppm.weibull', terms: E.stand.TERMS, fit: 'nls' }, 5);
-  const rowsS = await q.evaluate(() => [...document.querySelectorAll('table.sttab tbody tr')].map(tr => [tr.dataset.key, ...[...tr.children].slice(1).map(td => parseFloat(String(td.textContent).replace(',', '.')))]));
+  const rowsS = await q.evaluate(() => [...document.querySelectorAll('table.sttab tbody tr')].map(tr => [tr.dataset.key, ...[...tr.children].slice(1).map(td => parseFloat(String(td.textContent)))]));
   ok(rowsS.length === 2 && rowsS.every((r, j) => r.slice(1, 6).every((v, i) => Math.abs(v - ref.equations[j].beta[i]) < 6e-7 * Math.max(1, Math.abs(ref.equations[j].beta[i])))), 'PPM NLS coefficients = engine: ' + JSON.stringify(rowsS));
-  ok((await q.locator('#st-cvsum').textContent()).includes(`${refCv.summary.units} birimin ${refCv.summary.ok} tanesi`) && (await q.locator('#st-train', { hasText: 'H olarak kullanılan sütun: H_m' }).count()) === 1, 'validation summary and the H column recorded');
+  ok((await q.locator('#st-cvsum').textContent()).includes(`${refCv.summary.ok} of ${refCv.summary.units} units predicted`) && (await q.locator('#st-train', { hasText: 'Column used as H: H_m' }).count()) === 1, 'validation summary and the H column recorded');
   await q.check('input[name="st-fit"][value="sur"]'); await q.click('#st-train-btn'); await q.waitForSelector('table.sttab');
-  ok((await q.locator('#st-out', { hasText: 'SUR' }).count()) >= 1 && (await q.locator('#st-out', { hasText: 'artık korelasyonları' }).count()) === 1, 'SUR: rounds and residual correlations between equations reported');
+  ok((await q.locator('#st-out', { hasText: 'SUR' }).count()) >= 1 && (await q.locator('#st-out', { hasText: 'residual correlations between equations' }).count()) === 1, 'SUR: rounds and residual correlations between equations reported');
   await q.check('input[name="st-fit"][value="mcdfr"]'); await q.click('#st-train-btn'); await q.waitForSelector('#st-cdf', { timeout: 120000 });
-  { const mc = E.stand.train(XS.units, { set: 'ppm.weibull', terms: E.stand.TERMS, fit: 'mcdfr', width: 2 }), txt = dotNum(await q.locator('#st-cdf').textContent());
-    ok(txt.includes(fmt6(mc.cdf.objective)) && txt.includes('sınıf genişliği 2 cm') && txt.includes('son sınıf yalnızca amaç fonksiyonundan çıkarıldı'), 'modified CDFR in the worker: objective = engine, class width and last-class rule stated: ' + txt); }
+  { const mc = E.stand.train(XS.units, { set: 'ppm.weibull', terms: E.stand.TERMS, fit: 'mcdfr', width: 2 }), txt = await q.locator('#st-cdf').textContent();
+    ok(txt.includes(fmt6(mc.cdf.objective)) && txt.includes('class width 2 cm') && txt.includes('the last class left out of the objective only'), 'modified CDFR in the worker: objective = engine, class width and last-class rule stated: ' + txt); }
   await q.check('input[name="st-fit"][value="sur"]'); await q.click('#st-train-btn'); await q.waitForSelector('table.sttab', { timeout: 120000 });
   const [dm] = await Promise.all([q.waitForEvent('download'), q.click('#st-json')]), file = await dm.path(), mj = JSON.parse(await readFile(file, 'utf8'));
   { const [dr] = await Promise.all([q.waitForEvent('download'), q.click('#st-r')]), rs = await readFile(await dr.path(), 'utf8');
-    ok(/mescere-modeli.*\.R$/.test(dr.suggestedFilename()) && rs.includes('f <- fb_sur(Z, Y, iterate = TRUE)') && rs.includes('stand_cols <- c(') && rs.includes('fold <- c(') && rs.includes('fb_out(res)'), 'stand model R code: the units, SUR, the cross-validation folds (checked in R by scripts/rcode-check.sh)'); }
+    ok(/stand-model.*\.R$/.test(dr.suggestedFilename()) && rs.includes('f <- fb_sur(Z, Y, iterate = TRUE)') && rs.includes('stand_cols <- c(') && rs.includes('fold <- c(') && rs.includes('fb_out(res)'), 'stand model R code: the units, SUR, the cross-validation folds (checked in R by scripts/rcode-check.sh)'); }
   ok(mj.schema === 'dist-stand-model/1' && mj.fit === 'sur' && mj.validation.K === 5 && mj.scope.plots === 36 && mj.hColumn === 'H_m', 'model file: schema, method, validation, scope, H column');
   await q.click('#stt-predict'); await q.check('input[name="st-src"][value="imported"]'); await q.setInputFiles('#st-file', file); await q.waitForSelector('#st-msum');
   for (const [k, v] of [['N', '800'], ['H', '20'], ['A', '40']]) { await q.fill('#st-x-' + k, v); await q.locator('#st-x-' + k).dispatchEvent('change'); }
   await q.click('#st-pred'); await q.waitForSelector('#st-params');
-  const pe = E.stand.predict(E.stand.importModel(mj).model, { N: 800, H: 20, A: 40 }), shown = dotNum(await q.locator('#st-params').textContent());
+  const pe = E.stand.predict(E.stand.importModel(mj).model, { N: 800, H: 20, A: 40 }), shown = await q.locator('#st-params').textContent();
   ok(shown.includes(fmt4(pe.params.b)) && shown.includes(fmt4(pe.params.c)) && (await q.locator('#ch-st svg path').count()) >= 1 && (await q.locator('#st-outside').count()) === 0, 'imported model: prediction = engine, density drawn: ' + shown);
   await q.fill('#st-x-N', '5000'); await q.locator('#st-x-N').dispatchEvent('change'); await q.click('#st-pred'); await q.waitForSelector('#st-pout');
-  ok((await q.locator('#st-outside', { hasText: 'aralığı dışında' }).count()) === 1, 'outside the training range: extrapolation stated');
+  ok((await q.locator('#st-outside', { hasText: 'outside the range of the training data' }).count()) === 1, 'outside the training range: extrapolation stated');
   await q.setViewportSize({ width: 390, height: 844 }); await q.click('#stt-train');
   ok(await q.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'stand model tab: no horizontal scroll on a phone');
   await c6.close(); }
@@ -534,7 +528,7 @@ await page.waitForSelector('#panel .srcs');
 // 2o. P18: L-moments, QME and MGE are optional (unchecked by default); options from the interface; † on the self-criterion
 { const c7 = await browser.newContext({ viewport: { width: 1280, height: 900 } }), q = await c7.newPage(); q.on('pageerror', e => errors.push(e.message));
   const E = await import('../../assets/lab/dist/index.js'), dd = [12.5, 15, 18.2, 22, 25.5, 31, 9.4, 14, 27, 20.1, 16.6, 23.3, 19.9, 21.7, 17.5, 24.8, 13.2, 28.6, 11.9, 26.4];
-  await q.goto(URL + '?lang=tr'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
+  await q.goto(URL + '?lang=en'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
   await q.waitForSelector('#impbox .fname'); await q.click('#to2');
   const on = await q.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-m]')].map(x => [x.dataset.m, x.checked])));
   ok(['weibull.lmom', 'gamma.lmom', 'normal.qme', 'normal.mge', 'gamma.qme', 'gamma.mge'].every(id => id in on && on[id] === false) && on['gamma.ml'] === true, 'new methods offered but not selected by default');
@@ -547,8 +541,8 @@ await page.waitForSelector('#panel .srcs');
   const rq = E.runMethod('gamma.qme', { d: dd }, { probs: [0.25, 0.5, 0.75], weights: [1, 2, 1] }), rm = E.runMethod('gamma.mge', { d: dd }, { gof: 'ks' }), rl = E.runMethod('gamma.lmom', { d: dd });
   const fam = await q.evaluate(() => [...document.querySelectorAll('table.ptab[data-fam="gamma"] tbody tr')].map(tr => ({ m: tr.dataset.method, c: [...tr.children].map(x => x.textContent.trim()) })));
   const cell = id => fam.find(r => r.m === id);
-  ok(Math.abs(parseFloat(String(cell('gamma.qme').c[2]).replace(',', '.')) - rq.params.k) < 6e-5 * rq.params.k && Math.abs(parseFloat(String(cell('gamma.mge').c[2]).replace(',', '.')) - rm.params.k) < 6e-5 * rm.params.k && Math.abs(parseFloat(String(cell('gamma.lmom').c[2]).replace(',', '.')) - rl.params.k) < 6e-5 * rl.params.k, 'QME (probabilities and weights from the interface), MGE (KS) and L-moments = engine');
-  ok(cell('gamma.qme').c[0].includes('olasılıklar 0.25, 0.5, 0.75') && cell('gamma.qme').c[0].includes('ağırlıklar 1, 2, 1') && cell('gamma.mge').c[0].includes('KS ile'), 'probabilities, weights and the minimised criterion shown with the method');
+  ok(Math.abs(parseFloat(String(cell('gamma.qme').c[2])) - rq.params.k) < 6e-5 * rq.params.k && Math.abs(parseFloat(String(cell('gamma.mge').c[2])) - rm.params.k) < 6e-5 * rm.params.k && Math.abs(parseFloat(String(cell('gamma.lmom').c[2])) - rl.params.k) < 6e-5 * rl.params.k, 'QME (probabilities and weights from the interface), MGE (KS) and L-moments = engine');
+  ok(cell('gamma.qme').c[0].includes('probabilities 0.25, 0.5, 0.75') && cell('gamma.qme').c[0].includes('weights 1, 2, 1') && cell('gamma.mge').c[0].includes('by KS'), 'probabilities, weights and the minimised criterion shown with the method');
   await q.selectOption('#cmp-sort', 'ks');
   const desc = await q.evaluate(() => [...document.querySelectorAll('table[data-kind="desc"] tbody tr')].map(tr => [tr.dataset.method, tr.querySelector('.selfcrit') != null]));
   ok(desc.length === 3 && desc.find(r => r[0] === 'gamma.mge')[1] && desc.filter(r => r[1]).length === 1 && (await q.locator('table[data-kind="ml"] tbody tr').count()) === 1, 'MGE among the descriptive fits, not in the AIC table; † on the criterion it minimised: ' + JSON.stringify(desc));
@@ -559,21 +553,21 @@ await page.waitForSelector('#panel .srcs');
   const E = await import('../../assets/lab/dist/index.js'), { sbMomentsY } = await import('../../assets/lab/dist/families/johnsonsb.js');
   const P = { xi: 4, lambda: 40, gamma: 0.8, delta: 1.4 }, u = sbMomentsY(0.8, 1.4), m1 = 4 + 40 * u.m1, m2 = 16 + 320 * u.m1 + 1600 * u.m2, m3 = 64 + 1920 * u.m1 + 19200 * u.m2 + 64000 * u.m3;
   const S0 = { mean: m1, median: 4 + 40 / (1 + Math.exp(0.8 / 1.4)), dq: Math.sqrt(m2), dg: m3 / m2 };
-  await q.goto(URL + '?lang=tr'); await q.click('#wf-summary'); await q.click('#rt-fns'); await q.waitForSelector('#fnscard');
+  await q.goto(URL + '?lang=en'); await q.click('#wf-summary'); await q.click('#rt-fns'); await q.waitForSelector('#fnscard');
   for (const k of ['mean', 'median', 'dq', 'dg']) { await q.fill('#f-' + k, String(S0[k])); await q.locator('#f-' + k).dispatchEvent('change'); }
   await q.click('#f-calc'); await q.waitForSelector('table.fnstab', { timeout: 60000 });
   const row = await q.evaluate(() => { const tr = document.querySelector('table.fnstab tbody tr'); return { s: tr.dataset.status, c: [...tr.children].map(x => x.textContent.trim()) }; });
-  ok(row.s === 'ok' && Math.abs(parseFloat(String(row.c[1]).replace(',', '.')) - 4) < 1e-5 && Math.abs(parseFloat(String(row.c[2]).replace(',', '.')) - 40) < 1e-5 && Math.abs(parseFloat(String(row.c[3]).replace(',', '.')) - 0.8) < 1e-5 && Math.abs(parseFloat(String(row.c[4]).replace(',', '.')) - 1.4) < 1e-5, 'four parameters recovered (ξ = 4, λ = 40, γ = 0.8, δ = 1.4): ' + row.c.slice(1, 5));
-  ok((await q.locator('#f-out', { hasText: 'm₃ = d̄_G × Dq²' }).count()) === 1 && (await q.locator('#f-out .srcs li[data-ref="R17"]').count()) === 1 && row.c[7].includes('koşul sayısı'), 'm3 shown, source [R17] listed, condition number reported');
+  ok(row.s === 'ok' && Math.abs(parseFloat(String(row.c[1])) - 4) < 1e-5 && Math.abs(parseFloat(String(row.c[2])) - 40) < 1e-5 && Math.abs(parseFloat(String(row.c[3])) - 0.8) < 1e-5 && Math.abs(parseFloat(String(row.c[4])) - 1.4) < 1e-5, 'four parameters recovered (ξ = 4, λ = 40, γ = 0.8, δ = 1.4): ' + row.c.slice(1, 5));
+  ok((await q.locator('#f-out', { hasText: 'm₃ = d̄_G × Dq²' }).count()) === 1 && (await q.locator('#f-out .srcs li[data-ref="R17"]').count()) === 1 && row.c[7].includes('condition number'), 'm3 shown, source [R17] listed, condition number reported');
   await q.click('#rt-prs'); ok(await q.inputValue('#p-median') === String(S0.median), 'median shared with the Parresol tab');
   await q.click('#rt-fns'); await q.fill('#f-median', String(S0.mean)); await q.locator('#f-median').dispatchEvent('change'); await q.click('#f-calc'); await q.waitForSelector('table.fnstab');
-  ok((await q.locator('table.fnstab tr[data-status="invalid"]').count()) === 1 && (await q.locator('table.fnstab', { hasText: 'simetrik' }).count()) === 1, 'median = mean: refused as symmetric, no parameters');
+  ok((await q.locator('table.fnstab tr[data-status="invalid"]').count()) === 1 && (await q.locator('table.fnstab', { hasText: 'symmetric' }).count()) === 1, 'median = mean: refused as symmetric, no parameters');
   await c8.close(); }
 
 // 2q. P20: generalized gamma, optional; same fit as the engine; the note on parameter counts in the AIC table
 { const c9 = await browser.newContext({ viewport: { width: 1280, height: 900 } }), q = await c9.newPage(); q.on('pageerror', e => errors.push(e.message));
   const E = await import('../../assets/lab/dist/index.js'), FX = JSON.parse(await readFile(path.join(root, 'tests/weibull/fixture.json'), 'utf8')).samples, dd = FX.w2;
-  await q.goto(URL + '?lang=tr'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
+  await q.goto(URL + '?lang=en'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
   await q.waitForSelector('#impbox .fname'); await q.click('#to2');
   const on = await q.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-m]')].map(x => [x.dataset.m, x.checked])));
   ok(on['gengamma.ml'] === false, 'generalized gamma offered, not selected by default');
@@ -582,52 +576,52 @@ await page.waitForSelector('#panel .srcs');
   await q.click('#calc'); await q.waitForSelector('table.cmptab');
   const rg = E.runMethod('gengamma.ml', { d: dd });
   const row = await q.evaluate(() => { const tr = document.querySelector('table.ptab[data-fam="gengamma"] tbody tr'); return [...tr.children].map(x => x.textContent.trim()); });
-  ok(['a', 'b', 'c'].every((k, i) => Math.abs(parseFloat(String(row[2 + i]).replace(',', '.')) - rg.params[k]) < 6e-5 * rg.params[k]), 'generalized gamma a, b, c = engine: ' + row.slice(2, 5));
+  ok(['a', 'b', 'c'].every((k, i) => Math.abs(parseFloat(String(row[2 + i])) - rg.params[k]) < 6e-5 * rg.params[k]), 'generalized gamma a, b, c = engine: ' + row.slice(2, 5));
   ok((await q.locator('table[data-kind="ml"] tbody tr').count()) === 2 && (await q.locator('.cmpgroup .kdiff').count()) === 1, 'gamma and generalized gamma in one AIC table, with the note that more parameters is not a better biological model');
   await c9.close(); }
 
 // 2r. P20: Gumbel (maximum form), optional; negative-diameter probability F(0) shown with the fit
 { const c10 = await browser.newContext({ viewport: { width: 1280, height: 900 } }), q = await c10.newPage(); q.on('pageerror', e => errors.push(e.message));
   const E = await import('../../assets/lab/dist/index.js'), dd = [6.5, 9, 12.2, 14, 15.5, 21, 8.4, 11, 17, 13.1, 10.6, 18.3, 12.9, 16.7, 11.5, 24.8, 9.2, 28.6, 7.9, 14.4];
-  await q.goto(URL + '?lang=tr'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
+  await q.goto(URL + '?lang=en'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
   await q.waitForSelector('#impbox .fname'); await q.click('#to2');
   const on = await q.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-m]')].map(x => [x.dataset.m, x.checked])));
-  ok(on['gumbel.ml'] === false && on['gumbel.mom'] === false && (await q.locator('fieldset.fam[data-fam="gumbel"] legend', { hasText: 'Gumbel (maksimum biçimi)' }).count()) === 1, 'Gumbel offered under its explicit name (maximum form), not selected by default');
+  ok(on['gumbel.ml'] === false && on['gumbel.mom'] === false && (await q.locator('fieldset.fam[data-fam="gumbel"] legend', { hasText: 'Gumbel (maximum form)' }).count()) === 1, 'Gumbel offered under its explicit name (maximum form), not selected by default');
   for (const m of Object.keys(on)) if (on[m]) await q.uncheck(`[data-m="${m}"]`);
   for (const m of ['gumbel.ml', 'gumbel.mom']) await q.check(`[data-m="${m}"]`);
   await q.click('#calc'); await q.waitForSelector('table.cmptab');
   const r = E.runMethod('gumbel.ml', { d: dd }), row = await q.evaluate(() => { const tr = document.querySelector('table.ptab[data-fam="gumbel"] tbody tr[data-method="gumbel.ml"]'); return [...tr.children].map(x => x.textContent.trim()); });
-  ok(Math.abs(parseFloat(String(row[2]).replace(',', '.')) - r.params.mu) < 6e-5 * r.params.mu && Math.abs(parseFloat(String(row[3]).replace(',', '.')) - r.params.beta) < 6e-5 * r.params.beta, 'Gumbel μ, β = engine: ' + row.slice(2, 4));
+  ok(Math.abs(parseFloat(String(row[2])) - r.params.mu) < 6e-5 * r.params.mu && Math.abs(parseFloat(String(row[3])) - r.params.beta) < 6e-5 * r.params.beta, 'Gumbel μ, β = engine: ' + row.slice(2, 4));
   ok((await q.locator('ul.notes li', { hasText: 'F(0) = exp[−exp(μ/β)]' }).count()) >= 1, 'negative-diameter probability F(0) listed in the notes');
   await c10.close(); }
 
 // 2s. P23: empirical basal area diameter distribution (descriptive) in the Classes tab; Excel sheet; phone width
 { const c11 = await browser.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true }), q = await c11.newPage(); q.on('pageerror', e => errors.push(e.message));
   const E = await import('../../assets/lab/dist/index.js'), dd = [12, 14, 14, 14, 16, 18, 18, 20, 24, 24, 24, 24, 30, 36, 36];
-  await q.goto(URL + '?lang=tr'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
+  await q.goto(URL + '?lang=en'); await q.locator('#impbox details summary').click(); await q.fill('#impbox textarea', ['dbh', ...dd].join('\n')); await q.click('#impbox [data-act="paste"]');
   await q.waitForSelector('#impbox .fname'); await q.click('#to2'); await q.click('#calc'); await q.waitForSelector('table.ptab', { state: 'attached' });
   const before = await (async () => { await q.click('#tab-classes'); await q.waitForSelector('table.ctab'); return q.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => tr.children[1].textContent)); })();
   const pc = E.basal.baPercentiles(dd), cells = await q.evaluate(() => [...document.querySelectorAll('table.batab tbody td')].map(x => x.textContent.trim()));
-  ok(cells.length === 12 && cells.every((c, i) => Math.abs(parseFloat(String(c.replace(',', '.')).replace(',', '.')) - pc.d[i]) < 1e-9) && new RegExp(`dgM = ${pc.dgM}(\\.0+)? cm`).test(await q.textContent('#ba-dgm')), 'basal area percentiles 0…100 % and dgM = engine: ' + cells.join(' '));
+  ok(cells.length === 12 && cells.every((c, i) => Math.abs(parseFloat(c) - pc.d[i]) < 1e-9) && new RegExp(`dgM = ${pc.dgM}(\\.0+)? cm`).test(await q.textContent('#ba-dgm')), 'basal area percentiles 0…100 % and dgM = engine: ' + cells.join(' '));
   ok((await q.locator('#ch-ba svg').count()) === 1 && (await q.locator('.bacard', { hasText: 'F_G(d) ≥ p' }).count()) === 1, 'cumulative distributions by number and by basal area drawn; percentile definition stated');
   await q.fill('#cl-area', '250'); await q.locator('#cl-area').dispatchEvent('change'); await q.waitForSelector('table.bactab', { state: 'attached' });
   const tot = await q.evaluate(() => [...document.querySelector('table.bactab tr.tot').children].map(x => x.textContent.trim()));
   const G = dd.reduce((a, v) => a + Math.PI * v * v / 40000, 0) * 40;
-  ok(Math.abs(parseFloat(String(tot[2]).replace(',', '.')) - G) < 1e-4 && tot[1] === tot[4] && parseFloat(String(tot[1]).replace(',', '.')) === 600, `class table: Σ G = ${G.toFixed(4)} m²/ha, Σ f = Σ N = 600 trees/ha: ` + tot);
+  ok(Math.abs(parseFloat(String(tot[2])) - G) < 1e-4 && tot[1] === tot[4] && parseFloat(String(tot[1])) === 600, `class table: Σ G = ${G.toFixed(4)} m²/ha, Σ f = Σ N = 600 trees/ha: ` + tot);
   const after = await q.evaluate(() => [...document.querySelectorAll('table.ctab tbody tr')].map(tr => tr.children[1].textContent));
   ok(after.length === before.length && after.every((v, i) => v === before[i]), 'tree-number class table unchanged');
   await q.setViewportSize({ width: 390, height: 844 });
   ok(await q.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Classes tab with the basal area card: no horizontal scroll on a phone');
   const [dl] = await Promise.all([q.waitForEvent('download'), q.click('#tab-params').then(() => q.click('#x-xlsx'))]);
   const wb = XLSX.read(await readFile(await dl.path()));
-  const sh = XLSX.utils.sheet_to_json(wb.Sheets['GY dagilimi'], { header: 1 });
-  ok(sh.filter(r => r[2] === 'göğüs yüzeyi yüzdeliği').length === 12 && sh.find(r => r[6] === 0.5)[7] === pc.dgM && sh.some(r => r[2] === 'sınıf' && r[14] === 'm2/ha'), 'Excel: "GY dagilimi" sheet with percentiles (dgM at p = 0.5) and class basal area per hectare');
+  const sh = XLSX.utils.sheet_to_json(wb.Sheets['BA distribution'], { header: 1 });
+  ok(sh.filter(r => r[2] === 'basal area percentile').length === 12 && sh.find(r => r[6] === 0.5)[7] === pc.dgM && sh.some(r => r[2] === 'class' && r[14] === 'm2/ha'), 'Excel: "BA distribution" sheet with percentiles (dgM at p = 0.5) and class basal area per hectare');
   await c11.close(); }
 
 // 3. sample data, phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
 phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr'); await phone.click('#sample'); await phone.waitForSelector('#impbox .fname'); await phone.click('#to2');
+await phone.goto(URL + '?lang=en'); await phone.click('#sample'); await phone.waitForSelector('#impbox .fname'); await phone.click('#to2');
 ok(await phone.isChecked('input[name="dec"][value=","]'), 'sample with decimal commas: comma proposed');
 await phone.click('#calc'); await phone.waitForSelector('table.ptab', { state: 'attached' });
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');

@@ -24,7 +24,7 @@ const csv = async () => { const [d] = await Promise.all([page.waitForEvent('down
 const bestRef = s => { const i = REF[s].overall.indexOf(Math.min(...REF[s].overall)); return REF[s].models[i]; };
 
 // 1. sample workbook (title row above the header, duplicate name, missing value, R² = FI, one poor model)
-await page.goto(URL + '?lang=tr');
+await page.goto(URL);
 await page.click('#sample'); await page.waitForSelector('#impbox .fname');
 await page.click('#to2');
 ok(await page.locator('#hrow').inputValue() === '1', 'header row found under the title row');
@@ -42,7 +42,7 @@ ok(last === '13', 'worst overall = m = 13');
 await shot('rk-3-siralama');
 // exclude the poor model M13 → m = 12, ranks recomputed
 await page.locator('#panel tbody tr', { hasText: 'M13' }).locator('input[type=checkbox]').click();
-ok((await page.locator('#panel', { hasText: '12 model sıralandı' }).count()) === 1, 'excluding a model recomputes with m = 12');
+ok((await page.locator('#panel', { hasText: '12 models ranked' }).count()) === 1, 'excluding a model recomputes with m = 12');
 ok((await page.locator('#panel tbody tr').first().locator('th').textContent()) === bestRef('excl'), 'best after exclusion = reference');
 ok((await page.locator('[data-back]').count()) === 1, 'excluded model listed with put-back button');
 await shot('rk-4-dislama');
@@ -51,26 +51,26 @@ await page.click('#tab-radar');
 await page.fill('#nb', '3'); await page.locator('#nb').dispatchEvent('change');
 await page.fill('#nw', '2'); await page.locator('#nw').dispatchEvent('change');
 ok((await page.locator('#ch-r polygon.ch-radar').count()) === 5, 'radar shows best 3 + worst 2');
-await page.locator('details summary', { hasText: 'Ayrıca göster' }).click();
+await page.locator('details summary', { hasText: /^Also show$/ }).click();
 await page.locator('[data-x]').nth(5).click();
 ok((await page.locator('#ch-r polygon.ch-radar').count()) === 6, 'extra model added to radar');
 await shot('rk-5-radar');
 const [ds] = await Promise.all([page.waitForEvent('download'), page.click('#svg')]);
 ok((await readFile(await ds.path(), 'utf8')).includes('<svg'), 'radar downloads as SVG');
 
-// 2. exports and language
+// 2. exports, before and after a reload
 await page.click('#tab-export');
-const tr = await csv();
-await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('#tab-export');
+const before = await csv();
+await page.reload(); await page.waitForSelector('#tab-export');
 await page.click('#tab-export');
 const en = await csv();
-ok(en[0].startsWith('Rank,Model,Row,R: R²') && tr[0].startsWith('Sıra,Model,Satır,R: R²'), 'CSV headers in each language');
-ok(en.length === 13 && tr[1].split(',').slice(-1)[0] === en[1].split(',').slice(-1)[0], 'same values in TR and EN (m = 12 kept after switch)');
+ok(en[0].startsWith('Rank,Model,Row,R: R²') && before[0] === en[0], 'CSV header in English');
+ok(en.length === 13 && before[1].split(',').slice(-1)[0] === en[1].split(',').slice(-1)[0], 'same values after a reload (m = 12 kept)');
 const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 ok(XLSX.read(await readFile(await dx.path())).SheetNames.join(',') === 'Info,Relative ranks,Criterion values,Criteria', 'XLSX sheets');
 
 // 3. unknown criterion name needs a direction; pasted text table with decimal comma
-await page.goto(URL + '?lang=tr');
+await page.goto(URL);
 await page.click('#steps [data-go="1"]'); await page.click('#reset');
 await page.locator('#impbox details summary').click();
 await page.fill('#impbox textarea', 'Model\tRMSE\tXYZ\nA\t1,20\t5\nB\t1,40\t6\nC\t1,10\t9\n');
@@ -85,7 +85,7 @@ ok(rowsTxt.join(',') === 'A,C,B', 'ranking A, C, B: ' + rowsTxt.join(','));
 // 4. phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
 phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr');
+await phone.goto(URL);
 await phone.click('#sample'); await phone.waitForSelector('#impbox .fname');
 await phone.click('#to2'); await phone.click('#calc'); await phone.click('#tab-radar');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');

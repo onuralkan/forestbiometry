@@ -22,14 +22,19 @@ const SITE_AUTHOR = [
 
 function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
-/** ?lang= wins and is remembered in a cookie; otherwise the cookie; otherwise English (the site's default language). */
+/**
+ * The site is English only (20 Nov 2026, user decision; Turkish is removed step by step, its strings stay unused in the
+ * code for now). Old Turkish links (?lang=tr) are sent to the same page without the parameter, and the old language
+ * cookie is cleared; ?lang=en is accepted and ignored.
+ */
 function lang(): string {
-    if (isset($_GET['lang']) && in_array($_GET['lang'], ['tr', 'en'], true)) {
-        setcookie('lang', $_GET['lang'], ['expires' => time() + 31536000, 'path' => '/', 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
-        return $_GET['lang'];
+    if (isset($_GET['lang']) && $_GET['lang'] !== 'en' && !headers_sent() && PHP_SAPI !== 'cli') {
+        $q = $_GET; unset($q['lang']);
+        $path = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
+        header('Location: ' . $path . ($q ? '?' . http_build_query($q) : ''), true, 301); exit;
     }
-    if (isset($_COOKIE['lang']) && in_array($_COOKIE['lang'], ['tr', 'en'], true)) return $_COOKIE['lang'];
-    return 'en'; // default English (16 Nov 2026, user decision); Turkish by the language switch (?lang=tr, kept in a cookie)
+    if (isset($_COOKIE['lang']) && !headers_sent()) setcookie('lang', '', ['expires' => 1, 'path' => '/', 'samesite' => 'Lax']);
+    return 'en';
 }
 
 function site_ctx(): array {
@@ -206,10 +211,7 @@ function site_top(array $o = []): void {
 <title><?= h($pageTitle) ?></title>
 <meta name="description" content="<?= h($o['desc'] ?? '') ?>">
 <?php if (!empty($o['robots'])): ?><meta name="robots" content="<?= h($o['robots']) ?>">
-<?php else: $pg = ($here === 'index.php' ? '' : $here) . '?' . (!empty($o['query']) ? $o['query'] . '&' : ''); /* 'query': page-defining parameters (e.g. the guide's k=…) */ ?><link rel="canonical" href="<?= h(SITE_BASE . $pg . 'lang=' . $c['L']) ?>">
-<link rel="alternate" hreflang="tr" href="<?= h(SITE_BASE . $pg . 'lang=tr') ?>">
-<link rel="alternate" hreflang="en" href="<?= h(SITE_BASE . $pg . 'lang=en') ?>">
-<link rel="alternate" hreflang="x-default" href="<?= h(SITE_BASE . rtrim(rtrim($pg, '?'), '&')) ?>">
+<?php else: $pg = ($here === 'index.php' ? '' : $here) . (!empty($o['query']) ? '?' . $o['query'] : ''); /* 'query': page-defining parameters (e.g. the guide's k=…) */ ?><link rel="canonical" href="<?= h(SITE_BASE . $pg) ?>">
 <?php endif; ?><meta name="author" content="<?= h(SITE_AUTHOR['name']) ?>">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
@@ -233,7 +235,6 @@ function site_top(array $o = []): void {
   <span class="b-tools">
     <button type="button" class="b-citebtn" id="citebtn" data-cite-open aria-haspopup="dialog"><?= site_icon('cite') ?><span><?= $tr ? 'Atıf' : 'Cite' ?></span></button>
     <button type="button" id="theme" class="b-iconbtn" aria-label="<?= $tr ? 'Koyu / açık tema' : 'Dark / light theme' ?>"><?= site_icon('theme') ?></button>
-    <a id="langlink" href="<?= h($langHref) ?>" hreflang="<?= $c['other'] ?>" lang="<?= $c['other'] ?>"><span class="ll-l"><?= $c['other'] === 'en' ? 'English' : 'Türkçe' ?></span><span class="ll-s"><?= $c['other'] === 'en' ? 'EN' : 'TR' ?></span></a>
   </span>
 </header>
 <div class="b-shell">

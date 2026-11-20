@@ -1,6 +1,6 @@
 <?php
 // Bibliography of the platform: every source the tools' methods and tests rely on, APA 7, from inc/kaynakca.json
-// (extracted from docs/METHODS.md and docs/KAYNAK_LISTESI.md; no detail added that those documents do not give).
+// (extracted from docs/METHODS.md and docs/SOURCE_LIST.md; no detail added that those documents do not give).
 require __DIR__ . '/inc/site.php';
 $tr = site_ctx()['tr'];
 $refs = json_decode((string) @file_get_contents(__DIR__ . '/inc/kaynakca.json'), true) ?: [];   // docs/kaynakca.json without the sources of archived (removed) tools

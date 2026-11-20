@@ -92,7 +92,7 @@
   "tools": [
    "METHODS §14 SV01 (Huber, Smalian, Newton; textbook-definition exception)"
   ],
-  "note": "details from TOOLS_SPEC §9 and KAYNAK_LISTESI (publisher)"
+  "note": "details from TOOLS_SPEC §9 and SOURCE_LIST (publisher)"
  },
  {
   "key": "baia2025",
@@ -287,7 +287,7 @@
   "tools": [
    "METHODS §22 BC04"
   ],
-  "note": "read via rdrr.io copy 17 Nov 2026; METHODS: version number could not be read; KAYNAK_LISTESI lists BIOMASS 2.2; no marker"
+  "note": "read via rdrr.io copy 17 Nov 2026; METHODS: version number could not be read; SOURCE_LIST lists BIOMASS 2.2; no marker"
  },
  {
   "key": "bruce1950",
@@ -410,7 +410,7 @@
   "tools": [
    "METHODS §22 BC04 (§2(a), p. 410)"
   ],
-  "note": "title from KAYNAK_LISTESI"
+  "note": "title from SOURCE_LIST"
  },
  {
   "key": "chave2014",
@@ -461,7 +461,7 @@
   "tools": [
    "METHODS §27 SM-03 (calibration)"
   ],
-  "note": "secondary source for Vonesh & Chinchilli 1997 [A]; authors and title from KAYNAK_LISTESI; pages field holds article number"
+  "note": "secondary source for Vonesh & Chinchilli 1997 [A]; authors and title from SOURCE_LIST; pages field holds article number"
  },
  {
   "key": "clark1906",
@@ -508,7 +508,7 @@
   "tools": [
    "METHODS §16 SS02 (Clark–Evans R)"
   ],
-  "note": "title from TOOLS_SPEC §9 / KAYNAK_LISTESI"
+  "note": "title from TOOLS_SPEC §9 / SOURCE_LIST"
  },
  {
   "key": "cochran1963",
@@ -672,7 +672,7 @@
   "tools": [
    "METHODS §16 SS02 (Donnelly edge correction, temporary exception)"
   ],
-  "note": "ed. Hodder, I.; details from TOOLS_SPEC §9 / KAYNAK_LISTESI; METHODS gives only 'Donnelly (1978)', constants 0.0514 and 0.041"
+  "note": "ed. Hodder, I.; details from TOOLS_SPEC §9 / SOURCE_LIST; METHODS gives only 'Donnelly (1978)', constants 0.0514 and 0.041"
  },
  {
   "key": "draper1981",
@@ -814,7 +814,7 @@
    "METHODS §12 P18 (QME, MGE)",
    "DIST_SPEC [R8]"
   ],
-  "note": "developer documentation; KAYNAK_LISTESI separately names the package paper Delignette-Muller, M.L., Dutang, C. 2015, J. Statistical Software 64(4)"
+  "note": "developer documentation; SOURCE_LIST separately names the package paper Delignette-Muller, M.L., Dutang, C. 2015, J. Statistical Software 64(4)"
  },
  {
   "key": "fonseca2009",
@@ -1071,7 +1071,7 @@
   "tools": [
    "METHODS §25 SV-05 (International ¼-inch equation)"
   ],
-  "note": "incomplete: 'Grosenbaugh 1952a', via Kershaw et al. 2016 §7.3; no marker; not identifiable with KAYNAK_LISTESI's 'Grosenbaugh 1952 Plotless timber estimates'"
+  "note": "incomplete: 'Grosenbaugh 1952a', via Kershaw et al. 2016 §7.3; no marker; not identifiable with SOURCE_LIST's 'Grosenbaugh 1952 Plotless timber estimates'"
  },
  {
   "key": "growthmodels",
@@ -1382,7 +1382,7 @@
    "METHODS §22 BC-01 (Eq. 2.8, §2.2.3)",
    "METHODS §22 BC02/BC03"
   ],
-  "note": "Volume 4 (AFOLU), Chapter 2 (Generic Methodologies Applicable to Multiple Land-Use Categories); conflict: TOOLS_SPEC §9 cites Volume 4 Chapter 4 (Forest Land); URL as given in KAYNAK_LISTESI (no scheme)"
+  "note": "Volume 4 (AFOLU), Chapter 2 (Generic Methodologies Applicable to Multiple Land-Use Categories); conflict: TOOLS_SPEC §9 cites Volume 4 Chapter 4 (Forest Land); URL as given in SOURCE_LIST (no scheme)"
  },
  {
   "key": "israel1992",
@@ -1484,7 +1484,7 @@
    "METHODS §24 SV-04 (§6.2)",
    "METHODS §25 SV-05 (§7.3, §7.4.1, Table 6.1)"
   ],
-  "note": "conflict: publisher 'Wiley' (§17, §24, §25, KAYNAK_LISTESI) vs 'Wiley-Blackwell' (§23); §14 lists it as [D] textbook-definition exception"
+  "note": "conflict: publisher 'Wiley' (§17, §24, §25, SOURCE_LIST) vs 'Wiley-Blackwell' (§23); §14 lists it as [D] textbook-definition exception"
  },
  {
   "key": "knoebel1991",
@@ -1559,7 +1559,7 @@
    "METHODS §16 SS-02 (CCF)",
    "METHODS §23 TM-04 (CCF note)"
   ],
-  "note": "via Kershaw et al. 2016 and van Laar & Akça 2007; METHODS: original not found, not read, no marker; full citation only in KAYNAK_LISTESI (written from memory)"
+  "note": "via Kershaw et al. 2016 and van Laar & Akça 2007; METHODS: original not found, not read, no marker; full citation only in SOURCE_LIST (written from memory)"
  },
  {
   "key": "krenn1944",
@@ -1795,7 +1795,7 @@
   "tools": [
    "METHODS §10 (model forms)"
   ],
-  "note": "R package help page read on CRAN (search.r-project.org) 9 Nov 2026; METHODS gives no version; KAYNAK_LISTESI lists lmfor 1.7"
+  "note": "R package help page read on CRAN (search.r-project.org) 9 Nov 2026; METHODS gives no version; SOURCE_LIST lists lmfor 1.7"
  },
  {
   "key": "meyer1942",
@@ -2336,7 +2336,7 @@
   "tools": [
    "METHODS §16 SS02 (W, M, T)"
   ],
-  "note": "title from TOOLS_SPEC §9 / KAYNAK_LISTESI"
+  "note": "title from TOOLS_SPEC §9 / SOURCE_LIST"
  },
  {
   "key": "poudel2013",
@@ -2435,7 +2435,7 @@
   "tools": [
    "METHODS §27 SM-03 (calibration)"
   ],
-  "note": "secondary source for Vonesh & Chinchilli 1997 [A]; authors and title from KAYNAK_LISTESI (METHODS: 'Raptis, D.I. ve ark.')"
+  "note": "secondary source for Vonesh & Chinchilli 1997 [A]; authors and title from SOURCE_LIST (METHODS: 'Raptis, D.I. ve ark.')"
  },
  {
   "key": "reineke1933",
@@ -2486,7 +2486,7 @@
   "tools": [
    "METHODS §22 BC04 (Monte Carlo, 'Final propagation' p. 1166)"
   ],
-  "note": "title from KAYNAK_LISTESI"
+  "note": "title from SOURCE_LIST"
  },
  {
   "key": "reynolds1988",
@@ -2720,7 +2720,7 @@
   "tools": [
    "METHODS §16 SS-07/a1 (Hegyi, second source; pairwise in tests/ref/ss02_check.R)"
   ],
-  "note": "R package documentation; KAYNAK_LISTESI names García, O. 2014 as the package publication"
+  "note": "R package documentation; SOURCE_LIST names García, O. 2014 as the package publication"
  },
  {
   "key": "snowdon1991",

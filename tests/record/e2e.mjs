@@ -75,7 +75,7 @@ const standDs = JSON.parse(await fileOf('assets/lab/stand/ornek/ornek-veri.json'
 ok(st.obj.tool.version === '1.2.1' && st.obj.units.length > 0 && st.obj.inputs[0].kind === 'dataset' && st.obj.inputs[0].sha256 === sha(Buffer.from(R.canonical(standDs))) && await sealOk(st.obj), 'plot & stand 1.2.0: record; data package fingerprinted in canonical form');
 
 // 3. Record Verifier
-await page.goto(BASE + '/kayit-dogrulayici.php?lang=tr');
+await page.goto(BASE + '/kayit-dogrulayici.php');
 ok((await page.locator('.b-ids').textContent()).includes('DI-07') && await page.locator('.b-side a[href="kayit-dogrulayici.php"]').count() === 1, 'verifier: DI-07 page in the sidebar');
 ok(await page.locator('#nonote').count() === 1, 'verifier: empty state');
 await page.setInputFiles('#recfile', g1.p);
@@ -105,7 +105,7 @@ await page.setInputFiles('#recfile', op); await page.waitForSelector('#vernote[d
 ok(await page.getAttribute('#vernote', 'data-ver') === 'changed' && await page.getAttribute('#seal', 'data-seal') === 'ok' && (await page.getAttribute('#sumkv a[target="_blank"]', 'href')).endsWith('/commit/' + 'a'.repeat(40)), 'verifier: older version reported, commit linked');
 const lg = path.join(tmp, 'legacy.json'); await writeFile(lg, JSON.stringify({ tool: { id: 'bonitet', version: '1.0.0-beta.3' }, created: '2026-11-12T10:00:00Z', results: [] }));
 await page.setInputFiles('#recfile', lg); await page.waitForSelector('#kindnote');
-ok(await page.getAttribute('#kindnote', 'data-kind') === 'legacy' && (await page.textContent('#sumkv')).includes('Bonitet'), 'verifier: pre-DI-07 JSON read as legacy');
+ok(await page.getAttribute('#kindnote', 'data-kind') === 'legacy' && (await page.textContent('#sumkv')).includes('Site Index'), 'verifier: pre-DI-07 JSON read as legacy');
 const ds = path.join(tmp, 'ds.json'); await writeFile(ds, JSON.stringify(standDs));
 await page.setInputFiles('#recfile', ds); await page.waitForSelector('#kindnote');
 ok((await page.textContent('#kindnote')).includes('forest-dataset/1'), 'verifier: a data package is not a record');
@@ -114,8 +114,8 @@ await page.setInputFiles('#recfile', st.p); await page.waitForSelector('#intab')
 await page.setInputFiles('#chkfiles', path.join(ROOT, 'assets/lab/stand/ornek/ornek-veri.json')); await page.waitForSelector('#chklist');
 ok(await page.locator('#chklist li[data-match="yes"]').count() === 1, 'verifier: the data package file matches the dataset input');
 
-// 4. English, phone
-await page.click('#langlink'); await page.waitForURL(/lang=en/);
+// 4. English page text, phone
+await page.reload(); await page.waitForSelector('#incard');
 ok((await page.textContent('h1')).includes('Record Verifier') && (await page.textContent('#incard')).includes('Open a run record'), 'verifier: English');
 const phone = await browser.newPage({ viewport: { width: 390, height: 800 } });
 await phone.goto(BASE + '/kayit-dogrulayici.php'); await phone.setInputFiles('#recfile', g2.p); await phone.waitForSelector('#intab');

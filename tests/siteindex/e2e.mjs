@@ -20,25 +20,25 @@ const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const rows = () => page.evaluate(() => [...document.querySelectorAll('#rtab tbody tr')].map(tr => [...tr.children].map(x => x.textContent.trim())));
-const num = s => parseFloat(String(s).replace(',', '.'));
+const num = s => parseFloat(String(s).replace(/,/g, ''));   // English screens: decimal point, comma only as a thousands separator
 const fillC = async (id, v) => { await page.fill(id, v); await page.locator(id).dispatchEvent('change'); };
 
 // 0. listed under its category
-await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('#side .b-cat', { hasText: 'Yetişme ortamı verim gücü' }).count()) === 1 && (await page.locator('#side a[href="bonitet.php"]').count()) === 1, 'sidebar: "Yetişme ortamı verim gücü" with Bonitet');
-await page.goto(URL + '?lang=tr'); await page.waitForSelector('.coefcard');
-ok((await page.locator('h1').textContent()).includes('Bonitet') && (await page.locator('#cf-none').count()) === 1 && (await page.locator('#to2').isDisabled()), 'no built-in coefficients; cannot continue without a set (K1)');
+await page.goto(BASE + '/');
+ok((await page.locator('#side .b-cat', { hasText: 'Site quality and productivity' }).count()) === 1 && (await page.locator('#side a[href="bonitet.php"]').count()) === 1, 'sidebar: "Site quality and productivity" with Site Index');
+await page.goto(URL); await page.waitForSelector('.coefcard');
+ok((await page.locator('h1').textContent()).includes('Site Index') && (await page.locator('#cf-none').count()) === 1 && (await page.locator('#to2').isDisabled()), 'no built-in coefficients; cannot continue without a set (K1)');
 ok((await page.locator('#cf-form option').count()) === 3, 'three forms offered (no GADA)');
 
 // 1. a set: source and the definition of the equation are required
 await page.selectOption('#cf-form', 'si.cr.ada.b0'); await page.click('#cf-new');
 await page.fill('#cf-p-b1', '0.03'); await page.fill('#cf-p-b2', '1.4'); await page.click('#cf-save');
 let m = await page.locator('#cf-msg').textContent();
-ok(m.includes('Yaş türü seçilmedi') && m.includes('Üst boy tanımı seçilmedi') && m.includes('kaynak künyesi zorunlu'), 'age type, top height definition and source required: ' + m);
+ok(m.includes('Age type not chosen') && m.includes('Top height definition not chosen') && m.includes('the citation is required'), 'age type, top height definition and source required: ' + m);
 await page.selectOption('#cf-x-ageType', 'total'); await page.selectOption('#cf-x-topDef', 'h0dbh');
 await page.fill('#cf-v-A-0', '10'); await page.fill('#cf-v-A-1', '80'); await page.fill('#cf-cit', 'Test, not a real equation'); await page.click('#cf-save');
 await page.waitForSelector('#setsel');
-ok(await page.inputValue('#setsel') !== '' && (await page.locator('#setinfo').textContent()).includes('toplam yaş'), 'the only set is chosen; its age type shown');
+ok(await page.inputValue('#setsel') !== '' && (await page.locator('#setinfo').textContent()).includes('total age'), 'the only set is chosen; its age type shown');
 ok(await page.locator('#to2').isDisabled(), 'no base age: cannot continue (no default)');
 await fillC('#a0', '50');
 await page.check('input[name="clsmode"][value="equal"]'); for (const [k, v] of [['start', '10'], ['width', '4'], ['n', '5']]) await fillC('#cls-' + k, v);
@@ -49,13 +49,13 @@ await shot('si-model');
 await page.click('#to2');
 ok(await page.locator('#calc').isDisabled(), 'age type of the data must be chosen');
 await page.selectOption('#dage', 'bh');
-ok((await page.locator('#step2 .nav').textContent()).includes('aynı değil') && await page.locator('#calc').isDisabled(), 'data age type differs from the equation: refused (K8)');
+ok((await page.locator('#step2 .nav').textContent()).includes('is not that of the equation') && await page.locator('#calc').isDisabled(), 'data age type differs from the equation: refused (K8)');
 await page.selectOption('#dage', 'total'); await fillC('#sA', '30'); await fillC('#sH', '15');
 await page.click('#calc'); await page.waitForSelector('#rtab');
 const M = { form: 'cr.ada.b0', params: { b1: 0.03, b2: 1.4 }, baseAge: 50, ageType: 'total' }, si1 = SI.siteIndex(M, 30, 15).value;
 let r = (await rows())[0];
-near(num(r[6]), si1, 6e-4, 'SI50 on screen = engine'); ok(r[7] === 'III' && r[9] === 'tamam', 'class III ([18, 22))');
-ok((await page.locator('#rmodel').textContent()).includes('Standart yaş 50 yıl (toplam yaş)') && (await page.locator('#rsrc').textContent()).includes('Kullanıcı katsayılarıyla üretildi: Test, not a real equation'), 'base age, age type and source in the result');
+near(num(r[6]), si1, 6e-4, 'SI50 on screen = engine'); ok(r[7] === 'III' && r[9] === 'ok', 'class III ([18, 22))');
+ok((await page.locator('#rmodel').textContent()).includes('Base age 50 years (total age)') && (await page.locator('#rsrc').textContent()).includes('Produced with user coefficients: Test, not a real equation'), 'base age, age type and source in the result');
 ok((await page.locator('#ch-si svg path, #ch-si svg polyline').count()) >= 6, 'curve family: six class-boundary curves');
 // class boundaries change → class changes, SI does not
 await page.click('#steps [data-go="1"]'); await fillC('#cls-start', '14');
@@ -65,7 +65,7 @@ near(num(r[6]), si1, 6e-4, 'SI unchanged when the classes change'); ok(r[7] === 
 await page.click('#steps [data-go="1"]'); await page.check('input[name="clsmode"][value="none"]'); await fillC('#a0', '100');
 await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab'); r = (await rows())[0];
 near(num(r[6]), SI.project(M, 100, 50, si1).value, 6e-4, 'SI100 = projection of SI50 to age 100');
-ok((await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent))).includes('Bonitet endeksi SI100 (m)'), 'column named with the base age');
+ok((await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent))).includes('Site index SI100 (m)'), 'column named with the base age');
 
 // 3. table input: decimal comma, an unreadable cell, an age outside the validity range
 const tbl = ['alan;donem;yas;ust_boy', 'A;2019;35;17,5', 'A;2024;40;19,8', 'B;2019;95;30,1', 'C;2019;x;12'].join('\n');
@@ -76,9 +76,9 @@ await page.click('#calc'); await page.waitForSelector('#rtab');
 const tr = await rows(), M100 = { ...M, baseAge: 100 };
 near(num(tr[0][6]), SI.siteIndex(M100, 35, 17.5).value, 6e-4, 'row A/2019 = engine'); near(num(tr[1][6]), SI.siteIndex(M100, 40, 19.8).value, 6e-4, 'row A/2024 = engine');
 // no classes now: columns unit, plot, period, A, H, source, SI, note, state
-ok(tr[2][7].includes('geçerlilik aralığı dışında') && tr[2][8] === 'tamam', 'age 95 outside the set range 10–80: computed and flagged');
-ok(tr[3][8] === 'hesaplanmadı' && tr[3][6] === '–' && tr[3][7].includes('sayı okunamadı ("x")'), 'unreadable age: no number');
-ok((await page.locator('#rsum').textContent()).includes('4 nokta: 3 hesaplandı, 1 hesaplanamadı, 1 geçerlilik aralığı dışında'), 'summary');
+ok(tr[2][7].includes('outside the validity range') && tr[2][8] === 'ok', 'age 95 outside the set range 10–80: computed and flagged');
+ok(tr[3][8] === 'not computed' && tr[3][6] === '–' && tr[3][7].includes('number not readable ("x")'), 'unreadable age: no number');
+ok((await page.locator('#rsum').textContent()).includes('4 points: 3 computed, 1 not computed, 1 outside the validity range'), 'summary');
 const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-csv')]);
 ok((await readFile(await dc.path(), 'utf8')).split('\n').length >= 5, 'CSV downloads');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
@@ -99,10 +99,10 @@ await page.waitForSelector('#rtab');
 const dr = await rows(), units = ST.buildUnits(ds, {}).units.filter(u => u.state === 'measured');
 let nH0 = 0;
 units.forEach((u, i) => { const mm = ST.unitMetrics(u), H0 = mm.dom.H0, A = mm.age.mean;
-  if (H0 == null) { ok(dr[i][8] === 'hesaplanmadı' && dr[i][7].includes('H0 hesaplanamadı'), `${u.plot_id}: tallest-tree H0 with an unmeasured height: not computed (Plot & Stand rule)`); return; }
+  if (H0 == null) { ok(dr[i][8] === 'not computed' && dr[i][7].includes('H0 not available'), `${u.plot_id}: tallest-tree H0 with an unmeasured height: not computed (Plot & Stand rule)`); return; }
   nH0++;
   near(num(dr[i][4]), H0, 6e-4, `${u.plot_id}: H0 = Plot & Stand function (100 tallest)`); near(num(dr[i][3]), A, 6e-4, `${u.plot_id}: mean recorded age`);
-  near(num(dr[i][6]), SI.siteIndex(M100, A, H0).value, 6e-4, `${u.plot_id}: SI100 from H0`); ok(dr[i][5] === 'H0, en uzun 100', `${u.plot_id}: source of the top height named`); });
+  near(num(dr[i][6]), SI.siteIndex(M100, A, H0).value, 6e-4, `${u.plot_id}: SI100 from H0`); ok(dr[i][5] === 'H0, 100 tallest', `${u.plot_id}: source of the top height named`); });
 ok(nH0 > 0 && nH0 < units.length, `some units with H0 (${nH0}) and some without (unmeasured heights)`);
 await shot('si-results');
 
@@ -115,19 +115,19 @@ ok(await page.inputValue('#fm-series') === '0' && await page.inputValue('#fm-A')
 await page.check('input[name="fstart"][value="user"]'); await fillC('#fs-b1', String(REF.start['cr.ada.b0'][0])); await fillC('#fs-b2', String(REF.start['cr.ada.b0'][1]));
 for (const mode of ['all', 'consecutive']) {
   await page.check(`input[name="fpair"][value="${mode}"]`); await page.click('#f-run'); await page.waitForSelector('#fittab');
-  const ref = rec.fits[mode], est = await page.evaluate(() => [...document.querySelectorAll('#fittab tbody tr')].map(tr => parseFloat(String(tr.children[1].textContent).replace(',', '.'))));
+  const ref = rec.fits[mode], est = await page.evaluate(() => [...document.querySelectorAll('#fittab tbody tr')].map(tr => parseFloat(String(tr.children[1].textContent).replace(/,/g, ''))));
   near(est[0], ref.theta[0], 1e-7, `${mode}: b1 = SciPy least_squares`); near(est[1], ref.theta[1], 1e-7, `${mode}: b2 = SciPy`);
-  ok((await page.locator('#fitsum').textContent()).startsWith(`${ref.n} çift, 25 dizi`), `${mode}: ${ref.n} pairs`);
+  ok((await page.locator('#fitsum').textContent()).startsWith(`${ref.n} pairs, 25 series`), `${mode}: ${ref.n} pairs`);
   near(num((await page.locator('#fitgof').textContent()).match(/RMSE ([\d.,]+)/)[1]), ref.rmse, 6e-4, `${mode}: RMSE`);
 }
-ok((await page.locator('#fitbox', { hasText: 'Gözlemler bağımsız varsayımıyla' }).count()) === 1 && (await page.locator('#ch-fit svg').count()) === 1 && (await page.locator('#ch-res svg').count()) === 1, 'SE label, curve and residual charts');
+ok((await page.locator('#fitbox', { hasText: 'Assuming independent observations' }).count()) === 1 && (await page.locator('#ch-fit svg').count()) === 1 && (await page.locator('#ch-res svg').count()) === 1, 'SE label, curve and residual charts');
 // series-level bootstrap (SI04): the same seed and B as the Python reference → the same percentile intervals
 const R4 = JSON.parse(await readFile(new globalThis.URL('../ref/siteindex_si04.json', import.meta.url), 'utf8')), c4 = R4.cases.find(c => c.form === 'cr.ada.b0');
 await fillC('#bt-B', String(R4.B)); await fillC('#bt-seed', String(R4.seed)); await page.click('#bt-run'); await page.waitForSelector('#bt-tab');
-{ const iv = await page.evaluate(() => [...document.querySelectorAll('#bt-tab tbody tr')].map(tr => tr.children[2].textContent.split('–').map(x => parseFloat(String(x).replace(',', '.')))));
+{ const iv = await page.evaluate(() => [...document.querySelectorAll('#bt-tab tbody tr')].map(tr => tr.children[2].textContent.split('–').map(x => parseFloat(String(x).replace(/,/g, '')))));
   iv.forEach(([lo, hi], i) => { near(lo, c4.lo[i], 1e-7, `bootstrap ${['b1', 'b2'][i]} lower = Python`); near(hi, c4.hi[i], 1e-7, `bootstrap ${['b1', 'b2'][i]} upper = Python`); });
-  ok((await page.locator('#bt-res').textContent()).includes(`B = ${R4.B}, tohum ${R4.seed}: ${R4.B} tekrar başarılı, 0 başarısız`), 'B, seed and failures shown'); }
-await page.click('#fx-save'); ok((await page.locator('#fx-msg').textContent()).includes('Eksik') && (await page.locator('#fx-msg').textContent()).includes('Kaynak künyesi'), 'saving needs age type, top height definition and a citation');
+  ok((await page.locator('#bt-res').textContent()).includes(`B = ${R4.B}, seed ${R4.seed}: ${R4.B} replicates succeeded, 0 failed`), 'B, seed and failures shown'); }
+await page.click('#fx-save'); ok((await page.locator('#fx-msg').textContent()).includes('Missing') && (await page.locator('#fx-msg').textContent()).includes('Citation'), 'saving needs age type, top height definition and a citation');
 await page.selectOption('#fx-age', 'total'); await page.selectOption('#fx-top', 'h0dbh'); await fillC('#fx-cit', 'Simulated stem analyses (test)'); await page.click('#fx-save'); await page.waitForSelector('#fx-ok');
 { const lib = await page.evaluate(async () => (await (await import('/assets/lab/core/coef.js')).listCoefs('siteindex')));
   const fitted = lib.find(s => s.origin === 'fitted');
@@ -136,36 +136,36 @@ await page.selectOption('#fx-age', 'total'); await page.selectOption('#fx-top', 
 
 // SI intervals in the results: bootstrap replicates of the fitted set; delta method for a user set with a covariance
 await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab');
-{ const th = await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent)), rr = await rows(), ci = th.indexOf('SI %95 aralığı alt');
-  ok(ci > 0 && th[ci + 1] === 'SI %95 aralığı üst' && (await page.locator('#runc').textContent()).includes(`B = ${R4.B}, tohum ${R4.seed}`), 'bootstrap interval as two numeric columns (lower, upper) and its description');
+{ const th = await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent)), rr = await rows(), ci = th.indexOf('SI 95 % interval, lower');
+  ok(ci > 0 && th[ci + 1] === 'SI 95 % interval, upper' && (await page.locator('#runc').textContent()).includes(`B = ${R4.B}, seed ${R4.seed}`), 'bootstrap interval as two numeric columns (lower, upper) and its description');
   const okRow = rr.find(r => r[ci] !== '–'), lo = num(okRow[ci]), hi = num(okRow[ci + 1]); ok(lo <= num(okRow[ci - 1]) && num(okRow[ci - 1]) <= hi, 'interval contains the site index'); }
 // the page may run a bundle (its own module copies): load the source forms first, then save through the shared store
 await page.evaluate(async () => { await import('/assets/lab/siteindex/calc.js'); const C = await import('/assets/lab/core/coef.js');
   await C.saveCoef({ ...C.blankSet('si.cr.ada.b0'), id: 'covset', params: { b1: 0.03, b2: 1.4 }, meta: { ageType: 'total', topDef: 'h0dbh', cov: '1.9e-6 3.1e-5; 3.1e-5 8.1e-4' }, source: { citation: 'Test with covariance' } }); });
 await page.reload(); await page.waitForSelector('#steps'); await page.click('#steps [data-go="1"]'); await page.waitForSelector('#setsel'); await page.selectOption('#setsel', 'covset');
 await page.click('#steps [data-go="2"]'); await page.check('input[name="dmode"][value="single"]'); await fillC('#sA', '30'); await fillC('#sH', '15'); await page.click('#calc'); await page.waitForSelector('#rtab');
-{ const d = SI.deltaSI({ form: 'cr.ada.b0', params: { b1: 0.03, b2: 1.4 }, baseAge: 100, ageType: 'total' }, [[1.9e-6, 3.1e-5], [3.1e-5, 8.1e-4]], 30, 15), r0 = (await rows())[0], th = await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent)), ci = th.indexOf('SI %95 aralığı alt');
+{ const d = SI.deltaSI({ form: 'cr.ada.b0', params: { b1: 0.03, b2: 1.4 }, baseAge: 100, ageType: 'total' }, [[1.9e-6, 3.1e-5], [3.1e-5, 8.1e-4]], 30, 15), r0 = (await rows())[0], th = await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent)), ci = th.indexOf('SI 95 % interval, lower');
   const lo = num(r0[ci]), hi = num(r0[ci + 1]); near(lo, d.lo, 6e-4, 'delta lower = engine'); near(hi, d.hi, 6e-4, 'delta upper = engine');
-  ok((await page.locator('#runc').textContent()).includes('delta yöntemi'), 'delta method named'); }
+  ok((await page.locator('#runc').textContent()).includes('delta method'), 'delta method named'); }
 { const plain = await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js'); return (await C.listCoefs('siteindex')).find(x => x.origin !== 'fitted' && x.id !== 'covset').id; });
   await page.click('#steps [data-go="1"]'); await page.selectOption('#setsel', plain); await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab');
-  ok((await page.locator('#runc').textContent()).includes('Belirsizlik bilgisi yok') && !(await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent))).includes('SI %95 aralığı alt'), 'user set without covariance: "no uncertainty information", no interval column'); }
+  ok((await page.locator('#runc').textContent()).includes('No uncertainty information') && !(await page.evaluate(() => [...document.querySelectorAll('#rtab thead th')].map(x => x.textContent))).includes('SI 95 % interval, lower'), 'user set without covariance: "no uncertainty information", no interval column'); }
 
 // 4b. simulated sample data for the fitting tab, in a fresh browser context
 { const c2 = await browser.newContext({ viewport: { width: 1280, height: 900 } }), q = await c2.newPage(); q.on('pageerror', e => errors.push(e.message));
-  await q.goto(URL + '?lang=tr'); await q.waitForSelector('#mt-fit'); await q.click('#mt-fit'); await q.waitForSelector('#fsample');
+  await q.goto(URL); await q.waitForSelector('#mt-fit'); await q.click('#mt-fit'); await q.waitForSelector('#fsample');
   ok((await q.locator('#coefbox').isHidden()) && (await q.locator('#mt-fit').getAttribute('aria-selected')) === 'true', 'step 1: one of the two ways at a time (fit tab open, coefficient editor hidden)');
   await q.click('#fsample'); await q.waitForSelector('#f-run:not([disabled])'); await q.click('#f-run'); await q.waitForSelector('#fittab');
-  ok((await q.locator('#fitimp', { hasText: 'benzetim' }).count()) >= 1 && (await q.locator('#fittab tbody tr').count()) >= 2, 'sample (simulated, labelled) loads with its columns mapped and fits');
+  ok((await q.locator('#fitimp', { hasText: 'simulated' }).count()) >= 1 && (await q.locator('#fittab tbody tr').count()) >= 2, 'sample (simulated, labelled) loads with its columns mapped and fits');
   await c2.close(); }
 
-// 5. English and phone + dark (back to the results)
+// 5. session restored in a new tab, and phone + dark (back to the results)
 await page.click('#steps [data-go="3"]'); await page.waitForSelector('#rtab'); await page.waitForTimeout(400);
 const en = await ctx.newPage(); en.on('pageerror', e => errors.push(e.message));
-await en.goto(URL + '?lang=en'); await en.waitForSelector('#rtab');
-ok((await en.locator('#rsrc').textContent()).includes('Produced with user coefficients') && (await en.locator('#rtab thead th', { hasText: 'Site index SI100 (m)' }).count()) === 1, 'English');
+await en.goto(URL); await en.waitForSelector('#rtab');
+ok((await en.locator('#rsrc').textContent()).includes('Produced with user coefficients') && (await en.locator('#rtab thead th', { hasText: 'Site index SI100 (m)' }).count()) === 1, 'new tab: results restored');
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' }); phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr'); await phone.waitForSelector('.coefcard');
+await phone.goto(URL); await phone.waitForSelector('.coefcard');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();

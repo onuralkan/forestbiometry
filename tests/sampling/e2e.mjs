@@ -25,13 +25,13 @@ const tile = async id => (await page.locator(`#${id} b`).textContent()).trim();
 const dl = async btn => { const [d] = await Promise.all([page.waitForEvent('download'), page.click(btn)]); return d; };
 
 // 1. acceptance with a typed CV: CV 30 %, E 10 %, 95 %, no frame → 35
-await page.goto(URL + '?lang=tr'); await page.waitForSelector('#app .statement');
-ok((await page.locator('.statement', { hasText: 'hipotez testi için güç analizi değildir' }).count()) === 1, 'scope statement: not a power analysis');
+await page.goto(URL); await page.waitForSelector('#app .statement');
+ok((await page.locator('.statement', { hasText: 'not a power analysis for a hypothesis test' }).count()) === 1, 'scope statement: not a power analysis');
 await page.check('input[name="src"][value="manual"]');
-ok((await page.locator('#c-res li', { hasText: 'CV yok' }).count()) === 1, 'missing CV reported, no number shown');
+ok((await page.locator('#c-res li', { hasText: 'No CV' }).count()) === 1, 'missing CV reported, no number shown');
 await page.fill('#cv', '30');
 ok(await tile('t-n') === '35' && (await page.locator('#nofpc').count()) === 1 && (await page.locator('#calc1').count()) === 0, '35 plots; no finite correction applied');
-ok((await page.locator('#calc0').textContent()).includes('1,96') && (await page.locator('#calc0').textContent()).includes('34,573'), 'calculation shown with numbers (decimal comma)');
+ok((await page.locator('#calc0').textContent()).includes('1.96') && (await page.locator('#calc0').textContent()).includes('34.573'), 'calculation shown with numbers (decimal point)');
 // E smaller → n larger; the table and chart
 await page.fill('#e', '5');
 ok(+await tile('t-n') === REF.grid_cv30_95['5'].inf.n && +await tile('t-n') > 35, 'E = 5 % → more plots: ' + await tile('t-n'));
@@ -41,19 +41,19 @@ ok((await page.locator('#gtab tr.tail').count()) === 1 && (await page.locator('#
 await page.fill('#e', '10');
 // a frame size only counts when the finite frame is chosen
 await page.check('input[name="fr"][value="fin"]');
-ok((await page.locator('#c-res li', { hasText: 'M girilmedi' }).count()) === 1, 'finite frame without M: asks for M');
+ok((await page.locator('#c-res li', { hasText: 'M is missing' }).count()) === 1, 'finite frame without M: asks for M');
 await page.fill('#M', '500');
 ok(+await tile('t-n') === REF.grid_cv30_95['10'].M500.n && (await page.locator('#calc1').count()) === 1, 'M = 500: corrected n = ' + await tile('t-n'));
-await page.fill('#M', '120,5');
-ok((await page.locator('#c-res li', { hasText: 'tam sayı' }).count()) === 1, 'non-integer M rejected');
+await page.fill('#M', '120.5');
+ok((await page.locator('#c-res li', { hasText: 'whole number' }).count()) === 1, 'non-integer M rejected');
 await page.fill('#M', '500');
 await page.check('input[name="fr"][value="inf"]');
 ok(await tile('t-n') === '35', 'back to no frame: M ignored, 35 again');
 // invalid inputs
-await page.fill('#e', '0'); ok((await page.locator('#c-res li', { hasText: '0 ile 100' }).count()) === 1, 'E = 0 rejected');
-await page.fill('#e', '-3'); ok((await page.locator('#c-res li', { hasText: '0 ile 100' }).count()) === 1, 'negative E rejected');
-await page.fill('#e', '10'); await page.fill('#cv', '-30'); ok((await page.locator('#c-res li', { hasText: 'CV pozitif' }).count()) === 1, 'negative CV rejected');
-await page.fill('#cv', 'abc'); ok((await page.locator('#c-res li', { hasText: 'CV yok' }).count()) === 1, 'unreadable CV rejected');
+await page.fill('#e', '0'); ok((await page.locator('#c-res li', { hasText: 'between 0 and 100' }).count()) === 1, 'E = 0 rejected');
+await page.fill('#e', '-3'); ok((await page.locator('#c-res li', { hasText: 'between 0 and 100' }).count()) === 1, 'negative E rejected');
+await page.fill('#e', '10'); await page.fill('#cv', '-30'); ok((await page.locator('#c-res li', { hasText: 'CV must be positive' }).count()) === 1, 'negative CV rejected');
+await page.fill('#cv', 'abc'); ok((await page.locator('#c-res li', { hasText: 'No CV' }).count()) === 1, 'unreadable CV rejected');
 await page.fill('#cv', '30');
 // existing plots, part of the design → additional
 await page.fill('#nex', '12');
@@ -65,8 +65,8 @@ await shot('sp-1-elle-cv');
 // 2. pilot data (sample): CV from plot-level values
 await page.check('input[name="src"][value="pilot"]');
 await page.click('#sample'); await page.waitForSelector('#plstats');
-ok((await page.locator('#plstats').textContent()).includes('n = 13') && (await page.locator('#placc', { hasText: '1 boş' }).count()) === 1, 'sample: 13 plots, one empty reported');
-ok((await page.locator('#c-res li', { hasText: 'beyanı onaylayın' }).count()) === 1, 'calculation waits for the plot-level statement');
+ok((await page.locator('#plstats').textContent()).includes('n = 13') && (await page.locator('#placc', { hasText: '1 empty' }).count()) === 1, 'sample: 13 plots, one empty reported');
+ok((await page.locator('#c-res li', { hasText: 'Confirm the statement' }).count()) === 1, 'calculation waits for the plot-level statement');
 await page.check('#confirm');
 const cvS = REF.sample.cv, n95 = Math.ceil(REF.z['95'] ** 2 * (cvS / 10) ** 2 - 1e-9);
 ok(+await tile('t-n') === n95, `pilot CV ${cvS.toFixed(3)} % → ${n95} plots`);
@@ -74,20 +74,20 @@ await shot('sp-2-pilot');
 // summary download
 await page.check('#indesign');
 const txt = (await readFile(await (await dl('#x-txt')).path(), 'utf8')).split('\r\n');
-ok(txt[0].includes('Envanter Örnekleme Planlayıcısı') && txt.some(l => l.startsWith('n₀ = z² × (CV / E)²')) && txt.some(l => l.includes('Sonlu çerçeve belirtilmedi')), 'summary: approach and frame');
-ok(txt.some(l => l.includes('Normal (z) yaklaşımı')) && txt.some(l => l.includes('hipotez testi için güç analizi')), 'summary: assumptions and scope');
-ok(txt.some(l => l.includes(`ek gereken ${n95 - 13}`)), 'summary: additional plots');
+ok(txt[0].includes('Inventory Sampling Planner') && txt.some(l => l.startsWith('n₀ = z² × (CV / E)²')) && txt.some(l => l.includes('No finite frame stated')), 'summary: approach and frame');
+ok(txt.some(l => l.includes('Normal (z) approximation')) && txt.some(l => l.includes('power analysis for a hypothesis test')), 'summary: assumptions and scope');
+ok(txt.some(l => l.includes(`${n95 - 13} more needed`)), 'summary: additional plots');
 const csv = (await readFile(await (await dl('#x-csv')).path(), 'utf8')).replace(/^﻿/, '').split('\r\n');
-ok(csv[0].startsWith('E (%),n₀ (yuvarlanmamış),Gerekli örnek alan,Ek') && csv.length >= 10, 'error-target table CSV');
+ok(csv[0].startsWith('E (%),n₀ (not rounded),Plots needed,Additional') && csv.length >= 10, 'error-target table CSV');
 
 // 3. edge-case file: two periods → duplicates; filter one period; negative and unreadable rows
 const [fc] = await Promise.all([page.waitForEvent('filechooser'), page.click('#impbox .filebtn')]);
 await fc.setFiles({ name: 'pilot-donemler.csv', mimeType: 'text/csv', buffer: Buffer.from(FIX) });
 await page.waitForSelector('#impbox .fname');
 await page.selectOption('#vcol', '2');
-ok((await page.locator('#pcols .note.err', { hasText: 'Aynı örnek alan kimliği' }).count()) === 1 && (await page.locator('#c-res li', { hasText: 'Aynı örnek alan' }).count()) === 1, 'duplicated plot ids block the calculation');
+ok((await page.locator('#pcols .note.err', { hasText: 'The same plot identifier' }).count()) === 1 && (await page.locator('#c-res li', { hasText: 'The same plot identifier' }).count()) === 1, 'duplicated plot ids block the calculation');
 await page.selectOption('#fcol', '1'); await page.selectOption('#fval', '2023');
-ok((await page.locator('#placc', { hasText: '1 negatif değer (satır 4)' }).count()) === 1 && (await page.locator('#placc', { hasText: '1 okunamayan (satır 5)' }).count()) === 1, 'negative and unreadable values reported with row numbers');
+ok((await page.locator('#placc', { hasText: '1 negative values (row 4)' }).count()) === 1 && (await page.locator('#placc', { hasText: '1 unreadable (row 5)' }).count()) === 1, 'negative and unreadable values reported with row numbers');
 await page.check('#confirm');
 ok(+await tile('t-n') === Math.ceil(REF.z['95'] ** 2 * (REF.fixture2023.cv / 10) ** 2 - 1e-9), 'filtered pilot used');
 // tree-level column name and zero mean
@@ -95,18 +95,18 @@ const tree = 'plot,dbh\nP1,20\nP2,31\nP3,25\n';
 const [fc2] = await Promise.all([page.waitForEvent('filechooser'), page.click('#impbox .filebtn')]);
 await fc2.setFiles({ name: 'agaclar.csv', mimeType: 'text/csv', buffer: Buffer.from(tree) });
 await page.locator('#impbox .fname', { hasText: 'agaclar.csv' }).waitFor(); await page.selectOption('#vcol', '1');
-ok((await page.locator('#pcols .note.err', { hasText: 'ağaç düzeyinde' }).count()) === 1, 'tree-level column name warned');
+ok((await page.locator('#pcols .note.err', { hasText: 'tree-level measurement' }).count()) === 1, 'tree-level column name warned');
 const zero = 'plot,V\nP1,0\nP2,0\nP3,0\n';
 const [fc3] = await Promise.all([page.waitForEvent('filechooser'), page.click('#impbox .filebtn')]);
 await fc3.setFiles({ name: 'sifir.csv', mimeType: 'text/csv', buffer: Buffer.from(zero) });
 await page.locator('#impbox .fname', { hasText: 'sifir.csv' }).waitFor(); await page.selectOption('#vcol', '1');
-ok((await page.locator('#plprob', { hasText: 'tanımsızdır' }).count()) === 1 && (await page.locator('#t-n').count()) === 0, 'zero mean: relative error undefined, no result');
+ok((await page.locator('#plprob', { hasText: 'undefined' }).count()) === 1 && (await page.locator('#t-n').count()) === 0, 'zero mean: relative error undefined, no result');
 await shot('sp-3-sifir-ortalama');
 
-// 4. EN, other confidence level, XLSX
+// 4. session kept after a reload, other confidence level, XLSX
 await page.check('input[name="src"][value="manual"]');
-await page.click('#langlink'); await page.waitForURL(/lang=en/); await page.waitForSelector('#c-res');
-ok(await tile('t-n') === '35', 'EN: session kept, 35');
+await page.reload(); await page.waitForSelector('#c-res #t-n');
+ok(await tile('t-n') === '35', 'reload: session kept, 35');
 await page.selectOption('#level', '99');
 ok(+await tile('t-n') === Math.ceil(REF.z['99'] ** 2 * 9 - 1e-9), '99 % confidence: ' + await tile('t-n'));
 await page.selectOption('#level', 'other'); await page.fill('#lvo', '99.9');
@@ -117,7 +117,7 @@ ok(wb.SheetNames.join(',') === 'Summary,Error targets', 'XLSX sheets: ' + wb.She
 // 5. phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
 phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr'); await phone.check('input[name="src"][value="manual"]'); await phone.fill('#cv', '30');
+await phone.goto(URL); await phone.check('input[name="src"][value="manual"]'); await phone.fill('#cv', '30');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
 await shot('sp-4-telefon-koyu', phone);
 

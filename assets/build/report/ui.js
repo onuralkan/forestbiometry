@@ -298,7 +298,7 @@ function render() {
   dlg.innerHTML = `<div class="dlg-f cite"><div class="cite-head"><h2>${T.h}</h2><button type="button" class="b-iconbtn" id="citeclose" aria-label="${T.close}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg></button></div>
     <div class="cite-opts">${data.tool ? `<fieldset><legend>${T.scope}</legend><label><input type="radio" name="cscope" value="tool"${st.scope === 'tool' ? ' checked' : ''}> ${T.tool(data.tool[ui])} (v${data.tool.v})</label>
       <label><input type="radio" name="cscope" value="platform"${st.scope === 'platform' ? ' checked' : ''}> ${T.platform}</label></fieldset>` : ''}
-      <fieldset><legend>${T.lang}</legend><label><input type="radio" name="clang" value="tr"${st.lang === 'tr' ? ' checked' : ''}> Türkçe</label><label><input type="radio" name="clang" value="en"${st.lang === 'en' ? ' checked' : ''}> English</label></fieldset>
+
       <label class="cite-date">${T.date} <input type="date" id="cdate" value="${st.accessed}" max="${today()}"></label></div>
     <div class="cite-list">${blocks}</div><p class="muted small">${T.note}</p></div>`;
   dlg.querySelector('#citeclose').addEventListener('click', () => dlg.close());
@@ -5838,7 +5838,7 @@ const later = () => { clearTimeout(timer); timer = setTimeout(preview, 300); };
 function formHTML() {
   const M = S.meta, inp = (k, size = 40) => `<label>${T('m.' + k)} <input type="text" data-m="${k}" size="${size}" value="${esc(M[k])}"></label>`;
   let h = `<div class="card" id="metacard"><h2>${T('m.h')}</h2><div class="lims">${inp('title', 48)}${inp('author', 28)}${inp('org', 32)}<label>${T('m.date')} <input type="date" data-m="date" value="${esc(M.date)}"></label>
-    <label>${T('m.lang')} <select id="rlang">${['tr', 'en'].map(l => `<option value="${l}"${S.lang === l ? ' selected' : ''}>${T('m.' + l)}</option>`).join('')}</select></label></div>
+</div>
     <label class="blk">${T('m.intro')} <textarea data-m="intro" rows="3">${esc(M.intro)}</textarea></label></div>`;
   h += `<div class="card" id="pkgcard"><h2>${T('p.h')}</h2><div class="lims"><label>${T('p.pick')} <select id="pkg"><option value="">${T('p.none')}</option>${projects.map(p => `<option value="${esc(p.id)}"${!S.sample && S.pid === p.id ? ' selected' : ''}>${esc(p.name)}${p.year ? ' · ' + p.year : ''}</option>`).join('')}<option value="#sample"${S.sample ? ' selected' : ''}>${T('p.sample')}</option></select></label></div>`;
   if (!projects.length) h += `<p class="muted small">${T('p.empty')}</p>`;
@@ -5862,7 +5862,7 @@ function bind() {
   document.querySelectorAll('[data-m]').forEach(x => { x.addEventListener('input', () => { S.meta[x.dataset.m] = x.value; later(); }); x.addEventListener('change', save); });
   document.querySelectorAll('[data-note]').forEach(x => { x.addEventListener('input', () => { S.meta.notes[x.dataset.note] = x.value; later(); }); x.addEventListener('change', save); });
   document.querySelectorAll('[data-on]').forEach(x => x.addEventListener('change', () => { S.on[x.dataset.on] = x.checked; save(); preview(); }));
-  $('rlang').addEventListener('change', e => { S.lang = e.target.value; save(); preview(); });
+
   $('pkg').addEventListener('change', async e => { const v = e.target.value; S.sample = v === '#sample'; S.pid = S.sample || !v ? null : v; save(); await loadProject(); render(); });
   document.querySelectorAll('[data-f]').forEach(s => s.addEventListener('change', () => { S.f[s.dataset.f] = s.value; save(); preview(); }));
   $('width') && $('width').addEventListener('change', e => { S.width = e.target.value.trim(); save(); preview(); });
@@ -5898,6 +5898,7 @@ function bind() {
   try {
     const saved = await get(KEY);
     if (saved && saved.v === 1) S = { ...blank(), ...saved, f: { ...P.blankFilter(), ...(saved.f || {}) }, meta: { ...R.blankMeta(), ...(saved.meta || {}), notes: { ...R.blankMeta().notes, ...((saved.meta || {}).notes || {}) } }, on: { ...blank().on, ...(saved.on || {}) } };
+    S.lang = 'en';   // reports are written in English only (20 Nov 2026); an older session may hold 'tr'
     await adoptApproved(lang); projects = await listProjects(); active = await activeId();
     if (!saved && !S.sample) S.pid = active;
     if (S.pid && !projects.some(p => p.id === S.pid)) S.pid = null;

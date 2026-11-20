@@ -19,7 +19,7 @@ const page = await ctx.newPage();
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 const rows = id => page.evaluate(id => [...document.querySelectorAll(`#${id} tbody tr`)].map(tr => [...tr.children].map(x => x.textContent.trim())), id);
-const num = s => parseFloat(String(s).replace(',', '.'));
+const num = s => parseFloat(String(s).replace(/,/g, ''));   // English screens: decimal point, comma only as a thousands separator
 
 // cone trees: (plot, tree, D0 at ground, H, cut height, measured heights); bark 2·5 % of d in mm
 const cone = (D0, H) => h => D0 * (1 - h / H);
@@ -31,10 +31,10 @@ const engine = (s) => TREES.map(([p, t, D0, H, st, hs]) => { const d = cone(D0, 
   points: hs.map((h, i) => ({ row: i + 2, h, d: +d(h).toFixed(6), d_ib: +d(h).toFixed(6) - +(d(h) * 0.5).toFixed(6) / 10, kind: null })) }, s); });
 
 // 0. the tool is listed under its category
-await page.goto(BASE + '/?lang=tr');
-ok((await page.locator('#side .b-cat', { hasText: 'Gövde hacmi ve profili' }).count()) === 1 && (await page.locator('#side a[href="seksiyon-hacmi.php"]').count()) === 1, 'sidebar: "Gövde hacmi ve profili" with Seksiyon Hacmi');
-await page.goto(URL + '?lang=tr');
-ok((await page.locator('h1').textContent()).includes('Seksiyon Hacmi') && (await page.locator('text=1.0.0-beta.2').count()) >= 1, 'page title and version 1.0.0-beta.2');
+await page.goto(BASE + '/');
+ok((await page.locator('#side .b-cat', { hasText: 'Stem volume and taper' }).count()) === 1 && (await page.locator('#side a[href="seksiyon-hacmi.php"]').count()) === 1, 'sidebar: "Stem volume and taper" with Section Volume');
+await page.goto(URL);
+ok((await page.locator('h1').textContent()).includes('Stem Section Volume') && (await page.locator('text=1.0.0-beta.2').count()) >= 1, 'page title and version 1.0.0-beta.2');
 
 // 1. paste the table, columns recognised, defaults
 await page.locator('#impbox details summary').click(); await page.fill('#impbox textarea', lines.join('\n')); await page.click('#impbox [data-act="paste"]');
@@ -50,32 +50,32 @@ await shot('secvol-results');
 
 // 2. tree volumes equal the engine; top piece is the exact cone
 let E = engine({ method: 'smalian', layout: 'ends' }), tr = await rows('ttab');
-ok((await page.locator('#sum').textContent()).includes('4 ağaç: 3 hesaplandı, 1 hesaplanamadı'), 'summary: 3 computed, 1 not');
-TREES.forEach(([, t], i) => { const r = tr.find(x => x[1] === t); near(num(r[3]), E[i].ob.total, 6e-5, `${t}: over-bark volume = engine`); near(num(r[4]), E[i].ib.total, 6e-5, `${t}: under-bark volume = engine`); near(num(r[5]), E[i].formFactor.value, 6e-5, `${t}: form factor`); ok(r[6] === 'kesimden tepeye' && r[7] === 'tamam', `${t}: extent and state`); });
+ok((await page.locator('#sum').textContent()).includes('4 trees: 3 computed, 1 not computed'), 'summary: 3 computed, 1 not');
+TREES.forEach(([, t], i) => { const r = tr.find(x => x[1] === t); near(num(r[3]), E[i].ob.total, 6e-5, `${t}: over-bark volume = engine`); near(num(r[4]), E[i].ib.total, 6e-5, `${t}: under-bark volume = engine`); near(num(r[5]), E[i].formFactor.value, 6e-5, `${t}: form factor`); ok(r[6] === 'cut to tip' && r[7] === 'ok', `${t}: extent and state`); });
 { const [, , D0, H, , hs] = TREES[0], h0 = hs[hs.length - 1], d0 = cone(D0, H)(h0); near(E[0].ob.top, Math.PI / 4 * (d0 / 100) ** 2 * (H - h0) / 3, 1e-12, 'top piece of a cone tree = exact cone gL/3'); }
-ok(tr.find(x => x[1] === 'D')[7] === 'hesaplanmadı' && tr.find(x => x[1] === 'D')[3] === '–', 'tree with a repeated height: not computed, no number');
+ok(tr.find(x => x[1] === 'D')[7] === 'not computed' && tr.find(x => x[1] === 'D')[3] === '–', 'tree with a repeated height: not computed, no number');
 // plots: m³/ha = Σ V × 10000/A, the plot with a failed tree is marked
 const pr = await rows('ptab');
-near(num(pr[0][6]), (E[0].ob.total + E[1].ob.total) * 10000 / 500, 6e-3, 'P1 m³/ha over bark'); ok(pr[0][8] === 'tamam' && pr[1][8] === 'eksik ağaç var' && pr[1][5] === '1', 'P2: one tree not computed, marked');
+near(num(pr[0][6]), (E[0].ob.total + E[1].ob.total) * 10000 / 500, 6e-3, 'P1 m³/ha over bark'); ok(pr[0][8] === 'ok' && pr[1][8] === 'trees missing' && pr[1][5] === '1', 'P2: one tree not computed, marked');
 near(num(pr[1][6]), E[2].ob.total * 10000 / 400, 6e-3, 'P2 m³/ha over the computed tree only');
 // problems with row numbers
 await page.locator('#probs summary').click();
 const probs = await rows('prtab');
-ok(probs.some(r => r[0] === '18' && r[3].includes('aynı yükseklik')), 'repeated height reported with its row (18): ' + JSON.stringify(probs));
+ok(probs.some(r => r[0] === '18' && r[3].includes('the same height')), 'repeated height reported with its row (18): ' + JSON.stringify(probs));
 // data quality (SV03): summary with the thresholds; one tree not computed; the dbh in the table equals d(1.3) so no dbh flags
-ok((await page.locator('#qsum').textContent()).includes("4 ağaçtan: 0 ağaçta") && (await page.locator('#qsum').textContent()).includes('1 ağaç veri hatası') && (await page.locator('#qcard', { hasText: "uç seksiyon payı en çok %10" }).count()) === 1, 'quality summary and thresholds shown');
+ok((await page.locator('#qsum').textContent()).includes('Of 4 trees: 0 with') && (await page.locator('#qsum').textContent()).includes('1 not computed because of data errors') && (await page.locator('#qcard', { hasText: 'top-piece share at most 10 %' }).count()) === 1, 'quality summary and thresholds shown');
 await page.locator('#qcard details summary').first().click();
-{ const q = await rows('qtab'), a = q.find(r => r[1] === 'A'); near(num(a[8]), 100 * E[0].ob.top / E[0].ob.total, 0.06, 'A: top-piece share (%) = engine'); ok(q.find(r => r[1] === 'D')[10] === 'hesaplanmadı', 'tree D flagged not computed'); }
+{ const q = await rows('qtab'), a = q.find(r => r[1] === 'A'); near(num(a[8]), 100 * E[0].ob.top / E[0].ob.total, 0.06, 'A: top-piece share (%) = engine'); ok(q.find(r => r[1] === 'D')[10] === 'not computed', 'tree D flagged not computed'); }
 await page.click('#steps [data-go="2"]'); await page.locator('#step2 details summary').click(); await page.fill('#adv-topShare', '1'); await page.locator('#adv-topShare').dispatchEvent('change');
 await page.click('#calc'); await page.waitForSelector('#qsum');
-ok((await page.locator('#qsum').textContent()).includes('3 ağaçta uç seksiyon payı eşiğin üstünde') && (await page.locator('#qcard', { hasText: 'uç seksiyon payı en çok %1.' }).count()) === 1, 'top-share threshold 1 %: all three flagged, threshold written');
+ok((await page.locator('#qsum').textContent()).includes('3 with a top-piece share above the threshold') && (await page.locator('#qcard', { hasText: 'top-piece share at most 1 %.' }).count()) === 1, 'top-share threshold 1 %: all three flagged, threshold written');
 await page.click('#steps [data-go="2"]'); await page.evaluate(() => { document.querySelector('#step2 details').open = true; }); await page.fill('#adv-topShare', '10'); await page.locator('#adv-topShare').dispatchEvent('change'); await page.click('#calc'); await page.waitForSelector('#ttab');
 
 // 3. tree details: section breakdown and profile chart
 await page.locator('#ttab tr[data-key]').nth(2).click();
 ok(await page.evaluate(() => document.getElementById('tdetail').open), 'clicking a row opens the details');
 const secs = await rows('sectab');
-ok(secs[0][0] === 'dip kütük' && secs[secs.length - 1][0].startsWith('uç (koni') && secs.length === 6, 'stump, four sections, top: ' + secs.map(r => r[0]).join(','));
+ok(secs[0][0] === 'stump' && secs[secs.length - 1][0].startsWith('top (cone') && secs.length === 6, 'stump, four sections, top: ' + secs.map(r => r[0]).join(','));
 near(secs.slice(1).reduce((a, r) => a + num(r[7]), 0), E[2].ob.total, 3e-5, 'section volumes add up to the total (stump not added)');
 ok((await page.locator('#ch-prof svg path, #ch-prof svg polyline').count()) >= 2, 'profile chart with measured line and top piece');
 await page.check('input[name="dbark"][value="ib"]'); ok(num((await rows('sectab'))[1][7]) < num(secs[1][7]), 'under-bark breakdown is smaller');
@@ -85,15 +85,15 @@ await page.click('#steps [data-go="2"]'); await page.check('input[name="top"][va
 await page.click('#calc'); await page.waitForSelector('#ttab');
 E = engine({ method: 'smalian', layout: 'ends', top: 'paraboloid', includeStump: true, dTop: 7 }); tr = await rows('ttab');
 const hd = await page.evaluate(() => [...document.querySelectorAll('#ttab thead th')].map(x => x.textContent));
-ok(hd.includes("Ticari hacim, 7 cm'ye (m³)") && hd.includes('7 cm yüksekliği (m)'), 'merchantable columns appear');
-TREES.forEach(([, t], i) => { const r = tr.find(x => x[1] === t); near(num(r[3]), E[i].ob.total, 6e-5, `${t}: paraboloid top + stump = engine`); near(num(r[6]), E[i].ob.merch.volume, 6e-5, `${t}: merchantable volume = engine`); near(num(r[7]), E[i].ob.merch.h, 6e-3, `${t}: height of 7 cm`); ok(r[8] === 'kesimden tepeye + dip kütük', `${t}: extent says the stump is included`); });
+ok(hd.includes('Merchantable volume to 7 cm (m³)') && hd.includes('Height of 7 cm (m)'), 'merchantable columns appear');
+TREES.forEach(([, t], i) => { const r = tr.find(x => x[1] === t); near(num(r[3]), E[i].ob.total, 6e-5, `${t}: paraboloid top + stump = engine`); near(num(r[6]), E[i].ob.merch.volume, 6e-5, `${t}: merchantable volume = engine`); near(num(r[7]), E[i].ob.merch.h, 6e-3, `${t}: height of 7 cm`); ok(r[8] === 'cut to tip + stump', `${t}: extent says the stump is included`); });
 { const [, , D0, H, , hs] = TREES[0], h0 = hs[hs.length - 1], d0 = cone(D0, H)(h0), L = H - h0;   // 7 cm lies in the top piece of A: the chosen paraboloid's profile d0·(1 − t/L)^(1/2)
   near(E[0].ob.merch.h, h0 + L * (1 - (7 / d0) ** 2), 1e-9, 'A: height of 7 cm in the paraboloid top piece'); ok(E[0].ob.merch.rule === 'top-solid', 'A: rule recorded'); }
 
 // 5. exports
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-csv')]);
 const csv = await readFile(await dl.path(), 'utf8');
-ok(csv.split('\n')[0].includes('Smalian, kabuklu (m³)') && csv.includes('A,') && !/\d,\d{3}\b/.test(csv.split('\n')[1].replace(/^[^,]*,[^,]*,[^,]*,/, '')), 'CSV with comma separator and decimal point');
+ok(csv.split('\n')[0].includes('Smalian, over bark (m³)') && csv.includes('A,') && !/\d,\d{3}\b/.test(csv.split('\n')[1].replace(/^[^,]*,[^,]*,[^,]*,/, '')), 'CSV with comma separator and decimal point');
 const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dj.path(), 'utf8'));
 ok(js.tool.version === '1.0.0-beta.2' && js.settings.top === 'paraboloid' && js.settings.includeStump === true && js.results.smalian.length === 4 && js.results.smalian[0].ob.sections.length > 0, 'JSON: settings and full results');
@@ -107,26 +107,26 @@ await page.click('#steps [data-go="1"]'); await page.evaluate(() => { document.q
 await page.waitForSelector('#impbox .fname'); await page.click('#to2'); await page.check('input[name="layout"][value="triples"]'); await page.check('input[name="area"][value="none"]');
 await page.click('#calc'); await page.waitForSelector('#ttab');
 const th3 = await page.evaluate(() => [...document.querySelectorAll('#ttab thead th')].map(x => x.textContent)), r3 = (await rows('ttab'))[0];
-ok(th3.includes('Huber, kabuklu (m³)') && th3.includes('Newton, kabuklu (m³)') && th3.includes('Huber farkı (%)') && th3.includes('Newton, kabuksuz (m³)'), 'three methods side by side; differences relative to Newton');
+ok(th3.includes('Huber, over bark (m³)') && th3.includes('Newton, over bark (m³)') && th3.includes('Huber difference (%)') && th3.includes('Newton, under bark (m³)'), 'three methods side by side; differences relative to Newton');
 { const vh = num(r3[3]), vs = num(r3[4]), vn = num(r3[5]); ok(vh < vn && vs > vn, 'cone: Huber below Newton, Smalian above (Newton exact)'); const tt = { plot_id: 'P', tree_id: 'T', period: null, state: 'ok', height: 20, stump_h: 0.3, dbh: null, points: [0.3, 2.3, 4.3, 6.3, 8.3].map((h, i) => ({ row: i + 2, h, d: +cone(30, 20)(h).toFixed(6), d_ib: null, kind: null })) };
   const eh = V.treeVolume(tt, { method: 'huber', layout: 'triples' }).ob.total, en_ = V.treeVolume(tt, { method: 'newton', layout: 'triples' }).ob.total;
   near(num(r3[7]), 100 * (eh - en_) / en_, 6e-4, 'Huber difference % = engine'); }
 ok((await page.locator('#ptab').count()) === 0, 'no per-hectare table without plot sizes');
-{ const c = await rows('ctab'); ok(c.length === 3 && c[2][0] === 'Newton (referans)' && c[2][2] === '–', 'comparison table: Newton is only the reference (no difference shown)');
-  ok(num(c[0][2]) < 0 && num(c[1][2]) > 0 && (await page.locator('#csum').textContent()).includes('1 ağaç'), 'cone: Huber total below, Smalian above; one tree in common');
-  ok((await page.locator('#qcard details', { hasText: 'Huber eksik, Smalian fazla' }).count()) === 1, 'known behaviour explained behind a disclosure, no method declared correct'); }
+{ const c = await rows('ctab'); ok(c.length === 3 && c[2][0] === 'Newton (reference)' && c[2][2] === '–', 'comparison table: Newton is only the reference (no difference shown)');
+  ok(num(c[0][2]) < 0 && num(c[1][2]) > 0 && (await page.locator('#csum').textContent()).includes('Over the 1 trees'), 'cone: Huber total below, Smalian above; one tree in common');
+  ok((await page.locator('#qcard details', { hasText: 'Huber underestimates and Smalian overestimates' }).count()) === 1, 'known behaviour explained behind a disclosure, no method declared correct'); }
 
-// 7. sample data (decimal commas), English, phone + dark
+// 7. sample data (decimal commas), session restored in a new tab, phone + dark
 await page.click('#steps [data-go="1"]'); await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
 ok(await page.isChecked('input[name="dec"][value=","]'), 'sample with decimal commas: comma proposed');
 await page.click('#calc'); await page.waitForSelector('#ttab');
-ok((await page.locator('#sum').textContent()).includes('14 ağaç: 13 hesaplandı, 1 hesaplanamadı') && (await page.locator('#ptab tbody tr').count()) === 3, 'sample: 13 of 14 trees, three plots');
+ok((await page.locator('#sum').textContent()).includes('14 trees: 13 computed, 1 not computed') && (await page.locator('#ptab tbody tr').count()) === 3, 'sample: 13 of 14 trees, three plots');
 await page.waitForTimeout(600);                                   // the session is saved 250 ms after the last change
 const en = await ctx.newPage(); en.on('pageerror', e => errors.push(e.message));
-await en.goto(URL + '?lang=en'); await en.waitForSelector('#ttab');
-ok((await en.locator('#sum').textContent()).includes('14 trees: 13 computed, 1 not computed') && (await en.locator('#ttab thead th', { hasText: 'over bark' }).count()) >= 1, 'English: same session, translated');
+await en.goto(URL); await en.waitForSelector('#ttab');
+ok((await en.locator('#sum').textContent()).includes('14 trees: 13 computed, 1 not computed') && (await en.locator('#ttab thead th', { hasText: 'over bark' }).count()) >= 1, 'new tab: same session restored');
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' }); phone.on('pageerror', e => errors.push(e.message));
-await phone.goto(URL + '?lang=tr'); await phone.click('#sample'); await phone.waitForSelector('#impbox .fname'); await phone.click('#to2'); await phone.click('#calc'); await phone.waitForSelector('#ttab');
+await phone.goto(URL); await phone.click('#sample'); await phone.waitForSelector('#impbox .fname'); await phone.click('#to2'); await phone.click('#calc'); await phone.waitForSelector('#ttab');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');
 await shot('secvol-phone', phone);
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
