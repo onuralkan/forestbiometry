@@ -1,131 +1,131 @@
-# P00: Mevcut çap dağılımı aracının incelenmesi ve değişiklik haritası
+# P00: Review of the current diameter distribution tool and change map
 
-Tarih: 10 Kasım 2026. Şartname: `docs/DIST_SPEC.md`. Bu aşamada kod değiştirilmedi.
-İncelenen sürüm: `cap-dagilimi` 1.0.0 (`assets/lab/weibull/`, `cap-dagilimi.php`), testler `tests/weibull/` (368 birim, 28 tarayıcı).
+Date: 10 Nov 2026. Specification: `docs/DIST_SPEC.md`. No code was changed in this stage.
+Version reviewed: `cap-dagilimi` 1.0.0 (`assets/lab/weibull/`, `cap-dagilimi.php`), tests `tests/weibull/` (368 unit, 28 browser).
 
-## 1. İlgili dosyalar
+## 1. Relevant files
 
-| Dosya | İçerik | Yeni araçta |
+| File | Content | In the new tool |
 |---|---|---|
-| `assets/lab/weibull/calc.js` (152 satır) | Weibull pdf/cdf/sf/quantile/moment, `fitML`, `fitMoments`, `ks`, `ad`, `aicBic`, `classTable`, `ecdf`, `analyse`, `solveMonotone` | Formüller yeni motora taşınır; dosya 2.0.0'a kadar değişmez |
-| `assets/lab/weibull/ui.js` (375 satır) | 3 adım (veri, ayarlar, sonuçlar); sekmeler: parametreler, grafikler, sınıflar, örnek alanlar, indir; eğri gezgini | Yeniden yazılır |
-| `assets/lab/weibull/i18n.js` | TR/EN metinler (`makeT`) | Yeni `dist/i18n.js` |
-| `assets/lab/core/importer.js`, `table.js`, `num.js` | Dosya/yapıştırma, ayırıcı, kodlama, XLSX; sayı okuma, ondalık kanıtı, `defaultDecimal` | Aynen kullanılır |
-| `assets/lab/core/i18n.js` | `lang`, `makeT`, `fmtNum` (dilden bağımsız, nokta), `esc` | Aynen |
-| `assets/lab/core/unitnav.js` | Örnek alan gezgini (liste, arama, sıralama, önceki/sonraki, tuşlar) | Aynen |
-| `assets/lab/core/chart.js` | `barChart`, `scatterChart`, `plotChart` (çubuk + çizgi, sürekli eksen), `radarChart`, SVG indirme | Kullanılır; Q–Q/P–P için `scatterChart` yeterli görünüyor (P13'te doğrulanacak) |
-| `assets/lab/core/export.js`, `store.js` | CSV (`,` ve `.`), XLSX, JSON; IndexedDB oturumu | Aynen |
-| `assets/lab/core/special.js` | `lnGamma`, `gammaFn` | Genişletilir (bkz. §4) |
-| `assets/lab/core/stats.js` | `betaInc`, `gammaP`, `normCdf`, `normQuantile`, `tCdf`, `tQuantile`, tohumlu üreteç | Kullanılır; normal kuyruk düzeltilir (bkz. §3) |
-| `assets/lab/core/nls.js` | Levenberg–Marquardt, kovaryans, OLS | P16–P17'de genişletilir |
-| `assets/lab/stand/calc.js` → `classIndex` | Çap sınıfı dizini; Weibull aracı buradan içe aktarıyor | `core/`'a taşınır (araçlar arası bağımlılık kalkar) |
+| `assets/lab/weibull/calc.js` (152 lines) | Weibull pdf/cdf/sf/quantile/moment, `fitML`, `fitMoments`, `ks`, `ad`, `aicBic`, `classTable`, `ecdf`, `analyse`, `solveMonotone` | Formulas move to the new engine; the file does not change until 2.0.0 |
+| `assets/lab/weibull/ui.js` (375 lines) | 3 steps (data, settings, results); tabs: parameters, charts, classes, plots, download; curve explorer | Rewritten |
+| `assets/lab/weibull/i18n.js` | TR/EN texts (`makeT`) | New `dist/i18n.js` |
+| `assets/lab/core/importer.js`, `table.js`, `num.js` | File/paste, separator, encoding, XLSX; number reading, decimal evidence, `defaultDecimal` | Used as is |
+| `assets/lab/core/i18n.js` | `lang`, `makeT`, `fmtNum` (language-independent, point), `esc` | As is |
+| `assets/lab/core/unitnav.js` | Plot navigator (list, search, sorting, previous/next, keys) | As is |
+| `assets/lab/core/chart.js` | `barChart`, `scatterChart`, `plotChart` (bar + line, continuous axis), `radarChart`, SVG download | Used; `scatterChart` looks sufficient for Q–Q/P–P (to be verified in P13) |
+| `assets/lab/core/export.js`, `store.js` | CSV (`,` and `.`), XLSX, JSON; IndexedDB session | As is |
+| `assets/lab/core/special.js` | `lnGamma`, `gammaFn` | Extended (see §4) |
+| `assets/lab/core/stats.js` | `betaInc`, `gammaP`, `normCdf`, `normQuantile`, `tCdf`, `tQuantile`, seeded generator | Used; normal tail fixed (see §3) |
+| `assets/lab/core/nls.js` | Levenberg–Marquardt, covariance, OLS | Extended in P16–P17 |
+| `assets/lab/stand/calc.js` → `classIndex` | Diameter class index; the Weibull tool imports it from here | Moved to `core/` (the dependency between tools goes away) |
 
-## 2. Mevcut davranış
+## 2. Current behaviour
 
-- **Parametreleştirme:** a = konum, b = ölçek, c = şekil; F(d) = 1 − exp(−((d − a)/b)^c). Şartnameyle aynı.
-- **Konum:** hiçbir zaman tahmin edilmez; 0 ya da kullanıcının sabitlediği a (a ≥ 0 ve a < min d).
-- **Yöntemler:** sabit a ile en çok olabilirlik (profil skor denklemi, c için geometrik ikiye bölme, 0.01–1000) ve momentler (ortalama + varyans). Yüzdelik tahmincisi, serbest üç parametreli uyum ve özetlerden geri kazanım **yok**.
-- **Analiz birimi:** örnek alan sütunu seçilirse her alan ayrı ya da bütün ağaçlar havuzda (eşit ağırlık). İsteğe bağlı tek süzgeç sütunu (ör. dönem). **Dönem ayrı bir boyut değildir**; şartnamedeki "örnek alan/dönem gezintisi" bu araçta yalnızca örnek alan gezintisidir. Dönem boyutu yeni araçta eklenmeli (bkz. §5, P01).
-- **Ölçüm eşiği:** kullanıcıya sorulur; "eşik var" denirse uydurma engellenir.
-- **Sınıflar:** yarı açık [alt, üst), eşit genişlik ya da sınır listesi; beklenen = n·[F(üst) − F(alt)]; alt ve üst kuyruk ayrı gösterilir, yeniden ölçekleme yok.
-- **Uyum:** KS D, Anderson–Darling A², ln L; AIC/BIC yalnızca en çok olabilirlik uyumlarında (k = 2). p değeri ve kritik değer yok.
-- **Tanılar:** n < 2, sabit veri, a ≥ min, az farklı değer, gruplanmış görünen veri; şekil çözümü aralık sınırında ya da yakınsamadı ayrı durumlar.
-- **Grafik ve çıktı:** histogram + yoğunluk eğrileri, ampirik/kuramsal CDF, sınıf tablosu, eğri gezgini; parametre ve sınıf CSV'si, Excel raporu (Bilgi, Parametreler, Sınıflar).
-- **Sayı biçimi ve çeviri:** `core/i18n.js` (`fmtNum`), araç metinleri `weibull/i18n.js`; içe aktarmada varsayılan nokta.
+- **Parameterisation:** a = location, b = scale, c = shape; F(d) = 1 − exp(−((d − a)/b)^c). Same as the specification.
+- **Location:** never estimated; 0 or the a fixed by the user (a ≥ 0 and a < min d).
+- **Methods:** maximum likelihood with fixed a (profile score equation, geometric bisection for c, 0.01–1000) and moments (mean + variance). Percentile estimator, free three-parameter fit and recovery from summaries are **absent**.
+- **Unit of analysis:** if a plot column is selected, each plot separately, or all trees pooled (equal weight). One optional filter column (e.g. period). **Period is not a separate dimension**; the "plot/period navigation" in the specification is only plot navigation in this tool. The period dimension should be added in the new tool (see §5, P01).
+- **Measurement threshold:** the user is asked; if "there is a threshold" is answered, fitting is blocked.
+- **Classes:** half-open [lower, upper), equal width or a list of bounds; expected = n·[F(upper) − F(lower)]; lower and upper tails shown separately, no rescaling.
+- **Goodness of fit:** KS D, Anderson–Darling A², ln L; AIC/BIC only for maximum likelihood fits (k = 2). No p-value and no critical value.
+- **Diagnostics:** n < 2, constant data, a ≥ min, few distinct values, data that look grouped; shape solution at the interval boundary or not converged are separate states.
+- **Charts and output:** histogram + density curves, empirical/theoretical CDF, class table, curve explorer; parameter and class CSV, Excel report (Info, Parameters, Classes).
+- **Number format and translation:** `core/i18n.js` (`fmtNum`), tool texts `weibull/i18n.js`; default point on import.
 
-## 3. Şartnameyle uyuşmayan ya da değişmesi gereken yerler
+## 3. Places that disagree with the specification or must change
 
-| # | Mevcut | Şartname | Yapılacak |
+| # | Current | Specification | To do |
 |---|---|---|---|
-| 1 | Moment yöntemi örnek varyansını **n − 1** bölenle kullanır | Varsayılan n bölen (karar 2) | P05: varsayılan n; n − 1 seçenek; eski sonuçlar seçenekle birebir üretilir |
-| 2 | Yüzdelik tahmincisi yok | İki yüzdelikle doğrudan tahmin | P05'te eklenir |
-| 3 | Eşik beyanında uydurma engellenir | Koşullu olabilirlik | P11 |
-| 4 | Sınıf beklenenleri ham sayı (n·p) | Poudel EI'si ağaç/ha (N·p); ham sayıyla L1 hataya ayrı ad | P12–P13 |
-| 5 | Sonuç nesnesinde birim, sınır politikası, kaynak kimliği, amaç değeri yok | Sonuç sözleşmesi | P01 |
-| 6 | `normCdf` alt kuyrukta duyarlılık kaybediyor: Φ(−8) = 6.11·10⁻¹⁶ (doğrusu 6.22·10⁻¹⁶), Φ(−10) = 0 | Kararlı logcdf / log-survival | P01: erfc tabanlı kuyruk ve `logNormCdf`; mevcut kullanıcılar (boy–çap, örnekleme) etkilenmeden |
-| 7 | Dönem boyutu yok | Örnek alan + dönem birimi; tekrar ölçümler aynı katta | P01 veri sözleşmesi |
-| 8 | Havuz: her ağaç eşit ağırlık | Hektar ağırlıklı birleştirme kapsam dışı | Değişmez; ekranda açık kalır |
-| 9 | `classIndex` başka aracın `calc.js`'inden | Bağımsız motor | `core/`'a taşınır |
+| 1 | Moment method uses the sample variance with divisor **n − 1** | Default divisor n (decision 2) | P05: default n; n − 1 as an option; old results reproduced exactly with the option |
+| 2 | No percentile estimator | Direct estimation with two percentiles | Added in P05 |
+| 3 | Fitting is blocked when a threshold is declared | Conditional likelihood | P11 |
+| 4 | Class expected values are raw counts (n·p) | Poudel's EI per hectare (N·p); separate name for the L1 error with raw counts | P12–P13 |
+| 5 | Result object has no unit, bound policy, source id, objective value | Result contract | P01 |
+| 6 | `normCdf` loses precision in the lower tail: Φ(−8) = 6.11·10⁻¹⁶ (correct value 6.22·10⁻¹⁶), Φ(−10) = 0 | Stable logcdf / log-survival | P01: erfc-based tail and `logNormCdf`; current users (height–diameter, sampling) unaffected |
+| 7 | No period dimension | Plot + period unit; repeated measurements on the same level | P01 data contract |
+| 8 | Pool: every tree has equal weight | Per-hectare-weighted pooling out of scope | Unchanged; stays explicit on screen |
+| 9 | `classIndex` from another tool's `calc.js` | Independent engine | Moved to `core/` |
 
-Kaynakla karşılaştırma (Poudel ve Cao 2013, okundu): KS'nin araçtaki tanımı doğru çift taraflı biçimdir; makalenin basılı Denklem 7'sinde ikinci terimin parantezi hatalıdır. Tablo 2 dipnotu b ve c adlarını ters yazar; araçtaki adlar ana denklemle uyumludur. Uyuşmazlık yok.
+Comparison with the source (Poudel and Cao 2013, read): the tool's definition of KS is the correct two-sided form; in the printed Equation 7 of the paper the parenthesis of the second term is wrong. The footnote of Table 2 writes the names b and c the wrong way round; the names in the tool agree with the main equation. No discrepancy.
 
-## 4. Sayısal altyapı
+## 4. Numerical infrastructure
 
-Dış bağımlılık önerilmiyor: gerekenlerin hepsi küçük, saf JS işlevleri olarak yazılabilir ve SciPy ile sınanabilir (proje kuralı: veri tarayıcıdan çıkmaz, derleme adımı yok).
+No external dependency is proposed: everything needed can be written as small, pure JS functions and tested against SciPy (project rule: data do not leave the browser, no build step).
 
-| Gereken | Durum | Aşama |
+| Needed | Status | Stage |
 |---|---|---|
-| ln Γ, eksik gamma P(a, x), eksik beta, normal CDF/quantile, t dağılımı, tohumlu üreteç | Var | — |
-| Kararlı normal kuyruk (erfc), log Φ | **Eksik** | P01 |
-| Digamma ψ, trigamma | **Eksik** | P03 |
-| Ters eksik gamma (gamma quantile), ters eksik beta (beta quantile) | **Eksik** | P03, P04 |
-| Kök bulma: Brent + aralık taraması ve kök birleştirme | Yalnızca tek kök için monoton ikiye bölme var | P01 (Brent), P07 (tarama) |
-| Sınırlı çok değişkenli en küçükleme (dönüştürülmüş parametrelerle Nelder–Mead ya da BFGS) | **Eksik** | P04, P10 |
-| Gauss–Hermite / Gauss–Legendre integrali (Johnson SB momentleri) | **Eksik** | P08 |
-| İki değişkenli doğrusal olmayan denklem çözücü (Parresol) | LM var (`core/nls.js`), artık biçimine uyarlanır | P09 |
-| Cramér–von Mises | **Eksik** | P13 |
-| Web Worker (bootstrap, model eğitimi) | Projede hiç kullanılmadı; ES modülü worker, `php -S` ve cPanel'de ek ayar gerektirmez | P14 |
-| Çok yanıtlı NLS, SUR (artık kovaryansı) | **Eksik** | P16 |
+| ln Γ, incomplete gamma P(a, x), incomplete beta, normal CDF/quantile, t distribution, seeded generator | Present | — |
+| Stable normal tail (erfc), log Φ | **Missing** | P01 |
+| Digamma ψ, trigamma | **Missing** | P03 |
+| Inverse incomplete gamma (gamma quantile), inverse incomplete beta (beta quantile) | **Missing** | P03, P04 |
+| Root finding: Brent + interval scan and root merging | Only monotone bisection for a single root | P01 (Brent), P07 (scan) |
+| Bounded multivariate minimisation (Nelder–Mead or BFGS with transformed parameters) | **Missing** | P04, P10 |
+| Gauss–Hermite / Gauss–Legendre integration (Johnson SB moments) | **Missing** | P08 |
+| Bivariate nonlinear equation solver (Parresol) | LM present (`core/nls.js`), adapted to the residual form | P09 |
+| Cramér–von Mises | **Missing** | P13 |
+| Web Worker (bootstrap, model training) | Never used in the project; an ES module worker needs no extra setting in `php -S` or cPanel | P14 |
+| Multi-response NLS, SUR (residual covariance) | **Missing** | P16 |
 
-## 5. Önerilen dosya düzeni
+## 5. Proposed file layout
 
 ```
-assets/lab/core/special.js      + digamma, trigamma, erfc, ters eksik gamma/beta
-assets/lab/core/roots.js        Brent, aralık taraması (yeni)
-assets/lab/core/optim.js        sınırlı en küçükleme (yeni)
-assets/lab/core/quad.js         Gauss–Hermite, Gauss–Legendre (yeni)
-assets/lab/core/classes.js      classIndex, sınıf kurma (stand/calc.js'ten taşınır; stand yeniden dışa aktarır)
-assets/lab/dist/registry.js     dağılım ve yöntem kaydı, sonuç sözleşmesi, yapılandırılmış hatalar
-assets/lab/dist/families/*.js   her aile: şema, destek, pdf/logpdf, cdf/logcdf, sf/logsf, quantile, momentler
-assets/lab/dist/fit/*.js        doğrudan tahmin yöntemleri (aileye göre)
-assets/lab/dist/recover/*.js    özetlerden geri kazanım (Weibull M2–M10, Parresol)
-assets/lab/dist/gof.js          KS, AD, CvM, ln L, AIC/BIC, sınıf hataları
-assets/lab/dist/observe.js      ölçüm eşiği, sınıflı veri olabilirliği
-assets/lab/dist/ui.js, i18n.js  arayüz
-cap-dagilimi-2.php              menüde listelenmeyen geliştirme sayfası (noindex); P15'ten sonra cap-dagilimi.php'nin yerine geçer
-tests/dist/test_*.mjs, e2e.mjs  birim ve tarayıcı testleri
-tests/ref/make_dist_*.py        SciPy referansları (ilk dosya: şartname Bölüm 8 tablosu)
+assets/lab/core/special.js      + digamma, trigamma, erfc, inverse incomplete gamma/beta
+assets/lab/core/roots.js        Brent, interval scan (new)
+assets/lab/core/optim.js        bounded minimisation (new)
+assets/lab/core/quad.js         Gauss–Hermite, Gauss–Legendre (new)
+assets/lab/core/classes.js      classIndex, class building (moved from stand/calc.js; stand re-exports it)
+assets/lab/dist/registry.js     distribution and method registry, result contract, structured errors
+assets/lab/dist/families/*.js   each family: schema, support, pdf/logpdf, cdf/logcdf, sf/logsf, quantile, moments
+assets/lab/dist/fit/*.js        direct estimation methods (by family)
+assets/lab/dist/recover/*.js    recovery from summaries (Weibull M2–M10, Parresol)
+assets/lab/dist/gof.js          KS, AD, CvM, ln L, AIC/BIC, class errors
+assets/lab/dist/observe.js      measurement threshold, likelihood of classed data
+assets/lab/dist/ui.js, i18n.js  interface
+cap-dagilimi-2.php              development page not listed in the menu (noindex); replaces cap-dagilimi.php after P15
+tests/dist/test_*.mjs, e2e.mjs  unit and browser tests
+tests/ref/make_dist_*.py        SciPy references (first file: specification Section 8 table)
 ```
 
-Hesap çekirdeği (`registry`, `families`, `fit`, `recover`, `gof`, `observe`) DOM'a dokunmaz; Node testlerinde ve Web Worker'da aynı dosyalar çalışır.
+The calculation core (`registry`, `families`, `fit`, `recover`, `gof`, `observe`) does not touch the DOM; the same files run in Node tests and in the Web Worker.
 
-## 6. Korunacak davranışlar
+## 6. Behaviours to keep
 
-1. a, b, c adları ve anlamları; konumun kendiliğinden tahmin edilmemesi.
-2. Sabit a ile en çok olabilirlik ve moment sonuçları (moment: n − 1 seçeneğiyle birebir).
-3. Çözüm durumlarının ayrı raporlanması (sınırda, yakınsamadı, veri sorunu); başarısız uyumun sayı gibi gösterilmemesi.
-4. p değeri verilmemesi (P14 bootstrap'a kadar); AIC/BIC'in yalnızca olabilirliği en büyüklenen uyumlarda verilmesi.
-5. Sınıf tablosunda kuyrukların ayrı gösterilmesi, yeniden ölçekleme yapılmaması.
-6. Örnek alan gezgini, seçimin sekmeler arasında korunması, eğri gezgini.
-7. İçe aktarma kuralları, varsayılan ondalık nokta, TR/EN, oturumun tarayıcıda saklanması, verinin tarayıcıdan çıkmaması.
-8. CSV ve Excel çıktılarında araç sürümü ve ayarlar.
+1. The names a, b, c and their meanings; the location not being estimated automatically.
+2. Maximum likelihood with fixed a and the moment results (moments: exactly the same with the n − 1 option).
+3. Separate reporting of solution states (at boundary, did not converge, data problem); a failed fit not being shown as a number.
+4. No p-value (until the P14 bootstrap); AIC/BIC given only for fits whose likelihood is maximised.
+5. Tails shown separately in the class table, no rescaling.
+6. The plot navigator, the selection being kept across tabs, the curve explorer.
+7. Import rules, default decimal point, TR/EN, the session stored in the browser, data not leaving the browser.
+8. Tool version and settings in the CSV and Excel outputs.
 
-## 7. Şartname ↔ mevcut durum eşlemesi
+## 7. Specification ↔ current state mapping
 
-| İstenen | Durum |
+| Requested | Status |
 |---|---|
-| Weibull 2P / sabit a, MLE, MOM | Mevcut (MOM böleni değişmeli) |
-| KS, AD, ln L, AIC/BIC kuralları, kuyruklu sınıf tablosu, durum ayrımı | Mevcut |
-| Varsayılan ondalık nokta, ortak gezgin, TR/EN, CSV/Excel | Mevcut |
-| Weibull yüzdelik tahmini; ölçüm eşiği; dönem boyutu; sonuç sözleşmesi; normal kuyruk | Değişmeli / eklenmeli |
-| Dağılım kayıt sistemi; normal, lognormal, gamma, beta, Johnson SB, exponential, log-logistic | Eklenecek |
-| Özetlerden geri kazanım (M2–M10, Parresol); sınıflı veri; CvM; Q–Q/P–P; bootstrap | Eklenecek |
-| Meşcere modelleri (PPM/PRM, NLS, SUR, CDFR) | Eklenecek (P16–P17) |
+| Weibull 2P / fixed a, MLE, MOM | Present (MOM divisor must change) |
+| KS, AD, ln L, AIC/BIC rules, class table with tails, state distinction | Present |
+| Default decimal point, shared navigator, TR/EN, CSV/Excel | Present |
+| Weibull percentile estimation; measurement threshold; period dimension; result contract; normal tail | Must change / be added |
+| Distribution registry; normal, lognormal, gamma, beta, Johnson SB, exponential, log-logistic | To be added |
+| Recovery from summaries (M2–M10, Parresol); classed data; CvM; Q–Q/P–P; bootstrap | To be added |
+| Stand models (PPM/PRM, NLS, SUR, CDFR) | To be added (P16–P17) |
 
-## 8. Aşama bağımlılıkları
+## 8. Stage dependencies
 
 ```
 P01 ─ P05 ─┬─ P02 ─ P03 ─ P04 ─ P08 ─ P10 ─┬─ P11 ─ P12 ─ P13 ─ P14 ─ P15 (2.0.0)
            └─ P06 ─ P07                    │
-                    P09 (P08'e bağlı) ─────┘
+                    P09 (depends on P08) ──┘
 P16 (P06, P07, P09, P15) ─ P17
 ```
 
-P03 digamma ve ters eksik gamma, P04 ters eksik beta ve en küçükleyici, P08 integral gerektirir; P11 her ailenin cdf/sf'sine, P14 her yöntemin yeniden çalıştırılabilir olmasına bağlıdır. Çalıştırma sırası şartnamedeki gibidir.
+P03 requires digamma and the inverse incomplete gamma, P04 the inverse incomplete beta and a minimiser, P08 integration; P11 depends on each family's cdf/sf, P14 on every method being re-runnable. The run order is as in the specification.
 
-## 9. Uygulama notu
+## 9. Implementation note
 
-- Yeni oturum anahtarı `session:cap-dagilimi-2`; 1.0.0 oturumları yeni araca taşınmaz (yalnızca ayarlar içerir, veri yeniden yüklenir).
-- Yeni sayfa `site_tools()` listesine girmez; atıf menüsü ve sürüm denetimi (`tests/site/test_cite.mjs`) P15'te güncellenir.
-- Her aşamada: `tests/ref/make_dist_<aşama>.py` → `tests/dist/test_<aşama>.mjs` → yayın iş akışına eklenir; mevcut `tests/weibull/` her aşamada değişmeden geçmelidir.
-- Kaynak durumu: Poudel ve Cao (2013), Parresol (2003), Kangas ve Maltamo (2000) okundu [B]; diğerleri ilgili aşamada okunursa [B], aksi hâlde [İ]/[D].
+- New session key `session:cap-dagilimi-2`; 1.0.0 sessions are not carried over to the new tool (they hold only settings; the data are loaded again).
+- The new page does not enter the `site_tools()` list; the citation menu and the version check (`tests/site/test_cite.mjs`) are updated in P15.
+- At every stage: `tests/ref/make_dist_<stage>.py` → `tests/dist/test_<stage>.mjs` → added to the release workflow; the existing `tests/weibull/` must pass unchanged at every stage.
+- Source status: Poudel and Cao (2013), Parresol (2003), Kangas and Maltamo (2000) read [B]; the others [B] if read in the relevant stage, otherwise [İ]/[D].

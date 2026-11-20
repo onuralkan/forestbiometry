@@ -1,139 +1,139 @@
-# Çap dağılımı aracı: araştırma, teknik şartname ve aşamalı geliştirme promptları
+# Diameter distribution tool: research, technical specification and staged development prompts
 
-Hazırlanma tarihi: 10 Kasım 2026  
-Hedef: Mevcut Weibull aracını, ormancılık araştırmalarında kullanılabilecek, Türkçe ve İngilizce çalışan bir çap dağılımı analiz aracına dönüştürmek.
+Prepared: 10 Nov 2026  
+Goal: Turn the existing Weibull tool into a diameter distribution analysis tool that works in Turkish and English and can be used in forestry research.
 
-Bu belge bir literatür değerlendirmesi ve geliştirme şartnamesidir. Özgün metin, web sitesinin kaynak kodu incelenmeden yazılmıştır; mevcut koda göre düzeltmeler Bölüm 0'da ve ilgili promptlarda **[Rev]** ile işaretlidir (10 Kasım 2026, kullanıcı onayıyla). Belgedeki referans sayıları bağımsız Python/SciPy hesaplamalarıyla kontrol edilmiştir; bunlar mevcut web uygulamasının test edildiği anlamına gelmez.
+This document is a literature review and development specification. The original text was written without examining the website's source code; corrections made against the existing code are marked with **[Rev]** in Section 0 and in the relevant prompts (10 Nov 2026, with user approval). The reference numbers in the document were checked with independent Python/SciPy calculations; this does not mean that the existing web application has been tested.
 
-## 0. Revizyon notları ve kararlar (10 Kasım 2026)
+## 0. Revision notes and decisions (10 Nov 2026)
 
-Özgün belge kullanıcı tarafından hazırlandı; aşağıdaki düzeltmeler mevcut kod ve yüklenen iki kaynak (Poudel ve Cao 2013; Parresol 2003, ikisi de okundu) incelenerek, kullanıcı onayıyla işlendi. Bölüm 8'deki bütün referans sayıları SciPy 1.18.1 ile yeniden hesaplanıp doğrulandı (PDF/CDF/medyan 12 basamak; M8 kökleri 0.1915 ve 2.5, M9 kökleri 0.3986 ve 2.5; M10 → a = 5; Parresol girdileri).
+The original document was prepared by the user; the corrections below were made with user approval after examining the existing code and the two uploaded sources (Poudel and Cao 2013; Parresol 2003, both read). All reference numbers in Section 8 were recomputed and verified with SciPy 1.18.1 (PDF/CDF/median to 12 digits; M8 roots 0.1915 and 2.5, M9 roots 0.3986 and 2.5; M10 → a = 5; Parresol inputs).
 
-1. **Dmin adı.** Poudel ve Cao'nun "D0"ı meşcerenin en küçük çapıdır. Platformda D0, Örnek Alan ve Meşcere aracında baskın çap anlamında kullanıldığı için bu araçta ve belgede en küçük çap **Dmin** olarak adlandırılır; kaynak gösterimi yalnızca açıklamada anılır.
-2. **Varyans böleni.** Kullanıcı "Poudel'deki gibi" dedi; makale böleni belirtmiyor (yalnızca "diameter variance, Dvar"). Karar: varsayılan **n bölen** (v = Σ(d−m)²/n). Gerekçe: makalenin moment denklemleri (m = a + bG1, v = b²(G2 − G1²), Dq² = a² + 2abG1 + b²G2) kuramsal momentlerdir ve Dq² = m² + v özdeşliği yalnızca n bölenle sağlanır; M2 ile M3 ancak böyle aynı sonucu verir. n−1 bölenli s² seçenek olarak kalır. Sonuç: yayındaki 1.0.0 Weibull moment yöntemi n−1 kullanıyor; 2.0.0'da varsayılan sonuç (n−1)/n etkeni kadar değişir, sürüm notuna yazılır.
-3. **Göğüs yüzeyi çap dağılımı: yalnızca betimsel, isteğe bağlı P23.** Poudel ve Cao ile Parresol'da yöntem yok. Kullanıcının sonradan yüklediği Kangas ve Maltamo (2000) [R23] okundu: göğüs yüzeyi çap dağılımını (ağaçların göğüs yüzeyiyle ağırlıklandığı dağılım; açı sayımı örneklemesinin doğal çıktısı) tanımlar, 12 göğüs yüzeyi yüzdeliğindeki çapları SUR ile kestirir, yüzdelikler arasında Späth rasyonel spline ile ara değer bulur ve sınıf göğüs yüzeyini sınıf ortalama ağacının göğüs yüzeyine bölerek ağaç sayısına çevirir (Denklem 1). Makale **parametrik bir dağılımın göğüs yüzeyi ağırlıklı veriye uydurulmasını içermez**; boyut yanlı olabilirlik için atıf yapılan Gove ve Patil (1998) okunmadı. Bu yüzden: (i) ampirik göğüs yüzeyi dağılımı, yüzdelikleri ve sınıf dönüşümü P23 olarak eklendi; (ii) parametrik ailelerin göğüs yüzeyi ağırlıklı uydurulması ve farklı büyüklükteki örnek alanların hektar ağırlıklı birleştirilmesi kapsam dışı kalır; (iii) makaledeki Finlandiya katsayıları araca gömülmez.
-4. **Mevcut araçta olmayanlar.** Serbest üç parametreli Weibull ve yüzdelik tahmincisi yayındaki araçta yoktur (P05 buna göre düzeltildi). Ölçüm eşiği beyan edilirse araç şu an uydurmayı engeller; P11 bunu koşullu olabilirlikle değiştirir. Önceki "yalnızca Weibull" kararı (5 Kasım 2026) bu belgeyle kaldırılmıştır.
-5. **Sıra.** P05, P01'in hemen ardından çalıştırılır (bkz. "Nasıl kullanılmalı?" madde 6).
-6. **Yeniden yazım kararı.** Araç yeni bir motor üzerinde yeniden yazılır (`assets/lab/dist/`): mevcut arayüz tek dağılıma ve tek iş akışına göre kurulmuş, uyarlamak yeniden yazmaktan pahalı. Yeniden kullanılacaklar: `core/` (içe aktarma, sayı okuma, gezgin, grafik, dışa aktarma, istatistik işlevleri) ve mevcut Weibull hesap çekirdeğinin formülleri. Yayındaki araç (`assets/lab/weibull/`, `cap-dagilimi.php`) 2.0.0 yayımlanana kadar **değişmeden** kalır; testleri (368 birim, 28 tarayıcı) yeni motorun Weibull sonuçları için regresyon referansıdır. Yeni araç menüde listelenmeyen ayrı bir sayfada geliştirilir; P15 kabulünden sonra `cap-dagilimi.php` yerine geçer ve eski kod `legacy/`'ye taşınır.
-7. **Kaynak durumu.** [R1] ve [R2] okundu ([B]). Tablo 2 dipnotunun b/c adlarını ters yazdığı ([R1]) ve Parresol'un ξ'yi geri kazanmadığı, üçüncü denklem denemesinin başarısız olduğu ([R2]) kaynakta doğrulandı. Diğer kaynaklar okunana kadar METHODS.md'de [İ] ya da [D] olarak işaretlenir.
-8. **Yayın kuralı.** Her push canlıya çıktığı için bir dağılım ya da yöntem, kendi bağımsız referans testleri geçmeden hiçbir menüde görünmez.
-9. **Erken yayın (10 Kasım 2026, kullanıcı kararı; karar 6'yı değiştirir).** Yeni araç P15'i beklemeden, P00, P01, P05, P02, P03, P04 ve P08 tamamlandıktan sonra `cap-dagilimi.php` adresinde **2.0.0-beta.1** olarak yayına alındı; eski Weibull aracı `legacy/weibull/`'ye taşındı. Yayında henüz olmayanlar araç içinde yazılıdır (sınıf tabloları, ölçüm eşiği, CSV/Excel, Weibull geri kazanımı, bootstrap/p değerleri). 2.0.0 sürüm adı P15 kabulüne kalır.
-10. **P15 ve 2.0.0 (11 Kasım 2026, kullanıcı kararı).** P15 uygulandı; araç **2.0.0** adını aldı (karar 9'daki ad koşulu). Kullanıcının isteğiyle P15'e bir "araç yüklenemedi" uyarısı eklendi (barındırma hizmetinin bot koruması program dosyaları yerine HTML döndürebiliyor). Kapsam ve kalan aşamalar: `docs/DIST_P15.md`.
+1. **The name Dmin.** Poudel and Cao's "D0" is the smallest diameter in the stand. Because D0 is used on the platform, in the Plot and Stand tool, to mean the dominant diameter, the minimum diameter is called **Dmin** in this tool and in this document; the source notation is mentioned only in the explanation.
+2. **Variance divisor.** The user said "as in Poudel"; the paper does not state the divisor (only "diameter variance, Dvar"). Decision: the default is the **n divisor** (v = Σ(d−m)²/n). Rationale: the paper's moment equations (m = a + bG1, v = b²(G2 − G1²), Dq² = a² + 2abG1 + b²G2) are theoretical moments, and the identity Dq² = m² + v holds only with the n divisor; only then do M2 and M3 give the same result. The n−1 divisor s² remains an option. Consequence: the published 1.0.0 Weibull moment method uses n−1; in 2.0.0 the default result changes by the factor (n−1)/n, and this is written in the release notes.
+3. **Basal area diameter distribution: descriptive only, optional P23.** Poudel and Cao and Parresol contain no method for it. Kangas and Maltamo (2000) [R23], uploaded later by the user, was read: it defines the basal area diameter distribution (the distribution in which trees are weighted by their basal area; the natural output of angle-count sampling), estimates the diameters at 12 basal area percentiles with SUR, interpolates between percentiles with a Späth rational spline, and converts to tree numbers by dividing the class basal area by the basal area of the class mean tree (Equation 1). The paper **does not include fitting a parametric distribution to basal-area-weighted data**; Gove and Patil (1998), cited for the size-biased likelihood, was not read. Therefore: (i) the empirical basal area distribution, its percentiles and the class conversion were added as P23; (ii) basal-area-weighted fitting of parametric families and hectare-weighted pooling of plots of different sizes remain out of scope; (iii) the Finnish coefficients in the paper are not embedded in the tool.
+4. **What the existing tool lacks.** The published tool has no free three-parameter Weibull and no percentile estimator (P05 was corrected accordingly). If a measurement threshold is declared, the tool currently blocks fitting; P11 replaces this with the conditional likelihood. The earlier "Weibull only" decision (5 Nov 2026) is withdrawn by this document.
+5. **Order.** P05 is run immediately after P01 (see "How to use", item 6).
+6. **Rewrite decision.** The tool is rewritten on a new engine (`assets/lab/dist/`): the existing interface was built around a single distribution and a single workflow, and adapting it would cost more than rewriting it. To be reused: `core/` (import, number parsing, navigator, charts, export, statistical functions) and the formulas of the existing Weibull calculation core. The published tool (`assets/lab/weibull/`, `cap-dagilimi.php`) stays **unchanged** until 2.0.0 is released; its tests (368 unit, 28 browser) are the regression reference for the new engine's Weibull results. The new tool is developed on a separate page not listed in the menu; after P15 acceptance it replaces `cap-dagilimi.php` and the old code moves to `legacy/`.
+7. **Source status.** [R1] and [R2] were read ([B]). It was verified in the sources that the Table 2 footnote swaps the names b/c ([R1]) and that Parresol does not recover ξ and that the third-equation attempt failed ([R2]). The other sources are marked [İ] or [D] in METHODS.md until they are read.
+8. **Release rule.** Because every push goes live, a distribution or method does not appear in any menu until its own independent reference tests pass.
+9. **Early release (10 Nov 2026, user decision; amends decision 6).** Without waiting for P15, the new tool was released at `cap-dagilimi.php` as **2.0.0-beta.1** after P00, P01, P05, P02, P03, P04 and P08 were completed; the old Weibull tool was moved to `legacy/weibull/`. What is not yet available is stated inside the tool (class tables, measurement threshold, CSV/Excel, Weibull recovery, bootstrap/p-values). The version name 2.0.0 waits for P15 acceptance.
+10. **P15 and 2.0.0 (11 Nov 2026, user decision).** P15 was implemented; the tool was named **2.0.0** (the naming condition in decision 9). At the user's request a "tool could not be loaded" warning was added to P15 (the hosting provider's bot protection can return HTML instead of the program files). Scope and remaining stages: `docs/DIST_P15.md`.
 
-## Nasıl kullanılmalı?
+## How to use
 
-1. Bu belgeyi kodlama yapacak yapay zekâya proje referansı olarak ver.
-2. Önce “Ortak geliştirme talimatı”nı ve P00'ı gönder.
-3. Sonraki mesajlarda yalnızca sıradaki promptu çalıştır. Bir prompt tamamlanıp ilgili kontroller geçmeden bir sonrakine geçme.
-4. Yapay zekâ tüm belgeyi bağlamda tutamıyorsa, yalnızca ilgili teknik şartname bölümünü ve o aşamanın promptunu birlikte ver.
-5. P00–P15 ilk kullanılabilir çok dağılımlı sürümü; P16–P17 meşcere düzeyinde model geliştirmeyi tamamlar. P18–P23 ayrı, isteğe bağlı genişletmelerdir.
-6. **Çalıştırma sırası (Bölüm 0, karar 5):** P00 → P01 → P05 → P02 → P03 → P04 → P08 → P10 → P06 → P07 → P09 → P11 → P12 → P13 → P14 → P15 → P16 → P17.
+1. Give this document to the AI that will do the coding as the project reference.
+2. First send the "Common development instruction" and P00.
+3. In later messages run only the next prompt. Do not move on to the next one until a prompt is complete and its checks have passed.
+4. If the AI cannot keep the whole document in context, give it only the relevant technical specification section together with that stage's prompt.
+5. P00–P15 deliver the first usable multi-distribution version; P16–P17 complete stand-level model development. P18–P23 are separate, optional extensions.
+6. **Run order (Section 0, decision 5):** P00 → P01 → P05 → P02 → P03 → P04 → P08 → P10 → P06 → P07 → P09 → P11 → P12 → P13 → P14 → P15 → P16 → P17.
 
-Buradaki öncelik sırası bir ürün geliştirme önerisidir; dağılımların evrensel başarı sıralaması değildir.
+The priority order here is a product development proposal; it is not a universal ranking of how well the distributions perform.
 
-## 1. Araştırmanın temel sonucu
+## 1. Main finding of the research
 
-Dağılım seçimi, parametre tahmini ve parametre geri kazanımı aynı şey değildir. Arayüz ve hesaplama motoru bunları ayrı ele almalıdır.
+Distribution choice, parameter estimation and parameter recovery are not the same thing. The interface and the calculation engine must handle them separately.
 
-| Katman | Yanıtladığı soru | Örnek |
+| Layer | Question it answers | Example |
 |---|---|---|
-| Dağılım ailesi | Çapların olasılık modeli nedir? | Weibull, gamma, Johnson SB |
-| Doğrudan parametre tahmini | Ölçülmüş çaplara bu dağılım nasıl uydurulur? | En çok olabilirlik, moment, yüzdelik |
-| Parametre geri kazanımı | Ortalama, Dq veya yüzdelikler verilince parametreler nasıl bulunur? | Weibull moment/hibrid; Parresol SB |
-| Meşcere düzeyinde kestirim | Başka meşcerenin dağılımı N, H, yaş gibi değişkenlerden nasıl öngörülür? | Parametre kestirim modelleri; özet istatistik modelleri + geri kazanım |
-| Sayısal çözüm | Seçilen istatistiksel yöntemin denklemleri nasıl çözülür? | Brent, Newton–Raphson, kısıtlı optimizasyon |
+| Distribution family | What is the probability model of the diameters? | Weibull, gamma, Johnson SB |
+| Direct parameter estimation | How is this distribution fitted to measured diameters? | Maximum likelihood, moments, percentiles |
+| Parameter recovery | Given the mean, Dq or percentiles, how are the parameters found? | Weibull moment/hybrid; Parresol SB |
+| Stand-level estimation | How is the distribution of another stand predicted from variables such as N, H and age? | Parameter prediction models; summary statistic models + recovery |
+| Numerical solution | How are the equations of the chosen statistical method solved? | Brent, Newton–Raphson, constrained optimisation |
 
-Örneğin MLE ile Newton–Raphson aynı menünün eşdeğer seçenekleri değildir. MLE bir tahmin ilkesi, Newton–Raphson bir çözüm algoritmasıdır. Benzer şekilde SUR, tek bir örnek alanın çaplarına uygulanan MLE'nin alternatifi gibi sunulmamalıdır. Poudel ve Cao'daki SUR/CDFR yaklaşımları, çok sayıda örnek alandan meşcere modellerinin katsayılarını kestirme bağlamındadır. [R1]
+For example, MLE and Newton–Raphson are not equivalent options in the same menu. MLE is an estimation principle, Newton–Raphson is a solution algorithm. Likewise, SUR should not be presented as an alternative to MLE applied to the diameters of a single plot. The SUR/CDFR approaches in Poudel and Cao belong to the context of estimating the coefficients of stand models from many plots. [R1]
 
-### 1.1. İlk sürüm için dağılım ve yöntem matrisi
+### 1.1. Distribution and method matrix for the first version
 
-Kısaltmalar: MLE = en çok olabilirlik; MOM = momentler; CML = sabit sınırlar koşulunda en çok olabilirlik; QME = yüzdelik eşleştirme; MGE = minimum uzaklık; PRM = parametre geri kazanım modeli; PPM = parametre kestirim modeli.
+Abbreviations: MLE = maximum likelihood; MOM = moments; CML = conditional maximum likelihood with fixed bounds; QME = quantile matching; MGE = minimum distance; PRM = parameter recovery model; PPM = parameter prediction model.
 
-| Dağılım | Temel parametreler | Doğrudan tahmin için uygulanabilir yöntemler | Özetlerden geri kazanım | Önerilen ilk uygulama |
+| Distribution | Basic parameters | Applicable methods for direct estimation | Recovery from summaries | Recommended first implementation |
 |---|---|---|---|---|
-| Weibull | Konum a, ölçek b, şekil c; 2P için a=0 | MLE, MOM, yüzdelik; ayrıca L-moment, olasılık grafiği regresyonları, MPS ve çeşitli modifiye tahminciler | Ortalama–varyans; Dq–varyans; yüzdelik çiftleri; moment–yüzdelik hibridleri | Mevcut yöntemleri koru; 2P/sabit a ile doğrudan uyum ve Poudel M2–M10 |
-| Gamma | Şekil k, ölçek θ | MLE, MOM; ayrıca L-moment ve genel QME/MGE | Ortalama ve varyans veya ortalama ve Dq | 2P MLE + MOM |
-| Johnson SB | Alt sınır ξ, aralık λ, şekiller γ ve δ | Sabit ξ, λ ile CML, moment ve yüzdelik; literatürde mod temelli yöntemler de vardır; serbest sınırlar için kısıtlı sayısal uyum ayrı problemdir | Parresol: ξ verilerek üç parametre; Fonseca: medyan ve ilk üç ham momentle dört parametre | Sabit sınırlarla doğrudan uyum + Parresol |
-| Normal | μ, σ | MLE ve MOM; genel QME/MGE eklenebilir | Ortalama ve varyans | MLE/MOM; negatif çap olasılığı göstergesi |
-| Lognormal | Log ölçekte μ, σ | Log çaplardan MLE; çap ölçeğinde MOM; yüzdelik | Ortalama ve varyans veya ortalama ve Dq | 2P MLE + MOM |
-| Beta, konum–ölçek biçimi | Alt L, üst U; şekiller α, β | Sabit sınırlar altında MOM ve sayısal MLE; genel QME/MGE | Sınırlar + ortalama ve varyans | Sabit/açıkça belirlenmiş sınırlarla MOM + MLE |
-| Negatif üstel / exponential | Hız r; isteğe bağlı sabit alt konum a | MLE ve MOM | Ortalama; a sabitse r=1/(ortalama−a) | Ters J biçimi için basit karşılaştırma modeli |
-| Log-logistic / Fisk | Ölçek b, şekil c | Sayısal MLE; iki yüzdelik; log-moment; koşulları sağlanırsa sıradan momentler | İki yüzdelik; sonlu momentler koşulunda ortalama–varyans | MLE + iki yüzdelik |
+| Weibull | Location a, scale b, shape c; a=0 for 2P | MLE, MOM, percentiles; also L-moments, probability plot regressions, MPS and various modified estimators | Mean–variance; Dq–variance; percentile pairs; moment–percentile hybrids | Keep the existing methods; direct fit with 2P/fixed a and Poudel M2–M10 |
+| Gamma | Shape k, scale θ | MLE, MOM; also L-moments and general QME/MGE | Mean and variance or mean and Dq | 2P MLE + MOM |
+| Johnson SB | Lower bound ξ, range λ, shapes γ and δ | CML, moments and percentiles with fixed ξ, λ; mode-based methods also exist in the literature; constrained numerical fitting for free bounds is a separate problem | Parresol: three parameters given ξ; Fonseca: four parameters from the median and the first three raw moments | Direct fit with fixed bounds + Parresol |
+| Normal | μ, σ | MLE and MOM; general QME/MGE can be added | Mean and variance | MLE/MOM; indicator of negative diameter probability |
+| Lognormal | μ, σ on the log scale | MLE from log diameters; MOM on the diameter scale; percentiles | Mean and variance or mean and Dq | 2P MLE + MOM |
+| Beta, location–scale form | Lower L, upper U; shapes α, β | MOM and numerical MLE under fixed bounds; general QME/MGE | Bounds + mean and variance | MOM + MLE with fixed/explicitly specified bounds |
+| Negative exponential / exponential | Rate r; optional fixed lower location a | MLE and MOM | Mean; if a is fixed, r=1/(mean−a) | Simple comparison model for the reverse-J shape |
+| Log-logistic / Fisk | Scale b, shape c | Numerical MLE; two percentiles; log-moments; ordinary moments if the conditions hold | Two percentiles; mean–variance provided the moments are finite | MLE + two percentiles |
 
-Weibull, gamma, beta ve Johnson SB'nin ormancılık uygulamaları doğrudan karşılaştırmalı araştırmalarda ele alınmıştır. Normal ve lognormal de çap dağılımı literatüründeki klasik alternatiflerdir. Log-logistic, genelleştirilmiş gamma, Burr ve Dagum gibi aileler için de ormancılık uygulamaları vardır. Her veri setinde aynı dağılımın üstün olduğu sonucu çıkarılmamalıdır. [R3, R4, R5]
+Forestry applications of Weibull, gamma, beta and Johnson SB have been treated in direct comparative studies. Normal and lognormal are also classical alternatives in the diameter distribution literature. Forestry applications also exist for families such as log-logistic, generalised gamma, Burr and Dagum. It should not be concluded that the same distribution is superior on every data set. [R3, R4, R5]
 
-Tablodaki “genel QME/MGE” seçenekleri, dağılımın PDF/CDF/quantile işlevlerinden yararlanan genel istatistiksel genişletmelerdir; bunların her birinin aynı ormancılık makalesinde karşılaştırıldığı iddia edilmemektedir. [R8]
+The "general QME/MGE" options in the table are general statistical extensions that use the distribution's PDF/CDF/quantile functions; it is not claimed that each of them was compared in the same forestry paper. [R8]
 
-### 1.2. İkinci aşamadaki seçenekler
+### 1.2. Options for the second stage
 
-| Aile / yaklaşım | Tahmin yaklaşımı | Konumlandırma |
+| Family / approach | Estimation approach | Positioning |
 |---|---|---|
-| Genelleştirilmiş gamma | Öncelikle sayısal MLE; yeterli bağımsız momentle sayısal MOM mümkün | Gamma ve Weibull'u kapsayan daha esnek pozitif aile; farklı parametreleştirmeler açıkça eşlenmeli |
-| Burr XII | Sayısal MLE; tanımlı momentlerle MOM veya yüzdelik/MGE genişletmeleri | Uzun sağ kuyrukları modelleyebilir; momentlerin varlığı parametrelere bağlıdır |
-| Dagum / Burr III | Sayısal MLE; tanımlı momentlerle MOM veya yüzdelik/MGE genişletmeleri | Burr XII ile aynı isim altında birleştirilmemeli |
-| Gumbel | MLE, MOM, L-moment | Minimum ve maksimum biçimi belirtilmeli; negatif çap olasılığı ayrıca izlenmeli |
-| Sonlu karışımlar | Karışım olabilirliği; EM veya kısıtlı doğrudan optimizasyon | Çok tepeli yapılar için; başlangıçta iki bileşenle sınırlı |
-| KDE / ampirik yüzdelik yaklaşımı | Bant genişliği seçimi veya yüzdelik enterpolasyonu | Parametrik dağılımlardan ayrı, karşılaştırma ve keşif katmanı |
+| Generalised gamma | Primarily numerical MLE; numerical MOM possible with enough independent moments | A more flexible positive family that includes gamma and Weibull; different parameterisations must be mapped explicitly |
+| Burr XII | Numerical MLE; MOM with defined moments or percentile/MGE extensions | Can model long right tails; the existence of moments depends on the parameters |
+| Dagum / Burr III | Numerical MLE; MOM with defined moments or percentile/MGE extensions | Must not be merged with Burr XII under the same name |
+| Gumbel | MLE, MOM, L-moments | Minimum and maximum forms must be stated; the probability of negative diameters must be monitored separately |
+| Finite mixtures | Mixture likelihood; EM or constrained direct optimisation | For multimodal structures; initially limited to two components |
+| KDE / empirical percentile approach | Bandwidth selection or percentile interpolation | A comparison and exploration layer separate from the parametric distributions |
 
-Rayleigh gibi özel durumlar yeni ve bağımsız bir yöntem gibi çoğaltılmamalıdır: Rayleigh, Weibull'un belirli şekilli bir özel durumudur. A-Charlier gibi seri yaklaşımları literatürde bulunsa da tüm parametrelerde negatif olmayan geçerli yoğunluk sağlamama riski nedeniyle ilk ürün kapsamına alınması önerilmemiştir.
+Special cases such as Rayleigh should not be duplicated as if they were new, independent methods: Rayleigh is a special case of Weibull with a particular shape. Although series approximations such as A-Charlier exist in the literature, including them in the first product scope is not recommended because of the risk that they do not give a valid non-negative density for all parameters.
 
-**İsimlendirme tuzağı:** Bazı ormancılık yayınlarında “generalized beta”, konum ve ölçek eklenmiş dört parametreli beta için kullanılır. Bu, otomatik olarak GB1/GB2 gibi başka genelleştirilmiş beta aileleri demek değildir. Önce formülleri karşılaştır; aynı dağılımı iki farklı aile olarak listeleme. [R3]
+**Naming trap:** In some forestry publications "generalized beta" is used for the four-parameter beta with added location and scale. This does not automatically mean other generalised beta families such as GB1/GB2. Compare the formulas first; do not list the same distribution as two different families. [R3]
 
-## 2. Ortak bilimsel ve hesaplamalı şartname
+## 2. Common scientific and computational specification
 
-### 2.1. Veri ve birimler
+### 2.1. Data and units
 
-- Yanıt, ağaç sayısına göre çap dağılımıdır. Göğüs yüzeyi çap dağılımı yalnızca betimsel olarak P23'te ele alınır; parametrik ağırlıklı uydurma ve hektar ağırlıklı birleştirme **kapsam dışıdır** (Bölüm 0, karar 3).
-- d: çap, cm. n: gerçekten gözlenmiş ağaç sayısı. N: hektardaki ağaç sayısı. G: göğüs yüzeyi, m²/ha. Örnek alan alanı: m².
-- Ortalama m=Σd/n; ikinci ham moment m2=Σd²/n; Dq=√m2; moment varyansı v=Σ(d−m)²/n. Dolayısıyla m2=m²+v.
-- n−1 bölenli örnek varyansı s² kullanılmışsa v=(n−1)s²/n dönüşümü kaydedilsin. **Karar (Bölüm 0, karar 2):** moment yöntemlerinde ve geri kazanımda varsayılan v, n bölenlidir; n−1 bölenli s² açık bir seçenektir ve sonuçta hangisinin kullanıldığı yazılır.
-- Gerçek tamsayı frekansı, aynı çapta kaç ağaç gözlendiğini gösterir. Hektara genişletme katsayısı veya örnekleme ağırlığı, bağımsız gözlem sayısı değildir.
-- n ve N, özellikle M10, olabilirlik, BIC ve bootstrap işlemlerinde birbirine dönüştürülerek kullanılmamalıdır.
-- Örnek alan, dönem ve gerektiğinde tür alanları korunmalı; aynı alanın tekrar ölçümleri çapraz doğrulamada farklı katlara dağılmamalıdır.
-- İçe aktarımda ondalık ayıracı ile CSV sütun ayıracı ayrı ayarlardır. Belirsiz binlik/ondalık yazımı sessizce tahmin edilmemeli; mevcut açık içe aktarma tercihi korunmalıdır.
+- The response is the diameter distribution by number of trees. The basal area diameter distribution is handled only descriptively, in P23; parametric weighted fitting and hectare-weighted pooling are **out of scope** (Section 0, decision 3).
+- d: diameter, cm. n: number of trees actually observed. N: number of trees per hectare. G: basal area, m²/ha. Plot area: m².
+- Mean m=Σd/n; second raw moment m2=Σd²/n; Dq=√m2; moment variance v=Σ(d−m)²/n. Hence m2=m²+v.
+- If the sample variance s² with the n−1 divisor was used, record the conversion v=(n−1)s²/n. **Decision (Section 0, decision 2):** in moment methods and recovery the default v uses the n divisor; s² with the n−1 divisor is an explicit option, and the result states which one was used.
+- A true integer frequency shows how many trees were observed at the same diameter. A per-hectare expansion factor or a sampling weight is not a number of independent observations.
+- n and N must not be converted into each other and used interchangeably, especially in M10, the likelihood, BIC and bootstrap operations.
+- Plot, period and, where needed, species fields must be kept; repeated measurements of the same plot must not be spread across different folds in cross-validation.
+- On import, the decimal separator and the CSV column separator are separate settings. Ambiguous thousands/decimal notation must not be guessed silently; the existing explicit import preference must be kept.
 
-### 2.2. Üç farklı sınır kavramı
+### 2.2. Three different bound concepts
 
-1. **Dağılım desteği:** Weibull a, beta L/U, Johnson ξ ve ξ+λ.
-2. **Ölçüm eşiği / truncation:** Örneğin yalnızca d≥8 cm ağaçların kaydedilmesi.
-3. **Örneklem minimumu/maksimumu:** Yüklenen dosyada gözlenen en küçük/en büyük değer.
+1. **Distribution support:** Weibull a, beta L/U, Johnson ξ and ξ+λ.
+2. **Measurement threshold / truncation:** For example, recording only trees with d≥8 cm.
+3. **Sample minimum/maximum:** The smallest/largest value observed in the uploaded file.
 
-Bunlar aynı değildir. Örneklem minimumunu otomatik olarak gerçek dağılım alt sınırı kabul etme. Beta ve Johnson SB'de gözlemleri sınırın tam üzerine koymak dönüşüm/olabilirlik sorunlarına yol açabilir. Veriye dayalı bir sınır belirleme kuralı kullanılırsa kural, birim, ayar ve veri bağımlılığı görünür olsun; sabit sayıları bütün türlere evrensel kural gibi uygulama.
+These are not the same. Do not automatically take the sample minimum as the true lower bound of the distribution. In beta and Johnson SB, placing observations exactly on the bound can cause transformation/likelihood problems. If a data-based bound-setting rule is used, the rule, unit, setting and data dependence must be visible; do not apply fixed numbers to all species as if they were a universal rule.
 
-### 2.3. Truncation ve sınıflı veriler
+### 2.3. Truncation and classed data
 
-L≤D≤U aralığı gözleniyorsa:
+If the interval L≤D≤U is observed:
 
 $$
 f_T(d)=\frac{f(d)}{F(U)-F(L)},\qquad
 F_T(d)=\frac{F(d)-F(L)}{F(U)-F(L)}.
 $$
 
-Sürekli dağılımda uç noktaların açık/kapalı yazımı olasılığı değiştirmez. U=∞ için F(U)=1. Uydurma işlemi de bu koşullu dağılımın olabilirliği üzerinden yapılmalıdır. Önce kesilmemiş dağılımı uydurup yalnızca grafiği kesmek doğru değildir. Kesilmiş örneklemin ortalama/percentillerini kesilmemiş geri kazanım denklemlerine doğrudan sokma; desteklenmiyorsa seçeneği kapat.
+For a continuous distribution, writing the endpoints as open or closed does not change the probability. For U=∞, F(U)=1. The fitting must also be done through the likelihood of this conditional distribution. Fitting the untruncated distribution first and then only cutting the chart is not correct. Do not plug the mean/percentiles of a truncated sample directly into the untruncated recovery equations; if this is not supported, disable the option.
 
-Çap sınıfı [l_j,u_j) için beklenen olasılık:
+Expected probability for the diameter class [l_j,u_j):
 
 $$p_j=F(u_j)-F(l_j).$$
 
-Koşullu modelde F yerine F_T kullanılır. Sınıflı gözlemlerde log-olabilirlik, parametrelerden bağımsız sabit hariç, Σn_j log(p_j)'dir. Sınıf orta noktalarını n_j kez çoğaltarak bunu ham çap MLE'si gibi sunma.
+In the conditional model F_T is used instead of F. For classed observations the log-likelihood, apart from a constant independent of the parameters, is Σn_j log(p_j). Do not replicate class midpoints n_j times and present this as the raw-diameter MLE.
 
-N_j=N×p_j. Sınıflar tüm ilgili desteği kapsıyorsa toplam beklenen sıklık N olmalıdır. Sonlu çizim aralığı dışında kalan kuyruk olasılığını ayrı göster; sessizce yeniden ölçekleme yapma. Gözlenmeyen sınıfların sıfır frekans mı, kayıt dışı mı olduğunu ayırt et.
+N_j=N×p_j. If the classes cover the whole relevant support, the total expected frequency must be N. Show the tail probability outside the finite plotting range separately; do not rescale silently. Distinguish whether unobserved classes have zero frequency or are outside the record.
 
-### 2.4. Uyum ölçütleri ve belirsizlik
+### 2.4. Goodness-of-fit measures and uncertainty
 
-- Log-olabilirlik orijinal çap ölçeğinde hesaplanmalı. Log dönüşümü kullanılan modellerde Jacobian ihmal edilmemeli.
-- AIC=2k−2ℓ, BIC=k ln(n)−2ℓ. Standart karşılaştırma, aynı gözlemler, aynı gözlem süreci, aynı birimler ve karşılaştırılabilir MLE uyumları için yapılmalı.
-- MOM/geri kazanım için log-skor hesaplanabilir; bunları standart MLE-AIC sıralamasına gerekçesiz katma. Dışarıdan gelen modelin yerel parametre sayısı, bütün eğitim sürecinin karmaşıklığını temsil etmez.
-- Gerçekten dışarıdan sabitlenmiş sınırla, aynı veriden seçilmiş sınır aynı değildir. Veriyle belirlenen sınırların karmaşıklığını yok sayarak düşük k üzerinden yanıltıcı avantaj üretme.
-- AICc eklenecekse uygulanabilirlik ve küçük örnek düzeltmesinin varsayımları belirtilsin; n≤k+1 durumunda hesaplanmasın. Karışım ve uç nokta tahmini gibi düzenli olmayan problemlerde otomatik geçerli sayılmasın.
-- KS, AD ve Cramér–von Mises istatistikleri verilebilir. Aynı veriden parametre tahmin edildiğinde standart, parametreleri bilinen dağılımın p-değerlerini kullanma.
-- Parametrik bootstrap p-değeri için her örnekte aynı parametre tahmini ve veriyle belirlenen sınır/ölçüm/yuvarlama süreci tekrarlanmalı. Monte Carlo p=(1+başlangıçtan büyük/eşit istatistik sayısı)/(B+1).
-- Ölçüm yuvarlaması bağlar oluşturuyorsa bootstrap örneklerine aynı yuvarlama uygulanmalı veya uygun aralık olabilirliği kullanılmalı. Bağları gizlemek için rastgele jitter ekleme.
-- EI için Poudel tanımı: Σ_j |N_j,gözlenen−N_j,tahmin|, birimi ağaç/ha. Sınıflar ve kuyrukların ele alınışı modeller arasında aynı olmalı. Ham sayılarla hesaplanan L1 hataya farklı ad/birim ver.
-- Optimizasyon başarısızlığı, tanımsız moment, sınır çözümü ve çoklu çözüm ayrı durumlar olarak raporlansın.
-- Wald aralıklarını her modelde otomatik kullanma. Parametre belirsizliği için kullanılan yaklaşımın geçerliliği ve bootstrap başarısızlık oranı raporlansın.
+- The log-likelihood must be computed on the original diameter scale. In models that use a log transformation, the Jacobian must not be neglected.
+- AIC=2k−2ℓ, BIC=k ln(n)−2ℓ. Standard comparison must be made for the same observations, the same observation process, the same units and comparable MLE fits.
+- A log score can be computed for MOM/recovery; do not add these to the standard MLE-AIC ranking without justification. The local parameter count of an externally supplied model does not represent the complexity of the whole training process.
+- A bound that is genuinely fixed externally is not the same as a bound chosen from the same data. Do not produce a misleading advantage through a low k by ignoring the complexity of data-determined bounds.
+- If AICc is added, state its applicability and the assumptions of the small-sample correction; do not compute it when n≤k+1. Do not treat it as automatically valid in irregular problems such as mixtures and endpoint estimation.
+- KS, AD and Cramér–von Mises statistics can be given. When parameters are estimated from the same data, do not use the standard p-values for a distribution with known parameters.
+- For a parametric bootstrap p-value, the same parameter estimation and the data-determined bound/measurement/rounding process must be repeated in every sample. Monte Carlo p=(1+number of statistics greater than or equal to the original)/(B+1).
+- If measurement rounding creates ties, the same rounding must be applied to the bootstrap samples or a suitable interval likelihood must be used. Do not add random jitter to hide ties.
+- Poudel's definition of EI: Σ_j |N_j,observed−N_j,predicted|, unit trees/ha. The handling of classes and tails must be the same across models. Give the L1 error computed with raw counts a different name/unit.
+- Optimisation failure, undefined moments, boundary solutions and multiple solutions must be reported as separate states.
+- Do not use Wald intervals automatically in every model. Report the validity of the approach used for parameter uncertainty and the bootstrap failure rate.
 
-KS'nin doğru çift taraflı tanımı, sıralı ham veride:
+The correct two-sided definition of KS, on sorted raw data:
 
 $$
 D^+=\max_j\left[\frac{j}{n}-F(d_{(j)})\right],\quad
@@ -141,43 +141,43 @@ D^-=\max_j\left[F(d_{(j)})-\frac{j-1}{n}\right],\quad
 D=\max(D^+,D^-).
 $$
 
-Bu bölümdeki koruyucu kurallar, kaynakların doğrudan alıntısı değil, araştırma amaçlı yazılım için hazırlanmış teknik tasarım önerileridir. Bootstrap yaklaşımının genel referansı [R9]'dur.
+The safeguard rules in this section are not direct quotations from the sources but technical design recommendations prepared for research software. The general reference for the bootstrap approach is [R9].
 
-## 3. Dağılımlar için uygulama denklemleri
+## 3. Implementation equations for the distributions
 
-Aşağıdaki ifadeler, kaynaklardaki dağılım tanımlarının standart moment ve olabilirlik ilişkileriyle yazılmış uygulama biçimleridir. Belirli bir makaleye ait yöntemler ayrıca adlandırılmıştır; genel cebirsel türetimler makaleye özgü yeni yöntemler gibi sunulmamalıdır.
+The expressions below are implementation forms of the distribution definitions in the sources, written with the standard moment and likelihood relations. Methods belonging to a specific paper are named separately; general algebraic derivations must not be presented as if they were new paper-specific methods.
 
 ### 3.1. Normal
 
-Parametreler μ∈R, σ>0. MLE: μ=m, σ²=v. MOM aynı parametreleri verir. Bu eşitlik arayüzde iki farklı sonuç varmış gibi gösterilmesin. Negatif çap olasılığı Φ(−μ/σ) raporlanmalı. Kesilmiş normal için bu kapalı formüller MLE değildir; koşullu olabilirlik optimize edilir. [R10]
+Parameters μ∈R, σ>0. MLE: μ=m, σ²=v. MOM gives the same parameters. The interface must not show this equality as if there were two different results. The probability of negative diameters Φ(−μ/σ) must be reported. For the truncated normal these closed formulas are not the MLE; the conditional likelihood is optimised. [R10]
 
 ### 3.2. Lognormal
 
-Parametreler μ=E[ln D], σ>0. Buradaki μ, cm cinsinden aritmetik ortalama değildir.
+Parameters μ=E[ln D], σ>0. Here μ is not the arithmetic mean in cm.
 
-MLE: μ=ortalama(ln d), σ²=ortalama[(ln d−μ)²].
+MLE: μ=mean(ln d), σ²=mean[(ln d−μ)²].
 
-MOM / geri kazanım:
+MOM / recovery:
 
 $$
 \sigma^2=\ln(1+v/m^2),\qquad \mu=\ln m-\sigma^2/2.
 $$
 
-E[D]=exp(μ+σ²/2), E[D²]=exp(2μ+2σ²). Verilen m ve Dq için v=Dq²−m² kullanılır. d≤0 kabul edilmez. İlk sürüm kaydırılmamış 2P biçimdir; üçüncü konum parametresi ayrı model/yöntem olarak eklenmelidir. [R11]
+E[D]=exp(μ+σ²/2), E[D²]=exp(2μ+2σ²). For given m and Dq, v=Dq²−m² is used. d≤0 is not accepted. The first version is the unshifted 2P form; a third location parameter must be added as a separate model/method. [R11]
 
 ### 3.3. Gamma
 
-Şekil k>0, ölçek θ>0:
+Shape k>0, scale θ>0:
 
 $$f(d)=\frac{d^{k-1}e^{-d/\theta}}{\Gamma(k)\theta^k},\quad d>0.$$
 
 MOM: k=m²/v, θ=v/m.
 
-MLE: ln(k)−ψ(k)=ln(m)−ortalama(ln d) denklemini çöz; ardından θ=m/k. ψ digamma işlevidir. Şekil denklemi için k>0 kısıtı ve dejenere veri kontrolü gereklidir. Rate kullanan kütüphanelerde rate=1/θ dönüşümü açıkça yapılmalı. L-moment yöntemi eklenirse kendisine ait denklemler kullanılmalı; MOM etiketi değiştirilerek sunulmamalı. [R12, R13]
+MLE: solve the equation ln(k)−ψ(k)=ln(m)−mean(ln d); then θ=m/k. ψ is the digamma function. The shape equation requires the constraint k>0 and a check for degenerate data. In libraries that use the rate, the conversion rate=1/θ must be made explicitly. If the L-moment method is added, its own equations must be used; it must not be presented by relabelling MOM. [R12, R13]
 
-### 3.4. Konum–ölçek beta
+### 3.4. Location–scale beta
 
-Y=(D−L)/(U−L) ve Y~Beta(α,β). α,β>0; L<U.
+Y=(D−L)/(U−L) and Y~Beta(α,β). α,β>0; L<U.
 
 S=U−L, μ_y=(m−L)/S, v_y=v/S²:
 
@@ -186,17 +186,17 @@ t=\frac{\mu_y(1-\mu_y)}{v_y}-1,\quad
 \alpha=\mu_y t,\quad \beta=(1-\mu_y)t.
 $$
 
-MOM için 0<μ_y<1 ve 0<v_y<μ_y(1−μ_y) olmalıdır. MLE sabit L/U altında beta log-olabilirliğini optimize eder; D ölçeğine geçerken −n ln(S) terimi bulunmalıdır. Serbest L/U tahmini, sabit sınır yönteminin gizli bir seçeneği yapılmamalıdır. [R14]
+For MOM, 0<μ_y<1 and 0<v_y<μ_y(1−μ_y) must hold. MLE optimises the beta log-likelihood under fixed L/U; when moving to the D scale the term −n ln(S) must be included. Free L/U estimation must not be made a hidden option of the fixed-bound method. [R14]
 
-### 3.5. Weibull: doğrudan uyum
+### 3.5. Weibull: direct fit
 
-**Standart adlandırma:** a=konum, b=ölçek, c=şekil.
+**Standard naming:** a=location, b=scale, c=shape.
 
 $$
 F(d)=1-\exp[-((d-a)/b)^c],\quad d>a,\quad b,c>0.
 $$
 
-2P modelde a=0. Sabit a ile y_i=d_i−a>0:
+In the 2P model a=0. With fixed a and y_i=d_i−a>0:
 
 $$
 \frac1c+\overline{\ln y}
@@ -204,28 +204,28 @@ $$
 b=\left(\frac1n\sum_i y_i^c\right)^{1/c}.
 $$
 
-Bunlar sabit a altında MLE denklemleridir. Serbest a ile üç parametreli olabilirlik, özellikle a gözlenen minimuma yaklaşınca düzenli olmayan/sınırsız davranış gösterebilir. “Başarılı optimizasyon” tek başına geçerli küresel MLE kanıtı değildir. İlk sürümde mevcut 3P davranışı incelensin; yeni serbest 3P yöntemi ancak açık kısıt, çoklu başlangıç ve sınır tanılarıyla eklensin.
+These are the MLE equations under fixed a. With free a, the three-parameter likelihood can behave irregularly/unboundedly, especially as a approaches the observed minimum. "Successful optimisation" alone is not proof of a valid global MLE. In the first version, examine the existing 3P behaviour; add a new free 3P method only with explicit constraints, multiple starts and boundary diagnostics.
 
-ForestFit belgeleri, 2P için MLE/MOM/yüzdelik/L-moment ve regresyon seçeneklerini; 3P için MLE, modifiye moment/olabilirlik, MPS ve T-L-moment seçeneklerini listeler. Bunların hepsini ilk sürüme taşımak gerekli değildir. Her yöntem, özgün tanımı ve geçerlilik koşulu doğrulanarak ayrı eklenmelidir. [R6]
+The ForestFit documentation lists MLE/MOM/percentile/L-moment and regression options for 2P, and MLE, modified moments/likelihood, MPS and T-L-moment options for 3P. It is not necessary to carry all of these into the first version. Each method must be added separately, after verifying its original definition and validity conditions. [R6]
 
-### 3.6. Weibull: Poudel ve Cao (2013)
+### 3.6. Weibull: Poudel and Cao (2013)
 
-Kaynak: Yüklenen “Evaluation of Methods to Predict Weibull Parameters for Characterizing Diameter Distributions”, özellikle Tablo 2 ve basılı s.245–247. [R1]
+Source: The uploaded "Evaluation of Methods to Predict Weibull Parameters for Characterizing Diameter Distributions", especially Table 2 and printed pp.245–247. [R1]
 
-G_r(c)=Γ(1+r/c), m=ortalama, v=varyans, q=Dq olsun:
+Let G_r(c)=Γ(1+r/c), m=mean, v=variance, q=Dq:
 
 $$
 m=a+bG_1,\quad v=b^2(G_2-G_1^2),\quad
 q^2=a^2+2abG_1+b^2G_2.
 $$
 
-Pozitif ölçek çözümü:
+Positive scale solution:
 
 $$
 B_q(c)=\frac{-aG_1+\sqrt{a^2G_1^2+G_2(q^2-a^2)}}{G_2}.
 $$
 
-Q_p p yüzdeliği, A_p=−ln(1−p) olsun. 0<p<r<1 için:
+Let Q_p be the p percentile and A_p=−ln(1−p). For 0<p<r<1:
 
 $$
 C_{p,r}(a)=
@@ -233,37 +233,37 @@ C_{p,r}(a)=
 b=\frac{Q_p-a}{A_p^{1/c}}.
 $$
 
-| Kaynak yöntemi | Gerekli hedefler | İşlem |
+| Source method | Required targets | Operation |
 |---|---|---|
-| M1 | a, b, c için eğitim hedefleri ve meşcere açıklayıcıları | Doğrudan parametre kestirimi; PRM değildir |
-| M2 | m, v; a politikası | b=(m−a)/G1; b²(G2−G1²)=v denklemini c için çöz |
-| M3 | q, v; a politikası | b=Bq(c); b²(G2−G1²)=v denklemini c için çöz |
-| M4 | Q31, Q63; a politikası | c=C.31,.63(a); yüzdelik denklemiyle b |
-| M5 | Q50, Q95; a politikası | c=C.50,.95(a); yüzdelik denklemiyle b |
-| M6 | q, Q25, Q95; a politikası | c=C.25,.95(a); b=Bq(c) |
-| M7 | q, Q31, Q63; a politikası | c=C.31,.63(a); b=Bq(c) |
-| M8 | m, Q95; a politikası | b=(Q95−a)/A.95^(1/c); a+bG1=m denklemini çöz |
-| M9 | q, Q95; a politikası | Aynı b; a²+2abG1+b²G2=q² denklemini çöz |
-| M10 | q, Q25, Q50, Q95, Dmin ve n | a=(n^(1/3)Dmin−Q50)/(n^(1/3)−1); c=C.25,.95(a); b=Bq(c) |
+| M1 | Training targets for a, b, c and stand predictors | Direct parameter prediction; not a PRM |
+| M2 | m, v; a policy | b=(m−a)/G1; solve b²(G2−G1²)=v for c |
+| M3 | q, v; a policy | b=Bq(c); solve b²(G2−G1²)=v for c |
+| M4 | Q31, Q63; a policy | c=C.31,.63(a); b from the percentile equation |
+| M5 | Q50, Q95; a policy | c=C.50,.95(a); b from the percentile equation |
+| M6 | q, Q25, Q95; a policy | c=C.25,.95(a); b=Bq(c) |
+| M7 | q, Q31, Q63; a policy | c=C.31,.63(a); b=Bq(c) |
+| M8 | m, Q95; a policy | b=(Q95−a)/A.95^(1/c); solve a+bG1=m |
+| M9 | q, Q95; a policy | Same b; solve a²+2abG1+b²G2=q² |
+| M10 | q, Q25, Q50, Q95, Dmin and n | a=(n^(1/3)Dmin−Q50)/(n^(1/3)−1); c=C.25,.95(a); b=Bq(c) |
 
-M2–M9 için kaynakta a=0.5×tahmin edilen Dmin kullanılır. Dmin, meşcerenin minimum çap hedefidir (kaynak gösterimi D0; bkz. Bölüm 0, karar 1); matematiksel Q(0)=a ile eş anlamlı değildir. Kullanıcının doğrudan a vermesi, aynı geri kazanım denklemlerini kullanabilir ancak “kaynakla aynı konum politikası” diye etiketlenmemelidir.
+For M2–M9 the source uses a=0.5×predicted Dmin. Dmin is the stand's minimum diameter target (source notation D0; see Section 0, decision 1); it is not synonymous with the mathematical Q(0)=a. A user-supplied a can use the same recovery equations but must not be labelled "the same location policy as the source".
 
-M10 başlığında görünenden fazla girdiye ihtiyaç duyar: Dmin ve örnek alandaki n zorunludur; n>1 olmalıdır. Konum formülünün ürettiği geçersiz değer sessizce sıfıra çekilmemelidir.
+M10 needs more inputs than its heading suggests: Dmin and the plot's n are required; n>1 must hold. An invalid value produced by the location formula must not be silently pulled to zero.
 
-M6/M7/M10'da şekil yüzdelik oranından, ölçek Dq'dan gelir. Çelişkili hedeflerde bütün yüzdeliklerin birebir sağlanması beklenmez. Hedef ve geri hesaplanan değerleri göster.
+In M6/M7/M10 the shape comes from the percentile ratio and the scale from Dq. With conflicting targets, all percentiles are not expected to be matched exactly. Show the target and back-calculated values.
 
-**Çoklu kök:** M8 ve M9 her girdi için tek çözüm garanti etmez. Bölüm 8'deki örnekte her ikisinin de iki pozitif şekil çözümü vardır. Başlangıç değerine göre bulunan kökü tek doğru sonuç gibi verme. Aranan parametre aralığını ve bulunan adayları raporla. Ham veri varsa ek uyum ölçütüyle seçim yapılabilir; yoksa ek kısıt/tercih olmadan belirsizliği koru.
+**Multiple roots:** M8 and M9 do not guarantee a single solution for every input. In the example in Section 8 both have two positive shape solutions. Do not give the root found from the starting value as the single correct result. Report the parameter range searched and the candidates found. If raw data are available, a choice can be made with an additional goodness-of-fit measure; otherwise keep the ambiguity unless there is an additional constraint/preference.
 
-**Kaynak aktarımında düzeltilmesi gerekenler:**
+**Corrections needed when transcribing the source:**
 
-- Tablo 2 dipnotu b/c adlarını ters yazıyor; ana dağılım denklemiyle tutarlı biçimde b=ölçek, c=şekil kullanılmalı.
-- Basılı K–S Denklem 7'nin ikinci terimindeki parantez düzeni hatalı görünüyor; Bölüm 2.4'teki standart tanım uygulanmalı.
-- mLogL “ortalama log-olabilirlik” değil, negatif log-olabilirliktir. Kod alanı negative_log_likelihood olsun.
-- M1'in SUR açıklamasında a,b,c hedeflenirken CDFR bölümünde modeller 1–9 için a'nın Dmin'dan hesaplandığı belirtilir. Kaynak yaklaşımı seçilince bu ayrım açıkça tanımlanmalı; hepsine aynı a politikası uygulanmamalı.
+- The Table 2 footnote swaps the names b/c; consistent with the main distribution equation, b=scale, c=shape must be used.
+- The parenthesisation in the second term of the printed K–S Equation 7 appears to be wrong; the standard definition in Section 2.4 must be applied.
+- mLogL is not the "mean log-likelihood" but the negative log-likelihood. The code field should be negative_log_likelihood.
+- In M1's SUR description a, b, c are targeted, while the CDFR section states that for models 1–9 a is computed from Dmin. When the source approach is selected this distinction must be defined explicitly; the same a policy must not be applied to all of them.
 
-### 3.7. Johnson SB: doğrudan uyum
+### 3.7. Johnson SB: direct fit
 
-ξ alt sınır, λ>0 aralık, δ>0 ve γ∈R şekil parametreleri:
+ξ lower bound, λ>0 range, δ>0 and γ∈R shape parameters:
 
 $$
 z=\gamma+\delta\ln\frac{d-\xi}{\xi+\lambda-d},\quad
@@ -276,58 +276,58 @@ Q_p=\xi+\lambda\,\operatorname{logistic}
 \left(\frac{\Phi^{-1}(p)-\gamma}{\delta}\right).
 $$
 
-Sabit ξ ve λ altında t_i=ln[(d_i−ξ)/(ξ+λ−d_i)]:
+Under fixed ξ and λ, t_i=ln[(d_i−ξ)/(ξ+λ−d_i)]:
 
 $$\delta=1/s_t,\qquad\gamma=-\bar t/s_t.$$
 
-Burada s_t², n bölenli dönüşmüş varyanstır. Bu, iki şekil parametresinin koşullu MLE'sidir; dört parametrenin birlikte MLE'si değildir.
+Here s_t² is the transformed variance with the n divisor. This is the conditional MLE of the two shape parameters; it is not the joint MLE of the four parameters.
 
-Sabit sınırlar ve iki yüzdelikle t_p=logit[(Q_p−ξ)/λ], z_p=Φ⁻¹(p):
+With fixed bounds and two percentiles, t_p=logit[(Q_p−ξ)/λ], z_p=Φ⁻¹(p):
 
 $$\delta=(z_r-z_p)/(t_r-t_p),\qquad\gamma=z_p-\delta t_p.$$
 
-50/95 seçimi Knoebel–Burkhart yaklaşımının ilgili uygulaması olarak kullanılabilir. Moment yöntemi, sabit sınırlar altında dönüşmüş normal integrallerinden ortalama/varyansı eşleştiren sayısal çözüm gerektirir.
+The 50/95 choice can be used as the corresponding implementation of the Knoebel–Burkhart approach. The moment method requires a numerical solution that matches the mean/variance from transformed normal integrals under fixed bounds.
 
-ForestFit'teki CML/MM/KB ve Bayesian seçenekler, belgede ξ ve λ önceden belirlenerek çalıştırılır. Paket, veriye dayalı belirli sınır sabitleri kullanır; bu sabitler tür, birim ve veri kapsamından bağımsız bir ürün varsayımı yapılmamalıdır. Bayesian yöntem ayrıca önsel, zincir yakınsaması ve belirsizlik tasarımı gerektirdiğinden bu paketin ilk kapsamına alınmamıştır. [R7]
+The CML/MM/KB and Bayesian options in ForestFit are run, in the documentation, with ξ and λ specified in advance. The package uses certain data-based bound constants; these constants must not be made a product assumption independent of species, unit and data coverage. The Bayesian method also requires a prior, chain convergence and an uncertainty design, so it was not included in the first scope of this package. [R7]
 
-Mod temelli Johnson SB yöntemleri de ormancılık literatüründe yer alır. Örneklem modunun sınıflama/bant genişliğine duyarlılığı ve birden fazla tepe olasılığı nedeniyle bu yöntem için ayrıca tanım ve doğrulama gerekir; burada öncelik CML, moment, yüzdelik ve geri kazanım yaklaşımlarındadır. [R3]
+Mode-based Johnson SB methods also appear in the forestry literature. Because of the sensitivity of the sample mode to classing/bandwidth and the possibility of more than one peak, this method needs a separate definition and validation; the priority here is on the CML, moment, percentile and recovery approaches. [R3]
 
-### 3.8. Johnson SB: Parresol (2003) geri kazanımı
+### 3.8. Johnson SB: Parresol (2003) recovery
 
-Kaynak: Yüklenen “Recovering Parameters of Johnson's SB Distribution”, özellikle basılı s.3–5, Denklem 9–16. [R2]
+Source: The uploaded "Recovering Parameters of Johnson's SB Distribution", especially printed pp.3–5, Equations 9–16. [R2]
 
-Girdiler: N, G, ortalama çap m, medyan M ve önceden verilen/tahmin edilen ξ. Alternatif olarak N/G yerine doğrudan Dq girilebilir.
+Inputs: N, G, mean diameter m, median M and a given/predicted ξ. Alternatively, Dq can be entered directly instead of N/G.
 
 $$K=\pi/40000,\qquad q^2=Dq^2=\frac{G}{KN}.$$
 
-Medyan koşulundan:
+From the median condition:
 
 $$\gamma=\delta\ln\left(\frac{\xi+\lambda-M}{M-\xi}\right).$$
 
-Z~N(0,1), Y=logistic[(Z−γ)/δ], u_r=E[Y^r] olsun:
+Let Z~N(0,1), Y=logistic[(Z−γ)/δ], u_r=E[Y^r]:
 
 $$
 \xi+\lambda u_1=m,\qquad
 \xi^2+2\xi\lambda u_1+\lambda^2u_2=q^2.
 $$
 
-Bu iki denklem λ ve δ için çözülür; γ medyandan hesaplanır. **Parresol bu adımda ξ'yi geri kazanmıyor.** Alt sınır dışarıdan verildiğinde aralık ve iki şekil olmak üzere üç parametreyi geri kazanıyor.
+These two equations are solved for λ and δ; γ is computed from the median. **Parresol does not recover ξ in this step.** When the lower bound is given externally, it recovers three parameters: the range and the two shapes.
 
-u1 ve u2 normal ağırlıklı integrallerdir. Kararlı kuadratür ve pozitif parametre dönüşümleri kullanılabilir. Kaynakta iki değişkenli Newton–Raphson vardır; aynı denklemleri sağlayan başka güvenilir çözücü, ayrı algoritma bilgisiyle kullanılabilir. Farklı birimli iki artık için ölçeklendirilmiş yakınsama ve sonradan özgün birimlerde doğrulama yapılmalı.
+u1 and u2 are normal-weighted integrals. Stable quadrature and positive parameter transformations can be used. The source uses a bivariate Newton–Raphson; another reliable solver that satisfies the same equations can be used, with separate algorithm information. For two residuals with different units, use scaled convergence and then verify in the original units.
 
-Kontroller: N>0, G>0, m>ξ, M>ξ, q²≥m²; çözümde λ>M−ξ, δ>0. Bunlar gerekli koşullardır, her girdi için geçerli/tek çözüm garantisi değildir. Çoklu başlangıç ve tanımlanabilirlik kontrolü yap.
+Checks: N>0, G>0, m>ξ, M>ξ, q²≥m²; in the solution λ>M−ξ, δ>0. These are necessary conditions, not a guarantee of a valid/unique solution for every input. Use multiple starts and an identifiability check.
 
-Kaynakta en küçük üç çaptan alt sınır ekstrapolasyonu ve türe/veri setine özgü meşcere denklemleri de vardır. Bunları genel varsayılan yapma. Alt sınır sezgiseli istenirse ayrı kaynak doğrulamasıyla eklenmeli. Ortalama, varyans ve ikinci ham moment bağımsız üç bilgi değildir; sadece bunları kullanarak eksik dördüncü parametreyi çözdüğünü iddia etme.
+The source also contains a lower-bound extrapolation from the three smallest diameters and species/data-set-specific stand equations. Do not make these the general default. If a lower-bound heuristic is wanted, it must be added with separate source verification. The mean, variance and second raw moment are not three independent pieces of information; do not claim to solve for the missing fourth parameter using only these.
 
-### 3.9. Exponential ve log-logistic
+### 3.9. Exponential and log-logistic
 
-Exponential için sabit a ile F(d)=1−exp[−r(d−a)], r>0. MLE ve MOM aynı sonucu verir: r=1/(m−a). Hız r ile ölçek 1/r karıştırılmamalı. Sınıf sıklığının logaritmasına doğrusal regresyon yapıp bunu ham veri MLE'si diye adlandırma. [R15]
+For the exponential with fixed a, F(d)=1−exp[−r(d−a)], r>0. MLE and MOM give the same result: r=1/(m−a). The rate r and the scale 1/r must not be confused. Do not run a linear regression on the logarithm of class frequencies and call it the raw-data MLE. [R15]
 
 Log-logistic/Fisk:
 
 $$F(d)=\frac1{1+(b/d)^c},\qquad Q_p=b\left(\frac{p}{1-p}\right)^{1/c}.$$
 
-İki yüzdelikle:
+With two percentiles:
 
 $$
 c=\frac{\operatorname{logit}(r)-\operatorname{logit}(p)}
@@ -335,35 +335,35 @@ c=\frac{\operatorname{logit}(r)-\operatorname{logit}(p)}
 b=\frac{Q_p}{[p/(1-p)]^{1/c}}.
 $$
 
-MLE sayısaldır. Sıradan ortalama c>1, varyans c>2 koşulunda vardır. Dolayısıyla ortalama–varyans MOM/geri kazanımı c>2 ile sınırlandırılmalıdır. Log-moment yaklaşımı farklıdır: b=exp[ortalama(ln d)], c=π/√[3 var_n(ln d)]. Bu yöntem “log-moment” adıyla gösterilmeli. [R16]
+The MLE is numerical. The ordinary mean exists for c>1 and the variance for c>2. Therefore mean–variance MOM/recovery must be restricted to c>2. The log-moment approach is different: b=exp[mean(ln d)], c=π/√[3 var_n(ln d)]. This method must be shown under the name "log-moment". [R16]
 
-## 4. Meşcere değişkenlerinden tahmin
+## 4. Prediction from stand variables
 
-### 4.1. PPM, PRM ve regresyon
+### 4.1. PPM, PRM and regression
 
-PPM, örnek alanlardan kestirilmiş dağılım parametrelerini meşcere değişkenlerine bağlar. PRM, önce moment/yüzdelik gibi hedefleri kestirir, ardından bunlardan dağılım parametrelerini geri kazanır. Kullanıcı sadece özetleri elle giriyorsa regresyon eğitimi gerekmez.
+A PPM links distribution parameters estimated from plots to stand variables. A PRM first predicts targets such as moments/percentiles and then recovers the distribution parameters from them. If the user only enters summaries by hand, no regression training is needed.
 
-Poudel ve Cao'nun genel meşcere denklem biçimi:
+Poudel and Cao's general form of the stand equation:
 
 $$
 y=\exp[\beta_1+\beta_2RS+\beta_3\ln N+\beta_4\ln H+\beta_5/A]+\varepsilon,
 \quad RS=\frac{\sqrt{10000/N}}{H}.
 $$
 
-H baskın/ortak baskın boyu temsil eder; A yaştır. Makalenin orijinal ölçekte eklemeli hatalı denklemiyle ln(y) üzerinde OLS aynı amaç fonksiyonu değildir. Özgün modele uygun NLS ve çok yanıtlı SUR ayrı; log-OLS ayrı tanımlansın.
+H represents the dominant/codominant height; A is age. OLS on ln(y) is not the same objective function as the paper's equation with an additive error on the original scale. NLS suited to the original model and multi-response SUR must be defined separately, and log-OLS separately.
 
-SUR'da yanıt denklemlerinin artık kovaryansı hesaba katılmalıdır. Her hedef için bağımsız regresyon yapıp “SUR” deme. Tek alanla regresyon modeli eğitme; yeterli bağımsız alan ve doğrulama gereklidir. Tür/bölge değiştiğinde makaledeki katsayıları evrensel tahmin modeli olarak kullanma.
+In SUR the residual covariance of the response equations must be taken into account. Do not run an independent regression for each target and call it "SUR". Do not train a regression model with a single plot; enough independent plots and validation are required. When the species/region changes, do not use the paper's coefficients as a universal prediction model.
 
-### 4.2. CDFR ve modified CDFR
+### 4.2. CDFR and modified CDFR
 
-CDFR için i alanında sıralı j ağacın gözlenen kümülatif konumu (j−0.5)/n_i:
+For CDFR, the observed cumulative position of the sorted tree j in plot i is (j−0.5)/n_i:
 
 $$
 \sum_i\frac1{n_i}\sum_j
 \left[\frac{j-0.5}{n_i}-F(d_{ij};\theta_i(\beta))\right]^2.
 $$
 
-Burada optimize edilenler çok alanlı meşcere modelinin β katsayılarıdır. Tek alanın parametrelerine CDF uzaklığı uydurmak, ayrı bir minimum uzaklık yöntemidir; bu meşcere CDFR uygulamasıyla aynı ad altında karıştırılmamalıdır.
+What is optimised here are the β coefficients of the multi-plot stand model. Fitting a CDF distance to the parameters of a single plot is a separate minimum distance method; it must not be mixed up with this stand CDFR implementation under the same name.
 
 Modified CDFR:
 
@@ -372,338 +372,338 @@ $$
 [C_{ij}-F(u_{ij};\theta_i(\beta))]^2.
 $$
 
-C_ij gözlenen kümülatif sınıf oranı, u_ij sınıf üst sınırıdır. Kaynak 2 cm sınıf için orta noktaya +1 ekler; yazılımda genel üst sınır kullan. Son sınıfı dışlama yalnızca bu kaynak amaç fonksiyonuna aittir. Histogramda, toplam ağaç sayısında ve sınıflı MLE'de son sınıf kaybolmamalıdır. m_i>1 zorunludur.
+C_ij is the observed cumulative class proportion and u_ij the upper class bound. The source adds +1 to the midpoint for 2 cm classes; in the software use the general upper bound. Excluding the last class belongs only to this source objective function. The last class must not disappear from the histogram, the total number of trees or the classed MLE. m_i>1 is required.
 
-Alan başına normalize edilmiş ağırlıklandırmayı koru. Eşit çapların sıralaması/plotting position kuralı ve sınıf kenarları kaydedilsin. Kaynak moduyla farklı bir ağırlıklandırma veya kesilmiş CDF kullanılırsa sonuç “genişletilmiş CDFR” olarak açıkça tanımlansın.
+Keep the per-plot normalised weighting. Record the ordering/plotting position rule for equal diameters and the class edges. If a weighting or a truncated CDF different from the source mode is used, define the result explicitly as "extended CDFR".
 
-## 5. Ortak geliştirme talimatı
+## 5. Common development instruction
 
-İlk mesajda P00 ile birlikte gönder:
+Send together with P00 in the first message:
 
 ~~~text
-Mevcut çap dağılımı aracını bu belgedeki teknik şartnameye göre aşamalı geliştireceğiz. Önce mevcut kodu ve proje talimatlarını incele. Teknoloji yığınını varsayma; mevcut mimariye uyum sağla.
+We will develop the existing diameter distribution tool in stages according to the technical specification in this document. First examine the existing code and the project instructions. Do not assume the technology stack; fit the existing architecture.
 
-Her mesajda yalnızca belirtilen promptun kapsamını uygula. Çalışan Weibull özelliklerini ve mevcut örnek alan/dönem gezintisini koruyarak yeniden kullanılabilir bileşenlere bağla. Büyük, ilgisiz yeniden yazımlar yapma.
+In each message implement only the scope of the specified prompt. Keep the working Weibull features and the existing plot/period navigation, and connect them to reusable components. Do not make large, unrelated rewrites.
 
-Dağılım ailesi, istatistiksel tahmin yöntemi, parametre geri kazanımı, meşcere regresyonu ve sayısal çözücü ayrı kavramlar olsun. Henüz uygulanmamış yöntemleri çalışıyormuş gibi menüye ekleme.
+Distribution family, statistical estimation method, parameter recovery, stand regression and numerical solver must be separate concepts. Do not add methods that are not yet implemented to the menu as if they worked.
 
-Türkçe ve İngilizce arayüzlerde varsayılan ondalık ayıracı nokta olsun. Sayısal değerleri hesaplama boyunca sayı olarak sakla; biçimlendirmeyi sunum katmanında yap. Mevcut açık kullanıcı tercihleri varsa koru.
+In the Turkish and English interfaces the default decimal separator should be the point. Keep numerical values as numbers throughout the calculation; do the formatting in the presentation layer. Keep existing explicit user preferences, if any.
 
-Formüllerde parametre tanımı, destek, birim, sabit/serbest parametreler ve geçerlilik koşulları açık olsun. Kaynak katsayılarını farklı tür ve bölgelere evrensel model gibi aktarma. Çözülemeyen veya belirsiz sonuçları başarılı sonuç gibi gösterme.
+In the formulas, the parameter definition, support, unit, fixed/free parameters and validity conditions must be explicit. Do not transfer source coefficients to other species and regions as if they were a universal model. Do not show unsolvable or ambiguous results as successful results.
 
-Her aşama sonunda değişen davranışı, çalıştırılan kontrolleri ve bilinen sınırlamaları kısa raporla. Hesaplama değişikliklerini bağımsız referanslarla doğrula; yalnızca kendi fonksiyonunu yineleyen testlerle yetinme. Tamamlanmamış hesaplamayı sahte veri veya placeholder sonuçlarla kapatma.
+At the end of each stage, briefly report the changed behaviour, the checks that were run and the known limitations. Verify calculation changes with independent references; do not settle for tests that merely repeat your own function. Do not cover an unfinished calculation with fake data or placeholder results.
 ~~~
 
-## 6. Ana geliştirme promptları
+## 6. Main development prompts
 
-### P00 — Mevcut uygulamanın incelenmesi
+### P00 — Examination of the existing application
 
 ~~~text
-Yalnızca mevcut çap dağılımı aracını incele ve bu revizyon için uygulanabilir bir değişiklik haritası hazırla.
+Examine only the existing diameter distribution tool and prepare an actionable change map for this revision.
 
-Weibull'un mevcut parametreleştirmesini, desteklenen tahmin/geri kazanım yöntemlerini, veri içe aktarmayı, örnek alan/dönem gruplamasını, çap sınıflarını, uyum ölçütlerini, grafik ve dışa aktarma bileşenlerini belirle. Sayı biçimlendirme ve TR/EN çevirilerinin nereden yönetildiğini bul.
+Identify Weibull's current parameterisation, the supported estimation/recovery methods, data import, plot/period grouping, diameter classes, goodness-of-fit measures, and the chart and export components. Find where number formatting and the TR/EN translations are managed.
 
-Bu belgede istenen özellikleri “mevcut”, “değişmeli”, “eklenecek” olarak eşleştir. Mevcut davranışta kaynak formülleriyle uyuşmayan bir yer varsa açıkça göster. Kaynak PDF'ler erişilebilir değilse okunmuş gibi davranma; belgedeki doğrulanmış teknik şartnameyi referans al.
+Map the features requested in this document as "existing", "must change" and "to be added". If any part of the existing behaviour disagrees with the source formulas, show it explicitly. If the source PDFs are not accessible, do not pretend to have read them; take the verified technical specification in this document as the reference.
 
-Kullanılan sayısal kütüphanenin gamma/digamma, normal CDF/quantile, optimizasyon ve integral yeteneklerini değerlendir. Gerekiyorsa küçük bir bağımlılık öner; teknoloji yığınını değiştirmeyi varsayma.
+Evaluate the gamma/digamma, normal CDF/quantile, optimisation and integration capabilities of the numerical library in use. If necessary, propose a small dependency; do not assume a change of technology stack.
 
-Çıktı: ilgili dosyalar, korunacak davranışlar, yapılacak değişiklikler, aşama bağımlılıkları ve kısa bir uygulama notu. Bu aşamada büyük kod değişikliği yapma.
+Output: relevant files, behaviours to keep, changes to make, stage dependencies and a short implementation note. Do not make large code changes at this stage.
 
-[Rev] Bölüm 0'daki bilinen durumu (mevcut araçta serbest 3P ve yüzdelik tahmincisi yok; MOM n−1 bölen kullanıyor; eşik beyanında uydurma engelleniyor) doğrula ve yeni motorun dosya düzenini (assets/lab/dist/) öner.
+[Rev] Verify the known state in Section 0 (the existing tool has no free 3P and no percentile estimator; MOM uses the n−1 divisor; fitting is blocked when a threshold is declared) and propose the file layout of the new engine (assets/lab/dist/).
 ~~~
 
-### P01 — Ortak dağılım motoru ve veri sözleşmesi
+### P01 — Common distribution engine and data contract
 
 ~~~text
-P00 bulgularına göre ortak dağılım arayüzünü ve yöntem kayıt sistemini uygula.
+Following the P00 findings, implement the common distribution interface and the method registry.
 
-Her dağılım kendi kimliği, parametre şeması, destek sınırları, pdf/logpdf, cdf/logcdf, survival/log-survival, quantile ve uygun moment işlevlerini sunsun. Parametre tahmini, özetlerden geri kazanım ve meşcere modeli bağlantıları ayrı yetenekler olarak kaydedilsin.
+Each distribution must provide its own id, parameter schema, support bounds, pdf/logpdf, cdf/logcdf, survival/log-survival, quantile and the applicable moment functions. Parameter estimation, recovery from summaries and stand model links must be registered as separate capabilities.
 
-Sonuç sözleşmesine kullanılan veri/örnek alan/dönem, yöntem, sabit/serbest parametreler, sınır politikası, birimler, örnek büyüklüğü, amaç değeri, yakınsama, uyarılar ve kaynak kimliği ekle. İlgisiz alanları zorunlu yapma.
+Add to the result contract the data/plot/period used, the method, fixed/free parameters, bound policy, units, sample size, objective value, convergence, warnings and source id. Do not make irrelevant fields required.
 
-Sayısal işlemlerde kararlı logaritmik hesaplamaları kullan. Destek dışı veri veya tanımsız moment için yapılandırılmış hata üret. Yoğunluğa gelişigüzel küçük sabit ekleyerek hatayı gizleme.
+Use stable logarithmic computations in numerical operations. Produce a structured error for data outside the support or for undefined moments. Do not hide errors by adding arbitrary small constants to the density.
 
-Mevcut Weibull'u bu arayüze adaptörle bağla. Yöntem seçicisi yalnızca desteklenen veri/yöntem kombinasyonlarını göstersin. Ortak ondalık biçimlendirme varsayılanını nokta yap.
+Connect the existing Weibull to this interface with an adapter. The method selector must show only supported data/method combinations. Make the point the common decimal formatting default.
 
-[Rev] Ondalık standardı ve ortak örnek alan gezgini (core/unitnav.js) hazırdır; yeniden yazma, kullan. Yeni araç assets/lab/dist/ altında, yayındaki Weibull aracına dokunmadan ve menüde listelenmeyen ayrı bir sayfada geliştirilir (Bölüm 0, karar 6). Uzun hesaplar (P14 bootstrap, P17 eğitim) için hesap çekirdeği Web Worker içinde çalışabilecek biçimde DOM'dan bağımsız tutulur.
+[Rev] The decimal standard and the common plot navigator (core/unitnav.js) are ready; do not rewrite them, use them. The new tool is developed under assets/lab/dist/, without touching the published Weibull tool, on a separate page not listed in the menu (Section 0, decision 6). For long computations (P14 bootstrap, P17 training) the calculation core is kept independent of the DOM so that it can run inside a Web Worker.
 
-Kabul: Mevcut Weibull sonuçları tolerans içinde korunmalı; destek/parametre doğrulaması çalışmalı; dağılım ailesi eklemek mevcut arayüzü yeniden yazmayı gerektirmemeli.
+Acceptance: Existing Weibull results must be preserved within tolerance; support/parameter validation must work; adding a distribution family must not require rewriting the existing interface.
 ~~~
 
-### P02 — Normal ve lognormal
+### P02 — Normal and lognormal
 
 ~~~text
-Bölüm 3.1–3.2'ye göre normal ve iki parametreli lognormal dağılımlarını ekle.
+Add the normal and two-parameter lognormal distributions according to Sections 3.1–3.2.
 
-Normal için MLE/MOM, lognormal için MLE ve MOM yöntemlerini uygula. Ortalama–varyans veya ortalama–Dq girdilerinden geri kazanımı ayrı iş akışına bağla. Lognormal μ ve σ'nın log ölçeğinde olduğunu etiketle.
+Implement MLE/MOM for the normal and the MLE and MOM methods for the lognormal. Connect recovery from mean–variance or mean–Dq inputs to a separate workflow. Label that the lognormal μ and σ are on the log scale.
 
-Moment varyansı ile n−1 bölenli örnek varyansını ayırt et. Sıfır varyans, yetersiz veri ve lognormalde sıfır/negatif çap için açık doğrulama ekle. Normal modelin negatif çap olasılığını göster.
+Distinguish the moment variance from the sample variance with the n−1 divisor. Add explicit validation for zero variance, insufficient data and, for the lognormal, zero/negative diameters. Show the normal model's probability of negative diameters.
 
-Orijinal çap ölçeğinde log-olabilirlik kullan; log dönüşümünün Jacobian'ını ihmal etme. Truncation desteklenene kadar kesilmiş veriyle kapalı form MLE seçeneğini destekleniyor gibi sunma.
+Use the log-likelihood on the original diameter scale; do not neglect the Jacobian of the log transformation. Until truncation is supported, do not present the closed-form MLE option with truncated data as if it were supported.
 
-Kabul: Bölüm 8'deki normal/lognormal PDF, CDF ve quantile referansları sağlanmalı. Moment geri kazanımı verilen m ve Dq değerlerini yeniden üretmeli. Normal MLE/MOM aynı sonucu veriyorsa bunun nedenini kısa yöntem açıklamasında belirt.
+Acceptance: The normal/lognormal PDF, CDF and quantile references in Section 8 must be met. Moment recovery must reproduce the given m and Dq values. If normal MLE/MOM give the same result, state why in the short method description.
 ~~~
 
 ### P03 — Gamma
 
 ~~~text
-Bölüm 3.3'e göre iki parametreli gamma dağılımını ekle.
+Add the two-parameter gamma distribution according to Section 3.3.
 
-MOM için k=m²/v ve θ=v/m kullan. MLE için pozitif şekil parametresinin digamma denklemini kararlı biçimde çöz; ölçeği m/k olarak hesapla. Kullanılan kütüphane rate bekliyorsa dönüşümü açıkça yap.
+For MOM use k=m²/v and θ=v/m. For MLE solve the digamma equation for the positive shape parameter stably; compute the scale as m/k. If the library used expects a rate, make the conversion explicitly.
 
-PDF/logpdf, CDF ve quantile işlevlerini ortak arayüze bağla. Ortalama–varyans ve ortalama–Dq girdilerinden MOM geri kazanımını ekle. Serbest konumlu gamma'yı bu yöntemle aynı model olarak sunma.
+Connect the PDF/logpdf, CDF and quantile functions to the common interface. Add MOM recovery from mean–variance and mean–Dq inputs. Do not present a free-location gamma as the same model as this method.
 
-Sıfır/negatif çap, sıfır varyans, taşma ve yakınsamama durumlarını ayır. Çözücü başarısız olduğunda MOM sonucunu MLE etiketiyle sessizce döndürme.
+Separate the cases of zero/negative diameter, zero variance, overflow and non-convergence. When the solver fails, do not silently return the MOM result under the MLE label.
 
-Kabul: Bölüm 8 referansı geçmeli. MLE için bağımsız bir istatistik kütüphanesiyle aynı örnek veri üzerinde parametre ve log-olabilirlik karşılaştırması yap. Şekil/ölçek birimleri ve tanımları TR/EN arayüzde tutarlı olsun.
+Acceptance: The Section 8 reference must pass. For MLE, compare parameters and log-likelihood with an independent statistics library on the same sample data. The shape/scale units and definitions must be consistent in the TR/EN interface.
 ~~~
 
-### P04 — Beta ve sınır politikası
+### P04 — Beta and the bound policy
 
 ~~~text
-Bölüm 3.4'e göre konum–ölçek beta dağılımını uygula. İlk kapsam, açıkça belirtilmiş sabit L ve U altında iki şekil parametresinin MOM ve MLE ile tahminidir.
+Implement the location–scale beta distribution according to Section 3.4. The first scope is the estimation of the two shape parameters with MOM and MLE under explicitly specified fixed L and U.
 
-Kullanıcı sınırları belirleyebilsin; otomatik sınır önerisi varsa kullanılan kural ve veri bağımlılığı görünür olsun. Empirik minimum/maksimumu açıklamasız biçimde gerçek destek sınırına dönüştürme. Sınır üzerindeki gözlemleri sessiz epsilon/jitter ile oynatma.
+The user must be able to set the bounds; if there is an automatic bound suggestion, the rule used and its data dependence must be visible. Do not turn the empirical minimum/maximum into the true support bound without explanation. Do not shift observations on the bound with a silent epsilon/jitter.
 
-MOM uygunluk eşitsizliklerini kontrol et. MLE'yi orijinal çap ölçeğinde, ölçek dönüşümü dahil hesapla. Sınır dışındaki gözlemleri hata olarak bildir.
+Check the MOM admissibility inequalities. Compute the MLE on the original diameter scale, including the scale transformation. Report observations outside the bounds as errors.
 
-Aynı konum–ölçek beta formülünü “beta” ve “generalized beta” adlarıyla iki ayrı model olarak çoğaltma. GB1/GB2 bu aşamanın kapsamı değildir.
+Do not duplicate the same location–scale beta formula as two separate models under the names "beta" and "generalized beta". GB1/GB2 are not within the scope of this stage.
 
-Kabul: Bilinen α, β, L, U parametrelerinden üretilen momentler geri kazanılmalı; Bölüm 8 referansı sağlanmalı; uygun olmayan sınır/moment kombinasyonları hesaplanmış sonuç gibi görünmemeli.
+Acceptance: Moments generated from known α, β, L, U parameters must be recovered; the Section 8 reference must be met; inadmissible bound/moment combinations must not appear as computed results.
 ~~~
 
-### P05 — Weibull doğrudan tahmininin düzenlenmesi
+### P05 — Rework of Weibull direct estimation
 
 ~~~text
-Mevcut Weibull işlevlerini Bölüm 3.5 ile karşılaştır ve ortak motorla uyumlu hale getir.
+Compare the existing Weibull functions with Section 3.5 and make them compatible with the common engine.
 
-Adlandırmayı a=konum, b=ölçek, c=şekil olarak standardize et; dış kütüphanenin adlarını adaptörde eşleştir. İki parametreli a=0 ve kullanıcı tarafından sabitlenen a seçenekleri açık olsun.
+Standardise the naming as a=location, b=scale, c=shape; map the external library's names in the adapter. The two-parameter a=0 and user-fixed a options must be explicit.
 
-Sabit a altında MLE ve mevcut doğrudan MOM yöntemini koru ve doğrula. [Rev] Mevcut araçta yüzdelik tahmincisi ve serbest üç parametreli yöntem yoktur: iki yüzdelikle doğrudan tahmini (Bölüm 3.6'daki C_{p,r}(a) ve b bağıntısı, kullanıcı tanımlı p<r) yeni yöntem olarak ekle; serbest konum optimizasyonu ekleme. MOM varyansında varsayılan n bölendir (karar 2); mevcut 1.0.0 sonuçlarıyla fark yalnızca bu etkenden kaynaklanmalı ve testte n−1 seçeneğiyle eski sonuçlar birebir üretilmelidir.
+Keep and verify the MLE under fixed a and the existing direct MOM method. [Rev] The existing tool has no percentile estimator and no free three-parameter method: add direct estimation with two percentiles (the C_{p,r}(a) and b relation in Section 3.6, user-defined p<r) as a new method; do not add free location optimisation. The default in the MOM variance is the n divisor (decision 2); the difference from the existing 1.0.0 results must come only from this factor, and in the tests the old results must be reproduced exactly with the n−1 option.
 
-Yöntem ile sayısal çözücü adını ayrı tut. İterasyon, tolerans, yakınsama ve sınır uyarılarını raporla. Yeniden adlandırma eski kayıtları bozuyorsa açık bir uyumluluk dönüşümü sağla.
+Keep the method name and the numerical solver name separate. Report iterations, tolerance, convergence and boundary warnings. If renaming breaks old records, provide an explicit compatibility conversion.
 
-Kabul: Mevcut işlevlerde regresyon oluşmamalı. Bilinen Weibull parametrelerinde PDF/CDF/quantile doğrulanmalı; sabit konumlu MLE bağımsız referansla karşılaştırılmalı. Gösterilen ondalık ayıracı TR/EN'de nokta olmalı.
+Acceptance: No regression in the existing functions. PDF/CDF/quantile must be verified for known Weibull parameters; the fixed-location MLE must be compared with an independent reference. The displayed decimal separator must be the point in TR/EN.
 ~~~
 
-### P06 — Weibull moment ve yüzdelik geri kazanımı
+### P06 — Weibull moment and percentile recovery
 
 ~~~text
-Bölüm 3.6'daki Poudel M2, M3, M4 ve M5 geri kazanım yöntemlerini ayrı kimliklerle uygula.
+Implement Poudel's M2, M3, M4 and M5 recovery methods from Section 3.6 with separate ids.
 
-M2: ortalama–varyans. M3: Dq–varyans. M4: Q31–Q63. M5: Q50–Q95. Gerekli girdileri yönteme göre göster; gereksiz alan isteme.
+M2: mean–variance. M3: Dq–variance. M4: Q31–Q63. M5: Q50–Q95. Show the required inputs according to the method; do not ask for unnecessary fields.
 
-Konum politikası ayrıca seçilsin: kaynakla uyumlu a=0.5×tahmin edilen Dmin veya açıkça verilen a. Arayüzde ad Dmin'dir; açıklamada "Poudel ve Cao'da D0" notu bulunur. Dmin ile teorik sıfırıncı yüzdeliği karıştırma. Tüm girdi hedeflerinin ölçülmüş mü tahmin edilmiş mi olduğu kaydedilsin.
+The location policy must be chosen separately: the source-consistent a=0.5×predicted Dmin or an explicitly given a. In the interface the name is Dmin; the explanation carries the note "D0 in Poudel and Cao". Do not confuse Dmin with the theoretical zeroth percentile. Record whether each input target was measured or predicted.
 
-Moment köklerini pozitif c aralığında ara, geçerli b ve artık kontrolleri yap. Yüzdeliklerde sıralama, p/r aralığı ve Qp>a koşulunu doğrula. Empirik yüzdelik hesaplanıyorsa kullanılan quantile tanımını kaydet.
+Search for the moment roots in the positive c range and check valid b and residuals. For percentiles, verify the ordering, the p/r range and the condition Qp>a. If empirical percentiles are computed, record the quantile definition used.
 
-Kabul: Bölüm 8'deki sentetik Weibull hedeflerinden a=5, b=20, c=2.5 geri elde edilmeli. Aynı yöntem ham veriden özet hesaplayarak da çalışabilmeli; bu akışla meşcere regresyonu birbirine karıştırılmamalı.
+Acceptance: a=5, b=20, c=2.5 must be recovered from the synthetic Weibull targets in Section 8. The same method must also be able to work by computing summaries from raw data; this workflow and stand regression must not be mixed up.
 ~~~
 
-### P07 — Weibull hibrid geri kazanımı
+### P07 — Weibull hybrid recovery
 
 ~~~text
-Bölüm 3.6'daki M6–M10 yöntemlerini ekle. Her yöntemin gerekli girdileri ve a politikası doğru tanımlansın.
+Add the M6–M10 methods from Section 3.6. The required inputs and the a policy of each method must be defined correctly.
 
-M6/M7'de c yüzdelik oranından, b Dq'dan hesaplansın. M8/M9'da Q95 ile moment denklemleri birlikte çözülsün. M10 için Dmin, Q50 ve örnek alandaki n de zorunlu olsun; N/ha kullanılmasın.
+In M6/M7, c must be computed from the percentile ratio and b from Dq. In M8/M9, Q95 and the moment equations must be solved together. For M10, Dmin, Q50 and the plot's n must also be required; N/ha must not be used.
 
-M8/M9 için tek başlangıçlı çözücünün ilk kökünü tek sonuç diye sunma. Belirtilmiş aralıkta kök adaylarını ara, tekrarlanan kökleri birleştir ve çoklu çözüm durumunu koru. Parametre aralığı ve seçim kuralı sonuç metadatasında bulunsun. Gizli c>1 kısıtı ekleme.
+For M8/M9 do not present the first root of a single-start solver as the only result. Search for root candidates in a stated range, merge repeated roots and preserve the multiple-solution state. The parameter range and the selection rule must be in the result metadata. Do not add a hidden c>1 constraint.
 
-Girdi hedefleri ile modelin geri hesapladığı moment/yüzdelikleri göster. Hibrid yöntemlerde bütün hedeflerin tam eşleşmesini zorunlu sanma.
+Show the input targets and the moments/percentiles back-calculated by the model. In hybrid methods do not assume that all targets must be matched exactly.
 
-Kabul: Bölüm 8 örneğinde M8 ve M9'un iki pozitif kökü tespit edilmeli. M10 referansı geçmeli. Çözümsüz, çok çözümlü ve geçerli tek çözümlü sonuçlar arayüzde ayırt edilmeli.
+Acceptance: In the Section 8 example the two positive roots of M8 and M9 must be detected. The M10 reference must pass. Results with no solution, multiple solutions and a single valid solution must be distinguishable in the interface.
 ~~~
 
-### P08 — Johnson SB doğrudan uyum
+### P08 — Johnson SB direct fit
 
 ~~~text
-Bölüm 3.7'ye göre Johnson SB dağılımını ekle: ξ alt sınır, λ aralık, γ ve δ şekil; δ>0.
+Add the Johnson SB distribution according to Section 3.7: ξ lower bound, λ range, γ and δ shape; δ>0.
 
-Önce sabit ξ ve λ altında CML, iki yüzdelik ve sayısal moment yöntemlerini uygula. CML'de logit dönüşümünün n bölenli varyansını kullan. 50/95 yüzdelik seçeneğini kaynak bilgisiyle sun; kullanıcı tanımlı çift varsa genel yüzdelik yöntemi olarak ayır.
+First implement CML, two-percentile and numerical moment methods under fixed ξ and λ. In CML use the n-divisor variance of the logit transformation. Present the 50/95 percentile option with source information; if there is a user-defined pair, separate it as the general percentile method.
 
-Moment uyumunda normal ağırlıklı integralleri kararlı hesapla. Dört parametrenin birlikte tahmin edildiği iddiasında bulunma. Destek uçlarındaki ve dışındaki gözlemleri, dejenere dönüşümü ve uygunsuz momentleri denetle.
+In the moment fit compute the normal-weighted integrals stably. Do not claim that the four parameters are estimated jointly. Check observations at and beyond the support ends, degenerate transformations and inadmissible moments.
 
-Sınırları belirleyen paket sabitlerini evrensel varsayılan yapma. Uydurulan parametrelerden PDF, CDF ve quantile elde edildiğini bağımsız referanslarla doğrula.
+Do not make the package constants that set the bounds a universal default. Verify with independent references that the PDF, CDF and quantile are obtained from the fitted parameters.
 
-Kabul: Bölüm 8'deki ξ=5, λ=40, γ=0.6, δ=1.3 referansı sağlanmalı. Simetrik/asimetrik ve sınır yakınındaki örneklerde sayısal hatalar başarı olarak sunulmamalı.
+Acceptance: The ξ=5, λ=40, γ=0.6, δ=1.3 reference in Section 8 must be met. In symmetric/asymmetric and near-boundary examples, numerical errors must not be presented as success.
 ~~~
 
-### P09 — Johnson SB Parresol geri kazanımı
+### P09 — Johnson SB Parresol recovery
 
 ~~~text
-Bölüm 3.8'deki Parresol (2003) yöntemini özetlerden geri kazanım iş akışına ekle.
+Add the Parresol (2003) method from Section 3.8 to the recovery-from-summaries workflow.
 
-Girdiler N/ha, G m²/ha, ortalama çap, medyan ve ξ olsun. N/G yerine Dq girilebilen alternatif sun; ikisi birlikte girilirse tutarlılığı kontrol et.
+The inputs are N/ha, G m²/ha, mean diameter, median and ξ. Offer the alternative of entering Dq instead of N/G; if both are entered, check their consistency.
 
-Medyan denkleminden γ'yı ifade et. λ ve δ'yı birinci ve ikinci ham moment denklemlerinden çöz. Parametre dönüşümleriyle pozitifliği koru; artıkları ölçeklendir ve sonucu özgün birimlerde tekrar doğrula.
+Express γ from the median equation. Solve λ and δ from the first and second raw moment equations. Preserve positivity with parameter transformations; scale the residuals and re-verify the result in the original units.
 
-Bu yöntemi “ξ sabitken üç parametre geri kazanımı” olarak tanımla. Parresol'un türe özgü regresyon katsayılarını ve başlangıç denklemlerini genel model gibi gömme. Gerekli koşulların sağlanmasının tek/uygun çözümü garanti etmediğini hesaplama durumlarında ele al.
+Define this method as "three-parameter recovery with ξ fixed". Do not embed Parresol's species-specific regression coefficients and starting equations as a general model. Handle in the calculation states that meeting the necessary conditions does not guarantee a unique/admissible solution.
 
-Kabul: Bölüm 8'deki Parresol girdilerinden λ=40, γ=0.6, δ=1.3 elde edilmeli; m, medyan ve Dq geri doğrulanmalı. Yakınsamama veya tanımlanabilirlik sorununda açık başarısızlık/belirsizlik sonucu dönmeli.
+Acceptance: λ=40, γ=0.6, δ=1.3 must be obtained from the Parresol inputs in Section 8; m, median and Dq must be verified back. On non-convergence or an identifiability problem, an explicit failure/ambiguity result must be returned.
 ~~~
 
-### P10 — Exponential ve log-logistic
+### P10 — Exponential and log-logistic
 
 ~~~text
-Bölüm 3.9'a göre exponential ve log-logistic/Fisk dağılımlarını ekle.
+Add the exponential and log-logistic/Fisk distributions according to Section 3.9.
 
-Exponential için a=0 veya açıkça sabitlenen a altında MLE/MOM uygula. Hız r ile ölçek 1/r etiketlerini ayır. Ters J dağılımı için kullanılabilecek basit karşılaştırma modeli olarak sun.
+For the exponential, implement MLE/MOM under a=0 or an explicitly fixed a. Keep the labels rate r and scale 1/r separate. Present it as a simple comparison model that can be used for the reverse-J distribution.
 
-Log-logistic için sayısal MLE ve iki yüzdelik tahmini uygula. İsteğe bağlı log-moment seçeneğini sıradan MOM'dan ayrı adlandır. Ortalama için c>1, varyans için c>2 koşulunu kontrol et; tanımsız momentleri NaN veya yanıltıcı sayıyla gösterme.
+For the log-logistic implement numerical MLE and two-percentile estimation. Name the optional log-moment option separately from ordinary MOM. Check the conditions c>1 for the mean and c>2 for the variance; do not show undefined moments as NaN or as a misleading number.
 
-Her iki dağılımı kayıt sistemine, grafiklere ve çıktı sözleşmesine bağla. Parametre kısıtlarını açıkça uygula; pozitif destek koşullarını kontrol et.
+Connect both distributions to the registry, the charts and the output contract. Apply the parameter constraints explicitly; check the positive support conditions.
 
-Kabul: Bölüm 8 referansları geçmeli. Log-logistic yüzdelik geri kazanımı teorik girdilerle doğru parametreleri vermeli; c≤1 ve 1<c≤2 durumlarında moment uygunluğu doğru raporlanmalı.
+Acceptance: The Section 8 references must pass. Log-logistic percentile recovery must give the correct parameters from theoretical inputs; moment admissibility must be reported correctly in the cases c≤1 and 1<c≤2.
 ~~~
 
-### P11 — Ölçüm eşiği ve kesilmiş dağılımlar
+### P11 — Measurement threshold and truncated distributions
 
 ~~~text
-Bölüm 2.2–2.3'e göre ölçüm eşiğini dağılım destek sınırından ayrı modelle.
+Model the measurement threshold separately from the distribution support bound, according to Sections 2.2–2.3.
 
-Önce ham veride alt eşik ve gerekiyorsa üst eşik altında koşullu PDF/CDF/log-olabilirliği uygula. Dağılım uydurma seçilen truncation modelinin olabilirliğiyle yapılmalı; yalnızca grafiği kesmekle yetinme.
+First implement the conditional PDF/CDF/log-likelihood in raw data under a lower threshold and, if needed, an upper threshold. Distribution fitting must be done with the likelihood of the selected truncation model; do not settle for just cutting the chart.
 
-Kesilmemiş dağılım için geçerli kapalı form MLE/MOM/geri kazanım yöntemleri, kesilmiş gözlemlerde otomatik geçerli sayılmasın. Henüz koşullu sürümü uygulanmayan kombinasyonları açıklamayla devre dışı bırak.
+Closed-form MLE/MOM/recovery methods valid for the untruncated distribution must not be treated as automatically valid for truncated observations. Disable, with an explanation, the combinations whose conditional version is not yet implemented.
 
-Uç kuyruklarda F(U)−F(L) farkını kararlı hesapla. Sonuçlarda temel dağılım parametreleri, gözlenen koşullu dağılım ve eşik bilgisi ayrı olsun. N'nin eşik üstündeki ağaçları mı bütün popülasyonu mu temsil ettiği açıkça seçilsin.
+Compute the difference F(U)−F(L) stably in the extreme tails. In the results, the underlying distribution parameters, the observed conditional distribution and the threshold information must be separate. Whether N represents the trees above the threshold or the whole population must be chosen explicitly.
 
-Kabul: Seçilen gözlem aralığında koşullu yoğunluğun integrali 1 olmalı; koşullu CDF/quantile tutarlı olmalı. Simüle edilmiş kesilmiş veride bağımsız koşullu olabilirlik hesabıyla sonuçlar karşılaştırılmalı.
+Acceptance: The integral of the conditional density over the selected observation range must be 1; the conditional CDF/quantile must be consistent. On simulated truncated data, results must be compared with an independent conditional likelihood calculation.
 ~~~
 
-### P12 — Çap sınıfları ve gruplandırılmış veri
+### P12 — Diameter classes and grouped data
 
 ~~~text
-Bölüm 2.3'e göre sınıf alt/üst sınırı ve gerçek gözlem sayısıyla veri girişini ekle.
+Add data entry with lower/upper class bounds and the true number of observations, according to Section 2.3.
 
-Sınıf olasılıklarını CDF farkından hesapla. Sayısal MLE için Σn_j log(p_j) kullan. Orta nokta çoğaltmayı ham veri MLE'si gibi sunma. Eşit olmayan sınıf genişlikleri ve açık uçlu son sınıf desteklenebiliyorsa açıkça tanımla.
+Compute class probabilities from CDF differences. For the numerical MLE use Σn_j log(p_j). Do not present midpoint replication as the raw-data MLE. If unequal class widths and an open-ended last class can be supported, define them explicitly.
 
-Tamsayı gözlem frekansı ile hektara genişletilmiş ağırlıkları ayır. Yalnızca genişletilmiş sıklık verilmişse bilinmeyen gerçek n'yi uydurma; standart AIC/BIC/p-değeri seçeneklerini geçerlilik durumuna göre sınırla.
+Separate integer observation frequency from per-hectare expanded weights. If only the expanded frequency is given, do not make up the unknown true n; restrict the standard AIC/BIC/p-value options according to their validity.
 
-Sıfır frekanslı fakat gözlenen sınıflar ve kayıt dışı aralıklar ayrı ele alınsın. Histogram, beklenen sayılar, N/ha ve kuyruk olasılığı aynı sınıf kenarlarından üretilsin.
+Observed classes with zero frequency and intervals outside the record must be handled separately. The histogram, expected counts, N/ha and tail probability must be produced from the same class edges.
 
-Kabul: Destek tamamını kapsayan sınıflarda toplam olasılık 1 ve beklenen toplam N olmalı. Aynı sınıflar için elle hesaplanan olasılık/olabilirlik referansı sağlanmalı; sınıf genişliği değişince yanlış +1 sabiti kullanılmamalı.
+Acceptance: For classes covering the whole support, the total probability must be 1 and the expected total N. A hand-calculated probability/likelihood reference must be met for the same classes; a wrong +1 constant must not be used when the class width changes.
 ~~~
 
-### P13 — Model karşılaştırma ve tanı grafikleri
+### P13 — Model comparison and diagnostic charts
 
 ~~~text
-Bölüm 2.4'e uygun bir karşılaştırma tablosu ve tanı görünümü oluştur.
+Build a comparison table and a diagnostic view consistent with Section 2.4.
 
-Dağılım, tahmin yöntemi, parametreler, sınır/truncation politikası, n, yakınsama, log-olabilirlik, uygun olduğunda AIC/BIC, KS/AD/CvM ve sınıf hatalarını göster. Aynı veriyi ve gözlem sürecini kullanmayan sonuçları aynı sıralamada karıştırma.
+Show the distribution, estimation method, parameters, bound/truncation policy, n, convergence, log-likelihood, AIC/BIC where appropriate, KS/AD/CvM and class errors. Do not mix results that do not use the same data and observation process in the same ranking.
 
-MLE karşılaştırmasını MOM/geri kazanım sonuçlarının betimsel karşılaştırmasından ayır. Varsayılan olarak tüm modeller için tek bir gizli bileşik “en iyi model” puanı üretme; kullanıcı hangi ölçüte göre sıraladığını görsün.
+Separate the MLE comparison from the descriptive comparison of MOM/recovery results. By default, do not produce a single hidden composite "best model" score for all models; the user must see which measure the ranking uses.
 
-Histogram üzerinde yoğunluk veya beklenen sınıf sayısı, ampirik/teorik CDF, Q–Q ve P–P grafikleri ekle. Grafik eksen birimleriyle yoğunluk/sayı ölçeklerini karıştırma. Sınıf karşılaştırmaları ortak kenarlar kullanmalı.
+Add density or expected class counts on the histogram, empirical/theoretical CDF, Q–Q and P–P charts. Do not mix chart axis units with density/count scales. Class comparisons must use common edges.
 
-Kabul: KS çift taraflı formülü ve Poudel EI birimi doğru olmalı. Bootstrap tamamlanana kadar tahmin edilmiş parametrelere ait standart KS/AD p-değerleri gösterilmemeli. Lognormal log-olabilirliğinde Jacobian kontrolü yapılmalı.
+Acceptance: The two-sided KS formula and the Poudel EI unit must be correct. Until the bootstrap is complete, standard KS/AD p-values for estimated parameters must not be shown. The Jacobian must be checked in the lognormal log-likelihood.
 ~~~
 
-### P14 — Bootstrap ve belirsizlik
+### P14 — Bootstrap and uncertainty
 
 ~~~text
-Uygun dağılım/yöntem kombinasyonları için tekrar üretilebilir bootstrap altyapısını ekle.
+Add a reproducible bootstrap infrastructure for suitable distribution/method combinations.
 
-Uyum testi için parametrik bootstrap'ta her örneği fitted gözlem modelinden üret, aynı yöntemle yeniden uydur ve istatistiği yeniden hesapla. Veriden belirlenen sınırlar, truncation, sınıflama ve ölçüm yuvarlaması aynı süreçte tekrarlansın. Sabit dış sınırlar sabit kalmalı.
+In the parametric bootstrap for the goodness-of-fit test, generate each sample from the fitted observation model, refit with the same method and recompute the statistic. Data-determined bounds, truncation, classing and measurement rounding must be repeated in the same process. Fixed external bounds must stay fixed.
 
-Parametre/quantile aralıkları ile uyum testi p-değerlerini ayrı işlemler olarak tasarla. Ham veri içi yeniden örnekleme ile çok alanlı modellerde alan düzeyinde yeniden örneklemeyi karıştırma.
+Design parameter/quantile intervals and goodness-of-fit p-values as separate operations. Do not confuse resampling within raw data with plot-level resampling in multi-plot models.
 
-Seed, tekrar sayısı, tamamlanan/başarısız tekrarlar ve Monte Carlo belirsizliği kaydedilsin. İşlem ilerlemesi ve iptal sağla; uzun hesaplar arayüzü dondurmasın. Yüksek başarısızlık oranını sessizce yok sayma.
+Record the seed, the number of replicates, completed/failed replicates and the Monte Carlo uncertainty. Provide progress and cancellation; long computations must not freeze the interface. Do not silently ignore a high failure rate.
 
-Kabul: Aynı seed aynı sonucu üretmeli. Her bootstrap örneğinde yeniden tahmin yapıldığı kontrol edilmeli. M8/M9 gibi çok çözümlü yöntemlerde kullanılan seçim kuralı tekrarlar boyunca aynı kalmalı; desteklenmeyen kombinasyonlar açıkça belirtilmeli.
+Acceptance: The same seed must produce the same result. It must be checked that re-estimation is done in every bootstrap sample. In methods with multiple solutions such as M8/M9 the selection rule used must stay the same across replicates; unsupported combinations must be stated explicitly.
 ~~~
 
-### P15 — Arayüz, çıktı ve ilk sürüm doğrulaması
+### P15 — Interface, output and first-version validation
 
 ~~~text
-P01–P14 işlevlerini mevcut aracın tasarımına uygun şekilde birleştir.
+Combine the P01–P14 functions in a way that fits the existing tool's design.
 
-Ana iş akışları “Veriden dağılım uydur” ve “Özetlerden parametre geri kazan” olsun. Meşcere modeli iş akışı uygulanınca ayrıca eklensin. Yöntem seçimi dağılıma ve veri tipine göre değişsin.
+The main workflows should be "Fit a distribution to data" and "Recover parameters from summaries". The stand model workflow is added separately once implemented. The method choice must change with the distribution and the data type.
 
-Mevcut örnek alan/dönem gezintisini yeniden kullan. Çoklu dağılım sonuçları aynı seçili alan/dönemle senkronize olsun. TR/EN açıklamalar, erişilebilir kontroller ve mobil görünüm sağla.
+Reuse the existing plot/period navigation. Results for multiple distributions must stay synchronised with the same selected plot/period. Provide TR/EN explanations, accessible controls and a mobile view.
 
-Her sonuçta kullanılan yöntem, birimler, destek/eşik politikası ve kaynak bulunabilsin. Tablo/grafik dışa aktarımında uygulama sürümü, ayarlar, model parametreleri ve varsa seed korunmalı. CSV gibi metin çıktılarında nokta kullan; elektronik tablo çıktılarında sayısal hücreleri metne çevirmeden sakla.
+In every result, the method used, units, support/threshold policy and source must be findable. Table/chart exports must keep the application version, settings, model parameters and the seed, if any. Use the point in text outputs such as CSV; in spreadsheet outputs keep numeric cells without converting them to text.
 
-Örnek verilerle sekiz aileyi ve geri kazanım akışlarını uçtan uca kontrol et. Boş/eksik veri, eşit çaplar, virgüllü içe aktarma tercihi, alan değiştirme ve başarısız uyum senaryolarını doğrula.
+Check the eight families and the recovery workflows end to end with sample data. Verify the scenarios of empty/missing data, equal diameters, the comma import preference, switching plots and failed fits.
 
-Kabul: Çalışan sonuçlar ile desteklenmeyen/belirsiz sonuçlar ayırt edilmeli. İlk kullanılabilir sürümün tamamlanan kapsamını ve kalan aşamaları kısa raporla.
+Acceptance: Working results must be distinguishable from unsupported/ambiguous results. Briefly report the completed scope of the first usable version and the remaining stages.
 ~~~
 
-### P16 — Meşcere modelleri: PPM, PRM, NLS ve SUR
+### P16 — Stand models: PPM, PRM, NLS and SUR
 
 ~~~text
-Bölüm 4.1'e göre ayrı bir “Meşcere değişkenlerinden tahmin” iş akışı ekle.
+Add a separate "Prediction from stand variables" workflow according to Section 4.1.
 
-Çok alanlı eğitim verisinde doğrudan parametre kestirimi PPM ile moment/yüzdelik kestirimi + geri kazanımı PRM olarak ayır. Başlangıçta Weibull ve Parresol hedeflerine odaklan.
+In multi-plot training data, separate direct parameter prediction as PPM from moment/percentile prediction + recovery as PRM. Initially focus on the Weibull and Parresol targets.
 
-Poudel'in orijinal ölçekte eklemeli hatalı üstel denklem biçimi için NLS uygula. SUR eklendiğinde denklemler arası artık kovaryansını gerçekten hesaba kat. Log-OLS sunulursa farklı hata/amaç tanımını açıkla; log dönüşümünden geri dönüşte yanlılık yaklaşımını belirt.
+Implement NLS for Poudel's exponential equation form with additive error on the original scale. When SUR is added, genuinely take the cross-equation residual covariance into account. If log-OLS is offered, explain its different error/objective definition; state the bias approach used in back-transformation from the log.
 
-Eğitim/doğrulama ayrımını alan düzeyinde yap; aynı alanın dönemleri aynı grupta kalsın. Hedef üretme ve veriyle seçilen işlemler eğitim katı içinde yürüsün. Tahmin edilen yüzdelik sıralaması ve moment tutarlılığı kontrol edilsin; gizli kırpma yapma.
+Make the training/validation split at plot level; the periods of the same plot must stay in the same group. Target generation and data-driven choices must run inside the training fold. The ordering of predicted percentiles and moment consistency must be checked; do no hidden clipping.
 
-Katsayıları, eğitim kapsamını, birimleri, model sürümünü ve doğrulama sonuçlarını kaydet. Kullanıcı doğrulanmış modeli dışa/içe aktarabilsin.
+Record the coefficients, training coverage, units, model version and validation results. The user must be able to export/import a validated model.
 
-[Rev] Meşcere açıklayıcıları (N, H, yaş, Dq vb.) ağaç tablosuyla birlikte gelen sütunlardan ya da Örnek Alan ve Meşcere aracının (sürüm 1.1.0) "ağaç verisi + meşcere parametreleri" çıktısından okunur; ayrı bir veri düzeni icat etme. Poudel'in H'si baskın/ortak baskın ağaçların ortalama boyudur; o aracın H0 sütunu (hektardaki en büyük 100 ağaç) aynı tanım değildir, hangi sütunun H olarak kullanıldığını kullanıcı seçer ve kaydedilir.
+[Rev] Stand predictors (N, H, age, Dq etc.) are read from columns that come with the tree table or from the "tree data + stand parameters" output of the Plot and Stand tool (version 1.1.0); do not invent a separate data layout. Poudel's H is the mean height of the dominant/codominant trees; that tool's H0 column (the 100 largest trees per hectare) is not the same definition; the user chooses which column is used as H, and this is recorded.
 
-Kabul: Bağımsız örnekle NLS/SUR hesapları doğrulanmalı; model eğitimi olmadan rastgele veya makaleden kopyalanmış katsayılarla tahmin yapılmamalı.
+Acceptance: NLS/SUR computations must be verified with an independent example; no prediction must be made without model training, with random coefficients or coefficients copied from the paper.
 ~~~
 
-### P17 — CDFR ve modified CDFR
+### P17 — CDFR and modified CDFR
 
 ~~~text
-Bölüm 4.2'deki Poudel ve Cao CDFR/modified CDFR amaçlarını meşcere modeli eğitimine ekle.
+Add Poudel and Cao's CDFR/modified CDFR objectives from Section 4.2 to stand model training.
 
-Optimize edilen değişkenler örnek alanlar arasında ortak regresyon katsayıları olsun. Seçilen M1–M10 yoluna göre parametreler doğrudan kestirilsin veya hedeflerden geri kazanılsın. M1 için kaynak yaklaşımlarındaki konum politikası farkını açıkça uygula.
+The optimised variables must be regression coefficients common across plots. Depending on the selected M1–M10 path, parameters must be predicted directly or recovered from targets. For M1, apply the difference in location policy between the source approaches explicitly.
 
-CDFR'de alan başına 1/n_i ağırlığı ve (j−0.5)/n_i plotting position kullan. Modified CDFR'de gerçek sınıf üst sınırı ve 1/(m_i−1) ağırlığı kullan; yalnızca bu amaçta son sınıfı dışla.
+In CDFR use the per-plot weight 1/n_i and the plotting position (j−0.5)/n_i. In modified CDFR use the true upper class bound and the weight 1/(m_i−1); exclude the last class only in this objective.
 
-İç içe geri kazanım çözücülerindeki başarısızlıkları izlenebilir hale getir. Optimizasyonun çoklu kökler arasında açıklamasız atlamasına izin verme; önceden tanımlı seçim/parametre bölgesi politikasını kaydet.
+Make failures in nested recovery solvers traceable. Do not allow the optimisation to jump between multiple roots without explanation; record a predefined selection/parameter-region policy.
 
-Kaynak yeniden üretimi ile yeni truncation/ağırlık genişletmelerini ayrı adlandır. Alan düzeyinde çapraz doğrulama ve kaynak sınıf genişliğinden farklı örneklerle kontrol yap.
+Name source reproduction and new truncation/weighting extensions separately. Check with plot-level cross-validation and with examples whose class width differs from the source's.
 
-Kabul: Küçük veri üzerinde elle hesaplanan iki amaç fonksiyonu değerleri sağlanmalı. Histogram ve toplam ağaç sayısında son sınıf kaybolmamalı.
+Acceptance: Hand-calculated values of the two objective functions must be met on small data. The last class must not disappear from the histogram or the total number of trees.
 ~~~
 
-## 7. İsteğe bağlı ileri aşamalar
+## 7. Optional advanced stages
 
-### P18 — L-moment, genel yüzdelik ve minimum uzaklık
+### P18 — L-moments, general percentiles and minimum distance
 
 ~~~text
-Temel sürüm tamamlandıktan sonra ek tahmin yöntemlerini kontrollü biçimde genişlet.
+After the core version is complete, extend the additional estimation methods in a controlled way.
 
-İlk olarak 2P/sabit konum Weibull ve 2P gamma için kaynakla doğrulanmış L-moment yöntemlerini ekle. Weibull'da y=d−a için c=−ln(2)/ln(1−L2/L1), b=L1/Γ(1+1/c); L1/L2 örnek L-momentleridir. Örnek L-moment hesabını bağımsız referansla kontrol et. Gamma için lmomco dokümantasyonunu referans al.
+First add source-verified L-moment methods for 2P/fixed-location Weibull and 2P gamma. For Weibull, with y=d−a, c=−ln(2)/ln(1−L2/L1), b=L1/Γ(1+1/c); L1/L2 are the sample L-moments. Check the sample L-moment computation against an independent reference. For gamma take the lmomco documentation as the reference.
 
-Genel QME'de seçilmiş yüzdelik ve ağırlıkları; MGE'de minimize edilen KS/CvM/AD ölçütünü açıkça kaydet. Her dağılımda bütün seçenekleri otomatik açma: yeterli bilgi, parametre tanımlanabilirliği ve destek kontrolleri yap.
+In general QME record the selected percentiles and weights explicitly; in MGE record the minimised KS/CvM/AD measure explicitly. Do not switch on all options automatically for every distribution: check for sufficient information, parameter identifiability and support.
 
-Bu yöntemlerin sonuçlarını standart MLE-AIC sıralamasına otomatik katma. Aynı ölçütle uydurup aynı ölçütte değerlendirme yapıldığını kullanıcının görebilmesini sağla.
+Do not automatically add the results of these methods to the standard MLE-AIC ranking. Make sure the user can see that fitting and evaluation were done with the same measure.
 
-Kabul: L-moment, MOM ve MLE'nin farklı tanımları korunmalı; seçilen yöntem gerçekten uygulanmalı. Yeni yöntemler bağımsız örneklerle doğrulanmalı; başarısız sonuçlarda başka yönteme gizli geçiş olmamalı.
+Acceptance: The different definitions of L-moments, MOM and MLE must be preserved; the selected method must actually be applied. New methods must be validated with independent examples; there must be no hidden switch to another method on failure.
 ~~~
 
-### P19 — Johnson SB: Fonseca ve arkadaşları (2009)
+### P19 — Johnson SB: Fonseca et al. (2009)
 
-Bu, Parresol (2003)'ten ayrı bir yöntemdir. Fonseca, Marques ve Parresol'un çalışması medyan ve ilk üç ham momentten dört parametre geri kazanımı önerir. Üçüncü ham moment m3, göğüs yüzeyine göre ağırlıklı ortalama çap ile Dq² çarpımına eşittir. [R17]
+This is a method separate from Parresol (2003). The work of Fonseca, Marques and Parresol proposes recovering four parameters from the median and the first three raw moments. The third raw moment m3 equals the basal-area-weighted mean diameter multiplied by Dq². [R17]
 
-Uygulama için Parresol gösterimini genişleten moment eşitliği:
+The moment equality extending Parresol's notation for implementation:
 
 $$
 E[D^3]=\xi^3+3\xi^2\lambda u_1+
 3\xi\lambda^2u_2+\lambda^3u_3=m_3.
 $$
 
-Medyan denklemiyle γ elimine edilip ξ, λ, δ için üç moment denklemi çözülür. Bu cebirsel ifade, belgedeki uygulama çıkarımıdır. Dört özetin sayıca dört olması her koşulda tek ve kararlı çözüm anlamına gelmez; özellikle simetrik durumlar ayrıca incelenmelidir.
+γ is eliminated with the median equation and three moment equations are solved for ξ, λ, δ. This algebraic expression is an implementation derivation made in this document. Having four summaries for four parameters does not mean a unique and stable solution under all conditions; symmetric cases in particular must be examined separately.
 
 ~~~text
-Fonseca–Marques–Parresol (2009) dört parametre geri kazanımını ayrı bir gelişmiş yöntem olarak ekle.
+Add the Fonseca–Marques–Parresol (2009) four-parameter recovery as a separate advanced method.
 
-Girdiler medyan, m1, m2 ve m3 olsun. Dq²=m2 ve göğüs yüzeyi ağırlıklı ortalama=m3/m2 ilişkilerini doğru kullan. Parresol'un sabit ξ yönteminin üstüne aynı isimle yazma.
+The inputs are the median, m1, m2 and m3. Use the relations Dq²=m2 and basal-area-weighted mean=m3/m2 correctly. Do not overwrite Parresol's fixed-ξ method under the same name.
 
-Medyan ve üç moment denklemine kısıtlı, çok başlangıçlı çözüm uygula. Fiziksel destek, moment uygunluğu, Jacobian rank/koşulluluk ve çoklu çözüm denetimi yap. Gerekli girdi bulunmadığında m3'ü ortalama ve varyanstan uydurma.
+Apply a constrained, multi-start solution to the median and three moment equations. Check physical support, moment admissibility, Jacobian rank/conditioning and multiple solutions. When the required input is missing, do not make up m3 from the mean and variance.
 
-Kabul: Bilinen asimetrik parametrelerden üretilen özetlerin geri kazanımı doğrulanmalı. Simetrik veya zayıf tanımlanan girdilerde yapay tek çözüm üretmemeli. Kaynak ve yakınsama ayrıntıları kaydedilmeli.
+Acceptance: Recovery of summaries generated from known asymmetric parameters must be verified. With symmetric or weakly identified inputs, no artificial unique solution must be produced. Source and convergence details must be recorded.
 ~~~
 
-### P20 — Genelleştirilmiş gamma ve Gumbel
+### P20 — Generalised gamma and Gumbel
 
-Genelleştirilmiş gamma için bu aşamanın açık parametreleştirmesi:
+The explicit parameterisation of the generalised gamma for this stage:
 
 $$
 f(d)=\frac{c}{b\Gamma(a)}
@@ -711,25 +711,25 @@ f(d)=\frac{c}{b\Gamma(a)}
 \exp[-(d/b)^c],\quad a,b,c>0.
 $$
 
-E[D^r]=b^r Γ(a+r/c)/Γ(a). c=1 gamma, a=1 Weibull özel durumudur. Buradaki a, Weibull'daki konum parametresi değildir; aileye özgü parametre şeması kullanılmalıdır. Bu sürüm pozitif c ile sınırlıdır; c<0 sağlayan daha geniş tanımla aynı kapsam iddia edilmemelidir. [R18]
+E[D^r]=b^r Γ(a+r/c)/Γ(a). c=1 is the gamma and a=1 the Weibull special case. The a here is not Weibull's location parameter; a family-specific parameter schema must be used. This version is restricted to positive c; it must not claim the same scope as the broader definition that allows c<0. [R18]
 
-Gumbel maksimum biçimi için F(d)=exp{−exp[−(d−μ)/β]}, β>0. MOM: β=√(6v)/π, μ=m−γ_E β; γ_E Euler–Mascheroni sabitidir. Minimum biçimin yönü ve ortalama bağıntısı farklıdır. [R19]
+For the maximum form of the Gumbel, F(d)=exp{−exp[−(d−μ)/β]}, β>0. MOM: β=√(6v)/π, μ=m−γ_E β; γ_E is the Euler–Mascheroni constant. The direction and the mean relation of the minimum form are different. [R19]
 
 ~~~text
-Bu aşamayı iki küçük değişiklik halinde uygula: önce genelleştirilmiş gamma, sonra Gumbel.
+Implement this stage as two small changes: first the generalised gamma, then the Gumbel.
 
-Genelleştirilmiş gamma için yukarıdaki pozitif-c parametreleştirmesiyle MLE ekle. Üç parametreli kaydırılmış gamma ile karıştırma. Gamma/Weibull özel durumlarını doğrulama örnekleri olarak kullan.
+For the generalised gamma add MLE with the positive-c parameterisation above. Do not confuse it with the three-parameter shifted gamma. Use the gamma/Weibull special cases as validation examples.
 
-Gumbel için maksimum biçimini açık adla, MLE ve MOM yöntemleriyle ekle. Negatif çap olasılığını raporla; truncation seçeneklerine bağlanıyorsa doğru koşullu olabilirlik kullan.
+For the Gumbel add the maximum form under an explicit name, with the MLE and MOM methods. Report the probability of negative diameters; if it is connected to the truncation options, use the correct conditional likelihood.
 
-Her aileyi ancak kendi PDF/CDF/quantile, kısıt ve bağımsız sayısal kontrolleri tamamlanınca kullanıcıya aç. Parametre sayısını artırmanın otomatik olarak daha iyi biyolojik model anlamına gelmediğini karşılaştırma ekranının tasarımında koru.
+Open each family to the user only once its own PDF/CDF/quantile, constraints and independent numerical checks are complete. In the design of the comparison screen, preserve the point that increasing the number of parameters does not automatically mean a better biological model.
 ~~~
 
-### P21 — Burr XII ve Dagum
+### P21 — Burr XII and Dagum
 
-> **Kapsam dışı bırakıldı (12 Kasım 2026, kullanıcı kararı).** Uygulanmadı; aşağıdaki metin yalnızca kayıt için durur.
+> **Dropped from scope (12 Nov 2026, user decision).** Not implemented; the text below remains for the record only.
 
-Kullanılacak iki ayrı CDF:
+The two separate CDFs to be used:
 
 $$
 F_{\text{Burr XII}}(d)=1-[1+(d/b)^c]^{-k},
@@ -737,67 +737,67 @@ F_{\text{Burr XII}}(d)=1-[1+(d/b)^c]^{-k},
 F_{\text{Dagum}}(d)=[1+(d/b)^{-c}]^{-k},
 $$
 
-b,c,k>0, d>0. Burr XII'de r'nci pozitif moment için ck>r; Dagum'da c>r gerekir. Standart birimlerin eşlenmesi kütüphane adaptöründe açık olmalıdır. [R20, R21]
+b,c,k>0, d>0. In Burr XII the r-th positive moment requires ck>r; in Dagum, c>r. The mapping of standard units must be explicit in the library adapter. [R20, R21]
 
 ~~~text
-Burr XII ve Dagum/Burr III ailelerini ayrı kimliklerle, başlangıçta sabit sıfır konum ve sayısal MLE ile ekle.
+Add the Burr XII and Dagum/Burr III families with separate ids, initially with a fixed zero location and numerical MLE.
 
-Yukarıdaki CDF tanımlarından parametre eşleştirmesini doğrula. Çoklu başlangıç, kararlı kuyruk hesapları ve destek kontrolleri kullan. Moment varlığı koşullarını sonuçlara yansıt; tanımsız ortalama/varyansı sayısal taşmayla karıştırma.
+Verify the parameter mapping from the CDF definitions above. Use multiple starts, stable tail computations and support checks. Reflect the moment existence conditions in the results; do not confuse an undefined mean/variance with numerical overflow.
 
-k=1 olduğunda her iki modelin log-logistic özel durumuna indirgenmesini test et. Ortak karşılaştırma ve bootstrap altyapısını yalnızca desteklenen kombinasyonlar için kullan.
+Test that both models reduce to the log-logistic special case when k=1. Use the common comparison and bootstrap infrastructure only for supported combinations.
 
-Kabul: Bağımsız SciPy/R referanslarıyla PDF/CDF/quantile ve MLE karşılaştırmaları geçmeli. İki aile veya bunların parametre adları birbirine karışmamalı.
+Acceptance: PDF/CDF/quantile and MLE comparisons against independent SciPy/R references must pass. The two families or their parameter names must not be mixed up.
 ~~~
 
-### P22 — İki bileşenli karışım dağılımları
+### P22 — Two-component mixture distributions
 
-> **Kapsam dışı bırakıldı (12 Kasım 2026, kullanıcı kararı).** Uygulanmadı; aşağıdaki metin yalnızca kayıt için durur.
+> **Dropped from scope (12 Nov 2026, user decision).** Not implemented; the text below remains for the record only.
 
 ~~~text
-Tek dağılımlı sürüm kararlı hale geldikten sonra, ayrı bir gelişmiş analiz olarak iki bileşenli karışım ekle. Önce iki lognormal veya iki gamma bileşeni seç; tüm aile kombinasyonlarını tek aşamada uygulama.
+After the single-distribution version has become stable, add a two-component mixture as a separate advanced analysis. First choose two lognormal or two gamma components; do not implement all family combinations in a single stage.
 
-f(d)=π f1(d)+(1−π)f2(d), 0<π<1. Karışım log-olabilirliğini log-sum-exp ile hesapla. EM veya kısıtlı doğrudan optimizasyon kullan; çoklu başlangıç, bileşen çökmesi ve çok küçük ağırlık kontrolleri ekle.
+f(d)=π f1(d)+(1−π)f2(d), 0<π<1. Compute the mixture log-likelihood with log-sum-exp. Use EM or constrained direct optimisation; add multiple starts and checks for component collapse and very small weights.
 
-Bileşenlerin rapor sırasını ortalama/medyan gibi belirli bir kuralla standardize et. Bileşenleri otomatik olarak tür, yaş sınıfı veya biyolojik alt popülasyon diye yorumlama.
+Standardise the reporting order of the components with a specific rule such as the mean/median. Do not automatically interpret the components as species, age classes or biological subpopulations.
 
-Tek bileşenle karşılaştırmayı destekle. Karışımlarda düzenli olmayan çıkarım sorunları nedeniyle standart olabilirlik oranı p-değeri veya otomatik AICc güvencesi verme; tahmin performansı ve alan düzeyinde doğrulama öncelikli olsun.
+Support comparison with a single component. Because of irregular inference problems in mixtures, do not give a standard likelihood ratio p-value or an automatic AICc guarantee; predictive performance and plot-level validation must take priority.
 
-Kabul: İki tepeli sentetik örnekte bileşenler kararlı bulunmalı; tek tepeli örnekte aşırı uyum ve çökme tanıları çalışmalı. Bu aşamayı diğer tüm dağılımların tamamlanması için ön koşul yapma.
+Acceptance: In a bimodal synthetic example the components must be found stably; in a unimodal example the overfitting and collapse diagnostics must work. Do not make this stage a prerequisite for completing all other distributions.
 ~~~
 
-Karışım uyumunun ormancılık yazılımı bağlamındaki uygulama referansı: ForestFit fitmixture dokümantasyonu. [R22]
+Implementation reference for mixture fitting in the context of forestry software: ForestFit fitmixture documentation. [R22]
 
-### P23 — Ampirik göğüs yüzeyi çap dağılımı (betimsel)
+### P23 — Empirical basal area diameter distribution (descriptive)
 
-Kaynak: Kangas ve Maltamo (2000) [R23], Bölüm 2.2–2.3. Göğüs yüzeyi çap dağılımı, her ağacın g=πd²/40000 ile ağırlıklandığı dağılımdır. Sabit alanlı örnek alanda ampirik işlev:
+Source: Kangas and Maltamo (2000) [R23], Sections 2.2–2.3. The basal area diameter distribution is the distribution in which each tree is weighted by g=πd²/40000. The empirical function on a fixed-area plot:
 
 $$F_G(x)=\frac{\sum_{d_i\le x} g_i}{\sum_i g_i}.$$
 
-Sınıf k'nin göğüs yüzeyi b_k (m²/ha) ise ağaç sayısı f_k=b_k/ḡ_k; ḡ_k sınıfın ortalama ağacının göğüs yüzeyidir (kaynak Denklem 1). Ham çaplar varken ḡ_k gözlenen ağaçlardan hesaplanır; yalnızca sınıf sınırları biliniyorsa sınıf orta çapının göğüs yüzeyi bir yaklaşımdır ve böyle etiketlenir.
+If the basal area of class k is b_k (m²/ha), the number of trees is f_k=b_k/ḡ_k, where ḡ_k is the basal area of the class mean tree (source Equation 1). When raw diameters are available, ḡ_k is computed from the observed trees; if only the class bounds are known, the basal area of the class mid-diameter is an approximation and is labelled as such.
 
 ~~~text
-Tek dağılımlı sürüm tamamlandıktan sonra, ayrı ve betimsel bir görünüm olarak ampirik göğüs yüzeyi çap dağılımını ekle.
+After the single-distribution version is complete, add the empirical basal area diameter distribution as a separate, descriptive view.
 
-Seçili örnek alan için ağaç sayısına göre ve göğüs yüzeyine göre ampirik kümülatif dağılımları birlikte göster. Göğüs yüzeyinin %0, 10, 20, …, 90, 95 ve 100 yüzdeliklerindeki çapları ve göğüs yüzeyi orta çapını (dgM, %50) ver; kullanılan yüzdelik tanımını kaydet. Çap sınıfı tablosuna sınıf göğüs yüzeyini (m²/ha) ve payını ekle.
+For the selected plot, show the empirical cumulative distributions by number of trees and by basal area together. Give the diameters at the 0, 10, 20, …, 90, 95 and 100% percentiles of basal area and the basal area median diameter (dgM, 50%); record the percentile definition used. Add the class basal area (m²/ha) and its share to the diameter class table.
 
-Sınıf göğüs yüzeyinden ağaç sayısına dönüşümü f_k=b_k/ḡ_k ile uygula; ḡ_k'nin gözlenen ortalamadan mı sınıf orta çapından mı geldiğini belirt. Dönüşümün ham veriyle birebir tutarlı olduğunu doğrula.
+Apply the conversion from class basal area to number of trees with f_k=b_k/ḡ_k; state whether ḡ_k comes from the observed mean or from the class mid-diameter. Verify that the conversion is exactly consistent with the raw data.
 
-Parametrik bir aileyi göğüs yüzeyi ağırlıklı veriye uydurma, boyut yanlı (size-biased) olabilirlik, açı sayımı verisi ve yüzdelik kestirim modelleri bu aşamanın kapsamında değildir; kaynaktaki tür katsayılarını gömme. Rasyonel spline ara değerlemesi ancak yüzdeliklerden dağılım kurma akışı eklenirse ve monotonluk denetimiyle birlikte uygulanır.
+Fitting a parametric family to basal-area-weighted data, the size-biased likelihood, angle-count data and percentile prediction models are not within the scope of this stage; do not embed the species coefficients from the source. Rational spline interpolation is implemented only if a workflow that builds a distribution from percentiles is added, and then together with a monotonicity check.
 
-Kabul: Elle hesaplanan küçük örnekte F_G, yüzdelik çapları ve sınıf payları sağlanmalı; Σb_k toplam G'ye, Σf_k toplam N'ye eşit olmalı; ağaç sayısı dağılımı sonuçları değişmemeli.
+Acceptance: In a small hand-calculated example, F_G, the percentile diameters and the class shares must be met; Σb_k must equal the total G and Σf_k the total N; the results of the distribution by number of trees must not change.
 ~~~
 
-## 8. Bağımsız sayısal referanslar
+## 8. Independent numerical references
 
-Bu değerler 10 Kasım 2026'da Python, NumPy 2.3.5 ve SciPy 1.17.0 kullanılarak hesaplandı. Sekiz modelde yoğunluk integrali ve F(Q.50)=0.5 kontrol edildi. Weibull geri kazanım denklemleri kök taramasıyla, Parresol örneği normal ağırlıklı sayısal integral ve bağımsız least-squares çözümüyle doğrulandı.
+These values were computed on 10 Nov 2026 using Python, NumPy 2.3.5 and SciPy 1.17.0. For the eight models, the density integral and F(Q.50)=0.5 were checked. The Weibull recovery equations were verified by root scanning, and the Parresol example with normal-weighted numerical integration and an independent least-squares solution.
 
-Bu kontroller web sitesine ait değildir; geliştirilecek kodun karşılaştırabileceği referanslardır. Tablo yuvarlamaları için yaklaşık 1e−8 mutlak tolerans uygundur. Parametre tahmini kontrollerinde problem ölçeğine uygun ayrıca bağıl tolerans belirlenmelidir.
+These checks do not belong to the website; they are references against which the code to be developed can be compared. For table rounding an absolute tolerance of about 1e−8 is appropriate. For parameter estimation checks, a relative tolerance suited to the scale of the problem must also be set.
 
-### 8.1. PDF, CDF ve medyan
+### 8.1. PDF, CDF and median
 
-Tüm satırlarda değerlendirme noktası d=20 cm'dir.
+In all rows the evaluation point is d=20 cm.
 
-| Dağılım ve parametreler | PDF(20) | CDF(20) | Q.50 |
+| Distribution and parameters | PDF(20) | CDF(20) | Q.50 |
 |---|---:|---:|---:|
 | Normal μ=20, σ=5 | 0.079788456080 | 0.500000000000 | 20.000000000000 |
 | Lognormal μ=3, σ=0.4 | 0.049864946799 | 0.495743639452 | 20.085536923188 |
@@ -808,15 +808,15 @@ Tüm satırlarda değerlendirme noktası d=20 cm'dir.
 | Exponential a=0, r=0.1 | 0.013533528324 | 0.864664716763 | 6.931471805599 |
 | Log-logistic b=20, c=3 | 0.037500000000 | 0.500000000000 | 20.000000000000 |
 
-### 8.2. Weibull geri kazanımı
+### 8.2. Weibull recovery
 
-a=5, b=20, c=2.5 için:
+For a=5, b=20, c=2.5:
 
-| Hedef | Değer |
+| Target | Value |
 |---|---:|
-| Ortalama | 22.745276350061506 |
-| Moment varyansı | 57.65867565204488 |
-| İkinci ham moment | 575.0062718927121 |
+| Mean | 22.745276350061506 |
+| Moment variance | 57.65867565204488 |
+| Second raw moment | 575.0062718927121 |
 | Dq | 23.979288394210368 |
 | Q25 | 17.150527008986376 |
 | Q31 | 18.45269745606343 |
@@ -824,82 +824,82 @@ a=5, b=20, c=2.5 için:
 | Q63 | 24.95393865551951 |
 | Q95 | 36.01924299565496 |
 
-M2–M9 kontrollerinde a açıkça 5 verilmiştir. Kaynağın a=0.5Dmin politikası ayrıca denenecekse bu kontrol için hedef Dmin=10 girilir; bu değer teorik Q0 olarak yorumlanmaz.
+In the M2–M9 checks a is given explicitly as 5. If the source's a=0.5Dmin policy is also to be tried, the target Dmin=10 is entered for this check; this value is not interpreted as the theoretical Q0.
 
-0.15≤c≤50 aralığında bulunan kökler:
+Roots found in the range 0.15≤c≤50:
 
-| Yöntem | Şekil parametresi adayları |
+| Method | Shape parameter candidates |
 |---|---|
 | M2 | 2.500000000000 |
 | M3 | 2.500000000000 |
-| M8 | 0.191476498065 ve 2.500000000000 |
-| M9 | 0.398620001976 ve 2.500000000000 |
+| M8 | 0.191476498065 and 2.500000000000 |
+| M9 | 0.398620001976 and 2.500000000000 |
 
-Bu, M8/M9'da tek kök varsayımının yanlış olabileceğini gösteren hesaplanmış bir örnektir; makaleden aktarılmış deney sonucu değildir. Adaylar ilgili ölçek formülleriyle birlikte değerlendirilmelidir.
+This is a computed example showing that the single-root assumption in M8/M9 can be wrong; it is not an experimental result taken from the paper. The candidates must be evaluated together with the corresponding scale formulas.
 
-M10 için ayrı konum kontrolü: n=125 ve Dmin=8.4545396024095 kullanıldığında, yukarıdaki Q50 ile a=5 elde edilir. Dmin burada formülü sınamak için üretilmiş bir hedeftir; M2–M9'un konum politikasıyla aynı Dmin olmak zorunda değildir.
+Separate location check for M10: with n=125 and Dmin=8.4545396024095, a=5 is obtained with the Q50 above. Dmin here is a target generated to test the formula; it need not be the same Dmin as in the M2–M9 location policy.
 
-### 8.3. Parresol geri kazanımı
+### 8.3. Parresol recovery
 
-| Girdi | Değer |
+| Input | Value |
 |---|---:|
 | ξ | 5 |
-| N, ağaç/ha | 500 |
+| N, trees/ha | 500 |
 | G, m²/ha | 18.979383683389663 |
-| Ortalama çap | 20.972673017674087 |
-| Medyan | 20.464836861498966 |
+| Mean diameter | 20.972673017674087 |
+| Median | 20.464836861498966 |
 | Dq | 21.984222451746177 |
-| İkinci ham moment | 483.30603680786066 |
+| Second raw moment | 483.30603680786066 |
 
-Beklenen parametreler: ξ=5, λ=40, γ=0.6, δ=1.3. Bağımsız çözümde λ=39.99999999999997, γ=0.5999999999999978, δ=1.299999999999999 bulundu. En büyük ölçeklendirilmiş moment artığı yaklaşık 2.4×10⁻¹⁶ idi. Bu tek örnek, tüm veri kombinasyonlarında aynı kesinlik veya benzersizlik garantisi değildir.
+Expected parameters: ξ=5, λ=40, γ=0.6, δ=1.3. The independent solution gave λ=39.99999999999997, γ=0.5999999999999978, δ=1.299999999999999. The largest scaled moment residual was about 2.4×10⁻¹⁶. This single example is not a guarantee of the same precision or uniqueness for all data combinations.
 
-### 8.4. Sınır ve yöntem uygunluğu kontrolleri
+### 8.4. Bound and method admissibility checks
 
-- Boş veri; tek gözlem; tüm çapların eşit olması.
-- Sıfır/negatif değer ve seçilen desteğin dışındaki gözlem.
-- Ayrı bir yuvarlama politikası bulunan tekrarlı çaplar.
-- Ortalama–Dq uyumsuzluğu; sırasız veya eşit yüzdelikler.
-- Beta ve Johnson SB'de sınır üzerindeki gözlemler.
-- Weibull M8/M9 çoklu kökleri; M10'da n=1.
-- Truncation eşiği değişirken destek parametresinin kendiliğinden değişmemesi.
-- Birim dönüşümünde parametre ve yoğunluk dönüşümleri; aynı birimde model karşılaştırması.
-- Hektara genişletme katsayısı değişirken bağımsız gözlem sayısının değişmemesi.
-- Sınıf genişlikleri ve sınıf sayısı değişirken toplam olasılığın doğru kalması.
-- TR/EN geçişinde sayısal hesapların ve varsayılan nokta gösteriminin korunması.
+- Empty data; a single observation; all diameters equal.
+- Zero/negative values and observations outside the selected support.
+- Repeated diameters for which a separate rounding policy exists.
+- Mean–Dq inconsistency; unordered or equal percentiles.
+- Observations on the bound in beta and Johnson SB.
+- Weibull M8/M9 multiple roots; n=1 in M10.
+- The support parameter must not change by itself when the truncation threshold changes.
+- Parameter and density transformations under unit conversion; model comparison in the same unit.
+- The number of independent observations must not change when the per-hectare expansion factor changes.
+- The total probability must stay correct when class widths and the number of classes change.
+- Numerical results and the default point notation must be preserved when switching TR/EN.
 
-## 9. Kaynaklar ve hangi amaçla kullanıldıkları
+## 9. Sources and the purpose for which they were used
 
-### Yüklenen ve incelenen kaynaklar
+### Uploaded and examined sources
 
-- **[R1] Poudel, K. P. & Cao, Q. V. (2013).** Evaluation of Methods to Predict Weibull Parameters for Characterizing Diameter Distributions. Forest Science, 59(2), 243–252. [Yayın bağlantısı](https://academic.oup.com/forestscience/article-abstract/59/2/243/4583693), DOI: 10.5849/forsci.12-001. Yüklenen PDF'nin ana yöntem bölümü ve Tablo 2 incelendi; Tablo 2 ve K–S denkleminin bulunduğu sayfalar görsel olarak kontrol edildi. M1–M10, SUR/CDFR ayrımı ve EI/mLogL tanımları için temel kaynak.
-- **[R2] Parresol, B. R. (2003).** Recovering Parameters of Johnson's SB Distribution. USDA Forest Service, Southern Research Station, Research Paper SRS–31. [Kurum PDF'si](https://www.srs.fs.usda.gov/pubs/rp/rp_srs031.pdf). Yüklenen PDF'nin yöntem bölümü ve integral/geri kazanım denklemleri incelendi. Sabit ξ koşulunda λ, γ ve δ geri kazanımı için temel kaynak.
+- **[R1] Poudel, K. P. & Cao, Q. V. (2013).** Evaluation of Methods to Predict Weibull Parameters for Characterizing Diameter Distributions. Forest Science, 59(2), 243–252. [Publication link](https://academic.oup.com/forestscience/article-abstract/59/2/243/4583693), DOI: 10.5849/forsci.12-001. The main methods section and Table 2 of the uploaded PDF were examined; the pages containing Table 2 and the K–S equation were checked visually. Primary source for M1–M10, the SUR/CDFR distinction and the EI/mLogL definitions.
+- **[R2] Parresol, B. R. (2003).** Recovering Parameters of Johnson's SB Distribution. USDA Forest Service, Southern Research Station, Research Paper SRS–31. [Institutional PDF](https://www.srs.fs.usda.gov/pubs/rp/rp_srs031.pdf). The methods section and the integral/recovery equations of the uploaded PDF were examined. Primary source for the recovery of λ, γ and δ with ξ fixed.
 
-### Dağılım seçimi ve ormancılık uygulamaları
+### Distribution choice and forestry applications
 
-- **[R3] Gorgoso-Varela, J. J., Adedapo, S. M. & Ogana, F. N. (2024).** A Comparison of Probability Density Functions Fitted by Moments and Maximum Likelihood Estimation Methods Used for Diameter Distribution Estimation. Forests, 15(3), 425. [Makale](https://www.mdpi.com/1999-4907/15/3/425). Dağılım/yöntem çeşitliliği ve MOM–MLE uygulamaları; tek veri setindeki başarıyı evrensel sıralamaya çevirmek için kullanılmadı.
-- **[R4] Hafley, W. L. & Schreuder, H. T. (1977).** Statistical distributions for fitting diameter and height data in even-aged stands. Canadian Journal of Forest Research, 7, 481–487. [Özgün makale PDF'si](https://www.u-cursos.cl/forestal/2010/1/MF004/1/material_docente/bajar?id_material=483164). Normal, lognormal, gamma, beta, Weibull ve Johnson SB'nin klasik ormancılık karşılaştırması.
-- **[R5] Binoti, D. H. B. ve arkadaşları (2012).** Probability density functions for description of diameter distribution in thinned stands of Tectona grandis. CERNE, 18(2). [Makale](https://www.scielo.br/j/cerne/a/M55XHDVw4LKSjns7m5jFNjQ/?lang=en), [dergi kaydı](https://cerne.ufla.br/site/index.php/CERNE/article/view/814). Log-logistic, genelleştirilmiş gamma, Burr, Dagum ve diğer alternatiflerin ormancılıkta MLE uygulaması.
+- **[R3] Gorgoso-Varela, J. J., Adedapo, S. M. & Ogana, F. N. (2024).** A Comparison of Probability Density Functions Fitted by Moments and Maximum Likelihood Estimation Methods Used for Diameter Distribution Estimation. Forests, 15(3), 425. [Article](https://www.mdpi.com/1999-4907/15/3/425). Variety of distributions/methods and MOM–MLE applications; not used to turn success on a single data set into a universal ranking.
+- **[R4] Hafley, W. L. & Schreuder, H. T. (1977).** Statistical distributions for fitting diameter and height data in even-aged stands. Canadian Journal of Forest Research, 7, 481–487. [Original article PDF](https://www.u-cursos.cl/forestal/2010/1/MF004/1/material_docente/bajar?id_material=483164). Classical forestry comparison of normal, lognormal, gamma, beta, Weibull and Johnson SB.
+- **[R5] Binoti, D. H. B. et al. (2012).** Probability density functions for description of diameter distribution in thinned stands of Tectona grandis. CERNE, 18(2). [Article](https://www.scielo.br/j/cerne/a/M55XHDVw4LKSjns7m5jFNjQ/?lang=en), [journal record](https://cerne.ufla.br/site/index.php/CERNE/article/view/814). MLE application in forestry of log-logistic, generalised gamma, Burr, Dagum and other alternatives.
 
-### Yöntem ve hesaplama belgeleri
+### Method and computation documentation
 
-- **[R6] ForestFit — fitWeibull.** [Resmî paket belgesi](https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html). 2P/3P Weibull tahmin yöntemleri envanteri; parametre adı eşleştirmesi.
-- **[R7] ForestFit — fitJSB.** [Resmî paket belgesi](https://search.r-project.org/CRAN/refmans/ForestFit/html/fitJSB.html). Johnson SB'de sabit sınırlar altında CML/MM/KB/Bayesian ayrımı.
-- **[R8] fitdistrplus vignette.** [Geliştirici belgesi](https://lbbe-software.github.io/fitdistrplus/articles/fitdistrplus_vignette.html). MLE, moment, quantile ve minimum uzaklık yaklaşımlarının genel çerçevesi.
-- **[R9] SciPy — goodness_of_fit.** [Resmî belge](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html). Parametrelerin tekrar tahmin edildiği Monte Carlo/parametrik bootstrap uyum değerlendirmesi.
-- **[R10] NIST — Normal Distribution.** [Teknik el kitabı](https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm).
-- **[R11] NIST — Lognormal Distribution.** [Teknik el kitabı](https://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm).
-- **[R12] NIST — Gamma Distribution.** [Teknik el kitabı](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm).
-- **[R13] lmomco — pargam.** [Resmî paket belgesi](https://search.r-project.org/CRAN/refmans/lmomco/html/pargam.html). Gamma için L-moment parametre tahmini.
-- **[R14] NIST — Beta Distribution.** [Teknik el kitabı](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366h.htm).
-- **[R15] NIST — Exponential Distribution.** [Teknik el kitabı](https://www.itl.nist.gov/div898/handbook/eda/section3/eda3667.htm).
-- **[R16] SciPy — fisk.** [Resmî belge](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html). Log-logistic parametreleştirmesi.
-- **[R17] Fonseca, T. F., Marques, C. P. & Parresol, B. R. (2009).** Describing Maritime Pine Diameter Distributions with Johnson's SB Distribution Using a New All-Parameter Recovery Approach. Forest Science, 55(4), 367–373. [Özgün makale PDF'si](https://capsis.cirad.fr/capsis/_media/help/describing_maritime_pine_with_sb_distribution.pdf). Medyan ve ilk üç ham momentle dört parametre geri kazanımı.
-- **[R18] SciPy — gengamma.** [Resmî belge](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gengamma.html).
-- **[R19] NIST — Extreme Value Type I / Gumbel.** [Teknik el kitabı](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm).
-- **[R20] SciPy — burr12.** [Resmî belge](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.burr12.html).
-- **[R21] SciPy — burr.** [Resmî belge](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.burr.html). Burr III / Dagum.
-- **[R23] Kangas, A. & Maltamo, M. (2000).** Percentile based basal area diameter distribution models for Scots pine, Norway spruce and birch species. Silva Fennica, 34(4), 371–380. Yüklenen PDF okundu. Göğüs yüzeyi çap dağılımının tanımı, yüzdelik yöntemi ve sınıf göğüs yüzeyinden ağaç sayısına dönüşüm (P23) için kaynak.
-- **[R22] ForestFit — fitmixture.** [Resmî paket belgesi](https://search.r-project.org/CRAN/refmans/ForestFit/html/fitmixture.html). Karışım dağılımları için EM uygulamaları.
+- **[R6] ForestFit — fitWeibull.** [Official package documentation](https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html). Inventory of 2P/3P Weibull estimation methods; parameter name mapping.
+- **[R7] ForestFit — fitJSB.** [Official package documentation](https://search.r-project.org/CRAN/refmans/ForestFit/html/fitJSB.html). The CML/MM/KB/Bayesian distinction under fixed bounds in Johnson SB.
+- **[R8] fitdistrplus vignette.** [Developer documentation](https://lbbe-software.github.io/fitdistrplus/articles/fitdistrplus_vignette.html). General framework of the MLE, moment, quantile and minimum distance approaches.
+- **[R9] SciPy — goodness_of_fit.** [Official documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html). Monte Carlo/parametric bootstrap goodness-of-fit assessment in which the parameters are re-estimated.
+- **[R10] NIST — Normal Distribution.** [Technical handbook](https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm).
+- **[R11] NIST — Lognormal Distribution.** [Technical handbook](https://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm).
+- **[R12] NIST — Gamma Distribution.** [Technical handbook](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm).
+- **[R13] lmomco — pargam.** [Official package documentation](https://search.r-project.org/CRAN/refmans/lmomco/html/pargam.html). L-moment parameter estimation for the gamma.
+- **[R14] NIST — Beta Distribution.** [Technical handbook](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366h.htm).
+- **[R15] NIST — Exponential Distribution.** [Technical handbook](https://www.itl.nist.gov/div898/handbook/eda/section3/eda3667.htm).
+- **[R16] SciPy — fisk.** [Official documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html). Log-logistic parameterisation.
+- **[R17] Fonseca, T. F., Marques, C. P. & Parresol, B. R. (2009).** Describing Maritime Pine Diameter Distributions with Johnson's SB Distribution Using a New All-Parameter Recovery Approach. Forest Science, 55(4), 367–373. [Original article PDF](https://capsis.cirad.fr/capsis/_media/help/describing_maritime_pine_with_sb_distribution.pdf). Four-parameter recovery from the median and the first three raw moments.
+- **[R18] SciPy — gengamma.** [Official documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gengamma.html).
+- **[R19] NIST — Extreme Value Type I / Gumbel.** [Technical handbook](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm).
+- **[R20] SciPy — burr12.** [Official documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.burr12.html).
+- **[R21] SciPy — burr.** [Official documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.burr.html). Burr III / Dagum.
+- **[R23] Kangas, A. & Maltamo, M. (2000).** Percentile based basal area diameter distribution models for Scots pine, Norway spruce and birch species. Silva Fennica, 34(4), 371–380. The uploaded PDF was read. Source for the definition of the basal area diameter distribution, the percentile method and the conversion from class basal area to number of trees (P23).
+- **[R22] ForestFit — fitmixture.** [Official package documentation](https://search.r-project.org/CRAN/refmans/ForestFit/html/fitmixture.html). EM implementations for mixture distributions.
 
-Kaynaklar 10 Kasım 2026 araştırmasında erişilen sürümlerdir. Resmî paket sayfaları yöntem ve parametreleştirme referansıdır; mevcut projede o paketin veya aynı programlama dilinin zorunlu olarak kullanılmasını gerektirmez.
+The sources are the versions accessed during the 10 Nov 2026 research. The official package pages are references for methods and parameterisation; they do not require that the package or the same programming language be used in the current project.
 

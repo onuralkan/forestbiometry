@@ -1,314 +1,314 @@
-# Yeni araçlar: teknik şartname ve aşamalı geliştirme promptları
+# New tools: technical specification and staged development prompts
 
-Hazırlanma tarihi: 12 Kasım 2026
-Durum: **onaylandı** (12 Kasım 2026, kullanıcı); T00 raporunun §5'teki 1–3 düzeltmeleri işlendi (12 Kasım 2026, kullanıcı onayı). Bölüm 0'daki K1–K9 kararları bağlayıcıdır; CLAUDE.md'de bağlantısı vardır.
-Kapsam: kullanıcının istediği sırayla beş yeni araç (12 Kasım 2026):
+Prepared on: 12 Nov 2026
+Status: **approved** (12 Nov 2026, user); corrections 1–3 in §5 of the T00 report applied (12 Nov 2026, user approval). The K1–K9 decisions in Section 0 are binding; CLAUDE.md links to them.
+Scope: five new tools in the order requested by the user (12 Nov 2026):
 
-1. Seksiyon hacmi hesaplayıcısı / Stem Section Volume
-2. Bonitet hesaplayıcısı / Site Index
-3. Meşcere yapısı ve rekabet / Stand Structure & Competition
-4. Biyokütle ve karbon hesaplayıcısı / Biomass & Carbon
-5. Gövde profili ve ürün hacmi / Taper & Assortment
+1. Section volume calculator / Stem Section Volume
+2. Site index calculator / Site Index
+3. Stand structure and competition / Stand Structure & Competition
+4. Biomass and carbon calculator / Biomass & Carbon
+5. Taper and product volume / Taper & Assortment
 
-Bu belge `docs/DIST_SPEC.md` ile aynı biçimdedir: önce ortak kurallar ve araç başına teknik şartname, sonra her aşama için kodlama yapacak yapay zekâya tek tek verilecek promptlar. Bölüm 8'deki referans sayıları bu belge yazılırken SciPy/NumPy ile hesaplandı. Bu, sitedeki kodun test edildiği anlamına gelmez. Bölüm 9'daki kaynakların **hiçbiri bu belge için okunmadı**: künyeler bilgiden yazıldı, durumları **[D]** (doğrulanacak). Bir kaynağın denklemi uygulanmadan önce okunup METHODS.md'de **[B]** olarak işaretlenmelidir.
+This document has the same format as `docs/DIST_SPEC.md`: first the common rules and a technical specification per tool, then the prompts to be given one by one, for each stage, to the AI that will do the coding. The reference numbers in Section 8 were computed with SciPy/NumPy while this document was written. This does not mean that the code on the site has been tested. **None** of the sources in Section 9 **was read for this document**: the references were written from knowledge, their status is **[D]** (to be verified). Before a source's equation is implemented, it must be read and marked **[B]** in METHODS.md.
 
-## 0. Kararlar (K1–K9, 12 Kasım 2026 kullanıcı onayı; bağlayıcı)
+## 0. Decisions (K1–K9, user approval 12 Nov 2026; binding)
 
-| No | Karar | Karar metni | Gerekçe |
+| No | Decision | Decision text | Rationale |
 |---|---|---|---|
-| K1 | Yerleşik katsayı | **Hiçbir araçta yerleşik tür/yöre katsayısı yok.** Bonitet eğrileri, biyokütle denklemleri, karbon oranı, odun yoğunluğu, kabuk modeli ve gövde profili katsayılarını kullanıcı girer ya da kendi verisinden uydurur. Katsayı seti, kaynak alanı zorunlu bir "katsayı kaydı"nda tutulur (T01). | PROJECT.md §5 kural 4; uydurma katsayı riski sıfır. Yerleşik bir set istenirse, kaynağı okunup [B] olarak işaretlendikten sonra **ayrı bir aşama** olarak eklenir. |
-| K2 | Sayfa ve klasör adları | `seksiyon-hacmi.php` → `assets/lab/secvol/`; `bonitet.php` → `assets/lab/siteindex/`; `mescere-yapisi.php` → `assets/lab/structure/`; `biyokutle-karbon.php` → `assets/lab/biomass/`; `govde-profili.php` → `assets/lab/taper/` | Mevcut adlandırmayla aynı (Türkçe sayfa adı, İngilizce kod klasörü). |
-| K3 | Kenar çubuğu kategorileri | Yeni kategori **"Ağaç ve gövde / Tree and stem"**: seksiyon hacmi, gövde profili, biyokütle ve karbon. Bonitet ve meşcere yapısı için yeni kategori **"Meşcere ve yetişme ortamı / Stand and site"**. | Mevcut dört kategori bu araçlara uymuyor. |
-| K4 | Sürüm | Her araç `1.0.0-beta.1` ile başlar. Hesaplanan yöntem kümesi değişen her yayında beta numarası artar (çap dağılımı kuralı). İlk tam sürüm, aracın son aşamasının kabulüyle `1.0.0` olur. | Atıf sürümü aracın yaptığını göstermeli. |
-| K5 | Sıra | T00 → T01 → SV01 → SV02 → SV03 → SI01 → SI02 → SI03 → SI04 → SS01 → SS02 → SS03 → SS04 → BC01 → BC02 → BC03 → TP01 → TP02 → TP03 → TP04. İsteğe bağlı: SV04, BC04, TP05. | Kullanıcının araç sırası korunur. Ortak altyapı (T01) baştadır, çünkü dört araç katsayı kaydını, iki araç gövde ölçüm sözleşmesini paylaşır. |
-| K6 | Gövde ölçüm verisi | Seksiyon hacmi ve gövde profili aynı veri sözleşmesini (`stem-sections/1`, Bölüm 1.2) kullanır. Profil aracı seksiyon aracının hesabını yeniden yazmaz, içe aktarır. | Aynı veri iki kez girilmez (arayüz ilkesi 4). |
-| K7 | Uç seksiyon | Son ölçüm noktasından tepeye kadarki parça için geometrik cisim **kullanıcı seçimi** olur: koni, paraboloit ya da neiloit. Araç varsayılanı **koni**dur; bu bir araç kuralıdır, kaynaktan alınmış bir zorunluluk değildir ve sonuçta yazılır. | Uygulamada en sık kullanılan seçenek konidir ama tek doğru değildir. |
-| K8 | Bonitette yaş | Yaş türü (toplam yaş / göğüs yüksekliği yaşı) her veri setinde **açıkça seçilir**. Eğri katsayıları hangi yaş türüyle üretildiyse o türle kullanılır; araç yaş türlerini birbirine çevirmez. | Karıştırılırsa bonitet sistematik olarak kayar. |
-| K9 | Karbon ve CO₂ | Karbon oranı (CF) kullanıcı girer (bileşen başına). CO₂ eşdeğeri = C × 44/12 (molar kütle oranı; katsayı değil, sabit). | K1 ile tutarlı. 44/12 kimyasal bir sabittir. |
+| K1 | Built-in coefficients | **No tool has built-in species/region coefficients.** Site index curves, biomass equations, carbon fraction, wood density, bark model and taper coefficients are entered by the user or fitted from the user's own data. A coefficient set is kept in a "coefficient registry" with a mandatory source field (T01). | PROJECT.md §5 rule 4; zero risk of fabricated coefficients. If a built-in set is requested, it is added as a **separate stage** after its source has been read and marked [B]. |
+| K2 | Page and folder names | `seksiyon-hacmi.php` → `assets/lab/secvol/`; `bonitet.php` → `assets/lab/siteindex/`; `mescere-yapisi.php` → `assets/lab/structure/`; `biyokutle-karbon.php` → `assets/lab/biomass/`; `govde-profili.php` → `assets/lab/taper/` | Same as the existing naming (Turkish page name, English code folder). |
+| K3 | Sidebar categories | New category **"Tree and stem"**: section volume, taper, biomass and carbon. New category for site index and stand structure: **"Stand and site"**. | The existing four categories do not fit these tools. |
+| K4 | Version | Each tool starts at `1.0.0-beta.1`. The beta number increases with every release in which the set of computed methods changes (diameter distribution rule). The first full version becomes `1.0.0` with the acceptance of the tool's last stage. | The citation version must show what the tool does. |
+| K5 | Order | T00 → T01 → SV01 → SV02 → SV03 → SI01 → SI02 → SI03 → SI04 → SS01 → SS02 → SS03 → SS04 → BC01 → BC02 → BC03 → TP01 → TP02 → TP03 → TP04. Optional: SV04, BC04, TP05. | The user's tool order is kept. The shared infrastructure (T01) comes first, because four tools share the coefficient registry and two tools share the stem measurement contract. |
+| K6 | Stem measurement data | Section volume and taper use the same data contract (`stem-sections/1`, Section 1.2). The taper tool does not rewrite the section tool's computation; it imports it. | The same data is not entered twice (interface principle 4). |
+| K7 | Top section | For the piece from the last measurement point to the tip, the geometric solid is a **user choice**: cone, paraboloid or neiloid. The tool default is **cone**; this is a tool rule, not a requirement taken from a source, and it is written in the result. | In practice the cone is the most frequently used option, but it is not the only correct one. |
+| K8 | Age in site index | The age type (total age / breast-height age) is **chosen explicitly** for each dataset. Curve coefficients are used with the age type they were produced with; the tool does not convert age types into each other. | If they are mixed, site index shifts systematically. |
+| K9 | Carbon and CO₂ | The carbon fraction (CF) is entered by the user (per component). CO₂ equivalent = C × 44/12 (molar mass ratio; a constant, not a coefficient). | Consistent with K1. 44/12 is a chemical constant. |
 
-## Nasıl kullanılmalı?
+## How should it be used?
 
-1. Bu belgeyi kodlama yapacak yapay zekâya proje referansı olarak ver. `CLAUDE.md`, `docs/PROJECT.md` ve `docs/METHODS.md` her zaman geçerlidir.
-2. İlk mesajda Bölüm 7'deki "Ortak geliştirme talimatı"nı ve T00'ı gönder.
-3. Sonraki her mesajda yalnızca sıradaki promptu gönder ("SV01'e geçelim" yeterli). Bir aşamanın kabul ölçütleri sağlanmadan sonrakine geçilmez.
-4. Her aracın ilk yayına çıkışı, o aracın ilk "kabul" ölçütleri sağlandığında ve kılavuz bölümü yazıldığında yapılır (PROJECT.md §6: kılavuzsuz araç yayına çıkmaz). Yayına alma ayrı kullanıcı kararıdır.
-5. Bir araçta öngörülmeyen bir bilimsel karar gerekirse aşama durdurulur ve kullanıcıya sorulur; tahminle ilerlenmez.
+1. Give this document to the AI that will do the coding as a project reference. `CLAUDE.md`, `docs/PROJECT.md` and `docs/METHODS.md` always apply.
+2. In the first message send the "Common development instruction" in Section 7 and T00.
+3. In each later message send only the next prompt ("Let's move on to SV01" is enough). Do not move on to the next stage until the acceptance criteria of a stage are met.
+4. Each tool is first published when its first "acceptance" criteria are met and its guide section is written (PROJECT.md §6: a tool without a guide is not published). Publishing is a separate user decision.
+5. If an unforeseen scientific decision is needed in a tool, the stage is stopped and the user is asked; do not proceed by guessing.
 
-## 1. Ortak çerçeve
+## 1. Common framework
 
-### 1.1. Bütün araçlar için
+### 1.1. For all tools
 
-- Hesap (`calc.js` ya da motor dosyaları) arayüzden (`ui.js`) ve metinlerden (`i18n.js`) ayrıdır; hesap dosyaları DOM'a dokunmaz ve Node testlerinde çalışır.
-- Girdi: ortak içe aktarma paneli (`core/importer.js`), Veri Denetçisi'nin onaylanmış verisi (`forest-dataset/1`, PROJECT.md §4b) ya da elle giriş. Örnek alan × dönem birimi ve gezgini (`core/unitnav.js`) çok birimli verilerde ortak davranıştır.
-- Çıktı: ekranda tek bir genel tablo, ayrıntılar açılırda. Excel/CSV/JSON dışa aktarma (`core/export.js`). Excel'in "Bilgi" sayfası araç, sürüm, tarih, dil, ayarlar ve **kullanılan katsayı setlerinin kaynaklarını** içerir.
-- Sonuç kaydı: çap dağılımındaki `dist-result/1` ilkeleri genelleştirilir. Her hesaplanan değer için durum (`ok`, `invalid`, `boundary`, `noconverge`, `error`), sorunlar ve uyarılar kod olarak, birimler, kullanılan ayarlar ve katsayı setinin kimliği kayda yazılır. Hesaplanamayan değer sayı gibi gösterilmez (boş ya da "–" ve nedeni).
-- Birimler: çap cm, boy ve uzunluk m, alan m² (ekranda ha dönüşümü açıkça), hacim m³, kütle kg (ağaç) ve Mg/ha (meşcere), karbon Mg C/ha, CO₂ Mg CO₂/ha. Dönüşümler ekranda yazılır.
-- Kabuklu/kabuksuz ayrımı her çap ve hacim değerinde bir alanla taşınır (`bark: 'ob' | 'ib'`). İkisi hiçbir yerde sessizce karışmaz.
-- Ekstrapolasyon: katsayı setinin geçerlilik aralığı (ör. denklemin uydurulduğu çap ve boy aralığı) girildiyse, dışındaki ağaçlar hesaplanır ama **uyarıyla** işaretlenir ve sayıları raporlanır.
-- Kılavuz: her araç için `inc/guide/tr/<araç>.php` ve `inc/guide/en/<araç>.php` dosyası (17 Kasım 2026'dan beri bölüm başına dosya; formül tekrarlanmaz) ve `inc/guide/cards.php`'de en az bir görev kartı; `tests/site/test_guide.mjs` kapsamına girer.
-- Atıf: `site_tools()` satırındaki `v` ile aracın `TOOL.version`'ı aynıdır (`tests/site/test_cite.mjs`).
-- Test: her bilimsel hesap için `tests/ref/make_<araç>_<aşama>.py` (SciPy/NumPy; JS'deki formülün kopyası değil, bağımsız yol: sayısal integral, genel optimizasyon, kaba kuvvet arama…) ve `tests/<araç>/test_<aşama>.mjs`; arayüz için `tests/<araç>/e2e.mjs`. Yeni testler `.github/workflows/deploy.yml`'e eklenir.
+- The computation (`calc.js` or engine files) is separate from the interface (`ui.js`) and the texts (`i18n.js`); computation files do not touch the DOM and run in Node tests.
+- Input: the shared import panel (`core/importer.js`), the Data Validator's confirmed data (`forest-dataset/1`, PROJECT.md §4b) or manual entry. The plot × period unit and its navigator (`core/unitnav.js`) are common behaviour for multi-unit data.
+- Output: a single general table on screen, details in an expandable section. Excel/CSV/JSON export (`core/export.js`). The Excel "Info" sheet contains the tool, version, date, language, settings and **the sources of the coefficient sets used**.
+- Result record: the principles of `dist-result/1` from the diameter distribution tool are generalised. For each computed value the status (`ok`, `invalid`, `boundary`, `noconverge`, `error`), problems and warnings as codes, units, the settings used and the id of the coefficient set are written to the record. A value that could not be computed is not shown as a number (empty or "–" and the reason).
+- Units: diameter cm, height and length m, area m² (conversion to ha shown explicitly on screen), volume m³, mass kg (tree) and Mg/ha (stand), carbon Mg C/ha, CO₂ Mg CO₂/ha. Conversions are written on screen.
+- The over-bark/under-bark distinction is carried with a field on every diameter and volume value (`bark: 'ob' | 'ib'`). The two are never silently mixed anywhere.
+- Extrapolation: if the validity range of the coefficient set (e.g. the diameter and height range over which the equation was fitted) has been entered, trees outside it are computed but flagged **with a warning**, and their number is reported.
+- Guide: for each tool an `inc/guide/tr/<tool>.php` and an `inc/guide/en/<tool>.php` file (one file per section since 17 Nov 2026; formulas are not repeated) and at least one task card in `inc/guide/cards.php`; covered by `tests/site/test_guide.mjs`.
+- Citation: `v` in the `site_tools()` row and the tool's `TOOL.version` are the same (`tests/site/test_cite.mjs`).
+- Test: for each scientific computation `tests/ref/make_<tool>_<stage>.py` (SciPy/NumPy; not a copy of the JS formula but an independent path: numerical integration, general optimisation, brute-force search…) and `tests/<tool>/test_<stage>.mjs`; for the interface `tests/<tool>/e2e.mjs`. New tests are added to `.github/workflows/deploy.yml`.
 
-### 1.2. Gövde ölçüm verisi: `stem-sections/1`
+### 1.2. Stem measurement data: `stem-sections/1`
 
-Seksiyon hacmi ve gövde profili için ikinci bir tablo türü. Her satır bir ağacın bir ölçüm noktasıdır.
+A second table type for section volume and taper. Each row is one measurement point of one tree.
 
-| Alan | Tür | Birim | Not |
+| Field | Type | Unit | Note |
 |---|---|---|---|
-| `row` | tamsayı | – | Kaynak satır numarası |
-| `plot_id`, `tree_id`, `period` | metin | – | Ağaç tablosuyla aynı kimlik kuralları (metin olarak korunur) |
-| `h` | sayı | m | Ölçüm noktasının yerden yüksekliği (kesim yüzeyinden değil, **zeminden**; kesim yüksekliği ayrı alan) |
-| `d` | sayı | cm | Çap. İki çapraz ölçüm varsa `d1`, `d2` eşlenir; birleştirme kuralı ayardır (aritmetik ortalama ya da alanların ortalaması: d = √((d1² + d2²)/2)) ve sonuçta yazılır |
-| `bark` | metin | – | `ob` (kabuklu) ya da `ib` (kabuksuz); tablo düzeyinde de verilebilir |
-| `bark_t` | sayı | mm | İsteğe bağlı **çift** kabuk kalınlığı; verilirse d_ib = d_ob − bark_t/10 |
-| `kind` | metin | – | İsteğe bağlı: `section` (seksiyon ortası ya da ucu), `stump`, `dbh`, `top` |
+| `row` | integer | – | Source row number |
+| `plot_id`, `tree_id`, `period` | text | – | Same id rules as the tree table (kept as text) |
+| `h` | number | m | Height of the measurement point above the ground (from the **ground**, not from the felling surface; felling height is a separate field) |
+| `d` | number | cm | Diameter. If there are two cross measurements, `d1`, `d2` are mapped; the combining rule is a setting (arithmetic mean or the mean of the areas: d = √((d1² + d2²)/2)) and is written in the result |
+| `bark` | text | – | `ob` (over bark) or `ib` (under bark); can also be given at table level |
+| `bark_t` | number | mm | Optional **double** bark thickness; if given, d_ib = d_ob − bark_t/10 |
+| `kind` | text | – | Optional: `section` (section middle or end), `stump`, `dbh`, `top` |
 
-Ağaç düzeyinde (ağaç tablosundan ya da aynı tablonun ağaç sütunlarından): `dbh` (cm), `height` (m, toplam boy), `stump_h` (m, kesim yüksekliği), isteğe bağlı `top_d` ve `top_h` (kullanılabilir tepe). Ağaç tablosu ile seksiyon tablosu `plot_id` + `tree_id` (+ `period`) ile birleştirilir; eşleşmeyen satırlar sayılır ve satır numarasıyla raporlanır.
+At tree level (from the tree table or from the tree columns of the same table): `dbh` (cm), `height` (m, total height), `stump_h` (m, felling height), optional `top_d` and `top_h` (usable top). The tree table and the section table are joined by `plot_id` + `tree_id` (+ `period`); unmatched rows are counted and reported with their row numbers.
 
-Kontroller (hesaptan önce, Denetçi'deki önem düzeyleriyle): aynı ağaçta yinelenen `h`; `h` < 0 ya da `h` > toplam boy; boydan büyük kesim yüksekliği; yükseklikle **artan** çap (kök şişkinliği dışındaki artışlar uyarı; kök şişkinliği bölgesi ayar olarak tanımlanır, varsayılan h < 1.3 m); 1.30 m'deki ölçülen çap ile `dbh` arasında büyük fark (eşik ayar); tek ölçüm noktalı ağaç (hesaplanmaz).
+Checks (before computation, with the severity levels of the Validator): duplicate `h` on the same tree; `h` < 0 or `h` > total height; felling height greater than height; diameter **increasing** with height (increases outside the butt swell are a warning; the butt swell zone is defined as a setting, default h < 1.3 m); large difference between the diameter measured at 1.30 m and `dbh` (threshold is a setting); tree with a single measurement point (not computed).
 
-### 1.3. Katsayı kaydı: `model-coef/1`
+### 1.3. Coefficient registry: `model-coef/1`
 
-Bonitet, biyokütle, gövde profili (ve kabuk modeli) katsayı setleri ortak bir kayıtta tutulur.
+The site index, biomass, taper (and bark model) coefficient sets are kept in a shared registry.
 
 ```
-{ schema: 'model-coef/1', id, tool: 'siteindex'|'biomass'|'taper'|'bark'|…, form: '<kayıtlı biçim kimliği>',
-  params: { <ad>: sayı }, inputs: { <değişken>: { unit, bark? } }, output: { name, unit, bark? },
-  valid: { <değişken>: [en küçük, en büyük] } | null, species, region, component?,
+{ schema: 'model-coef/1', id, tool: 'siteindex'|'biomass'|'taper'|'bark'|…, form: '<registered form id>',
+  params: { <name>: number }, inputs: { <variable>: { unit, bark? } }, output: { name, unit, bark? },
+  valid: { <variable>: [min, max] } | null, species, region, component?,
   transform: { kind: 'none'|'log'|'log10', correction: 'none'|'baskerville'|'snowdon'|'user', value? } | null,
-  source: { citation (zorunlu), doi?, page?, table?, note? }, origin: 'user-entered'|'fitted',
-  fit?: { data: 'açıklama', n, method, rmse, created } , created, modified }
+  source: { citation (required), doi?, page?, table?, note? }, origin: 'user-entered'|'fitted',
+  fit?: { data: 'description', n, method, rmse, created } , created, modified }
 ```
 
-- **Biçim kaydı:** her araç desteklediği denklem biçimlerini (ör. `B = a·D^b`) kimlik, parametre adları ve açık formülle kaydeder; kullanıcı yalnızca kayıtlı bir biçime katsayı girer. Serbest formül yazımı (ifade ayrıştırıcı) bu pakette yoktur.
-- **Kaynak alanı zorunludur.** "Kendi verim, yayımlanmamış" gibi bir ifade geçerlidir, ama boş bırakılamaz. Sonuç tablosu ve dışa aktarma "kullanıcı katsayılarıyla üretildi: <kaynak>" notunu taşır.
-- Saklama: IndexedDB (`forestbiometry` deposu); JSON olarak indirilebilir ve geri yüklenebilir. Sunucuya gitmez.
-- Uydurulan setler (`origin: 'fitted'`) uydurma özetini (`fit`) taşır ve aynı kayda yazılabilir.
+- **Form registry:** each tool registers the equation forms it supports (e.g. `B = a·D^b`) with an id, parameter names and an explicit formula; the user enters coefficients only for a registered form. Free formula entry (an expression parser) is not part of this package.
+- **The source field is mandatory.** A statement such as "My own data, unpublished" is valid, but it cannot be left empty. The result table and the export carry the note "produced with user coefficients: <source>".
+- Storage: IndexedDB (`forestbiometry` store); can be downloaded as JSON and restored. It does not go to the server.
+- Fitted sets (`origin: 'fitted'`) carry the fit summary (`fit`) and can be written to the same registry.
 
-## 2. Seksiyon hacmi (Stem Section Volume)
+## 2. Section volume (Stem Section Volume)
 
-Amaç: ölçülmüş seksiyon çaplarından tek ağaç gövde hacmi (kabuklu ve/veya kabuksuz), seksiyon dökümü, biçim sayısı; örnek alan verisi varsa hektara genişletme.
+Purpose: single-tree stem volume (over bark and/or under bark) from measured section diameters, section breakdown, form factor; expansion to the hectare if plot data are available.
 
-### 2.1. Denklemler
+### 2.1. Equations
 
-g(d) = (π/4)·(d/100)² (m², d cm). Seksiyon uzunluğu L (m).
+g(d) = (π/4)·(d/100)² (m², d cm). Section length L (m).
 
-| Yöntem | Ölçüm | Hacim |
+| Method | Measurement | Volume |
 |---|---|---|
-| Huber | seksiyon ortasında d_m | V = g_m·L |
-| Smalian | iki uçta d₁, d₂ | V = (g₁ + g₂)/2·L |
-| Newton | iki uç ve orta | V = L/6·(g₁ + 4g_m + g₂) |
-| Hohenadl (5 seksiyon) | 0.1H, 0.3H, 0.5H, 0.7H, 0.9H | V = (H/5)·Σ g_i (eşit uzunlukta beş Huber seksiyonu) |
+| Huber | d_m at the middle of the section | V = g_m·L |
+| Smalian | d₁, d₂ at the two ends | V = (g₁ + g₂)/2·L |
+| Newton | two ends and middle | V = L/6·(g₁ + 4g_m + g₂) |
+| Hohenadl (5 sections) | 0.1H, 0.3H, 0.5H, 0.7H, 0.9H | V = (H/5)·Σ g_i (five Huber sections of equal length) |
 
-- **Dip kütük (stump):** zemin ile kesim yüksekliği arasındaki hacim ayrı satırdır ve toplam gövde hacmine katılıp katılmayacağı ayardır (varsayılan: katılmaz; kesim yüksekliğinden tepeye gövde). Kütük silindir olarak, kesim yüzeyindeki çapla hesaplanır.
-- **Uç seksiyon (K7):** son ölçüm noktasından tepeye; koni V = g·L/3, paraboloit V = g·L/2, neiloit V = g·L/4. Tepe boyu bilinmiyorsa uç seksiyon hesaplanmaz ve hacim "son ölçüm noktasına kadar" diye etiketlenir.
-- **Eşit olmayan seksiyonlar** desteklenir; her seksiyonun kendi L'si vardır. Huber için ölçüm noktası seksiyonun ortası olmalıdır; araç seksiyon sınırlarını ölçüm noktalarından nasıl türettiğini açıkça yazar (iki ayrı veri düzeni: "uç ölçümleri" ve "orta ölçümleri"; kullanıcı seçer, araç tahmin etmez).
-- **Kullanılabilir hacim:** kullanıcı bir tepe çapı (ör. 7 cm) verirse, bu çapın aşıldığı noktanın yüksekliği iki ölçüm arasında **doğrusal aradeğerle** (çapta) bulunur; kullanılabilir hacim o noktaya kadardır. Aradeğer kuralı sonuçta yazılır.
-- **Biçim sayısı:** f₁.₃ = V / (g₁.₃·H) (gerçek biçim sayısı değil, göğüs yüksekliği biçim sayısı; tanım sonuçta yazılır). V'nin dip kütüğü içerip içermediği aynı satırda belirtilir.
-- **Kabuk:** kabuklu ve kabuksuz hacim ayrı sütunlardır; kabuk hacmi = fark, kabuk yüzdesi = fark / kabuklu hacim.
+- **Stump:** the volume between the ground and the felling height is a separate row, and whether it is included in the total stem volume is a setting (default: not included; stem from the felling height to the tip). The stump is computed as a cylinder with the diameter at the felling surface.
+- **Top section (K7):** from the last measurement point to the tip; cone V = g·L/3, paraboloid V = g·L/2, neiloid V = g·L/4. If the tip height is not known, the top section is not computed and the volume is labelled "up to the last measurement point".
+- **Unequal sections** are supported; each section has its own L. For Huber the measurement point must be the middle of the section; the tool states explicitly how it derives the section boundaries from the measurement points (two separate data layouts: "end measurements" and "middle measurements"; the user chooses, the tool does not guess).
+- **Merchantable volume:** if the user gives a top diameter (e.g. 7 cm), the height of the point where this diameter is crossed is found by **linear interpolation** (in diameter) between two measurements; merchantable volume is up to that point. The interpolation rule is written in the result.
+- **Form factor:** f₁.₃ = V / (g₁.₃·H) (not the true form factor but the breast-height form factor; the definition is written in the result). Whether V includes the stump is stated on the same row.
+- **Bark:** over-bark and under-bark volume are separate columns; bark volume = difference, bark percentage = difference / over-bark volume.
 
-### 2.2. Bilinen davranış (test edilebilir özellikler)
+### 2.2. Known behaviour (testable properties)
 
-Kesit alanı yükseklikle g(h) = g₀(1 − h/L)^r değişiyorsa: r = 1 paraboloit, r = 2 koni, r = 3 neiloit. Huber, Smalian ve Newton paraboloitte **tam**dır; Newton, kesit alanı yüksekliğin en çok üçüncü dereceden polinomu olan her cisimde tamdır (koni ve neiloit dahil); koni ve neiloitte Huber eksik, Smalian fazla tahmin eder ve seksiyon sayısı arttıkça ikisi de tam değere yaklaşır. Sayılar Bölüm 8.1'de.
+If the cross-sectional area changes with height as g(h) = g₀(1 − h/L)^r: r = 1 paraboloid, r = 2 cone, r = 3 neiloid. Huber, Smalian and Newton are **exact** for the paraboloid; Newton is exact for every solid whose cross-sectional area is a polynomial of at most third degree in height (including the cone and the neiloid); for the cone and the neiloid Huber underestimates and Smalian overestimates, and both approach the exact value as the number of sections increases. The numbers are in Section 8.1.
 
-### 2.3. Promptlar
+### 2.3. Prompts
 
-### SV01 — Seksiyon hacmi çekirdeği
-
-~~~text
-TOOLS_SPEC Bölüm 1.2 ve 2.1'e göre seksiyon hacmi hesap çekirdeğini yaz (assets/lab/secvol/calc.js, DOM'suz).
-
-Huber, Smalian, Newton ve Hohenadl (beş seksiyon) yöntemlerini ayrı kimliklerle uygula. Eşit olmayan seksiyon uzunluklarını destekle. "Uç ölçümleri" ve "orta ölçümleri" iki ayrı veri düzenidir; kullanıcı seçer, araç tahmin etmez. Newton için her seksiyonda uç ve orta ölçümler gerekir; eksikse o seksiyon hesaplanmaz ve nedeni yazılır.
-
-Dip kütük (silindir, kesim yüzeyi çapıyla) ve uç seksiyon (koni, paraboloit, neiloit; varsayılan koni, araç kuralı olarak etiketli) ayrı satırlardır. Tepe boyu yoksa uç seksiyon hesaplanmaz ve hacim "son ölçüm noktasına kadar" olarak etiketlenir.
-
-Her ağaç için seksiyon dökümü (alt/üst yükseklik, ölçüm(ler), uzunluk, hacim, yöntem), toplam hacim, biçim sayısı f1.3 (tanımıyla) ve durum/sorun kayıtlarını üret. Kabuklu ve kabuksuz hacmi ayrı hesapla; çift kabuk kalınlığı verildiyse d_ib = d_ob − bark_t/10. İki çapraz çapın birleştirme kuralı ayardır ve sonuca yazılır.
-
-Bölüm 1.2'deki veri kontrollerini uygula (yinelenen h, boydan yüksek ölçüm, yükseklikle artan çap, 1.30 m çapı ile dbh farkı, tek ölçüm noktası).
-
-Kabul: Bölüm 8.1'deki paraboloit, koni ve neiloit değerleri tek ve dört seksiyonla 1e−12 göreli toleransla geçmeli; Newton koni ve neiloitte tam olmalı. Bağımsız referans: tests/ref/make_secvol_sv01.py, kesit alanı fonksiyonunun scipy.integrate.quad ile integrali ve eşit olmayan uzunluklu rastgele seksiyonlarda ayrı yazılmış toplama. Eksik/çelişkili veride sayı yerine durum ve neden dönmeli.
-~~~
-
-### SV02 — Arayüz, ağaç ve örnek alan düzeyi
+### SV01 — Section volume core
 
 ~~~text
-Seksiyon hacmi aracının sayfasını (seksiyon-hacmi.php) ve arayüzünü ekle. Adımlar: veri (gövde ölçüm tablosu ve isteğe bağlı ağaç tablosu; içe aktarma paneli; sütun eşleme; veri düzeni seçimi), ayarlar (yöntem, uç seksiyon cismi, dip kütük dahil mi, çap birleştirme kuralı, kullanılabilir tepe çapı), sonuçlar.
+Write the section volume computation core according to TOOLS_SPEC Sections 1.2 and 2.1 (assets/lab/secvol/calc.js, DOM-free).
 
-Sonuç ekranı: ağaç başına tek tablo (ağaç, yöntem, kabuklu ve kabuksuz hacim, biçim sayısı, durum); seçili ağacın seksiyon dökümü ve gövde profil çizimi (yükseklik–çap, ölçüm noktaları ve seksiyon sınırları) ayrıntılar açılırında. Birden çok yöntem seçilirse aynı ağaçta yöntemler yan yana ve aralarındaki fark yüzde olarak gösterilir. Kullanılabilir tepe çapı verildiyse kullanılabilir hacim ve o çapın yüksekliği (doğrusal aradeğer, kural yazılı).
+Implement the Huber, Smalian, Newton and Hohenadl (five sections) methods with separate ids. Support unequal section lengths. "End measurements" and "middle measurements" are two separate data layouts; the user chooses, the tool does not guess. Newton needs end and middle measurements in each section; if they are missing, that section is not computed and the reason is written.
 
-Ağaç tablosunda örnek alan alanı varsa ağaç hacimleri genişletme faktörüyle hektara toplanır (m³/ha); seksiyon ölçümü olmayan ağaçlar bu toplama sessizce katılmaz: sayıları ve "ölçülmemiş" durumu raporlanır (hacim modeli ile tamamlama bu aşamada yok).
+The stump (cylinder, with the felling surface diameter) and the top section (cone, paraboloid, neiloid; default cone, labelled as a tool rule) are separate rows. If there is no tip height, the top section is not computed and the volume is labelled "up to the last measurement point".
 
-Excel/CSV/JSON dışa aktarma, kılavuz bölümü (TR/EN), site_tools satırı (K2, K3, K4), simge; "Ağaç ve gövde" kategorisi bu araçla birlikte site_cats()'a eklenir. Örnek veri benzetimdir ve öyle etiketlenir (tests/ref altında üretici betikle).
+For each tree produce the section breakdown (lower/upper height, measurement(s), length, volume, method), total volume, form factor f1.3 (with its definition) and status/problem records. Compute over-bark and under-bark volume separately; if double bark thickness is given, d_ib = d_ob − bark_t/10. The combining rule for two cross diameters is a setting and is written in the result.
 
-Kabul: e2e testinde bilinen cisimlerden üretilmiş örnek veriyle ekrandaki hacimler motorla aynı; uç seksiyon ve dip kütük seçenekleri değerleri doğru değiştirir; eksik veri satır numarasıyla raporlanır; telefon genişliğinde yatay kaydırma yok; TR/EN aynı sayılar.
+Apply the data checks in Section 1.2 (duplicate h, measurement above height, diameter increasing with height, difference between the 1.30 m diameter and dbh, single measurement point).
+
+Acceptance: the paraboloid, cone and neiloid values in Section 8.1 must pass with one and four sections at 1e−12 relative tolerance; Newton must be exact for the cone and the neiloid. Independent reference: tests/ref/make_secvol_sv01.py, the integral of the cross-sectional area function with scipy.integrate.quad and a separately written summation on random sections of unequal length. For missing/contradictory data a status and reason must be returned instead of a number.
 ~~~
 
-### SV03 — Kalite kontrolleri ve yöntem karşılaştırması
+### SV02 — Interface, tree and plot level
 
 ~~~text
-Seksiyon hacmi aracına veri kalitesi ve yöntem farkı raporunu ekle.
+Add the page (seksiyon-hacmi.php) and interface of the section volume tool. Steps: data (stem measurement table and optional tree table; import panel; column mapping; choice of data layout), settings (method, top section solid, whether the stump is included, diameter combining rule, merchantable top diameter), results.
 
-Her ağaç için profilin tutarlılığını raporla: yükseklikle artan çaplar (kök şişkinliği bölgesi ayarı dışında), seksiyon uzunluklarının dağılımı, uç seksiyonun toplam hacimdeki payı (ayarlanabilir eşik üstü uyarı: uç seksiyon cismi seçimi sonuca duyarlı demektir), 1.30 m çapı ile dbh farkı.
+Result screen: a single table per tree (tree, method, over-bark and under-bark volume, form factor, status); the section breakdown of the selected tree and the taper drawing (height–diameter, measurement points and section boundaries) in the details expandable section. If more than one method is selected, the methods are shown side by side for the same tree and the difference between them as a percentage. If a merchantable top diameter is given, merchantable volume and the height of that diameter (linear interpolation, rule written).
 
-Birden çok yöntem hesaplandıysa yöntemler arası farkın özetini ver (ağaç başına ve toplamda, yüzde). Hiçbir yöntemi "doğru" ilan etme; Bölüm 2.2'deki bilinen davranışı ayrıntılar açılırında açıkla.
+If the tree table has a plot field, tree volumes are summed to the hectare with the expansion factor (m³/ha); trees without section measurements are not silently included in this sum: their number and the "not measured" status are reported (completion with a volume model is not part of this stage).
 
-Kabul: bilinen cisimlerde yöntem farkları Bölüm 8.1 ile aynı; uyarı eşikleri ayarla değişiyor ve sonuçta yazılıyor.
+Excel/CSV/JSON export, guide section (TR/EN), site_tools row (K2, K3, K4), icon; the "Tree and stem" category is added to site_cats() together with this tool. The example data are a simulation and are labelled as such (with a generator script under tests/ref).
+
+Acceptance: in the e2e test, with example data produced from known solids, the volumes on screen are the same as the engine's; the top section and stump options change the values correctly; missing data are reported with row numbers; no horizontal scrolling at phone width; TR/EN give the same numbers.
 ~~~
 
-### SV04 — İsteğe bağlı: hacim denklemi uydurma
+### SV03 — Quality checks and method comparison
 
 ~~~text
-(İsteğe bağlı.) Seksiyon hacimleri hesaplanmış ağaçlardan kullanıcının seçtiği kayıtlı hacim denklemi biçimlerini (ör. V = b0 + b1·D²H; ln V = b0 + b1 ln D + b2 ln H) uydur. Logaritmik biçimde geri dönüşüm düzeltmesi açık bir seçenektir. Uydurulan set katsayı kaydına (model-coef/1, origin 'fitted') yazılabilir. Model başarısı değerlendirmesi için Model Başarısı aracına aktarma yolu ver; kendi başarı ölçütü hesaplarını o araçla aynı tanımlarla yap.
+Add a data quality and method difference report to the section volume tool.
 
-Kabul: katsayılar ve standart hatalar SciPy/statsmodels referansıyla aynı; logaritmik biçimde düzeltme etkeni elle hesaplanan değere eşit.
+For each tree report the consistency of the profile: diameters increasing with height (outside the butt swell zone setting), the distribution of section lengths, the share of the top section in total volume (warning above an adjustable threshold: it means the result is sensitive to the choice of top section solid), the difference between the 1.30 m diameter and dbh.
+
+If more than one method was computed, give a summary of the difference between methods (per tree and in total, as a percentage). Do not declare any method "correct"; explain the known behaviour in Section 2.2 in the details expandable section.
+
+Acceptance: for known solids the method differences are the same as in Section 8.1; warning thresholds change with the setting and are written in the result.
 ~~~
 
-## 3. Bonitet (Site Index)
+### SV04 — Optional: volume equation fitting
 
-Amaç: üst boy ve yaştan bonitet endeksi (seçilen dayanak yaşındaki üst boy), bonitet sınıfı ve bonitet eğrisi; kullanıcının katsayılarıyla ya da kendi gövde analizi / tekrarlı ölçüm verisinden uydurulan dinamik denklemle.
+~~~text
+(Optional.) From trees whose section volumes have been computed, fit the registered volume equation forms chosen by the user (e.g. V = b0 + b1·D²H; ln V = b0 + b1 ln D + b2 ln H). In the logarithmic form the back-transformation correction is an explicit option. The fitted set can be written to the coefficient registry (model-coef/1, origin 'fitted'). Provide a path to transfer to the Model Performance tool for model performance evaluation; do your own performance measure computations with the same definitions as that tool.
 
-### 3.1. Kavramlar
+Acceptance: coefficients and standard errors are the same as the SciPy/statsmodels reference; in the logarithmic form the correction factor equals the value computed by hand.
+~~~
 
-- **Üst boy:** platformda baskın boy H0 (hektardaki en büyük 100 ağacın boy ortalaması; Örnek Alan ve Meşcere aracı, METHODS §6). Bonitet aracı H0'ı o araçla **aynı tanımla** hesaplar ya da kullanıcının verdiği üst boyu kullanır; tanım sonuçta yazılır. Eğri katsayıları farklı bir üst boy tanımıyla üretildiyse araç bunu düzeltemez; kullanıcıya not olarak gösterilir.
-- **Yaş türü (K8)** ve **dayanak yaş** A₀ (ör. 50 ya da 100) ayardır ve her sonuçta yazılır.
-- **Dinamik (fark) denklemleri:** H₂ = f(A₂, A₁, H₁). İstenen özellikler: tutarlılık H₁ = f(A₁, A₁, H₁), dayanak yaştan bağımsızlık (base-age invariance) ve yol bağımsızlığı f(A₃, A₂, f(A₂, A₁, H₁)) = f(A₃, A₁, H₁). Bonitet endeksi SI = f(A₀, A, H).
-- Eğri biçimi **anamorfik** (eğriler birbirinin katı) ya da **polimorfik** olabilir; bu, biçimin özelliğidir ve arayüzde yazılır.
+## 3. Site index (Site Index)
 
-### 3.2. Biçimler (ilk kapsam)
+Purpose: site index (top height at the chosen base age), site class and site index curve from top height and age; with the user's coefficients or with a dynamic equation fitted from the user's own stem analysis / remeasurement data.
 
-Her biçim parametreleri, hangi parametrenin yetişme ortamına özgü olduğu (serbest parametre) ve fark denklemi türetimiyle METHODS.md'ye yazılır; türetim aşağıdaki özdeşlik testleriyle doğrulanır.
+### 3.1. Concepts
 
-| Kimlik | Temel model | Fark denklemi (serbest parametre) | Tür |
+- **Top height:** on the platform the dominant height H0 (mean height of the 100 largest trees per hectare; Plot and Stand tool, METHODS §6). The site index tool computes H0 **with the same definition** as that tool or uses the top height given by the user; the definition is written in the result. If the curve coefficients were produced with a different top height definition, the tool cannot correct this; it is shown to the user as a note.
+- **Age type (K8)** and **base age** A₀ (e.g. 50 or 100) are settings and are written in every result.
+- **Dynamic (difference) equations:** H₂ = f(A₂, A₁, H₁). Desired properties: consistency H₁ = f(A₁, A₁, H₁), base-age invariance and path invariance f(A₃, A₂, f(A₂, A₁, H₁)) = f(A₃, A₁, H₁). Site index SI = f(A₀, A, H).
+- The curve form can be **anamorphic** (the curves are multiples of each other) or **polymorphic**; this is a property of the form and is written in the interface.
+
+### 3.2. Forms (initial scope)
+
+Each form is written into METHODS.md with its parameters, which parameter is site-specific (free parameter) and the derivation of the difference equation; the derivation is verified with the identity tests below.
+
+| Id | Base model | Difference equation (free parameter) | Type |
 |---|---|---|---|
-| `cr.ada.b0` | Chapman–Richards H = b₀(1 − e^(−b₁A))^b₂ | H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂ (b₀ yere özgü) | anamorfik |
-| `cr.ada.b2` | aynı | H₂ = b₀·(H₁/b₀)^(ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))) (b₂ yere özgü) | polimorfik |
-| `schu.ada` | Schumacher ln H = b₀ + b₁/A | ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁) (b₀ yere özgü) | anamorfik |
-| `gada.*` | Cieszewski–Bailey GADA ailesi | **kaynaktan okunup** biçim bazında eklenir | polimorfik |
+| `cr.ada.b0` | Chapman–Richards H = b₀(1 − e^(−b₁A))^b₂ | H₂ = H₁·[(1 − e^(−b₁A₂))/(1 − e^(−b₁A₁))]^b₂ (b₀ site-specific) | anamorphic |
+| `cr.ada.b2` | same | H₂ = b₀·(H₁/b₀)^(ln(1 − e^(−b₁A₂))/ln(1 − e^(−b₁A₁))) (b₂ site-specific) | polymorphic |
+| `schu.ada` | Schumacher ln H = b₀ + b₁/A | ln H₂ = ln H₁ + b₁(1/A₂ − 1/A₁) (b₀ site-specific) | anamorphic |
+| `gada.*` | Cieszewski–Bailey GADA family | added form by form **after being read from the source** | polymorphic |
 
-GADA biçimleri uygulanmadan önce Cieszewski ve Bailey (2000) okunmalıdır; bu belgede denklem yazılmadı (uydurma riski).
+Before the GADA forms are implemented, Cieszewski and Bailey (2000) must be read; no equation was written in this document (risk of fabrication).
 
-### 3.3. Uydurma (kullanıcının kendi verisinden)
+### 3.3. Fitting (from the user's own data)
 
-- Veri: gövde analizi (bir ağacın yaş–boy dizisi) ya da tekrarlı ölçülen örnek alanların üst boy–yaş dizisi. Dizi kimliği (ağaç ya da örnek alan) zorunludur.
-- Fark denklemi uydurmada **eşleştirme biçimi** sonucu etkiler: ardışık eşler, ilk ölçüm ile sonrakiler, bütün eşler. Seçim ayardır ve sonuçta yazılır. Aynı dizinin gözlemleri bağımsız değildir; bu yüzden standart hatalar "gözlemler bağımsız varsayımıyla" diye etiketlenir ya da dizi düzeyinde bootstrap ile verilir (SI04).
-- Alternatif: yere özgü parametreyi her dizi için ayrı kestiren "dummy değişken" yaklaşımı; bu ayrı bir yöntem kimliğidir ve kaynakla doğrulanmadan eklenmez.
-- Çözücü: `core/nls.js` (Levenberg–Marquardt). Başarısızlık durumları ayrı raporlanır; başarısız uydurma katsayı kaydına yazılamaz.
+- Data: stem analysis (the age–height series of a tree) or the top height–age series of remeasured plots. A series id (tree or plot) is mandatory.
+- In difference equation fitting the **pairing scheme** affects the result: consecutive pairs, first measurement with the later ones, all pairs. The choice is a setting and is written in the result. Observations from the same series are not independent; therefore standard errors are labelled "assuming independent observations" or given by series-level bootstrap (SI04).
+- Alternative: the "dummy variable" approach that estimates the site-specific parameter separately for each series; this is a separate method id and is not added until verified with a source.
+- Solver: `core/nls.js` (Levenberg–Marquardt). Failure states are reported separately; a failed fit cannot be written to the coefficient registry.
 
-### 3.4. Bonitet sınıfları
+### 3.4. Site classes
 
-Sınıflar **kullanıcı tanımlıdır**: sınıf sayısı ve dayanak yaştaki SI aralıkları (eşit aralık ya da elle sınırlar), sınıf adları (I, II, … ya da serbest). Hasılat tablolarından sınıf sınırları ancak kullanıcı girerse kullanılır; araç hiçbir hasılat tablosunu gömmez (K1).
+Classes are **user-defined**: number of classes and SI ranges at the base age (equal intervals or manual boundaries), class names (I, II, … or free). Class boundaries from yield tables are used only if the user enters them; the tool does not embed any yield table (K1).
 
-### 3.5. Promptlar
+### 3.5. Prompts
 
-### SI01 — Dinamik denklem çekirdeği
-
-~~~text
-TOOLS_SPEC Bölüm 3.1–3.2'ye göre bonitet hesap çekirdeğini yaz (assets/lab/siteindex/calc.js, DOM'suz). Biçim kaydı: cr.ada.b0, cr.ada.b2, schu.ada. Her biçim için H2 = f(A2, A1, H1), SI = f(A0, A, H), eğri üretimi (verilen SI için A ızgarasında H) ve parametre geçerlilik kontrolleri.
-
-Tanımsız durumları ayrı raporla (ör. 1 − e^(−b1·A) ≤ 0, H ≤ 0, A ≤ 0, H1 ≥ b0 olan polimorfik biçim). Yaş türü ve dayanak yaş her sonucun ayarlarında yer alsın.
-
-Kabul: her biçimde tutarlılık, dayanak yaştan bağımsızlık ve yol bağımsızlığı rastgele 1000 durumda 1e−12 göreli toleransla sağlanmalı. Bağımsız referans: tests/ref/make_siteindex_si01.py, temel modeli SI'ya göre scipy.optimize.brentq ile çözüp eğriyi oradan hesaplayan ayrı yol (fark denkleminin kendisi kullanılmadan). Bölüm 8.2 değerleri geçmeli.
-~~~
-
-### SI02 — Katsayı kaydı ile bonitet hesabı ve arayüz
+### SI01 — Dynamic equation core
 
 ~~~text
-Bonitet aracının sayfasını (bonitet.php) ekle. Kullanıcı T01 katsayı kaydından bir set seçer ya da yeni set girer (biçim, katsayılar, yaş türü, dayanak yaş, üst boy tanımı, geçerlilik aralığı, kaynak zorunlu).
+Write the site index computation core according to TOOLS_SPEC Sections 3.1–3.2 (assets/lab/siteindex/calc.js, DOM-free). Form registry: cr.ada.b0, cr.ada.b2, schu.ada. For each form H2 = f(A2, A1, H1), SI = f(A0, A, H), curve generation (H on an A grid for a given SI) and parameter validity checks.
 
-Girdi: tek ağaç/örnek alan için elle (yaş, üst boy) ya da tablo (örnek alan, dönem, yaş, üst boy). Ağaç tablosundan üst boy hesaplanacaksa Örnek Alan ve Meşcere aracının H0 tanımı aynen kullanılır (kodu yeniden yazılmaz, paylaşılır) ve tanım sonuçta yazılır.
+Report undefined cases separately (e.g. 1 − e^(−b1·A) ≤ 0, H ≤ 0, A ≤ 0, a polymorphic form with H1 ≥ b0). The age type and base age must be part of the settings of every result.
 
-Çıktı: SI, bonitet sınıfı (Bölüm 3.4; sınıf tanımı kullanıcıdan), eğri demeti grafiği (sınıf sınırları ve gözlemler), geçerlilik aralığı dışı uyarıları. Excel/CSV/JSON, kılavuz, site_tools satırı; "Meşcere ve yetişme ortamı" kategorisi bu araçla birlikte site_cats()'a eklenir.
-
-Kabul: e2e'de ekrandaki SI motorla aynı; yaş türü ve dayanak yaş sonuçta görünür; kaynak alanı boş set kaydedilemez; sınıf sınırları değişince sınıflar değişir, SI değişmez.
+Acceptance: for every form, consistency, base-age invariance and path invariance must hold in 1000 random cases at 1e−12 relative tolerance. Independent reference: tests/ref/make_siteindex_si01.py, a separate path that solves the base model for SI with scipy.optimize.brentq and computes the curve from there (without using the difference equation itself). The values in Section 8.2 must pass.
 ~~~
 
-### SI03 — Kendi verisinden uydurma
+### SI02 — Site index computation with the coefficient registry, and interface
 
 ~~~text
-Bölüm 3.3'e göre gövde analizi ve tekrarlı ölçüm verisinden fark denklemi uydurmayı ekle. Eşleştirme biçimi (ardışık, ilk-ile-sonrakiler, bütün eşler) ayardır. Uydurma core/nls.js ile yapılır; başlangıç değerleri ve durdurma ölçütü sonuçta yazılır. Standart hatalar "gözlemler bağımsız varsayımıyla" etiketlenir.
+Add the page of the site index tool (bonitet.php). The user selects a set from the T01 coefficient registry or enters a new set (form, coefficients, age type, base age, top height definition, validity range, source mandatory).
 
-Çıktı: katsayılar, RMSE ve yanlılık (Model Başarısı aracıyla aynı tanımlar), artıklar–yaş grafiği, uydurulan eğrilerin gözlem dizileri üzerine çizimi. Başarılı set katsayı kaydına (origin 'fitted', veri özeti ve eşleştirme biçimiyle) yazılabilir.
+Input: manual for a single tree/plot (age, top height) or a table (plot, period, age, top height). If top height is to be computed from the tree table, the H0 definition of the Plot and Stand tool is used exactly (the code is shared, not rewritten) and the definition is written in the result.
 
-Kabul: katsayılar scipy.optimize.least_squares referansıyla 1e−6 göreli toleransla aynı (aynı eşleştirme biçimi, aynı başlangıç); benzetim verisinde (bilinen katsayılarla üretilmiş, gürültülü) katsayılar makul aralıkta geri gelir; eşleştirme biçimi değişince eş sayısı doğru.
+Output: SI, site class (Section 3.4; class definition from the user), curve family chart (class boundaries and observations), warnings outside the validity range. Excel/CSV/JSON, guide, site_tools row; the "Stand and site" category is added to site_cats() together with this tool.
+
+Acceptance: in e2e the SI on screen is the same as the engine's; age type and base age are visible in the result; a set with an empty source field cannot be saved; when class boundaries change the classes change and SI does not.
 ~~~
 
-### SI04 — Belirsizlik
+### SI03 — Fitting from the user's own data
 
 ~~~text
-Uydurulan bonitet modeli için dizi düzeyinde bootstrap ekle (diziler yeniden örneklenir, tek tek gözlemler değil). Katsayılar ve verilen bir (A, H) için SI'nın yüzdelik aralığı, başarısız tekrar oranı ve tohum sonuçta yazılır. Kullanıcı katsayısıyla girilen setlerde belirsizlik ancak kaynak kovaryans matrisini verirse (delta yöntemi) hesaplanır; yoksa "belirsizlik bilgisi yok" yazılır.
+Add difference equation fitting from stem analysis and remeasurement data according to Section 3.3. The pairing scheme (consecutive, first-with-later, all pairs) is a setting. Fitting is done with core/nls.js; starting values and the stopping criterion are written in the result. Standard errors are labelled "assuming independent observations".
 
-Kabul: sabit tohumla tekrarlanabilir; bağımsız Python bootstrap uygulamasıyla aynı tohum ve aynı yeniden örnekleme sırası kullanıldığında aynı sonuçlar; delta yöntemi sayısal türevle doğrulanır.
+Output: coefficients, RMSE and bias (same definitions as the Model Performance tool), residuals–age chart, the fitted curves drawn over the observed series. A successful set can be written to the coefficient registry (origin 'fitted', with the data summary and pairing scheme).
+
+Acceptance: coefficients are the same as the scipy.optimize.least_squares reference at 1e−6 relative tolerance (same pairing scheme, same start); in simulated data (produced with known coefficients, noisy) the coefficients come back within a reasonable range; when the pairing scheme changes, the number of pairs is correct.
 ~~~
 
-## 4. Meşcere yapısı ve rekabet (Stand Structure & Competition)
+### SI04 — Uncertainty
 
-Amaç: örnek alan × dönem başına çap/boy yapısı, sıklık ölçüleri, (koordinat varsa) mekânsal yapı ve ağaç düzeyinde rekabet endeksleri.
+~~~text
+Add series-level bootstrap for the fitted site index model (series are resampled, not individual observations). The percentile interval of the coefficients and of SI for a given (A, H), the rate of failed replicates and the seed are written in the result. For sets entered with user coefficients, uncertainty is computed only if the source gives the covariance matrix (delta method); otherwise "no uncertainty information" is written.
 
-### 4.1. Ölçüler
+Acceptance: reproducible with a fixed seed; the same results as an independent Python bootstrap implementation when the same seed and the same resampling order are used; the delta method is verified with a numerical derivative.
+~~~
 
-**Mekândan bağımsız (koordinat gerekmez):**
+## 4. Stand structure and competition (Stand Structure & Competition)
 
-| Ölçü | Tanım | Not |
+Purpose: diameter/height structure per plot × period, density measures, spatial structure (if coordinates are available) and tree-level competition indices.
+
+### 4.1. Measures
+
+**Distance-independent (no coordinates needed):**
+
+| Measure | Definition | Note |
 |---|---|---|
-| Çap ÇK, çarpıklık, basıklık | ağaç düzeyinde, n bölen (tanım yazılır) | |
-| Gini katsayısı | göğüs yüzeyi üzerinden (ağaç başına g); formül ve sıralama yönü METHODS'ta | çap üzerinden Gini ayrı seçenek, ayrı etiket |
-| Shannon çeşitliliği | çap sınıfı oranları üzerinden H' = −Σ p ln p | sınıf genişliği ve başlangıcı ayar; sonuçta yazılır |
-| Tür karışımı | tür oranları, Shannon ve Simpson | tür sütunu varsa |
-| BAL | ağaçtan kalın ağaçların hektardaki göğüs yüzeyi toplamı (m²/ha) | eşit çaplar: dahil mi değil mi ayar ve yazılır |
-| Göreli büyüklük | d_i / Dq ya da g_i / ortalama g | |
-| SDI (Reineke) | SDI = N·(Dq/25)^β, varsayılan β = 1.605, kullanıcı değiştirebilir | metrik dayanak çap 25 cm; β'nın kaynağı yazılır |
-| Göreli aralık (Hart–Becking) | S% = 100·a/H0; kare dikimde a = √(10000/N), üçgen dikimde a = √(2·10000/(N√3)) | dikim düzeni seçimi yazılır |
-| Curtis göreli sıklığı | RD = G/√Dq | birimleri yazılır |
+| Diameter CV, skewness, kurtosis | at tree level, n divisor (definition written) | |
+| Gini coefficient | over basal area (g per tree); formula and sorting direction in METHODS | Gini over diameter is a separate option with a separate label |
+| Shannon diversity | H' = −Σ p ln p over diameter class proportions | class width and start are settings; written in the result |
+| Species mixture | species proportions, Shannon and Simpson | if there is a species column |
+| BAL | sum of the basal area per hectare of trees thicker than the tree (m²/ha) | equal diameters: whether included or not is a setting and is written |
+| Relative size | d_i / Dq or g_i / mean g | |
+| SDI (Reineke) | SDI = N·(Dq/25)^β, default β = 1.605, user can change | metric reference diameter 25 cm; the source of β is written |
+| Relative spacing (Hart–Becking) | S% = 100·a/H0; for square planting a = √(10000/N), for triangular planting a = √(2·10000/(N√3)) | the choice of planting pattern is written |
+| Curtis relative density | RD = G/√Dq | units are written |
 
-**Mekânsal (x, y ve örnek alan sınırı gerekir):** Clark–Evans R (sınır düzeltmesiz ve Donnelly düzeltmeli), düzgün açı endeksi W, karışım M, çap farklılaşması T, baskınlık U (k = 4 en yakın komşu varsayılan, k ayar), Hegyi rekabet endeksi CI_i = Σ_j (d_j/d_i)/dist_ij (yarıçap R içindeki komşular ya da k en yakın; seçim yazılır).
+**Spatial (requires x, y and the plot boundary):** Clark–Evans R (without edge correction and with the Donnelly correction), uniform angle index W, mingling M, diameter differentiation T, dominance U (k = 4 nearest neighbours by default, k is a setting), Hegyi competition index CI_i = Σ_j (d_j/d_i)/dist_ij (neighbours within radius R or the k nearest; the choice is written).
 
-**Kenar etkisi:** seçenekler "düzeltme yok", "tampon" (sınıra belirli uzaklıktaki ağaçlar yalnızca komşu olur, endeks hesaplanmaz) ve dikdörtgen alanlarda "toroidal öteleme". Seçim her sonuçta yazılır; düzeltme yokken kenar ağaçları ayrıca işaretlenir.
+**Edge effect:** the options are "no correction", "buffer" (trees within a given distance of the boundary act only as neighbours, no index is computed for them) and, for rectangular plots, "toroidal translation". The choice is written in every result; without correction, edge trees are flagged separately.
 
-Örnek alan geometrisi (daire: merkez ve yarıçap; dikdörtgen: köşeler) kullanıcı verir. Koordinatlar alan dışındaysa satır numarasıyla raporlanır.
+The plot geometry (circle: centre and radius; rectangle: corners) is given by the user. Coordinates outside the plot are reported with their row numbers.
 
-### 4.2. Promptlar
+### 4.2. Prompts
 
-### SS01 — Mekândan bağımsız yapı ve sıklık
-
-~~~text
-TOOLS_SPEC Bölüm 4.1'deki mekândan bağımsız ölçüleri yaz (assets/lab/structure/calc.js, DOM'suz). Örnek alan × dönem birimi ve genişletme faktörü Örnek Alan ve Meşcere aracıyla aynı tanımlardır; kod paylaşılır, yeniden yazılmaz. Her ölçünün tanımı, birimleri ve seçenekleri (sınıf genişliği, eşit çaplar kuralı, Reineke üssü, dikim düzeni) sonuç kaydına yazılır.
-
-Kabul: Bölüm 8.3 değerleri geçmeli. Bağımsız referans tests/ref/make_structure_ss01.py: Gini için ayrı formül (ortalama mutlak fark / 2·ortalama) ile sıralamalı formülün eşitliği; Shannon için scipy.stats.entropy; BAL için kaba kuvvet çift döngü; ağırlıklı (genişletme faktörlü) hesaplar.
-~~~
-
-### SS02 — Mekânsal yapı
+### SS01 — Distance-independent structure and density
 
 ~~~text
-Bölüm 4.1'deki mekânsal ölçüleri ekle: Clark–Evans (düzeltmesiz ve Donnelly), W, M, T, U ve kenar etkisi seçenekleri. Örnek alan geometrisi kullanıcıdan; koordinatlar alan dışında ise sorun olarak raporlanır. Komşu araması k-d ağacı ya da ızgara ile; n ≥ 10 000 ağaçta tarayıcı donmamalı (gerekirse Web Worker).
+Write the distance-independent measures in TOOLS_SPEC Section 4.1 (assets/lab/structure/calc.js, DOM-free). The plot × period unit and the expansion factor have the same definitions as in the Plot and Stand tool; the code is shared, not rewritten. The definition, units and options of each measure (class width, equal diameters rule, Reineke exponent, planting pattern) are written to the result record.
 
-Kabul: düzenli ızgarada bilinen değerler (Bölüm 8.3: kare ızgarada R = 2, altıgen ızgarada R = 2.1491; kare ızgarada dört komşuyla W = 0); Poisson benzetiminde düzeltmesiz R'nin beklenen davranışı (kenar etkisi yüzünden 1'den büyük sapma) ve Donnelly düzeltmesinin bunu azalttığı gösterilir; bağımsız referans scipy.spatial.cKDTree ile ayrı yazılmış Python uygulaması.
+Acceptance: the values in Section 8.3 must pass. Independent reference tests/ref/make_structure_ss01.py: for Gini the equality of a separate formula (mean absolute difference / 2·mean) and the sorted formula; for Shannon scipy.stats.entropy; for BAL a brute-force double loop; weighted computations (with expansion factor).
 ~~~
 
-### SS03 — Rekabet endeksleri
+### SS02 — Spatial structure
 
 ~~~text
-Ağaç düzeyinde rekabet endekslerini ekle: mekândan bağımsız (BAL, göreli büyüklük) ve mekâna bağlı (Hegyi; yarıçap ya da k en yakın komşu). Kenar etkisi seçenekleri SS02 ile aynıdır. Çıktı ağaç tablosuna eklenmiş sütunlar olarak Excel'e yazılır (kaynak satırlar değişmeden, Örnek Alan aracının "ağaç verisine eklenmiş dışa aktarma" düzeniyle).
+Add the spatial measures in Section 4.1: Clark–Evans (uncorrected and Donnelly), W, M, T, U and the edge effect options. Plot geometry from the user; coordinates outside the plot are reported as problems. Neighbour search with a k-d tree or a grid; with n ≥ 10 000 trees the browser must not freeze (Web Worker if needed).
 
-Kabul: Hegyi kaba kuvvet çift döngüyle aynı; tampon seçeneğinde tampondaki ağaçlara endeks verilmez ama komşu olarak sayılır; eşit konumlu iki ağaç (dist = 0) sorun olarak raporlanır, sonsuz endeks üretilmez.
+Acceptance: known values on a regular grid (Section 8.3: R = 2 on a square grid, R = 2.1491 on a hexagonal grid; W = 0 with four neighbours on a square grid); in a Poisson simulation, the expected behaviour of the uncorrected R (deviation above 1 because of the edge effect) and that the Donnelly correction reduces it are shown; independent reference a separately written Python implementation with scipy.spatial.cKDTree.
 ~~~
 
-### SS04 — Arayüz ve grafikler
+### SS03 — Competition indices
 
 ~~~text
-Meşcere yapısı aracının sayfasını (mescere-yapisi.php) ekle: veri (ağaç tablosu ya da onaylanmış veri; koordinatlar isteğe bağlı), ayarlar (ölçü grupları, örnek alan geometrisi, kenar etkisi, k ve yarıçap), sonuçlar (birim başına genel tablo; ayrıntılarda çap sınıfı histogramı, Lorenz eğrisi, koordinat varsa gövde haritası ve rekabet endeksi renklendirmesi). Gezgin (core/unitnav.js), Excel/CSV/JSON, kılavuz, site_tools satırı.
+Add tree-level competition indices: distance-independent (BAL, relative size) and distance-dependent (Hegyi; radius or k nearest neighbours). The edge effect options are the same as in SS02. The output is written to Excel as columns appended to the tree table (source rows unchanged, with the "export appended to the tree data" layout of the Plot tool).
 
-Kabul: e2e'de değerler motorla aynı; koordinatsız veride mekânsal ölçüler "koordinat yok" durumuyla gösterilir, boş ya da sıfır değil; telefon ve koyu tema kontrolü.
+Acceptance: Hegyi is the same as a brute-force double loop; with the buffer option, trees in the buffer get no index but are counted as neighbours; two trees at the same position (dist = 0) are reported as a problem, no infinite index is produced.
 ~~~
 
-## 5. Biyokütle ve karbon (Biomass & Carbon)
+### SS04 — Interface and charts
 
-Amaç: tek ağaç ve meşcere düzeyinde bileşen biyokütlesi (gövde, dal, yaprak/ibre, kök…), karbon ve CO₂ eşdeğeri; kullanıcının katsayılarıyla.
+~~~text
+Add the page of the stand structure tool (mescere-yapisi.php): data (tree table or confirmed data; coordinates optional), settings (measure groups, plot geometry, edge effect, k and radius), results (general table per unit; in the details a diameter class histogram, Lorenz curve and, if coordinates are available, a stem map coloured by competition index). Navigator (core/unitnav.js), Excel/CSV/JSON, guide, site_tools row.
 
-### 5.1. Yaklaşımlar
+Acceptance: in e2e the values are the same as the engine's; for data without coordinates the spatial measures are shown with the "no coordinates" status, not empty or zero; phone and dark theme check.
+~~~
 
-**A. Allometrik denklemler (ağaç düzeyi).** Kayıtlı biçimler (ilk kapsam):
+## 5. Biomass and carbon (Biomass & Carbon)
 
-| Kimlik | Biçim |
+Purpose: component biomass (stem, branches, foliage/needles, roots…), carbon and CO₂ equivalent at single-tree and stand level; with the user's coefficients.
+
+### 5.1. Approaches
+
+**A. Allometric equations (tree level).** Registered forms (initial scope):
+
+| Id | Form |
 |---|---|
 | `pow.d` | B = a·D^b |
 | `pow.dh` | B = a·D^b·H^c |
@@ -317,199 +317,199 @@ Amaç: tek ağaç ve meşcere düzeyinde bileşen biyokütlesi (gövde, dal, yap
 | `log.d` | ln B = a + b·ln D |
 | `log.dh` | ln B = a + b·ln D + c·ln H |
 
-Logaritmik biçimlerde geri dönüşüm düzeltmesi açık bir seçimdir: yok; Baskerville CF = exp(SEE²/2) (SEE kaynaktan, doğal logaritma ölçeğinde); Snowdon oranı (kaynaktan); kullanıcı tanımlı etken. log10 ile verilmiş denklemler ayrı `transform.kind` ile tutulur; ln'ye sessizce çevrilmez. Her bileşen ayrı katsayı setidir; "toplam" ayrıca bir denklemse, bileşenlerin toplamıyla farkı uyarı olarak gösterilir (toplanabilirlik garanti değildir).
+In the logarithmic forms the back-transformation correction is an explicit choice: none; Baskerville CF = exp(SEE²/2) (SEE from the source, on the natural logarithm scale); Snowdon ratio (from the source); user-defined factor. Equations given with log10 are kept with a separate `transform.kind`; they are not silently converted to ln. Each component is a separate coefficient set; if the "total" is also a separate equation, its difference from the sum of the components is shown as a warning (additivity is not guaranteed).
 
-**B. Hacimden dönüşüm (meşcere ya da ağaç).** B = V × ρ × BEF × (1 + R): V gövde hacmi (m³; Seksiyon hacmi aracından ya da elle; Örnek Alan ve Meşcere aracında hacim hesabı yoktur, T00 §5), ρ temel odun yoğunluğu (Mg kuru madde / m³ taze hacim), BEF biyokütle genişletme faktörü (gövde → toprak üstü), R kök/gövde oranı. Hepsi kullanıcı girişi (K1). Hacmin kabuklu/kabuksuz olduğu ve katsayıların hangisiyle tanımlandığı eşleşmelidir; eşleşmezse hesaplanmaz.
+**B. Conversion from volume (stand or tree).** B = V × ρ × BEF × (1 + R): V stem volume (m³; from the Section volume tool or entered manually; the Plot and Stand tool has no volume computation, T00 §5), ρ basic wood density (Mg dry matter / m³ fresh volume), BEF biomass expansion factor (stem → above-ground), R root/shoot ratio. All are user input (K1). Whether the volume is over bark or under bark and which of the two the coefficients are defined with must match; if they do not match, nothing is computed.
 
-**Karbon:** C = B × CF (bileşen başına CF kullanıcıdan), CO₂ = C × 44/12. Meşcere düzeyinde genişletme faktörüyle Mg/ha.
+**Carbon:** C = B × CF (CF per component from the user), CO₂ = C × 44/12. At stand level Mg/ha with the expansion factor.
 
-### 5.2. Promptlar
+### 5.2. Prompts
 
-### BC01 — Biyokütle çekirdeği ve katsayı biçimleri
-
-~~~text
-TOOLS_SPEC Bölüm 5.1'e göre biyokütle ve karbon hesap çekirdeğini yaz (assets/lab/biomass/calc.js). Allometrik biçimler kayıtlı kimliklerle; logaritmik biçimlerde düzeltme seçenekleri ve log10/ln ayrımı açık. Hacimden dönüşüm yaklaşımı ayrı yöntemdir. Karbon ve CO2 dönüşümleri. Bileşen başına sonuç, toplam, toplanabilirlik farkı.
-
-Geçerlilik aralığı dışındaki ağaçlar hesaplanır ve uyarı alır; sayıları raporlanır. Eksik boy (H gereken biçimlerde) "hesaplanmadı" durumudur; boy tahmini Boy–Çap aracında yapılır ve tahmini boylar height_source ile ayrı işaretlenir, sonuçta kaç ağacın tahmini boyla hesaplandığı yazılır.
-
-Kabul: her biçim için elle doğrulanabilir değerler (Bölüm 8.4); Baskerville etkeni exp(s²/2) ile; log10 biçimi ln biçimine çevrilerek hesaplanan bağımsız Python referansıyla aynı; birimler (kg ağaç, Mg/ha meşcere) testli.
-~~~
-
-### BC02 — Arayüz
+### BC01 — Biomass core and coefficient forms
 
 ~~~text
-Biyokütle ve karbon aracının sayfasını (biyokutle-karbon.php) ekle. Veri: ağaç tablosu ya da onaylanmış veri; tür eşlemesi (veri türü kodu → katsayı seti; eşlenmeyen türler raporlanır, sessizce başka türün denklemiyle hesaplanmaz). Ayarlar: yaklaşım, bileşenler, katsayı setleri (T01 kaydından), karbon oranları. Sonuç: örnek alan × dönem başına bileşen biyokütlesi, karbon, CO2 (Mg/ha); ağaç tablosuna eklenmiş dışa aktarma; her sayının hangi katsayı setinden geldiği.
+Write the biomass and carbon computation core according to TOOLS_SPEC Section 5.1 (assets/lab/biomass/calc.js). Allometric forms with registered ids; in the logarithmic forms the correction options and the log10/ln distinction are explicit. The conversion-from-volume approach is a separate method. Carbon and CO2 conversions. Result per component, total, additivity difference.
 
-Kabul: e2e'de değerler motorla aynı; eşlenmeyen tür ve eksik boy durumları satır numarasıyla; kaynak alanı Excel "Bilgi" sayfasında.
+Trees outside the validity range are computed and get a warning; their number is reported. Missing height (in forms that need H) is a "not computed" status; height prediction is done in the Height–Diameter tool and predicted heights are flagged separately with height_source; the result states how many trees were computed with predicted height.
+
+Acceptance: hand-verifiable values for each form (Section 8.4); the Baskerville factor with exp(s²/2); the log10 form is the same as an independent Python reference computed by converting it to the ln form; units (kg tree, Mg/ha stand) are tested.
 ~~~
 
-### BC03 — Seksiyon hacmi aracıyla bağlantı
+### BC02 — Interface
 
 ~~~text
-Hacimden dönüşüm yaklaşımı için girdi olarak Seksiyon hacmi aracının ağaç hacimlerini tarayıcı deposu üzerinden okumayı ekle (Örnek Alan ve Meşcere aracında hacim hesabı yoktur; T00 §5) (forest-dataset/1 'derived' bölümüne yeni bir sürüm numarasıyla yazılır; şema değişikliği PROJECT.md §4b'ye işlenir). Kabuklu/kabuksuz eşleşmesi zorunlu.
+Add the page of the biomass and carbon tool (biyokutle-karbon.php). Data: tree table or confirmed data; species mapping (data species code → coefficient set; unmapped species are reported, not silently computed with another species' equation). Settings: approach, components, coefficient sets (from the T01 registry), carbon fractions. Result: component biomass, carbon, CO2 (Mg/ha) per plot × period; export appended to the tree table; which coefficient set each number comes from.
 
-Kabul: aynı ağaçlar için iki yol (allometrik ve hacimden) ayrı satırlarda; araçlar arası aktarımda değerler bit düzeyinde aynı; eski şema sürümü okunabiliyor.
+Acceptance: in e2e the values are the same as the engine's; unmapped species and missing height cases with row numbers; the source field on the Excel "Info" sheet.
 ~~~
 
-### BC04 — İsteğe bağlı: belirsizlik
+### BC03 — Link with the section volume tool
 
 ~~~text
-(İsteğe bağlı.) Katsayı kovaryansı ve artık varyansı kaynakta verilmişse Monte Carlo ile ağaç ve örnek alan düzeyinde belirsizlik. Verilmemişse hesaplama yapılmaz ve "belirsizlik bilgisi yok" yazılır. Tohum, tekrar sayısı ve varsayımlar (normal hata, bağımsızlık) sonuçta yazılır.
+For the conversion-from-volume approach, add reading the tree volumes of the Section volume tool as input via browser storage (the Plot and Stand tool has no volume computation; T00 §5) (written to the 'derived' part of forest-dataset/1 with a new version number; the schema change is recorded in PROJECT.md §4b). Over-bark/under-bark matching is mandatory.
+
+Acceptance: for the same trees the two paths (allometric and from volume) are on separate rows; in the transfer between tools the values are bit-identical; the old schema version can be read.
 ~~~
 
-## 6. Gövde profili ve ürün hacmi (Taper & Assortment)
+### BC04 — Optional: uncertainty
 
-Amaç: gövde profili denklemiyle herhangi bir yükseklikteki çap, herhangi bir çapın yüksekliği, parça hacimleri ve kullanıcı tanımlı ürün (sortiman) bölmesi.
+~~~text
+(Optional.) If the coefficient covariance and residual variance are given in the source, uncertainty at tree and plot level by Monte Carlo. If they are not given, no computation is done and "no uncertainty information" is written. The seed, number of replicates and assumptions (normal error, independence) are written in the result.
+~~~
 
-### 6.1. Profil denklemleri
+## 6. Taper and product volume (Taper & Assortment)
 
-İlk kapsam, kaynağı okunduktan sonra eklenecek biçimler:
+Purpose: with a taper equation, the diameter at any height, the height of any diameter, piece volumes and a user-defined product (assortment) breakdown.
 
-| Kimlik | Biçim | Not |
+### 6.1. Taper equations
+
+Initial scope, forms to be added after their source has been read:
+
+| Id | Form | Note |
 |---|---|---|
-| `mb76` | Max ve Burkhart (1976) parçalı polinom: y = d²/D², x = h/H; y = b₁(x − 1) + b₂(x² − 1) + b₃(a₁ − x)²·I₁ + b₄(a₂ − x)²·I₂, I_i = 1 (x ≤ a_i) | hacim integrali kapalı biçimde; **künye ve biçim kaynaktan doğrulanacak [D]** |
-| `kozak04` | Kozak (2004) değişken üslü model | biçim bu belgeye yazılmadı; kaynaktan birebir alınacak |
+| `mb76` | Max and Burkhart (1976) segmented polynomial: y = d²/D², x = h/H; y = b₁(x − 1) + b₂(x² − 1) + b₃(a₁ − x)²·I₁ + b₄(a₂ − x)²·I₂, I_i = 1 (x ≤ a_i) | volume integral in closed form; **reference and form to be verified from the source [D]** |
+| `kozak04` | Kozak (2004) variable-exponent model | the form was not written in this document; to be taken verbatim from the source |
 
-- d(h) kabuklu ya da kabuksuz tanımlıdır (katsayı setinin `output.bark`'ı). Kabuk modeli ayrı bir katsayı setidir (`tool: 'bark'`).
-- Hacim: V(h₁, h₂) = (π/40000)·∫ d(h)² dh. Kapalı biçim varsa o, yoksa uyarlamalı Gauss–Legendre; ikisi testte karşılaştırılır.
-- Verilen çapın yüksekliği: d(h) = d* denkleminin kökü (Brent; d(h) yükseklikle azalmıyorsa birden çok kök olabilir, hepsi raporlanır).
-- Tutarlılık kontrolleri (biçime göre): d(H) = 0, d(1.3) ≈ D (bazı biçimlerde tam değildir; fark raporlanır).
+- d(h) is defined over bark or under bark (`output.bark` of the coefficient set). The bark model is a separate coefficient set (`tool: 'bark'`).
+- Volume: V(h₁, h₂) = (π/40000)·∫ d(h)² dh. The closed form if there is one, otherwise adaptive Gauss–Legendre; the two are compared in the test.
+- Height of a given diameter: root of the equation d(h) = d* (Brent; if d(h) is not decreasing with height there may be several roots, all are reported).
+- Consistency checks (depending on the form): d(H) = 0, d(1.3) ≈ D (not exact in some forms; the difference is reported).
 
-### 6.2. Ürün bölme (sortiman)
+### 6.2. Product breakdown (assortment)
 
-- Ürün tanımı (kullanıcı): ad, en küçük ince uç çapı (kabuklu/kabuksuz), boy (sabit ya da en az–en çok ve adım), kesim payı (trim, cm), öncelik ve isteğe bağlı birim değer (para birimi kullanıcıdan; araç fiyat önermez).
-- Dip kütük yüksekliği ve kullanılabilir tepe çapı ayardır.
-- Algoritmalar: (1) **öncelik sırası (açgözlü):** dipten başlayarak sıradaki en yüksek öncelikli ürün sığdığı sürece; (2) **en yüksek değer (dinamik programlama):** gövde uzunluğu adım (varsayılan 0.1 m, ayar) ızgarasında, ürünlerin değer toplamını en büyükleyen kesim. İkisi ayrı yöntemdir; seçilen yöntem ve adım sonuçta yazılır.
-- Çıktı: ağaç başına parçalar (alt/üst yükseklik, ince uç çapı, uzunluk, hacim, ürün), ürün başına toplam hacim ve sayı, artık (kullanılamayan) hacim.
+- Product definition (user): name, minimum small-end diameter (over bark/under bark), length (fixed, or minimum–maximum and step), trim allowance (trim, cm), priority and optional unit value (currency from the user; the tool does not suggest prices).
+- Stump height and merchantable top diameter are settings.
+- Algorithms: (1) **priority order (greedy):** starting from the butt, the next highest-priority product as long as it fits; (2) **maximum value (dynamic programming):** on a grid of stem length steps (default 0.1 m, setting), the bucking that maximises the sum of product values. The two are separate methods; the chosen method and step are written in the result.
+- Output: pieces per tree (lower/upper height, small-end diameter, length, volume, product), total volume and count per product, residual (unusable) volume.
 
-### 6.3. Promptlar
+### 6.3. Prompts
 
-### TP01 — Profil çekirdeği
-
-~~~text
-TOOLS_SPEC Bölüm 6.1'e göre gövde profili çekirdeğini yaz (assets/lab/taper/calc.js). Önce Max ve Burkhart (1976) kaynağını oku; biçimi ve parametre adlarını kaynakla karşılaştır, METHODS.md'de [B] olarak işaretle. Kaynak okunamazsa biçimi ekleme, kullanıcıya bildir. d(h), h(d), V(h1, h2), kabuk modeli uygulaması, tutarlılık kontrolleri.
-
-Kabul: kapalı biçim hacim ile sayısal integral 1e−10 göreli içinde aynı; h(d) kökü d(h)'yi 1e−10 içinde geri verir; bağımsız referans tests/ref/make_taper_tp01.py (scipy.integrate.quad, brentq; denklemi ayrı yazılmış Python). Kozak (2004) ancak kaynağı okunduktan sonra, ayrı bir alt aşamada aynı kabul ölçütleriyle eklenir.
-~~~
-
-### TP02 — Profil denklemi uydurma
+### TP01 — Taper core
 
 ~~~text
-Gövde ölçüm verisinden (stem-sections/1, Seksiyon hacmi aracıyla aynı içe aktarma) profil denklemi uydurmayı ekle (core/nls.js). Aynı ağacın ölçümleri bağımsız değildir: standart hatalar "bağımsız varsayımıyla" etiketlenir; karma etkili uydurma bu pakette yok. Çıktı: katsayılar, RMSE ve yanlılık (yükseklik sınıflarına göre), artık grafikleri, Seksiyon hacmi aracının Newton/Smalian hacimleriyle profil integrali hacminin ağaç başına karşılaştırması. Başarılı set katsayı kaydına yazılabilir.
+Write the taper core according to TOOLS_SPEC Section 6.1 (assets/lab/taper/calc.js). First read the Max and Burkhart (1976) source; compare the form and the parameter names with the source and mark it [B] in METHODS.md. If the source cannot be read, do not add the form; inform the user. d(h), h(d), V(h1, h2), application of the bark model, consistency checks.
 
-Kabul: katsayılar scipy.optimize.least_squares ile 1e−6 göreli içinde aynı; bilinen katsayılarla üretilmiş benzetim verisinde katsayılar geri gelir.
+Acceptance: the closed-form volume and the numerical integral agree within 1e−10 relative; the h(d) root gives back d(h) within 1e−10; independent reference tests/ref/make_taper_tp01.py (scipy.integrate.quad, brentq; Python with the equation written separately). Kozak (2004) is added only after its source has been read, in a separate sub-stage with the same acceptance criteria.
 ~~~
 
-### TP03 — Ürün bölme
+### TP02 — Taper equation fitting
 
 ~~~text
-Bölüm 6.2'ye göre ürün bölmeyi ekle: öncelik sırası ve dinamik programlama yöntemleri, kesim payı, dip kütük, kullanılabilir tepe çapı. Ürün tanımları JSON olarak kaydedilip yüklenebilir.
+Add taper equation fitting from stem measurement data (stem-sections/1, same import as the Section volume tool) (core/nls.js). Measurements of the same tree are not independent: standard errors are labelled "assuming independence"; mixed-effects fitting is not part of this package. Output: coefficients, RMSE and bias (by height class), residual plots, a per-tree comparison of the taper integral volume with the Newton/Smalian volumes of the Section volume tool. A successful set can be written to the coefficient registry.
 
-Kabul: dinamik programlama küçük örneklerde (≤ 8 m gövde, 0.5 m adım) bütün kesim kombinasyonlarını deneyen kaba kuvvet aramayla aynı en yüksek değeri bulur (bağımsız Python referansı); parça hacimlerinin toplamı + artık hacim = toplam gövde hacmi (1e−10); her parçanın ince uç çapı ürünün en küçük çapından küçük değildir.
+Acceptance: coefficients are the same as scipy.optimize.least_squares within 1e−6 relative; in simulated data produced with known coefficients the coefficients come back.
 ~~~
 
-### TP04 — Arayüz
+### TP03 — Product breakdown
 
 ~~~text
-Gövde profili aracının sayfasını (govde-profili.php) ekle: katsayı seti seçimi ya da uydurma; tek ağaç (D, H) ya da ağaç tablosu girdisi; profil grafiği (kabuklu ve kabuksuz), parça çizimi (ürünler renkli ve desenli; yalnız renge dayanmadan), ürün özeti tablosu, Excel/CSV/JSON, kılavuz, site_tools satırı.
+Add the product breakdown according to Section 6.2: priority order and dynamic programming methods, trim allowance, stump, merchantable top diameter. Product definitions can be saved and loaded as JSON.
 
-Kabul: e2e'de değerler motorla aynı; ürün tanımı değişince bölme değişir; telefon ve koyu tema kontrolü.
+Acceptance: on small examples (≤ 8 m stem, 0.5 m step) dynamic programming finds the same maximum value as a brute-force search that tries all bucking combinations (independent Python reference); the sum of the piece volumes + residual volume = total stem volume (1e−10); the small-end diameter of each piece is not smaller than the product's minimum diameter.
 ~~~
 
-### TP05 — İsteğe bağlı: meşcere düzeyi ürün tablosu
+### TP04 — Interface
 
 ~~~text
-(İsteğe bağlı.) Örnek alan ağaç tablosunun bütün ağaçlarını bölüp hektara genişletilmiş ürün tablosu üret (ürün × çap sınıfı). Boyu ölçülmemiş ağaçlar Boy–Çap aracının tahminleriyle ancak kullanıcı seçerse ve ayrı işaretlenerek kullanılır.
+Add the page of the taper tool (govde-profili.php): choice of a coefficient set or fitting; single tree (D, H) or tree table input; taper chart (over bark and under bark), piece drawing (products coloured and patterned; not relying on colour alone), product summary table, Excel/CSV/JSON, guide, site_tools row.
+
+Acceptance: in e2e the values are the same as the engine's; when the product definition changes, the breakdown changes; phone and dark theme check.
 ~~~
 
-## 7. Ortak geliştirme talimatı
-
-İlk mesajda T00 ile birlikte gönder:
+### TP05 — Optional: stand-level product table
 
 ~~~text
-Platforma TOOLS_SPEC.md'deki beş yeni aracı aşamalı ekleyeceğiz. CLAUDE.md, PROJECT.md (özellikle §5 ortak kurallar ve §6 arayüz ilkeleri) ve METHODS.md bağlayıcıdır. Önce mevcut kodu incele; mevcut çekirdeği (içe aktarma, gezgin, grafik, dışa aktarma, nls, roots, quad, stats) yeniden kullan, yeniden yazma.
-
-Her mesajda yalnızca belirtilen promptun kapsamını uygula. Tür/yöre katsayısı, hasılat tablosu, karbon oranı, odun yoğunluğu veya kaynak uydurma; katsayıları kullanıcı girer (TOOLS_SPEC K1). Bir kaynağın denklemini uygulamadan önce kaynağı oku ve METHODS.md'de [B] olarak işaretle; okuyamıyorsan dur ve bildir.
-
-Hesap arayüzden ayrıdır. Her bilimsel hesabı bağımsız referansla doğrula (tests/ref altında Python üretici + tests altında test); yalnızca kendi fonksiyonunu yineleyen testlerle yetinme. Hesaplanamayan değeri sayı gibi gösterme. Kabuklu/kabuksuz, yaş türü, birimler ve seçilen kurallar her sonuçta yazılsın.
-
-Her aşama sonunda: değişen davranış, çalıştırılan testler, bilinen sınırlamalar; METHODS.md ve PROGRESS.md güncellenir, ayrı commit. Yayına alma (main'e birleştirme) ayrı kullanıcı kararıdır; push'tan önce bütün testler çalıştırılır.
+(Optional.) Break down all trees of the plot tree table and produce a product table expanded to the hectare (product × diameter class). Trees without measured height are used with the predictions of the Height–Diameter tool only if the user chooses so, and are flagged separately.
 ~~~
 
-### T00 — İnceleme (kod değişmez)
+## 7. Common development instruction
+
+Send together with T00 in the first message:
 
 ~~~text
-TOOLS_SPEC'teki beş araç için mevcut kodu incele ve docs/TOOLS_T00.md raporunu yaz: yeniden kullanılacak çekirdek modüller ve eksikleri; Örnek Alan ve Meşcere aracında paylaşılması gereken hesaplar (genişletme faktörü, H0, D0, birim × dönem gruplama) ve bunların paylaşılabilir hâle getirilmesi için gereken en küçük değişiklik; forest-dataset/1 ve yeni stem-sections/1 ile model-coef/1 sözleşmelerinin mevcut koda etkisi; site_cats/site_tools/kılavuz/atıf testlerine etkileri; Bölüm 0 kararlarıyla çelişen bir durum varsa listesi. Kod değiştirme.
+We will add the five new tools in TOOLS_SPEC.md to the platform in stages. CLAUDE.md, PROJECT.md (especially §5 common rules and §6 interface principles) and METHODS.md are binding. First review the existing code; reuse the existing core (import, navigator, charts, export, nls, roots, quad, stats), do not rewrite it.
+
+In each message implement only the scope of the prompt given. Do not fabricate species/region coefficients, yield tables, carbon fractions, wood densities or sources; coefficients are entered by the user (TOOLS_SPEC K1). Before implementing a source's equation, read the source and mark it [B] in METHODS.md; if you cannot read it, stop and report.
+
+Computation is separate from the interface. Verify each scientific computation with an independent reference (Python generator under tests/ref + test under tests); do not settle for tests that only repeat your own function. Do not show a value that could not be computed as a number. Over bark/under bark, age type, units and the chosen rules must be written in every result.
+
+At the end of each stage: changed behaviour, tests run, known limitations; METHODS.md and PROGRESS.md are updated, separate commit. Publishing (merging into main) is a separate user decision; all tests are run before pushing.
 ~~~
 
-### T01 — Ortak altyapı: katsayı kaydı ve gövde ölçüm sözleşmesi
+### T00 — Review (no code changes)
 
 ~~~text
-TOOLS_SPEC Bölüm 1.2 ve 1.3'ü uygula: model-coef/1 kaydı (core/coef.js: doğrulama, IndexedDB'de saklama, JSON içe/dışa aktarma, kaynak alanı zorunlu, biçim kaydı arayüzü) ve ortak katsayı seti düzenleyici bileşeni (core/coef-ui.js; biçimin formülünü gösterir, parametreleri, birimleri, geçerlilik aralığını, dönüşüm/düzeltmeyi ve kaynağı alır). stem-sections/1 okuyucusu ve kontrolleri (core/stems.js). core/store.js'e anahtar önekiyle listeleme; core/num.js UNITS'e kabuk kalınlığı (mm) ve yaş; dağılım motorundaki çoklu kök tarayıcısını (scanRoots) davranışı değişmeden core/roots.js'e taşı. Örnek Alan aracının paylaşılacak işlevleri (validateDataset, buildUnits, unitMetrics, dominantWeights/dominant, sınıf işlevleri, tableToDataset) taşınmaz: yeni araçlar ../stand/calc.js'ten doğrudan içe aktarır; bu işlevlerin girdi/çıktı sözleşmesi METHODS §6'ya yazılır (T00 §2). tests/site/test_guide.mjs ve test_cite.mjs'teki sabit araç sayısını site_tools() satırlarından okunacak hâle getir. Kenar çubuğu kategorileri bu aşamada eklenmez; her kategori ilk aracıyla (SV02, SI02) eklenir (T00 §5).
-
-Kabul: model-coef/1 doğrulayıcısı geçersiz setleri (kaynak yok, bilinmeyen biçim, eksik parametre, birim yok) reddeder; JSON gidiş-dönüş bit düzeyinde aynı; stem-sections kontrolleri Bölüm 1.2'deki her durum için satır numarasıyla sorun üretir; katsayı düzenleyicisi yayınlanmayan bir test sayfasında tarayıcı testinden geçer; dağılım, Örnek Alan ve site testleri değişmeden geçer.
+Review the existing code for the five tools in TOOLS_SPEC and write the report docs/TOOLS_T00.md: core modules to be reused and their gaps; computations in the Plot and Stand tool that must be shared (expansion factor, H0, D0, unit × period grouping) and the smallest change needed to make them shareable; the effect of the forest-dataset/1 contract and the new stem-sections/1 and model-coef/1 contracts on the existing code; effects on the site_cats/site_tools/guide/citation tests; a list of any conflicts with the Section 0 decisions. Do not change code.
 ~~~
 
-## 8. Bağımsız sayısal referanslar
+### T01 — Shared infrastructure: coefficient registry and stem measurement contract
 
-Bu değerler 12 Kasım 2026'da Python (SciPy 1.18.1, NumPy 2.5.3) ile hesaplandı. Sitedeki koda ait değildir; geliştirilecek kodun karşılaştıracağı referanslardır.
+~~~text
+Implement TOOLS_SPEC Sections 1.2 and 1.3: the model-coef/1 registry (core/coef.js: validation, storage in IndexedDB, JSON import/export, mandatory source field, form registry interface) and the shared coefficient set editor component (core/coef-ui.js; shows the formula of the form and takes the parameters, units, validity range, transformation/correction and source). The stem-sections/1 reader and its checks (core/stems.js). Listing by key prefix in core/store.js; bark thickness (mm) and age in core/num.js UNITS; move the multiple-root scanner (scanRoots) of the distribution engine to core/roots.js without changing its behaviour. The Plot tool functions to be shared (validateDataset, buildUnits, unitMetrics, dominantWeights/dominant, class functions, tableToDataset) are not moved: the new tools import them directly from ../stand/calc.js; the input/output contract of these functions is written into METHODS §6 (T00 §2). Make the fixed tool count in tests/site/test_guide.mjs and test_cite.mjs read from the site_tools() rows. Sidebar categories are not added at this stage; each category is added with its first tool (SV02, SI02) (T00 §5).
 
-### 8.1. Seksiyon hacmi: bilinen cisimler
+Acceptance: the model-coef/1 validator rejects invalid sets (no source, unknown form, missing parameter, no unit); the JSON round trip is bit-identical; the stem-sections checks produce a problem with a row number for every case in Section 1.2; the coefficient editor passes a browser test on an unpublished test page; the distribution, Plot and site tests pass unchanged.
+~~~
 
-Dip çapı 30 cm, boy L = 20 m; g(h) = g₀(1 − h/L)^r. Hacimler m³.
+## 8. Independent numerical references
 
-| Cisim | Tam | Huber (1 seksiyon) | Smalian (1) | Newton (1) | Huber (4 × 5 m) | Smalian (4 × 5 m) |
+These values were computed on 12 Nov 2026 with Python (SciPy 1.18.1, NumPy 2.5.3). They do not belong to the code on the site; they are the references against which the code to be developed will be compared.
+
+### 8.1. Section volume: known solids
+
+Butt diameter 30 cm, height L = 20 m; g(h) = g₀(1 − h/L)^r. Volumes in m³.
+
+| Solid | Exact | Huber (1 section) | Smalian (1) | Newton (1) | Huber (4 × 5 m) | Smalian (4 × 5 m) |
 |---|---:|---:|---:|---:|---:|---:|
-| Paraboloit (r = 1) | 0.706858347058 | 0.706858347058 | 0.706858347058 | 0.706858347058 | 0.706858347058 | 0.706858347058 |
-| Koni (r = 2) | 0.471238898038 | 0.353429173529 | 0.706858347058 | 0.471238898038 | 0.463875790257 | 0.485965113602 |
-| Neiloit (r = 3) | 0.353429173529 | 0.176714586764 | 0.706858347058 | 0.353429173529 | 0.342384511856 | 0.375518496874 |
+| Paraboloid (r = 1) | 0.706858347058 | 0.706858347058 | 0.706858347058 | 0.706858347058 | 0.706858347058 | 0.706858347058 |
+| Cone (r = 2) | 0.471238898038 | 0.353429173529 | 0.706858347058 | 0.471238898038 | 0.463875790257 | 0.485965113602 |
+| Neiloid (r = 3) | 0.353429173529 | 0.176714586764 | 0.706858347058 | 0.353429173529 | 0.342384511856 | 0.375518496874 |
 
-Hohenadl (beş seksiyon) koni üzerinde: 0.466526509058 m³.
+Hohenadl (five sections) on the cone: 0.466526509058 m³.
 
-### 8.2. Bonitet: özdeşlikler
+### 8.2. Site index: identities
 
-Sayısal değer yerine özellik testleri (her biçim, rastgele 1000 durum): f(A₁, A₁, H₁) = H₁; f(A₃, A₂, f(A₂, A₁, H₁)) = f(A₃, A₁, H₁); SI₅₀ ve SI₁₀₀ arasında f(100, 50, SI₅₀) = SI₁₀₀. Referans betiği temel modelden (fark denklemi kullanmadan) aynı değerleri üretir.
+Property tests instead of numerical values (each form, 1000 random cases): f(A₁, A₁, H₁) = H₁; f(A₃, A₂, f(A₂, A₁, H₁)) = f(A₃, A₁, H₁); between SI₅₀ and SI₁₀₀, f(100, 50, SI₅₀) = SI₁₀₀. The reference script produces the same values from the base model (without using the difference equation).
 
-### 8.3. Meşcere yapısı
+### 8.3. Stand structure
 
-| Durum | Değer |
+| Case | Value |
 |---|---:|
-| SDI, N = 800 ağaç/ha, Dq = 20 cm, β = 1.605 | 559.177149815208 |
-| Hart–Becking S%, N = 800, H0 = 20 m, kare dikim | 17.677669529664 |
-| Hart–Becking S%, aynı, üçgen dikim | 18.995892141290 |
-| Clark–Evans R, sonsuz kare ızgara | 2 |
-| Clark–Evans R, sonsuz altıgen ızgara | 2.149139863647 |
-| W, kare ızgara, k = 4, standart açı 72° | 0 |
+| SDI, N = 800 trees/ha, Dq = 20 cm, β = 1.605 | 559.177149815208 |
+| Hart–Becking S%, N = 800, H0 = 20 m, square planting | 17.677669529664 |
+| Hart–Becking S%, same, triangular planting | 18.995892141290 |
+| Clark–Evans R, infinite square grid | 2 |
+| Clark–Evans R, infinite hexagonal grid | 2.149139863647 |
+| W, square grid, k = 4, standard angle 72° | 0 |
 
-Izgara değerleri sınır etkisi olmayan (ya da toroidal düzeltmeli) durum içindir.
+The grid values are for the case without edge effect (or with toroidal correction).
 
-### 8.4. Biyokütle ve karbon
+### 8.4. Biomass and carbon
 
-| Durum | Değer |
+| Case | Value |
 |---|---:|
-| CO₂/C molar kütle oranı | 44/12 = 3.666666666667 |
-| Baskerville etkeni, SEE = 0.2 (ln ölçeği) | exp(0.02) = 1.020201340027 |
+| CO₂/C molar mass ratio | 44/12 = 3.666666666667 |
+| Baskerville factor, SEE = 0.2 (ln scale) | exp(0.02) = 1.020201340027 |
 
-Allometrik biçimlerin kendisi için test değerleri, bağımsız referans betiğinde (`tests/ref/make_biomass_bc01.py`) rastgele katsayı ve ağaçlarla üretilir; burada sabit katsayı verilmez (gerçek bir türün katsayısı izlenimi vermemek için).
+Test values for the allometric forms themselves are produced in the independent reference script (`tests/ref/make_biomass_bc01.py`) with random coefficients and trees; no fixed coefficients are given here (so as not to give the impression of a real species' coefficients).
 
-## 9. Kaynaklar (hepsi [D]: okunmadı, künye bilgiden; uygulamadan önce okunacak)
+## 9. Sources (all [D]: not read, references from knowledge; to be read before implementation)
 
-- Avery, T.E., Burkhart, H.E. *Forest Measurements* (5. baskı, 2002). Seksiyon formülleri, biçim sayısı, bonitet kavramları. (Huber, Smalian ve Newton formülleri için ders kitabı tanımı istisnası, 12 Kasım 2026 kullanıcı kararı: METHODS §14. Hohenadl: Heger 1965 okundu [B].)
-- Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. *Forest Mensuration* (5. baskı, 2016). Seksiyon hacmi, gövde profili, meşcere sıklığı.
-- West, P.W. *Tree and Forest Measurement* (2. baskı, 2009). Seksiyon formülleri, biyokütle.
-- Burkhart, H.E., Tomé, M. *Modeling Forest Trees and Stands* (2012). Bonitet (fark denklemleri), gövde profili, rekabet endeksleri.
+- Avery, T.E., Burkhart, H.E. *Forest Measurements* (5th edition, 2002). Section formulas, form factor, site index concepts. (Textbook-definition exception for the Huber, Smalian and Newton formulas, 12 Nov 2026 user decision: METHODS §14. Hohenadl: Heger 1965 read [B].)
+- Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. *Forest Mensuration* (5th edition, 2016). Section volume, taper, stand density.
+- West, P.W. *Tree and Forest Measurement* (2nd edition, 2009). Section formulas, biomass.
+- Burkhart, H.E., Tomé, M. *Modeling Forest Trees and Stands* (2012). Site index (difference equations), taper, competition indices.
 - Bailey, R.L., Clutter, J.L. 1974. Base-age invariant polymorphic site curves. *Forest Science* 20: 155–159.
 - Cieszewski, C.J., Bailey, R.L. 2000. Generalized algebraic difference approach: theory based derivation of dynamic site equations with polymorphism and variable asymptotes. *Forest Science* 46: 116–126.
 - Clark, P.J., Evans, F.C. 1954. Distance to nearest neighbor as a measure of spatial relationships in populations. *Ecology* 35: 445–453.
 - Donnelly, K.P. 1978. Simulations to determine the variance and edge effect of total nearest-neighbour distance. (Hodder, I. (ed.), *Simulation Studies in Archaeology*, Cambridge University Press.)
-- Pommerening, A. 2002. Approaches to quantifying forest structures. *Forestry* 75: 305–324. (W, M, T, U ve kenar düzeltmeleri.) (SS02: Clark–Evans, Donnelly ve Pommerening geçici tanım istisnasıyla uygulandı, 12 Kasım 2026 kullanıcı kararı; kaynaklar yüklenince doğrulanacak.)
+- Pommerening, A. 2002. Approaches to quantifying forest structures. *Forestry* 75: 305–324. (W, M, T, U and edge corrections.) (SS02: Clark–Evans, Donnelly and Pommerening implemented under a temporary definition exception, 12 Nov 2026 user decision; to be verified when the sources are uploaded.)
 - Hegyi, F. 1974. A simulation model for managing jack-pine stands. (Fries, J. (ed.), *Growth Models for Tree and Stand Simulation*, Royal College of Forestry, Stockholm.)
-- Reineke, L.H. 1933. Perfecting a stand-density index for even-aged forests. *Journal of Agricultural Research* 46: 627–638. (Okundu [B], METHODS §16.)
-- Curtis, R.O. 1982. A simple index of stand density for Douglas-fir. *Forest Science* 28: 92–94. (Okundu [B], METHODS §16. Hart–Becking göreli aralık: tanım istisnası, 12 Kasım 2026 kullanıcı kararı.)
+- Reineke, L.H. 1933. Perfecting a stand-density index for even-aged forests. *Journal of Agricultural Research* 46: 627–638. (Read [B], METHODS §16.)
+- Curtis, R.O. 1982. A simple index of stand density for Douglas-fir. *Forest Science* 28: 92–94. (Read [B], METHODS §16. Hart–Becking relative spacing: definition exception, 12 Nov 2026 user decision.)
 - Max, T.A., Burkhart, H.E. 1976. Segmented polynomial regression applied to taper equations. *Forest Science* 22: 283–289.
 - Kozak, A. 2004. My last words on taper equations. *The Forestry Chronicle* 80: 507–515.
 - Baskerville, G.L. 1972. Use of logarithmic regression in the estimation of plant biomass. *Canadian Journal of Forest Research* 2: 49–53.
 - Sprugel, D.G. 1983. Correcting for bias in log-transformed allometric equations. *Ecology* 64: 209–210.
 - Snowdon, P. 1991. A ratio estimator for bias correction in logarithmic regressions. *Canadian Journal of Forest Research* 21: 720–724.
-- IPCC 2006. *2006 IPCC Guidelines for National Greenhouse Gas Inventories*, Cilt 4 (AFOLU), Bölüm 4 (Forest Land). Hacimden biyokütleye dönüşüm ve karbon oranı kavramları; varsayılan değerleri bu araçlara gömülmez (K1).
+- IPCC 2006. *2006 IPCC Guidelines for National Greenhouse Gas Inventories*, Volume 4 (AFOLU), Chapter 4 (Forest Land). Concepts of conversion from volume to biomass and carbon fraction; their default values are not embedded in these tools (K1).
 - Pnevmaticos, S.M., Mann, S.H. 1972. Dynamic programming in tree bucking. *Forest Products Journal* 22(2): 26–30.

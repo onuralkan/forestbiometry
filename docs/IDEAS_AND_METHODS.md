@@ -1,329 +1,329 @@
-# Fikir notu: araçlara eklenebilecek, literatürde sık kullanılan yöntemler
+# Idea note: methods commonly used in the literature that could be added to the tools
 
-Hazırlanma: 17 Kasım 2026, kullanıcı isteği (yan iş).
+Prepared: 17 Nov 2026, user request (side task).
 
-**Bu belge bir plan değildir.** PLATFORM_PLAN, TOOLS_SPEC, PROGRESS ya da KAYNAK_LISTESI'ne bağlı değildir, hiçbir karar ya da sıra içermez. Yalnızca "ileride ne eklenebilir" sorusuna hazır bir ad listesidir.
+**This document is not a plan.** It is not tied to PLATFORM_PLAN, TOOLS_SPEC, PROGRESS or SOURCE_LIST, and it contains no decisions or order. It is only a ready list of names for the question "what could be added later".
 
-- Adlar bellekten derlendi; hiçbiri kaynaktan okunmadı. Durumları [D]'dir; biçim, künye ve yazımı doğrulanmadı.
-- Bir yöntem sisteme alınacaksa her zamanki kural geçerlidir: kaynak sağlanır, okunur, [B]/[A]/[P] işaretlenir, sonra uygulanır.
-- ✓ işareti, yöntemin bu notun yazıldığı gün sitede zaten bulunduğunu gösterir.
-- Kapsam dışı araçlar (P4) ve hesap yöntemi olmayan altyapı araçları (DI) listede yok.
+- The names were compiled from memory; none was read from a source. Their status is [D]; form, reference details and spelling have not been verified.
+- If a method is to be taken into the system, the usual rule applies: the source is provided, read, marked [B]/[A]/[P], then implemented.
+- The ✓ mark shows that the method was already on the site on the day this note was written.
+- Out-of-scope tools (P4) and infrastructure tools without a calculation method (DI) are not in the list.
 
-## TM — Ağaç ölçümü
+## TM — Tree measurement
 
-**TM-01 Boy hesaplayıcı**
-- Trigonometrik (açı + yatay uzaklık; tanjant yöntemi)
-- Sinüs yöntemi (eğik uzaklık)
-- Benzer üçgenler (Christen boyölçeri, Merritt cetveli)
-- Eğimli arazide düzeltme
-- Eğik ağaç düzeltmesi
+**TM-01 Height calculator**
+- Trigonometric (angle + horizontal distance; tangent method)
+- Sine method (slope distance)
+- Similar triangles (Christen hypsometer, Merritt rule)
+- Correction on sloping terrain
+- Leaning tree correction
 
-**TM-02 Çap ve göğüs yüzeyi**
-- Çevreden çap
-- Çapraz iki çap: aritmetik, geometrik ve karesel ortalama
-- Göğüs yüzeyi g = π/4·d²
-- Göğüs yüksekliği tanımı: 1.3 m, 1.37 m (4.5 ft); eğimde üst taraftan ölçme
-- Çatallı ve kök şişkinlikli ağaçlarda ölçme yeri kuralları
+**TM-02 Diameter and basal area**
+- Diameter from circumference
+- Two cross diameters: arithmetic, geometric and quadratic mean
+- Basal area g = π/4·d²
+- Breast height definition: 1.3 m, 1.37 m (4.5 ft); measuring from the uphill side on slopes
+- Rules for the measurement point on forked trees and trees with butt swell
 
-**TM-03 Kabuk kalınlığı ve kabuksuz çap**
-- Doğrusal kabuk oranı (k = d_ub/d_ob)
-- Kabuk kalınlığı = a + b·d
-- Kabuk yüzdesi ile göğüs yüzeyi ilişkisi
-- Meyer kabuk oranı yöntemi
-- Gövde boyunca kabuk modelleri: Cao ve Pepper; Laasasenaho, Melkas ve Aldén
+**TM-03 Bark thickness and under-bark diameter**
+- Linear bark ratio (k = d_ub/d_ob)
+- Bark thickness = a + b·d
+- Relation between bark percentage and basal area
+- Meyer bark ratio method
+- Bark models along the stem: Cao and Pepper; Laasasenaho, Melkas and Aldén
 
-**TM-04 Tepe tacı ölçüleri**
-- Tepe çapı
-  - iki dik çaptan ortalama
-  - sekiz ya da dört yönlü tepe yarıçapı
-  - poligon alanı
-- Tepe izdüşüm alanı
-- Tepe oranı (CR)
-- Tepe boyu
-- Tepe yüzey alanı ve hacmi: koni, paraboloit, silindir ve elipsoit varsayımları
-- Tepe rekabet etkeni (CCF): Krajicek, Brinkman ve Gingrich
-- En büyük tepe genişliği (MCW) modelleri
-- Tepe dibi yüksekliği modelleri: Ritchie ve Hann; Hasenauer ve Monserud
+**TM-04 Crown measurements**
+- Crown diameter
+  - mean of two perpendicular diameters
+  - crown radii in eight or four directions
+  - polygon area
+- Crown projection area
+- Crown ratio (CR)
+- Crown length
+- Crown surface area and volume: cone, paraboloid, cylinder and ellipsoid assumptions
+- Crown competition factor (CCF): Krajicek, Brinkman and Gingrich
+- Maximum crown width (MCW) models
+- Height to crown base models: Ritchie and Hann; Hasenauer and Monserud
 
-**TM-05 Ağaç yaşı ve çap artımı**
-- Halka sayımı ve göğüs yüksekliği yaşı düzeltmesi
-- Burgu örneğinden çap artımı
-- Periyodik ve yıllık ortalama artım
-- Çapraz tarihleme: COFECHA mantığı
-- Halka genişliği standartlaştırma
-  - negatif üstel eğri
+**TM-05 Tree age and diameter increment**
+- Ring counting and breast-height age correction
+- Diameter increment from increment cores
+- Periodic and mean annual increment
+- Cross-dating: COFECHA logic
+- Ring-width standardisation
+  - negative exponential curve
   - spline
   - RCS
-- Göğüs yüzeyi artımına çevirme
-- Pressler artım yüzdesi
-- Schneider artım yüzdesi formülü
+- Conversion to basal area increment
+- Pressler increment percentage
+- Schneider increment percentage formula
 
-**TM-06 Biçim sayısı ve biçim bölümü**
-- Yapay ve doğal (göğüs yüksekliği ve h/10) biçim sayıları
-- Biçim bölümleri
+**TM-06 Form factor and form quotient**
+- Artificial and natural (breast height and h/10) form factors
+- Form quotients
   - Schiffel
   - Girard
-  - mutlak biçim bölümü (Jonson)
+  - absolute form quotient (Jonson)
   - Hohenadl (✓)
-- Biçim yüksekliği (f·h)
+- Form height (f·h)
 
-## SV — Gövde hacmi ve profili
+## SV — Stem volume and taper
 
-**SV-01 Seksiyon hacmi**
+**SV-01 Section volume**
 - Huber ✓
 - Smalian ✓
 - Newton ✓
 - Hohenadl ✓
-- Riecke formülü
-- Bruce düzeltmesi (Smalian için)
-- Kesik koni, kesik paraboloit ve kesik neiloit formülleri
-- Seksiyon uzunluğu ve konumu kuralları: 1 m, 2 m, göreli seksiyonlar
+- Riecke formula
+- Bruce correction (for Smalian)
+- Frustum of cone, frustum of paraboloid and frustum of neiloid formulas
+- Section length and position rules: 1 m, 2 m, relative sections
 
-**SV-02 Gövde profili denklemleri**
-- Tek denklemli
-  - Kozak, Munro ve Smith (1969)
+**SV-02 Taper equations**
+- Single-equation
+  - Kozak, Munro and Smith (1969)
   - Demaerschalk (1972)
   - Ormerod (1973)
-- Parçalı
-  - Max ve Burkhart (1976) ✓
-  - Fang, Borders ve Bailey (2000)
-  - Clark, Souter ve Schlaegel (1991)
-  - Parresol, Hotvedt ve Cao (1987)
-- Değişken üslü
+- Segmented
+  - Max and Burkhart (1976) ✓
+  - Fang, Borders and Bailey (2000)
+  - Clark, Souter and Schlaegel (1991)
+  - Parresol, Hotvedt and Cao (1987)
+- Variable-exponent
   - Kozak (1988)
   - Kozak (2004) ✓
-  - Lee ve ark. (2003)
+  - Lee et al. (2003)
   - Newnham (1992)
   - Bi (2000)
   - Muhairwe (1999)
-- Jiang, Brooks ve Wang (2005): Max–Burkhart ve Fang tabanlı uyumlu sistem
-- Riemer, Gadow ve Sloboda (1995)
-- Sharma ve Oderwald (2001), boyutsal uyumlu
-- Karma etkili profil modelleri (ağaç düzeyinde rastgele etki)
+- Jiang, Brooks and Wang (2005): compatible system based on Max–Burkhart and Fang
+- Riemer, Gadow and Sloboda (1995)
+- Sharma and Oderwald (2001), dimensionally compatible
+- Mixed-effects taper models (tree-level random effect)
 
-**SV-03 Kullanılabilir hacim**
-- Tepe çapına kadar profil integrali ✓
-- Kullanılabilir yükseklik modelleri
-- Kullanılabilir hacim oranı denklemleri
+**SV-03 Merchantable volume**
+- Taper integral to a top diameter ✓
+- Merchantable height models
+- Merchantable volume ratio equations
   - Burkhart (1977)
-  - Van Deusen, Sullivan ve Matney (1981)
-  - Cao ve Burkhart (1980)
-- Tomruk boyu sınırlı hacim
+  - Van Deusen, Sullivan and Matney (1981)
+  - Cao and Burkhart (1980)
+- Volume limited by log length
 
-**SV-04 Hacim denklemleri**
-- Spurr birleşik değişken: V = a + b·D²H
+**SV-04 Volume equations**
+- Spurr combined variable: V = a + b·D²H
 - Schumacher–Hall: V = a·D^b·H^c
-- Logaritmik Spurr
+- Logarithmic Spurr
 - Berkhout: V = a·D^b
 - Kopezky–Gehrhardt: V = a + b·D²
 - Hohenadl–Krenn: V = a + b·D + c·D²
 - Meyer
-- Stoate (birleşik değişkenli varyant)
+- Stoate (combined-variable variant)
 - Ogaya
 - Takata
-- Naslund hacim denklemi
+- Naslund volume equation
 - Honer (1965)
-- Tek ve çift girişli hacim tabloları (yerel ve genel hacim tabloları)
+- Single- and double-entry volume tables (local and general volume tables)
 
-**SV-05 Tomruk ölçüm kuralları**
+**SV-05 Log scaling rules**
 - Doyle
-- Scribner ve Scribner Decimal C
+- Scribner and Scribner Decimal C
 - International ¼-inch
-- Huber/Smalian kübik ölçüm
+- Huber/Smalian cubic scaling
 - Hoppus
-- JAS kuralı
-- Türkiye için TS ölçüm ve sınıflandırma standartları (tomruk, maden direği, kağıtlık)
+- JAS rule
+- TS measurement and grading standards for Türkiye (logs, mine props, pulpwood)
 
-**SV-06 Ürün bölme (sortiman) eniyileme**
-- Dinamik programlama
-  - Pnevmaticos ve Mann
+**SV-06 Bucking (assortment) optimisation**
+- Dynamic programming
+  - Pnevmaticos and Mann
   - Grondin ✓
-  - Bennemann ve ark. (BuckR) ✓
-- Öncelik (açgözlü) kuralı ✓
-- Ağ çözümlemesi ve en kısa yol (Sessions)
-- Doğrusal programlama ile meşcere düzeyinde sortiman
-- Pazar kısıtlı bölme (talep oranlarına uyma; Laroze ve Greber)
-- Sezgisel yöntemler: tabu arama, genetik algoritma (Kivinen)
-- Kalite (kusur, eğrilik) dikkate alan bölme
+  - Bennemann et al. (BuckR) ✓
+- Priority (greedy) rule ✓
+- Network analysis and shortest path (Sessions)
+- Stand-level assortments with linear programming
+- Market-constrained bucking (matching demand proportions; Laroze and Greber)
+- Heuristics: tabu search, genetic algorithm (Kivinen)
+- Bucking that takes quality (defects, crook) into account
 
-## BC — Biyokütle ve karbon
+## BC — Biomass and carbon
 
-**BC-01 Allometrik biyokütle**
-- Kuvvet (log–log) modeli: B = a·D^b
-- D²H birleşik değişkenli modeller
-- Chave ve ark. (2005, 2014) pantropikal modeller
-- Jenkins ve ark. (2003) ulusal ölçek denklemleri
-- Muukkonen (2007) genelleştirilmiş denklemler
-- Zianis ve ark. (2005) Avrupa denklem derlemesi
-- Geri dönüşüm düzeltmeleri
-  - Baskerville ✓ (ln ölçeği)
+**BC-01 Allometric biomass**
+- Power (log–log) model: B = a·D^b
+- D²H combined-variable models
+- Chave et al. (2005, 2014) pantropical models
+- Jenkins et al. (2003) national-scale equations
+- Muukkonen (2007) generalized equations
+- Zianis et al. (2005) compilation of European equations
+- Back-transformation corrections
+  - Baskerville ✓ (ln scale)
   - Sprugel
-  - Snowdon oranı
+  - Snowdon ratio
   - smearing (Duan)
 
-**BC-02 Biyokütle bileşenleri**
-- Bileşen modelleri: gövde, kabuk, dal, yaprak/ibre, kök
-- Toplanabilirlik (additivity): Parresol (1999, 2001), NSUR ile eşanlı kestirim
-- Kök/gövde oranı (R/S)
-- Kök biyokütlesi denklemleri: Cairns ve ark. (1997), Mokany ve ark. (2006)
+**BC-02 Biomass components**
+- Component models: stem, bark, branches, foliage/needles, roots
+- Additivity: Parresol (1999, 2001), simultaneous estimation with NSUR
+- Root/shoot ratio (R/S)
+- Root biomass equations: Cairns et al. (1997), Mokany et al. (2006)
 
-**BC-03 Biyokütle dönüşüm etkeni (BEF)**
-- BEF, BCEF, kök/gövde oranı
-- Sabit ve yaşa/sıklığa bağlı BEF
-- Lehtonen ve ark. (2004)
-- Fang ve Wang tipi hacme bağlı BEF
+**BC-03 Biomass expansion factor (BEF)**
+- BEF, BCEF, root/shoot ratio
+- Constant and age-/density-dependent BEF
+- Lehtonen et al. (2004)
+- Fang and Wang type volume-dependent BEF
 
-**BC-04 Karbon stoku ve CO₂ eşdeğeri**
-- Karbon oranı yaklaşımı (kullanıcı değeri)
-- CO₂ = C × 44/12 ✓ (tanım)
-- Odun yoğunluğu ile hacimden kütleye çevirme ✓
+**BC-04 Carbon stock and CO₂ equivalent**
+- Carbon fraction approach (user value)
+- CO₂ = C × 44/12 ✓ (definition)
+- Conversion from volume to mass with wood density ✓
 
-**BC-05 IPCC karbon hesabı**
-- Kazanç–kayıp yöntemi (gain–loss)
-- Stok farkı yöntemi (stock-difference)
-- Katman (tier) 1, 2 ve 3 yaklaşımları
-- Ölü odun, döküntü ve toprak havuzları
+**BC-05 IPCC carbon accounting**
+- Gain–loss method
+- Stock-difference method
+- Tier 1, 2 and 3 approaches
+- Dead wood, litter and soil pools
 
-**BC-06 Karbon belirsizliği**
-- Hata yayılımı (IPCC Yaklaşım 1)
-- Monte Carlo (IPCC Yaklaşım 2)
-- Model belirsizliği dahil yayılım: Picard ve ark., Molto ve ark.
+**BC-06 Carbon uncertainty**
+- Error propagation (IPCC Approach 1)
+- Monte Carlo (IPCC Approach 2)
+- Propagation including model uncertainty: Picard et al., Molto et al.
 
-## SS — Meşcere yapısı ve sıklığı
+## SS — Stand structure and density
 
-**SS-01 Meşcere özeti**
+**SS-01 Stand summary**
 - N/ha, G/ha
-- Aritmetik ve karesel ortalama çap (dg)
-- Göğüs yüzeyi ağırlıklı ortalama çap
-- Üst boy tanımları
-  - Assmann üst boyu (100 kalın ağaç/ha)
+- Arithmetic and quadratic mean diameter (dg)
+- Basal-area-weighted mean diameter
+- Top height definitions
+  - Assmann top height (100 thickest trees/ha)
   - Weise
-  - Lorey ortalama boyu
-  - dominant/kodominant ortalama
-- Hacim/ha
+  - Lorey's mean height
+  - dominant/codominant mean
+- Volume/ha
 
-**SS-02 Meşcere sıklık endeksleri**
+**SS-02 Stand density indices**
 - Reineke SDI ✓
-- Toplama yöntemiyle SDI (Zeide; Shaw)
+- SDI by the summation method (Zeide; Shaw)
 - Curtis RD ✓
-- Hart–Becking göreli aralık ✓
-- Tepe rekabet etkeni (CCF)
-- Wilson aralık etkeni
-- Yoda –3/2 kuralı
-- Kuvvet kanunu sıklık ölçüleri
-- Stand Density Management Diagram göstergeleri (Drew ve Flewelling)
+- Hart–Becking relative spacing ✓
+- Crown competition factor (CCF)
+- Wilson spacing factor
+- Yoda –3/2 rule
+- Power-law density measures
+- Stand Density Management Diagram indicators (Drew and Flewelling)
 
-**SS-03 Çap dağılımı**
-- Dağılım ailesi
-  - Weibull (2 ve 3 parametre) ✓
+**SS-03 Diameter distribution**
+- Distribution family
+  - Weibull (2 and 3 parameters) ✓
   - Johnson SB ✓
   - gamma ✓
   - beta ✓
   - lognormal ✓
   - normal ✓
-  - genelleştirilmiş gamma ✓
+  - generalized gamma ✓
   - Gumbel ✓
   - Burr XII
   - Dagum
-  - sonlu karışımlar (iki Weibull)
-- Uydurma ve geri kazanım yöntemleri
-  - parametre tahmin (PPM) ✓
-  - parametre geri kazanım (PRM) ✓
+  - finite mixtures (two Weibulls)
+- Fitting and recovery methods
+  - parameter prediction (PPM) ✓
+  - parameter recovery (PRM) ✓
   - CDFR ✓
-  - yüzdelik eşleştirme ✓
-  - moment ✓
-  - L-moment ✓
-- Parametresiz yöntemler: çekirdek yoğunluğu, k-NN atama (Haara, Maltamo ve Kangas)
-- Matris ve sınıf kaydırma (bkz. GY-02)
+  - percentile matching ✓
+  - moments ✓
+  - L-moments ✓
+- Non-parametric methods: kernel density, k-NN imputation (Haara, Maltamo and Kangas)
+- Matrix and class shifting (see GY-02)
 
-**SS-04 Çeşitlilik endeksleri**
+**SS-04 Diversity indices**
 - Shannon ✓
 - Simpson ✓
-- Pielou eşitliği
+- Pielou evenness
 - Berger–Parker
 - Margalef
 - Menhinick
-- Hill sayıları
-- Rényi ailesi
+- Hill numbers
+- Rényi family
 - Fisher α
-- Seyreltme eğrileri (rarefaction)
-- Chao1, ACE kestiricileri
-- β çeşitliliği: Jaccard, Sørensen, Bray–Curtis
+- Rarefaction curves
+- Chao1, ACE estimators
+- β diversity: Jaccard, Sørensen, Bray–Curtis
 
-**SS-05 Yapısal çeşitlilik endeksleri**
-- Gini katsayısı ✓
-- Lorenz eğrisi ✓
-- Çap ve boy farklılaşması (T) ✓
-- Uniform açı endeksi (W) ✓
-- Karışım (M) ✓
-- Baskınlık (U) ✓
-- Structural complexity index (Zenner ve Hibbs)
+**SS-05 Structural diversity indices**
+- Gini coefficient ✓
+- Lorenz curve ✓
+- Diameter and height differentiation (T) ✓
+- Uniform angle index (W) ✓
+- Mingling (M) ✓
+- Dominance (U) ✓
+- Structural complexity index (Zenner and Hibbs)
 - Stand Structural Complexity Index
-- Shannon yapı endeksi (çap sınıflarına göre)
-- Latham ve ark. boy farklılaşması
-- Staudhammer ve LeMay endeksleri
-- Jaehne ve Dohrenbusch endeksi
-- Pretzsch'in A endeksi (dikey tür profili)
+- Shannon structure index (by diameter classes)
+- Latham et al. height differentiation
+- Staudhammer and LeMay indices
+- Jaehne and Dohrenbusch index
+- Pretzsch's A index (vertical species profile)
 
-**SS-06 Mekânsal desen çözümlemesi**
-- Clark–Evans ✓ (Donnelly düzeltmesiyle ✓)
-- Ripley K ve Besag L işlevleri
-- Çift korelasyon işlevi g(r)
-- Morisita endeksi
-- Varyans/ortalama oranı
-- Hopkins ve Skellam
-- Pielou rastgelelik endeksi
-- Kenar düzeltmeleri: Ripley, Ohser, sınır şeridi
-- İşaret korelasyon işlevleri
-- Nearest-neighbour G, F ve J işlevleri
-- Eş ve iki değişkenli desen (Lotwick–Silverman)
+**SS-06 Spatial pattern analysis**
+- Clark–Evans ✓ (with the Donnelly correction ✓)
+- Ripley K and Besag L functions
+- Pair correlation function g(r)
+- Morisita index
+- Variance/mean ratio
+- Hopkins and Skellam
+- Pielou randomness index
+- Edge corrections: Ripley, Ohser, border strip
+- Mark correlation functions
+- Nearest-neighbour G, F and J functions
+- Joint and bivariate patterns (Lotwick–Silverman)
 
-**SS-07 Rekabet endeksleri**
-- Uzaklıktan bağımsız
+**SS-07 Competition indices**
+- Distance-independent
   - BAL ✓
-  - göreli boyut ✓
+  - relative size ✓
   - Glover–Hool
-  - CCF temelli endeksler
-- Uzaklığa bağlı
+  - CCF-based indices
+- Distance-dependent
   - Hegyi ✓
   - Martin–Ek
   - Bella
   - Lorimer
   - Daniels
-  - Rouvinen ve Kuuluvainen
-  - Pukkala ve Kolström
-- Alan örtüşmesi (ZOI): Gerrard; Bella
-- Rekabet etki alanı ve rakip seçimi
-  - sabit yarıçap
-  - k komşu ✓
-  - açı sayımı (BAF)
-- Voronoi ve Dirichlet poligon alanları
-- Işık temelli endeksler (tepe izdüşümü, gölgeleme)
+  - Rouvinen and Kuuluvainen
+  - Pukkala and Kolström
+- Area overlap (ZOI): Gerrard; Bella
+- Competition zone and competitor selection
+  - fixed radius
+  - k neighbours ✓
+  - angle count (BAF)
+- Voronoi and Dirichlet polygon areas
+- Light-based indices (crown projection, shading)
 
-## SQ — Yetişme ortamı verimliliği
+## SQ — Site productivity
 
-**SQ-01 / SQ-02 Bonitet endeksi ve eğrisi**
-- Kılavuz eğri yöntemi
-- Cebirsel fark yaklaşımı (ADA) ✓
-- Genelleştirilmiş cebirsel fark yaklaşımı (GADA): Cieszewski ve Bailey
-- Bailey ve Clutter (1974)
-- Chapman–Richards temelli ADA ✓
-- Schumacher temelli ADA ✓
+**SQ-01 / SQ-02 Site index and site index curves**
+- Guide curve method
+- Algebraic difference approach (ADA) ✓
+- Generalized algebraic difference approach (GADA): Cieszewski and Bailey
+- Bailey and Clutter (1974)
+- Chapman–Richards-based ADA ✓
+- Schumacher-based ADA ✓
 - Hossfeld IV
 - Korf
 - McDill–Amateis
-- Cieszewski (2001, 2002) GADA biçimleri
-- Parametre tahmin ve parametre geri kazanım yaklaşımları
-- Karma etkili bonitet modelleri
-- Boy artımına dayalı bonitet (growth intercept)
-- Yaş türü: toplam yaş / göğüs yaşı ✓ (K8)
+- Cieszewski (2001, 2002) GADA forms
+- Parameter prediction and parameter recovery approaches
+- Mixed-effects site index models
+- Site index from height growth (growth intercept)
+- Age type: total age / breast-height age ✓ (K8)
 
-**SQ-03 Büyüme işlevi uydurma**
+**SQ-03 Growth function fitting**
 - Chapman–Richards ✓
 - Schumacher ✓
 - Gompertz ✓
-- Logistik ✓
-- Monomoleküler (Mitscherlich) ✓
+- Logistic ✓
+- Monomolecular (Mitscherlich) ✓
 - Weibull ✓
 - Korf
 - Hossfeld (I–IV)
@@ -331,158 +331,158 @@ Hazırlanma: 17 Kasım 2026, kullanıcı isteği (yan iş).
 - Yoshida I
 - Sloboda
 - von Bertalanffy
-- Richards (dört parametreli)
+- Richards (four-parameter)
 - Lundqvist–Matérn
 - Schnute
-- Zeide'nin LTD/TD biçimleri
+- Zeide's LTD/TD forms
 - Prodan
 
-## SI — Örnekleme ve envanter
+## SI — Sampling and inventory
 
-**SI-01 Örnek büyüklüğü**
-- Basit rastgele (n₀ = z²(CV/E)²) ✓
-- Sonlu kitle düzeltmesi ✓
-- Tabakalı örneklemede dağıtım: orantılı, Neyman, en uygun (maliyetli)
-- Sistematik örnekleme varyans yaklaşımları
-- Küme örneklemesi
-- Freese ve Cochran formülleri
+**SI-01 Sample size**
+- Simple random (n₀ = z²(CV/E)²) ✓
+- Finite population correction ✓
+- Allocation in stratified sampling: proportional, Neyman, optimal (with costs)
+- Variance approximations for systematic sampling
+- Cluster sampling
+- Freese and Cochran formulas
 
-**SI-02 Örnekleme tasarımı üretici**
-- Basit rastgele
-- Sistematik ızgara (kare, üçgen)
-- Tabakalı rastgele
-- Küme örneklemesi
-- Dengeli örnekleme: küp yöntemi (Deville ve Tillé)
-- Mekânsal dengeli örnekleme
+**SI-02 Sampling design generator**
+- Simple random
+- Systematic grid (square, triangular)
+- Stratified random
+- Cluster sampling
+- Balanced sampling: cube method (Deville and Tillé)
+- Spatially balanced sampling
   - GRTS
-  - yerel pivot yöntemi (LPM)
-- Halton ve BAS
-- Olasılık–boyutla orantılı (PPS)
+  - local pivotal method (LPM)
+- Halton and BAS
+- Probability proportional to size (PPS)
 
-**SI-03 Sabit alanlı örnek alan kestirimi**
-- Alan genişletme etkeniyle hektara çevirme ✓
+**SI-03 Fixed-area plot estimation**
+- Conversion to per hectare with the area expansion factor ✓
 - Horvitz–Thompson
-- Oran kestiricisi
-- İç içe (nested) daireler
-- Değişken alanlı alt örnek alanlar
+- Ratio estimator
+- Nested circles
+- Variable-area subplots
 
-**SI-04 Açı sayımı (Bitterlich)**
-- Bitterlich açı sayımı (göğüs yüzeyi etkeni, BAF)
-- Sınır ağaç kontrolü (limiting distance)
-- Grosenbaugh'un boy açı sayımı (vertical point sampling)
-- Big BAF (Marshall, Iles ve Bell)
-- 3P örneklemesi
-- İç içe sayım
-- Strand hattı yöntemi
+**SI-04 Angle count (Bitterlich)**
+- Bitterlich angle count (basal area factor, BAF)
+- Borderline tree check (limiting distance)
+- Grosenbaugh's height angle count (vertical point sampling)
+- Big BAF (Marshall, Iles and Bell)
+- 3P sampling
+- Nested counts
+- Strand line method
 
-**SI-05 Kenar etkisi düzeltmesi**
-- Yansıtma (mirage, Schmid–Haas)
-- Walkthrough (Ducey, Gove ve Valentine)
-- Kenar ağırlıkları
-- Toroidal kaydırma
-- Tampon şeridi
-- Ripley kenar düzeltmesi
+**SI-05 Edge effect correction**
+- Reflection (mirage, Schmid–Haas)
+- Walkthrough (Ducey, Gove and Valentine)
+- Edge weights
+- Toroidal shift
+- Buffer strip
+- Ripley edge correction
 
-**SI-06 Hat kesişim örneklemesi**
-- Line intersect sampling: Warren ve Olsen; Van Wagner; De Vries
-- Kalıp kesişim (Gregoire ve Valentine)
+**SI-06 Line intersect sampling**
+- Line intersect sampling: Warren and Olsen; Van Wagner; De Vries
+- Template intersect (Gregoire and Valentine)
 - Transect relascope (Ståhl)
-- Ölü odun hacmi için LIS formülleri
+- LIS formulas for dead wood volume
 
-**SI-07 İki aşamalı ve çift örnekleme**
-- Çift örnekleme ile oran ve regresyon kestiricisi
-- Tabakalama için çift örnekleme
-- İki aşamalı örnekleme (birincil/ikincil birimler)
-- Çok aşamalı örnekleme
+**SI-07 Two-stage and double sampling**
+- Ratio and regression estimators with double sampling
+- Double sampling for stratification
+- Two-stage sampling (primary/secondary units)
+- Multistage sampling
 
-**SI-08 Tasarıma dayalı çıkarım**
+**SI-08 Design-based inference**
 - Horvitz–Thompson
 - Hansen–Hurwitz
-- Oran kestiricisi
-- Regresyon kestiricisi
-- Genelleştirilmiş regresyon (GREG)
-- Kalibrasyon kestiricileri
-- Jackknife ve bootstrap varyansları
-- Sistematik örneklemede varyans yaklaşımları: ardışık farklar (Matérn)
+- Ratio estimator
+- Regression estimator
+- Generalized regression (GREG)
+- Calibration estimators
+- Jackknife and bootstrap variances
+- Variance approximations for systematic sampling: successive differences (Matérn)
 
-**SI-09 Tekrarlı envanter çözümlemesi**
-- Sürekli orman envanteri (CFI)
-- Yerine koyma ile örnekleme (SRP)
-- Kısmi değiştirme
-- Büyüme bileşenleri
-  - sağkalım
-  - aralanma (ingrowth)
-  - ölüm
-  - kesim
+**SI-09 Repeated inventory analysis**
+- Continuous forest inventory (CFI)
+- Sampling with replacement (SRP)
+- Partial replacement
+- Growth components
+  - survival
+  - ingrowth
+  - mortality
+  - cut
   - ontogrowth
-- Beers ve Miller yaklaşımları
-- Martin (1982) değişim kestiricileri
+- Beers and Miller approaches
+- Martin (1982) change estimators
 
-## GY — Büyüme ve hasılat
+## GY — Growth and yield
 
-**GY-01 Meşcere hasılat tablosu üretici**
-- Normal hasılat tabloları (Schwappach, Wiedemann, Schober)
-- Clutter (1963) uyumlu büyüme ve hasılat
+**GY-01 Stand yield table generator**
+- Normal yield tables (Schwappach, Wiedemann, Schober)
+- Clutter (1963) compatible growth and yield
 - Buckman (1962)
-- Sullivan ve Clutter (1972)
-- Göğüs yüzeyi projeksiyon modelleri
-- Langsaeter sıklık–artım ilişkisi
-- Eichhorn kuralı
+- Sullivan and Clutter (1972)
+- Basal area projection models
+- Langsaeter density–increment relationship
+- Eichhorn's rule
 
-**GY-02 Çap sınıfı ve matris modeli**
-- Usher matris modeli
-- Buongiorno ve Michie
-- Çap sınıfı ilerletme (stand table projection)
-- Sabit ve dinamik geçiş olasılıkları
-- Liang, Buongiorno ve Monserud
+**GY-02 Diameter class and matrix model**
+- Usher matrix model
+- Buongiorno and Michie
+- Diameter class progression (stand table projection)
+- Fixed and dynamic transition probabilities
+- Liang, Buongiorno and Monserud
 
-**GY-03 Tek ağaç büyüme benzetimi**
-- Mesafeden bağımsız: Prognosis/FVS mantığı (Wykoff), Monserud ve Sterba
-- Mesafeye bağlı: SILVA (Pretzsch), MOSES (Hasenauer)
+**GY-03 Individual-tree growth simulation**
+- Distance-independent: Prognosis/FVS logic (Wykoff), Monserud and Sterba
+- Distance-dependent: SILVA (Pretzsch), MOSES (Hasenauer)
 - BWINPro
-- Potansiyel × düzelticisi yaklaşımı
-- Çap artımı modelleri (ln(DDS) biçimi)
+- Potential × modifier approach
+- Diameter increment models (ln(DDS) form)
 
-**GY-04 Ölüm ve aralanma modelleri**
-- Lojistik ölüm modelleri
-- Hamilton ölüm modeli
-- Monserud ve Sterba
-- Kendiliğinden seyrelme temelli ölüm
-- Sıfır şişkin (zero-inflated) ve hurdle aralanma modelleri
-- Vanclay aralanma modeli
+**GY-04 Mortality and ingrowth models**
+- Logistic mortality models
+- Hamilton mortality model
+- Monserud and Sterba
+- Self-thinning-based mortality
+- Zero-inflated and hurdle ingrowth models
+- Vanclay ingrowth model
 
-**GY-05 Aralama senaryoları**
-- Aralama türleri: alttan, üstten, seçme, karma
-- Aralama oranı tanımları: N, G ya da V oranı
-- Aralama ağırlığı göstergeleri
-  - Reineke SDI hedefi
-  - Hart–Becking aralığı
-  - A-değeri (Wilson)
-- Aralama etkisi modelleri (Hynynen, Pukkala)
+**GY-05 Thinning scenarios**
+- Thinning types: from below, from above, selection, mixed
+- Thinning ratio definitions: N, G or V ratio
+- Thinning intensity indicators
+  - Reineke SDI target
+  - Hart–Becking spacing
+  - A-value (Wilson)
+- Thinning response models (Hynynen, Pukkala)
 
-**GY-06 Meşcere sıklığı yönetim diyagramı**
-- SDMD: Drew ve Flewelling (1979); McCarter ve Long (1986); Newton
-- Ando'nun SDMD'si
-- Yoda –3/2 kuralı
-- Tepe kapanması ve rekabet eşikleri (Long)
+**GY-06 Stand density management diagram**
+- SDMD: Drew and Flewelling (1979); McCarter and Long (1986); Newton
+- Ando's SDMD
+- Yoda –3/2 rule
+- Crown closure and competition thresholds (Long)
 
-**GY-07 Kendiliğinden seyrelme doğrusu**
+**GY-07 Self-thinning line**
 - Reineke (–1.605)
 - Yoda (–3/2)
-- Sınır doğrusu tahmin yöntemleri
-  - kantil regresyon
-  - stokastik sınır (stochastic frontier)
-  - en büyük yoğunluk noktaları seçimi
-  - indirgenmiş ana eksen
-- Zeide modelleri
+- Boundary line estimation methods
+  - quantile regression
+  - stochastic frontier
+  - selection of maximum density points
+  - reduced major axis
+- Zeide models
 
-## SM — İstatistiksel modelleme
+## SM — Statistical modelling
 
-**SM-01 Boy–çap modelleri**
+**SM-01 Height–diameter models**
 - Näslund ✓
 - Michailoff ✓
 - Curtis ✓
-- Kuvvet ✓
+- Power ✓
 - Chapman–Richards ✓
 - Weibull ✓
 - Petterson
@@ -492,156 +492,156 @@ Hazırlanma: 17 Kasım 2026, kullanıcı isteği (yan iş).
 - Schnute
 - Henricksen
 - Meyer
-- Logistik
+- Logistic
 - Gompertz
 - Sloboda
-- Genelleştirilmiş boy–çap modelleri: meşcere değişkenleriyle, ör. Cañadas, Sharma ve Parton, Mehtätalo
-- Karma etkili boy–çap modelleri ve kalibrasyon (ölçülmüş birkaç boyla)
+- Generalized height–diameter models: with stand variables, e.g. Cañadas, Sharma and Parton, Mehtätalo
+- Mixed-effects height–diameter models and calibration (with a few measured heights)
 
-**SM-02 Doğrusal olmayan regresyon**
+**SM-02 Nonlinear regression**
 - Gauss–Newton
 - Levenberg–Marquardt ✓
-- Ağırlıklı en küçük kareler (varyans işlevleri: kuvvet, üstel)
-- Başlangıç değeri stratejileri (ızgara, doğrusallaştırma)
-- Profil olabilirlik güven aralıkları
-- Bootstrap güven aralıkları
+- Weighted least squares (variance functions: power, exponential)
+- Starting value strategies (grid, linearisation)
+- Profile likelihood confidence intervals
+- Bootstrap confidence intervals
 
-**SM-03 Karma etkili modeller**
-- Doğrusal karma modeller (REML, ML)
-- Doğrusal olmayan karma modeller (Lindstrom–Bates)
-- Rastgele etki kalibrasyonu (BLUP; Lappi)
-- İç içe ve çapraz rastgele etkiler
-- Varyans ve korelasyon yapıları: AR(1), CAR
+**SM-03 Mixed-effects models**
+- Linear mixed models (REML, ML)
+- Nonlinear mixed models (Lindstrom–Bates)
+- Random effect calibration (BLUP; Lappi)
+- Nested and crossed random effects
+- Variance and correlation structures: AR(1), CAR
 
-**SM-04 Eşanlı ve uyumlu sistemler**
-- Görünüşte ilişkisiz regresyon (SUR)
-- Doğrusal olmayan SUR (NSUR)
-- Üç aşamalı en küçük kareler (3SLS)
-- Tam bilgi en çok olabilirlik (FIML)
-- Uyumlu profil–hacim sistemleri
-- Toplanabilir biyokütle sistemleri (Parresol)
+**SM-04 Simultaneous and compatible systems**
+- Seemingly unrelated regression (SUR)
+- Nonlinear SUR (NSUR)
+- Three-stage least squares (3SLS)
+- Full information maximum likelihood (FIML)
+- Compatible taper–volume systems
+- Additive biomass systems (Parresol)
 
-**SM-05 Ölüm ve sağkalım modelleri**
-- Lojistik regresyon (ağaç düzeyi)
-- Complementary log–log (farklı ölçüm aralıkları için)
-- Cox orantılı tehlikeler
-- Weibull sağkalım
-- Parametrik ve yarı parametrik sağkalım
-- Zero-inflated modeller
+**SM-05 Mortality and survival models**
+- Logistic regression (tree level)
+- Complementary log–log (for different measurement intervals)
+- Cox proportional hazards
+- Weibull survival
+- Parametric and semi-parametric survival
+- Zero-inflated models
 
-**SM-06 Model değerlendirme**
-- Model başarı ölçütleri
+**SM-06 Model evaluation**
+- Model performance measures
   - Bias ✓
   - RMSE ✓
   - MAE ✓
   - R² = 1 − SSE/SST ✓
-  - modelleme etkinliği (EF)
-  - AIC ✓ (Büyüme İşlevi'nde)
+  - modelling efficiency (EF)
+  - AIC ✓ (in Growth Function)
   - BIC
 - Theil U
-- Freese χ² doğruluk testi
-- Reynolds testi
-- Eşdeğerlik testleri (Robinson ve Froese)
-- Çapraz doğrulama: k-katlı, LOO, örnek alan bazında ✓
-- Bağıl sıralama (Poudel ve Cao) ✓
+- Freese χ² accuracy test
+- Reynolds test
+- Equivalence tests (Robinson and Froese)
+- Cross-validation: k-fold, LOO, by plot ✓
+- Relative ranking (Poudel and Cao) ✓
 
-**SM-07 Belirsizlik nicelemesi**
-- Delta yöntemi
-- Bootstrap: parametrik, parametresiz, artık bootstrap
-- Monte Carlo hata yayılımı
-- Bayesçi kestirim (MCMC)
-- Tahmin aralıkları ve güven aralıkları ayrımı
+**SM-07 Uncertainty quantification**
+- Delta method
+- Bootstrap: parametric, non-parametric, residual bootstrap
+- Monte Carlo error propagation
+- Bayesian estimation (MCMC)
+- Distinction between prediction intervals and confidence intervals
 
-## ML — Makine öğrenmesi ve mekânsal tahmin
+## ML — Machine learning and spatial prediction
 
-**ML-01 Makine öğrenmesi ile regresyon ve sınıflama**
-- Rastgele orman
-- Gradyan artırma: XGBoost, LightGBM
-- Destek vektör makineleri
-- Yapay sinir ağları (MLP)
-- Kübist (Cubist)
+**ML-01 Regression and classification with machine learning**
+- Random forest
+- Gradient boosting: XGBoost, LightGBM
+- Support vector machines
+- Artificial neural networks (MLP)
+- Cubist
 - MARS
 - GAM
-- Değişken önemi: permütasyon, SHAP
+- Variable importance: permutation, SHAP
 
-**ML-04 k-NN atama**
-- k-NN: öklit, Mahalanobis
-- MSN (Moeur ve Stage)
-- GNN (Ohmann ve Gregory)
-- Rastgele orman temelli yakınlık (RF-kNN)
-- Ağırlıklandırma şemaları
+**ML-04 k-NN imputation**
+- k-NN: Euclidean, Mahalanobis
+- MSN (Moeur and Stage)
+- GNN (Ohmann and Gregory)
+- Random-forest-based proximity (RF-kNN)
+- Weighting schemes
 
-**ML-05 Mekânsal ara değerleme**
-- Ters uzaklık ağırlıklı (IDW)
-- Basit, olağan ve evrensel kriging
-- Regresyon kriging
-- Ko-kriging
-- Varyogram modelleri: küresel, üstel, Gauss, Matérn
+**ML-05 Spatial interpolation**
+- Inverse distance weighting (IDW)
+- Simple, ordinary and universal kriging
+- Regression kriging
+- Co-kriging
+- Variogram models: spherical, exponential, Gaussian, Matérn
 - Spline (thin-plate)
 
-**ML-06 Mekânsal çapraz doğrulama**
-- Blok çapraz doğrulama
-- Tampon ile LOO
-- Kümelenmiş k-katlı (spatial k-fold)
-- Uzaklığa dayalı katlar (Roberts ve ark.)
-- Uygulanabilirlik alanı (Meyer ve Pebesma)
+**ML-06 Spatial cross-validation**
+- Block cross-validation
+- LOO with a buffer
+- Clustered k-fold (spatial k-fold)
+- Distance-based folds (Roberts et al.)
+- Area of applicability (Meyer and Pebesma)
 
-**ML-07 Küçük alan kestirimi**
-- Doğrudan kestirici
-- Sentetik kestirici
-- Fay–Herriot (alan düzeyi)
-- Battese–Harter–Fuller (birim düzeyi)
+**ML-07 Small area estimation**
+- Direct estimator
+- Synthetic estimator
+- Fay–Herriot (area level)
+- Battese–Harter–Fuller (unit level)
 - EBLUP
-- Hiyerarşik Bayes
+- Hierarchical Bayes
 
-**ML-08 Model destekli çıkarım**
-- Model destekli GREG
-- Fark kestiricisi
-- Lidar destekli envanter kestiricileri (Gregoire ve ark.; Næsset)
-- Hibrit çıkarım (Ståhl ve ark.)
-- Model tabanlı çıkarım ve tasarım tabanlı çıkarım karşılaştırması
+**ML-08 Model-assisted inference**
+- Model-assisted GREG
+- Difference estimator
+- Lidar-assisted inventory estimators (Gregoire et al.; Næsset)
+- Hybrid inference (Ståhl et al.)
+- Comparison of model-based and design-based inference
 
-## DS — Karar destek ve uygulamalar
+## DS — Decision support and applications
 
-**DS-01 Odun değerleme**
-- Net bugünkü değer (NPV)
-- Faustmann (arazi beklenti değeri, LEV)
-- İç verim oranı
-- Eşdeğer yıllık gelir
-- Stumpage değeri (artık değer yöntemi)
-- Optimum idare süresi
+**DS-01 Timber valuation**
+- Net present value (NPV)
+- Faustmann (land expectation value, LEV)
+- Internal rate of return
+- Equivalent annual income
+- Stumpage value (residual value method)
+- Optimal rotation age
   - Faustmann
-  - en büyük ortalama artım
-  - en büyük ormancılık rantı
+  - maximum mean annual increment
+  - maximum forest rent
 
-**DS-02 Üretim planlama eniyileme**
-- Model I ve Model II (Johnson ve Scheurman)
-- Doğrusal ve tamsayılı programlama
-- Hedef programlama
-- Komşuluk kısıtları: URM, ARM
-- Sezgisel yöntemler: tabu arama, benzetilmiş tavlama, genetik algoritma
-- Alan ve hacim kontrolü yöntemleri
+**DS-02 Harvest scheduling optimisation**
+- Model I and Model II (Johnson and Scheurman)
+- Linear and integer programming
+- Goal programming
+- Adjacency constraints: URM, ARM
+- Heuristics: tabu search, simulated annealing, genetic algorithm
+- Area and volume control methods
 
-**DS-04 Ölü odun ve habitat yapısı**
-- Ölü odun hacmi: hat kesişim, sabit alan
-- Çürüklük sınıfları (Maser; Hunter)
-- Habitat ağacı tipolojisi (Larrieu ve ark.)
+**DS-04 Dead wood and habitat structure**
+- Dead wood volume: line intersect, fixed area
+- Decay classes (Maser; Hunter)
+- Habitat tree typology (Larrieu et al.)
 - Index of Biodiversity Potential (IBP)
-- Yaşlı orman göstergeleri
+- Old-growth indicators
 
-**DS-05 Zarar değerlendirmesi**
-- Yangın şiddeti ölçüleri: kabuk yanık yüksekliği, tepe kavrulması, ölüm olasılığı (Ryan ve Reinhardt)
-- Rüzgar zararı riski: GALES, HWIND
-- Böcek zararı sınıflaması
-- Tepe sağlığı ve yaprak kaybı sınıfları (ICP Forests)
-- Zararlı odun hacmi ve değer kaybı kestirimi
+**DS-05 Damage assessment**
+- Fire severity measures: bark char height, crown scorch, probability of mortality (Ryan and Reinhardt)
+- Wind damage risk: GALES, HWIND
+- Insect damage classification
+- Crown condition and defoliation classes (ICP Forests)
+- Estimation of damaged wood volume and value loss
 
-**DS-06 Kent ağaçları envanteri**
-- i-Tree Eco ve Streets yaklaşımları
-- Kent ağacı biyokütle denklemleri (Nowak; McHale)
-- Ağaç değerleme
+**DS-06 Urban tree inventory**
+- i-Tree Eco and Streets approaches
+- Urban tree biomass equations (Nowak; McHale)
+- Tree appraisal
   - CTLA (Council of Tree and Landscape Appraisers)
   - Burnley
   - Helliwell
-- Risk değerlendirme: ISA TRAQ
-- Ekosistem hizmeti kestirimleri: yağış tutma, hava kirliliği giderimi
+- Risk assessment: ISA TRAQ
+- Ecosystem service estimates: rainfall interception, air pollution removal

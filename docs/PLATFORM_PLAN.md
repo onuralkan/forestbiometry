@@ -1,217 +1,218 @@
-# Platform planı: modüller ve araç kataloğu
+# Platform plan: modules and tool catalogue
 
-Kullanıcının 12 Kasım 2026'da yüklediği "Forest Biometry Online — Platform Revision Plan" belgesinin, projenin
-bağlayıcı kurallarına (CLAUDE.md, docs/PROJECT.md, TOOLS_SPEC K1–K9) göre düzenlenmiş hâli. Sitenin kenar çubuğu ve
-araçlar dizini bu katalogdan çizilir (`inc/catalog.php`); bu belge ile o dosya birlikte güncellenir. 17 Kasım 2026'da
-27 planlı araç plandan çıkarıldı (P8).
+The "Forest Biometry Online — Platform Revision Plan" document uploaded by the user on 12 Nov 2026, edited to fit the
+project's binding rules (CLAUDE.md, docs/PROJECT.md, TOOLS_SPEC K1–K9). The site's sidebar and the tools index are
+drawn from this catalogue (`inc/catalog.php`); this document and that file are updated together. On 17 Nov 2026
+27 planned tools were removed from the plan (P8).
 
-## 1. Vizyon ve ilkeler
+## 1. Vision and principles
 
-Ormancılar, araştırmacılar ve öğrenciler için tek ağaçtan bütün envantere kadar ölçen, kestiren, modelleyen ve
-raporlayan, yöntemleri şeffaf, kaynaklı ve tekrarlanabilir açık kaynaklı bir araç platformu.
+An open-source tool platform for foresters, researchers and students that measures, estimates, models and reports,
+from a single tree to a whole inventory, with transparent, sourced and reproducible methods.
 
-- **Yalnızca hesap araçları:** her araç girdi alır, hesaplanmış, modellenmiş ya da görselleştirilmiş çıktı verir.
-- **Ortak veri:** araçlar aynı veri sözleşmelerini okur ve yazar (`forest-dataset/1`, `stem-sections/1`,
+- **Calculation tools only:** every tool takes input and gives calculated, modelled or visualized output.
+- **Shared data:** the tools read and write the same data contracts (`forest-dataset/1`, `stem-sections/1`,
   `model-coef/1`; PROJECT.md §4b, TOOLS_SPEC §1).
-- **Şeffaf yöntem:** her denklemin formülü, kaynağı (METHODS.md'de [B]/[İ]/[P]/[A]/[D]), birimleri ve geçerlilik aralığı yazılır.
-- **Tekrarlanabilirlik:** her sonuç girdileri, ayarları, yöntem sürümleri ve kaynaklarıyla dışa aktarılır; sürümlü
-  arşiv Zenodo DOI'siyle.
-- **Açıklık:** kaynak kodu Apache-2.0, belgeler CC BY 4.0.
+- **Transparent method:** the formula of every equation, its source ([B]/[İ]/[P]/[A]/[D] in METHODS.md), its units and its range of validity are written out.
+- **Reproducibility:** every result is exported with its inputs, settings, method versions and sources; a versioned
+  archive with a Zenodo DOI.
+- **Openness:** source code Apache-2.0, documents CC BY 4.0.
 
-## 2. Bağlayıcı kararlar (12 Kasım 2026, kullanıcı)
+## 2. Binding decisions (12 Nov 2026, user)
 
-| No | Karar |
+| No | Decision |
 |---|---|
-| P1 | **Sunucu yok:** REST API, sunucu tarafı hesap (Python/R), veritabanı (PostgreSQL/PostGIS) ve kullanıcı hesapları kapsam dışıdır. Hesaplar tarayıcıda (JS; ağır işler Web Worker'da) yapılır, veri tarayıcıdan çıkmaz. "Proje" tarayıcıda (IndexedDB) tutulur, dosya olarak dışa ve içe aktarılır. Hesap motorları DOM'suzdur ve Node'da da çalışır; bu, API'nin yerine geçen belgelenmiş yoldur. |
-| P2 | **Yerleşik katsayı yok (K1 korunur):** "tür ve yöre seçmeli denklem veritabanı" kullanıcının kendi kaynaklı katsayı kütüphanesidir (`model-coef/1`, kaynak alanı zorunlu). Hazır bir set ancak kaynağı okunup [B] işaretlenince, ayrı bir aşama olarak eklenir. IPCC ve benzeri varsayılan değerler gömülmez. |
-| P3 | **Kalıcı araç kimlikleri `MODÜL-NN`:** sayfalar, testler, belgeler ve sorunlar bu kimlikle anılır. Bir sayfa birden çok kimliği karşılayabilir. Aşamalar araç kimliğine bağlanır: `<KİMLİK>/a<n>` (ör. `SS-07/a1`). TOOLS_SPEC ve DIST_SPEC'teki eski aşama kodları (SV01, SI01, SS01, P01…) geçmiş kayıtlarda olduğu gibi kalır; eşlemeleri Bölüm 5'te. |
-| P4 | **Kapsam dışı:** ML-02, ML-03, SQ-04, GY-08, DS-03 ve DI-06 (API). SV-05 düşük öncelikli. |
-| P5 | **Birimler:** platform metriktir; gerekirse girişte birim dönüştürme yapılır, hesap ve çıktı metrik kalır. İstisna (17 Kasım 2026, kullanıcı kararı): Tomruk Ölçümü (SV-05) board-foot kurallarının sonucunu board foot olarak verir (açıkça etiketli; yanında m³). |
-| P6 | **Sayfa adresleri değişmez** (DOI'li atıflar ve kılavuz bağlantıları). Yeni araçlar Türkçe sayfa adı ve İngilizce kod klasörüyle eklenir (K2). Plandaki uzun İngilizce yollar yalnızca belge kimliğidir. |
-| P7 | **Çıktılar:** Excel, CSV, JSON (yöntem bilgileriyle) ve SVG grafik. PDF rapor DI-05 aşamasında ayrıca değerlendirilir (derleme adımı ve sunucu olmadan). DI-05/a1 (16 Kasım 2026): rapor yazdırılabilir HTML'dir; PDF tarayıcının yazdırma penceresinden ("PDF olarak kaydet") alınır, PDF kütüphanesi eklenmedi. |
-| P8 | **Çıkarılanlar (17 Kasım 2026, kullanıcı kararı):** planlı 27 araç plandan ve siteden çıkarıldı: BC-05; SI-02, SI-04…SI-09; GY-01…GY-07; SM-07; ML-01, ML-04…ML-08; DS-01, DS-02, DS-04…DS-06. P4'teki altı kapsam dışı araçla birlikte 33 kimlik kapsam dışıdır. Kimlikler kalıcıdır (P3): katalogda `out` olarak tarihçe için durur, sitede (kenar çubuğu, araç dizini, ana sayfa sayaçları) gösterilmez, başka adla yeniden önerilmez. Aracı kalmayan GY, ML ve DS modülleri listelenmez; site 8 modül gösterir. Açık kalan planlılar: SV-03, SV-04, SV-05, SM-02…SM-05. **Ek (17 Kasım 2026, kullanıcı kararı):** SM-05 (ölüm ve sağkalım modelleri) de plandan ve siteden çıkarıldı; kapsam dışı kimlik 34. Plandaki öteki araçların hepsi yayında; planlı araç kalmadı. |
+| P1 | **No server:** a REST API, server-side calculation (Python/R), a database (PostgreSQL/PostGIS) and user accounts are out of scope. Calculations are done in the browser (JS; heavy work in a Web Worker), data does not leave the browser. A "project" is kept in the browser (IndexedDB) and exported and imported as a file. The calculation engines have no DOM and also run in Node; this is the documented path that replaces an API. |
+| P2 | **No built-in coefficients (K1 is kept):** the "species- and region-selectable equation database" is the user's own sourced coefficient library (`model-coef/1`, source field mandatory). A ready-made set is added, as a separate stage, only once its source has been read and marked [B]. IPCC and similar default values are not embedded. |
+| P3 | **Stable tool ids `MODULE-NN`:** pages, tests, documents and issues are referred to by this id. One page may cover several ids. Stages are tied to the tool id: `<ID>/a<n>` (e.g. `SS-07/a1`). The old stage codes in TOOLS_SPEC and DIST_SPEC (SV01, SI01, SS01, P01…) stay as they are in the historical records; their mapping is in Section 5. |
+| P4 | **Out of scope:** ML-02, ML-03, SQ-04, GY-08, DS-03 and DI-06 (API). SV-05 low priority. |
+| P5 | **Units:** the platform is metric; where needed, units are converted on input, calculation and output stay metric. Exception (17 Nov 2026, user decision): Log Scaling (SV-05) gives the result of the board-foot rules in board feet (clearly labelled; m³ alongside). |
+| P6 | **Page addresses do not change** (citations with DOIs and guide links). New tools are added with a Turkish page name and an English code folder (K2). The long English paths in the plan are document ids only. |
+| P7 | **Outputs:** Excel, CSV, JSON (with method information) and SVG charts. A PDF report is considered separately in stage DI-05 (without a build step and a server). DI-05/a1 (16 Nov 2026): the report is printable HTML; the PDF is obtained from the browser's print dialog ("Save as PDF"), no PDF library was added. |
+| P8 | **Removed (17 Nov 2026, user decision):** 27 planned tools were removed from the plan and the site: BC-05; SI-02, SI-04…SI-09; GY-01…GY-07; SM-07; ML-01, ML-04…ML-08; DS-01, DS-02, DS-04…DS-06. Together with the six out-of-scope tools in P4, 33 ids are out of scope. The ids are permanent (P3): they stay in the catalogue as `out` for history, are not shown on the site (sidebar, tools index, home page counters) and are not proposed again under another name. The GY, ML and DS modules, left without a tool, are not listed; the site shows 8 modules. Planned tools still open: SV-03, SV-04, SV-05, SM-02…SM-05. **Addendum (17 Nov 2026, user decision):** SM-05 (mortality and survival models) was also removed from the plan and the site; 34 out-of-scope ids. All the other tools in the plan are live; no planned tool remains. |
 
-Plandaki "Açık kararlar" bu kararlarla kapandı: teknoloji mevcut PHP 7.4+ ve tarayıcı JS (derleme adımı yok); hesap
-yeri tarayıcı; veritabanı ve kullanıcı hesabı yok; lisans Apache-2.0 ve CC BY 4.0; başlangıç tür/yöre kapsamı yok (P2).
+The plan's "Open decisions" were closed by these decisions: technology the existing PHP 7.4+ and browser JS (no build
+step); calculation in the browser; no database and no user accounts; licence Apache-2.0 and CC BY 4.0; no initial
+species/region coverage (P2).
 
-## 3. Durum anahtarı
+## 3. Status key
 
-**yayında** bir sayfa karşılıyor · **yolda** geliştiriliyor, sayfası yok · **planlı** · **kapsam dışı** sitede
-gösterilmez. Kaynak sütunu, uygulamadan önce okunması gereken kaynakları ve durumlarını gösterir; "kullanıcıdan PDF"
-yazan yerlerde aşamaya geçmeden önce kaynak istenir.
+**live** a page covers it · **in development** being developed, no page yet · **planned** · **out of scope** not shown
+on the site. The source column shows the sources that must be read before implementation and their status; where it
+says "PDF from the user", the source is requested before moving to the stage.
 
-## 4. Araç kataloğu
+## 4. Tool catalogue
 
-### DI — Veri altyapısı
+### DI — Data preparation and management
 
-| Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
+| ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| DI-01 | Veri içe aktarma ve denetim | yayında | `veri-denetcisi.php` | Ormancılık Verisi Denetçisi |
-| DI-02 | Katsayı ve denklem kütüphanesi | yayında | `katsayi-kutuphanesi.php` | Kütüphane çekirdeği `core/coef.js`, `core/coef-ui.js`. DI-02/a1 (16 Kasım 2026, kullanıcı kararı: merkezî yönetim): bütün araçların setleri tek sayfada (`assets/lab/coeflib/`), süzme/arama, ayrıntı, aynı düzenleyiciyle düzenleme, kopya, silme, aynı katsayılı ve sorunlu setler, tek dosyayla yedek ve önizlemeli geri yükleme; 1.0.0-beta.1, yayına alındı (16 Kasım 2026, kullanıcı kararı). Yerleşik set yok (P2) |
-| DI-03 | Proje ve envanter verisi yöneticisi | yayında | `veri-yoneticisi.php` | Tarayıcıda (P1); örnek alan–ağaç–ölçüm hiyerarşisi `forest-dataset/1` ile. DI-03/a1 (16 Kasım 2026, kullanıcı kararı: çoklu veri paketi + etkin paket; yalnızca üst bilgi düzenlenir): Envanter Verisi Yöneticisi 1.0.0-beta.1 (`forest-project/1`, PROJECT §4b): proje bilgileri, örnek alan × dönem özeti, etkin paket (`dataset:approved`, araçlar değişmedi), içe/dışa aktarma ve önizlemeli yedek, kopya, silme; Veri Denetçisi 1.2.0 onayları listeye ekler; yayına alındı (16 Kasım 2026, kullanıcı kararı). Sonraki: dönem birleştirme (SI-09'un zemini), paketi Denetçi'de yeniden açma. |
-| DI-04 | Görselleştirme panosu | yayında | `pano.php` | DI-04/a1 (16 Kasım 2026, kullanıcı kararı: paket + çalışma kayıtları; hazır paneller + süzgeç): Görselleştirme Panosu 1.0.0-beta.1: özet, çap dağılımı, tür katılımı, örnek alan başına N/ha ve G/ha, boy–çap, ağaç haritası; dönem, tabaka, tür, örnek alan süzgeçleri; Çap Dağılımı kayıtlarından yoğunluklar, Boy–Çap kayıtlarından eğriler (METHODS §21). Yayına alındı (16 Kasım 2026, kullanıcı kararı). Sonraki: öteki araçların kayıtları (bonitet, meşcere yapısı), serbest grafik kurucu. |
-| DI-05 | Rapor üretici | yayında | `rapor.php` | P7. DI-05/a1 (16 Kasım 2026, kullanıcı kararları: yazdırılabilir HTML; paket + çalışma kayıtları; seçilebilir bölümler + başlık ve notlar): Rapor Üretici 1.0.0-beta.1: rapor bilgileri, rapor dili TR/EN, veri paketi özeti ve örnek alan × dönem tablosu, pano grafikleri (süzgeçli, kayıt eğrileriyle), çalışma kayıtlarının ayarları ve sonuç tabloları, kaynaklar (platform ve araç atıfları, kayıtlardaki kaynaklar, kullanıcı katsayı kaynakları), tekrarlanabilirlik eki; tarayıcıdan yazdırma/PDF ve tek başına açılan HTML. Yayına alındı (16 Kasım 2026, kullanıcı kararı). |
-| DI-06 | API ve betik arayüzü | kapsam dışı | – | P1; yerine Node'da çalışan motorlar ve planlı "R kodunu da ver" düğmesi. |
-| DI-07 | Tekrarlanabilirlik katmanı | yayında | `kayit-dogrulayici.php` | DI-07/a1 (16 Kasım 2026, kullanıcı kararı: ortak kayıt + doğrulayıcı; girdi varsayılan olarak yalnızca parmak izi, veri gömme isteğe bağlı): bütün araçların JSON indirmesi `run-record/1` (PROJECT §4c, METHODS §20): araç, sürüm, katalog kimlikleri, yayındaki commit, ayarlar, girdi SHA-256'ları, RFC 8785 + SHA-256 mührü; JSON'u olmayan beş araca (boy–çap SM-01, model değerlendirme ve nispi sıralama SM-06, örnekleme SI-01, örnek alan SI-03) kayıt indirmesi. Kayıt Doğrulayıcı 1.0.0-beta.1; yayına alındı (16 Kasım 2026, kullanıcı kararı). Sonraki: kaydı aracında yeniden açıp hesabı tekrarlama ve karşılaştırma; Zenodo DOI. |
+| DI-01 | Data import and validation | live | `veri-denetcisi.php` | Forestry Data Validator |
+| DI-02 | Coefficient and equation library | live | `katsayi-kutuphanesi.php` | Library core `core/coef.js`, `core/coef-ui.js`. DI-02/a1 (16 Nov 2026, user decision: central management): the sets of all tools on a single page (`assets/lab/coeflib/`), filtering/search, details, editing with the same editor, copy, delete, sets with identical coefficients and problematic sets, backup to a single file and restore with preview; 1.0.0-beta.1, released (16 Nov 2026, user decision). No built-in set (P2) |
+| DI-03 | Project and inventory data manager | live | `veri-yoneticisi.php` | In the browser (P1); the plot–tree–measurement hierarchy with `forest-dataset/1`. DI-03/a1 (16 Nov 2026, user decision: multiple data packages + an active package; only the metadata is edited): Inventory Data Manager 1.0.0-beta.1 (`forest-project/1`, PROJECT §4b): project information, plot × period summary, active package (`dataset:approved`, tools unchanged), import/export and backup with preview, copy, delete; Data Validator 1.2.0 adds approvals to the list; released (16 Nov 2026, user decision). Next: merging periods (the groundwork for SI-09), reopening a package in the Validator. |
+| DI-04 | Visualization dashboard | live | `pano.php` | DI-04/a1 (16 Nov 2026, user decision: package + run records; ready-made panels + filters): Visualization Dashboard 1.0.0-beta.1: summary, diameter distribution, species composition, N/ha and G/ha per plot, height–diameter, tree map; period, stratum, species, plot filters; densities from Diameter Distribution records, curves from Height–Diameter records (METHODS §21). Released (16 Nov 2026, user decision). Next: the records of the other tools (site index, stand structure), a free chart builder. |
+| DI-05 | Report generator | live | `rapor.php` | P7. DI-05/a1 (16 Nov 2026, user decisions: printable HTML; package + run records; selectable sections + title and notes): Report Generator 1.0.0-beta.1: report information, report language TR/EN, data package summary and plot × period table, dashboard charts (filtered, with record curves), settings and result tables of the run records, sources (platform and tool citations, sources in the records, user coefficient sources), reproducibility appendix; print/PDF from the browser and standalone HTML. Released (16 Nov 2026, user decision). |
+| DI-06 | API and scripting interface | out of scope | – | P1; instead, engines that run in Node and the planned "also give the R code" button. |
+| DI-07 | Reproducibility layer | live | `kayit-dogrulayici.php` | DI-07/a1 (16 Nov 2026, user decision: shared record + verifier; input by default as a fingerprint only, embedding the data optional): the JSON download of all tools is `run-record/1` (PROJECT §4c, METHODS §20): tool, version, catalogue ids, released commit, settings, input SHA-256s, RFC 8785 + SHA-256 seal; a record download for the five tools that had no JSON (height–diameter SM-01, model evaluation and relative ranking SM-06, sampling SI-01, plot SI-03). Record Verifier 1.0.0-beta.1; released (16 Nov 2026, user decision). Next: reopening a record in its tool, repeating and comparing the calculation; Zenodo DOI. |
 
-### TM — Ağaç ölçümü
+### TM — Tree measurement
 
-Kararlar (17 Kasım 2026, kullanıcı): (1) TM araçlarına bir ölçme bilgisi kitabı (Kershaw ve ark. 2016, van Laar ve Akça 2007 ya da Türkçe bir ölçme bilgisi kitabı) Drive'a eklendikten sonra başlanır; tanım formülleri de ondan okunup [B] işaretlenir, tanım istisnası kullanılmaz. (2) TM-01, TM-02, TM-04 ve TM-06 tek "Ağaç Ölçümü" sayfasında; TM-03 (kabuk, katsayı seti ister) ve TM-05 (halka ve burgu verisi) ayrı sayfalar (sonradan kullanıcı kararıyla ikisi de Ağaç Ölçümü'ne sekme oldu). (3) TM modülünü `claude/nifty-hamilton-oi0q51` oturumu yürütür; öteki oturumlar TM'ye dokunmaz.
+Decisions (17 Nov 2026, user): (1) work on the TM tools starts after a mensuration textbook (Kershaw et al. 2016, van Laar and Akça 2007 or a Turkish mensuration textbook) has been added to Drive; the definition formulas are also read from it and marked [B], the definition exception is not used. (2) TM-01, TM-02, TM-04 and TM-06 on a single "Tree Measurement" page; TM-03 (bark, needs a coefficient set) and TM-05 (ring and increment-core data) separate pages (later, by user decision, both became tabs of Tree Measurement). (3) The TM module is run by the `claude/nifty-hamilton-oi0q51` session; other sessions do not touch TM.
 
-| Kimlik | Araç | Durum | Not ve kaynak |
+| ID | Tool | Status | Note and source |
 |---|---|---|---|
-| TM-01 | Boy hesaplayıcı (eğim ölçer, tanjant, sinüs, eğim düzeltmesi) | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). TM-01/a1 (17 Kasım 2026): boy çekirdeği `assets/lab/tree/height.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23). Sayfa "Ağaç Ölçümü" TM-02, TM-04, TM-06 ile birlikte |
-| TM-02 | Çap ve göğüs yüzeyi (çevre ↔ çap, düzensiz gövde) | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). TM-02/a1 (17 Kasım 2026): `assets/lab/tree/diameter.js`; Hamilton 1975 ve Graves 1906 [B] (METHODS §23) |
-| TM-03 | Kabuk kalınlığı ve kabuksuz çap | yayında | TM-03/a1 (17 Kasım 2026): `assets/lab/tree/bark.js`; Hamilton 1975, Graves 1906, van Laar ve Akça 2007 4.1.6 [B] (METHODS §23). Ağaç Ölçümü sayfasında "Kabuk" sekmesi (kullanıcı kararı: ayrı sayfa yerine sekme; 1.0.0-beta.3); katsayılar kullanıcıdan (K1), katsayı kütüphanesinde araç `bark` |
-| TM-04 | Tepe tacı ölçüleri | yayında | TM-04/a1 (17 Kasım 2026): `assets/lab/tree/crown.js`; van Laar ve Akça 2007 4.1.7, Kershaw ve ark. 2016 §5.5 ve §8.6.1, Hamilton 1975 §8 [B] (METHODS §23). Ağaç Ölçümü sayfasında "Tepe" sekmesi (1.0.0-beta.4) |
-| TM-05 | Ağaç yaşı ve çap artımı (halka ve burgu verisi) | yayında | TM-05/a1 (17 Kasım 2026): `assets/lab/tree/age.js`; Graves 1906 bölüm XV–XVI ve van Laar ve Akça 2007 4.1.1 [B] (METHODS §23). Ağaç Ölçümü sayfasında "Yaş ve artım" sekmesi (kullanıcı kararı; 1.0.0-beta.2), yayına alındı (17 Kasım 2026, kullanıcı kararı) |
-| TM-06 | Biçim sayısı ve biçim bölümü | yayında | Sayfa `agac-olcumu.php` (yayına alındı 17 Kasım 2026, kullanıcı kararı). Seksiyon Hacmi biçim sayısını ve Hohenadl biçim bölümlerini (Heger 1965 [B]) zaten veriyor. TM-06/a1 (17 Kasım 2026): `assets/lab/tree/form.js`; Graves 1906 [B] bölüm XIII (METHODS §23; kitaptaki biçim üssü örneğinde aritmetik hata bulundu) |
+| TM-01 | Height calculator (clinometer, tangent, sine, slope correction) | live | Page `agac-olcumu.php` (released 17 Nov 2026, user decision). TM-01/a1 (17 Nov 2026): height core `assets/lab/tree/height.js`; Hamilton 1975 and Graves 1906 [B] (METHODS §23). Page "Tree Measurement" together with TM-02, TM-04, TM-06 |
+| TM-02 | Diameter and basal area (circumference ↔ diameter, irregular stem) | live | Page `agac-olcumu.php` (released 17 Nov 2026, user decision). TM-02/a1 (17 Nov 2026): `assets/lab/tree/diameter.js`; Hamilton 1975 and Graves 1906 [B] (METHODS §23) |
+| TM-03 | Bark thickness and under-bark diameter | live | TM-03/a1 (17 Nov 2026): `assets/lab/tree/bark.js`; Hamilton 1975, Graves 1906, van Laar and Akça 2007 4.1.6 [B] (METHODS §23). "Bark" tab on the Tree Measurement page (user decision: a tab instead of a separate page; 1.0.0-beta.3); coefficients from the user (K1), tool `bark` in the coefficient library |
+| TM-04 | Crown metrics | live | TM-04/a1 (17 Nov 2026): `assets/lab/tree/crown.js`; van Laar and Akça 2007 4.1.7, Kershaw et al. 2016 §5.5 and §8.6.1, Hamilton 1975 §8 [B] (METHODS §23). "Crown" tab on the Tree Measurement page (1.0.0-beta.4) |
+| TM-05 | Tree age and diameter increment (ring and increment-core data) | live | TM-05/a1 (17 Nov 2026): `assets/lab/tree/age.js`; Graves 1906 chapters XV–XVI and van Laar and Akça 2007 4.1.1 [B] (METHODS §23). "Age and increment" tab on the Tree Measurement page (user decision; 1.0.0-beta.2), released (17 Nov 2026, user decision) |
+| TM-06 | Form factor and form quotient | live | Page `agac-olcumu.php` (released 17 Nov 2026, user decision). Section Volume already gives the form factor and the Hohenadl form quotients (Heger 1965 [B]). TM-06/a1 (17 Nov 2026): `assets/lab/tree/form.js`; Graves 1906 [B] chapter XIII (METHODS §23; an arithmetic error was found in the book's form exponent example) |
 
-### SV — Gövde hacmi ve profili
+### SV — Stem volume and taper
 
-| Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
+| ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| SV-01 | Seksiyon hacmi (Huber, Smalian, Newton, Hohenadl) | yayında | `seksiyon-hacmi.php` | Huber/Smalian/Newton tanım istisnası [D]; Hohenadl Heger (1965) [B] |
-| SV-02 | Gövde profili denklemleri (Max ve Burkhart, Kozak, değişken üslü) | yayında | `govde-profili.php` | TOOLS_SPEC TP01–TP02. SV-02/a1 (16 Kasım 2026): Max ve Burkhart (1976) Model 4 çekirdeği [B] (`assets/lab/taper/calc.js`). SV-02/a2 (16 Kasım 2026): Kozak (2004) Model 02 [B]. SV-02/a3 (16 Kasım 2026): gövde ölçümlerinden uydurma (TP02). Sayfa (TP04) 16 Kasım 2026, 1.0.0-beta.1; tepe çapına kadar kullanılabilir hacim de sayfada (SV-03'ün temeli) |
-| SV-03 | Kullanılabilir hacim (profil integrali, tepe çapı ve tomruk boyu sınırları) | yayında | `govde-profili.php` | TP01–TP03. Tepe çapı sınırı SV-02 sayfasıyla; SV-03/a1 (17 Kasım 2026, 1.0.0-beta.3): tomruk boyu sınırı, Kershaw ve ark. 2016 §6.4.1, §7.4.1, §7.4.3 [B] |
-| SV-04 | Hacim denklemleri | yayında | `hacim-denklemleri.php` | TOOLS_SPEC SV04; SV-04/a1 (17 Kasım 2026, 1.0.0-beta.1): Kershaw ve ark. 2016 §6.2 [B] (6.22, 6.23, 6.24–6.25, yerel, 6.29); ağırlık Parresol 1999 [B]; katsayılar kullanıcının verisinden |
-| SV-05 | Tomruk ölçüm kuralları (Doyle, Scribner, International ¼″, kübik) | yayında | `tomruk-olcumu.php` | SV-05/a1 (17 Kasım 2026, 1.0.0-beta.1): Kershaw ve ark. 2016 §7.3, §7.4.1, Tablo 6.1 [B]; board foot etiketli (P5 istisnası, kullanıcı kararı) ve m³ |
-| SV-06 | Ürün bölme (sortiman) eniyileme | yayında | `govde-profili.php` | TP03. SV-06/a1 (16 Kasım 2026): öncelik sırası ve dinamik programlama çekirdeği (`assets/lab/taper/bucking.js`); Grondin (1998) ve Bennemann ve ark. (2025) [B]; Pnevmaticos ve Mann (1972) aktarılan [D]. Sayfa: Gövde Profili'nde ürün bölme bölümü (`govde-profili.php`, 1.0.0-beta.2; 16 Kasım 2026); yayına alındı (16 Kasım 2026, kullanıcı kararı) |
+| SV-01 | Section volume (Huber, Smalian, Newton, Hohenadl) | live | `seksiyon-hacmi.php` | Huber/Smalian/Newton definition exception [D]; Hohenadl Heger (1965) [B] |
+| SV-02 | Taper equations (Max and Burkhart, Kozak, variable-exponent) | live | `govde-profili.php` | TOOLS_SPEC TP01–TP02. SV-02/a1 (16 Nov 2026): Max and Burkhart (1976) Model 4 core [B] (`assets/lab/taper/calc.js`). SV-02/a2 (16 Nov 2026): Kozak (2004) Model 02 [B]. SV-02/a3 (16 Nov 2026): fitting from stem measurements (TP02). Page (TP04) 16 Nov 2026, 1.0.0-beta.1; usable volume up to a top diameter is also on the page (the basis of SV-03) |
+| SV-03 | Merchantable volume (taper integral, top-diameter and log-length limits) | live | `govde-profili.php` | TP01–TP03. Top-diameter limit with the SV-02 page; SV-03/a1 (17 Nov 2026, 1.0.0-beta.3): log-length limit, Kershaw et al. 2016 §6.4.1, §7.4.1, §7.4.3 [B] |
+| SV-04 | Volume equations | live | `hacim-denklemleri.php` | TOOLS_SPEC SV04; SV-04/a1 (17 Nov 2026, 1.0.0-beta.1): Kershaw et al. 2016 §6.2 [B] (6.22, 6.23, 6.24–6.25, local, 6.29); weighting Parresol 1999 [B]; coefficients from the user's data |
+| SV-05 | Log scaling rules (Doyle, Scribner, International ¼″, cubic) | live | `tomruk-olcumu.php` | SV-05/a1 (17 Nov 2026, 1.0.0-beta.1): Kershaw et al. 2016 §7.3, §7.4.1, Table 6.1 [B]; board feet labelled (P5 exception, user decision) and m³ |
+| SV-06 | Product bucking (assortment) optimization | live | `govde-profili.php` | TP03. SV-06/a1 (16 Nov 2026): priority order and dynamic programming core (`assets/lab/taper/bucking.js`); Grondin (1998) and Bennemann et al. (2025) [B]; Pnevmaticos and Mann (1972) cited [D]. Page: bucking section in Taper (`govde-profili.php`, 1.0.0-beta.2; 16 Nov 2026); released (16 Nov 2026, user decision) |
 
-### BC — Biyokütle ve karbon
+### BC — Biomass and carbon
 
-| Kimlik | Araç | Durum | Not ve kaynak |
+| ID | Tool | Status | Note and source |
 |---|---|---|---|
-| BC-01 | Allometrik biyokütle | yayında | TOOLS_SPEC BC01–BC02. BC-01/a1 = BC01 (16 Kasım 2026): çekirdek `assets/lab/biomass/calc.js`; biçimler tanım istisnası [D] (kullanıcı kararı); Baskerville düzeltmesi ln ölçeğinde [A] (Chave ve ark. 2014, Baia ve ark. 2025); log₁₀'da Sprugel 1983 bekleniyor; Snowdon ve kullanıcı etkeni değer olarak. Sayfa `biyokutle-karbon.php` BC02 ile (17 Kasım 2026, 1.0.0-beta.1) |
-| BC-02 | Biyokütle bileşenleri (gövde, dal, yaprak, kök; toplamsal sistemler) | yayında | BC-02/a1 (17 Kasım 2026, 1.0.0-beta.4, yayında): doğrusal toplamsal sistem, kısıtlı (ağırlıklı) SUR, Parresol 1999 [B]; BC-02/a2 (17 Kasım 2026, 1.0.0-beta.5): doğrusal olmayan toplamsal sistem, üs biçimleri, ağırlıklı ya da ln ölçeğinde NSUR, güven ve tahmin aralıkları, Parresol 2001 [B]. SM-04'ün biyokütle kısmı |
-| BC-03 | Biyokütle dönüşüm etkeni (BEF) | yayında | TOOLS_SPEC BC03; etkenler kullanıcıdan. BC01'de hacimden dönüşüm çekirdeği: IPCC 2006 Cilt 4 Bölüm 2 Denklem 2.8b [B]. BC-03/a1 = BC03 (17 Kasım 2026, 1.0.0-beta.2): hacimler Seksiyon Hacmi'nden `forest-derived/1` kaydıyla (paket değişmez), iki yaklaşım ayrı satırlarda |
-| BC-04 | Karbon stoku ve CO₂ eşdeğeri | yayında | K9: CO₂ = C × 44/12 (IPCC 2006 §2.2.3 [B]), karbon oranı kullanıcıdan. BC01'de çekirdek |
-| BC-05 | IPCC karbon hesabı (katman 1–3) | çıkarıldı (P8) | IPCC 2006 Cilt 4: kullanıcıdan PDF; varsayılan değer gömülmez (P2) |
-| BC-06 | Karbon belirsizliği (Monte Carlo) | yayında | TOOLS_SPEC BC04. BC-06/a1 = BC04 (17 Kasım 2026, 1.0.0-beta.3): katsayı kovaryansı ve artık standart hatası kaynaktan; şema Réjou-Méchain ve ark. 2017 [B], log-normal artık Chave ve ark. 2004 [B]; yayına alındı (17 Kasım 2026, kullanıcı kararı) |
+| BC-01 | Allometric biomass | live | TOOLS_SPEC BC01–BC02. BC-01/a1 = BC01 (16 Nov 2026): core `assets/lab/biomass/calc.js`; forms definition exception [D] (user decision); Baskerville correction on the ln scale [A] (Chave et al. 2014, Baia et al. 2025); for log₁₀, Sprugel 1983 awaited; Snowdon and a user factor as values. Page `biyokutle-karbon.php` with BC02 (17 Nov 2026, 1.0.0-beta.1) |
+| BC-02 | Biomass components (stem, branches, foliage, roots; additive systems) | live | BC-02/a1 (17 Nov 2026, 1.0.0-beta.4, live): linear additive system, restricted (weighted) SUR, Parresol 1999 [B]; BC-02/a2 (17 Nov 2026, 1.0.0-beta.5): nonlinear additive system, power forms, NSUR weighted or on the ln scale, confidence and prediction intervals, Parresol 2001 [B]. The biomass part of SM-04 |
+| BC-03 | Biomass expansion factor (BEF) | live | TOOLS_SPEC BC03; factors from the user. Volume conversion core in BC01: IPCC 2006 Volume 4 Chapter 2 Equation 2.8b [B]. BC-03/a1 = BC03 (17 Nov 2026, 1.0.0-beta.2): volumes from Section Volume via a `forest-derived/1` record (the package does not change), the two approaches in separate rows |
+| BC-04 | Carbon stock and CO₂ equivalent | live | K9: CO₂ = C × 44/12 (IPCC 2006 §2.2.3 [B]), carbon fraction from the user. Core in BC01 |
+| BC-05 | IPCC carbon accounting (tiers 1–3) | removed (P8) | IPCC 2006 Volume 4: PDF from the user; default values are not embedded (P2) |
+| BC-06 | Carbon uncertainty (Monte Carlo) | live | TOOLS_SPEC BC04. BC-06/a1 = BC04 (17 Nov 2026, 1.0.0-beta.3): coefficient covariance and residual standard error from the source; scheme Réjou-Méchain et al. 2017 [B], log-normal residual Chave et al. 2004 [B]; released (17 Nov 2026, user decision) |
 
-### SS — Meşcere yapısı ve sıklığı
+### SS — Stand structure and density
 
-| Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
+| ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| SS-01 | Meşcere özeti (N/ha, G/ha, Dq, üst boy) | yayında | `ornek-alan.php` | Örnek Alan ve Meşcere |
-| SS-02 | Meşcere sıklık endeksleri (Reineke SDI, göreli sıklık, CCF, Curtis RD) | yayında | `mescere-yapisi.php` | SDI ve RD hazır (Reineke 1933, Curtis 1982 [B]); göreli aralık tanım istisnası; CCF için Krajicek ve ark. (1961): özgün makale bulunamadı; Kershaw ve ark. 2016 §8.9.4 ve van Laar ve Akça 2007 (s. 156–157) okundu [B], CCF 17 Kasım 2026'da eklendi (`structure/ccf.js`, Meşcere Yapısı 1.0.0-beta.3; katsayılar kullanıcıdan, katsayı kütüphanesinde araç `ccf`; METHODS §16) |
-| SS-03 | Çap dağılımı (Weibull, gamma, Johnson SB…; geri kazanım) | yayında | `cap-dagilimi.php` | Çap Dağılımı Laboratuvarı 2.2.0 |
-| SS-04 | Çeşitlilik endeksleri (Shannon, Simpson, tür zenginliği) | yayında | `mescere-yapisi.php` | İstatistiksel tanım |
-| SS-05 | Yapısal çeşitlilik endeksleri (Gini, karışım, farklılaşma) | yayında | `mescere-yapisi.php` | Gini tanım; M, T, U Pommerening (2002): yüklendi, doğrulama bekliyor |
-| SS-06 | Mekânsal desen çözümlemesi (Ripley K/L, çift korelasyon, Clark–Evans) | yayında | `mescere-yapisi.php` | Clark–Evans ve Donnelly hazır (yüklendi, doğrulama bekliyor); Ripley K/L ve çift korelasyon işlevi için kaynak: kullanıcıdan PDF |
-| SS-07 | Rekabet endeksleri (Hegyi; uzaklığa bağlı ve bağımsız) | yayında | `mescere-yapisi.php` | SS-07/a1 hesabı hazır (`structure/competition.js`); Hegyi (1974) geçici istisna, kullanıcıdan PDF |
+| SS-01 | Stand summary (N/ha, G/ha, Dq, top height) | live | `ornek-alan.php` | Plot and Stand |
+| SS-02 | Stand density indices (Reineke SDI, relative density, CCF, Curtis RD) | live | `mescere-yapisi.php` | SDI and RD ready (Reineke 1933, Curtis 1982 [B]); relative spacing definition exception; for CCF, Krajicek et al. (1961): the original article could not be found; Kershaw et al. 2016 §8.9.4 and van Laar and Akça 2007 (pp. 156–157) read [B], CCF added on 17 Nov 2026 (`structure/ccf.js`, Stand Structure 1.0.0-beta.3; coefficients from the user, tool `ccf` in the coefficient library; METHODS §16) |
+| SS-03 | Diameter distribution (Weibull, gamma, Johnson SB…; parameter recovery) | live | `cap-dagilimi.php` | Diameter Distribution Lab 2.2.0 |
+| SS-04 | Diversity indices (Shannon, Simpson, species richness) | live | `mescere-yapisi.php` | Statistical definition |
+| SS-05 | Structural diversity indices (Gini, mingling, differentiation) | live | `mescere-yapisi.php` | Gini definition; M, T, U Pommerening (2002): uploaded, awaiting verification |
+| SS-06 | Spatial pattern analysis (Ripley K/L, pair correlation, Clark–Evans) | live | `mescere-yapisi.php` | Clark–Evans and Donnelly ready (uploaded, awaiting verification); source for Ripley K/L and the pair correlation function: PDF from the user |
+| SS-07 | Competition indices (Hegyi; distance-dependent and distance-independent) | live | `mescere-yapisi.php` | SS-07/a1 calculation ready (`structure/competition.js`); Hegyi (1974) temporary exception, PDF from the user |
 
-### SQ — Yetişme ortamı verimliliği
+### SQ — Site quality and productivity
 
-| Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
+| ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| SQ-01 | Bonitet endeksi | yayında | `bonitet.php` | Hernández-Cuevas ve ark. (2018) [B]; eğri kütüphanesi kullanıcıdan (P2) |
-| SQ-02 | Bonitet eğrisi kurma (ADA/GADA uydurma) | yayında (ADA) | `bonitet.php` | GADA için Cieszewski ve Bailey (2000): kullanıcıdan PDF |
-| SQ-03 | Büyüme işlevi uydurma (Chapman–Richards, Schumacher, Gompertz, logistik, monomoleküler, Weibull) | yayında | `buyume-islevi.php` | CR ve Schumacher [B] (Hernández-Cuevas ve ark. 2018); diğerleri [A] (Fekedulegn ve ark. 1999 + `growthmodels`); Korf kaynak bekliyor |
-| SQ-04 | Çevresel verilerden verimlilik | kapsam dışı | – | P4 |
+| SQ-01 | Site index | live | `bonitet.php` | Hernández-Cuevas et al. (2018) [B]; curve library from the user (P2) |
+| SQ-02 | Site index curve building (ADA/GADA fitting) | live (ADA) | `bonitet.php` | For GADA, Cieszewski and Bailey (2000): PDF from the user |
+| SQ-03 | Growth function fitting (Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular, Weibull) | live | `buyume-islevi.php` | CR and Schumacher [B] (Hernández-Cuevas et al. 2018); the others [A] (Fekedulegn et al. 1999 + `growthmodels`); Korf awaiting a source |
+| SQ-04 | Productivity from environmental data | out of scope | – | P4 |
 
-### SI — Örnekleme ve envanter
+### SI — Sampling and inventory
 
-| Kimlik | Araç | Durum | Sayfa | Not ve kaynak |
+| ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| SI-01 | Örnek büyüklüğü | yayında | `ornekleme.php` | Envanter Örnekleme Planlayıcısı |
-| SI-02 | Örnekleme tasarımı üretici (rastgele, sistematik, tabakalı, kümeli) | çıkarıldı (P8) | – | |
-| SI-03 | Sabit alanlı örnek alan kestirimi | yayında | `ornek-alan.php` | genişletme etkenleri, hektar değerleri |
-| SI-04 | Açı sayımı (Bitterlich) | çıkarıldı (P8) | – | |
-| SI-05 | Kenar etkisi düzeltmesi (ayna, walkthrough) | çıkarıldı (P8) | – | |
-| SI-06 | Hat kesişim örneklemesi (kalın ölü odun) | çıkarıldı (P8) | – | |
-| SI-07 | İki aşamalı ve çift örnekleme | çıkarıldı (P8) | – | |
-| SI-08 | Tasarıma dayalı çıkarım (Horvitz–Thompson, tabakalı, GREG) | çıkarıldı (P8) | – | Örnek Alan aracının tasarıma dayalı orman kestirimi bunun bir kısmını karşılıyor |
-| SI-09 | Tekrarlı envanter çözümlemesi (büyüme, ölüm, aralanma) | çıkarıldı (P8) | – | |
+| SI-01 | Sample size | live | `ornekleme.php` | Inventory Sampling Planner |
+| SI-02 | Sampling design generator (random, systematic, stratified, cluster) | removed (P8) | – | |
+| SI-03 | Fixed-area plot estimation | live | `ornek-alan.php` | expansion factors, per-hectare values |
+| SI-04 | Angle count (Bitterlich) | removed (P8) | – | |
+| SI-05 | Edge-effect correction (mirage, walkthrough) | removed (P8) | – | |
+| SI-06 | Line-intersect sampling (coarse woody debris) | removed (P8) | – | |
+| SI-07 | Two-phase and double sampling | removed (P8) | – | |
+| SI-08 | Design-based inference (Horvitz–Thompson, stratified, GREG) | removed (P8) | – | The design-based forest estimation of the Plot tool covers part of this |
+| SI-09 | Repeated inventory analysis (growth, mortality, ingrowth) | removed (P8) | – | |
 
-### GY — Büyüme ve hasılat
+### GY — Growth and yield
 
-| Kimlik | Araç | Durum | Not |
+| ID | Tool | Status | Note |
 |---|---|---|---|
-| GY-01 | Meşcere hasılat tablosu üretici | çıkarıldı (P8) | Hasılat tablosu gömülmez (K1); kullanıcının modelinden üretilir |
-| GY-02 | Çap sınıfı ve matris modeli | çıkarıldı (P8) | |
-| GY-03 | Tek ağaç büyüme benzetimi | çıkarıldı (P8) | |
-| GY-04 | Ölüm ve aralanma modelleri | çıkarıldı (P8) | |
-| GY-05 | Aralama senaryoları | çıkarıldı (P8) | |
-| GY-06 | Meşcere sıklığı yönetim diyagramı | çıkarıldı (P8) | |
-| GY-07 | Kendiliğinden seyrelme doğrusu | çıkarıldı (P8) | |
-| GY-08 | İklime duyarlı büyüme projeksiyonu | kapsam dışı | P4 |
+| GY-01 | Whole-stand yield table generator | removed (P8) | Yield tables are not embedded (K1); generated from the user's model |
+| GY-02 | Diameter-class and matrix model | removed (P8) | |
+| GY-03 | Individual-tree growth simulation | removed (P8) | |
+| GY-04 | Mortality and ingrowth models | removed (P8) | |
+| GY-05 | Thinning scenarios | removed (P8) | |
+| GY-06 | Stand density management diagram | removed (P8) | |
+| GY-07 | Self-thinning line | removed (P8) | |
+| GY-08 | Climate-sensitive growth projection | out of scope | P4 |
 
-### SM — İstatistiksel modelleme
+### SM — Statistical modelling
 
-| Kimlik | Araç | Durum | Sayfa | Not |
+| ID | Tool | Status | Page | Note |
 |---|---|---|---|---|
-| SM-01 | Boy–çap modelleri | yayında | `boy-cap.php` | sabit etkili sürüm |
-| SM-02 | Doğrusal olmayan regresyon (NLS, ağırlıklı) | yayında | `dogrusal-olmayan-regresyon.php` | SM-02/a1 (17 Kasım 2026, 1.0.0-beta.1): hazır biçimler ve serbest formül (kullanıcı kararı; `core/expr.js`), ağırlıklı NLS, aralıklar, AIC ile karşılaştırma, kütüphaneye kayıt; Parresol 2001 [B] |
-| SM-03 | Karma etkili modeller | yayında | `karma-modeller.php` | SM-03/a1 (17 Kasım 2026, 1.0.0-beta.1): doğrusal ve doğrusal olmayan karma modeller (Pinheiro ve Bates 2000, Lindstrom ve Bates 1990 [B]), ML/REML, köşegen/genel kovaryans, varPower, AIC/BIC/LRT, yeni grup kalibrasyonu [A], kütüphaneye kayıt; nlme 3.1-168 ile doğrulandı [P] |
-| SM-04 | Eşanlı ve uyumlu sistemler (SUR, toplamsal biyokütle) | yayında | `denklem-sistemleri.php` | SM-04/a1 (17 Kasım 2026, 1.0.0-beta.1): kullanıcının formülleriyle doğrusal ve doğrusal olmayan SUR, yinelemeli SUR, ortak katsayılarla uyumlu sistemler (Henningsen ve Hamann 2007, Parresol 2001 [B]); systemfit 1.1-30 ile doğrulandı [P]; 2SLS/3SLS kapsam dışı |
-| SM-05 | Ölüm ve sağkalım modelleri | kapsam dışı | – | P8 ek (17 Kasım 2026, kullanıcı kararı) |
-| SM-06 | Model değerlendirme | yayında | `model-degerlendirme.php`, `nispi-siralama.php` | Nispi Sıralama 19 Kasım 2026'da katalogda SM-06'nın altına alındı (kullanıcı kararı; ayrı sayfa, dizinde Model Başarısı'nın hemen yanında), modelleri sıralamak için |
-| SM-07 | Belirsizlik nicelemesi (bootstrap, Monte Carlo, Bayesçi) | çıkarıldı (P8) | – | bootstrap çap dağılımı ve bonitette var |
+| SM-01 | Height–diameter models | live | `boy-cap.php` | fixed-effects version |
+| SM-02 | Nonlinear regression (NLS, weighted) | live | `dogrusal-olmayan-regresyon.php` | SM-02/a1 (17 Nov 2026, 1.0.0-beta.1): ready-made forms and free formula (user decision; `core/expr.js`), weighted NLS, intervals, comparison by AIC, saving to the library; Parresol 2001 [B] |
+| SM-03 | Mixed-effects models | live | `karma-modeller.php` | SM-03/a1 (17 Nov 2026, 1.0.0-beta.1): linear and nonlinear mixed models (Pinheiro and Bates 2000, Lindstrom and Bates 1990 [B]), ML/REML, diagonal/general covariance, varPower, AIC/BIC/LRT, calibration for a new group [A], saving to the library; verified against nlme 3.1-168 [P] |
+| SM-04 | Simultaneous and compatible systems (SUR, additive biomass) | live | `denklem-sistemleri.php` | SM-04/a1 (17 Nov 2026, 1.0.0-beta.1): linear and nonlinear SUR with the user's formulas, iterated SUR, compatible systems with shared coefficients (Henningsen and Hamann 2007, Parresol 2001 [B]); verified against systemfit 1.1-30 [P]; 2SLS/3SLS out of scope |
+| SM-05 | Mortality and survival models | out of scope | – | P8 addendum (17 Nov 2026, user decision) |
+| SM-06 | Model evaluation | live | `model-degerlendirme.php`, `nispi-siralama.php` | Relative Ranking was placed under SM-06 in the catalogue on 19 Nov 2026 (user decision; a separate page, right next to Model Performance in the index), for ranking models |
+| SM-07 | Uncertainty quantification (bootstrap, Monte Carlo, Bayesian) | removed (P8) | – | bootstrap exists in diameter distribution and site index |
 
-### ML — Makine öğrenmesi ve mekânsal tahmin
+### ML — Machine learning and spatial prediction
 
-| Kimlik | Araç | Durum | Not |
+| ID | Tool | Status | Note |
 |---|---|---|---|
-| ML-01 | Makine öğrenmesi ile regresyon ve sınıflama | çıkarıldı (P8) | tarayıcıda |
-| ML-02 | Derin öğrenmeyle tepe tacı ayırma | kapsam dışı | P4: büyük modeller, GPU, veri tarayıcıdan çıkmaz |
-| ML-03 | Nokta bulutu segmentasyonu | kapsam dışı | P4 |
-| ML-04 | k-NN atama | çıkarıldı (P8) | |
-| ML-05 | Mekânsal ara değerleme (kriging, Gauss süreçleri) | çıkarıldı (P8) | |
-| ML-06 | Mekânsal çapraz doğrulama | çıkarıldı (P8) | |
-| ML-07 | Küçük alan kestirimi | çıkarıldı (P8) | |
-| ML-08 | Model destekli çıkarım | çıkarıldı (P8) | |
+| ML-01 | Machine-learning regression and classification | removed (P8) | in the browser |
+| ML-02 | Deep-learning crown delineation | out of scope | P4: large models, GPU, data does not leave the browser |
+| ML-03 | Point-cloud segmentation | out of scope | P4 |
+| ML-04 | k-NN imputation | removed (P8) | |
+| ML-05 | Spatial interpolation (kriging, Gaussian processes) | removed (P8) | |
+| ML-06 | Spatial cross-validation | removed (P8) | |
+| ML-07 | Small-area estimation | removed (P8) | |
+| ML-08 | Model-assisted inference | removed (P8) | |
 
-### DS — Karar destek ve uygulamalar
+### DS — Decision support and applications
 
-| Kimlik | Araç | Durum | Not |
+| ID | Tool | Status | Note |
 |---|---|---|---|
-| DS-01 | Odun değerleme | çıkarıldı (P8) | fiyatlar kullanıcıdan |
-| DS-02 | Üretim planlama eniyileme | çıkarıldı (P8) | doğrusal programlama tarayıcıda |
-| DS-03 | Karbon projesi MRV | kapsam dışı | P4: biyometriden çok mevzuat |
-| DS-04 | Ölü odun ve habitat yapısı | çıkarıldı (P8) | |
-| DS-05 | Zarar değerlendirmesi | çıkarıldı (P8) | |
-| DS-06 | Kent ağaçları envanteri | çıkarıldı (P8) | |
+| DS-01 | Timber valuation | removed (P8) | prices from the user |
+| DS-02 | Harvest scheduling optimization | removed (P8) | linear programming in the browser |
+| DS-03 | Carbon project MRV | out of scope | P4: more regulation than biometrics |
+| DS-04 | Deadwood and habitat structure | removed (P8) | |
+| DS-05 | Damage assessment | removed (P8) | |
+| DS-06 | Urban tree inventory | removed (P8) | |
 
-## 5. Eski aşama kodlarının kimliklere eşlemesi
+## 5. Mapping of old stage codes to ids
 
-| Eski kod (şartname) | Araç kimliği |
+| Old code (specification) | Tool id |
 |---|---|
 | DIST_SPEC P00–P23 | SS-03 |
 | TOOLS_SPEC SV01–SV03 (SV04) | SV-01 (SV-04) |
-| TOOLS_SPEC SI01–SI04 | SQ-01, SQ-02 (eski "SI" = bonitet; plandaki SI = örnekleme) |
+| TOOLS_SPEC SI01–SI04 | SQ-01, SQ-02 (old "SI" = site index; SI in the plan = sampling) |
 | TOOLS_SPEC SS01 | SS-02, SS-04, SS-05 (`assets/lab/structure/calc.js`) |
 | TOOLS_SPEC SS02 | SS-05, SS-06 (`assets/lab/structure/spatial.js`) |
 | TOOLS_SPEC SS03 | SS-07 |
-| TOOLS_SPEC SS04 | SS-02, SS-04…SS-07 sayfası (`mescere-yapisi.php`) |
+| TOOLS_SPEC SS04 | SS-02, SS-04…SS-07 page (`mescere-yapisi.php`) |
 | TOOLS_SPEC BC01–BC03 (BC04) | BC-01…BC-04 (BC-06) |
 | TOOLS_SPEC TP01–TP04 (TP05) | SV-02, SV-03, SV-06 |
 
-Bundan sonraki aşamalar `<KİMLİK>/a<n>` ile adlandırılır.
+From now on, stages are named `<ID>/a<n>`.
 
-## 6. Yol haritası
+## 6. Roadmap
 
-Plandaki dört evre, yayındaki araçlara göre güncellendi. Sıra kullanıcının gönderdiği promptlarla belirlenir; bir
-aşama kabul ölçütleri sağlanmadan sonrakine geçilmez.
+The plan's four phases were updated according to the live tools. The order is set by the prompts the user sends; a
+stage does not move on to the next until its acceptance criteria are met.
 
-17 Kasım 2026 kullanıcı kararıyla (P8) yol haritası daraltıldı. Yayında olmayan ve plandan çıkarılmayan araçlar:
+By the user decision of 17 Nov 2026 (P8) the roadmap was narrowed. Tools that are not live and were not removed from the plan:
 
-1. **Gövde hacmi:** SV-03, SV-04 ve SV-05 yapıldı (17 Kasım 2026); SV modülünde planlı araç kalmadı.
-2. **İstatistiksel modelleme:** SM-02, SM-03 ve SM-04 yapıldı (17 Kasım 2026); SM-05 plandan çıkarıldı (17 Kasım 2026, kullanıcı kararı). Planlı araç kalmadı.
-3. **Biyokütle:** BC-02/a2 yapıldı (17 Kasım 2026); BC modülünde planlı araç kalmadı.
+1. **Stem volume:** SV-03, SV-04 and SV-05 done (17 Nov 2026); no planned tool remains in the SV module.
+2. **Statistical modelling:** SM-02, SM-03 and SM-04 done (17 Nov 2026); SM-05 removed from the plan (17 Nov 2026, user decision). No planned tool remains.
+3. **Biomass:** BC-02/a2 done (17 Nov 2026); no planned tool remains in the BC module.
 
-Bağımlılıklar: DI bütün modüllere girdi verir; katsayı kütüphanesi (DI-02) SV, BC, SQ'ya; SM'deki uydurma araçları
-SQ-03'e ve boy–çapa.
+Dependencies: DI feeds input to all modules; the coefficient library (DI-02) to SV, BC, SQ; the fitting tools in SM
+to SQ-03 and height–diameter.
 
-## 7. Araç başına şartname
+## 7. Per-tool specification
 
-Her yeni araç için kodlamadan önce şartname yazılır: ya TOOLS_SPEC biçiminde bir bölüm ya da `docs/tools/<KİMLİK>.md`
-(amaç; girdiler ve birimleri; yöntemler ve denklemler; çıktılar; kaynaklar ve okunma durumu; doğrulama: bilinen
-sonuçlu referans durumlar ve toleranslar; arayüz; bağımlılıklar). API bölümü yoktur (P1).
+For every new tool a specification is written before coding: either a section in the TOOLS_SPEC format or `docs/tools/<ID>.md`
+(purpose; inputs and their units; methods and equations; outputs; sources and their reading status; verification:
+reference cases with known results and tolerances; interface; dependencies). There is no API section (P1).
 
-## 8. Ortak gereksinimler
+## 8. Common requirements
 
-Plandaki ortak gereksinimler PROJECT.md ve TOOLS_SPEC §1.1 kurallarıyla zaten karşılanır: birimler her değerle
-taşınır (P5); tek kayıt ve toplu (CSV/Excel) kullanım; geçerlilik aralığı dışında uyarı; her bilimsel hesap bağımsız
-referansla test edilir; her yöntem kaynağını gösterir; Excel/CSV/JSON dışa aktarma (P7); duyarlı düzen, TR/EN eksiksiz;
-her araç için kılavuz bölümü.
+The plan's common requirements are already met by the rules of PROJECT.md and TOOLS_SPEC §1.1: units are carried
+with every value (P5); single-record and batch (CSV/Excel) use; a warning outside the range of validity; every
+scientific calculation is tested against an independent reference; every method shows its source; Excel/CSV/JSON
+export (P7); responsive layout, complete TR/EN; a guide section for every tool.

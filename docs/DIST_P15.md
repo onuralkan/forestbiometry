@@ -1,36 +1,36 @@
-# P15 raporu: ilk kullanılabilir sürüm (Çap Dağılımı Laboratuvarı 2.0.0)
+# P15 report: first usable release (Diameter Distribution Lab 2.0.0)
 
-11 Kasım 2026. Şartname `docs/DIST_SPEC.md` P15. Kod `assets/lab/dist/`, sayfa `cap-dagilimi.php`.
+11 Nov 2026. Specification `docs/DIST_SPEC.md` P15. Code `assets/lab/dist/`, page `cap-dagilimi.php`.
 
-## 1. Tamamlanan kapsam (P00–P15)
+## 1. Completed scope (P00–P15)
 
-| Alan | Ne var | Aşama |
+| Area | What is there | Stage |
 |---|---|---|
-| Aileler | Weibull (a sabit), normal, iki parametreli lognormal, gamma, sabit sınırlı beta, Johnson SB (ξ, λ sabit), üstel (a sabit), log-lojistik (Fisk) | P05, P02, P03, P04, P08, P10 |
-| Ham veriden uydurma | En çok olabilirlik; momentler (n bölen varsayılan, n − 1 seçenek); yüzdelikler (Weibull Dubey çifti, SB 50/95 ve kullanıcı çifti, log-lojistik); log-momentler (log-lojistik) | aynı |
-| Özetlerden geri kazanım | Normal, lognormal, gamma (ortalama + varyans ya da Dq); Weibull M2–M10 (Poudel ve Cao 2013); Johnson SB, ξ sabit (Parresol 2003) | P06, P07, P09 |
-| Ölçüm eşiği | Sekiz aile için koşullu en çok olabilirlik; uyum ölçütleri koşullu dağılımla | P11 |
-| Çap sınıfları | Sınıf tabloları; sınıf sıklıklarından en çok olabilirlik (sekiz aile), ağaç sayısı / hektar sıklığı ayrımı | P12 |
-| Karşılaştırma | KS, AD, CvM, AIC, BIC, AICc, sınıf hataları, EI; gözlem sürecine göre gruplar; Q–Q, P–P | P13 |
-| Belirsizlik | Parametrik bootstrap p değerleri; parametrik / parametrik olmayan yüzdelik aralıklar; seed; Web Worker | P14 |
-| Arayüz ve çıktı | İki iş akışı; örnek alan × dönem gezgini bütün sekmelerde aynı birim; TR/EN; erişilebilir kontroller; telefon görünümü; her sonucun yöntemi, birimleri, destek ve gözlem politikası ve kaynakları; Excel (Bilgi, Uydurmalar, Parametreler, Örnek alanlar, Sınıflar, Karşılaştırma, Bootstrap, Kaynaklar), CSV, JSON, SVG (sürüm, ayarlar, parametreler ve seed dosyanın içinde); yüklenme uyarısı | P15 |
+| Families | Weibull (a fixed), normal, two-parameter lognormal, gamma, fixed-bound beta, Johnson SB (ξ, λ fixed), exponential (a fixed), log-logistic (Fisk) | P05, P02, P03, P04, P08, P10 |
+| Fitting from raw data | Maximum likelihood; moments (divisor n by default, n − 1 as an option); percentiles (Weibull Dubey pair, SB 50/95 and a user pair, log-logistic); log-moments (log-logistic) | same |
+| Recovery from summaries | Normal, lognormal, gamma (mean + variance or Dq); Weibull M2–M10 (Poudel and Cao 2013); Johnson SB, ξ fixed (Parresol 2003) | P06, P07, P09 |
+| Measurement threshold | Conditional maximum likelihood for eight families; goodness-of-fit measures with the conditional distribution | P11 |
+| Diameter classes | Class tables; maximum likelihood from class frequencies (eight families), distinction between tree counts and per-hectare frequencies | P12 |
+| Comparison | KS, AD, CvM, AIC, BIC, AICc, class errors, EI; groups by observation process; Q–Q, P–P | P13 |
+| Uncertainty | Parametric bootstrap p-values; parametric / non-parametric percentile intervals; seed; Web Worker | P14 |
+| Interface and output | Two workflows; plot × period navigator is the same unit across all tabs; TR/EN; accessible controls; phone view; method, units, support and observation policy and sources of every result; Excel (Info, Fits, Parameters, Plots, Classes, Comparison, Bootstrap, Sources), CSV, JSON, SVG (version, settings, parameters and seed inside the file); loading warning | P15 |
 
-**Çalışan ve çalışmayan sonuçların ayrımı.** Yalnızca "tamam" durumundaki sonuç parametre gösterir. Öteki durumlar (sınırda, yakınsamadı, birden çok çözüm, hesaplanmadı, hata) parametre vermez; nedeni sözcükle yazılır ve her birimde sayılır ("n sonuç hesaplandı; m sonuç hesaplanamadı ya da desteklenmiyor"). Desteklenmeyen birleşimler sayı yerine açıklamayla gösterilir: eşikli veride eşiksiz yöntemler, sınıflı veride ham veri yöntemleri, bootstrap'ta geri kazanım, hektar sıklığı ve "ölçüldü, ağaç yok" seçeneği.
+**Separating working and non-working results.** Only a result in the "ok" state shows parameters. The other states (at boundary, did not converge, multiple solutions, not computed, error) give no parameters; the reason is written in words and counted for each unit ("n results computed; m results could not be computed or are not supported"). Unsupported combinations are shown with an explanation instead of a number: methods without a threshold on thresholded data, raw-data methods on classed data, recovery in the bootstrap, per-hectare frequencies and the "measured, no trees" option.
 
-**Doğrulama.** Her hesap bağımsız bir referansla (SciPy, mpmath, elle hesap) test edildi: `tests/dist/test_p01.mjs` … `test_p15.mjs` ve `test_export.mjs`, toplam 9 233 kontrol. Tarayıcı testi `tests/dist/e2e.mjs` 168/168 kontrol. Tarayıcı testinin P15 bölümleri şunları kapsar:
-- örnek veride sekiz ailenin bütün yöntemleri; küçük alanlarda başarısız sonuçlar;
-- seçili alanın bütün sekmelerde korunması;
-- boş ve eksik veri; virgüllü veri yalnızca virgül seçiliyken okunur;
-- eşit çaplar;
-- dışa aktarılan dosyalarda sürüm, ayarlar, parametreler ve seed;
-- yükleme hatası.
+**Verification.** Every calculation was tested against an independent reference (SciPy, mpmath, hand calculation): `tests/dist/test_p01.mjs` … `test_p15.mjs` and `test_export.mjs`, 9 233 checks in total. Browser test `tests/dist/e2e.mjs` 168/168 checks. The P15 sections of the browser test cover:
+- all methods of the eight families on the sample data; failing results on small plots;
+- the selected plot being kept across all tabs;
+- empty and missing data; comma data are read only when comma is selected;
+- equal diameters;
+- version, settings, parameters and seed in the exported files;
+- load error.
 
-## 2. Bilerek yapılmayanlar
-- **Eğri gezgini.** Eski Weibull aracındaki parametre kaydırıcıları taşınmadı. P01'de P15'e bırakılmıştı, ama P15 metninde yok. İstenirse ayrı bir iş olarak eklenir.
-- **Konum ya da sınır tahmini** (üç parametreli Weibull, serbest beta L/U ve SB ξ/λ): şartname kararı gereği yok.
-- **Göğüs yüzeyiyle ağırlıklı uydurma ve hektar ağırlıklı birleştirme:** kapsam dışı (şartname Bölüm 0, karar 3).
-- **Canlı tarayıcı testi.** Barındırma hizmetinin bot koruması başsız tarayıcıyı zaman zaman "One moment, please..." sayfasında tutuyor. Sunucudaki dosyalar yerelle karşılaştırılarak denetleniyor. Kullanıcı tarafında bu durum artık "araç yüklenemedi" uyarısıyla gösteriliyor. Kalıcı çözüm barındırma tarafında beyaz listedir.
+## 2. Deliberately not done
+- **Curve explorer.** The parameter sliders of the old Weibull tool were not carried over. In P01 it had been left to P15, but it is not in the P15 text. If wanted, it will be added as separate work.
+- **Location or bound estimation** (three-parameter Weibull, free beta L/U and SB ξ/λ): not included, by specification decision.
+- **Basal-area-weighted fitting and per-hectare-weighted pooling:** out of scope (specification Section 0, decision 3).
+- **Live browser test.** The hosting service's bot protection from time to time holds the headless browser on a "One moment, please..." page. The files on the server are checked by comparing them with the local ones. On the user side this situation is now shown with a "tool could not be loaded" warning. The permanent fix is a whitelist on the hosting side.
 
-## 3. Kalan aşamalar
-- **P16–P17:** meşcere düzeyinde model geliştirme, yani dağılım parametrelerinin meşcere değişkenlerinden tahmini (2.1.0). "Meşcere modeli" iş akışı bunlarla eklenir.
-- **P18–P23:** isteğe bağlı genişletmeler. P23, göğüs yüzeyi çap dağılımı ve yalnızca betimseldir. Ayrıntı için şartnamenin ilgili bölümlerine bakın.
+## 3. Remaining stages
+- **P16–P17:** stand-level model development, i.e. prediction of distribution parameters from stand variables (2.1.0). The "Stand model" workflow is added with these.
+- **P18–P23:** optional extensions. P23 is the basal-area diameter distribution and is descriptive only. For details see the relevant sections of the specification.
