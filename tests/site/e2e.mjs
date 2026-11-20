@@ -183,22 +183,34 @@ await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide
     else ok(un.length === 0 && im > 0, `${f || 'index.php'}: ${mods} scripts and styles, all versioned (import map of ${im} modules)${un.length ? '; unversioned: ' + un.join(' ') : ''}`); }
   await q.close(); }
 
-// 8. home page: reset every tool session at once (MR-003); a cancelled confirmation deletes nothing; packages and coefficient sets stay
+// 8. home page: reset every tool session and the active data package at once (MR-003); a cancelled confirmation deletes
+//    nothing; other kept packages and coefficient sets stay; the box sits under "New here?" and the button is red
 { const h = await browser.newPage(); h.on('pageerror', e => errors.push(e.message));
   await h.goto(BASE + '/?lang=tr');
   const kv = (op, ...a) => h.evaluate(async ([op, a]) => { const s = await import('./assets/lab/core/store.js'); return s[op](...a); }, [op, a]);
-  await kv('put', 'session:test-a', { v: 1 }); await kv('put', 'session:test-b', { v: 1 }); await kv('put', 'coef:test', { keep: 1 }); await kv('put', 'project:test', { keep: 1 });
-  await h.reload(); await h.waitForFunction(() => /Kayıtlı oturum: \d+/.test(document.getElementById('hm-sessions-text').textContent));
+  const ds = { schema: 'forest-dataset/1', created: '2026-11-20T10:00:00Z', trees: [], plots: [] };
+  await kv('put', 'session:test-a', { v: 1 }); await kv('put', 'session:test-b', { v: 1 }); await kv('put', 'coef:test', { keep: 1 });
+  await kv('put', 'project:test', { schema: 'forest-project/1', id: 'test', name: 'Deneme paketi', dataset: ds }); await kv('put', 'project:keep', { keep: 1 });
+  await kv('put', 'project:active', 'test'); await kv('put', 'dataset:approved', ds);
+  await h.reload(); await h.waitForFunction(() => /Etkin veri paketi: "Deneme paketi"/.test(document.getElementById('hm-sessions-text').textContent));
   const n0 = (await kv('keys', 'session:')).length;
-  ok(n0 >= 2 && (await h.textContent('#hm-sessions-text')).includes(`Kayıtlı oturum: ${n0}.`) && await h.isEnabled('#hm-sessions-reset'), `home: ${n0} saved tool sessions shown`);
+  const where = await h.evaluate(() => { const r = document.getElementById('hm-sessions').getBoundingClientRect(), st = document.querySelector('.hm-start').getBoundingClientRect(), b = getComputedStyle(document.getElementById('hm-sessions-reset'));
+    return { under: r.top >= st.bottom - 1 && Math.abs(r.left - st.left) < 2 && r.top < innerHeight, bg: b.backgroundColor }; });
+  ok(where.under && /^rgb\(209, 36, 47\)$/.test(where.bg), `home: the reset box is under "New here?", in view, the button red (${where.bg})`);
+  ok(n0 >= 2 && (await h.textContent('#hm-sessions-text')).includes(`Kayıtlı oturum: ${n0}.`) && await h.isVisible('#handoff'), `home: ${n0} saved tool sessions and the active package shown`);
   let msg = ''; h.once('dialog', d => { msg = d.message(); d.dismiss(); }); await h.click('#hm-sessions-reset'); await h.waitForTimeout(200);
-  ok(msg.includes('Katsayı Kütüphanesi') && (await kv('keys', 'session:')).length === n0, 'home: the confirmation names what stays; cancelling deletes nothing');
-  h.once('dialog', d => d.accept()); await h.click('#hm-sessions-reset'); await h.waitForFunction(() => /oturum sıfırlandı/.test(document.getElementById('hm-sessions-text').textContent));
-  ok((await kv('keys', 'session:')).length === 0 && (await kv('get', 'coef:test')) && (await kv('get', 'project:test')) && await h.isDisabled('#hm-sessions-reset'), 'home: all tool sessions reset; coefficient sets and data packages kept');
-  await kv('del', 'coef:test'); await kv('del', 'project:test');
+  ok(msg.includes('Katsayı Kütüphanesi') && msg.includes('"Deneme paketi"') && msg.includes('SİLİNECEK') && (await kv('keys', 'session:')).length === n0 && (await kv('get', 'project:active')) === 'test', 'home: the confirmation names the package to delete and what stays; cancelling deletes nothing');
+  h.once('dialog', d => d.accept()); await h.click('#hm-sessions-reset'); await h.waitForFunction(() => /etkin veri paketi silindi/.test(document.getElementById('hm-sessions-text').textContent));
+  ok((await kv('keys', 'session:')).length === 0 && !(await kv('get', 'project:test')) && !(await kv('get', 'project:active')) && !(await kv('get', 'dataset:approved')),
+    'home: all tool sessions reset; the active package deactivated and deleted');
+  ok((await kv('get', 'coef:test')) && (await kv('get', 'project:keep')) && await h.isDisabled('#hm-sessions-reset') && await h.isHidden('#handoff'), 'home: other packages and coefficient sets kept; the active-package box gone');
+  await kv('del', 'coef:test'); await kv('del', 'project:keep');
   await h.goto(BASE + '/?lang=en'); await h.waitForFunction(() => /No saved sessions/.test(document.getElementById('hm-sessions-text').textContent));
   ok((await h.textContent('#hm-sessions-reset')).trim() === 'Reset all tool sessions', 'home: English button');
-  await h.close(); }
+  const ph = await browser.newPage({ viewport: { width: 390, height: 800 } }); await ph.goto(BASE + '/?lang=tr');
+  ok(await ph.isVisible('#hm-sessions-reset') && await ph.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'home, phone: the reset box shows, no horizontal scroll');
+  if (SHOTS) { await h.goto(BASE + '/?lang=tr'); await shot('site-8-sifirla', h); await ph.screenshot({ path: path.join(SHOTS, 'site-8-telefon.png') }); }
+  await ph.close(); await h.close(); }
 
 ok(errors.length === 0, 'no console errors: ' + errors.join(' | '));
 await browser.close();

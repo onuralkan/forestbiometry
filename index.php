@@ -26,11 +26,18 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
         <li><?= $tr ? '<b>Açık kaynak</b>' : '<b>Open source</b>' ?><?php if (SITE_DOI !== ''): ?> · <a href="https://doi.org/<?= h(SITE_DOI) ?>">DOI <?= h(SITE_DOI) ?></a><?php endif; ?></li>
       </ul>
     </div>
+    <div class="hm-side">
     <div class="hm-start">
       <p class="hm-start-h"><?= $tr ? 'İlk kez mi kullanıyorsunuz?' : 'New here?' ?></p>
       <a class="btn" href="veri-denetcisi.php"><?= site_icon('checker') ?><?= $tr ? 'Veriyi denetleyerek başlayın' : 'Start by checking your data' ?></a>
       <a class="btn ghost" href="kilavuz.php"><?= site_icon('guide') ?><?= $tr ? 'Kullanım kılavuzu' : 'User guide' ?></a>
       <p class="muted small"><?= $tr ? 'Her araç kendi başına da çalışır; tablonuzu doğrudan araca yükleyebilirsiniz.' : 'Every tool also works on its own; you can load your table straight into a tool.' ?></p>
+    </div>
+    <section class="hm-reset" id="hm-sessions" aria-labelledby="hm-sessions-h">
+      <p class="hm-reset-h" id="hm-sessions-h"><?= $tr ? 'Baştan başlamak mı istiyorsunuz?' : 'Start over?' ?></p>
+      <p class="muted small" id="hm-sessions-text"><?= $tr ? 'Araçlar tablonuzu, ayarları ve sonuçları bu tarayıcıda saklar; onaylanmış veri paketi araçlara etkin paket olarak gider.' : 'The tools keep your table, settings and results in this browser; an approved data package goes to the tools as the active package.' ?></p>
+      <button type="button" class="btn danger" id="hm-sessions-reset"><?= site_icon('delete') ?><?= $tr ? 'Tüm araç oturumlarını sıfırla' : 'Reset all tool sessions' ?></button>
+    </section>
     </div>
   </section>
 
@@ -104,11 +111,6 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
           <li><a href="hakkinda.php"><?= site_icon('about') ?><?= $tr ? 'Hakkında ve atıf' : 'About and how to cite' ?></a></li>
         </ul>
       </section>
-      <section class="hm-help" id="hm-sessions" aria-labelledby="hm-sessions-h">
-        <h2 id="hm-sessions-h" class="hm-h"><?= $tr ? 'Araç oturumları' : 'Tool sessions' ?></h2>
-        <p class="muted small" id="hm-sessions-text"><?= $tr ? 'Her araç, yüklediğiniz tabloyu, ayarları ve sonuçları bu tarayıcıda oturum olarak saklar.' : 'Each tool keeps the table you loaded, its settings and results in this browser as a session.' ?></p>
-        <button type="button" class="btn ghost small" id="hm-sessions-reset"><?= $tr ? 'Tüm araç oturumlarını sıfırla' : 'Reset all tool sessions' ?></button>
-      </section>
     </aside>
   </div>
 
@@ -180,21 +182,33 @@ async function show() {
 }
 $('handoff-clear').addEventListener('click', async () => { await del('project:active'); await del('dataset:approved'); show(); });
 show();
-// ---- every tool session at once ('session:<tool>' keys, the same keys each tool's "Reset session" deletes). Data packages,
-// the coefficient library and downloaded files are other keys and stay.
+// ---- every tool session at once, and the active data package (MR-003): the 'session:<tool>' keys (the same keys each
+// tool's "Reset session" deletes), then the active package is deactivated and deleted ('project:active',
+// 'dataset:approved' and the active project, as core/projects.js deleteProject does). Other kept packages, the
+// coefficient library and downloaded files stay.
 const sBtn = $('hm-sessions-reset'), sText = $('hm-sessions-text'), sBase = sText.textContent;
+async function scan() {
+  const k = await keys('session:'), ds = await get('dataset:approved'), id = await get('project:active'), p = id ? await get('project:' + id) : null;
+  const pkg = ds || p ? (p && p.name) || (ds && ds.source && ds.source.trees && ds.source.trees.name) || (tr ? 'adsız paket' : 'unnamed package') : null;
+  return { k, id, pkg };
+}
 async function sessions() {
-  const k = await keys('session:');
-  sText.textContent = sBase + ' ' + (k.length ? (tr ? `Kayıtlı oturum: ${k.length}.` : `Saved sessions: ${k.length}.`) : (tr ? 'Kayıtlı oturum yok.' : 'No saved sessions.'));
-  sBtn.disabled = !k.length; return k;
+  const s = await scan();
+  sText.textContent = sBase + ' ' + (s.k.length ? (tr ? `Kayıtlı oturum: ${s.k.length}.` : `Saved sessions: ${s.k.length}.`) : (tr ? 'Kayıtlı oturum yok.' : 'No saved sessions.'))
+    + (s.pkg ? (tr ? ` Etkin veri paketi: "${s.pkg}".` : ` Active data package: "${s.pkg}".`) : '');
+  sBtn.disabled = !s.k.length && !s.pkg; return s;
 }
 sBtn.addEventListener('click', async () => {
-  const k = await sessions(); if (!k.length) return;
-  if (!confirm(tr ? `Bütün araçların kayıtlı oturumları (${k.length}) silinecek: yüklenen tablolar, ayarlar ve sonuçlar. Her araç başlangıç durumunda açılır.\n\nVeri paketleri (Envanter Verisi Yöneticisi), Katsayı Kütüphanesi ve indirdiğiniz dosyalar silinmez. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç oturumunu yeniden kaydeder.\n\nDevam edilsin mi?`
-                  : `The saved sessions of all tools (${k.length}) will be deleted: loaded tables, settings and results. Every tool opens in its starting state.\n\nData packages (Inventory Data Manager), the Coefficient Library and files you downloaded are not deleted. Close any tool open in another tab first; otherwise it saves its session again.\n\nContinue?`)) return;
-  for (const x of k) await del(x);
-  await sessions();
-  sText.textContent += ' ' + (tr ? `${k.length} oturum sıfırlandı.` : `${k.length} session(s) reset.`);
+  const s = await sessions(); if (!s.k.length && !s.pkg) return;
+  const pk = s.pkg ? (tr ? `\n\nEtkin veri paketi "${s.pkg}" etkisizleştirilip bu tarayıcıdan SİLİNECEK; araçlar onaylanmış veri görmez. Gerekiyorsa önce Envanter Verisi Yöneticisi'nden yedek alın.`
+                        : `\n\nThe active data package "${s.pkg}" will be deactivated and DELETED from this browser; the tools will see no approved data. Make a backup in the Inventory Data Manager first if you need it.`) : '';
+  if (!confirm(tr ? `Bütün araçların kayıtlı oturumları (${s.k.length}) silinecek: yüklenen tablolar, ayarlar ve sonuçlar. Her araç başlangıç durumunda açılır.${pk}\n\nEnvanter Verisi Yöneticisi'ndeki öteki paketler, Katsayı Kütüphanesi ve indirdiğiniz dosyalar silinmez. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç oturumunu yeniden kaydeder.\n\nBu işlem geri alınamaz. Devam edilsin mi?`
+                  : `The saved sessions of all tools (${s.k.length}) will be deleted: loaded tables, settings and results. Every tool opens in its starting state.${pk}\n\nOther packages in the Inventory Data Manager, the Coefficient Library and files you downloaded are not deleted. Close any tool open in another tab first; otherwise it saves its session again.\n\nThis cannot be undone. Continue?`)) return;
+  for (const x of s.k) await del(x);
+  if (s.id) await del('project:' + s.id);
+  await del('project:active'); await del('dataset:approved');
+  await sessions(); show();
+  sText.textContent += ' ' + (tr ? `${s.k.length} oturum sıfırlandı${s.pkg ? ', etkin veri paketi silindi' : ''}.` : `${s.k.length} session(s) reset${s.pkg ? ', active data package deleted' : ''}.`);
 });
 sessions();
 </script>
