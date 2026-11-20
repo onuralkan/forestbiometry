@@ -1568,67 +1568,79 @@ function normalExpect(g, k, { breaks = [], step = 0.5, nodes = 10 } = {}) {
 __fb_m["core/reset-all.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "mount": () => mount, "scan": () => scan, "wipe": () => wipe });
 const { get, del, keys } = __fb_r("core/store.js");
-// Reset every tool session at once, and the active data package (MR-003; moved from the home page to the tools on
-// 20 Nov 2026, user decision). On every tool page a red button stands next to the tool's own "Reset session" button
-// (#reset); pages without one get it at the end of the page. What it deletes is unchanged:
-//   - every 'session:<tool>' key (the same keys each tool's own reset deletes): loaded tables, settings, results;
-//   - the active data package: 'project:active', 'dataset:approved' and the active project (as projects.deleteProject).
-// Other kept packages, the coefficient library, downloaded files and preferences (theme, language, recent tools) stay.
-// The open tool must not write its session back: store.js holds every 'session:' write once the reset has started
+// Reset the whole site in this browser, like a factory reset (MR-003; on the tool pages since 20 Nov 2026; made a full
+// reset the same day, user decision: after it nothing the site keeps in this browser is left). On every tool page a red
+// button stands next to the tool's own "Reset session" button (#reset); pages without one get it at the end of the page.
+// After the confirmation it deletes:
+//   - everything in the site's browser store (IndexedDB 'forestbiometry', core/store.js): every tool session, every data
+//     package of the Inventory Data Manager and the active one, every coefficient set of the Coefficient Library;
+//   - the site's preferences in localStorage: theme, sidebar width and open modules, recently used tools.
+// Kept: files you downloaded (they are not in the browser store) and the language (a cookie; the page reloads in it).
+// The open tool must not write anything back: store.js holds every write once the reset has started
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
 const tr = document.documentElement.lang !== 'en';
 const T = tr ? {
-  sessions: 'Tüm araç oturumlarını sıfırla', both: 'Tüm oturumları ve etkin paketi sil',
-  titleS: 'Bütün araçların kayıtlı oturumlarını siler (bu aracınki de dahil).', titleB: 'Bütün araçların kayıtlı oturumlarını ve etkin veri paketini siler.',
-  none: 'Silinecek kayıtlı oturum ya da etkin paket yok.', unnamed: 'adsız paket',
-  pkg: p => `\n\nEtkin veri paketi "${p}" etkisizleştirilip bu tarayıcıdan SİLİNECEK; araçlar onaylanmış veri görmez. Gerekiyorsa önce Envanter Verisi Yöneticisi'nden yedek alın.`,
-  ask: (n, pk) => `Bütün araçların kayıtlı oturumları (${n}) silinecek: yüklenen tablolar, ayarlar ve sonuçlar; bu araç dahil her araç başlangıç durumunda açılır.${pk}\n\nEnvanter Verisi Yöneticisi'ndeki öteki paketler, Katsayı Kütüphanesi ve indirdiğiniz dosyalar silinmez. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç oturumunu yeniden kaydeder.\n\nBu işlem geri alınamaz. Devam edilsin mi?`,
-  done: (n, p) => `${n} araç oturumu sıfırlandı${p ? ', etkin veri paketi silindi' : ''}. Araç başlangıç durumunda.`,
+  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
+  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
+  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
+    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
+    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
+    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
+    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
+    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
+    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
+  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
 } : {
-  sessions: 'Reset all tool sessions', both: 'Delete all sessions and the active package',
-  titleS: 'Deletes the saved sessions of all tools (this one included).', titleB: 'Deletes the saved sessions of all tools and the active data package.',
-  none: 'No saved session or active package to delete.', unnamed: 'unnamed package',
-  pkg: p => `\n\nThe active data package "${p}" will be deactivated and DELETED from this browser; the tools will see no approved data. Make a backup in the Inventory Data Manager first if you need it.`,
-  ask: (n, pk) => `The saved sessions of all tools (${n}) will be deleted: loaded tables, settings and results; every tool, this one included, opens in its starting state.${pk}\n\nOther packages in the Inventory Data Manager, the Coefficient Library and files you downloaded are not deleted. Close any tool open in another tab first; otherwise it saves its session again.\n\nThis cannot be undone. Continue?`,
-  done: (n, p) => `${n} tool session(s) reset${p ? ', active data package deleted' : ''}. The tool is in its starting state.`,
+  label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
+  none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
+  ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
+    + `• the sessions of all tools (${s.sessions}): loaded tables, settings, results\n`
+    + `• the data packages of the Inventory Data Manager (${s.packages})${s.pkg ? `, the active package "${s.pkg}" included` : ''}\n`
+    + `• the coefficient sets of the Coefficient Library (${s.coefs})\n`
+    + `• preferences: theme, sidebar, recently used tools\n\n`
+    + `Files you downloaded and the language stay. To keep packages and coefficient sets, download backups from the Inventory Data Manager and the Coefficient Library first. Close any tool open in another tab first; otherwise it saves its session again.\n\n`
+    + `This cannot be undone. Continue?`,
+  done: 'The site was reset: sessions, data packages, coefficient sets and preferences deleted. The tool is in its starting state.',
 };
-const DONE = 'fb-reset-all-done';
+const DONE = 'fb-reset-all-done', PREFS = ['theme', 'side', 'sideMods', 'recentTools'];
+const isPkg = k => k.startsWith('project:') && k !== 'project:active';
 
-/** What the reset would delete now: session keys, the active project id and the active package's name (or null). */
+/** Everything the site keeps in this browser: store keys (with counts by kind), the active package's name, preferences. */
 async function scan() {
-  const k = await keys('session:'), ds = await get('dataset:approved'), id = await get('project:active'), p = id ? await get('project:' + id) : null;
+  const all = await keys(''), ds = await get('dataset:approved'), id = await get('project:active'), p = id ? await get('project:' + id) : null;
   const pkg = ds || p ? (p && p.name) || (ds && ds.source && ds.source.trees && ds.source.trees.name) || T.unnamed : null;
-  return { k, id, pkg };
+  let prefs = []; try { prefs = PREFS.filter(k => localStorage.getItem(k) !== null); } catch (e) {}
+  return { all, pkg, prefs, sessions: all.filter(k => k.startsWith('session:')).length, packages: all.filter(isPkg).length, coefs: all.filter(k => k.startsWith('coef:')).length };
 }
-/** Deletes what scan() found. Session writes of this page are held first, so the open tool cannot write its state back. */
+/** Deletes everything scan() found. Every store write of this page is held first, so the open tool cannot write back. */
 async function wipe(s) {
   globalThis.__fbSessionsHeld = true;
-  for (const x of s.k) await del(x);
-  if (s.id) await del('project:' + s.id);
-  await del('project:active'); await del('dataset:approved');
+  for (const x of s.all) await del(x);
+  for (const x of await keys('')) await del(x);          // anything written meanwhile
+  try { for (const k of PREFS) localStorage.removeItem(k); } catch (e) {}
 }
 
 const buttons = new Set();
 async function refresh() {
-  const s = await scan(), any = s.k.length > 0 || !!s.pkg;
+  // recently used tools are written by every tool page on load, so they alone do not enable the button
+  const s = await scan(), any = s.all.length > 0 || s.prefs.some(k => k !== 'recentTools');
   for (const b of buttons) {
     if (!b.isConnected) { buttons.delete(b); continue; }
-    const label = s.pkg ? T.both : T.sessions;                  // only real changes: a rewrite would wake the observer again
-    if (b.textContent !== label) b.textContent = label;
-    b.title = any ? (s.pkg ? T.titleB : T.titleS) : T.none; b.disabled = !any;
+    if (b.textContent !== T.label) b.textContent = T.label;    // only real changes: a rewrite would wake the observer again
+    b.title = any ? T.title : T.none; b.disabled = !any;
   }
 }
 function button() {
   const b = document.createElement('button');
-  b.type = 'button'; b.className = 'btn danger b-resetall'; b.textContent = T.sessions;
+  b.type = 'button'; b.className = 'btn danger b-resetall'; b.textContent = T.label;
   b.addEventListener('click', async () => {
     const s = await scan();
-    if (!s.k.length && !s.pkg) { refresh(); return; }
-    if (!confirm(T.ask(s.k.length, s.pkg ? T.pkg(s.pkg) : ''))) return;   // cancelled: nothing is written or deleted
+    if (!s.all.length && !s.prefs.some(k => k !== 'recentTools')) { refresh(); return; }
+    if (!confirm(T.ask(s))) return;                              // cancelled: nothing is written or deleted
     await wipe(s);
-    try { sessionStorage.setItem(DONE, JSON.stringify({ n: s.k.length, p: !!s.pkg })); } catch (e) {}
+    try { sessionStorage.setItem(DONE, '1'); } catch (e) {}
     location.reload();
   });
   buttons.add(b); return b;
@@ -1653,10 +1665,9 @@ function place() {
 function mount() {
   if (!document.body.dataset.tool) return;                     // tool pages only (inc/site.php marks them)
   try {
-    const d = JSON.parse(sessionStorage.getItem(DONE) || 'null');
-    if (d) {
+    if (sessionStorage.getItem(DONE)) {
       sessionStorage.removeItem(DONE);
-      const p = document.createElement('p'); p.className = 'note ok small'; p.id = 'resetall-done'; p.setAttribute('role', 'status'); p.textContent = T.done(d.n, d.p);
+      const p = document.createElement('p'); p.className = 'note ok small'; p.id = 'resetall-done'; p.setAttribute('role', 'status'); p.textContent = T.done;
       const st = document.getElementById('status'); (st ? st.parentElement : document.getElementById('main')).insertBefore(p, st || null);
     }
   } catch (e) {}
@@ -2072,8 +2083,8 @@ async function tx(mode, fn) {
   });
 }
 async function put(key, value) {
-  // all tool sessions are being reset from this page (core/reset-all.js): no session is written back before the reload
-  if (globalThis.__fbSessionsHeld && typeof key === 'string' && key.startsWith('session:')) return;
+  // the site is being reset from this page (core/reset-all.js): nothing is written back before the reload
+  if (globalThis.__fbSessionsHeld) return;
   try { const d = await db(); if (!d) { mem.set(key, value); return; } await tx('readwrite', s => s.put(value, key)); }
   catch (e) { mem.set(key, value); }
 }

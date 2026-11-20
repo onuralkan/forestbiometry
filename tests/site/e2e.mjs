@@ -253,55 +253,49 @@ await page.goto(BASE + '/kilavuz.php?k=genel&lang=tr'); await page.click('.guide
     await p.close(); }
   await c.close(); }
 
-// 8. reset all tool sessions (MR-003; on the tool pages since 20 Nov 2026, user decision): a red button next to every
-//    tool's own "Reset session"; it deletes every tool session and the active data package (deactivated and deleted);
-//    other packages, coefficient sets and preferences stay; cancelling changes nothing; the open tool does not write
-//    its session back; after the reload the tool is in its starting state
+// 8. full reset of the site in this browser (MR-003; on the tool pages, a factory reset since 20 Nov 2026, user
+//    decision): a red button next to every tool's own "Reset session"; after the confirmation every tool session, every
+//    data package (active or not), every coefficient set and the preferences are gone; cancelling changes nothing; the
+//    open tool does not write anything back; after the reload the tool is in its starting state
 { const c = await browser.newContext({ viewport: { width: 1280, height: 900 } }), h = await c.newPage(); h.on('pageerror', e => errors.push(e.message));
   await h.goto(BASE + '/boy-cap.php?lang=tr'); await h.waitForSelector('.b-resetall');
   const kv = (op, ...a) => h.evaluate(async ([op, a]) => { const s = await import('./assets/lab/core/store.js'); return s[op](...a); }, [op, a]);
   const ds = { schema: 'forest-dataset/1', created: '2026-11-20T10:00:00Z', trees: [], plots: [] };
-  const seed = async () => { await kv('put', 'session:test-a', { v: 1 }); await kv('put', 'session:test-b', { v: 1 });
-    await kv('put', 'project:test', { schema: 'forest-project/1', id: 'test', name: 'Deneme paketi', dataset: ds }); await kv('put', 'project:active', 'test'); await kv('put', 'dataset:approved', ds); };
-  await seed(); await kv('put', 'coef:test', { keep: 1 }); await kv('put', 'project:keep', { keep: 1 });
-  await h.evaluate(() => { localStorage.setItem('theme', 'light'); localStorage.setItem('recentTools', JSON.stringify(['bonitet.php'])); });
+  await kv('put', 'session:test-a', { v: 1 }); await kv('put', 'session:test-b', { v: 1 });
+  await kv('put', 'project:test', { schema: 'forest-project/1', id: 'test', name: 'Deneme paketi', dataset: ds }); await kv('put', 'project:active', 'test'); await kv('put', 'dataset:approved', ds);
+  await kv('put', 'project:keep', { schema: 'forest-project/1', id: 'keep', name: 'Öteki paket', dataset: ds }); await kv('put', 'coef:test', { schema: 'model-coef/1', id: 'test' });
+  await h.evaluate(() => { localStorage.setItem('theme', 'light'); localStorage.setItem('sideMods', '{"TM":0}'); localStorage.setItem('side', 'wide'); });
   await h.reload(); await h.click('#sample'); await h.waitForSelector('#impbox .fname');
-  const own = 'session:' + (await h.evaluate(() => Object.keys(localStorage).length >= 0 && null) || 'boy-cap');
-  await h.waitForFunction(() => document.querySelector('.b-resetall').textContent === 'Tüm oturumları ve etkin paketi sil' && !document.querySelector('.b-resetall').disabled);
-  const keys0 = await kv('keys', 'session:');
+  await h.waitForFunction(() => document.querySelector('.b-resetall').textContent === 'Tüm verileri sil ve siteyi sıfırla' && !document.querySelector('.b-resetall').disabled);
+  await h.waitForTimeout(300); const all0 = await kv('keys', '');
   const pos = await h.evaluate(() => { const r = document.getElementById('reset'), a = document.querySelector('.b-resetall'), rr = r.getBoundingClientRect(), ar = a.getBoundingClientRect();
     return { group: r.parentElement === a.parentElement && r.nextElementSibling === a, side: Math.abs(rr.top - ar.top) < 2 && ar.left > rr.right && ar.left - rr.right < 20, bg: getComputedStyle(a).backgroundColor, n: document.querySelectorAll('.b-resetall').length }; });
-  ok(pos.group && pos.side && pos.n === 1 && pos.bg === 'rgb(209, 36, 47)' && keys0.length >= 3, `tool page: one red button right of "Oturumu sıfırla" in the same group (${pos.bg}); label names the active package`);
+  ok(pos.group && pos.side && pos.n === 1 && pos.bg === 'rgb(209, 36, 47)', `tool page: one red button right of "Oturumu sıfırla" in the same group (${pos.bg})`);
   // cancel: nothing changes
   let msg = ''; h.once('dialog', d => { msg = d.message(); d.dismiss(); }); await h.click('.b-resetall'); await h.waitForTimeout(200);
-  ok(msg.includes('"Deneme paketi"') && msg.includes('SİLİNECEK') && msg.includes('Katsayı Kütüphanesi') && msg.includes('geri alınamaz') && msg.includes('Başka bir sekmede') && msg.includes('yedek'),
-    'confirmation: sessions, the package by name, what stays, cannot be undone, backup and other tabs');
-  ok(JSON.stringify(await kv('keys', 'session:')) === JSON.stringify(keys0) && (await kv('get', 'project:active')) === 'test' && (await kv('get', 'dataset:approved')) && await h.locator('#impbox .fname').count() === 1, 'cancelled: no session, package or tool state changed');
+  ok(['ilk açıldığı duruma', 'oturumları (3)', 'veri paketleri (2)', '"Deneme paketi"', 'katsayı setleri (1)', 'tema', 'geri alınamaz', 'yedek', 'Başka bir sekmede', 'dil seçimi kalır'].every(x => msg.includes(x)),
+    'confirmation: sessions, packages (active by name), coefficient sets, preferences, what stays, backups, other tabs, cannot be undone');
+  ok(JSON.stringify(await kv('keys', '')) === JSON.stringify(all0) && await h.evaluate(() => localStorage.getItem('theme') === 'light') && await h.locator('#impbox .fname').count() === 1, 'cancelled: nothing changed');
   // the tool's own reset: only its own session
-  const hdKey = keys0.find(k => !k.startsWith('session:test-'));
+  const hdKey = all0.find(k => k.startsWith('session:') && !k.startsWith('session:test-'));
   await h.click('#reset'); await h.waitForTimeout(300);
-  const k1 = await kv('keys', 'session:');
-  ok(!k1.includes(hdKey) && k1.includes('session:test-a') && k1.includes('session:test-b') && (await kv('get', 'project:active')) === 'test', `"Oturumu sıfırla" deletes only this tool's session (${hdKey})`);
-  // bulk reset, from a tool with loaded data that autosaves
+  const k1 = await kv('keys', '');
+  ok(!k1.includes(hdKey) && k1.length === all0.length - 1, `"Oturumu sıfırla" deletes only this tool's session (${hdKey})`);
+  // full reset, from a tool with loaded data that autosaves
   await h.click('#sample'); await h.waitForSelector('#impbox .fname'); await h.waitForTimeout(300);
   h.once('dialog', d => d.accept()); await Promise.all([h.waitForEvent('load'), h.click('.b-resetall')]);
   await h.waitForSelector('#resetall-done'); await h.waitForTimeout(500);
-  const k2 = await kv('keys', 'session:'), left = k2.length ? await kv('get', k2[0]) : null;
-  ok(!k2.includes('session:test-a') && !k2.includes('session:test-b') && (await h.locator('#impbox .fname').count()) === 0 && (!k2.length || !JSON.stringify(left).includes('ornek')),
-    'bulk reset: every tool session gone; the open tool did not write its data back and opens in its starting state: ' + k2.join(','));
-  ok(!(await kv('get', 'project:test')) && !(await kv('get', 'project:active')) && !(await kv('get', 'dataset:approved')), 'bulk reset: the active package deactivated and deleted');
-  ok((await kv('get', 'coef:test')) && (await kv('get', 'project:keep')) && (await h.evaluate(() => localStorage.getItem('theme') === 'light' && localStorage.getItem('recentTools').includes('bonitet.php'))), 'bulk reset: other packages, coefficient sets, theme and recent tools kept');
-  ok((await h.textContent('#resetall-done')).includes('oturumu sıfırlandı, etkin veri paketi silindi'), 'after the reload: a note says what was reset');
-  await h.reload(); await h.waitForSelector('.b-resetall');
-  await h.waitForFunction(() => document.querySelector('.b-resetall').textContent === 'Tüm araç oturumlarını sıfırla');
-  const sess = await kv('keys', 'session:');
-  ok(sess.length > 0 || await h.isDisabled('.b-resetall'), 'without an active package: "Tüm araç oturumlarını sıfırla"; disabled when nothing is saved');
-  for (const k of await kv('keys', 'session:')) await kv('del', k);
-  await h.reload(); await h.waitForSelector('.b-resetall'); await h.waitForTimeout(400);
-  ok(await h.isDisabled('.b-resetall'), 'nothing to delete: the button is disabled');
-  await kv('del', 'coef:test'); await kv('del', 'project:keep');
+  const k2 = await kv('keys', '');
+  ok(k2.length === 0 && (await h.locator('#impbox .fname').count()) === 0, 'full reset: nothing left in the site store (sessions, packages, active package, coefficient sets); the open tool wrote nothing back and opens in its starting state: ' + k2.join(','));
+  ok(await h.evaluate(() => localStorage.getItem('theme') === null && localStorage.getItem('side') === null && localStorage.getItem('sideMods') === null && JSON.parse(localStorage.getItem('recentTools') || '[]').join() === 'boy-cap.php'),
+    'full reset: preferences gone (recent tools start again with this page)');
+  ok((await h.textContent('#resetall-done')).includes('Site sıfırlandı') && await h.isDisabled('.b-resetall'), 'after the reload: a note; nothing left to delete, so the button is disabled');
+  await h.goto(BASE + '/pano.php?lang=tr'); await h.waitForSelector('#srccard');
+  ok(await h.locator('#srcnone').count() === 1 && await h.locator('#panels').count() === 0, 'Data Visualization after the reset: no package left to show');
+  await h.goto(BASE + '/katsayi-kutuphanesi.php?lang=tr'); await h.waitForSelector('.b-resetall'); await h.waitForTimeout(400);
+  ok(!(await h.textContent('#main')).includes('test') || (await kv('keys', 'coef:')).length === 0, 'Coefficient Library after the reset: no set left');
   await h.goto(BASE + '/boy-cap.php?lang=en'); await h.waitForSelector('.b-resetall');
-  ok((await h.textContent('.b-resetall')) === 'Reset all tool sessions' && (await h.textContent('#reset')) === 'Reset session', 'English labels');
+  ok((await h.textContent('.b-resetall')) === 'Delete all data and reset the site' && (await h.textContent('#reset')) === 'Reset session', 'English labels');
   // every tool page of the catalogue: exactly one bulk button; next to "Reset session" where the tool has one, else at the end of the page
   const where = [];
   for (const id of TOOL_IDS) { await h.goto(`${BASE}/${id}.php?lang=tr`); await h.waitForSelector('.b-resetall', { timeout: 10000 }).catch(() => {});
