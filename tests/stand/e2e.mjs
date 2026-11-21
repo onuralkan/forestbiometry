@@ -140,6 +140,13 @@ await page.check('input[name="des"][value="strat"]');
 await page.fill('[data-stratum="A"]', '70'); await page.fill('[data-stratum="B"]', '50');
 await page.click('#calc'); await page.click('#tab-forest');
 ok((await page.locator('#panel', { hasText: 'W_h' }).count()) === 1, 'stratified estimate shows stratum weights');
+// 3a. confidence limits (1.3.0, Cochran 1977 eqs. 5.14–5.16): 90 % chosen; limits = estimate ± t·SE on screen, Satterthwaite df
+await page.click('#steps [data-go="2"]'); await page.selectOption('#flevel', '0.9');
+await page.click('#calc'); await page.click('#tab-forest');
+{ const row = await page.$$eval('#panel table.fe tbody tr[data-k="Nha"]', tr => [...tr[0].children].map(c => c.textContent.trim()));
+  const n = x => +x.replace(/\s/g, ''), [lo, hi] = row[4].split(' – ').map(n), est = n(row[1]), se = n(row[2]), df = n(row[6]), t = n(row[7]);
+  ok((await page.textContent('#panel table.fe thead')).includes('90% confidence limits') && (await page.locator('#panel', { hasText: 'Satterthwaite' }).count()) === 1, 'stratified: 90 % limits and the effective-df note shown');
+  ok(Math.abs(lo - (est - t * se)) < 0.2 && Math.abs(hi - (est + t * se)) < 0.2 && df > 0 && t > 1.6 && t < 3, `limits = estimate ± t·SE (${row.join(' | ')})`); }
 
 // 3b. field table loaded directly (no Data Checker): D0, H0, hm, dm, N, BA, age, Dq; Excel with the tree rows
 {

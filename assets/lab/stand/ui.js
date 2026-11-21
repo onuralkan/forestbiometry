@@ -178,6 +178,7 @@ function renderStep2() {
   if (!strata.length) h += `<p class="muted small">${T('des.nostrata')}</p>`;
   if (S.design.type === 'srs') h += `<p class="muted small">${T('des.srs.note')}</p><label class="field"><span>${T('des.area')}</span><input type="text" inputmode="decimal" id="farea" value="${esc(S.design.forestArea)}" size="10"></label>`;
   if (S.design.type === 'strat') h += `<p class="small"><b>${T('des.strata')}</b></p><div class="lims">${strata.map(s => `<label>${esc(s)} <input type="text" inputmode="decimal" data-stratum="${esc(s)}" value="${esc(S.design.strata[s])}" size="8"></label>`).join('')}</div>`;
+  if (S.design.type !== 'none') h += `<label class="field"><span>${T('des.level')}</span><select id="flevel">${C.LEVELS.map(l => `<option value="${l}"${(S.design.level || 0.95) === l ? ' selected' : ''}>${fmtNum(100 * l, 0)} %</option>`).join('')}</select></label>`;
   h += `</div><div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${cl.problem ? ' disabled' : ''}>${T('calc')}</button></div>`;
   el.innerHTML = h;
   el.querySelectorAll('[data-st]').forEach(x => x.addEventListener('change', () => {
@@ -196,6 +197,7 @@ function renderStep2() {
   $('opentop').addEventListener('change', e => { c.openTop = e.target.checked; R = null; save(); renderStep2(); });
   el.querySelectorAll('input[name="des"]').forEach(x => x.addEventListener('change', () => { S.design.type = x.value; R = null; save(); renderStep2(); }));
   $('farea') && $('farea').addEventListener('input', e => { S.design.forestArea = e.target.value; R = null; save(); });
+  $('flevel') && $('flevel').addEventListener('change', e => { S.design.level = +e.target.value; R = null; save(); });
   el.querySelectorAll('[data-stratum]').forEach(x => x.addEventListener('input', () => { S.design.strata[x.dataset.stratum] = x.value; R = null; save(); }));
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); S.tab = 'units'; go(3); });
@@ -207,8 +209,9 @@ function clsPreview(k) {
 }
 function designObj() {
   const d = S.design;
-  if (d.type === 'srs') { const a = num(d.forestArea); return { type: 'srs', forestArea_ha: Number.isFinite(a) && a > 0 ? a : undefined }; }
-  if (d.type === 'strat') return { type: 'strat', strataArea_ha: Object.fromEntries(Object.entries(d.strata).map(([k, v]) => [k, num(v)])) };
+  const level = C.LEVELS.includes(d.level) ? d.level : 0.95;
+  if (d.type === 'srs') { const a = num(d.forestArea); return { type: 'srs', forestArea_ha: Number.isFinite(a) && a > 0 ? a : undefined, level }; }
+  if (d.type === 'strat') return { type: 'strat', strataArea_ha: Object.fromEntries(Object.entries(d.strata).map(([k, v]) => [k, num(v)])), level };
   return { type: 'none' };
 }
 function compute() {
@@ -364,10 +367,10 @@ function tabBetween(p) {
   }
   p.innerHTML = h + `<p class="muted small">${T('bt.dnote')}</p>`;
 }
-function feRows(est, keys, label) {
-  const tot = keys.some(k => est[k].total != null);
-  return `<div class="tscroll"><table class="grid"><thead><tr><th>${T('fe.var')}</th><th>${T('fe.est')}</th><th>${T('fe.se')}</th><th>${T('fe.rse')}</th><th>${T('fe.m')}</th>${est[keys[0]].df != null ? `<th>${T('fe.df')}</th>` : ''}${tot ? `<th>${T('fe.total')}</th><th>${T('fe.setotal')}</th>` : ''}</tr></thead><tbody>
-    ${keys.map(k => { const e = est[k], d = k.startsWith('G') ? 3 : 1; return `<tr><th>${label(k)}</th><td class="num">${f(e.mean, d)}</td><td class="num">${f(e.se, d)}</td><td class="num">${f(e.rse == null ? null : e.rse * 100, 1)}</td><td class="num">${e.m}</td>${e.df != null ? `<td class="num">${e.df}</td>` : ''}${tot ? `<td class="num">${f(e.total, d)}</td><td class="num">${f(e.se_total, d)}</td>` : ''}</tr>`; }).join('')}</tbody></table></div>`;
+function feRows(est, keys, label, level) {
+  const tot = keys.some(k => est[k].total != null), pc = fmtNum(100 * level, 0), ci = (c, d) => c ? `${f(c.lo, d)} – ${f(c.hi, d)}` : '–';
+  return `<div class="tscroll"><table class="grid fe"><thead><tr><th>${T('fe.var')}</th><th>${T('fe.est')}</th><th>${T('fe.se')}</th><th>${T('fe.rse')}</th><th>${T('fe.ci', { l: pc })}</th><th>${T('fe.m')}</th><th>${T('fe.df')}</th><th>t</th>${tot ? `<th>${T('fe.total')}</th><th>${T('fe.setotal')}</th><th>${T('fe.citotal', { l: pc })}</th>` : ''}</tr></thead><tbody>
+    ${keys.map(k => { const e = est[k], d = k.startsWith('G') ? 3 : 1; return `<tr data-k="${esc(k)}"><th>${label(k)}</th><td class="num">${f(e.mean, d)}</td><td class="num">${f(e.se, d)}</td><td class="num">${f(e.rse == null ? null : e.rse * 100, 1)}</td><td class="num" data-c="ci">${ci(e.ci, d)}</td><td class="num">${e.m}</td><td class="num">${e.df == null ? '–' : f(e.df, 2)}</td><td class="num">${e.t == null ? '–' : f(e.t, 3)}</td>${tot ? `<td class="num">${f(e.total, d)}</td><td class="num">${f(e.se_total, d)}</td><td class="num">${ci(e.ci_total, d)}</td>` : ''}</tr>`; }).join('')}</tbody></table></div>`;
 }
 function tabForest(p) {
   if (S.design.type === 'none') { p.innerHTML = `<p class="note">${T('fe.none')}</p>`; return; }
@@ -377,12 +380,12 @@ function tabForest(p) {
     h += `<h3>${T('per')}: ${esc(perLabel(b.period))}</h3>`;
     if (!fe.estimate) { h += fe.problems.map(pr => `<p class="note err">${T('fe.p.' + pr.code, pr)}</p>`).join(''); continue; }
     const est = fe.estimate;
-    h += feRows(est, ['Nha', 'Gha'], k => T('v.' + k));
-    if (fe.species.length > 1) h += `<p class="small"><b>${T('fe.sp')}</b></p>` + feRows(est, fe.species.flatMap(s => [`Nha:${s}`, `Gha:${s}`]), k => `${esc(k.split(':').slice(1).join(':'))}: ${T('v.' + k.split(':')[0])}`);
+    h += feRows(est, ['Nha', 'Gha'], k => T('v.' + k), fe.level);
+    if (fe.species.length > 1) h += `<p class="small"><b>${T('fe.sp')}</b></p>` + feRows(est, fe.species.flatMap(s => [`Nha:${s}`, `Gha:${s}`]), k => `${esc(k.split(':').slice(1).join(':'))}: ${T('v.' + k.split(':')[0])}`, fe.level);
     if (est.Nha.strata) h += `<p class="small"><b>${T('fe.strata')}</b></p><div class="tscroll"><table class="grid"><thead><tr><th></th><th>${T('fe.ha')}</th><th>${T('fe.W')}</th><th>m_h</th><th>ȳ N/ha</th><th>s N/ha</th><th>ȳ G/ha</th><th>s G/ha</th></tr></thead><tbody>
       ${Object.entries(est.Nha.strata).map(([hh, s]) => `<tr><th>${esc(hh)}</th><td class="num">${f(s.area_ha, 2)}</td><td class="num">${f(s.W, 4)}</td><td class="num">${s.m}</td><td class="num">${f(s.mean, 1)}</td><td class="num">${f(s.s, 1)}</td><td class="num">${f(est.Gha.strata[hh].mean, 3)}</td><td class="num">${f(est.Gha.strata[hh].s, 3)}</td></tr>`).join('')}</tbody></table></div>`;
   }
-  p.innerHTML = h + `<p class="muted small">${T('fe.nci')}</p>`;
+  p.innerHTML = h + `<p class="muted small">${T(S.design.type === 'strat' ? 'fe.ci.strat' : 'fe.ci.srs')}</p>`;
 }
 
 /* ---------------- exports ---------------- */
@@ -439,11 +442,11 @@ function betweenRows() {
   return out;
 }
 function forestRows() {
-  const out = [['period', 'design', 'variable', 'estimate_per_ha', 'se', 'relative_se', 'plots_m', 'df', 'total', 'se_total', 'problem']];
+  const out = [['period', 'design', 'variable', 'estimate_per_ha', 'se', 'relative_se', 'plots_m', 'df', 'total', 'se_total', 'level', 't', 'ci_lo', 'ci_hi', 'ci_total_lo', 'ci_total_hi', 'problem']];
   for (const b of R.byPeriod) {
     const fe = b.forest; if (!fe) continue;
-    if (!fe.estimate) { out.push([b.period, S.design.type, null, null, null, null, null, null, null, null, fe.problems.map(x => x.code + (x.stratum ? ':' + x.stratum : '')).join(' ')]); continue; }
-    for (const [k, e] of Object.entries(fe.estimate)) out.push([b.period, S.design.type, k, e.mean, e.se, e.rse, e.m, e.df ?? null, e.total ?? null, e.se_total ?? null, null]);
+    if (!fe.estimate) { out.push([b.period, S.design.type, null, null, null, null, null, null, null, null, fe.level, null, null, null, null, null, fe.problems.map(x => x.code + (x.stratum ? ':' + x.stratum : '')).join(' ')]); continue; }
+    for (const [k, e] of Object.entries(fe.estimate)) out.push([b.period, S.design.type, k, e.mean, e.se, e.rse, e.m, e.df ?? null, e.total ?? null, e.se_total ?? null, fe.level, e.t ?? null, e.ci ? e.ci.lo : null, e.ci ? e.ci.hi : null, e.ci_total ? e.ci_total.lo : null, e.ci_total ? e.ci_total.hi : null, null]);
   }
   return out;
 }

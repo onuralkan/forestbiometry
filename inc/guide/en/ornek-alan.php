@@ -1,7 +1,7 @@
 <section class="card guide-sec">
 <?= $sec('ornek-alan', 'Plot & Stand Metrics') ?>
 <p>For every plot and measurement period: stems per hectare (N/ha) and basal area (G/ha), arithmetic mean diameter and quadratic mean diameter (Dq), the standard deviation of diameter, the smallest and largest diameter, the diameter class distribution, species composition, the dominant diameter D0 (mean diameter of the 100 thickest trees per hectare) and the top height H0 (mean height of the 100 tallest trees per hectare), the mean of measured heights and the mean age. Also a descriptive between-plot summary and, when a sampling design is given, a design-based estimate for the forest.</p>
-<p><b>What it does not do:</b> it does not estimate heights (heights flagged "estimated" in the data are shown apart, never pooled with measured ones); it gives no confidence intervals; it is for fixed-area plots only (nested plots and angle counts are out of scope, and the tool does not correct for them); it applies no finite population correction under simple random sampling. The between-plot table is not a forest estimate.</p>
+<p><b>What it does not do:</b> it does not estimate heights (heights flagged "estimated" in the data are shown apart, never pooled with measured ones); it is for fixed-area plots only (nested plots and angle counts are out of scope, and the tool does not correct for them); it applies no finite population correction under simple random sampling. The between-plot table is not a forest estimate.</p>
 <h3>Data</h3>
 <ul>
 <li><b>Data approved in the checker</b>: "Use these data". This is the recommended route.</li>
@@ -22,7 +22,7 @@
 <li><b>Plots</b>: one row per plot × period with its state (measured, empty, not measured, awaiting a decision). Click a plot ID to open its detail.</li>
 <li><b>Detail</b>: main figures (including the expansion factor 10000/A), dominant trees and age, the diameter class distribution and its chart, species composition (shares and their denominators), heights. The navigator on the left offers search, sorting and a "problems only" filter; ← → move between plots.</li>
 <li><b>Between-plot summary</b>: per period the number of plots, mean, standard deviation, minimum, median, maximum (not weighted by plot size).</li>
-<li><b>Forest estimate</b>: for N/ha and G/ha the estimate, standard error, relative standard error and (with an area) totals; by species if there are several; a strata table for the stratified design.</li>
+<li><b>Forest estimate</b>: for N/ha and G/ha the estimate, standard error, relative standard error, confidence limits at the level you choose in the settings (90, 95 or 99 %; Student's t, Cochran 1977) and (with an area) totals with their limits; by species if there are several; a strata table for the stratified design. The limits assume a roughly normal mean: with few plots and very skewed values they can be too narrow.</li>
 </ul>
 <h3>Downloads</h3>
 <p>"Tree data + stand parameters (Excel)" adds the plot-level results to the unchanged tree table; "Full report (Excel)"; plot table, diameter classes and species composition as CSV.</p>

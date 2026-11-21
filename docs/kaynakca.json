@@ -569,16 +569,16 @@
     "volume": null,
     "issue": null,
     "pages": null,
-    "publisher": "Wiley, New York",
+    "publisher": "John Wiley & Sons, New York",
     "doi": null,
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §6 (design-based estimate)",
       "METHODS §11"
     ],
-    "note": null
+    "note": "Checked in the PDF provided by the user (21 Nov 2026): §2.4–2.8 (pp. 21–28) and §5.4 (pp. 95–96); ISBN 0-471-16240-X"
   },
   {
     "key": "cohen1965",

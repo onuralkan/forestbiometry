@@ -3593,11 +3593,13 @@ function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k 
 
 // ---- assets/lab/stand/calc.js
 __fb_m["stand/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DOM_PER_HA": () => DOM_PER_HA, "SCHEMA": () => SCHEMA, "TOOL": () => TOOL, "betweenPlots": () => betweenPlots, "breaksFromWidth": () => breaksFromWidth, "buildUnits": () => buildUnits, "classIndex": () => classIndex, "classesFromBreaks": () => classesFromBreaks, "computeAll": () => computeAll, "dominant": () => dominant, "dominantWeights": () => dominantWeights, "forestEstimate": () => forestEstimate, "isValidUnit": () => isValidUnit, "periodsOf": () => periodsOf, "statusesOf": () => statusesOf, "tableToDataset": () => tableToDataset, "unitMetrics": () => unitMetrics, "validateDataset": () => validateDataset });
+__fb_x(__fb_e, { "DOM_PER_HA": () => DOM_PER_HA, "LEVELS": () => LEVELS, "SCHEMA": () => SCHEMA, "TOOL": () => TOOL, "betweenPlots": () => betweenPlots, "breaksFromWidth": () => breaksFromWidth, "buildUnits": () => buildUnits, "classIndex": () => classIndex, "classesFromBreaks": () => classesFromBreaks, "computeAll": () => computeAll, "dominant": () => dominant, "dominantWeights": () => dominantWeights, "forestEstimate": () => forestEstimate, "isValidUnit": () => isValidUnit, "periodsOf": () => periodsOf, "statusesOf": () => statusesOf, "tableToDataset": () => tableToDataset, "unitMetrics": () => unitMetrics, "validateDataset": () => validateDataset });
+const { tQuantile } = __fb_r("core/stats.js");
 // Plot & Stand Metrics: pure logic (no DOM). Definitions: docs/METHODS.md §6.
 // Scope: fixed-area plots, every tree on the plot has the same inclusion probability.
 // Nested plots and angle counts (Bitterlich) need per-tree expansion factors and are NOT handled here.
-const TOOL = { id: 'ornek-alan-mescere', version: '1.2.1' };
+
+const TOOL = { id: 'ornek-alan-mescere', version: '1.3.0' };
 /** Trees per hectare for D0 (the 100 thickest) and H0 (the 100 tallest), the user's definitions (H0: 19 Nov 2026). */
 const DOM_PER_HA = 100;
 const SCHEMA = 'forest-dataset/1';
@@ -3860,7 +3862,11 @@ function meanSE(v) {
  * design: { type:'srs', forestArea_ha?:number }                         simple random (systematic treated as SRS)
  *       | { type:'strat', strataArea_ha:{ stratum: ha } }                stratified random
  * Unit of estimation = the plot. y_i = per-hectare value of plot i (N/ha, G/ha, and per species).
+ * design.level (0.90 | 0.95 | 0.99; default 0.95): confidence limits mean ± t·SE (Cochran 1977, eqs. 2.23, 2.24; stratified
+ * 5.14, 5.15), t from Student's t with df = m − 1 (SRS) or the effective df of Satterthwaite (Cochran 1977, eq. 5.16) with
+ * g_h ∝ W_h²/m_h (no finite population correction, as for the SE). Totals: the same limits × the area.
  */
+const LEVELS = [0.9, 0.95, 0.99];
 function forestEstimate(metrics, design) {
   const problems = [];
   if (metrics.some(m => m.state === 'unknown')) problems.push({ code: 'est.unknown' });
@@ -3894,17 +3900,27 @@ function forestEstimate(metrics, design) {
           const W = areas[h] / A, r = meanSE(valid.filter(m => m.stratum === h).map(f));
           mean += W * r.mean; v += W * W * r.s * r.s / r.m; per[h] = { ...r, W, area_ha: areas[h] };
         }
-        est[k] = { m: valid.length, mean, se: Math.sqrt(v), rse: mean > 0 ? Math.sqrt(v) / mean : null, strata: per };
+        // effective degrees of freedom (Cochran 1977, eq. 5.16): (Σ a_h)² / Σ a_h²/(m_h − 1), a_h = W_h² s_h² / m_h
+        let num = 0, den = 0; for (const h of strata) { const r = per[h], a = r.W * r.W * r.s * r.s / r.m; num += a; den += a * a / (r.m - 1); }
+        est[k] = { m: valid.length, mean, se: Math.sqrt(v), df: den > 0 ? num * num / den : null, rse: mean > 0 ? Math.sqrt(v) / mean : null, strata: per };
       }
       est._area = A;
     }
   }
+  const level = LEVELS.includes(design.level) ? design.level : 0.95;
   if (est) {
+    // confidence limits; with SE = 0 (every plot equal) the limits are the mean and no t is needed
+    for (const k of Object.keys(est)) if (k[0] !== '_') {
+      const e = est[k];
+      if (e.se === 0) { e.t = null; e.ci = { lo: e.mean, hi: e.mean }; }
+      else if (e.se != null && e.df > 0) { e.t = tQuantile(1 - (1 - level) / 2, e.df); e.ci = { lo: e.mean - e.t * e.se, hi: e.mean + e.t * e.se }; }
+      else { e.t = null; e.ci = null; }
+    }
     const A = design.type === 'srs' ? design.forestArea_ha : est._area;
-    if (Number.isFinite(A) && A > 0) for (const k of Object.keys(est)) if (k[0] !== '_') { est[k].total = est[k].mean * A; est[k].se_total = est[k].se == null ? null : est[k].se * A; }
+    if (Number.isFinite(A) && A > 0) for (const k of Object.keys(est)) if (k[0] !== '_') { const e = est[k]; e.total = e.mean * A; e.se_total = e.se == null ? null : e.se * A; e.ci_total = e.ci ? { lo: e.ci.lo * A, hi: e.ci.hi * A } : null; }
     delete est._area;
   }
-  return { problems, estimate: est, species, m: valid.length };
+  return { problems, estimate: est, species, m: valid.length, level };
 }
 
 /* ---------------- one call for the UI and the tests ---------------- */

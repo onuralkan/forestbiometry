@@ -90,6 +90,41 @@ for (const [name, opts] of Object.entries(scen)) {
   }
 }
 
+/* 1.3.0 (21 Nov 2026): confidence limits, Cochran (1977) eqs. 2.23–2.24 and 5.14–5.16; reference: scipy.stats.t (make_stand_reference.py) */
+for (const [name, opts] of Object.entries(scen)) for (const level of [0.95, 0.9]) {
+  const r = C.computeAll(ds, opts, classes, { type: 'srs', forestArea_ha: ref.forest_ha, level });
+  const rs = C.computeAll(ds, opts, classes, { type: 'strat', strataArea_ha: ref.strata_ha, level });
+  for (const [per, R] of Object.entries(ref.scenarios[name])) {
+    const tag = `${name} ${per} ${level}`;
+    for (const [res, key] of [[r, 'srs'], [rs, 'strat']]) {
+      if (!R[key]) continue;
+      const fe = res.byPeriod.find(b => b.period === per).forest;
+      ok(fe.level === level, `${tag} ${key}: level reported`);
+      for (const k of ['Nha', 'Gha']) {
+        const e = fe.estimate[k], W = R[key][k], L = W.ci[String(level)];
+        near(e.df, W.df, `${tag} ${key} ${k} df${key === 'strat' ? ' (Satterthwaite)' : ''}`, 1e-12);
+        near(e.t, L.t, `${tag} ${key} ${k} t = scipy`, 1e-10); near(e.ci.lo, L.lo, `${tag} ${key} ${k} lower`); near(e.ci.hi, L.hi, `${tag} ${key} ${k} upper`);
+        near(e.ci_total.lo, L.lo_total, `${tag} ${key} ${k} total lower`); near(e.ci_total.hi, L.hi_total, `${tag} ${key} ${k} total upper`);
+      }
+    }
+  }
+}
+{ // Satterthwaite's n_e lies between min(m_h − 1) and Σ(m_h − 1) (Cochran 1977, p. 96)
+  const rs = C.computeAll(ds, scen.all_empty, classes, { type: 'strat', strataArea_ha: ref.strata_ha });
+  for (const b of rs.byPeriod) if (b.forest && b.forest.estimate) for (const k of ['Nha', 'Gha']) {
+    const e = b.forest.estimate[k], dfs = Object.values(e.strata).map(x => x.m - 1);
+    ok(e.df >= Math.min(...dfs) - 1e-9 && e.df <= dfs.reduce((a, x) => a + x, 0) + 1e-9, `${b.period} ${k}: n_e ${e.df} within [min, sum] of m_h − 1`);
+  }
+  // all plots equal: SE 0, the limits are the mean; default level 0.95
+  const flat = C.forestEstimate([1, 2, 3].map(i => ({ state: 'measured', Nha: 400, Gha: 20, n: 5, species: [], stratum: 'A' })), { type: 'srs' });
+  ok(flat.level === 0.95 && flat.estimate.Nha.ci.lo === 400 && flat.estimate.Nha.ci.hi === 400 && flat.estimate.Nha.t === null, 'equal plots: zero-width limits, default 95 %');
+  // Cochran's worked example (p. 28): 80 % limits of the petition total with the normal deviate 1.28 and the fpc, 18,107 and 21,669
+  const N = 676, n = 50, Y = N * 1471 / n, s2 = (54497 - 1471 ** 2 / 50) / 49;
+  ok(Math.round(Y) === 19888 && Math.abs(s2 - 229.0) < 0.05, `Cochran's example: total 19,888 and s² = 229.0 (${Y.toFixed(1)}, ${s2.toFixed(2)})`);
+  const half = 1.28 * N * 15.13 / Math.sqrt(n) * Math.sqrt(1 - 0.0740);   // the book's rounded s = 15.13 and f = 0.0740
+  ok(Math.abs(Y - half - 18107) <= 1 && Math.abs(Y + half - 21669) <= 1, `eq. 2.24 with the book's intermediate values gives its limits 18,107–21,669 within the book's rounding: ${(Y - half).toFixed(1)}–${(Y + half).toFixed(1)}`);
+}
+
 /* 5. undecided plot–period combinations block the forest estimate; descriptive summary leaves them out */
 {
   const r = C.computeAll(ds, { status: null, emptyCombos: null }, classes, { type: 'srs' });

@@ -2,9 +2,12 @@
 Reads tests/stand/fixture.json and writes tests/ref/stand.json using numpy only.
 Formulas from the textbook definitions (docs/METHODS.md §6), written separately from assets/lab/stand/calc.js.
 Run: python3 tests/ref/make_stand_reference.py
+21 Nov 2026 (1.3.0): confidence limits ('ci', 95 % and 90 %) from Cochran (1977) eqs. 2.23-2.24 and 5.14-5.16 (Satterthwaite
+effective df), t quantiles from scipy.stats.t (scipy needed only for this part).
 """
 import json, math, os
 import numpy as np
+from scipy import stats as sps
 
 here = os.path.dirname(os.path.abspath(__file__))
 ds = json.load(open(os.path.join(here, '..', 'stand', 'fixture.json'), encoding='utf-8'))
@@ -53,6 +56,14 @@ for name, sc in SCEN.items():
             u = plot_unit(pl, trees); u['stratum'] = pl['stratum']; units.append(u)
         N = np.array([u['Nha'] for u in units]); G = np.array([u['Gha'] for u in units]); m = len(units)
         srs = {k: {'mean': float(v.mean()), 'se': float(v.std(ddof=1) / math.sqrt(m)), 'total': float(v.mean() * FOREST_HA)} for k, v in (('Nha', N), ('Gha', G))} if m > 1 else None
+        def limits(mean, se, df, area):
+            out = {}
+            for lv in (0.95, 0.9):
+                t = float(sps.t.ppf(1 - (1 - lv) / 2, df))
+                out[str(lv)] = {'t': t, 'lo': mean - t * se, 'hi': mean + t * se, 'lo_total': (mean - t * se) * area, 'hi_total': (mean + t * se) * area}
+            return out
+        if srs:
+            for k in srs: srs[k]['df'] = m - 1; srs[k]['ci'] = limits(srs[k]['mean'], srs[k]['se'], m - 1, FOREST_HA)
         strat = None
         strata = sorted(set(u['stratum'] for u in units))
         if all(sum(1 for u in units if u['stratum'] == h) > 1 for h in strata):
@@ -62,7 +73,11 @@ for name, sc in SCEN.items():
                 for h in strata:
                     v = np.array([u[k] for u in units if u['stratum'] == h]); W = STRATA_HA[h] / A
                     mean += W * v.mean(); var += W ** 2 * v.var(ddof=1) / v.size
-                strat[k] = {'mean': mean, 'se': math.sqrt(var)}
+                # Satterthwaite effective df, Cochran (1977) eq. 5.16, without the fpc: a_h = W_h^2 s_h^2 / m_h
+                a = [(STRATA_HA[h] / A) ** 2 * np.array([u[k] for u in units if u['stratum'] == h]).var(ddof=1) / sum(1 for u in units if u['stratum'] == h) for h in strata]
+                mh = [sum(1 for u in units if u['stratum'] == h) for h in strata]
+                ne = sum(a) ** 2 / sum(x * x / (n - 1) for x, n in zip(a, mh))
+                strat[k] = {'mean': mean, 'se': math.sqrt(var), 'df': ne, 'ci': limits(mean, math.sqrt(var), ne, A)}
         between = {k: {'mean': float(v.mean()), 'sd': float(v.std(ddof=1)), 'median': float(np.median(v))} for k, v in (('Nha', N), ('Gha', G))} if m > 1 else None
         res[per] = {'units': units, 'srs': srs, 'strat': strat, 'between': between}
     ref['scenarios'][name] = res

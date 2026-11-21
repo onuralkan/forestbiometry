@@ -51,7 +51,7 @@ function site_tools(): array {
     return [
         ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.3.0', 'lab' => 'checker', 'title' => 'Forest Data Checker',
          'desc' => 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
-        ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.2.1', 'lab' => 'stand', 'title' => 'Plot & Stand Metrics',
+        ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.3.0', 'lab' => 'stand', 'title' => 'Plot & Stand Metrics',
          'desc' => 'From approved data, per plot and period: stems and basal area per hectare, mean diameters, diameter classes and species composition; between-plot summary and design-based forest estimate.'],
         ['n' => 3, 'cat' => 'SM', 'icon' => 'eval', 'short' => 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.2.0-beta.3', 'lab' => 'eval', 'title' => 'Model Evaluation',
          'desc' => 'Bias, MAE, RMSE and prediction R² from observed and predicted values (optionally weighted); a confidence interval for the bias, bootstrap intervals and equivalence tests; observed–predicted and residual plots, performance tables by group.'],
