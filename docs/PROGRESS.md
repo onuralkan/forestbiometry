@@ -14,6 +14,7 @@ Large changes reached `main` and the live site on 21 Nov 2026: CLAUDE.md rewritt
 | Branch | Task | State |
 |---|---|---|
 | `claude/sleepy-cerf-52g02s` | 21 Nov 2026: tool gaps done (6/6 incl. Lorey); R code also for Site Index and Taper fits (9 tools); `docs/REFERENCES_TODO.md` sent to the user (waiting for APA references); Record Verifier re-open shelved (user discussion: optional, only on demand) | done |
+| `claude/sharp-wozniak-lqhqsw` | 21 Nov 2026: AI interpretation service (ORCID accounts, approval, 30/month, `api/interpret.php`), pilot in Model Evaluation; needs the private config on the server (ORCID client, Anthropic key with a spend limit) | done, not live |
 | `claude/zealous-bardeen-kmh3fd` | old SI03/SI04, SS01/SS02 work, superseded by `main` | abandoned; do not merge |
 
 ## Next step

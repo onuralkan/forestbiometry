@@ -22,7 +22,7 @@ Rules that are in force. The full decision history (dates, release stories, scop
 - The free-formula parser `core/expr.js` is only used in SM-02/03/04.
 
 ## Code and tests
-- PHP 7.4 compatible (also 8.x). No server-side data, database, API or user account; data never leave the browser. `data/`, `files/` and secrets are never committed.
+- PHP 7.4 compatible (also 8.x). No server-side data, database, API or user account; data never leave the browser. **One exception (21 Nov 2026, user decision):** the optional AI interpretation service (ORCID sign-in only, accounts approved by the administrator, 30 interpretations per account per month; `inc/account.php`, `auth/`, `api/interpret.php`, `hesap.php`, `gizlilik.php`, client `core/interpret.js`; private config and SQLite outside the web root, never committed; details PROJECT.md §3). Only the run-record summary of one result is sent, only on the user's request; nothing of it is stored on the server. `data/`, `files/` and secrets are never committed.
 - In a turn only the module/prompt the user sent is implemented; finished modules are not rewritten.
 - Tests: numeric `node tests/<tool>/test_*.mjs` (old code `node legacy/test_math.js`, references in `tests/ref/`), browser `tests/*/e2e*.mjs` via `scripts/e2e.sh` with `php -S` (and `FB_BUNDLE=1 php -S …`). **Locally run only the tests of the tool(s) you changed plus `tests/site/`** (21 Nov 2026, user decision); the full suite runs in CI before every upload and blocks the upload if anything fails.
 - If `assets/lab/` changed, regenerate `assets/build/` with `node scripts/bundle.mjs` and commit it (CI checks `--check`).
