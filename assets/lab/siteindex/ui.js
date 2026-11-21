@@ -15,6 +15,8 @@ import { saveCoef, blankSet } from '../core/coef.js';
 import { scatterChart } from '../core/chart.js';
 import { buildUnits, unitMetrics } from '../stand/calc.js';
 import { EXTRA } from './coef-extra.js';
+import { buildR } from './rcode.js';
+import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:' + S.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
@@ -147,7 +149,8 @@ function drawFit() {
     <div class="tscroll"><table class="grid" id="fittab"><thead><tr><th>${T('fit.par')}</th><th>${T('fit.est')}</th><th>${T('fit.se')}</th></tr></thead><tbody>
     ${fm.params.map(k => `<tr><th>${k}</th><td class="num">${fmtNum(FR.params[k], 8)}</td><td class="num">${f(FR.se && FR.se[k], 6)}</td></tr>`).join('')}</tbody></table></div>
     <p class="muted small">${T('fit.senote')}</p>
-    <p class="small" id="fitgof">${esc(T('fit.gof', { rmse: fmtNum(FR.rmse, 4), bias: fmtNum(FR.bias, 4), sigma: fmtNum(FR.sigma, 4) }))}</p>`;
+    <p class="small" id="fitgof">${esc(T('fit.gof', { rmse: fmtNum(FR.rmse, 4), bias: fmtNum(FR.bias, 4), sigma: fmtNum(FR.sigma, 4) }))}</p>
+    <p><button type="button" class="btn ghost" id="fit-r">${T('fit.r')}</button></p><p class="muted small">${T('fit.r.note')}</p>`;
   const amax = Math.max(...FR.series.flatMap(s => s.points.map(p => p.A))) * 1.05, ages = Array.from({ length: 81 }, (_, i) => Math.max(0.5, amax * i / 80));
   const m = { form: FR.form, params: FR.params };
   const lines = FR.series.slice(0, 30).map((s, i) => { const o = [...s.points].sort((a, b) => b.A - a.A)[0]; return { name: i === 0 ? T('fit.ch.lines') : null, k: i % 6, pts: ages.map(a => [a, (S.project(m, a, o.A, o.H).value ?? null)]).filter(q => q[1] != null) }; });
@@ -163,6 +166,11 @@ function drawFit() {
     <label class="field"><span>${T('fit.cit')}</span><input type="text" id="fx-cit" value="${esc(F.cit)}" placeholder="${esc(T('fit.cit.ph'))}"></label>
     <div class="nav"><button type="button" class="btn" id="fx-save">${T('fit.save')}</button></div><div id="fx-msg"></div>`;
   out.innerHTML = h;
+  $('fit-r').addEventListener('click', () => {
+    const file = F.imp && F.imp.kind !== 'paste' && F.imp.kind !== 'dataset' ? F.imp.name : null;
+    download(`site-index-fit-${new Date().toISOString().slice(0, 10)}.R`, buildR(F, FR, { lang, created: new Date().toISOString(), version: S.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    if (!file) download(csvName(F.imp), tableCsv(F.src, cellText, F.decimal || '.'), 'text/csv;charset=utf-8');   // pasted cells go along as CSV
+  });
   for (const [id, k] of [['fx-age', 'ageType'], ['fx-top', 'topDef'], ['fx-note', 'topNote'], ['fx-cit', 'cit']]) $(id).addEventListener('change', e => { F[k] = e.target.value; save(); });
   $('bt-B').addEventListener('change', e => { F.bootB = e.target.value; save(); }); $('bt-seed').addEventListener('change', e => { F.bootSeed = e.target.value; save(); });
   $('bt-run').addEventListener('click', () => {

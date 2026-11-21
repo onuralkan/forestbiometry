@@ -1003,6 +1003,8 @@ Page `bonitet.php` (Tool 9, category "Stand and site", version 1.0.0-beta.1), in
 - **Deliberately not changed:** the base age is stored with the page setting, not with the set (a deviation documented in SI02); in the delta method the positive semidefiniteness check allows a margin of 10⁻¹² of the diagonal (for rounded covariance values in the source).
 - **Validation:** `tests/siteindex/test_si_classes.mjs` 15/15 (classes: equal width and bounds, half-open interval, last class closed, I highest/lowest, rejection of invalid definitions; validity range warnings); `tests/siteindex/e2e.mjs` 64/64.
 
+**R code (21 Nov 2026):** the fit (SI03) can be downloaded as an R script (`assets/lab/siteindex/rcode.js`): the same series and pairs, the chosen difference equation fitted by `nls` from the tool's starting values (Gauss–Newton, fallbacks: the tool's estimates, then the PORT algorithm, each said in the output). Checked in R by `scripts/rcode-check.sh` (`tests/rcode/siteindex.mjs`: three cases, the three forms and pairings, one with a plot column, decimal comma and rows left out; parameters, standard errors, n, SSE, RMSE, bias, σ agree with the tool).
+
 ## 16. Stand Structure (`assets/lab/structure/calc.js`; TOOLS_SPEC §4)
 
 ### SS01: non-spatial structure and density (12 Nov 2026)
@@ -1109,6 +1111,8 @@ Source **[B]**: Kershaw, J.A., Ducey, M.J., Beers, T.W., Husch, B. 2016. *Forest
 
 Implementation: n = ⌊(h_top − h_cut)/(L + t)⌋ (the same integer part as the book's form ((h_top − h_cut − (L + t))/(L + t)) + 1; exact multiples are counted as whole with a 1e−9 relative tolerance). h_top is the height of the top diameter, or the tree's tip if no top diameter is entered. The i-th log runs from b_i = h_cut + i(L + t) to b_i + L, the trim allowance from b_i + L to b_i + L + t. Remainder r = h_top − h_cut − n(L + t): "not counted" (default; the book's example) or "counted" (if r − t > 0 and, when a minimum log length is entered, r − t ≥ minimum); if L < minimum, no log is produced. Volumes are the integral of the selected profile set (§17); logs + short piece + trim allowances + remainder = merchantable volume from the cut to h_top. The values in the book (16 ft, 0.3 ft, 1 ft, 8 ft) are only an example; the tool has no defaults, lengths are metric and come from the user (K1). Defect deduction (§7.4.1) and scaling rules (board-foot, SV-05) are out of scope.
 Test: `node tests/taper/test_sv03.mjs` (8; the book's example 4 logs; `tests/ref/make_taper_sv03.py` standard library only, log count with the book's form and Simpson volumes on a Max–Burkhart profile, 42 trees; balance), browser `tests/taper/e2e.mjs` (39).
+
+**R code (21 Nov 2026):** the fit (SV-02/a3) can be downloaded as an R script (`assets/lab/taper/rcode.js`) with the observations the tool used as CSV (the stem table itself is read and checked by the tool): `nls` on d or on y = d²/D² (mb76), `nls` on d or `lm` on ln d (kozak02), from the tool's starting values (fallbacks as for Site Index); measures on the d scale. Checked in R by `scripts/rcode-check.sh` (`tests/rcode/taper.mjs`: both forms × both scales on the noisy simulated stems; parameters, standard errors, n, trees, RMSE, bias agree with the tool).
 
 ## 18. Growth function fitter (`assets/lab/growth/calc.js`; PLATFORM_PLAN SQ-03)
 

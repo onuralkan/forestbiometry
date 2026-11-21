@@ -37,6 +37,7 @@ const en = {
   'fit.fail': p => `The fit gave no result: ${p.why}. Try another start or form; the result cannot be written to the library.`,
   'fit.sum': p => `${p.n} pairs, ${p.s} series, pairing: ${p.pair}; Levenberg–Marquardt ${p.it} iterations; start ${p.start} (${p.from}).`,
   'fit.par': 'Coefficient', 'fit.est': 'Estimate', 'fit.se': 'Standard error*', 'fit.senote': '* Assuming independent observations (σ̂²(JᵀJ)⁻¹). Observations of one series are not independent; the real uncertainty may be larger.',
+  'fit.r': 'R code (.R)', 'fit.r.note': 'The R code redoes this fit in base R (nls) with the same settings: the same series and pairs, the same difference equation, started from the values the tool started from, and the same measures. The data are not embedded: the script reads your file (pasted cells are downloaded as a CSV file with it).',
   'fit.gof': p => `RMSE ${p.rmse} m, bias ${p.bias} m (observed − predicted; the definitions of the Model Evaluation tool), σ̂ ${p.sigma} m.`,
   'fit.ch.curves': 'Fitted curves and observations', 'fit.ch.note': 'The curve of each series passes through its oldest observation (first 30 series).', 'fit.ch.lines': 'curves of the series', 'fit.ch.age': 'Age (years)', 'fit.ch.h': 'Height (m)',
   'fit.ch.res': 'Residuals and predicted age', 'fit.ch.age2': 'Predicted age A₂ (years)', 'fit.ch.e': 'Residual e = observed − predicted (m)',

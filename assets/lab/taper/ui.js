@@ -15,6 +15,7 @@ import { mountCoefEditor } from '../core/coef-ui.js';
 import { saveCoef, listCoefs } from '../core/coef.js';
 import { readStems } from '../core/stems.js';
 import { EXTRA } from './coef-extra.js';
+import { buildR as buildFitR, obsCsv } from './rcode.js';
 
 const BASE = './', KEY = 'session:' + TP.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
@@ -124,6 +125,7 @@ function renderFitOut() {
   h += `<p class="small" id="fitsum">${esc(T('fit.sum', { n: r.n, trees: r.nTrees, rmse: f(r.rmse, 3), bias: f(r.bias, 3), method: T('fit.method.' + r.method) }))}</p>
     <table class="grid" id="fittab"><thead><tr><th>${T('fit.param')}</th><th>${T('fit.est')}</th><th>${T('fit.sec')}</th></tr></thead><tbody>${Object.entries(r.params).map(([k, v]) => `<tr><td>${k}</td><td class="num">${f(v, 6)}</td><td class="num">${r.se ? f(r.se[k], 6) : '–'}</td></tr>`).join('')}</tbody></table>
     <p class="note small">${T('fit.se')}</p>${r.se && Object.entries(r.se).some(([k, v]) => v > Math.abs(r.params[k])) ? `<p class="note warn small" id="fitweak">${esc(T('fit.weak', { list: Object.entries(r.se).filter(([k, v]) => v > Math.abs(r.params[k])).map(([k]) => k).join(', ') }))}</p>` : ''}${r.note === 'no-backtransform-correction' ? `<p class="note warn small">${T('fit.nobt')}</p>` : ''}
+    <p><button type="button" class="btn ghost" id="f-r">${T('fit.r')}</button></p><p class="muted small">${T('fit.r.note')}</p>
     <h3>${T('fit.cls')}</h3><table class="grid" id="clstab"><thead><tr><th>${T('fit.cls.c')}</th><th>${T('fit.cls.n')}</th><th>${T('fit.cls.bias')}</th><th>${T('fit.cls.rmse')}</th></tr></thead><tbody>${r.byClass.map(c => `<tr><td>${fmtNum(c.lo, 1)}–${fmtNum(c.hi, 1)}</td><td class="num">${c.n}</td><td class="num">${f(c.bias, 3)}</td><td class="num">${f(c.rmse, 3)}</td></tr>`).join('')}</tbody></table>
     <figure class="chartbox" id="ch-resid">${scatterChart({ title: T('fit.resid'), points: r.residuals.filter(q => q.res != null).map(q => [q.rel, q.res]), xLabel: 'h/H', yLabel: T('fit.cls.bias'), hline: 0, fmt: v => fmtNum(v, 2), height: 320 })}<figcaption class="small">${T('fit.resid')}</figcaption></figure>
     <h3>${T('fit.vol')}</h3><p class="muted small">${T('fit.vol.note')}</p><div class="tscroll"><table class="grid" id="voltab"><thead><tr><th>${T('fit.vol.tree')}</th><th>${T('fit.vol.sec')}</th><th>${T('fit.vol.prof')}</th><th>${T('fit.vol.rel')}</th></tr></thead><tbody>${r.volumes.map(v => `<tr><td>${esc([v.plot_id, v.tree_id].filter(Boolean).join(' / '))}</td><td class="num">${f(v.sectionV, 4)}</td><td class="num">${f(v.profileV, 4)}</td><td class="num">${v.rel == null ? '–' : f(100 * v.rel, 2)}</td></tr>`).join('')}</tbody></table></div>
@@ -131,6 +133,11 @@ function renderFitOut() {
     <div class="nav"><button type="button" class="btn" id="f-save">${T('fit.save')}</button></div>`;
   el.innerHTML = h;
   $('f-cit').addEventListener('input', e => { F.cit = e.target.value; save(); });
+  $('f-r').addEventListener('click', () => {   // the script and the observations it reads (the stem table is read and checked by the tool)
+    const day = new Date().toISOString().slice(0, 10), file = `taper-observations-${day}.csv`;
+    download(`taper-fit-${day}.R`, buildFitR(r, { lang, created: new Date().toISOString(), version: TP.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
+    download(file, obsCsv(r), 'text/csv;charset=utf-8');
+  });
   $('f-save').addEventListener('click', async () => {
     if (!F.cit.trim()) { status(T('fit.cit.need'), 'err'); return; }
     const set = FIT.fitToSet(r, { citation: F.cit.trim(), dataNote: F.imp ? F.imp.name : '' }); set.meta = { bark: r.bark };

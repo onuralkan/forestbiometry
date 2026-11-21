@@ -101,9 +101,10 @@ export function fitTaper(st, opts = {}) {
   if (!['ob', 'ib'].includes(s.bark) || !['d', 'source'].includes(s.scale)) return { ...head, status: 'invalid', problems: [{ code: 'fit.settings' }] };
   const { obs, left } = observations(st, s), keys = new Set(obs.map(o => o.key)), p = f.params.length;
   if (obs.length <= p + 1 || keys.size < 2) return { ...head, status: 'invalid', left, n: obs.length, nTrees: keys.size, problems: [{ code: 'fit.few', n: obs.length, trees: keys.size, p }] };
-  let theta, sse, iter = 0, status = 'ok', method, model;
+  let theta, sse, iter = 0, status = 'ok', method, model, start = null;
   if (s.form === 'mb76') {
     const th0 = mbStart(obs); if (!th0) return { ...head, status: 'invalid', left, problems: [{ code: 'fit.start' }] };
+    start = th0;
     model = mbModel(s.scale);
     const yv = obs.map(o => s.scale === 'source' ? (o.d / o.D) ** 2 : o.d);
     const r = levenbergMarquardt(model, obs, yv, th0, { valid: th => th[4] > 0 && th[4] < 1 && th[5] > 0 && th[5] < 1, maxIter: 1000 });
@@ -118,7 +119,7 @@ export function fitTaper(st, opts = {}) {
       // standard errors on the ln scale for c0 = ln a0, a1, a2, b1…b6 (OLS, independent observations)
       head.se = null; head.note = 'no-backtransform-correction';
     } else {
-      model = kzModel;
+      model = kzModel; start = ll.theta;
       const r = levenbergMarquardt(model, obs, obs.map(o => o.d), ll.theta, { valid: th => th[0] > 0, maxIter: 1000 });
       theta = r.theta; sse = r.sse; iter = r.iter; status = r.status === 'ok' ? 'ok' : 'noconverge'; method = 'nls-d';
       const cov = status === 'ok' ? covariance(model, theta, obs, sse) : null;
@@ -132,7 +133,8 @@ export function fitTaper(st, opts = {}) {
   const ok = residuals.filter(r => r.res != null), mean = a => a.reduce((x, y) => x + y, 0) / a.length;
   const byClass = Array.from({ length: s.classes }, (_, i) => { const lo = i / s.classes, hi = (i + 1) / s.classes, r = ok.filter(q => q.rel >= lo && (q.rel < hi || (i === s.classes - 1 && q.rel <= hi)));
     return { lo, hi, n: r.length, bias: r.length ? mean(r.map(q => q.res)) : null, rmse: r.length ? Math.sqrt(mean(r.map(q => q.res * q.res))) : null }; });
-  return { ...head, status, method, params, seNote: 'independent-observations', n: obs.length, nTrees: keys.size, left, iter, sse,
+  // start: the values Levenberg–Marquardt started from (the R code starts there too); obs: the observations used
+  return { ...head, status, method, params, start, obs, seNote: 'independent-observations', n: obs.length, nTrees: keys.size, left, iter, sse,
     rmse: ok.length ? Math.sqrt(mean(ok.map(q => q.res * q.res))) : null, bias: ok.length ? mean(ok.map(q => q.res)) : null, nUndefined: residuals.length - ok.length,
     byClass, residuals, volumes: compareVolumes(st, set, s.bark, s.secvol || {}), problems: [] };
 }

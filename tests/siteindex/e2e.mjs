@@ -157,6 +157,8 @@ await page.click('#steps [data-go="2"]'); await page.check('input[name="dmode"][
   ok((await q.locator('#coefbox').isHidden()) && (await q.locator('#mt-fit').getAttribute('aria-selected')) === 'true', 'step 1: one of the two ways at a time (fit tab open, coefficient editor hidden)');
   await q.click('#fsample'); await q.waitForSelector('#f-run:not([disabled])'); await q.click('#f-run'); await q.waitForSelector('#fittab');
   ok((await q.locator('#fitimp', { hasText: 'simulated' }).count()) >= 1 && (await q.locator('#fittab tbody tr').count()) >= 2, 'sample (simulated, labelled) loads with its columns mapped and fits');
+  { const [dr] = await Promise.all([q.waitForEvent('download'), q.click('#fit-r')]), rs = await (await import('node:fs/promises')).readFile(await dr.path(), 'utf8');
+    ok(dr.suggestedFilename().endsWith('.R') && rs.includes('nls(') && rs.includes('pairing <- ') && rs.includes('fb_out(res)'), 'R code of the fit: an .R file with nls, the pairing and the result writer (numbers checked in R by scripts/rcode-check.sh)'); }
   await c2.close(); }
 
 // 5. session restored in a new tab, and phone + dark (back to the results)

@@ -22,4 +22,5 @@
 <li><b>Method</b>: <b>highest value</b> (dynamic programming; maximises total value or total volume) or <b>priority order</b> (from the butt up, the highest-priority product that fits). Pieces lie on a grid of the <b>Bucking step</b> from the cut; length + trim must be a whole number of steps (e.g. step 0.05 m for a 5 cm trim). A piece's volume and value include the trim; its small-end diameter is the diameter at its top.</li>
 <li>Results: product summary (all trees), volume balance (pieces + stump + residual + top = total stem), pieces, volume and value per tree; a drawing of the chosen tree's stem (each product by colour and pattern) and its piece table. Downloads: Products and Pieces sheets in Excel, a pieces CSV, JSON.</li>
 </ul>
+<p><b>R code</b>: after a fit, "R code (.R)" downloads a script that redoes the fit in R, together with a CSV file of the measurement points the tool used (the stem table is read and checked here).</p>
 </section>

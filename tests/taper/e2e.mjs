@@ -51,6 +51,10 @@ await page.click('#mt-fit'); await page.click('#fsample'); await page.waitForSel
 ok(await page.isChecked('input[name="fdec"][value=","]'), 'decimal comma of the sample detected');
 ok(await page.inputValue('#fm-tree') !== '' && await page.inputValue('#fm-dbh') !== '' && await page.inputValue('#fm-height') !== '' && await page.inputValue('#fm-bark_t') !== '', 'stem columns guessed (tree, dbh, height, bark thickness)');
 await page.click('#f-run'); await page.waitForSelector('#fittab');
+{ const dl = []; page.on('download', d => dl.push(d)); await page.click('#f-r'); for (let i = 0; i < 40 && dl.length < 2; i++) await page.waitForTimeout(100);
+  const fs = await import('node:fs/promises'), rd = dl.find(d => d.suggestedFilename().endsWith('.R')), cd = dl.find(d => d.suggestedFilename().endsWith('.csv'));
+  const rs = rd ? await fs.readFile(await rd.path(), 'utf8') : '', cs = cd ? (await fs.readFile(await cd.path(), 'utf8')).replace(/^\uFEFF/, '') : '';
+  ok(rd && cd && rs.includes('nls(') && rs.includes(cd.suggestedFilename()) && cs.startsWith('row,tree,D,H,h,d\n') && cs.trim().split('\n').length > 10, 'R code of the fit: .R script and the observations CSV it reads (numbers checked in R by scripts/rcode-check.sh): ' + dl.map(d => d.suggestedFilename()).join(', ') + ' | ' + cs.split('\n')[0]); }
 ok((await page.textContent('#fitout h3')).includes('converged') && E.status === 'ok', 'fit converged (page and engine)');
 const shown = await page.$$eval('#fittab tbody tr', rs => rs.map(r => [...r.children].map(c => c.textContent.trim())));
 ok(shown.length === 6 && shown.every(([k, v]) => Math.abs(num(v) - E.params[k]) <= 1e-6 * Math.max(1, Math.abs(E.params[k]))), 'coefficients on screen = engine (mb76, inside bark, d scale)');

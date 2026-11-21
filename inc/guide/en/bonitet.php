@@ -18,4 +18,5 @@
 </ul>
 <h3>Results and downloads</h3>
 <p>For each point the site index, class and notes (points outside the validity range of the set are computed and flagged); the curve family chart (the indices at the class boundaries, or the smallest, median and largest computed index). Every result carries the equation, base age, age type, top height definition and the note "produced with user coefficients". <b>Excel report</b> (Info, Site index, Curves), CSV and JSON.</p>
+<p><b>R code</b>: after a fit, "R code (.R)" downloads a script that redoes the fit in R (nls) with the same series, pairs and equation; pasted cells come with it as a CSV file.</p>
 </section>
