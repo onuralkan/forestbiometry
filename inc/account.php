@@ -25,7 +25,8 @@ function fb_config(): ?array {
     if ($c !== false) return $c;
     $f = fb_private_dir() . '/config.php';
     if (!is_file($f)) return $c = null;
-    $v = require $f;
+    // a broken config (e.g. a missing quote) must never take the site down: the service is then simply off
+    try { $v = require $f; } catch (Throwable $e) { error_log('forestbiometry: private config unreadable: ' . $e->getMessage()); return $c = null; }
     if (!is_array($v)) return $c = null;
     $c = $v + [
         'anthropic_key' => '', 'anthropic_model' => 'claude-opus-5-5', 'anthropic_version' => '2023-06-01', 'anthropic_mock' => false,
