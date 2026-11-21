@@ -7,6 +7,7 @@ import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordButton } from '../core/record-ui.js';
+import { interpretSlot, mountInterpret } from '../core/interpret.js';
 import { scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { classesFromBreaks } from '../stand/calc.js';
@@ -221,7 +222,8 @@ function tabSummary(p) {
     h += `<p class="note ${R.sameSample ? 'ok' : 'warn'}">${T(R.sameSample ? 'own.same' : 'own.warn')}</p>`;
     h += `<h3>${T('ov.h')}</h3><div class="tscroll"><table class="grid"><thead><tr><th></th>${R.models.map(m => `<th>${esc(m.name)}</th>`).join('')}</tr></thead><tbody>${R.models.map((m, i) => `<tr><th>${esc(m.name)}</th>${R.overlap[i].map(c => `<td class="num">${fmtNum(c, 0)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
-  p.innerHTML = h + `<p class="muted small">${T('noinf')}</p>`;
+  p.innerHTML = h + `<p class="muted small">${T('noinf')}</p>` + interpretSlot();
+  mountInterpret(p, E.TOOL, recordPayload);   // AI interpretation (core/interpret.js); hidden without the service
 }
 function tabInfer(p) {
   const I = R.models.map(m => m.infer);

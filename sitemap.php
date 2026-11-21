@@ -9,6 +9,7 @@ $pages[] = 'kilavuz.php';
 foreach (array_merge(['genel', 'is-akisi', 'sorun-giderme'], array_map(function ($t) { return basename($t['file'], '.php'); }, site_tools())) as $id) if (is_file(__DIR__ . "/inc/guide/en/$id.php")) $pages[] = 'kilavuz.php?k=' . $id;   // one guide page per section
 $pages[] = 'hakkinda.php';
 $pages[] = 'kaynakca.php';
+$pages[] = 'gizlilik.php';
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">' . "\n";
 foreach ($pages as $p) echo '  <url><loc>' . htmlspecialchars(SITE_BASE . $p, ENT_XML1) . "</loc></url>\n";

@@ -629,3 +629,9 @@ a.hm-tool:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
 .b-resetrow { display: flex; justify-content: flex-start; margin: 26px 0 0; padding-top: 12px; border-top: 1px solid var(--line2); }
 .hm-filter[hidden], .hm-item[hidden], .hm-mod[hidden], .hm-none[hidden], .hm-recent[hidden] { display: none; }
 @media (max-width: 760px) { .hm-find { position: static; } }
+/* AI interpretation card (core/interpret.js; 21 Nov 2026) */
+.ai-slot { margin-top: 18px; }
+.ai-card h3 { margin-top: 0; }
+.ai-text { border-left: 3px solid var(--acc); padding: 2px 0 2px 14px; margin: 10px 0; max-width: 80ch; }
+.ai-text h4 { font: 600 14px var(--ui); margin: 12px 0 4px; } .ai-text p { margin: 0 0 8px; line-height: 1.55; }
+.ai-slot[hidden] { display: none; }

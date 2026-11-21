@@ -11,6 +11,7 @@ date_default_timezone_set('Europe/Istanbul');
 const SITE_BASE = 'https://forestbiometry.online/';
 const SITE_YEAR = 2026;
 require_once __DIR__ . '/catalog.php';
+require_once __DIR__ . '/account.php';   // AI interpretation accounts (21 Nov 2026); inactive without the private config
 const SITE_DOI = '10.5281/zenodo.24135603';   // Zenodo concept DOI of the repository archive (all versions); '' = none
 
 const SITE_AUTHOR = [
@@ -173,6 +174,7 @@ function site_top(array $o = []): void {
     $pageTitle = ($o['title'] ?? '') !== '' && $o['title'] !== $c['site'] ? $o['title'] . ' | ' . $c['site'] : $c['site'] . ' | ' . $c['sub'];
     $here = basename($_SERVER['SCRIPT_NAME'] ?? ''); $cur = site_current_tool();
     $tools = site_tools();
+    $acct = fb_config() ? fb_user() : null;   // before any output: may resume the session
     // 'side' => false: the home page and the tools index (20 Nov 2026): no sidebar beside the content; the tool menu is a
     // drawer behind the menu button at every width. Tool pages keep the sidebar.
     $side = $o['side'] ?? true;
@@ -194,7 +196,7 @@ function site_top(array $o = []): void {
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png?v=<?= site_ver('assets/brand/apple-touch-icon.png') ?>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
-<body class="bench"<?= $cur ? ' data-tool="' . h(basename($cur['file'], '.php')) . '"' : '' ?>>
+<body class="bench"<?= $cur ? ' data-tool="' . h(basename($cur['file'], '.php')) . '"' : '' ?><?= fb_config() ? ' data-ai="1"' : '' ?>>
 <a class="skip" href="#main"><?= 'Skip to content' ?></a>
 <header class="b-top">
   <button type="button" class="b-iconbtn b-menu" id="navopen" aria-controls="side" aria-expanded="false" aria-label="<?= 'Open the tools menu' ?>"><?= site_icon('menu') ?></button>
@@ -208,6 +210,7 @@ function site_top(array $o = []): void {
   <span class="b-tools">
     <button type="button" class="b-citebtn" id="citebtn" data-cite-open aria-haspopup="dialog"><?= site_icon('cite') ?><span><?= 'Cite' ?></span></button>
     <button type="button" id="theme" class="b-iconbtn" aria-label="<?= 'Dark / light theme' ?>"><?= site_icon('theme') ?></button>
+    <?php if (fb_config()): ?><a id="acctlink" class="b-acct" href="hesap.php"<?= $here === 'hesap.php' ? ' aria-current="page"' : '' ?> title="<?= $acct ? h($acct['name']) . ' (ORCID ' . h($acct['orcid']) . ')' : 'Sign in with ORCID for the AI interpretation' ?>"><?= $acct ? 'Account' : 'Sign in' ?></a><?php endif; ?>
   </span>
 </header>
 <div class="b-shell">
@@ -326,7 +329,7 @@ function site_bottom(string $script = ''): void {
 </div>
 <footer class="b-foot">
   <span><?= h($c['site']) ?> · forestbiometry.online · © <?= date('Y') ?> · <?= 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
-  <span><a href="araclar.php"><?= 'Tools index' ?></a> · <a href="kilavuz.php"><?= 'Guide' ?></a> · <a href="hakkinda.php"><?= 'About' ?></a> · <a href="kaynakca.php"><?= 'References' ?></a></span>
+  <span><a href="araclar.php"><?= 'Tools index' ?></a> · <a href="kilavuz.php"><?= 'Guide' ?></a> · <a href="hakkinda.php"><?= 'About' ?></a> · <a href="kaynakca.php"><?= 'References' ?></a> · <a href="gizlilik.php"><?= 'Privacy' ?></a></span>
 </footer>
 <script>
 (function () {
