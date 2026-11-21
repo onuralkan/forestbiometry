@@ -8,7 +8,7 @@ Kept short on purpose (21 Nov 2026, user decision): current state only. Complete
 ## Active branches (each agent updates its own row when it starts and finishes)
 | Branch | Task | State |
 |---|---|---|
-| `claude/sleepy-cerf-52g02s` | Agent rules slimmed; English only stage 2; `scripts/kaynakca.mjs` builds `inc/kaynakca.json` | 21 Nov 2026: tool gaps 5/6 done (HD hand-off; rank uncertainty, Model Evaluation 1.2.0-beta.3; criterion weights, Relative Ranking 1.2.0; species table and printable report, Data Checker 1.3.0; confidence limits, Plot & Stand 1.3.0, Cochran 1977 [B]); Lorey's mean height added (Kershaw eq. 8.12); open: Kershaw year 2016 vs 2017 (user decision); next: Record Verifier re-open (design proposal first) |
+| `claude/sleepy-cerf-52g02s` | Agent rules slimmed; English only stage 2; `scripts/kaynakca.mjs` builds `inc/kaynakca.json` | 21 Nov 2026: tool gaps 5/6 done (HD hand-off; rank uncertainty, Model Evaluation 1.2.0-beta.3; criterion weights, Relative Ranking 1.2.0; species table and printable report, Data Checker 1.3.0; confidence limits, Plot & Stand 1.3.0, Cochran 1977 [B]); Lorey's mean height added (Kershaw eq. 8.12); next: Record Verifier re-open (design proposal first) |
 | `claude/zealous-bardeen-kmh3fd` | old SI03/SI04, SS01/SS02 work, superseded by `main` | abandoned; do not merge |
 
 ## Next step
