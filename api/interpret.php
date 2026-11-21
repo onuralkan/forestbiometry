@@ -65,19 +65,27 @@ if (!empty($c['anthropic_mock'])) {   // test servers: no call, a fixed text tha
 $req = ['model' => $c['anthropic_model'], 'max_tokens' => (int)$c['max_output_tokens'], 'system' => FB_SYSTEM,
     'output_config' => ['effort' => 'medium'], 'fallbacks' => 'default',
     'messages' => [['role' => 'user', 'content' => $user]]];
-$ch = curl_init('https://api.anthropic.com/v1/messages');
-curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 120,
-    CURLOPT_HTTPHEADER => ['content-type: application/json', 'x-api-key: ' . $c['anthropic_key'], 'anthropic-version: ' . $c['anthropic_version'],
-        'anthropic-beta: server-side-fallback-2026-07-01'],
-    CURLOPT_POSTFIELDS => json_encode($req, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
-$body = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
-$r = is_string($body) ? json_decode($body, true) : null;
-
+/** One Messages API call → [http code, decoded body or null, curl error]. */
+function fb_claude(array $c, array $req, bool $beta): array {
+    $h = ['content-type: application/json', 'x-api-key: ' . $c['anthropic_key'], 'anthropic-version: ' . $c['anthropic_version']];
+    if ($beta) $h[] = 'anthropic-beta: server-side-fallback-2026-07-01';
+    $ch = curl_init('https://api.anthropic.com/v1/messages');
+    curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 120, CURLOPT_HTTPHEADER => $h,
+        CURLOPT_POSTFIELDS => json_encode($req, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
+    $body = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); $cerr = curl_error($ch); curl_close($ch);
+    return [$code, is_string($body) ? json_decode($body, true) : null, $cerr];
+}
+[$code, $r, $cerr] = fb_claude($c, $req, true);
+if ($code === 400) {   // the optional parts (refusal fallback, effort) refused by this API version: once more without them
+    $min = $req; unset($min['fallbacks'], $min['output_config']);
+    [$code, $r, $cerr] = fb_claude($c, $min, false);
+}
 if ($code !== 200 || !is_array($r)) {
     fb_give_back($u['orcid']);
-    $type = is_array($r) && isset($r['error']['type']) ? (string)$r['error']['type'] : 'http-' . $code;
-    error_log('interpret: Claude API error ' . $type);
-    fb_json(['error' => 'upstream', 'detail' => $type], 502);
+    $type = is_array($r) && isset($r['error']['type']) ? (string)$r['error']['type'] : ($code ? 'http-' . $code : 'connection');
+    $why = is_array($r) && isset($r['error']['message']) ? (string)$r['error']['message'] : $cerr;   // never contains the key
+    error_log('interpret: Claude API error ' . $type . ': ' . $why);
+    fb_json(['error' => 'upstream', 'detail' => substr($type . ($why !== '' ? ': ' . $why : ''), 0, 300)], 502);
 }
 if (($r['stop_reason'] ?? '') === 'refusal') { fb_give_back($u['orcid']); fb_json(['error' => 'refusal'], 422); }
 $text = '';
