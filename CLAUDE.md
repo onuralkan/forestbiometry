@@ -18,7 +18,7 @@ Rules that are in force. The full decision history (dates, release stories, scop
 - Each source is marked in METHODS.md (legend and full [P]/[A] conditions at its top): [B] checked in the primary source, [İ] record verified via a secondary source's reference list, [P] equation form from a CRAN package help page, test reference = that package's output (`tests/ref/*.R`, run by the user; no package code or data copied), [A] peer-reviewed secondary source citing the original, needing two independent secondary sources or a numerical check, [D] not verified. Nothing is implemented before its source is [B], [P] or [A] (definition-only exceptions are listed in DECISIONS.md).
 - A distribution/method/equation is not added to a tool before it passes an independent reference test. The beta number of a tool rises with every release that changes what it computes.
 - Terminology: "fit" (model), "estimation" (parameters), "prediction" (values; random effects are predicted); e = y − ŷ everywhere; top height H0 = mean height of the 100 tallest trees/ha; dominant diameter D0 = mean diameter of the 100 thickest trees/ha; minimum diameter is Dmin; sample data are "simulated".
-- References: `kaynakca.php`, APA 7; a source added to METHODS also goes to `docs/kaynakca.json` (master) and `inc/kaynakca.json`; missing fields stay null.
+- References: `kaynakca.php`, APA 7; a source added to METHODS also goes to `docs/kaynakca.json` (the only file edited by hand); then run `node scripts/kaynakca.mjs`, which builds `inc/kaynakca.json` (leaves out references whose every `tools` entry says "archived"; CI checks `--check`). Missing fields stay null.
 - The free-formula parser `core/expr.js` is only used in SM-02/03/04.
 
 ## Code and tests
@@ -30,6 +30,6 @@ Rules that are in force. The full decision history (dates, release stories, scop
 ## Git, branches, publishing
 - Several agents work in parallel. Before starting, merge `main` into your branch (no rebase) and add/update your row in the "Active branches" table of PROGRESS.md. On conflicts in `inc/site.php`, `inc/catalog.php`, `inc/home.php`, `inc/guide/*` run `tests/site/e2e.mjs` and `tests/site/test_guide.mjs`.
 - Push to `main` = going live (GitHub Actions: tests, browser tests, R code check, then upload through the cPanel API; `.github/workflows/deploy.yml`). Push to `main` only when the user says so ("yayına al"). Nothing is deleted on the server. Fallback: `scripts/build-zip.sh` + cPanel.
-- Pushes that change only Markdown/docs (except `docs/METHODS.md` and `docs/DIST_SPEC.md`, which a test reads) do not start the deploy workflow.
+- Pushes that change only Markdown/docs (except `docs/METHODS.md`, `docs/DIST_SPEC.md` and `docs/kaynakca.json`, which CI checks) do not start the deploy workflow.
 - At the end of a module update PROGRESS.md (and METHODS.md if needed), in the same push; keep PROGRESS short (one line per item, details belong in the commit message). Do not add "published" commits: live status is the Actions run.
 - Other documents: `docs/MINOR_REVISIONS.md` (user's MR-001… notes), `docs/SOURCE_LIST.md`, `docs/IDEAS_AND_METHODS.md`.

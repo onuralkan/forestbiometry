@@ -2,7 +2,7 @@
 // Bibliography of the platform: every source the tools' methods and tests rely on, APA 7, from inc/kaynakca.json
 // (extracted from docs/METHODS.md and docs/SOURCE_LIST.md; no detail added that those documents do not give).
 require __DIR__ . '/inc/site.php';
-$refs = json_decode((string) @file_get_contents(__DIR__ . '/inc/kaynakca.json'), true) ?: [];   // docs/kaynakca.json without the sources of archived (removed) tools
+$refs = json_decode((string) @file_get_contents(__DIR__ . '/inc/kaynakca.json'), true) ?: [];   // built from docs/kaynakca.json by scripts/kaynakca.mjs (archived-only sources left out)
 site_top([
     'title' => 'References',
     'desc'  => 'Every source used in the methods and tests of the forestbiometry.online tools (APA 7).',
@@ -54,8 +54,6 @@ function apa(array $r): string {
 }
 // status labels as defined in docs/METHODS.md (lines 4–8); assets/lab/report/render.js uses the same wording
 $label = ['B' => 'checked in the primary source', 'A' => 'quoted via a secondary source', 'P' => 'verified from the package documentation', 'İ' => 'citation verified (in a secondary source\'s reference list)', 'D' => 'not yet verified'];
-// Turkish page: the few English words of the "tools" notes in inc/kaynakca.json (data, kept as they are)
-$toolsTr = [];
 ?>
   <section class="card about" aria-labelledby="h-refs">
     <h2 id="h-refs" class="b-h2"><?= 'References' ?></h2>
@@ -65,7 +63,7 @@ $toolsTr = [];
     <ol class="refs" id="refs">
       <?php foreach ($refs as $r): ?>
       <li id="ref-<?= h($r['key'] ?? '') ?>"><?= apa($r) ?>
-        <span class="muted small"> — <?= h(implode('; ', array_unique(array_map(function ($t) use ($toolsTr) { return strtr(trim(preg_replace('/\s*(\((?:[^()]++|(?1))*\))/u', '', $t)), $toolsTr); }, $r['tools'] ?? [])))) ?><?= !empty($r['status']) ? ' · ' . h($r['status']) . ' (' . h($label[$r['status']] ?? $r['status']) . ')' : '' ?><?= !empty($r['note']) && stripos($r['note'], 'incomplete') === 0 ? ' · ' . 'citation incomplete in the source documents' : '' ?></span></li>
+        <span class="muted small"> — <?= h(implode('; ', array_unique(array_map(function ($t) { return trim(preg_replace('/\s*(\((?:[^()]++|(?1))*\))/u', '', $t)); }, $r['tools'] ?? [])))) ?><?= !empty($r['status']) ? ' · ' . h($r['status']) . ' (' . h($label[$r['status']] ?? $r['status']) . ')' : '' ?><?= !empty($r['note']) && stripos($r['note'], 'incomplete') === 0 ? ' · ' . 'citation incomplete in the source documents' : '' ?></span></li>
       <?php endforeach; ?>
     </ol>
   </section>

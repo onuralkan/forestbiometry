@@ -8,13 +8,15 @@ on:
   push:
     branches: [main]
     # Pushes that change only documents do not test or upload anything (21 Nov 2026, user decision): docs/ and the Markdown
-    # files are not uploaded to the server. METHODS.md and DIST_SPEC.md stay included because tests/dist/test_p15.mjs reads them.
+    # files are not uploaded to the server. METHODS.md and DIST_SPEC.md stay included because tests/dist/test_p15.mjs reads them;
+    # docs/kaynakca.json because inc/kaynakca.json is built from it (scripts/kaynakca.mjs --check).
     paths:
       - '**'
       - '!**.md'
       - '!docs/**'
       - 'docs/METHODS.md'
       - 'docs/DIST_SPEC.md'
+      - 'docs/kaynakca.json'
   workflow_dispatch: {}
 concurrency:
   group: deploy
@@ -37,6 +39,7 @@ jobs:
           node scripts/bundle.mjs --check
       - name: Numerical tests
         run: |
+          node scripts/kaynakca.mjs --check
           node legacy/test_math.js
           node tests/checker/test_checker.mjs
           node tests/stand/test_stand.mjs
