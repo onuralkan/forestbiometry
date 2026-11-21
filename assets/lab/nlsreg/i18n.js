@@ -1,4 +1,4 @@
-// Nonlinear regression (SM-02): TR/EN interface texts.
+// Nonlinear regression (SM-02): interface texts.
 import { makeT } from '../core/i18n.js';
 
 export const T = makeT({
@@ -6,6 +6,7 @@ export const T = makeT({
     privacy: 'Your data and coefficient sets stay in this browser; nothing is sent to the server. The site contains no species or regional coefficients.',
     'step.1': 'Data', 'step.2': 'Models', 'step.3': 'Results', next: 'Next', back: 'Back', reset: 'Reset session', calc: 'Fit', none: '—',
     restored: p => `Previous session restored (${p.when}).`,
+    handoff: p => `Table from Height–Diameter Modelling loaded: ${p.name}, ${p.n} trees. The response h_m and a Chapman–Richards model on d_cm are chosen; change them as you need.`,
     'tb.h': 'Data table', 'tb.sub': 'One observation per row; the response and the explanatory variables as columns (e.g. diameter, height, volume, age). The units are yours; they are written when you save.',
     'dec.h': 'Decimal separator', 'dec.dot': 'point (12.5)', 'dec.comma': 'comma (12,5)', 'tb.info': p => `${p.name}: ${p.n} rows, ${p.c} columns.`,
     sample: 'Load the simulated table', 'sample.note': 'Simulated data for trying out (random numbers; not any species\' values).', 'need.data': 'Load a table first.',

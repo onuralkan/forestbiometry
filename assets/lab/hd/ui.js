@@ -391,11 +391,31 @@ function recordPayload() {
     crossValidation: !R.cv ? null : R.cv.problem ? { problem: R.cv.problem } : { mode: R.cv.mode, k: R.cv.k, lopo: R.cv.lopo, models: H.MODELS.map((m, k) => ({ id: m.id, ...R.cv.sum.models[k], chosen: R.cv.sum.chosen[k] })), selection: R.cv.sum.selection },
     newDiameters: nd ? { model: nd.sf.id, rows: nd.rows.map(x => ({ d: x.d, h: x.yhat, ci: x.ci || null, pi: x.pi || null, outside: !!x.outside })) } : null };
 }
+/* ---- hand-off of the fitting data to Nonlinear Regression (SM-02) and Mixed-Effects Models (SM-03) ----
+ * The rows used in the fit (after the species filter; d in cm, h in m, heights above breast height) go as a
+ * tab-separated table under the store key 'handoff:<page>', read once by that page. Nothing is computed here. */
+function handoffCard() {
+  const p = R.prep, plots = p.hasPlot && p.nPlots >= 2;
+  return `<div class="card" id="handoff"><h2>${T('ho.h')}</h2><p class="muted small">${T('ho.sub', { n: p.fitRows.length })}</p>
+    <div class="exports"><button type="button" class="btn ghost" id="ho-nls">${T('ho.nls')}</button>${plots ? `<button type="button" class="btn ghost" id="ho-mixed">${T('ho.mixed')}</button>` : ''}</div>
+    <p class="muted small">${T('ho.nls.note')}</p><p class="muted small">${plots ? T('ho.mixed.note') : T('ho.mixed.noplot')}</p></div>`;
+}
+function handoffTable() {
+  const p = R.prep, cols = [...(p.hasPlot ? ['plot'] : []), ...(S.scol != null ? ['species'] : []), 'd_cm', 'h_m'];
+  const rows = p.fitRows.map(r => [...(p.hasPlot ? [r.plot] : []), ...(S.scol != null ? [r.species] : []), r.d, r.h]);
+  const clean = v => String(v).replace(/[\t\r\n]+/g, ' ');
+  return [cols, ...rows].map(r => r.map(clean).join('\t')).join('\n');
+}
+async function handoff(page) {
+  await put('handoff:' + page, { schema: 'hd-handoff/1', name: 'height-diameter.tsv', text: handoffTable(), y: 'h_m', d: 'd_cm', group: R.prep.hasPlot ? 'plot' : null,
+    units: { d_cm: 'cm', h_m: 'm' }, bh: R.prep.bh, tool: { id: H.TOOL.id, version: H.TOOL.version }, created: new Date().toISOString() });
+  await flush(); location.href = page + '.php';
+}
 function tabExport(p) {
   const nd = ndExport();
   p.innerHTML = `${selFit() ? '' : `<p class="note warn">${T('ex.nomodel')}</p>`}<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button>
     <button type="button" class="btn ghost" id="x-t">${T('ex.trees')}</button><button type="button" class="btn ghost" id="x-p">${T('ex.params')}</button>
-    ${R.cv && !R.cv.problem ? `<button type="button" class="btn ghost" id="x-cv">${T('ex.cv')}</button>` : ''}${nd ? `<button type="button" class="btn ghost" id="x-nd">${T('ex.nd')}</button>` : ''}${recordButton('x-json')}<button type="button" class="btn ghost" id="x-r">${T('ex.r')}</button></div><p class="muted small">${T('ex.r.note')}</p><p class="muted small">${T('ex.note')}</p>`;
+    ${R.cv && !R.cv.problem ? `<button type="button" class="btn ghost" id="x-cv">${T('ex.cv')}</button>` : ''}${nd ? `<button type="button" class="btn ghost" id="x-nd">${T('ex.nd')}</button>` : ''}${recordButton('x-json')}<button type="button" class="btn ghost" id="x-r">${T('ex.r')}</button></div><p class="muted small">${T('ex.r.note')}</p><p class="muted small">${T('ex.note')}</p>${handoffCard()}`;
   $('x-t').addEventListener('click', () => downloadCSV(fname('boy-cap-agaclar', 'height-diameter-trees') + '.csv', treeRows(), lang));
   $('x-p').addEventListener('click', () => downloadCSV(fname('boy-cap-parametreler', 'height-diameter-parameters') + '.csv', paramRows(), lang));
   $('x-cv') && $('x-cv').addEventListener('click', () => downloadCSV(fname('boy-cap-capraz-dogrulama', 'height-diameter-cv') + '.csv', cvRows(), lang));
@@ -409,6 +429,8 @@ function tabExport(p) {
     // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
     if (!file) download(csvName(S.imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
   });
+  $('ho-nls').addEventListener('click', () => handoff('dogrusal-olmayan-regresyon'));
+  $('ho-mixed') && $('ho-mixed').addEventListener('click', () => handoff('karma-modeller'));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status('XLSX', 'err'); return; }
     const sheets = [{ name: T('sheet.info'), rows: infoRows(), widths: [26, 110] }, { name: T('sheet.params'), rows: paramRows() }, { name: T('sheet.cv'), rows: cvRows() }, { name: T('sheet.trees'), rows: treeRows() }];

@@ -2503,7 +2503,7 @@ function predictSet(set, point) {
 __fb_m["nlsreg/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "T": () => T });
 const { makeT } = __fb_r("core/i18n.js");
-// Nonlinear regression (SM-02): TR/EN interface texts.
+// Nonlinear regression (SM-02): interface texts.
 
 
 const T = makeT({
@@ -2511,6 +2511,7 @@ const T = makeT({
     privacy: 'Your data and coefficient sets stay in this browser; nothing is sent to the server. The site contains no species or regional coefficients.',
     'step.1': 'Data', 'step.2': 'Models', 'step.3': 'Results', next: 'Next', back: 'Back', reset: 'Reset session', calc: 'Fit', none: '—',
     restored: p => `Previous session restored (${p.when}).`,
+    handoff: p => `Table from Height–Diameter Modelling loaded: ${p.name}, ${p.n} trees. The response h_m and a Chapman–Richards model on d_cm are chosen; change them as you need.`,
     'tb.h': 'Data table', 'tb.sub': 'One observation per row; the response and the explanatory variables as columns (e.g. diameter, height, volume, age). The units are yours; they are written when you save.',
     'dec.h': 'Decimal separator', 'dec.dot': 'point (12.5)', 'dec.comma': 'comma (12,5)', 'tb.info': p => `${p.name}: ${p.n} rows, ${p.c} columns.`,
     sample: 'Load the simulated table', 'sample.note': 'Simulated data for trying out (random numbers; not any species\' values).', 'need.data': 'Load a table first.',
@@ -3022,9 +3023,24 @@ function render() {
     const saved = await get(KEY);
     if (saved && saved.v === 1) { S = { ...blank(), ...saved, models: (saved.models || []).map(m => ({ ...newModel(), ...m, w: { ...newModel().w, ...(m.w || {}) } })) }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
     if (S.tbl && S.tbl.imp && S.tbl.imp.buf && !S.tbl.src) S.tbl.src = await readImport(S.tbl.imp, BASE).catch(() => null);
+    await takeHandoff();
   } catch (e) { S = blank(); }
   render();
 })();
+/** A table handed over by Height–Diameter Modelling (store key 'handoff:<this page>', schema 'hd-handoff/1'; read once).
+ * Loads the table, chooses the response (and the group), records the units and starts from the same model as the sample. */
+async function takeHandoff() {
+  const ho = await get('handoff:' + NL.TOOL.id);
+  if (!ho || ho.schema !== 'hd-handoff/1' || typeof ho.text !== 'string') return;
+  await del('handoff:' + NL.TOOL.id);
+  const imp = { kind: 'paste', name: ho.name || 'handoff', text: ho.text, encoding: 'utf-8', delim: '\t', header: true, sheet: null }, src = await readImport(imp, BASE);
+  S = blank(); S.tbl = { imp, src, decimal: '.', decChosen: true }; R = null;
+  const y = src.headers.indexOf(ho.y), d = src.headers.indexOf(ho.d);
+  S.y = y >= 0 ? y : null;
+  if (d >= 0) S.models = [{ ...newModel(), ready: 'cr', map: { x: d } }];
+  for (const [k, u] of Object.entries(ho.units || {})) { const c = src.headers.indexOf(k); if (c >= 0) S.units['c' + c] = u; }
+  S.step = 2; save(); status(T('handoff', { name: imp.name, n: src.rows.length }), 'ok');
+}
 };
 
 // ---- assets/lab/stand/calc.js

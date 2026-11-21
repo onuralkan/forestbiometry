@@ -316,6 +316,21 @@ function render() {
     const saved = await get(KEY);
     if (saved && saved.v === 1) { S = { ...blank(), ...saved, models: (saved.models || []).map(m => ({ ...newModel(), ...m, w: { ...newModel().w, ...(m.w || {}) } })) }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
     if (S.tbl && S.tbl.imp && S.tbl.imp.buf && !S.tbl.src) S.tbl.src = await readImport(S.tbl.imp, BASE).catch(() => null);
+    await takeHandoff();
   } catch (e) { S = blank(); }
   render();
 })();
+/** A table handed over by Height–Diameter Modelling (store key 'handoff:<this page>', schema 'hd-handoff/1'; read once).
+ * Loads the table, chooses the response (and the group), records the units and starts from the same model as the sample. */
+async function takeHandoff() {
+  const ho = await get('handoff:' + NL.TOOL.id);
+  if (!ho || ho.schema !== 'hd-handoff/1' || typeof ho.text !== 'string') return;
+  await del('handoff:' + NL.TOOL.id);
+  const imp = { kind: 'paste', name: ho.name || 'handoff', text: ho.text, encoding: 'utf-8', delim: '\t', header: true, sheet: null }, src = await readImport(imp, BASE);
+  S = blank(); S.tbl = { imp, src, decimal: '.', decChosen: true }; R = null;
+  const y = src.headers.indexOf(ho.y), d = src.headers.indexOf(ho.d);
+  S.y = y >= 0 ? y : null;
+  if (d >= 0) S.models = [{ ...newModel(), ready: 'cr', map: { x: d } }];
+  for (const [k, u] of Object.entries(ho.units || {})) { const c = src.headers.indexOf(k); if (c >= 0) S.units['c' + c] = u; }
+  S.step = 2; save(); status(T('handoff', { name: imp.name, n: src.rows.length }), 'ok');
+}

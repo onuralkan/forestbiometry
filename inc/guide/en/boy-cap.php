@@ -19,6 +19,7 @@
 <p><b>When are standard errors withheld?</b> With two or more plots in the data, trees in the same plot are not independent; standard errors would come out too small. In that case this version gives no standard errors, confidence or prediction intervals, and no AIC/BIC.</p>
 <h3>Downloads</h3>
 <p>Full report (Excel); the tree table (measured and predicted heights in separate columns), parameters, cross-validation folds and new-diameter predictions as CSV. <b>R code (.R)</b>: a script that redoes the run in base R (<code>nls</code>) with the same settings, starting values and cross-validation folds; the data are not embedded, you change the file name at its top to the path of your file. The site's tests check in R at every release that this code gives the tool's numbers.</p>
+<p><b>Continue in another tool</b> (Downloads tab): the trees used in the fit (d in cm, h in m) open in <a href="dogrusal-olmayan-regresyon.php">Nonlinear Regression</a> for weighted fitting and variance functions when the spread of heights grows with diameter, or, with at least two plots, in <a href="karma-modeller.php">Mixed-Effects Models</a> for a plot random effect and calibration to a new plot from a few measured heights. The other tool starts with the response, the plot group and a first model chosen; your table here does not change.</p>
 <h3>Common situations</h3>
 <ul>
 <li>Models that "did not converge" or "diverged" give no parameters; divergence means the asymptote is not identified by the data.</li>

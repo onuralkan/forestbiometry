@@ -131,6 +131,26 @@ await tab('compare');
 ok((await page.locator('#cvtab').count()) === 1, 'CV still runs; failed folds handled');
 await shot('hd-8-iraksama');
 
+// 6. hand-off of the fitting rows to Nonlinear Regression and Mixed-Effects Models (21 Nov 2026; read once there)
+{ const q = await browser.newPage(); q.on('pageerror', e => errors.push(e.message)); q.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  await q.goto(URL); await q.click('#sample'); await q.waitForSelector('#impbox .fname');
+  await q.click('#to2'); await q.click('#calc'); await q.waitForSelector('#ptab', { timeout: 60000 });
+  await q.click('#tab-export'); await q.waitForSelector('#handoff');
+  ok(await q.isVisible('#ho-nls') && await q.isVisible('#ho-mixed'), 'hand-off card: both tools offered (several plots)');
+  await q.click('#ho-mixed'); await q.waitForURL(/karma-modeller\.php/); await q.waitForSelector('#ysel');
+  const sel = async id => q.$eval(id + ' option:checked', o => o.textContent.trim());
+  const st = await q.textContent('#status');
+  ok(/Height–Diameter Modelling/.test(st) && await sel('#ysel') === 'h_m' && await sel('#gsel') === 'plot', `Mixed-Effects Models: table loaded, response h_m and group plot chosen (${st})`);
+  await q.click('#calc'); await q.waitForSelector('#cmptab', { timeout: 60000 });
+  ok(/observations, \d+ groups/.test(await q.textContent('#r-n')) && (await q.locator('[data-fix="0"] [data-k^="b"]').count()) === 2, 'Mixed-Effects Models: the handed-over data fit (two fixed effects: ln d and intercept): ' + await q.textContent('#r-n'));
+  ok(await q.evaluate(async () => !(await new Promise(r => { const o = indexedDB.open('forestbiometry'); o.onsuccess = () => { const g = o.result.transaction('kv').objectStore('kv').get('handoff:karma-modeller'); g.onsuccess = () => r(g.result); }; }))), 'hand-off read once (key removed)');
+  await q.goto(URL); await q.waitForSelector('#tab-export'); await q.click('#tab-export'); await q.waitForSelector('#ho-nls');
+  await q.click('#ho-nls'); await q.waitForURL(/dogrusal-olmayan-regresyon\.php/); await q.waitForSelector('#ysel');
+  ok(/Height–Diameter Modelling/.test(await q.textContent('#status')) && await sel('#ysel') === 'h_m', 'Nonlinear Regression: table loaded, response h_m chosen');
+  await q.click('#calc'); await q.waitForSelector('#cmptab', { timeout: 60000 });
+  ok(Number.isFinite(parseFloat(await q.textContent('#cmptab [data-k="aic"]'))), 'Nonlinear Regression: the handed-over data fit (Chapman–Richards, AIC shown)');
+  await q.close(); }
+
 // 5. phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
 phone.on('pageerror', e => errors.push(e.message));

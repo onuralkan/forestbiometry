@@ -2644,7 +2644,7 @@ function registerStoredForms(sets) {
 __fb_m["mixed/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "T": () => T });
 const { makeT } = __fb_r("core/i18n.js");
-// Mixed-effects models (SM-03): TR/EN interface texts.
+// Mixed-effects models (SM-03): interface texts.
 
 
 const T = makeT({
@@ -2652,6 +2652,7 @@ const T = makeT({
     privacy: 'Your data and coefficient sets stay in this browser; nothing is sent to the server. The site contains no species or regional coefficients.',
     'step.1': 'Data', 'step.2': 'Models', 'step.3': 'Results', next: 'Next', back: 'Back', reset: 'Reset session', calc: 'Fit', none: '—', busy: 'Fitting the models…',
     restored: p => `Previous session restored (${p.when}).`,
+    handoff: p => `Table from Height–Diameter Modelling loaded: ${p.name}, ${p.n} trees. The response h_m${p.g ? ', the group plot' : ''} and a linear model with ln(d_cm) and a random intercept are chosen; change them as you need.`,
     'tb.h': 'Data table', 'tb.sub': 'One observation per row; a group column (e.g. plot), the response and the explanatory variables. Random effects are per group.',
     'dec.h': 'Decimal separator', 'dec.dot': 'point (12.5)', 'dec.comma': 'comma (12,5)', 'tb.info': p => `${p.name}: ${p.n} rows, ${p.c} columns.`,
     sample: 'Load the simulated table', 'sample.note': 'Simulated data for trying out (25 plots, height–diameter; random numbers, not any species\' values).', 'need.data': 'Load a table first.',
@@ -3236,9 +3237,25 @@ function render() {
     const saved = await get(KEY);
     if (saved && saved.v === 1) { S = { ...blank(), ...saved, cal: { ...blank().cal, ...(saved.cal || {}) }, models: (saved.models || []).map(m => ({ ...newModel(m.kind || 'linear'), ...m })) }; status(T('restored', { when: new Date(saved.saved).toLocaleString(LOC) })); }
     if (S.tbl && S.tbl.imp && S.tbl.imp.buf && !S.tbl.src) S.tbl.src = await readImport(S.tbl.imp, BASE).catch(() => null);
+    await takeHandoff();
   } catch (e) { S = blank(); }
   render();
 })();
+/** A table handed over by Height–Diameter Modelling (store key 'handoff:<this page>', schema 'hd-handoff/1'; read once).
+ * Loads the table, chooses the response and the group (plot), records the units and starts from the same linear model
+ * as the sample (ln d with a random intercept). */
+async function takeHandoff() {
+  const ho = await get('handoff:' + MX.TOOL.id);
+  if (!ho || ho.schema !== 'hd-handoff/1' || typeof ho.text !== 'string') return;
+  await del('handoff:' + MX.TOOL.id);
+  const imp = { kind: 'paste', name: ho.name || 'handoff', text: ho.text, encoding: 'utf-8', delim: '\t', header: true, sheet: null }, src = await readImport(imp, BASE);
+  S = blank(); S.tbl = { imp, src, decimal: '.', decChosen: true }; R = null;
+  const y = src.headers.indexOf(ho.y), d = src.headers.indexOf(ho.d), g = ho.group ? src.headers.indexOf(ho.group) : -1;
+  S.y = y >= 0 ? y : null; S.g = g >= 0 ? g : null;
+  if (d >= 0) S.models = [{ ...newModel('linear'), terms: [{ col: d, tf: 'ln' }], rTerms: [false] }];
+  for (const [k, u] of Object.entries(ho.units || {})) { const c = src.headers.indexOf(k); if (c >= 0) S.units['c' + c] = u; }
+  S.step = 2; save(); status(T('handoff', { name: imp.name, n: src.rows.length, g: S.g != null }), 'ok');
+}
 };
 
 // ---- assets/lab/nlsreg/calc.js

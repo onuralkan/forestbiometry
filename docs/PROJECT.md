@@ -126,6 +126,8 @@ The reader (`core/derived.js` `readDerived`) converts every version in the versi
 
 The session (`session:veri-denetcisi`) is kept in the same store; changing the language reloads the page and the session comes back.
 
+**Tool-to-tool hand-off of a table (`handoff:<page>`):** a tool may put a one-off table for another page under the store key `handoff:<target page id>`; the target reads it once at start and deletes it. Used by Volume Equations and Nonlinear Regression → Model Evaluation (`{name, text (TSV), obs, models, role}`) and, since 21 Nov 2026, Height–Diameter Modelling → Nonlinear Regression / Mixed-Effects Models (`{schema: 'hd-handoff/1', name, text (TSV: plot?, species?, d_cm, h_m), y, d, group, units, bh, tool, created}`). The source data and packages are never changed.
+
 ## 4c. Run record (`run-record/1`; DI-07, 16 Nov 2026)
 The tools' result JSON is written in a shared envelope (`assets/lab/core/record.js`, page side `core/record-ui.js`). The tool's old JSON fields **stay unchanged at the top level** (old readers are not affected); reserved fields are added:
 ```

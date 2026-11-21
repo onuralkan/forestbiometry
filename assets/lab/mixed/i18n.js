@@ -1,4 +1,4 @@
-// Mixed-effects models (SM-03): TR/EN interface texts.
+// Mixed-effects models (SM-03): interface texts.
 import { makeT } from '../core/i18n.js';
 
 export const T = makeT({
@@ -6,6 +6,7 @@ export const T = makeT({
     privacy: 'Your data and coefficient sets stay in this browser; nothing is sent to the server. The site contains no species or regional coefficients.',
     'step.1': 'Data', 'step.2': 'Models', 'step.3': 'Results', next: 'Next', back: 'Back', reset: 'Reset session', calc: 'Fit', none: '—', busy: 'Fitting the models…',
     restored: p => `Previous session restored (${p.when}).`,
+    handoff: p => `Table from Height–Diameter Modelling loaded: ${p.name}, ${p.n} trees. The response h_m${p.g ? ', the group plot' : ''} and a linear model with ln(d_cm) and a random intercept are chosen; change them as you need.`,
     'tb.h': 'Data table', 'tb.sub': 'One observation per row; a group column (e.g. plot), the response and the explanatory variables. Random effects are per group.',
     'dec.h': 'Decimal separator', 'dec.dot': 'point (12.5)', 'dec.comma': 'comma (12,5)', 'tb.info': p => `${p.name}: ${p.n} rows, ${p.c} columns.`,
     sample: 'Load the simulated table', 'sample.note': 'Simulated data for trying out (25 plots, height–diameter; random numbers, not any species\' values).', 'need.data': 'Load a table first.',
