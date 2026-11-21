@@ -2,6 +2,11 @@
 
 Kept short on purpose (21 Nov 2026, user decision): current state only. Completed work with its checks up to 21 Nov 2026 is in `docs/PROGRESS_ARCHIVE.md` (frozen; grep it, do not read it whole); after that, the git log is the history. Whether something is live is not recorded here: a change is live when its push to `main` has a successful run of "Deploy to forestbiometry.online" in GitHub Actions.
 
+## Note for other sessions (21 Nov 2026)
+Large changes reached `main` and the live site on 21 Nov 2026: CLAUDE.md rewritten (old text in `docs/DECISIONS.md`) and PROGRESS split (`docs/PROGRESS_ARCHIVE.md`); **all Turkish code removed** (no `tr` dictionaries, no `$tr` / `lang === 'tr'` branches, no `inc/guide/tr/`; touched almost every PHP and JS file); `inc/kaynakca.json` is built by `scripts/kaynakca.mjs`; docs-only pushes do not deploy; new features in several tools (see Current state and the git log).
+- Working from a branch older than 21 Nov 2026: merge `main` first (no rebase). On conflicts, take `main`'s version of the language code and re-apply only your own change; never add language branches or Turkish strings back.
+- Then run the tests of the tools you touched plus `tests/site/`.
+
 ## Current state (21 Nov 2026)
 24 tools in 8 modules, no planned tools (P8; 34 ids out of scope). Last release v2026.11.2 (Zenodo version DOI 10.5281/zenodo.24339226). The site is English only: Turkish hidden on 20 Nov 2026 (stage 1) and removed from the code on 21 Nov 2026 (stage 2: PHP `$tr` branches, JS `tr` dictionaries and `lang === 'tr'` branches, Turkish R-code comments and citation formats, `inc/guide/tr/`; page HTML checked identical apart from the removed Turkish; tests rewritten for English only).
 
