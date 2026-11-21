@@ -81,6 +81,14 @@ await page.selectOption('[data-dir="2"]', 'min');
 await page.click('#calc'); await page.waitForSelector('#panel table');
 const rowsTxt = await page.locator('#panel tbody tr th').allTextContents();
 ok(rowsTxt.join(',') === 'A,C,B', 'ranking A, C, B: ' + rowsTxt.join(','));
+// 3b. criterion weights (1.2.0): RMSE weight 4 → C, A, B (relative ranks RMSE A 5/3, B 3, C 1; XYZ A 1, B 1.5, C 3: A 23/3, B 13.5, C 7)
+await page.click('#steps [data-go="2"]');
+await page.fill('[data-w="1"]', '0'); await page.locator('[data-w="1"]').dispatchEvent('change');
+ok(await page.isDisabled('#calc') && (await page.locator('.probs li', { hasText: 'Weight must be' }).count()) === 1, 'weight 0 refused, Calculate disabled');
+await page.fill('[data-w="1"]', '4'); await page.locator('[data-w="1"]').dispatchEvent('change');
+await page.click('#calc'); await page.waitForSelector('#panel table');
+const wTxt = await page.locator('#panel tbody tr th').allTextContents();
+ok(wTxt.join(',') === 'C,A,B' && (await page.locator('.note', { hasText: 'Weighted overall rank' }).count()) === 1 && (await page.textContent('#panel thead')).includes('w = 4'), 'weighted ranking C, A, B with the weights shown: ' + wTxt.join(','));
 
 // 4. phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });

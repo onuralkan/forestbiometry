@@ -334,7 +334,7 @@ Density, cumulative distribution, mean, standard deviation, median and percentil
 
 **Relative rank** (Poudel and Cao 2013, Eq. 10; there all criteria are "smaller is better", here generalised by direction):
 Rᵢⱼ = 1 + (m − 1)(Sᵢⱼ − S_best,ⱼ)/(S_worst,ⱼ − S_best,ⱼ). For "larger is better" best = max, worst = min; for "smaller is better" the reverse; for "closest to zero" S = |value| and best = min |value|. The best model gets 1, the worst m.
-**Overall relative rank:** Totalᵢ = Σⱼ Rᵢⱼ (all selected criteria, equal weight); Overallᵢ = 1 + (m − 1)(Totalᵢ − min Total)/(max Total − min Total). A rank number (with ties 1, 2, 2, 4) is also given.
+**Overall relative rank:** Totalᵢ = Σⱼ wⱼRᵢⱼ over the selected criteria; Overallᵢ = 1 + (m − 1)(Totalᵢ − min Total)/(max Total − min Total). A rank number (with ties 1, 2, 2, 4) is also given. **Criterion weights (21 Nov 2026, 1.2.0; definition [D], user decision):** wⱼ > 0 typed by the user, default 1 for every criterion, which is the equal weighting of Poudel and Cao (2013); only their ratios matter (the rescaling removes a common factor). The tool suggests no weights. Weights shown with the results, in the exports and in the run record. Verification: scenario `weighted` of `tests/ref/make_rank_reference.py` (numpy; weights that change the order), `tests/rank/test_rank.mjs` (also: doubling all weights changes nothing, all weights 1 = the unweighted ranking, w ≤ 0 or unreadable refused), `tests/rank/e2e.mjs` §3b.
 
 **Special cases:**
 - If all models are equal on a criterion, the denominator is zero: everyone gets 1 on that criterion and the case is reported (does not change the ranking).

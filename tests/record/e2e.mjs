@@ -62,7 +62,7 @@ const rk = await viaTab('/nispi-siralama.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');
 });
-ok(rk.obj.tool.version === '1.1.0' && rk.obj.ranks.length > 0 && rk.obj.inputs[0].format === 'xlsx' && rk.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/rank/ornek/ornek-olcutler.xlsx')) && await sealOk(rk.obj), 'relative ranking 1.1.0: record, XLSX input fingerprinted as bytes');
+ok(rk.obj.tool.version === '1.2.0' && rk.obj.ranks.length > 0 && rk.obj.inputs[0].format === 'xlsx' && rk.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/rank/ornek/ornek-olcutler.xlsx')) && await sealOk(rk.obj), 'relative ranking 1.1.0: record, XLSX input fingerprinted as bytes');
 const sp = await viaTab('/ornekleme.php', async () => {
   await page.check('input[name="src"][value="pilot"]'); await page.click('#sample'); await page.waitForSelector('#plstats'); await page.check('#confirm'); await page.waitForSelector('#x-json');
 });

@@ -1,7 +1,8 @@
 """Synthetic sample and independent reference for Relative Ranking (Module 7).
 Writes assets/lab/rank/ornek/ornek-olcutler.xlsx (made-up goodness-of-fit table, NOT real results) and
 tests/ref/rank.json computed with numpy from Poudel & Cao (2013) Eq. 10.
-Run: python3 tests/ref/make_rank_reference.py
+Run: python3 tests/ref/make_rank_reference.py  (the sample workbook is only rewritten with WRITE_SAMPLE=1 or when missing)
+21 Nov 2026 (1.2.0): scenario 'weighted', Total_i = sum_j w_j R_ij rescaled to 1..m (equal weights = the paper's total).
 """
 import json, os
 import numpy as np, openpyxl
@@ -29,7 +30,8 @@ for i, n in enumerate(names):
     if i == missing[0]: row[1 + cols.index(missing[1])] = None
     ws.append(row)
 ws2 = wb.create_sheet('not'); ws2['A1'] = 'Bu dosya uydurmadır; gerçek bir çalışmanın sonuçları değildir. This file is synthetic.'
-wb.save(os.path.join(root, 'assets', 'lab', 'rank', 'ornek', 'ornek-olcutler.xlsx'))
+sample = os.path.join(root, 'assets', 'lab', 'rank', 'ornek', 'ornek-olcutler.xlsx')
+if os.environ.get('WRITE_SAMPLE') or not os.path.exists(sample): wb.save(sample)
 
 DIR = {'R²': 'max', 'FI': 'max', 'Bias': 'abs', 'RMSE': 'min', 'MAE': 'min', 'AIC': 'min', 'BIC': 'min'}
 def rr(s, d):
@@ -37,17 +39,19 @@ def rr(s, d):
     if np.ptp(v) == 0: return np.ones_like(v)
     best, worst = (v.max(), v.min()) if d == 'max' else (v.min(), v.max())
     return 1 + (v.size - 1) * (v - best) / (worst - best)
-def scenario(use_idx, use_cols):
+def scenario(use_idx, use_cols, w=None):
     S = X[np.ix_(use_idx, [cols.index(c) for c in use_cols])]
     R = np.column_stack([rr(S[:, j], DIR[c]) for j, c in enumerate(use_cols)])
-    tot = R.sum(1); ov = rr(tot, 'min')
+    wv = np.ones(len(use_cols)) if w is None else np.array([w[c] for c in use_cols], dtype=float)
+    tot = R.sum(1) if w is None else R @ wv; ov = rr(tot, 'min')
     return {'models': [names[i] + (f' ({i + 4})' if names.count(names[i]) > 1 else '') for i in use_idx], 'rows': [int(i + 4) for i in use_idx],
-            'R': R.tolist(), 'sum': tot.tolist(), 'overall': ov.tolist()}
+            'R': R.tolist(), 'sum': tot.tolist(), 'overall': ov.tolist(), **({} if w is None else {'weights': w})}
 allc = list(cols)
 base = [i for i in range(m) if i != missing[0]]                                # incomplete model left out
 ref = {'numpy': np.__version__, 'directions': DIR,
        'all': scenario(base, allc),
        'excl': scenario([i for i in base if i != 12], allc),                    # user excludes the extreme model M13
-       'noMAE': scenario(list(range(m)), [c for c in allc if c != 'MAE'])}     # dropping MAE brings M06 back
+       'noMAE': scenario(list(range(m)), [c for c in allc if c != 'MAE']),
+       'weighted': scenario(base, allc, {'R²': 1, 'FI': 0.5, 'Bias': 6, 'RMSE': 1, 'MAE': 1.5, 'AIC': 0.25, 'BIC': 0.25})}     # dropping MAE brings M06 back
 json.dump(ref, open(os.path.join(here, 'rank.json'), 'w'), indent=1)
 print('ok', m, 'models; best (all):', ref['all']['models'][int(np.argmin(ref['all']['overall']))])

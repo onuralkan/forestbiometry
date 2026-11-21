@@ -5,7 +5,7 @@ import { readNum } from '../eval/calc.js';
 import { relativeRanks, ordinal } from '../core/relrank.js';
 export { relativeRanks, ordinal };
 
-export const TOOL = { id: 'nispi-siralama', version: '1.1.0' };
+export const TOOL = { id: 'nispi-siralama', version: '1.2.0' };
 export const DIRS = ['max', 'min', 'abs'];       // larger is better | smaller is better | closest to zero is better (|value|)
 
 /* ---------------- direction suggestion from the column name (the user confirms) ---------------- */
@@ -60,13 +60,16 @@ export function readModels(raw, spec) {
 /* ---------------- relative ranks ---------------- */
 // relativeRanks and ordinal live in core/relrank.js (21 Nov 2026: also used by Model Evaluation's rank bootstrap)
 /**
- * data: result of readModels. excluded: Set of model indices left out by the user.
+ * data: result of readModels (criteria may carry a weight w > 0; missing = 1). excluded: Set of model indices left out by the user.
+ * Overall: Totalᵢ = Σⱼ wⱼ Rᵢⱼ rescaled to 1…m (21 Nov 2026, 1.2.0; equal weights give Poudel and Cao's equal-weight total).
  * Models with a missing or unreadable value in any criterion cannot be ranked and are listed apart.
  */
 export function rank(data, excluded = new Set()) {
   const crit = data.criteria, problems = [];
   if (!crit.length) problems.push({ code: 'no.criteria' });
   if (crit.some(k => !DIRS.includes(k.dir))) problems.push({ code: 'no.direction', names: crit.filter(k => !DIRS.includes(k.dir)).map(k => k.name) });
+  const W = crit.map(k => k.w == null ? 1 : k.w);
+  if (W.some(w => !(typeof w === 'number' && Number.isFinite(w) && w > 0))) problems.push({ code: 'bad.weight', names: crit.filter((k, j) => !(Number.isFinite(W[j]) && W[j] > 0)).map(k => k.name) });
   const incomplete = [], used = [];
   data.models.forEach((md, i) => {
     if (excluded.has(i)) return;
@@ -76,7 +79,7 @@ export function rank(data, excluded = new Set()) {
   if (problems.length) return { problems, used, incomplete, excluded: [...excluded], m: used.length };
   const m = used.length;
   const per = crit.map((k, j) => ({ ...relativeRanks(used.map(i => data.models[i].values[j]), k.dir), name: k.name, dir: k.dir }));
-  const sums = used.map((_, r) => per.reduce((s, p) => s + p.R[r], 0));
+  const sums = used.map((_, r) => per.reduce((s, p, j) => s + W[j] * p.R[r], 0));
   const overall = relativeRanks(sums, 'min');
   const ord = ordinal(overall.R);
   const rows = used.map((i, r) => ({ index: i, label: data.models[i].label, row: data.models[i].row, values: data.models[i].values, R: per.map(p => p.R[r]), sum: sums[r], overall: overall.R[r], ordinal: ord[r] }))
@@ -84,7 +87,7 @@ export function rank(data, excluded = new Set()) {
   // criteria giving identical relative ranks for every model (e.g. FI = 1 − SSE/SST and prediction R², or RMSE and MSE): equal weighting counts them twice
   const same = [];
   for (let a = 0; a < per.length; a++) for (let b = a + 1; b < per.length; b++) if (!per[a].constant && per[a].R.every((x, r) => Math.abs(x - per[b].R[r]) <= 1e-9 * m)) same.push([per[a].name, per[b].name]);
-  return { problems, m, per: per.map(p => ({ name: p.name, dir: p.dir, best: p.best, worst: p.worst, constant: p.constant })), rows, used, incomplete, excluded: [...excluded], sameRanks: same, overallConstant: overall.constant };
+  return { problems, m, weighted: W.some(w => w !== W[0]), per: per.map((p, j) => ({ name: p.name, dir: p.dir, w: W[j], best: p.best, worst: p.worst, constant: p.constant })), rows, used, incomplete, excluded: [...excluded], sameRanks: same, overallConstant: overall.constant };
 }
 /** Models for the radar chart: best n and/or worst n by overall rank, plus any picked by name. */
 export function pickForChart(rows, { best = 0, worst = 0, extra = [] } = {}) {

@@ -61,7 +61,7 @@ function site_tools(): array {
          'desc' => 'Fixed-effects version: fit the Näslund, Michailoff, Curtis, power, Chapman–Richards and Weibull equations by nonlinear least squares; comparison on the same trees, plot-based cross-validation, a separate prediction column for missing heights. For mixed-effects models use the Mixed-Effects Models tool.'],
         ['n' => 6, 'cat' => 'SI', 'icon' => 'sampling', 'short' => 'Sampling Planner', 'file' => 'ornekleme.php', 'v' => '1.1.0', 'lab' => 'sampling', 'title' => 'Inventory Sampling Planner',
          'desc' => 'Approximate number of plots to estimate a mean with a target relative error under simple random sampling: from pilot measurements or a CV you enter, with an optional finite population correction.'],
-        ['n' => 7, 'cat' => 'SM', 'icon' => 'rank', 'short' => 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.1.0', 'lab' => 'rank', 'title' => 'Relative Ranking',
+        ['n' => 7, 'cat' => 'SM', 'icon' => 'rank', 'short' => 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.2.0', 'lab' => 'rank', 'title' => 'Relative Ranking',
          'desc' => 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.',
          'after' => 'model-degerlendirme.php'],   // listed under SM-06, right after Model Evaluation (19 Nov 2026, user decision)
         ['n' => 8, 'cat' => 'SV', 'icon' => 'secvol', 'short' => 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.2', 'lab' => 'secvol', 'title' => 'Stem Section Volume',

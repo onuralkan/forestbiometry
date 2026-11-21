@@ -63,13 +63,17 @@ function renderStep1() {
 }
 
 /* ---------------- criteria ---------------- */
-function critList() { return Object.entries(S.crit).filter(([, c]) => c.use).map(([j, c]) => ({ col: +j, dir: c.dir })); }
+/** Criterion weight typed by the user (point or comma; empty = 1). NaN when unreadable or not > 0. */
+const wOf = c => { const t = String(c.w ?? '').trim().replace(',', '.'); if (t === '') return 1; const v = /^[+]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(t) ? +t : NaN; return v > 0 ? v : NaN; };
+function critList() { return Object.entries(S.crit).filter(([, c]) => c.use).map(([j, c]) => ({ col: +j, dir: c.dir, w: wOf(c) })); }
 function problems() {
   const p = [], cl = critList();
   if (!cl.length) p.push(T('need.crit'));
   const nodir = cl.filter(c => !C.DIRS.includes(c.dir)).map(c => headerCells()[c.col]);
   if (nodir.length) p.push(T('need.dir', { names: nodir }));
   if (cl.some(c => c.col === S.modelCol)) p.push(T('need.model'));
+  const badw = cl.filter(c => !(c.w > 0)).map(c => headerCells()[c.col]);
+  if (badw.length) p.push(T('need.w', { names: badw }));
   if (!S.decimal) p.push(T('dec.choose'));
   return p;
 }
@@ -89,9 +93,10 @@ function renderStep2() {
     const first = rows.slice(S.headerRow + 1, S.headerRow + 4).map(r => `<code>${esc(cellText(r[j]))}</code>`).join(' ');
     h += `<div class="crit${c.use ? '' : ' off'}${c.use && !c.dir ? ' need' : ''}"><label class="chk"><input type="checkbox" data-use="${j}"${c.use ? ' checked' : ''}> <b>${esc(H[j])}</b></label>
       <label>${T('cr.dir')} <select data-dir="${j}"><option value="">${T('dir.none')}</option>${C.DIRS.map(d => `<option value="${d}"${c.dir === d ? ' selected' : ''}>${T('dir.' + d)}</option>`).join('')}</select></label>
+      <label>${T('cr.w')} <input type="text" inputmode="decimal" size="5" data-w="${j}" value="${esc(c.w ?? '1')}"></label>
       ${c.suggested ? `<span class="muted small">${T('cr.suggested')}</span>` : ''}<span class="small">${first}</span></div>`;
   }
-  h += `</div><p class="muted small">${T('aicnote')}</p></div>`;
+  h += `</div><p class="muted small">${T('cr.w.note')}</p><p class="muted small">${T('aicnote')}</p></div>`;
   const pr = problems();
   if (pr.length) h += `<div class="card"><ul class="probs">${pr.map(x => `<li class="note err">${esc(x)}</li>`).join('')}</ul></div>`;
   h += `<div class="nav"><button type="button" class="btn ghost" id="back1">${T('back')}</button><button type="button" class="btn" id="calc"${pr.length ? ' disabled' : ''}>${T('calc')}</button></div>`;
@@ -102,6 +107,7 @@ function renderStep2() {
   el.querySelectorAll('input[name="dec"]').forEach(x => x.addEventListener('change', () => { S.decimal = x.value; S.decimalChosen = true; re(); }));
   el.querySelectorAll('[data-use]').forEach(x => x.addEventListener('change', () => { S.crit[x.dataset.use].use = x.checked; re(); }));
   el.querySelectorAll('[data-dir]').forEach(x => x.addEventListener('change', () => { const c = S.crit[x.dataset.dir]; c.dir = x.value || null; c.suggested = false; re(); }));
+  el.querySelectorAll('[data-w]').forEach(x => x.addEventListener('change', () => { S.crit[x.dataset.w].w = x.value.trim(); re(); }));
   $('back1').addEventListener('click', () => go(1));
   $('calc').addEventListener('click', () => { compute(); S.tab = 'table'; go(3); });
 }
@@ -131,6 +137,7 @@ function notes() {
   if (D.duplicates.length) h += `<p class="note warn">${T('dup', { list: D.duplicates.map(d => `${esc(d.name)} ×${d.count}`).join(', ') })}</p>`;
   if (Rk.incomplete.length) h += `<p class="note warn">${T('incomplete', { k: Rk.incomplete.length, list: Rk.incomplete.map(i => esc(D.models[i].label)).join(', ') })}</p>`;
   if (Rk.sameRanks && Rk.sameRanks.length) h += `<p class="note warn">${T('same', { list: Rk.sameRanks.map(p => p.map(esc).join(' = ')).join('; ') })}</p>`;
+  if (Rk.weighted) h += `<p class="note">${T('weighted', { list: Rk.per.map(c => `${esc(c.name)} ${fv(c.w)}`).join(', ') })}</p>`;
   if (Rk.per && Rk.per.some(p => p.constant)) h += `<p class="note">${T('constant', { list: Rk.per.filter(p => p.constant).map(p => esc(p.name)).join(', ') })}</p>`;
   return h;
 }
@@ -144,7 +151,7 @@ function tabTable(p) {
   h += `<p class="small">${T('m.info', { m: Rk.m })}</p>` + notes();
   h += `<label class="chk small"><input type="checkbox" id="vals"${S.showVals ? ' checked' : ''}> ${T('show.vals')}</label>`;
   h += `<div class="tscroll"><table class="grid"><thead><tr><th>${T('th.use')}</th><th>${T('th.ord')}</th><th>${T('th.model')}</th>
-    ${Rk.per.map(c => `<th title="${esc(T('bestworst', { best: fv(c.best), worst: fv(c.worst) }))}">${T('R')}: ${esc(c.name)}<br><span class="kind">${T('dir.' + c.dir).split(' (')[0]}</span></th>`).join('')}
+    ${Rk.per.map(c => `<th title="${esc(T('bestworst', { best: fv(c.best), worst: fv(c.worst) }))}">${T('R')}: ${esc(c.name)}<br><span class="kind">${T('dir.' + c.dir).split(' (')[0]}${Rk.weighted ? ` · w = ${fv(c.w)}` : ''}</span></th>`).join('')}
     <th>${T('th.sum')}</th><th>${T('th.overall')}</th></tr></thead><tbody>`;
   for (const r of Rk.rows) {
     h += `<tr><td><input type="checkbox" checked data-row="${r.row}" aria-label="${esc(r.label)}"></td><td class="num">${r.ordinal}</td><th>${esc(r.label)}</th>
@@ -189,7 +196,7 @@ function rankRows() {
     ...Rk.rows.map(r => [r.ordinal, r.label, r.row, ...r.R, r.sum, r.overall])];
 }
 function valueRows() { return [[T('th.model'), T('th.row'), ...Rk.per.map(c => c.name)], ...Rk.rows.map(r => [r.label, r.row, ...r.values])]; }
-function critRows() { return [[T('x.crit'), T('x.dir'), T('x.best'), T('x.worst'), T('x.const')], ...Rk.per.map(c => [c.name, T('dir.' + c.dir), c.best, c.worst, T(c.constant ? 'yes' : 'no')])]; }
+function critRows() { return [[T('x.crit'), T('x.dir'), T('x.w'), T('x.best'), T('x.worst'), T('x.const')], ...Rk.per.map(c => [c.name, T('dir.' + c.dir), c.w, c.best, c.worst, T(c.constant ? 'yes' : 'no')])]; }
 function infoRows() {
   return [[T('x.k'), T('x.v')], [T('x.tool'), `${C.TOOL.id} ${C.TOOL.version}`], [T('x.date'), new Date().toISOString()], [T('x.src'), S.imp ? S.imp.name : ''],
     [T('x.m'), Rk.m], [T('x.excl'), D.models.filter(m => S.excl.includes(m.row)).map(m => m.label).join(', ') || '–'], [T('x.inc'), Rk.incomplete.map(i => D.models[i].label).join(', ') || '–'],
@@ -200,7 +207,7 @@ function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-csv">${T('ex.csv')}</button>${recordButton('x-json')}</div><p class="muted small">${T('ex.note')}</p>`;
   $('x-json').addEventListener('click', () => downloadRecord(fname('nispi-siralama', 'relative-ranking') + '.json', { tool: C.TOOL, created: new Date().toISOString(),
     settings: { headerRow: S.headerRow, modelColumn: S.modelCol, criteria: S.crit, decimal: S.decimal, excluded: D.models.filter(m => S.excl.includes(m.row)).map(m => ({ row: m.row, label: m.label })) },
-    criteria: Rk.per.map(c => ({ name: c.name, dir: c.dir, best: c.best, worst: c.worst, constant: !!c.constant })), m: Rk.m,
+    criteria: Rk.per.map(c => ({ name: c.name, dir: c.dir, weight: c.w, best: c.best, worst: c.worst, constant: !!c.constant })), m: Rk.m,
     incomplete: Rk.incomplete.map(i => D.models[i].label), sameRanks: Rk.sameRanks,
     ranks: Rk.rows.map(r => ({ ordinal: r.ordinal, label: r.label, row: r.row, values: r.values, R: r.R, sum: r.sum, overall: r.overall })) }, C.TOOL, [['table', S.imp]], m => status(m, 'err')));
   $('x-csv').addEventListener('click', () => downloadCSV(fname('nispi-siralama', 'relative-ranking') + '.csv', rankRows(), lang));

@@ -60,6 +60,17 @@ const cmp = (res, ref, tag) => {
   const ex = C.rank(data, new Set([data.models.findIndex(m => m.name === 'M13')]));
   ok(ex.m === 12, 'excluding a model recomputes with m = 12');
   cmp(ex, R.excl, 'excl');
+  // 1.2.0 (21 Nov 2026): criterion weights, Total = Σ w × R (numpy reference 'weighted')
+  const W = R.weighted.weights, wd = { ...data, criteria: data.criteria.map(k => ({ ...k, w: W[k.name] })) };
+  const rw = C.rank(wd);
+  ok(rw.problems.length === 0 && rw.weighted && rw.per.every(c => c.w === W[c.name]), 'weights taken per criterion and reported');
+  cmp(rw, R.weighted, 'weighted');
+  ok(rw.rows.map(r => r.row).join() !== res.rows.map(r => r.row).join(), 'these weights change the order of the models');
+  const twice = C.rank({ ...data, criteria: data.criteria.map(k => ({ ...k, w: 2 * W[k.name] })) });
+  ok(twice.rows.every((r, i) => Math.abs(r.overall - rw.rows[i].overall) < 1e-12 && r.row === rw.rows[i].row), 'only the ratios of the weights matter');
+  const ones = C.rank({ ...data, criteria: data.criteria.map(k => ({ ...k, w: 1 })) });
+  ok(!ones.weighted && ones.rows.every((r, i) => r.overall === res.rows[i].overall), 'all weights 1 = the equal-weight ranking of the paper');
+  for (const bad of [0, -1, NaN, null]) if (bad !== null) eq(C.rank({ ...data, criteria: data.criteria.map((k, j) => ({ ...k, w: j === 0 ? bad : 1 })) }).problems[0].code, 'bad.weight', `weight ${bad} refused`);
   const noMae = C.readModels(raw, { headerRow: hr, modelCol: 0, criteria: crit.filter(k => headers[k.col] !== 'MAE'), decimal: '.' });
   const r3 = C.rank(noMae); ok(r3.m === 14 && r3.incomplete.length === 0, 'dropping the criterion brings the model back');
   cmp(r3, R.noMAE, 'noMAE');
