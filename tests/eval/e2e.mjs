@@ -147,6 +147,25 @@ ok(s[0][2] === '-0.25' && (await page.locator('.note', { hasText: 'weighted by t
 await page.click('#tab-infer');
 ok((await page.locator('#panel .note.warn').count()) === 1, 'inference tab explains why nothing is computed');
 
+// 4c. uncertainty of the ranking (1.2.0-beta.3): two models, bootstrap on; table as calc.js, Excel sheet
+{ const T3 = 'obs\tm1\tm2\n10\t11\t13\n14\t13\t15\n20\t21\t18\n25\t24\t27\n31\t30\t29\n35\t36\t38\n40\t41\t37\n46\t44\t47\n';
+  await pasteRun(T3);
+  await page.click('#steps [data-go="2"]'); await page.check('[data-mc="2"]');
+  await page.check('#boot'); await page.fill('#seed', '7'); await page.locator('#seed').dispatchEvent('change'); await page.selectOption('#bootB', '1000');
+  await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-infer'); await page.waitForSelector('#rbtab');
+  const L = T3.trim().split('\n').slice(1).map(l => l.split('\t').map(Number));
+  const W = E.bootstrapRanks(L.map(r => r[0]), [L.map(r => r[1]), L.map(r => r[2])], { B: 1000, seed: 7, level: 0.95 });
+  const fx = x => String(+x.toFixed(4));
+  const cells = await page.evaluate(() => [...document.querySelectorAll('#rbtab tbody tr')].map(tr => ({ m: +tr.dataset.m, v: [...tr.querySelectorAll('td')].map(td => td.textContent.trim()) })));
+  ok(cells.length === 2 && cells.every(({ m, v }) => v[0] === fx(W.models[m].overall) && v[1] === String(W.models[m].ordinal) && v[2] === fx(W.models[m].lo) && v[3].replace(' *', '') === fx(W.models[m].hi)
+    && v[5] === `${String(+(100 * W.models[m].pBest).toFixed(1))} %`), 'rank uncertainty table as calc.js: ' + JSON.stringify(cells));
+  await page.click('#tab-export');
+  const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
+  const wbx = XLSX.read(await readFile(await dx.path()));
+  const rs = XLSX.utils.sheet_to_json(wbx.Sheets['Rank uncertainty'], { header: 1 });
+  ok(rs.length === 3 && Math.abs(rs[1][4] - W.models[0].lo) < 1e-12 && Math.abs(rs[2][7] - W.models[1].pBest) < 1e-12, 'Excel: rank uncertainty sheet at full precision');
+}
+
 // 5. phone + dark
 const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
 phone.on('pageerror', e => errors.push(e.message));

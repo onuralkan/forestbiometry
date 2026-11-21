@@ -41,6 +41,7 @@ assets/lab/core/table.js     CSV/TSV/paste parser, delimiter detection, encoding
 assets/lab/core/store.js     IndexedDB key–value store (session + data transfer)
 assets/lab/core/export.js    CSV (`,` and `.`, language-independent), XLSX writing, JSON download, SheetJS lazy loading
 assets/lab/core/i18n.js      Language, single shared number formatter (`fmtNum`, language-independent), HTML escaping
+assets/lab/core/relrank.js   Relative rank (Poudel and Cao 2013, Eq. 10) and competition ranking; used by Relative Ranking and Model Evaluation
 assets/lab/core/unitnav.js   Plot navigator (list, search, sorting, problem filter, previous/next, ← →); shared by the Diameter Distribution and Stand tools
 assets/lab/core/chart.js     SVG bar, scatter, continuous-axis (histogram + curve/step) and radar charts (no library), SVG download with theme colours
 assets/lab/core/importer.js  Single-table import panel (file/paste/delimiter/encoding/sheet/preview); from Module 3 on. The `rawRows` option leaves the choice of header row to the tool (Module 7)

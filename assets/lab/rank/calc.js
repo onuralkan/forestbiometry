@@ -2,6 +2,8 @@
 // Poudel & Cao (2013), Eq. 10: R_i = 1 + (m − 1)(S_i − S_best)/(S_worst − S_best); best = 1, worst = m.
 import { cellText } from '../core/table.js';
 import { readNum } from '../eval/calc.js';
+import { relativeRanks, ordinal } from '../core/relrank.js';
+export { relativeRanks, ordinal };
 
 export const TOOL = { id: 'nispi-siralama', version: '1.1.0' };
 export const DIRS = ['max', 'min', 'abs'];       // larger is better | smaller is better | closest to zero is better (|value|)
@@ -56,20 +58,7 @@ export function readModels(raw, spec) {
 }
 
 /* ---------------- relative ranks ---------------- */
-/** S: values; dir: 'max' | 'min' | 'abs'. Returns { R, best, worst, constant }. m = S.length. */
-export function relativeRanks(S, dir) {
-  const v = dir === 'abs' ? S.map(Math.abs) : S, m = v.length;
-  let lo = Infinity, hi = -Infinity; for (const x of v) { if (x < lo) lo = x; if (x > hi) hi = x; }
-  const best = dir === 'max' ? hi : lo, worst = dir === 'max' ? lo : hi;
-  if (hi === lo) return { R: v.map(() => 1), best, worst, constant: true };   // every model equal on this criterion
-  return { R: v.map(x => 1 + (m - 1) * (x - best) / (worst - best)), best, worst, constant: false };
-}
-/** Competition ranking (1, 2, 2, 4) of ascending values; ties within 1e-12 relative. */
-export function ordinal(v) {
-  const idx = v.map((x, i) => i).sort((a, b) => v[a] - v[b]), out = new Array(v.length);
-  idx.forEach((i, k) => { out[i] = k > 0 && Math.abs(v[i] - v[idx[k - 1]]) <= 1e-12 * Math.max(1, Math.abs(v[i])) ? out[idx[k - 1]] : k + 1; });
-  return out;
-}
+// relativeRanks and ordinal live in core/relrank.js (21 Nov 2026: also used by Model Evaluation's rank bootstrap)
 /**
  * data: result of readModels. excluded: Set of model indices left out by the user.
  * Models with a missing or unreadable value in any criterion cannot be ranked and are listed apart.

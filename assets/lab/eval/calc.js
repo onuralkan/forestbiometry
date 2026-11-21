@@ -4,8 +4,9 @@ import { parseNumber } from '../core/num.js';
 import { cellText } from '../core/table.js';
 import { classIndex } from '../stand/calc.js';
 import { tQuantile, tCdf, ncF1Quantile, normCdf, normQuantile, rng } from '../core/stats.js';
+import { relativeRanks, ordinal } from '../core/relrank.js';
 
-export const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.2' };
+export const TOOL = { id: 'model-degerlendirme', version: '1.2.0-beta.3' };
 export const ROLES = ['unknown', 'training', 'test', 'cv'];       // user's statement about where predictions come from
 export const NORMS = ['mean', 'range', 'sd'];                    // denominators for relative measures
 export const LEVELS = [0.9, 0.95, 0.99];                          // confidence levels of the interval for the bias
@@ -166,6 +167,50 @@ export function bootstrapCI(obs, pred, { B = 2000, seed = 1, level = 0.95 } = {}
   return out;
 }
 
+/* ---------------- uncertainty of the relative ranks (21 Nov 2026, 1.2.0-beta.3) ---------------- */
+/** Criteria of the bootstrap ranking and their direction (Relative Ranking, METHODS §9): |bias|, MAE, RMSE smaller, R² larger. */
+export const RANK_CRIT = [['bias', 'abs'], ['mae', 'min'], ['rmse', 'min'], ['r2', 'max']];
+/** Overall relative rank (Poudel and Cao 2013, Eq. 10, per criterion; sum over criteria rescaled to 1…m) and rank numbers. */
+function rankModels(obs, preds, idx) {
+  const q = preds.map(p => quick(obs, p, idx));
+  if (q.some(x => x.some(v => !Number.isFinite(v)))) return null;
+  const per = RANK_CRIT.map(([, dir], k) => relativeRanks(q.map(x => x[k]), dir).R);
+  const sums = q.map((_, i) => per.reduce((s, R) => s + R[i], 0));
+  const overall = relativeRanks(sums, 'min').R;
+  return { overall, ord: ordinal(overall) };
+}
+/**
+ * How stable is the ranking of the models? The B bootstrap samples of bootstrapCI (same seed → the same samples: n
+ * row indices drawn with replacement, the same rows for every model, i.e. paired; DiCiccio and Efron 1996 §6) are
+ * ranked one by one with the relative rank of Relative Ranking (Poudel and Cao 2013, Eq. 10) on |bias|, MAE, RMSE and
+ * R², equal weights. Per model: the overall relative rank on the full data, its percentile interval over the
+ * replications (Ĝ⁻¹ as for the bootstrap intervals), the mean rank number and the share of replications in which the
+ * model has rank number 1 (ties count for each tied model). A replication in which a criterion is undefined (R² with
+ * constant observed values) is left out and counted. obs: observed values of the common rows; preds: one array per model.
+ */
+export function bootstrapRanks(obs, preds, { B = 2000, seed = 1, level = 0.95 } = {}) {
+  const n = obs.length, m = preds.length, out = { n, m, B, seed, level, Bok: 0, skipped: 0, models: [], reason: null };
+  if (m < 2) { out.reason = 'models'; return out; }
+  if (n < 2) { out.reason = 'n'; return out; }
+  const est = rankModels(obs, preds, Array.from({ length: n }, (_, i) => i));
+  if (!est) { out.reason = 'est'; return out; }
+  const reps = preds.map(() => []), best = preds.map(() => 0), ordSum = preds.map(() => 0), r = rng(seed), idx = new Array(n);
+  for (let b = 0; b < B; b++) {
+    for (let j = 0; j < n; j++) idx[j] = Math.floor(r() * n);
+    const res = rankModels(obs, preds, idx);
+    if (!res) { out.skipped++; continue; }
+    out.Bok++;
+    for (let i = 0; i < m; i++) { reps[i].push(res.overall[i]); ordSum[i] += res.ord[i]; if (res.ord[i] === 1) best[i]++; }
+  }
+  if (out.Bok < 2) { out.reason = 'reps'; return out; }
+  const lo = (1 - level) / 2, hi = (1 + level) / 2;
+  out.models = preds.map((_, i) => {
+    const sorted = reps[i].slice().sort((x, y) => x - y), pl = invG(sorted, lo), ph = invG(sorted, hi);
+    return { overall: est.overall[i], ordinal: est.ord[i], lo: pl.value, hi: ph.value, edge: pl.edge || ph.edge, meanOrdinal: ordSum[i] / out.Bok, pBest: best[i] / out.Bok };
+  });
+  return out;
+}
+
 /* ---------------- rows, models, row sets ---------------- */
 /**
  * table: raw table (core/table.js). spec = {
@@ -231,7 +276,13 @@ export function evaluate(table, spec) {
     overlap = models.map(a => models.map(b => { let c = 0; const sb = new Set(b.idx); for (const i of a.idx) if (sb.has(i)) c++; return c; }));
   }
   const sameSample = models.every(m => m.acc.used === (models[0] ? models[0].acc.used : 0)) && (!overlap || overlap.every((r, i) => r.every(c => c === models[i].acc.used)));
-  return { N, nCommon, rowSet: spec.rowSet, weighted: !!wt, models, overlap, sameSample, rowNumbers: table.rowNumbers };
+  // uncertainty of the ranking: with the bootstrap on, unweighted, two or more models; always on the rows common to all models
+  let rankBoot = null;
+  if (spec.infer && spec.infer.boot && !wt && models.length > 1) {
+    const ci = []; for (let i = 0; i < N; i++) if (common[i]) ci.push(i);
+    rankBoot = bootstrapRanks(ci.map(i => obs[i].value), preds.map(p => ci.map(i => p[i].value)), { ...spec.infer.boot, level: spec.infer.level || 0.95 });
+  }
+  return { N, nCommon, rowSet: spec.rowSet, weighted: !!wt, models, overlap, sameSample, rankBoot, rowNumbers: table.rowNumbers };
 }
 function natural(a, b) {
   const na = /^-?\d+(\.\d+)?$/.test(a), nb = /^-?\d+(\.\d+)?$/.test(b);

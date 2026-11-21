@@ -1,5 +1,6 @@
 // Tests for Model Evaluation (Module 3). Run: node tests/eval/test_eval.mjs
 // References: hand values from the module prompt, and tests/ref/eval.json (scikit-learn, independent code).
+import * as RK from '../../assets/lab/rank/calc.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -197,6 +198,33 @@ const rb = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval_boot.json'), 
   const rr = E.evaluate(tb, { ...spec('common'), infer: { level: 0.95, boot: { B: 2000, seed: 1 } } });
   near(rr.models[1].infer.boot.stats.rmse.bca.hi, rb.h_m2.rmse.bca[1], 'evaluate → bootstrap BCa upper RMSE = R', 1e-12);
   ok(!E.evaluate(tb, { ...spec('common'), weight: col('dbh'), infer: { level: 0.95, boot: { B: 200, seed: 1 } } }).models[0].infer.boot, 'no bootstrap under weights');
+}
+
+/* 1.2.0-beta.3: uncertainty of the relative ranks (reference: tests/ref/make_eval_rankboot_reference.py, numpy, same generator) */
+const rk = JSON.parse(readFileSync(path.join(root, 'tests/ref/eval_rankboot.json'), 'utf8'));
+{
+  const same = (got, want, lab) => {
+    eq([got.n, got.m, got.Bok, got.skipped], [want.n, want.m, want.Bok, want.skipped], `${lab}: n, m, valid and skipped samples`);
+    want.models.forEach((w, i) => { const g = got.models[i];
+      near(g.overall, w.overall, `${lab} model ${i + 1}: overall relative rank`, 1e-12); eq(g.ordinal, w.ordinal, `${lab} model ${i + 1}: rank number`);
+      near(g.lo, w.lo, `${lab} model ${i + 1}: percentile lower`, 1e-12); near(g.hi, w.hi, `${lab} model ${i + 1}: percentile upper`, 1e-12);
+      near(g.meanOrdinal, w.meanOrdinal, `${lab} model ${i + 1}: mean rank`, 1e-12); near(g.pBest, w.pBest, `${lab} model ${i + 1}: share ranked first`, 1e-12); });
+  };
+  for (const key of ['simulated', 'tiny']) { const { data, result: w } = rk[key]; same(E.bootstrapRanks(data.y, data.P, { B: w.B, seed: w.seed, level: w.level }), w, 'rank bootstrap ' + key); }
+  // through evaluate: the rows common to both models of the sample file, B = 1000, seed 1
+  const rr = E.evaluate(tb, { ...spec('common'), infer: { level: 0.95, boot: { B: 1000, seed: 1 } } });
+  same(rr.rankBoot, rk.sample, 'evaluate → rank bootstrap (sample file)');
+  ok(!E.evaluate(tb, { ...spec('common'), weight: col('dbh'), infer: { level: 0.95, boot: { B: 200, seed: 1 } } }).rankBoot, 'no rank bootstrap under weights');
+  ok(!E.evaluate(tb, { ...spec('common'), infer: { level: 0.95 } }).rankBoot, 'no rank bootstrap without the bootstrap');
+  eq(E.bootstrapRanks([1, 2, 3], [[1, 2, 3]]).reason, 'models', 'one model: nothing to rank');
+  eq(E.bootstrapRanks([5, 5, 5], [[4, 5, 6], [5, 5, 5]]).reason, 'est', 'constant observed values: R² undefined, no ranking');
+  // the per-sample ranking is that of Relative Ranking: on the full data it equals rank() of the criteria table
+  const { data } = rk.simulated, full = Array.from({ length: data.y.length }, (_, i) => i);
+  const crit = data.P.map(p => { const e = data.y.map((y, i) => y - p[i]), n = e.length, mean = data.y.reduce((a, b) => a + b, 0) / n;
+    const sse = e.reduce((a, x) => a + x * x, 0), sst = data.y.reduce((a, y) => a + (y - mean) ** 2, 0);
+    return [e.reduce((a, b) => a + b, 0) / n, e.reduce((a, x) => a + Math.abs(x), 0) / n, Math.sqrt(sse / n), 1 - sse / sst]; });
+  const rel = RK.rank({ criteria: E.RANK_CRIT.map(([name, dir], j) => ({ col: j, dir, name })), models: crit.map((values, i) => ({ label: 'M' + i, row: i, values })) });
+  ok(full.length > 0 && rel.rows.every(x => Math.abs(x.overall - rk.simulated.result.models[x.index].overall) < 1e-12), 'full-data overall ranks = Relative Ranking rank()');
 }
 
 console.log(`eval: ${pass} passed, ${fail} failed`);

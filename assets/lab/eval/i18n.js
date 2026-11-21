@@ -80,6 +80,11 @@ const en = {
   'bt.r.est': 'the measure is undefined for these data', 'bt.r.reps': 'no valid replications', 'bt.r.jack': 'the measure is undefined with one pair left out; no acceleration',
   'bt.r.z0': 'every replication on one side of the estimate; ẑ₀ infinite', 'bt.r.a': 'acceleration correction undefined (1 − â(ẑ₀ + z) ≤ 0)',
   'bt.note': p => `B = ${p.B}, seed ${p.seed}. The percentile interval runs between the (1 − γ)/2 and (1 + γ)/2 percentiles of the bootstrap estimates: Ĝ⁻¹(α) is the ⌈αB⌉-th smallest. BCa: Ĝ⁻¹(Φ(ẑ₀ + (ẑ₀ + z_α)/(1 − â(ẑ₀ + z_α)))); ẑ₀ = Φ⁻¹(share of replications below the estimate), â from the jackknife. R² is undefined in replications with constant observed values; those are left out for R². The pairs are assumed independent.`,
+  'rb.h': 'How stable is the ranking of the models? (bootstrap)', 'rb.sheet': 'Rank uncertainty',
+  'rb.sub': p => `Each bootstrap sample above (the same rows for every model; the ${p.n} rows common to all ${p.m} models) is ranked with the relative rank of the Relative Ranking tool (Poudel and Cao 2013, Eq. 10) on |bias|, MAE, RMSE and R², equal weights. 1 is best, ${p.m} worst.`,
+  'rb.overall': 'Overall relative rank (all data)', 'rb.ord': 'Rank', 'rb.int': p => `${p.l}% percentile interval`, 'rb.mean': 'Mean rank over the samples', 'rb.best': 'Ranked first', 'rb.best.x': 'Share ranked first',
+  'rb.note': p => `${p.B} valid samples${p.skip ? `; ${p.skip} left out because R² was undefined (constant observed values)` : ''}. "Ranked first" is the share of samples in which the model had rank 1 (tied models each count). A wide interval or a small share means that the order of the models could change with other data from the same population. The intervals describe this sample of rows; they assume independent pairs.`,
+  'rb.r.models': 'fewer than two models', 'rb.r.n': 'fewer than two common rows', 'rb.r.est': 'a criterion is undefined for these data (R² with constant observed values)', 'rb.r.reps': 'fewer than two valid samples',
   'bt.edge': '* An endpoint was taken from the smallest or largest replication; increase B, the interval may be unreliable.', 'bt.edgeshort': 'endpoint at the smallest/largest replication',
   'ex.boot': 'Bootstrap table (CSV)', 'x.pctlo': 'Percentile lower', 'x.pcthi': 'Percentile upper', 'x.bcalo': 'BCa lower', 'x.bcahi': 'BCa upper', 'x.note': 'Note',
 };

@@ -267,7 +267,24 @@ function bootHtml(pc) {
     }
     h += '</tbody></table></div>';
   }
-  return h + `<p class="muted small">${T('bt.note', { B: fmtNum(S.bootB, 0), seed: esc(S.seed) })}${edge ? ' ' + T('bt.edge') : ''}</p>`;
+  return h + `<p class="muted small">${T('bt.note', { B: fmtNum(S.bootB, 0), seed: esc(S.seed) })}${edge ? ' ' + T('bt.edge') : ''}</p>` + rankBootHtml(pc);
+}
+/** Uncertainty of the ranking (1.2.0-beta.3): relative ranks of Relative Ranking in every bootstrap replication. */
+function rankBootHtml(pc) {
+  const rb = R.rankBoot; if (!rb) return '';
+  let h = `<h3>${T('rb.h')}</h3><p class="muted small">${T('rb.sub', { n: fmtNum(rb.n, 0), m: rb.m })}</p>`;
+  if (rb.reason) return h + `<p class="note warn">${T('undef')} (${T('rb.r.' + rb.reason)})</p>`;
+  const order = rb.models.map((x, i) => i).sort((a, b) => rb.models[a].overall - rb.models[b].overall || a - b);
+  h += `<div class="tscroll"><table class="grid" id="rbtab"><thead><tr><th>${T('m.model')}</th><th>${T('rb.overall')}</th><th>${T('rb.ord')}</th><th colspan="2">${T('rb.int', { l: pc })}</th><th>${T('rb.mean')}</th><th>${T('rb.best')}</th></tr></thead><tbody>
+    ${order.map(i => { const x = rb.models[i]; return `<tr data-m="${i}"><th>${esc(R.models[i].name)}</th><td class="num" data-k="overall">${f(x.overall)}</td><td class="num" data-k="ord">${x.ordinal}</td><td class="num" data-k="lo">${f(x.lo)}</td><td class="num" data-k="hi">${f(x.hi)}${x.edge ? ' *' : ''}</td><td class="num" data-k="mean">${f(x.meanOrdinal)}</td><td class="num" data-k="best">${fmtNum(100 * x.pBest, 1)} %</td></tr>`; }).join('')}</tbody></table></div>`;
+  return h + `<p class="muted small">${T('rb.note', { B: fmtNum(rb.Bok, 0), skip: rb.skipped })}</p>`;
+}
+function rankBootRows() {
+  const rb = R.rankBoot; if (!rb) return null;
+  const out = [[T('m.model'), T('rb.overall'), T('rb.ord'), T('x.level'), T('x.pctlo'), T('x.pcthi'), T('rb.mean'), T('rb.best.x'), 'B', T('bt.seed'), T('bt.Bok'), 'n', T('x.note')]];
+  if (rb.reason) { out.push(['', '', '', rb.level, '', '', '', '', rb.B, rb.seed, '', rb.n, `${T('undef')}: ${T('rb.r.' + rb.reason)}`]); return out; }
+  rb.models.forEach((x, i) => out.push([R.models[i].name, x.overall, x.ordinal, rb.level, x.lo, x.hi, x.meanOrdinal, x.pBest, rb.B, rb.seed, rb.Bok, rb.n, x.edge ? T('bt.edgeshort') : '']));
+  return out;
 }
 function tabCharts(p) {
   const m = R.models[S.chartModel], pts = m.obs.map((o, i) => [o, m.pred[i]]), res = m.pred.map((q, i) => [q, m.obs[i] - q]);
@@ -358,7 +375,8 @@ function recordPayload() {
       inference: { level: S.level, alpha: S.alpha, margin: S.mtype ? { type: S.mtype, value: margin() } : null, bootstrap: S.boot ? { B: S.bootB, seed: seed() } : null },
       groups: { plot: col(S.groups.plot), species: col(S.groups.species), fold: col(S.groups.fold), dclass: S.groups.dcol == null ? null : { column: col(S.groups.dcol), breaks: S.groups.breaks, openTop: S.groups.openTop } } },
     rows: { N: R.N, common: R.nCommon, sameSample: R.sameSample, weighted: R.weighted },
-    models: R.models.map(m => ({ name: m.name, column: col(m.col), role: m.role, accounting: m.acc, overall: m.overall, groups: m.groups, inference: m.infer })) };
+    models: R.models.map(m => ({ name: m.name, column: col(m.col), role: m.role, accounting: m.acc, overall: m.overall, groups: m.groups, inference: m.infer })),
+    rankBootstrap: R.rankBoot ? { ...R.rankBoot, criteria: E.RANK_CRIT, models: R.rankBoot.models.map((x, i) => ({ name: R.models[i].name, ...x })) } : null };
 }
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-m">${T('ex.metrics')}</button>
@@ -375,6 +393,7 @@ function tabExport(p) {
     const sheets = [{ name: T('sheet.info'), rows: infoRows(), widths: [30, 100] }, { name: T('sheet.metrics'), rows: metricsRows() }, { name: T('sheet.acc'), rows: accRows() }];
     if (!R.weighted) sheets.push({ name: T('sheet.infer'), rows: inferRows() });
     if (!R.weighted && S.boot) sheets.push({ name: 'Bootstrap', rows: bootRows() });
+    if (R.rankBoot) sheets.push({ name: T('rb.sheet'), rows: rankBootRows() });
     if (groupKeys().length) sheets.push({ name: T('sheet.groups'), rows: groupRows() });
     sheets.push({ name: T('sheet.rows'), rows: residualRows() });
     download(fname('model-degerlendirme', 'model-evaluation') + '.xlsx', xlsxBlob(XLSX, sheets));

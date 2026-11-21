@@ -57,7 +57,7 @@ const ev = await viaTab('/model-degerlendirme.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');
 });
-ok(ev.obj.tool.version === '1.2.0-beta.2' && ev.obj.models.length > 0 && ev.obj.models[0].overall && ev.obj.models[0].inference && ev.obj.models[0].inference.ci && ev.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/eval/ornek/ornek-tahminler.csv')) && await sealOk(ev.obj), 'model evaluation 1.2.0-beta.1: record with measures, bias interval and input fingerprint');
+ok(ev.obj.tool.version === '1.2.0-beta.3' && ev.obj.models.length > 0 && ev.obj.models[0].overall && ev.obj.models[0].inference && ev.obj.models[0].inference.ci && ev.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/eval/ornek/ornek-tahminler.csv')) && await sealOk(ev.obj), 'model evaluation 1.2.0-beta.1: record with measures, bias interval and input fingerprint');
 const rk = await viaTab('/nispi-siralama.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');
