@@ -1494,7 +1494,7 @@
     "volume": null,
     "issue": null,
     "pages": null,
-    "publisher": "Wiley",
+    "publisher": "John Wiley & Sons, Chichester, UK; Hoboken, NJ",
     "doi": null,
     "url": null,
     "version": null,
@@ -1505,9 +1505,10 @@
       "METHODS §17 SV-03 (§6.4.1, §7.4.1, §7.4.3)",
       "METHODS §23 TM-04 (§5.5, §8.6.1, App. A.2)",
       "METHODS §24 SV-04 (§6.2)",
-      "METHODS §25 SV-05 (§7.3, §7.4.1, Table 6.1)"
+      "METHODS §25 SV-05 (§7.3, §7.4.1, Table 6.1)",
+      "METHODS §6 (Lorey’s mean height, §8.4.1, eq. 8.12)"
     ],
-    "note": "conflict: publisher 'Wiley' (§17, §24, §25, SOURCE_LIST) vs 'Wiley-Blackwell' (§23); §14 lists it as [D] textbook-definition exception"
+    "note": "Copyright page (provided by the user, 21 Nov 2026): 'This edition first published 2017', John Wiley & Sons, Ltd; Chichester, UK; Hoboken, NJ; fifth edition; ISBN 9781118902035 (cloth), 9781118902004 (epub); LCCN 2016036142. The platform cites the year 2016 (key kept); the year on the copyright page is 2017: user decision pending. The earlier conflict 'Wiley' vs 'Wiley-Blackwell' is settled by the copyright page (John Wiley & Sons). §14 lists it as [D] textbook-definition exception"
   },
   {
     "key": "knoebel1991",

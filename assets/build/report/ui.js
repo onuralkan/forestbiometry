@@ -5924,7 +5924,7 @@ function bind() {
 
 // ---- assets/lab/stand/calc.js
 __fb_m["stand/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DOM_PER_HA": () => DOM_PER_HA, "LEVELS": () => LEVELS, "SCHEMA": () => SCHEMA, "TOOL": () => TOOL, "betweenPlots": () => betweenPlots, "breaksFromWidth": () => breaksFromWidth, "buildUnits": () => buildUnits, "classIndex": () => classIndex, "classesFromBreaks": () => classesFromBreaks, "computeAll": () => computeAll, "dominant": () => dominant, "dominantWeights": () => dominantWeights, "forestEstimate": () => forestEstimate, "isValidUnit": () => isValidUnit, "periodsOf": () => periodsOf, "statusesOf": () => statusesOf, "tableToDataset": () => tableToDataset, "unitMetrics": () => unitMetrics, "validateDataset": () => validateDataset });
+__fb_x(__fb_e, { "DOM_PER_HA": () => DOM_PER_HA, "LEVELS": () => LEVELS, "SCHEMA": () => SCHEMA, "TOOL": () => TOOL, "betweenPlots": () => betweenPlots, "breaksFromWidth": () => breaksFromWidth, "buildUnits": () => buildUnits, "classIndex": () => classIndex, "classesFromBreaks": () => classesFromBreaks, "computeAll": () => computeAll, "dominant": () => dominant, "dominantWeights": () => dominantWeights, "forestEstimate": () => forestEstimate, "isValidUnit": () => isValidUnit, "loreyHeight": () => loreyHeight, "periodsOf": () => periodsOf, "statusesOf": () => statusesOf, "tableToDataset": () => tableToDataset, "unitMetrics": () => unitMetrics, "validateDataset": () => validateDataset });
 const { tQuantile } = __fb_r("core/stats.js");
 // Plot & Stand Metrics: pure logic (no DOM). Definitions: docs/METHODS.md §6.
 // Scope: fixed-area plots, every tree on the plot has the same inclusion probability.
@@ -6058,6 +6058,7 @@ function unitMetrics(u, classes) {
   const meas = [], est = [];
   for (const t of u.trees) if (t.height != null) (t.height_source === 'estimated' ? est : meas).push(t.height);
   out.h_measured = stats(meas); out.h_estimated = stats(est); out.h_missing = n - meas.length - est.length;
+  out.hL = loreyHeight(u.trees);
   // age: mean of the trees whose age was recorded (all of them, or as many as were measured)
   const ages = u.trees.map(t => t.age).filter(a => Number.isFinite(a));
   out.age = stats(ages);
@@ -6069,6 +6070,17 @@ function unitMetrics(u, classes) {
 }
 
 const measuredH = t => t.height != null && Number.isFinite(t.height) && t.height_source !== 'estimated';
+/**
+ * Lorey's mean height (Kershaw et al. 2016, §8.4.1, eq. 8.12: h_L = Σ nᵢgᵢhᵢ / Σ nᵢgᵢ, the mean height weighted by basal
+ * area), here with every tree its own class (nᵢ = 1): h_L = Σ g h / Σ g over the trees with a MEASURED height (estimated
+ * heights are never mixed in). On a fixed-area plot the expansion factor is the same for every tree and cancels.
+ * Returns { value (m) | null, n (trees used), coverG (their share of the plot's basal area) }.
+ */
+function loreyHeight(trees) {
+  let gh = 0, g = 0, gAll = 0, n = 0;
+  for (const t of trees) { const gi = BA(t.dbh); gAll += gi; if (measuredH(t)) { gh += gi * t.height; g += gi; n++; } }
+  return { value: g > 0 ? gh / g : null, n, coverG: gAll > 0 ? g / gAll : null };
+}
 /**
  * Weights of the k largest trees by `rank` ('dbh' or 'height'). k = 100 × A / 10000 is often fractional
  * (A = 1250 m² → 12.5): the first ⌊k⌋ trees count fully and the next one with weight k − ⌊k⌋, so the selection is
@@ -6180,7 +6192,8 @@ function betweenPlots(metrics) {
   const valid = metrics.filter(m => m.state === 'measured' || m.state === 'empty'), nonEmpty = valid.filter(m => m.n > 0);
   return { m: valid.length, mEmpty: valid.length - nonEmpty.length,
     Nha: describe(valid.map(m => m.Nha)), Gha: describe(valid.map(m => m.Gha)),
-    d_mean: describe(nonEmpty.map(m => m.d_mean)), dq: describe(nonEmpty.map(m => m.dq)), area_m2: describe(valid.map(m => m.area_m2)) };
+    d_mean: describe(nonEmpty.map(m => m.d_mean)), dq: describe(nonEmpty.map(m => m.dq)), area_m2: describe(valid.map(m => m.area_m2)),
+    hL: describe(nonEmpty.filter(m => m.hL && m.hL.value != null).map(m => m.hL.value)) };
 }
 
 /* ---------------- design-based estimate for the whole forest (per period) ---------------- */

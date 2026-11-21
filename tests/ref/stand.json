@@ -66,6 +66,9 @@
       },
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": 0.0,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -117,6 +120,9 @@
       },
       "h_measured_n": 8,
       "h_measured_mean": 13.725000000000001,
+      "hL": 16.054390498284196,
+      "hL_n": 8,
+      "hL_coverG": 0.8196409600562988,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -163,6 +169,9 @@
       },
       "h_measured_n": 4,
       "h_measured_mean": 21.575,
+      "hL": 22.680876499721148,
+      "hL_n": 4,
+      "hL_coverG": 0.5535261659047295,
       "h_estimated_n": 4,
       "h_estimated_mean": 16.724999999999998,
       "stratum": "B"
@@ -198,6 +207,9 @@
       "species": {},
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": null,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "B"
@@ -239,6 +251,9 @@
       },
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": 0.0,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "B"
@@ -285,6 +300,9 @@
       },
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": 0.0,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -437,6 +455,9 @@
       },
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": 0.0,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -472,6 +493,9 @@
       "species": {},
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": null,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -507,6 +531,9 @@
       "species": {},
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": null,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "B"
@@ -542,6 +569,9 @@
       "species": {},
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": null,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "B"
@@ -577,6 +607,9 @@
       "species": {},
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": null,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "B"
@@ -612,6 +645,9 @@
       "species": {},
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": null,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -766,6 +802,9 @@
       },
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": 0.0,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -817,6 +856,9 @@
       },
       "h_measured_n": 7,
       "h_measured_mean": 14.528571428571428,
+      "hL": 16.308189384667376,
+      "hL_n": 7,
+      "hL_coverG": 0.8149511817510696,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -863,6 +905,9 @@
       },
       "h_measured_n": 4,
       "h_measured_mean": 21.575,
+      "hL": 22.680876499721148,
+      "hL_n": 4,
+      "hL_coverG": 0.5535261659047295,
       "h_estimated_n": 4,
       "h_estimated_mean": 16.724999999999998,
       "stratum": "B"
@@ -904,6 +949,9 @@
       },
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": 0.0,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "B"
@@ -950,6 +998,9 @@
       },
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": 0.0,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"
@@ -1102,6 +1153,9 @@
       },
       "h_measured_n": 0,
       "h_measured_mean": null,
+      "hL": null,
+      "hL_n": 0,
+      "hL_coverG": 0.0,
       "h_estimated_n": 0,
       "h_estimated_mean": null,
       "stratum": "A"

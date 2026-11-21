@@ -2,7 +2,7 @@
 Reads tests/stand/fixture.json and writes tests/ref/stand.json using numpy only.
 Formulas from the textbook definitions (docs/METHODS.md §6), written separately from assets/lab/stand/calc.js.
 Run: python3 tests/ref/make_stand_reference.py
-21 Nov 2026 (1.3.0): confidence limits ('ci', 95 % and 90 %) from Cochran (1977) eqs. 2.23-2.24 and 5.14-5.16 (Satterthwaite
+21 Nov 2026 (1.3.0): Lorey's mean height per plot (Kershaw et al. 2016, eq. 8.12); confidence limits ('ci', 95 % and 90 %) from Cochran (1977) eqs. 2.23-2.24 and 5.14-5.16 (Satterthwaite
 effective df), t quantiles from scipy.stats.t (scipy needed only for this part).
 """
 import json, math, os
@@ -39,6 +39,11 @@ def plot_unit(pl, trees):
     hm = np.array([t['height'] for t in trees if t['height'] is not None and t.get('height_source') != 'estimated'], float)
     he = np.array([t['height'] for t in trees if t['height'] is not None and t.get('height_source') == 'estimated'], float)
     out['h_measured_n'] = int(hm.size); out['h_measured_mean'] = float(hm.mean()) if hm.size else None
+    # Lorey's mean height (Kershaw et al. 2016, sec. 8.4.1, eq. 8.12), each tree its own class: sum(g h) / sum(g), measured heights only
+    mt = [t for t in trees if t['height'] is not None and t.get('height_source') != 'estimated']
+    gm = np.array([np.pi * t['dbh'] ** 2 / 4e4 for t in mt], float); hh = np.array([t['height'] for t in mt], float)
+    out['hL'] = float((gm * hh).sum() / gm.sum()) if gm.size else None
+    out['hL_n'] = int(gm.size); out['hL_coverG'] = float(gm.sum() / g.sum()) if n and g.sum() > 0 else None
     out['h_estimated_n'] = int(he.size); out['h_estimated_mean'] = float(he.mean()) if he.size else None
     return out
 

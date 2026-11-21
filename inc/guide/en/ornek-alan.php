@@ -14,6 +14,7 @@
 <li><b>Records to count</b>: if the data have a status, which statuses are counted (default: all).</li>
 <li><b>Plot–period combinations without records</b>: if some plots have no tree records in some periods, you decide: "Measured, no trees (N = 0, G = 0)" or "Not measured". Without a decision these combinations stay out of the calculation and no forest estimate is made for that period.</li>
 <li><b>Dominant diameter and top height</b>: D0 from the 100 thickest, H0 from the 100 tallest trees per hectare; there is no choice. H0 uses measured heights only.</li>
+<li><b>Lorey's mean height h_L</b>: the mean height weighted by basal area, Σ g·h / Σ g (Kershaw et al. 2016, eq. 8.12), from the trees with a measured height. The plot detail shows how many trees were used and what share of the plot's basal area they carry; if not every tree has a measured height and the measured ones are not typical of the plot, h_L is biased.</li>
 <li><b>Diameter classes</b>: equal width (default 4 cm) or a list of limits; classes are half-open [lower, upper); optional open class above the last limit.</li>
 <li><b>Estimate for the forest</b>: without a design no forest estimate is made. "Simple random" (approximately for systematic grids) with an optional forest area (for totals); "Stratified random" with stratum areas (when the data have strata).</li>
 </ul>

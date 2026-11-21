@@ -1641,7 +1641,7 @@ function createUnitNav(o) {
 
 // ---- assets/lab/stand/calc.js
 __fb_m["stand/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DOM_PER_HA": () => DOM_PER_HA, "LEVELS": () => LEVELS, "SCHEMA": () => SCHEMA, "TOOL": () => TOOL, "betweenPlots": () => betweenPlots, "breaksFromWidth": () => breaksFromWidth, "buildUnits": () => buildUnits, "classIndex": () => classIndex, "classesFromBreaks": () => classesFromBreaks, "computeAll": () => computeAll, "dominant": () => dominant, "dominantWeights": () => dominantWeights, "forestEstimate": () => forestEstimate, "isValidUnit": () => isValidUnit, "periodsOf": () => periodsOf, "statusesOf": () => statusesOf, "tableToDataset": () => tableToDataset, "unitMetrics": () => unitMetrics, "validateDataset": () => validateDataset });
+__fb_x(__fb_e, { "DOM_PER_HA": () => DOM_PER_HA, "LEVELS": () => LEVELS, "SCHEMA": () => SCHEMA, "TOOL": () => TOOL, "betweenPlots": () => betweenPlots, "breaksFromWidth": () => breaksFromWidth, "buildUnits": () => buildUnits, "classIndex": () => classIndex, "classesFromBreaks": () => classesFromBreaks, "computeAll": () => computeAll, "dominant": () => dominant, "dominantWeights": () => dominantWeights, "forestEstimate": () => forestEstimate, "isValidUnit": () => isValidUnit, "loreyHeight": () => loreyHeight, "periodsOf": () => periodsOf, "statusesOf": () => statusesOf, "tableToDataset": () => tableToDataset, "unitMetrics": () => unitMetrics, "validateDataset": () => validateDataset });
 const { tQuantile } = __fb_r("core/stats.js");
 // Plot & Stand Metrics: pure logic (no DOM). Definitions: docs/METHODS.md §6.
 // Scope: fixed-area plots, every tree on the plot has the same inclusion probability.
@@ -1775,6 +1775,7 @@ function unitMetrics(u, classes) {
   const meas = [], est = [];
   for (const t of u.trees) if (t.height != null) (t.height_source === 'estimated' ? est : meas).push(t.height);
   out.h_measured = stats(meas); out.h_estimated = stats(est); out.h_missing = n - meas.length - est.length;
+  out.hL = loreyHeight(u.trees);
   // age: mean of the trees whose age was recorded (all of them, or as many as were measured)
   const ages = u.trees.map(t => t.age).filter(a => Number.isFinite(a));
   out.age = stats(ages);
@@ -1786,6 +1787,17 @@ function unitMetrics(u, classes) {
 }
 
 const measuredH = t => t.height != null && Number.isFinite(t.height) && t.height_source !== 'estimated';
+/**
+ * Lorey's mean height (Kershaw et al. 2016, §8.4.1, eq. 8.12: h_L = Σ nᵢgᵢhᵢ / Σ nᵢgᵢ, the mean height weighted by basal
+ * area), here with every tree its own class (nᵢ = 1): h_L = Σ g h / Σ g over the trees with a MEASURED height (estimated
+ * heights are never mixed in). On a fixed-area plot the expansion factor is the same for every tree and cancels.
+ * Returns { value (m) | null, n (trees used), coverG (their share of the plot's basal area) }.
+ */
+function loreyHeight(trees) {
+  let gh = 0, g = 0, gAll = 0, n = 0;
+  for (const t of trees) { const gi = BA(t.dbh); gAll += gi; if (measuredH(t)) { gh += gi * t.height; g += gi; n++; } }
+  return { value: g > 0 ? gh / g : null, n, coverG: gAll > 0 ? g / gAll : null };
+}
 /**
  * Weights of the k largest trees by `rank` ('dbh' or 'height'). k = 100 × A / 10000 is often fractional
  * (A = 1250 m² → 12.5): the first ⌊k⌋ trees count fully and the next one with weight k − ⌊k⌋, so the selection is
@@ -1897,7 +1909,8 @@ function betweenPlots(metrics) {
   const valid = metrics.filter(m => m.state === 'measured' || m.state === 'empty'), nonEmpty = valid.filter(m => m.n > 0);
   return { m: valid.length, mEmpty: valid.length - nonEmpty.length,
     Nha: describe(valid.map(m => m.Nha)), Gha: describe(valid.map(m => m.Gha)),
-    d_mean: describe(nonEmpty.map(m => m.d_mean)), dq: describe(nonEmpty.map(m => m.dq)), area_m2: describe(valid.map(m => m.area_m2)) };
+    d_mean: describe(nonEmpty.map(m => m.d_mean)), dq: describe(nonEmpty.map(m => m.dq)), area_m2: describe(valid.map(m => m.area_m2)),
+    hL: describe(nonEmpty.filter(m => m.hL && m.hL.value != null).map(m => m.hL.value)) };
 }
 
 /* ---------------- design-based estimate for the whole forest (per period) ---------------- */
@@ -2061,7 +2074,7 @@ const en = {
   'fe.p.est.few': p => `A standard error needs at least 2 plots (${p.m} in this period).`,
   'fe.p.est.nostratum': 'A plot has no stratum.', 'fe.p.est.nostrata': 'The data have no strata.',
   'fe.p.est.noarea': p => `No area entered for stratum "${p.stratum}".`, 'fe.p.est.stratfew': p => `Stratum "${p.stratum}" has ${p.m} plot(s); at least 2 are needed.`,
-  'v.Nha': 'N (trees/ha)', 'v.Gha': 'G (m²/ha)', 'v.dmean': 'd̄ (cm)', 'v.dq': 'Dq (cm)', 'v.area': 'Area (m²)',
+  'v.hL': 'Lorey h_L (m)', 'v.Nha': 'N (trees/ha)', 'v.Gha': 'G (m²/ha)', 'v.dmean': 'd̄ (cm)', 'v.dq': 'Dq (cm)', 'v.area': 'Area (m²)',
   'ex.h': 'Download results', 'ex.xlsx': 'Full report (Excel)', 'ex.units': 'Plot table (CSV)', 'ex.cls': 'Diameter classes (CSV)', 'ex.sp': 'Species composition (CSV)',
   'ex.note': 'CSV: "," column separator and decimal point in both languages. Values are written at full precision.',
   'sheet.info': 'Info', 'sheet.units': 'Plots', 'sheet.cls': 'Diameter classes', 'sheet.sp': 'Species', 'sheet.between': 'Between plots', 'sheet.forest': 'Forest estimate',
@@ -2088,7 +2101,9 @@ const en = {
   'dom.def': 'D0 (dominant diameter): mean diameter of the 100 thickest trees per hectare. H0 (top height): mean height of the 100 tallest trees per hectare.',
   'dom.hnote': 'H0 uses measured heights only: to pick the tallest trees, every tree on the plot needs a measured height; otherwise H0 is not given for that plot.',
   'dom.agenote': 'Age: mean of the trees whose age was recorded on the plot (all of them, or as many as were measured).',
-  'c.D0': 'D0 (cm)', 'c.H0': 'H0 (m)',
+  'c.D0': 'D0 (cm)', 'c.H0': 'H0 (m)', 'c.hL': 'Lorey h_L (m)', 'c.hL.sub': p => `Lorey's mean height h_L (m) · ${p.n} trees, ${p.p}% of G`,
+  'hL.partial': p => `Lorey's mean height uses the trees with a measured height, which carry ${p.p}% of the plot's basal area; if they are not representative of the plot, h_L is biased.`,
+  'xd.hL': 'Lorey\'s mean height: mean measured height weighted by basal area, Σ g·h / Σ g (Kershaw et al. 2016, eq. 8.12)',
   'c.age': 'Mean age (yr)', 'c.agen': 'Aged trees n',
   'det.dom': 'Dominant trees and age', 'det.domk': p => `k = ${p.k} trees (${p.n} trees per hectare, area ${p.a} m²)`,
   'why.h.rank': 'some trees have no measured height, so the tallest trees cannot be found', 'why.empty': 'no trees',
@@ -2364,7 +2379,7 @@ function renderStep3() {
 const UNIT_COLS = [['plot', m => esc(m.plot_id), 'code'], ['per', m => esc(perLabel(m.period))], ['state', m => T('s.' + m.state)], ['c.area', m => f(m.area_m2, 2), 'num'],
   ['c.n', m => fmtNum(m.n, 0), 'num'], ['c.Nha', m => f(m.Nha, 1), 'num'], ['c.Gha', m => f(m.Gha, 3), 'num'], ['c.dmean', m => f(m.d_mean, 2), 'num'], ['c.dq', m => f(m.dq, 2), 'num'],
   ['c.dmin', m => f(m.d_min, 1), 'num'], ['c.dmax', m => f(m.d_max, 1), 'num'], ['c.dsd', m => f(m.d_sd, 2), 'num'], ['c.hm', m => fmtNum(m.h_measured.n, 0), 'num'],
-  ['c.hmean', m => f(m.h_measured.mean, 2), 'num'], ['c.he', m => fmtNum(m.h_estimated.n, 0), 'num']];
+  ['c.hmean', m => f(m.h_measured.mean, 2), 'num'], ['c.hL', m => f(m.hL.value, 2), 'num'], ['c.he', m => fmtNum(m.h_estimated.n, 0), 'num']];
 /** D0 (100 thickest trees per hectare), H0 (100 tallest) and age columns. */
 function domCols() {
   return [['c.D0', m => f(m.dom.D0, 2), 'num'], ['c.H0', m => f(m.dom.H0, 2), 'num'], ['c.age', m => f(m.age.mean, 1), 'num'], ['c.agen', m => fmtNum(m.age.n, 0), 'num']];
@@ -2398,7 +2413,8 @@ function tabDetail(p) {
       if (r.why && r.why !== 'empty') notes.push(`${T('c.' + (b === 'd' ? 'D0' : 'H0'))}: ${T('why.' + r.why)}`);
       if (r.short && !notes.includes('short')) notes.push('short');
     }
-    tl += tile(f(m.h_measured.mean, 2), T('c.hmean')) + tile(m.age.n ? f(m.age.mean, 1) : '–', `${T('c.age')} · n = ${fmtNum(m.age.n, 0)}`);
+    tl += tile(f(m.h_measured.mean, 2), T('c.hmean')) + tile(f(m.hL.value, 2), m.hL.n ? T('c.hL.sub', { n: fmtNum(m.hL.n, 0), p: fmtNum(100 * m.hL.coverG, 0) }) : T('c.hL')) + tile(m.age.n ? f(m.age.mean, 1) : '–', `${T('c.age')} · n = ${fmtNum(m.age.n, 0)}`);
+    if (m.hL.n && m.hL.coverG < 1) notes.push(T('hL.partial', { p: fmtNum(100 * m.hL.coverG, 0) }));
     h += `<h3>${T('det.dom')}</h3><p class="muted small">${T('det.domk', { k: f(m.dom.k, 4), n: C.DOM_PER_HA, a: f(m.area_m2, 2) })}</p><div class="tiles" id="domtiles">${tl}</div>
       ${notes.map(x => `<p class="small note warn">${x === 'short' ? T('dom.short', { k: f(m.dom.k, 4), n: m.n }) : esc(x)}</p>`).join('')}`;
   }
@@ -2486,7 +2502,7 @@ function tabBetween(p) {
     h += `<h3>${T('per')}: ${esc(perLabel(b.period))} · ${T('bt.m', { m: bt.m, e: bt.mEmpty })}</h3>`;
     if (b.unknown || b.unmeasured) h += `<p class="small note warn">${T('bt.excl', { u: b.unknown, x: b.unmeasured })}</p>`;
     h += `<div class="tscroll"><table class="grid"><thead><tr><th>${T('bt.var')}</th><th>${T('bt.k')}</th><th>${T('bt.mean')}</th><th>${T('bt.sd')}</th><th>${T('bt.min')}</th><th>${T('bt.med')}</th><th>${T('bt.max')}</th></tr></thead><tbody>
-      ${row('Nha', bt.Nha, 1)}${row('Gha', bt.Gha, 3)}${row('dmean', bt.d_mean, 2)}${row('dq', bt.dq, 2)}${row('area', bt.area_m2, 1)}</tbody></table></div>`;
+      ${row('Nha', bt.Nha, 1)}${row('Gha', bt.Gha, 3)}${row('dmean', bt.d_mean, 2)}${row('dq', bt.dq, 2)}${bt.hL && bt.hL.n ? row('hL', bt.hL, 2) : ''}${row('area', bt.area_m2, 1)}</tbody></table></div>`;
   }
   p.innerHTML = h + `<p class="muted small">${T('bt.dnote')}</p>`;
 }
@@ -2515,10 +2531,10 @@ function tabForest(p) {
 const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function unitRows() {
   return [['plot_id', 'period', 'state', 'stratum', 'area_m2', 'expansion_factor', 'n', 'N_ha', 'G_m2', 'G_m2_ha', 'd_mean_cm', 'dq_cm', 'd_min_cm', 'd_max_cm', 'd_sd_cm', 'h_measured_n', 'h_measured_mean_m', 'h_estimated_n', 'h_estimated_mean_m', 'h_missing_n', 'below_classes_n', 'above_classes_n',
-    'dominant_k', 'D0_cm', 'H0_m', 'age_mean', 'age_n'],
+    'dominant_k', 'D0_cm', 'H0_m', 'age_mean', 'age_n', 'h_lorey_m', 'h_lorey_n', 'h_lorey_share_G'],
     ...R.metrics.map(m => { const v = C.isValidUnit(m); return [m.plot_id, m.period, m.state, m.stratum, m.area_m2, m.ef, v ? m.n : null, v ? m.Nha : null, v ? m.G_m2 : null, v ? m.Gha : null, m.d_mean, m.dq, m.d_min, m.d_max, m.d_sd,
       m.h_measured.n, m.h_measured.mean, m.h_estimated.n, m.h_estimated.mean, v ? m.h_missing : null, m.below, m.above,
-      m.dom.k, m.dom.D0, m.dom.H0, m.age.mean, m.age.n]; })];
+      m.dom.k, m.dom.D0, m.dom.H0, m.age.mean, m.age.n, m.hL.value, m.hL.n, m.hL.coverG]; })];
 }
 /**
  * Tree table with the plot's stand parameters appended to every row (the user's field-data layout).
@@ -2527,7 +2543,7 @@ function unitRows() {
  */
 function treeExport() {
   const unit = new Map(R.metrics.map(m => [m.plot_id + '\u0000' + (m.period ?? '\u0001'), m]));
-  const add = [['D0', m => m.dom.D0], ['H0', m => m.dom.H0], ['hm', m => m.h_measured.mean], ['dm', m => m.d_mean], ['N', m => m.Nha], ['BA', m => m.Gha], ['age', m => m.age.mean], ['Dq', m => m.dq]];
+  const add = [['D0', m => m.dom.D0], ['H0', m => m.dom.H0], ['hm', m => m.h_measured.mean], ['dm', m => m.d_mean], ['N', m => m.Nha], ['BA', m => m.Gha], ['age', m => m.age.mean], ['Dq', m => m.dq], ['hL', m => m.hL.value]];
   const fromTable = S.dsSrc && S.dsSrc.kind === 'table' && S.tbl && S.tbl.src && S.tbl.usedKey === tblKey();
   let head, body;
   if (fromTable) {
@@ -2545,8 +2561,8 @@ function treeExport() {
     return [...body[i], ...add.map(([, g]) => ok ? g(m) : null), ...(keep ? [keep.has(t.status ?? '') ? 1 : 0] : [])];
   })];
   const def = { D0: T('xd.D0'), H0: T('xd.H0'),
-    hm: T('xd.hm'), dm: T('xd.dm'), N: T('xd.N'), BA: T('xd.BA'), age: T('xd.age'), Dq: T('xd.Dq') };
-  const units = { D0: 'cm', D0_d: 'cm', D0_h: 'cm', H0: 'm', H0_d: 'm', H0_h: 'm', hm: 'm', dm: 'cm', N: '1/ha', BA: 'm²/ha', age: T('xd.yr'), Dq: 'cm' };
+    hm: T('xd.hm'), hL: T('xd.hL'), dm: T('xd.dm'), N: T('xd.N'), BA: T('xd.BA'), age: T('xd.age'), Dq: T('xd.Dq') };
+  const units = { D0: 'cm', D0_d: 'cm', D0_h: 'cm', H0: 'm', H0_d: 'm', H0_h: 'm', hm: 'm', hL: 'm', dm: 'cm', N: '1/ha', BA: 'm²/ha', age: T('xd.yr'), Dq: 'cm' };
   const info = [...infoRows(), [], [T('xd.h')], [T('xd.col'), T('xd.def'), T('xd.unit')], ...add.map(([n], i) => [names[i], def[n], units[n]]),
     ...(keep ? [['in_calc', T('xd.used'), '']] : []), [], ['', T('xd.k')], ['', T('xd.empty')]];
   return { rows, info };
@@ -2561,7 +2577,7 @@ function speciesRows() {
 }
 function betweenRows() {
   const out = [['period', 'variable', 'plots', 'mean', 'sd', 'min', 'median', 'max']];
-  for (const b of R.byPeriod) for (const [k, key] of [['N_ha', 'Nha'], ['G_m2_ha', 'Gha'], ['d_mean_cm', 'd_mean'], ['dq_cm', 'dq'], ['area_m2', 'area_m2']]) { const s = b.between[key]; out.push([b.period, k, s.n, s.mean, s.sd, s.min, s.median, s.max]); }
+  for (const b of R.byPeriod) for (const [k, key] of [['N_ha', 'Nha'], ['G_m2_ha', 'Gha'], ['d_mean_cm', 'd_mean'], ['dq_cm', 'dq'], ['h_lorey_m', 'hL'], ['area_m2', 'area_m2']]) { const s = b.between[key]; out.push([b.period, k, s.n, s.mean, s.sd, s.min, s.median, s.max]); }
   return out;
 }
 function forestRows() {

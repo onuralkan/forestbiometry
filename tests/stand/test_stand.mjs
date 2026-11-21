@@ -79,6 +79,7 @@ for (const [name, opts] of Object.entries(scen)) {
       for (const [sp, s] of Object.entries(u.species)) { const x = m.species.find(y => y.species === sp); ok(x.n === s.n, `${tag} ${sp} n`); near(x.shareN, s.shareN, `${tag} ${sp} %N`); near(x.shareG, s.shareG, `${tag} ${sp} %G`); }
       ok(m.h_measured.n === u.h_measured_n && m.h_estimated.n === u.h_estimated_n, `${tag} height counts (measured/estimated apart)`);
       near(m.h_measured.mean, u.h_measured_mean, `${tag} measured height mean`); near(m.h_estimated.mean, u.h_estimated_mean, `${tag} estimated height mean`);
+      near(m.hL.value, u.hL, `${tag} Lorey's mean height (Kershaw eq. 8.12)`); ok(m.hL.n === u.hL_n, `${tag} Lorey n`); near(m.hL.coverG, u.hL_coverG, `${tag} Lorey share of G`);
     }
     const bp = r.byPeriod.find(b => b.period === per);
     if (R.between) for (const k of ['Nha', 'Gha']) { near(bp.between[k].mean, R.between[k].mean, `${name} ${per} between ${k} mean`); near(bp.between[k].sd, R.between[k].sd, `${name} ${per} between ${k} sd`); near(bp.between[k].median, R.between[k].median, `${name} ${per} between ${k} median`); }
@@ -108,6 +109,16 @@ for (const [name, opts] of Object.entries(scen)) for (const level of [0.95, 0.9]
       }
     }
   }
+}
+{ // Lorey's mean height (Kershaw et al. 2016, eq. 8.12): class form with one tree per class = tree form; estimated heights never used
+  const tr = [{ dbh: 20, height: 18 }, { dbh: 30, height: 24 }, { dbh: 40, height: 27 }, { dbh: 25, height: 30, height_source: 'estimated' }, { dbh: 35, height: null }];
+  const g = d => Math.PI * d * d / 40000, L = C.loreyHeight(tr), want = (g(20) * 18 + g(30) * 24 + g(40) * 27) / (g(20) + g(30) + g(40));
+  ok(Math.abs(L.value - want) < 1e-12 && L.n === 3 && Math.abs(L.coverG - (g(20) + g(30) + g(40)) / (g(20) + g(30) + g(40) + g(25) + g(35))) < 1e-12, `Lorey: ${L.value} = ${want}; 3 measured trees; share of G`);
+  // eq. 8.12 with diameter classes (n_i trees of equal diameter and height per class) = the tree form
+  const cls = [[3, 20, 18], [2, 30, 24]], byCls = cls.reduce((a, [n, d, h]) => a + n * g(d) * h, 0) / cls.reduce((a, [n, d]) => a + n * g(d), 0);
+  ok(Math.abs(C.loreyHeight(cls.flatMap(([n, d, h]) => Array(n).fill({ dbh: d, height: h }))).value - byCls) < 1e-12, 'class form of eq. 8.12 = tree form');
+  ok(C.loreyHeight([{ dbh: 20, height: null }]).value === null && C.loreyHeight([]).coverG === null, 'no measured height: undefined');
+  ok(Math.abs(C.loreyHeight([{ dbh: 20, height: 15 }, { dbh: 20, height: 25 }]).value - 20) < 1e-12, 'equal diameters: h_L = arithmetic mean height');
 }
 { // Satterthwaite's n_e lies between min(m_h − 1) and Σ(m_h − 1) (Cochran 1977, p. 96)
   const rs = C.computeAll(ds, scen.all_empty, classes, { type: 'strat', strataArea_ha: ref.strata_ha });
