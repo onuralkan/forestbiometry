@@ -49,7 +49,7 @@ function site_ctx(): array {
 /** Tool pages of the platform. 'cat' = home module of the catalogue (inc/catalog.php; the page may cover ids of other modules too), 'icon' = site_icon() name, 'short' = sidebar label. */
 function site_tools(): array {
     return [
-        ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.2.0', 'lab' => 'checker', 'title' => 'Forest Data Checker',
+        ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.3.0', 'lab' => 'checker', 'title' => 'Forest Data Checker',
          'desc' => 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
         ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.2.1', 'lab' => 'stand', 'title' => 'Plot & Stand Metrics',
          'desc' => 'From approved data, per plot and period: stems and basal area per hectare, mean diameters, diameter classes and species composition; between-plot summary and design-based forest estimate.'],

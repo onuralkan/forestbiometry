@@ -224,11 +224,19 @@ function renderStep3() {
     <div class="lims">${pair('lim.dbh', 'dbhMin', 'dbhMax')}${pair('lim.h2', 'hMin', 'hMax')}${pair('lim.sl', 'slMin', 'slMax')}</div>
     <p id="limerr" class="note err" hidden>${T('lim.bad')}</p>
     <button type="button" class="btn ghost small" id="limdef">${T('lim.default')}</button></div>
+    <div class="card"><h2>${T('sp.h')}</h2><p class="muted">${T('sp.sub')}</p>
+    <textarea id="sptext" rows="5" spellcheck="false" placeholder="${esc(T('sp.ph'))}">${esc(S.settings.speciesText || '')}</textarea>
+    <p id="spinfo" class="small"></p></div>
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button><button type="button" class="btn" id="run">${T('run')}</button></div>`;
   el.querySelectorAll('input[data-lim]').forEach(i => i.addEventListener('input', () => {
     const v = parseFloat(i.value); if (Number.isFinite(v)) S.settings.limits[i.dataset.lim] = v; checkLimits(); save();
   }));
   $('limdef').addEventListener('click', () => { S.settings.limits = { ...C.DEFAULT_LIMITS }; save(); renderStep3(); });
+  const spInfo = () => { const r = C.parseSpeciesNames(S.settings.speciesText); const n = Object.keys(r.map).length;
+    $('spinfo').className = 'small ' + (r.bad.length || r.dup.length ? 'note warn' : 'muted');
+    $('spinfo').textContent = [n ? T('sp.n', { n }) : T('sp.none'), r.bad.length ? T('sp.bad', { lines: r.bad.join(', ') }) : '', r.dup.length ? T('sp.dup', { codes: r.dup.join(', ') }) : ''].filter(Boolean).join(' '); };
+  $('sptext').addEventListener('input', e => { S.settings.speciesText = e.target.value; spInfo(); save(); });
+  spInfo();
   $('back2').addEventListener('click', () => go(2));
   $('run').addEventListener('click', run);
 }
@@ -281,8 +289,21 @@ function tabSummary(p) {
     ${tile(s.infos, T('sum.infos'), '', 't-info')}</div>
     <p class="note ${s.approvable ? 'ok' : 'err'}">${s.approvable ? T('sum.ok') : T('sum.notok', { e: s.errors })}</p>
     <div class="two"><div><h3>${T('sum.bycat')}</h3><table class="grid kv">${Object.entries(s.byCategory).map(([c, n]) => `<tr><th>${T('cat.' + c)}</th><td class="num">${fmtNum(n, 0)}</td></tr>`).join('') || '<tr><td>–</td></tr>'}</table></div>
-    <div><h3>${T('sum.settings')}</h3><table class="grid kv">${settingsRows().map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table></div></div>`;
+    <div><h3>${T('sum.settings')}</h3><table class="grid kv">${settingsRows().map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table></div></div>
+    ${speciesHtml()}`;
 }
+function speciesInfo() { return C.speciesSummary(S.work, ev, C.parseSpeciesNames(S.settings.speciesText).map); }
+function speciesHtml() {
+  const sp = speciesInfo();
+  if (!sp.rows.length) return '';
+  let h = `<h3>${T('sp.tab')}</h3><div class="tscroll"><table class="grid" id="sptab"><thead><tr><th>${T('sp.code')}</th><th>${T('sp.name')}</th><th>${T('sp.recs')}</th></tr></thead><tbody>
+    ${sp.rows.map(r => `<tr><td>${vis(r.code)}</td><td>${r.name == null ? `<span class="muted">${sp.table ? T('sp.noname') : '–'}</span>` : esc(r.name)}</td><td class="num">${fmtNum(r.n, 0)}</td></tr>`).join('')}</tbody></table></div>`;
+  if (!sp.table) h += `<p class="muted small">${T('sp.hint')}</p>`;
+  if (sp.unmapped.length) h += `<p class="note warn" id="sp-unmapped">${T('sp.unmapped', { codes: sp.unmapped.map(c => `"${c}"`).join(', ') })}</p>`;
+  if (sp.unused.length) h += `<p class="note" id="sp-unused">${T('sp.unused', { codes: sp.unused.map(c => `"${c}"`).join(', ') })}</p>`;
+  return h;
+}
+function speciesRows() { const sp = speciesInfo(); return [[T('sp.code'), T('sp.name'), T('sp.recs')], ...sp.rows.map(r => [r.code, r.name ?? '', r.n]), ...sp.unused.map(c => [c, C.parseSpeciesNames(S.settings.speciesText).map[c], 0])]; }
 function settingsRows() {
   const st = S.settings, L = st.limits, u = st.units;
   return [
@@ -499,6 +520,31 @@ function dataRows(ds) {
   return [[...DATA_COLS.map(c => c[1]), ...extra.map(e => 'extra.' + e)], ...ds.trees.map(t => [...DATA_COLS.map(c => t[c[0]]), ...extra.map(e => t.extra[e] ?? '')])];
 }
 function plotRows(ds) { return [['plot_id', 'plot_area_m2', 'stratum', 'area_source', 'n_records'], ...ds.plots.map(p => [p.plot_id, p.plot_area, p.stratum, p.area_source, p.n_records])]; }
+/**
+ * Printable report (21 Nov 2026): one self-contained HTML file (no scripts, no external files) with the settings, the
+ * counts, the species table, every issue with its status and the change log; the browser prints it or saves it as PDF.
+ */
+function printableReport(current) {
+  const s = ev.summary, cell = v => v == null || v === '' ? '' : typeof v === 'number' ? esc(fmtNum(v, 6)) : esc(String(v));
+  const table = (rows, cls = '') => rows.length < 2 ? `<p class="none">${esc(T('pr.none'))}</p>`
+    : `<table class="${cls}"><thead><tr>${rows[0].map(h => `<th>${esc(String(h))}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map(r => `<tr>${r.map(v => `<td>${cell(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const kv = rows => `<table class="kv"><tbody>${rows.map(([k, v]) => `<tr><th>${esc(String(k))}</th><td>${cell(v)}</td></tr>`).join('')}</tbody></table>`;
+  const ap = approvedDs ? (current ? T('pr.approved', { when: new Date(approvedDs.created).toLocaleString('en-GB'), n: approvedDs.trees.length, p: approvedDs.plots.length }) : T('pr.stale')) : T('pr.notapproved');
+  const issues = issueRows().map(r => [r[0], r[2], r[4], r[5], r[6], r[7], r[9], r[10], r[12]]);
+  const body = `<h1>${esc(T('pr.title'))}</h1>
+<p class="meta">${esc(`${C.TOOL.id} ${C.TOOL.version}`)} · ${esc(new Date().toLocaleString('en-GB'))} · forestbiometry.online</p>
+<p class="status ${s.approvable ? 'ok' : 'err'}">${esc(s.approvable ? T('sum.ok') : T('sum.notok', { e: s.errors }))} ${esc(ap)}</p>
+<h2>${esc(T('pr.counts'))}</h2>${kv([[T('sum.records'), s.records - s.excluded], [T('sum.excluded'), s.excluded], [T('sum.plots'), s.plots], [T('sum.periods'), s.periods], [T('sum.species'), s.species], [T('sum.errors'), s.errors], [T('sum.warnings'), `${fmtNum(s.warnings, 0)} (${fmtNum(s.warningsOpen, 0)} ${T('sum.open')})`], [T('sum.infos'), s.infos]])}
+<h2>${esc(T('sum.settings'))}</h2>${kv(settingsRows())}
+<h2>${esc(T('sp.tab'))}</h2>${table(speciesRows())}
+<h2>${esc(T('pr.issues', { n: ev.issues.length }))}</h2>${table([[T('pr.c.sev'), T('pr.c.cat'), T('pr.c.table'), T('pr.c.row'), T('pr.c.plot'), T('pr.c.field'), T('pr.c.value'), T('pr.c.msg'), T('pr.c.accepted')], ...issues.slice(1)], 'small')}
+<h2>${esc(T('pr.log', { n: S.work.changelog.length }))}</h2>${table(logRows(), 'small')}
+<p class="foot">${esc(T('pr.foot'))}</p>`;
+  const css = 'body{font:11pt/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#111;background:#fff;margin:24px auto;max-width:1000px;padding:0 16px}h1{font-size:18pt;margin:0 0 4px}h2{font-size:13pt;margin:22px 0 6px;border-bottom:1px solid #999}'
+    + '.meta{color:#555;margin:0 0 10px}.status{padding:6px 8px;border-left:4px solid #888}.status.ok{border-color:#1a7f37}.status.err{border-color:#b42318}table{border-collapse:collapse;width:100%;margin:4px 0}th,td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top}'
+    + 'thead th{background:#eee}table.kv{width:auto}table.kv th{background:#f5f5f5;font-weight:600}table.small{font-size:9pt}tr{break-inside:avoid}.none,.foot{color:#555}.foot{margin-top:24px;font-size:9pt}@page{size:A4;margin:14mm}@media print{body{margin:0;max-width:none}thead{display:table-header-group}}';
+  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(T('pr.title'))}</title><style>${css}</style></head><body>${body}</body></html>\n`;
+}
 function tabApprove(p) {
   const s = ev.summary, current = S.approved && S.approved.sig === sig();
   let h = `<div class="card"><h2>${T('ap.h')}</h2><p class="muted">${T('ap.sub')}</p>`;
@@ -510,7 +556,8 @@ function tabApprove(p) {
     <button type="button" class="btn ghost" id="x-log"${S.work.changelog.length ? '' : ' disabled'}>${T('ex.log')} (CSV)</button>
     <button type="button" class="btn ghost" id="x-data"${approvedDs ? '' : ' disabled'}>${T('ex.data')} (CSV)</button>
     <button type="button" class="btn" id="x-xlsx">${T('ex.all')}</button>
-    <button type="button" class="btn ghost" id="x-json"${approvedDs ? '' : ' disabled'}>${T('ex.json')}</button></div>
+    <button type="button" class="btn ghost" id="x-json"${approvedDs ? '' : ' disabled'}>${T('ex.json')}</button>
+    <button type="button" class="btn ghost" id="x-print">${T('ex.print')}</button></div><p class="muted small">${T('ex.print.note')}</p>
     ${approvedDs ? '' : `<p class="muted small">${T('ex.need')}</p>`}<p class="muted small">${T('ex.csvnote')}</p>
     <p>${approvedDs ? `<a class="btn" href="ornek-alan.php">${T('to.stand')}</a> <a class="btn ghost" href="veri-yoneticisi.php">${T('to.manager')}</a> ` : ''}<a href="./">${T('to.tools')}</a></p></div>`;
   p.innerHTML = h;
@@ -523,6 +570,7 @@ function tabApprove(p) {
   $('x-log').addEventListener('click', () => downloadCSV(fname('degisiklik-gunlugu', 'change-log') + '.csv', logRows(), lang));
   $('x-data').addEventListener('click', () => downloadCSV(fname('onayli-veri', 'approved-data') + '.csv', dataRows(approvedDs), lang));
   $('x-json').addEventListener('click', () => downloadJSON(fname('veri-paketi', 'dataset') + '.json', approvedDs));
+  $('x-print').addEventListener('click', () => download(fname('veri-denetimi-raporu', 'data-check-report') + '.html', printableReport(current), 'text/html;charset=utf-8'));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { status(T('xlsx.loading')); XLSX = await loadXLSX(BASE); status(''); } catch (e) { status(T('xlsx.fail'), 'err'); return; }
     const sum = [[T('x.tool'), `${C.TOOL.id} ${C.TOOL.version}`], [T('x.date'), new Date().toISOString()], [T('x.lang'), lang],
@@ -533,6 +581,7 @@ function tabApprove(p) {
       sheets.push({ name: T('sheet.data'), rows: dataRows(approvedDs) }, { name: T('sheet.plots'), rows: plotRows(approvedDs) },
         { name: T('sheet.derived'), rows: [T('x.derivedCols'), ...approvedDs.derived.trees.map(d => [d.row, d.basal_area_m2]), [], T('x.derivedPlotCols'), ...approvedDs.derived.plots.map(d => [d.plot_id, d.expansion_factor])] });
     }
+    sheets.push({ name: T('sheet.species'), rows: speciesRows(), widths: [14, 40, 10] });
     sheets.push({ name: T('sheet.log'), rows: logRows(), widths: [5, 22, 14, 16, 6, 16, 14, 14, 40, 14] });
     download(fname('veri-denetimi', 'data-check') + '.xlsx', xlsxBlob(XLSX, sheets));
   });

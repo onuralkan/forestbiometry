@@ -163,6 +163,10 @@ Optional tree field `age` (years; header suggestions: age, yaş, ağaç yaşı).
 
 ---
 
+### Species code table and printable report (21 Nov 2026, 1.3.0; no computation)
+- **Species codes:** optional table typed or pasted by the user in the settings step, one "code<tab | ; | =>name" per line (`parseSpeciesNames`; lines without a code or name and repeated codes are reported, the first line counts). Codes are matched exactly after trimming (`speciesSummary`, records in use only). The summary shows code, name and records; codes without a name and table codes not in the data are reported. The approved package gets the optional field `species_names: {code: name}` for the codes that occur (absent without a table); the species codes in the records are never changed. Nothing is built in (K1). Test: `tests/checker/test_checker.mjs` (species table), `tests/checker/e2e.mjs` §2b.
+- **Printable report:** one self-contained HTML file (no scripts or external files): counts, settings, species table, every issue with its acceptance reason, the change log and the approval state; A4 print styles. The browser prints it or saves it as PDF.
+
 ## 6. Plot and Stand Calculator (Module 2, `assets/lab/stand/calc.js`)
 **Scope:** Fixed-area plots; every tree in a plot has the same probability of being sampled (over the whole plot, every tree above the measurement threshold is measured). Plot sizes may differ between plots. **Nested plots, plots varying with diameter and angle counts (Bitterlich)** require a separate sampling weight (per-hectare expansion factor) per tree; this tool does not handle them automatically and asks the user to confirm "fixed-area".
 

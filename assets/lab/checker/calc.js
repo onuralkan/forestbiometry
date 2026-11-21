@@ -4,7 +4,7 @@
 import { parseNumber, toInternal, detectDecimal, UNITS } from '../core/num.js';
 import { cellText } from '../core/table.js';
 
-export const TOOL = { id: 'veri-denetcisi', version: '1.2.0' };
+export const TOOL = { id: 'veri-denetcisi', version: '1.3.0' };
 export const SCHEMA = 'forest-dataset/1';
 
 export const TREE_FIELDS = [
@@ -322,6 +322,49 @@ export function applyChoice(sources, work, issue, chosen, reason, settings) {
 }
 
 /* ---------------- approval: the dataset other tools read (docs/PROJECT.md §4b) ---------------- */
+/* ---------------- species code table (21 Nov 2026, user decision) ---------------- */
+/**
+ * The user's own table of species codes: one "code<separator>full name" per line; separator tab, ';' or '='.
+ * Empty lines are skipped. Returns { map: {code: name}, bad: [line numbers without a code or a name], dup: [codes given
+ * twice; the first line counts] }. Nothing is built in: the tool knows no species (K1).
+ */
+export function parseSpeciesNames(text) {
+  const map = {}, bad = [], dup = [];
+  String(text ?? '').split(/\r?\n/).forEach((line, i) => {
+    if (!line.trim()) return;
+    const m = line.match(/^([^\t;=]*)[\t;=](.*)$/);
+    const code = m ? m[1].trim() : '', name = m ? m[2].trim() : '';
+    if (!code || !name) { bad.push(i + 1); return; }
+    if (Object.prototype.hasOwnProperty.call(map, code)) { dup.push(code); return; }
+    map[code] = name;
+  });
+  return { map, bad, dup };
+}
+/**
+ * Species codes of the records in use (excluded records left out; the code as read, trimmed; exact match with the table).
+ * rows: [{ code, name|null, n }] in natural order of the code; unmapped: codes without a name in the table (only when a
+ * table was given); unused: table codes that do not occur in the data.
+ */
+export function speciesSummary(work, ev, map = {}) {
+  const count = new Map();
+  for (const rec of work.trees) {
+    if (rec.excluded) continue;
+    const x = ev.vals.trees[rec.i] && ev.vals.trees[rec.i].species;
+    if (!x || x.status !== 'ok' || x.value == null) continue;
+    const code = String(x.value).trim(); if (!code) continue;
+    count.set(code, (count.get(code) || 0) + 1);
+  }
+  const has = Object.keys(map).length > 0;
+  const rows = [...count.keys()].sort((a, b) => String(a).localeCompare(String(b), 'en', { numeric: true })).map(code => ({ code, name: has && Object.prototype.hasOwnProperty.call(map, code) ? map[code] : null, n: count.get(code) }));
+  return { rows, unmapped: has ? rows.filter(r => r.name == null).map(r => r.code) : [], unused: Object.keys(map).filter(c => !count.has(c)), table: has };
+}
+
+/** Optional package field species_names: the user's names for the codes that occur in the approved records (none: absent). */
+function speciesNamesOf(work, ev, settings) {
+  const { map } = parseSpeciesNames(settings && settings.speciesText);
+  const rows = speciesSummary(work, ev, map).rows.filter(r => r.name != null);
+  return rows.length ? { species_names: Object.fromEntries(rows.map(r => [r.code, r.name])) } : {};
+}
 export function approve(sources, work, mapping, settings, ev, meta = {}) {
   if (!ev.summary.approvable) throw new Error('not-approvable');
   const v = ev.vals, pick = (x) => x && x.status === 'ok' ? x.value : null;
@@ -352,5 +395,6 @@ export function approve(sources, work, mapping, settings, ev, meta = {}) {
     warnings: ev.issues.filter(i => i.severity === 'warning').map(i => ({ code: i.code, table: i.table, row: i.row ?? null, plot: i.plot ?? null, field: i.field, accepted: i.accepted ? i.accepted.reason : null })),
     excluded: work.trees.filter(r => r.excluded).map(r => r.row),
     changelog: work.changelog,
+    ...speciesNamesOf(work, ev, settings),
   };
 }

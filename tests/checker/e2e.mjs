@@ -80,7 +80,7 @@ ok(proj.list.length === 1 && proj.list[0].origin === 'checker' && proj.active ==
 ok(await page.locator('#panel a[href="veri-yoneticisi.php"]').count() === 1, 'link to the Inventory Data Manager after approval');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 const wb = XLSX.read(await (await import('node:fs/promises')).readFile(await dl.path()));
-ok(wb.SheetNames.length === 6, 'XLSX report with 6 sheets: ' + wb.SheetNames.join(','));
+ok(wb.SheetNames.length === 7 && wb.SheetNames.includes('Species'), 'XLSX report with 7 sheets (Species added 21 Nov 2026): ' + wb.SheetNames.join(','));
 const dataSheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[2]], { header: 1 });
 ok(dataSheet[1][1] === '001' && typeof dataSheet[1][6] === 'number', 'XLSX: ID stays text "001", dbh numeric');
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#x-data')]);
@@ -104,6 +104,27 @@ ok(csv2.split('\r\n')[1].startsWith('2,001,1,,2019,Pb,24.5,17.2'), 'CSV after a 
 await page.click('#tab-data');
 ok((await page.locator('.cellbtn', { hasText: '27,4' }).count()) === 1, 'data view shows the source text unchanged (27,4)');
 await shot('8-en-veri');
+
+// 2b. species code table and printable report (21 Nov 2026)
+await page.click('#tab-summary');
+ok((await page.locator('#sptab tbody tr').count()) >= 3 && (await page.locator('#panel', { hasText: 'Species codes' }).count()) === 1, 'summary: species table without names, with a hint to the settings');
+await page.click('#steps [data-go="3"]');
+await page.fill('#sptext', 'Pb; Pinus brutia\nPn\tPinus nigra\nAb = Abies nordmanniana\nbroken line');
+ok((await page.textContent('#spinfo')).includes('3 codes') && (await page.textContent('#spinfo')).includes('skipped: 4'), 'settings: 3 codes read, line 4 reported: ' + await page.textContent('#spinfo'));
+await page.click('#run'); await page.waitForSelector('.tiles');
+const spRows = await page.$$eval('#sptab tbody tr', tr => tr.map(r => [...r.children].map(c => c.textContent.trim())));
+ok(spRows.some(r => r[0] === 'Pb' && r[1] === 'Pinus brutia') && spRows.some(r => r[0] === 'Pn' && r[1] === 'Pinus nigra'), 'species table with the names: ' + JSON.stringify(spRows));
+ok((await page.textContent('#sp-unmapped')).includes('"Ca"') && (await page.textContent('#sp-unused')).includes('"Ab"'), 'codes without a name (Ca) and unused table codes (Ab) reported');
+await page.click('#tab-approve');
+ok((await page.locator('.note.warn', { hasText: 'The data changed after approva' }).count()) === 1, 'the species table changes the settings: the earlier approval is shown as no longer current');
+await page.click('#approve'); await page.waitForSelector('.note.ok');
+const ds2 = await page.evaluate(() => new Promise(res => { const r = indexedDB.open('forestbiometry'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('dataset:approved'); q.onsuccess = () => res(q.result); }; }));
+ok(ds2.species_names && ds2.species_names.Pb === 'Pinus brutia' && ds2.species_names.Pn === 'Pinus nigra' && !('Ab' in ds2.species_names) && ds2.trees.find(t => t.row === 2).species === 'Pb', 'package: species_names for the codes in use, codes in the records unchanged');
+const [dp] = await Promise.all([page.waitForEvent('download'), page.click('#x-print')]);
+const rep = await (await import('node:fs/promises')).readFile(await dp.path(), 'utf8');
+ok(dp.suggestedFilename().startsWith('data-check-report-') && rep.startsWith('<!doctype html>') && rep.includes('<h1>Data check report</h1>') && rep.includes('Pinus brutia') && /Change log \(\d+ entries\)/.test(rep) && rep.includes('Approved ') && !/<script/i.test(rep) && rep.includes('@page{size:A4'),
+  'printable report: one HTML file, no scripts, species, change log, approval, A4');
+{ const pr = await browser.newPage(); await pr.setContent(rep); ok((await pr.locator('table').count()) >= 4, 'printable report renders: ' + await pr.locator('table').count() + ' tables'); await pr.close(); }
 
 // 3. ambiguous decimals via paste: reported, the default point is pre-selected and can be changed
 await page.goto(URL);

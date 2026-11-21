@@ -213,5 +213,22 @@ const plotsTxt = readFileSync(path.join(root, 'assets/lab/checker/ornek/ornek-al
 { const old = { decimal: '.', units: { dbh: 'cm', height: 'm', area: 'm2', xy: 'm' }, limits: { ...C.DEFAULT_LIMITS } }, r = run('plot,tree,species,dbh,age\n1,1,Ps,20,30\n', 'plot,area\n1,400\n', old, ',');
   ok(C.approve(r.sources, r.work, r.mapping, old, r.ev()).trees[0].age === 30, 'a session saved before the age field (no age unit) still reads ages'); }
 
+/* species code table (21 Nov 2026): parsing, summary of the records in use, optional package field species_names */
+{ const p = C.parseSpeciesNames('Pn; Pinus nigra\nPb\tPinus brutia\n\nAb = Abies nordmanniana\nQc;\n;Quercus\nPn;Pinus sylvestris\nnoseparator\n');
+  eq(p.map, { Pn: 'Pinus nigra', Pb: 'Pinus brutia', Ab: 'Abies nordmanniana' }, 'species table: tab, ";" and "=" separators, names trimmed');
+  eq(p.bad, [5, 6, 8], 'lines without a code or a name reported by line number'); eq(p.dup, ['Pn'], 'a code given twice reported; the first line counts');
+  eq(C.parseSpeciesNames('').map, {}, 'empty table'); eq(C.parseSpeciesNames(undefined).bad, [], 'no table at all');
+  const r = run('alan;agac;tur;cap\n1;1;Pn;20\n1;2;Pn;22\n1;3; Pb ;18\n1;4;Ps;25\n', 'alan;alan buyuklugu\n1;400\n', S());
+  r.work.trees[3].excluded = true;
+  const ev = C.evaluate(r.sources, r.work, r.settings);
+  const sp = C.speciesSummary(r.work, ev, { Pn: 'Pinus nigra', Ab: 'Abies nordmanniana' });
+  eq(sp.rows, [{ code: 'Pb', name: null, n: 1 }, { code: 'Pn', name: 'Pinus nigra', n: 2 }], 'summary: codes of the records in use (trimmed; excluded record left out), names from the table');
+  eq([sp.unmapped, sp.unused, sp.table], [['Pb'], ['Ab'], true], 'codes without a name and table codes not in the data reported');
+  eq(C.speciesSummary(r.work, ev, {}).unmapped, [], 'no table: nothing reported as unmapped');
+  const ds = C.approve(r.sources, r.work, r.mapping, { ...r.settings, speciesText: 'Pn; Pinus nigra\nAb; Abies nordmanniana' }, ev);
+  eq(ds.species_names, { Pn: 'Pinus nigra' }, 'package: species_names only for codes in the approved records');
+  ok(ds.trees.every(t => t.species === 'Pn' || t.species.trim() === 'Pb'), 'the species codes in the records are not changed');
+  ok(!('species_names' in C.approve(r.sources, r.work, r.mapping, r.settings, ev)), 'no table: no species_names field (package unchanged)'); }
+
 console.log(`checker: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

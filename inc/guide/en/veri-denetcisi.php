@@ -12,6 +12,7 @@
 </ul>
 <h3>3. Check settings</h3>
 <p>Limits for diameter (default 1–200 cm), height (2–60 m) and slenderness h/d (15–200); "Restore defaults" and "Run checks".</p>
+<p><b>Species codes</b> (optional): if your data use codes such as Pn or Pb, paste your own code list with the full names (one per line: code, then a tab, ";" or "=", then the name). The summary then lists every code with its name and number of records and points out codes that have no name in your list, which often reveals typos. The names go into the approved data package as a separate list; the codes in your records stay as they are.</p>
 <h3>4. Results</h3>
 <ul>
 <li><b>Errors</b> (block approval): unreadable number, empty required field, zero or negative value, duplicate record (the same tree in different periods is not a duplicate), plot missing from the plot table, different sizes or strata for one plot, plot without a size.</li>
@@ -22,6 +23,7 @@
 <p><b>Approve and export</b>: "Approve and save" is enabled once no error remains; open warnings are saved with the data. The approved data are kept in this browser, added to the list of the <b>Inventory Data Manager</b> and made the active package; the tools that read approved data use the active package. If the data change after approval you are asked to approve again. "Reset session" does not delete the approved data.</p>
 <h3>Downloads</h3>
 <p>Issue table and change log (CSV); after approval the approved data (CSV), the data package (JSON) and the full report (Excel). When a CSV file is opened in Excel, leading zeros (e.g. 001) may be lost.</p>
+<p><b>Printable report</b>: one HTML file with the counts, settings, species, every issue (with the reason for accepted warnings) and the change log. Open it in the browser and print it or save it as PDF, for example to keep with the field records.</p>
 <h3>Common situations</h3>
 <ul>
 <li>If Turkish letters are broken, the file is most likely windows-1254; change the "Text encoding".</li>
