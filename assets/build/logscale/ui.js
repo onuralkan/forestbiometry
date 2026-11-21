@@ -12,19 +12,16 @@ function __fb_x(x, g) { for (const k of Object.keys(g).sort()) Object.defineProp
 __fb_m["core/citation.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "FORMATS": () => FORMATS, "NAMES": () => NAMES, "cite": () => cite, "plain": () => plain });
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
-// Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// Input c = { author:{ family, given }, year, base (canonical URL with trailing '/'), site:{ en },
+//             tool: null | { file, v, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
 // doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
 const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MON_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const MLA_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const IEEE_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
 const VAN_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SHORT_TR = ['Oca.', 'Şub.', 'Mar.', 'Nis.', 'May.', 'Haz.', 'Tem.', 'Ağu.', 'Eyl.', 'Eki.', 'Kas.', 'Ara.'];
-const VAN_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
 const FORMATS = ['apa', 'mla', 'chicago', 'harvard', 'ieee', 'vancouver', 'bibtex', 'ris'];
 const NAMES = { apa: 'APA 7', mla: 'MLA 9', chicago: 'Chicago (author-date)', harvard: 'Harvard', ieee: 'IEEE', vancouver: 'Vancouver', bibtex: 'BibTeX', ris: 'RIS' };
@@ -34,9 +31,9 @@ const it = s => `<i>${esc(s)}</i>`;
 const plain = html => html.replace(/<\/?i>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 function parts(c) {
-  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1, tr = c.lang === 'tr';
-  const site = c.site[c.lang], tool = c.tool ? c.tool[c.lang] : null;
-  return { tr, y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
+  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1;
+  const site = c.site.en, tool = c.tool ? c.tool.en : null;
+  return { y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
     url: c.base + (c.tool ? c.tool.file : ''), fam: c.author.family, given: c.author.given, ini: c.author.given.charAt(0) + '.', year: c.year };
 }
 const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -45,54 +42,42 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 function cite(fmt, c) {
   const body = core(fmt, c);
   if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
-  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  const u = esc('https://doi.org/' + c.doi);
   switch (fmt) {
-    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'apa': return `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
     case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
     case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
     default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
   }
 }
 function core(fmt, c) {
-  const p = parts(c), tr = p.tr, v = p.v;
+  const p = parts(c), v = p.v;
   switch (fmt) {
     case 'apa':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Sürüm ${v})` : ''} [Web uygulaması].${p.container ? ` ${esc(p.container)}.` : ''} ${p.d} ${MON_TR[p.mi]} ${p.y} tarihinde ${esc(p.url)} adresinden erişildi.`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
     case 'mla':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Sürüm ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Erişim ${p.d} ${SHORT_TR[p.mi]} ${p.y}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
     case 'chicago':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Sürüm ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Erişim ${p.d} ${MON_TR[p.mi]} ${p.y}. ${esc(p.url)}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
     case 'harvard':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (sürüm ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Erişim adresi: ${esc(p.url)} (Erişim tarihi: ${p.d} ${MON_TR[p.mi]} ${p.y}).`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
     case 'ieee': {
-      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ${tr ? 'sür.' : 'ver.'} ${v}, ` : `${it(p.title)}, `;
-      return tr
-        ? `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Çevrimiçi]. Erişim: ${esc(p.url)} (erişim tarihi: ${p.d} ${SHORT_TR[p.mi]} ${p.y}).`
-        : `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
+      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ver. ${v}, ` : `${it(p.title)}, `;
+      return `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
     }
     case 'vancouver':
-      return tr
-        ? `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [İnternet]. ${v ? `Sürüm ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [erişim ${p.y} ${VAN_TR[p.mi]} ${p.d}]. Erişim adresi: ${esc(p.url)}`
-        : `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
+      return `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
     case 'bibtex': {
       const key = `${p.fam.toLowerCase()}${p.year}${c.tool ? c.tool.file.replace(/\.php$/, '').replace(/[^a-z0-9]/g, '') : 'forestbiometry'}`;
       const tt = p.title.replace(/–/g, '--');
-      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
+      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{Web application${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (`Version ${v}. `) : ''}Accessed ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `Version ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }
@@ -110,11 +95,8 @@ __fb_r("core/reset-all.js");
    // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
-const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
+const ui = 'en';
 const T = {
-  tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
-    copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
     note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
@@ -227,12 +209,13 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
-// Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
-// languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
-const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
+// Tiny i18n helper. The site is English only (20 Nov 2026; Turkish removed from the code 21 Nov 2026): `lang` is
+// always 'en' and every dictionary has a single `en` table. Numbers on screen use a decimal point and no thousands
+// separator; the interface never changes how data are parsed or stored.
+const lang = 'en';
 function makeT(dict) {
   return (key, p) => {
-    const s = (dict[lang] && dict[lang][key]) ?? dict.tr[key];
+    const s = dict.en[key];
     if (s == null) return key;
     return typeof s === 'function' ? s(p || {}) : s;
   };
@@ -240,23 +223,23 @@ function makeT(dict) {
 /**
  * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
  * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
- * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * point (English only). '−' is not used: negative numbers keep
  * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
  * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
 /** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
-const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+const SCREEN_DECIMAL = '.';
 /** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
-const LIST_SEP = lang === 'tr' ? '; ' : ', ';
+const LIST_SEP = ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
+  return s === '-0' ? '0' : s;
 }
-/** Decimal separator of CSV exports (both languages). */
+/** Decimal separator of CSV exports. */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -274,12 +257,6 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
-    auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
-    encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
-    fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
-    comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
     auto: p => `detected: ${p.d}`, header: 'First row is a header', enc: 'Text encoding', sheet: 'Worksheet', pasted: 'pasted table',
     encwarn: 'Reading the file as UTF-8 produced broken characters; Turkish Excel CSV files are often Windows-1254.',
@@ -446,8 +423,6 @@ const { download } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { embed: 'Girdi verisini kayda ekle', embedHelp: 'İşaretli değilse JSON kaydında girdi dosyalarının yalnızca SHA-256 parmak izi bulunur; işaretliyse verinin kendisi de girer ve kayıt tek başına yeniden üretilebilir. Kaydı paylaşırsanız veriyi de paylaşmış olursunuz.',
-    fail: 'Kayıt hazırlanamadı', btn: 'Çalışma kaydı (JSON)' },
   en: { embed: 'Include the input data in the record', embedHelp: 'Unchecked, the JSON record holds only the SHA-256 fingerprint of each input file; checked, the data itself goes in too and the record reproduces on its own. If you share the record, you share the data.',
     fail: 'The record could not be prepared', btn: 'Run record (JSON)' },
 });
@@ -699,19 +674,7 @@ const { get, del, keys } = __fb_r("core/store.js");
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
-const tr = document.documentElement.lang !== 'en';
-const T = tr ? {
-  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
-  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
-  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
-    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
-    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
-    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
-    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
-    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
-    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
-  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
-} : {
+const T = {
   label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
   none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
   ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
@@ -1017,7 +980,7 @@ function cellText(c) {
   return c.w != null ? c.w : String(c.v);
 }
 function padTo(a, n) { const r = a.slice(); while (r.length < n) r.push(''); return r; }
-function colName(i) { return (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'Column ' : 'Sütun ') + (i + 1); }
+function colName(i) { return 'Column ' + (i + 1); }
 function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k = seen.get(x) || 0; seen.set(x, k + 1); return k ? `${x} (${k + 1})` : x; }); }
 };
 
@@ -1128,28 +1091,6 @@ const { makeT } = __fb_r("core/i18n.js");
 
 
 const T = makeT({
-  tr: {
-    privacy: 'Verileriniz yalnızca bu tarayıcıda kalır; sunucuya gönderilmez.',
-    'step.1': 'Tomruklar', 'step.2': 'Kurallar', 'step.3': 'Sonuçlar', next: 'Devam', back: 'Geri', reset: 'Oturumu sıfırla', calc: 'Hesapla', none: '—',
-    restored: p => `Önceki oturum geri yüklendi (${p.when}).`,
-    'mode.h': 'Giriş', 'mode.single': 'Tek tomruk', 'mode.table': 'Tomruk tablosu',
-    'in.ds': 'İnce uç çapı, kabuksuz (cm)', 'in.db': 'Kalın uç çapı (cm, isteğe bağlı)', 'in.dm': 'Orta çap (cm, isteğe bağlı)', 'in.L': 'Boy (m)',
-    'tb.h': 'Tomruk tablosu', 'tb.sub': 'Her satır bir tomruk: ince uç çapı (cm, kabuksuz), boy (m); kalın uç ve orta çap isteğe bağlı (kübik hacim ve tomruk bölme için).',
-    'map.id': 'Tomruk (isteğe bağlı)', 'map.ds': 'İnce uç çapı (cm)', 'map.db': 'Kalın uç çapı (cm)', 'map.dm': 'Orta çap (cm)', 'map.L': 'Boy (m)',
-    'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'nokta (12.5)', 'dec.comma': 'virgül (12,5)', 'map.use': 'Bu tabloyu kullan', 'sample': 'Benzetim tablosunu yükle', 'sample.note': 'Benzetim verisi denemek içindir (rastgele sayılar).',
-    'src.info': p => `${p.n} tomruk.`, 'need.data': 'Önce tomruk girin.', 'p.single': 'İnce uç çapı ve boy pozitif olmalı; kalın uç ince uçtan küçük olamaz.',
-    'r.h': 'Board-foot kuralları', 'r.sub': 'Kershaw ve ark. (2016) §7.3: 1 inç kalınlığında kereste için board foot; ince uç çapı (inç) ve boy (feet) ile.',
-    'r.scribner': 'Scribner (7.3)', 'r.doyle': 'Doyle (7.5)', 'r.intl8': 'International ⅛ inç (7.7–7.10; yalnız 8, 12, 16, 20 ft)', 'r.intl4': 'International ¼ inç (Grosenbaugh 1952; her boy)',
-    'o.h': 'Ölçme düzeni', 'o.roundD': 'Çap en yakın inçe yuvarlanır', 'o.len': 'Ölçme boyu', 'o.len.whole': 'tam feet (aşağı)', 'o.len.even': 'çift feet (aşağı)', 'o.len.none': 'yuvarlanmaz',
-    'o.max': 'En uzun ölçme boyu (ft, isteğe bağlı)', 'o.round5': 'International kurallarında 5 board foot\'a yuvarla (Clark tabloları gibi)',
-    'o.note': '§7.4.1: çap kabuksuz, ince uçta, en yakın inçe; kesim payı ölçme boyuna girmez. En uzun ölçme boyunu aşan tomruk iki ya da daha çok parça olarak ölçülür, eşit bölünmezse uzun parça dipte kalır; ayrım noktasının çapı ince ve kalın uç arasında doğrusal kabul edilir (araç kuralı; kalın uç gerekir). Kitaptaki değerler (16 ft doğu, 40 ft batı) varsayılan değildir.',
-    'p.rules': 'En az bir kural seçin', 'p.max': 'En uzun ölçme boyu pozitif bir sayı olmalı',
-    'res.h': 'Tomruklar', 'res.id': 'Tomruk', 'res.ds': 'İnce uç (cm)', 'res.L': 'Boy (m)', 'res.Lft': 'Ölçme boyu (ft)', 'res.Din': 'Ölçme çapı (in)', 'res.seg': 'Parça', 'res.bf': p => `${p.r} (board foot)`,
-    'res.sm': 'Smalian (m³)', 'res.hu': 'Huber (m³)', 'res.ne': 'Newton (m³)', 'res.tot': 'Toplam', 'res.partial': 'Bazı tomruklar bu kuralla hesaplanamadı; kısmi toplam gösterilmez.', 'res.mbf': p => `Toplam: ${p.list}.`, 'res.note': 'Board foot metrik bir birim değildir; ABD ve Kanada ticaretindeki tanımıyla verilir (1 board foot = 1 in × 12 in × 1 ft kereste). Kübik hacim ölçülen metrik değerlerden, yuvarlamasız hesaplanır.',
-    'e.input': 'geçersiz ölçü', 'e.db': 'kalın uç ince uçtan küçük', 'e.short': 'ölçme boyu sıfır', 'e.split.db': 'bölmek için kalın uç çapı gerekir', 'e.max': 'geçersiz en uzun boy',
-    'e.intl8.length': 'bu boy için denklem yok (8/12/16/20 ft)', 'e.doyle.small': 'çap 4 inç ya da daha küçük', 'e.nonpositive': 'kural pozitif hacim vermiyor',
-    'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Tomruklar (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.', 'x.info': 'Bilgi', 'x.logs': 'Tomruklar', 'x.segs': 'Parçalar', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.src': 'Kaynak', 'x.rule': 'Kural',
-  },
   en: {
     privacy: 'Your data stay in this browser; nothing is sent to the server.',
     'step.1': 'Logs', 'step.2': 'Rules', 'step.3': 'Results', next: 'Next', back: 'Back', reset: 'Reset session', calc: 'Compute', none: '—',
@@ -1198,7 +1139,7 @@ const { downloadRecord, recordOption } = __fb_r("core/record-ui.js");
 
 
 
-const BASE = './', KEY = 'session:' + LS.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
+const BASE = './', KEY = 'session:' + LS.TOOL.id, LOC = 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = t => { const s = String(t ?? '').trim(); if (s === '') return null; const r = parseNumber(s.replace(',', '.'), '.'); return r.status === 'ok' ? r.value : NaN; };
 let S = blank(), R = null;
@@ -1246,7 +1187,7 @@ function renderStep1() {
     renderMap();
     $('sample').addEventListener('click', async () => {
       const buf = await (await fetch(BASE + 'assets/lab/logscale/ornek/ornek-tomruk.csv')).arrayBuffer();
-      const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-tomruk.csv (benzetim)' : 'ornek-tomruk.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+      const imp = { kind: 'csv', name: 'ornek-tomruk.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
       setTable({ imp, src: await readImport(imp, BASE) }); S.tbl.decimal = ','; S.tbl.decChosen = true; useTable();
     });
   }
@@ -1324,7 +1265,7 @@ function renderStep3() {
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('back2').addEventListener('click', () => go(2));
-  const name = ext => `${lang === 'tr' ? 'tomruk-olcumu' : 'log-scaling'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `log-scaling-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), logRows(), lang));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }

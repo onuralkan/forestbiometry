@@ -1,38 +1,26 @@
-// Shared number display: decimal comma on Turkish screens, point in English (19 Nov 2026, user decision); CSV and
-// the import defaults are independent of the interface language.
+// Shared number display: decimal point, no thousands separator (English only; 20 Nov 2026); CSV and the import
+// defaults are independent of the interface.
 //   node tests/site/test_format.mjs
 let pass = 0, fail = 0;
 const eq = (a, b, m) => { const A = JSON.stringify(a), B = JSON.stringify(b); if (A === B) pass++; else { fail++; console.log('FAIL', m, 'got', A, 'expected', B); } };
 
-async function load(l) {
-  globalThis.document = { documentElement: { lang: l } };
-  const base = new URL('../../assets/lab/core/', import.meta.url).href;
-  const i18n = await import(base + 'i18n.js?l=' + l), ex = await import(base + 'export.js?l=' + l);
-  delete globalThis.document;
-  return { ...i18n, csvText: ex.csvText };
-}
-const tr = await load('tr'), en = await load('en');
-eq([tr.lang, en.lang], ['tr', 'en'], 'two separate language instances');
+const base = new URL('../../assets/lab/core/', import.meta.url).href;
+const i18n = await import(base + 'i18n.js'), ex = await import(base + 'export.js');
+eq(i18n.lang, 'en', 'interface language is English');
 
 // [value, digits, expected]: point, no grouping, at most `digits` decimals, trailing zeros dropped
 const cases = [[24.5, 2, '24.5'], [1234567.891, 2, '1234567.89'], [0.12345, 3, '0.123'], [2.675, 2, '2.68'], [-0.0001, 2, '0'],
   [-12.3456, 1, '-12.3'], [1e-7, 3, '0'], [100, 0, '100'], [0.5, 0, '1'], [1.30, 2, '1.3'], [NaN, 2, '–'], [null, 2, '–'], [Infinity, 2, '–']];
-for (const [x, d, want] of cases) {
-  eq(tr.fmtNum(x, d), want.replace('.', ','), `fmtNum TR ${x},${d}`);
-  eq(en.fmtNum(x, d), want, `fmtNum EN ${x},${d}`);
-}
-for (let i = 0; i < 500; i++) {                                         // random values: Turkish = English with the comma
-  const x = (Math.random() - 0.5) * 10 ** (Math.random() * 8 - 2), d = i % 6;
-  const a = tr.fmtNum(x, d), b = en.fmtNum(x, d);
-  if (a !== b.replace('.', ',') || b.includes(',') || (a.match(/,/g) || []).length > 1) { eq(a, b.replace('.', ','), 'random ' + x); continue; }
+for (const [x, d, want] of cases) eq(i18n.fmtNum(x, d), want, `fmtNum ${x},${d}`);
+for (let i = 0; i < 500; i++) {                                         // random values: never a comma, at most one point
+  const x = (Math.random() - 0.5) * 10 ** (Math.random() * 8 - 2), d = i % 6, s = i18n.fmtNum(x, d);
+  if (s.includes(',') || (s.match(/\./g) || []).length > 1) { eq(s, 'a number with a point', 'random ' + x); continue; }
   pass++;
 }
-eq([tr.SCREEN_DECIMAL, en.SCREEN_DECIMAL, tr.LIST_SEP, en.LIST_SEP], [',', '.', '; ', ', '], 'screen decimal and list separator by language');
-eq([tr.DECIMAL, en.DECIMAL], ['.', '.'], 'DECIMAL constant');
+eq([i18n.SCREEN_DECIMAL, i18n.LIST_SEP, i18n.DECIMAL], ['.', ', ', '.'], 'screen decimal, list separator, CSV decimal');
 
 const rows = [['plot', 'd'], ['001', 24.5], ['002', 1234.125]];
-eq(tr.csvText(rows, 'tr'), en.csvText(rows, 'en'), 'CSV identical in both languages');
-eq(tr.csvText(rows, 'tr').split(/\r?\n/)[1], '001,24.5', 'CSV: comma columns, point decimals');
+eq(ex.csvText(rows).split(/\r?\n/)[1], '001,24.5', 'CSV: comma columns, point decimals');
 
 const num = await import(new URL('../../assets/lab/core/num.js', import.meta.url).href);
 eq([num.defaultDecimal('dot'), num.defaultDecimal('comma'), num.defaultDecimal('none'), num.defaultDecimal('ambiguous'), num.defaultDecimal('conflict')],

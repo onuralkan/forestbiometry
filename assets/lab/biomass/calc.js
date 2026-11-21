@@ -23,14 +23,14 @@ export const BASKERVILLE_SCALES = ['log'];
 
 /** Registered forms. f(p, D, H) gives B on the form's own scale (linear, ln B or log10 B). */
 export const FORMS = {
-  'pow.d': { params: ['a', 'b'], needsH: false, scale: 'none', formula: { tr: 'B = a·D^b', en: 'B = a·D^b' }, f: (p, D) => p.a * D ** p.b },
-  'pow.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'none', formula: { tr: 'B = a·D^b·H^c', en: 'B = a·D^b·H^c' }, f: (p, D, H) => p.a * D ** p.b * H ** p.c },
-  'pow.d2h': { params: ['a', 'b'], needsH: true, scale: 'none', formula: { tr: 'B = a·(D²H)^b', en: 'B = a·(D²H)^b' }, f: (p, D, H) => p.a * (D * D * H) ** p.b },
-  'lin.d2h': { params: ['a', 'b'], needsH: true, scale: 'none', formula: { tr: 'B = a + b·D²H', en: 'B = a + b·D²H' }, f: (p, D, H) => p.a + p.b * D * D * H },
-  'log.d': { params: ['a', 'b'], needsH: false, scale: 'log', formula: { tr: 'ln B = a + b·ln D', en: 'ln B = a + b·ln D' }, f: (p, D) => p.a + p.b * Math.log(D) },
-  'log.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log', formula: { tr: 'ln B = a + b·ln D + c·ln H', en: 'ln B = a + b·ln D + c·ln H' }, f: (p, D, H) => p.a + p.b * Math.log(D) + p.c * Math.log(H) },
-  'log10.d': { params: ['a', 'b'], needsH: false, scale: 'log10', formula: { tr: 'log₁₀ B = a + b·log₁₀ D', en: 'log₁₀ B = a + b·log₁₀ D' }, f: (p, D) => p.a + p.b * Math.log10(D) },
-  'log10.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log10', formula: { tr: 'log₁₀ B = a + b·log₁₀ D + c·log₁₀ H', en: 'log₁₀ B = a + b·log₁₀ D + c·log₁₀ H' }, f: (p, D, H) => p.a + p.b * Math.log10(D) + p.c * Math.log10(H) },
+  'pow.d': { params: ['a', 'b'], needsH: false, scale: 'none', formula: { en: 'B = a·D^b' }, f: (p, D) => p.a * D ** p.b },
+  'pow.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'none', formula: { en: 'B = a·D^b·H^c' }, f: (p, D, H) => p.a * D ** p.b * H ** p.c },
+  'pow.d2h': { params: ['a', 'b'], needsH: true, scale: 'none', formula: { en: 'B = a·(D²H)^b' }, f: (p, D, H) => p.a * (D * D * H) ** p.b },
+  'lin.d2h': { params: ['a', 'b'], needsH: true, scale: 'none', formula: { en: 'B = a + b·D²H' }, f: (p, D, H) => p.a + p.b * D * D * H },
+  'log.d': { params: ['a', 'b'], needsH: false, scale: 'log', formula: { en: 'ln B = a + b·ln D' }, f: (p, D) => p.a + p.b * Math.log(D) },
+  'log.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log', formula: { en: 'ln B = a + b·ln D + c·ln H' }, f: (p, D, H) => p.a + p.b * Math.log(D) + p.c * Math.log(H) },
+  'log10.d': { params: ['a', 'b'], needsH: false, scale: 'log10', formula: { en: 'log₁₀ B = a + b·log₁₀ D' }, f: (p, D) => p.a + p.b * Math.log10(D) },
+  'log10.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log10', formula: { en: 'log₁₀ B = a + b·log₁₀ D + c·log₁₀ H' }, f: (p, D, H) => p.a + p.b * Math.log10(D) + p.c * Math.log10(H) },
 };
 // BC-02: linear component equations of an additive system, B = b0 + Σ b_j·term_j over a subset of D, D², D²H, H
 // (Parresol 1999 §1.1.4–1.1.5 [B]; fitted in sur.js, applied here like any other set).
@@ -39,7 +39,7 @@ export const FORMS = {
   for (let m = 1; m < 16; m++) {
     const ts = order.filter((_, i) => m & (1 << i)), params = ['b0', ...ts.map((_, i) => 'b' + (i + 1))];
     const text = 'B = b0 + ' + ts.map((t, i) => `b${i + 1}·${T[t][0]}`).join(' + ');
-    FORMS['lt.' + ts.join('.')] = { params, needsH: ts.some(t => t === 'd2h' || t === 'h'), scale: 'none', linear: ts, formula: { tr: text, en: text },
+    FORMS['lt.' + ts.join('.')] = { params, needsH: ts.some(t => t === 'd2h' || t === 'h'), scale: 'none', linear: ts, formula: { en: text },
       f: (p, D, H) => ts.reduce((s, t, i) => s + p['b' + (i + 1)] * T[t][1](D, H), p.b0) };
   }
 }

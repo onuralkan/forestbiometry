@@ -10,7 +10,7 @@ import { downloadRecord, recordButton } from '../core/record-ui.js';
 import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 
-const BASE = './', KEY = 'session:' + P.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + P.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 /** Numbers typed in the form: point or comma as decimal separator; anything else → NaN (never 0). */
@@ -85,7 +85,7 @@ function renderSrc() {
     renderImport($('impbox'), { imp: S.imp, src: S.tbl }, { base: BASE, title: T('imp.h'), sub: T('imp.sub'), onChange: setTable, onError: m => status(m, 'err') });
     $('sample').addEventListener('click', async () => {
       const buf = await (await fetch(BASE + 'assets/lab/sampling/ornek/ornek-pilot.csv')).arrayBuffer();
-      const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-pilot.csv (benzetim)' : 'ornek-pilot.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+      const imp = { kind: 'csv', name: 'ornek-pilot.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
       setTable({ imp, src: await readImport(imp, BASE) });
       S.unit = 'm³/ha'; changed(true);
     });
@@ -198,7 +198,7 @@ function renderResult() {
 }
 
 /* ---------------- exports ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function gridRows(p, r) {
   const g = P.grid(p, [p.e]);
   return [[T('grid.e'), T('grid.n0'), T('grid.n'), ...(r.additional != null ? [T('grid.add')] : []), 'CV (%)', T('tg.level'), 'z', 'M'],

@@ -13,7 +13,7 @@ import { parseNumber, toInternal, detectDecimal, defaultDecimal } from '../core/
 
 const BASE = './', KEY = 'session:' + C.TOOL.id;
 const $ = id => document.getElementById(id);
-const LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const LOC = 'en-GB';
 const f = (x, d = 2) => fmtNum(x, d);
 const perLabel = p => p == null ? T('per.none') : p;
 const when = iso => iso ? new Date(iso).toLocaleString(LOC) : '–';
@@ -127,7 +127,7 @@ function renderStep1() {
   });
   $('sample').addEventListener('click', async () => {
     const ds = await (await fetch(BASE + 'assets/lab/stand/ornek/ornek-veri.json')).json();
-    useDataset(ds, { kind: 'sample', name: lang === 'tr' ? 'örnek veri paketi (benzetim)' : 'sample data package (simulated)' });
+    useDataset(ds, { kind: 'sample', name: 'sample data package (simulated)' });
   });
   $('scope').addEventListener('change', e => { S.scopeOk = e.target.checked; save(); renderStep1(); renderSteps(); });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -386,7 +386,7 @@ function tabForest(p) {
 }
 
 /* ---------------- exports ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function unitRows() {
   return [['plot_id', 'period', 'state', 'stratum', 'area_m2', 'expansion_factor', 'n', 'N_ha', 'G_m2', 'G_m2_ha', 'd_mean_cm', 'dq_cm', 'd_min_cm', 'd_max_cm', 'd_sd_cm', 'h_measured_n', 'h_measured_mean_m', 'h_estimated_n', 'h_estimated_mean_m', 'h_missing_n', 'below_classes_n', 'above_classes_n',
     'dominant_k', 'D0_cm', 'H0_m', 'age_mean', 'age_n'],
@@ -471,7 +471,7 @@ function tabExport(p) {
   $('x-trees').addEventListener('click', async () => {
     let XLSX; try { status(T('busy')); XLSX = await loadXLSX(BASE); status(''); } catch (e) { status('XLSX', 'err'); return; }
     const x = treeExport(), base = ((S.dsSrc && S.dsSrc.name) || 'data').replace(/\.[^.]+$/, '').replace(/[^\p{L}\p{N}_-]+/gu, '-').slice(0, 60);
-    download(`${base}-${lang === 'tr' ? 'mescere' : 'stand'}.xlsx`, xlsxBlob(XLSX, [{ name: T('sheet.data'), rows: x.rows }, { name: T('sheet.info'), rows: x.info, widths: [22, 90, 10] }]));
+    download(`${base}-stand.xlsx`, xlsxBlob(XLSX, [{ name: T('sheet.data'), rows: x.rows }, { name: T('sheet.info'), rows: x.info, widths: [22, 90, 10] }]));
   });
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { status(T('busy')); XLSX = await loadXLSX(BASE); status(''); } catch (e) { status('XLSX', 'err'); return; }

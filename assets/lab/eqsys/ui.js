@@ -14,7 +14,7 @@ import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { buildR } from './rcode.js';
 import { tableCsv, csvName } from '../core/rcode.js';
 
-const BASE = './', KEY = 'session:' + Q.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
+const BASE = './', KEY = 'session:' + Q.TOOL.id, LOC = 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 function sig(x) { return x == null || !Number.isFinite(x) ? '–' : x === 0 ? '0' : Math.abs(x) >= 1e-4 && Math.abs(x) < 1e6 ? fmtNum(Number(x.toPrecision(7)), 14) : x.toExponential(6); }
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
@@ -54,7 +54,7 @@ function renderStep1() {
   el.querySelectorAll('input[name="tdec"]').forEach(x => x.addEventListener('change', () => { S.tbl.decimal = x.value; S.tbl.decChosen = true; R = null; save(); }));
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/eqsys/ornek/ornek-sistem.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-sistem.csv (benzetim)' : 'ornek-sistem.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-sistem.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) }); S.tbl.decimal = ','; S.tbl.decChosen = true;
     const H = headers().map(x => x.toLowerCase());
     S.eqs = [{ y: H.indexOf('h_m'), expr: '1.3 + a*(1-exp(-b*D_cm))^c' }, { y: H.indexOf('v_m3'), expr: 'k*D_cm^p*(1.3 + a*(1-exp(-b*D_cm))^c)^q' }];
@@ -172,7 +172,7 @@ function renderStep3() {
         ${t.restricted.converged && t.unrestricted.converged ? '' : `<p class="note warn small">${T('r.noconv')}</p>`}<p class="muted small">${esc(T('lrt.names', { n: Object.entries(t.renamed).map(([k, v]) => `${k} → ${v.join(', ')}`).join('; ') }))}</p>`;
     });
   }
-  const name = ext => `${lang === 'tr' ? 'denklem-sistemleri' : 'equation-systems'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `equation-systems-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-r').addEventListener('click', () => {
     const imp = S.tbl.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
     download(name('R'), buildR({ imp, src: S.tbl.src, decimal: S.tbl.decimal || '.', eqs: S.eqs.map(e => ({ y: e.y })), map: S.map }, R, { lang, created: new Date().toISOString(), version: Q.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');

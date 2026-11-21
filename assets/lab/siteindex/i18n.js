@@ -1,76 +1,6 @@
 // Site Index: TR/EN texts.
 import { makeT } from '../core/i18n.js';
 
-const tr = {
-  'step.1': 'Model', 'step.2': 'Veri', 'step.3': 'Sonuçlar',
-  'privacy': 'Verileriniz ve katsayı setleriniz bu tarayıcıda işlenir ve saklanır; sunucuya gönderilmez.',
-  'next': 'Devam', 'back': 'Geri', 'calc': 'Hesapla', 'reset': 'Oturumu sıfırla', 'none': '— yok —',
-  'restored': p => `Önceki oturum geri yüklendi (${p.when}).`,
-  // step 1
-  'x.ageType': 'Yaş türü', 'x.ageType.total': 'toplam yaş', 'x.ageType.bh': 'göğüs yüksekliği yaşı',
-  'x.ageType.note': 'Denklem hangi yaş türüyle fit edildiyse o seçilir; araç yaş türlerini birbirine çevirmez.',
-  'x.topDef': 'Üst boy tanımı', 'x.topDef.h0dbh': 'hektarda en kalın 100 ağacın ortalama boyu', 'x.topDef.h0height': 'hektarda en uzun 100 ağacın ortalama boyu (platformun üst boyu H0; ağaçlar boya göre seçilir, en kalın 100 ağaca dayanan Assmann tanımından farklıdır)', 'x.topDef.other': 'başka bir tanım (nota yazın)',
-  'x.topNote': 'Üst boy tanımı notu',
-  'm.h': 'Kullanılacak denklem', 'm.set': 'Katsayı seti', 'm.noset': 'Önce yukarıda bir katsayı seti kaydedin.', 'm.a0': 'Standart yaş A₀ (yıl)',
-  'm.a0.note': 'Bonitet endeksi, standart yaştaki üst boydur. Fark denklemleri standart yaştan bağımsızdır: standart yaşı değiştirmek eğrileri değil, endeksin hangi yaşta okunduğunu değiştirir. Varsayılan yoktur; kullandığınız sınıflandırmanın standart yaşını girin.',
-  'm.a0.bad': 'Standart yaş pozitif bir sayı olmalı.', 'm.need': 'Bir katsayı seti seçin.',
-  'm.info': p => `${p.form} · yaş türü: ${p.age} · üst boy: ${p.top} · kaynak: ${p.src}`,
-  'cls.h': 'Bonitet sınıfları (isteğe bağlı)', 'cls.none': 'Sınıf yok (yalnızca endeks)', 'cls.equal': 'Eşit aralıklı', 'cls.breaks': 'Sınırları ben yazacağım',
-  'cls.start': 'Başlangıç (m)', 'cls.width': 'Genişlik (m)', 'cls.n': 'Sınıf sayısı', 'cls.list': 'Sınırlar (m, artan, boşlukla ya da noktalı virgülle)',
-  'cls.order': 'Adlandırma', 'cls.order.desc': 'I en iyi bonitet', 'cls.order.asc': 'I en kötü bonitet',
-  'cls.note': 'Sınıf sınırlarını siz verirsiniz; araç hiçbir hasılat tablosunun sınırlarını içermez. Sınıflar [alt, üst) aralıklarıdır, sonuncusu üst sınırı da kapsar; dışında kalan endeks "sınıf dışı" yazılır.',
-  'cls.bad': 'Sınıf tanımı geçersiz: başlangıç ≥ 0, genişlik > 0, 1–20 sınıf; sınırlar artan olmalı.',
-  'cls.preview': p => `Sınıflar: ${p.list}`,
-  'x.cov': 'Kovaryans matrisi (isteğe bağlı)', 'x.cov.note': 'Kaynak, global katsayıların kovaryans matrisini veriyorsa satır satır girin (satırlar ";" ile, ondalık nokta; ör. "1.9e-6 3.1e-5; 3.1e-5 8.1e-4"). Verilirse bonitet endeksinin %95 aralığı delta yöntemiyle hesaplanır; verilmezse belirsizlik bilgisi yoktur.',
-  'bt.h': 'Belirsizlik: dizi düzeyinde bootstrap', 'bt.sub': 'Diziler (tek tek gözlemler değil) yerine koyarak yeniden örneklenir, çiftler aynı eşleştirmeyle yeniden kurulur ve denklem tam verinin kestiriminden başlayarak yeniden fit edilir. Aralıklar başarılı tekrarların yüzdelikleridir (tip 7). Sabit tohumla tekrarlanabilir.',
-  'bt.B': 'Tekrar sayısı B', 'bt.seed': 'Tohum', 'bt.run': 'Bootstrap\'ı çalıştır', 'bt.bad': 'B 20 ile 5000 arasında bir tam sayı, tohum negatif olmayan bir tam sayı olmalı.', 'bt.busy': p => `${p.B} tekrar hesaplanıyor…`,
-  'bt.sum': p => `B = ${p.B}, tohum ${p.seed}: ${p.ok} tekrar başarılı, ${p.fail} başarısız (%${p.rate}).`, 'bt.ci': '%95 yüzdelik aralığı', 'bt.sd': 'Bootstrap standart sapması',
-  't.ci': 'SI %95 aralığı', 't.cilo': 'SI %95 aralığı alt', 't.cihi': 'SI %95 aralığı üst', 'd.set.noage': 'Seçili sette yaş türü yok (eski ya da dışarıdan yüklenmiş bir set); seti düzenleyip yaş türünü seçin.', 'bt.prog': p => `Bootstrap: ${p.b} / ${p.B} tekrar…`, 'x.fail': 'Excel kitaplığı yüklenemedi; sayfayı yenileyip yeniden deneyin.', 'u.boot': p => `Bonitet endeksinin %95 aralığı: dizi düzeyinde bootstrap (B = ${p.B}, tohum ${p.seed}, ${p.ok} başarılı tekrar; setle birlikte saklanan tekrarlardan).`, 'u.delta': 'Bonitet endeksinin %95 aralığı: delta yöntemi, kaynağın verdiği kovaryans matrisiyle (normal yaklaşım).', 'u.none': 'Belirsizlik bilgisi yok: set bootstrap tekrarları ya da kaynaktan bir kovaryans matrisi içermiyor.',
-  'c.boot.nofit': 'önce başarılı bir fit etme gerekir', 'c.boot.fewseries': 'bootstrap için en az iki dizi gerekir', 'c.cov.shape': 'kovaryans matrisi katsayı sayısıyla uyuşmuyor', 'c.cov.diag': 'kovaryans köşegeni pozitif olmalı', 'c.cov.sym': 'kovaryans matrisi simetrik değil', 'c.cov.notpsd': 'kovaryans matrisi pozitif yarı tanımlı değil', 'c.si.invalid': 'bonitet endeksi yok',
-  'fit.sample': 'Örnek veriyi yükle', 'fit.sample.note': 'Örnek veri benzetimdir (gerçek ölçüm değildir): 8 ağacın gövde analizi, 10–80 yaş. Ürettiği katsayılar hiçbir tür ya da yöreye ait değildir.',
-  'mt.label': 'Katsayı setinin kaynağı', 'mt.coef': 'Kaynaktan katsayı seti', 'mt.fit': 'Kendi verime fit et',
-  'fit.h': 'Katsayıları kendi verime fit et (gövde analizi ya da tekrarlı ölçüm)', 'fit.sub': 'Her satır bir dizinin (bir ağacın gövde analizi ya da bir örnek alanın tekrarlı üst boy ölçümleri) bir gözlemi: dizi kimliği, yaş ve boy. Fark denklemi aynı dizinin gözlem çiftlerine (H₂ = f(A₂, A₁, H₁)) en küçük kareler ile fit edilir.',
-  'fit.imp': 'Yaş–boy dizileri', 'fit.imp.sub': 'Dizi kimliği, yaş ve boy zorunlu; örnek alan isteğe bağlı (dizi kimliğiyle birleşir).',
-  'fit.col.series': 'Dizi (ağaç ya da örnek alan)', 'fit.col.plot': 'Örnek alan', 'fit.col.A': 'Yaş', 'fit.col.H': 'Boy (m)', 'fit.form': 'Biçim',
-  'fit.pair': 'Gözlem çiftleri', 'fit.pair.consecutive': 'ardışık (1→2, 2→3, …)', 'fit.pair.first': 'ilk gözlemden (1→2, 1→3, …)', 'fit.pair.all': 'bütün çiftler (her i < j)',
-  'fit.start': 'Başlangıç değerleri:', 'fit.start.grid': 'otomatik (küçük bir ızgaradan en iyisi)', 'fit.start.user': 'kendim gireceğim', 'fit.run': 'Fit et',
-  'fit.read': p => `${p.n} satır kullanılamadı (satırlar: ${p.rows}…): okunamayan ya da pozitif olmayan yaş/boy, boş dizi kimliği ya da dizide tekrarlanan yaş.`,
-  'fit.fail': p => `Fit etme sonuç vermedi: ${p.why}. Başka bir başlangıç ya da biçim deneyin; sonuç katsayı kaydına yazılamaz.`,
-  'fit.sum': p => `${p.n} çift, ${p.s} dizi, eşleştirme: ${p.pair}; Levenberg–Marquardt ${p.it} yineleme; başlangıç ${p.start} (${p.from}).`,
-  'fit.par': 'Katsayı', 'fit.est': 'Kestirim', 'fit.se': 'Standart hata*', 'fit.senote': '* Gözlemler bağımsız varsayımıyla (σ̂²(JᵀJ)⁻¹). Aynı dizinin gözlemleri bağımsız değildir; gerçek belirsizlik daha büyük olabilir.',
-  'fit.gof': p => `RMSE ${p.rmse} m, yanlılık ${p.bias} m (gözlenen − tahmin; Model Başarısı aracıyla aynı tanımlar), σ̂ ${p.sigma} m.`,
-  'fit.ch.curves': 'Fit edilen eğriler ve gözlemler', 'fit.ch.note': 'Her dizinin eğrisi o dizinin en yaşlı gözleminden geçer (ilk 30 dizi).', 'fit.ch.lines': 'dizilerin eğrileri', 'fit.ch.age': 'Yaş (yıl)', 'fit.ch.h': 'Boy (m)',
-  'fit.ch.res': 'Artıklar ve hedef yaş', 'fit.ch.age2': 'Hedef yaş A₂ (boyun tahmin edildiği yaş, yıl)', 'fit.ch.e': 'Artık e = gözlenen − tahmin (m)',
-  'fit.save.h': 'Katsayı kaydına yaz', 'fit.save.sub': 'Kayıt, kökeni "fit edilen" olan bir set olur; fit etme özeti (veri, çift ve dizi sayısı, eşleştirme, RMSE, yanlılık), verinin yaş ve boy aralığı (geçerlilik aralığı olarak) ve sizin verdiğiniz kaynak künyesiyle saklanır.',
-  'fit.cit': 'Kaynak künyesi (zorunlu)', 'fit.cit.ph': 'ör. Kendi gövde analizi verim, 2026, yayımlanmamış', 'fit.save': 'Seti kaydet', 'fit.saved': 'Set kaydedildi ve seçildi.',
-  'fit.miss': p => `Eksik: ${p.list}.`,
-  'c.fit.few': p => `${p.n} çift ${p.p} katsayı için yetersiz`, 'c.fit.nostart': 'başlangıç değeri bulunamadı', 'c.fit.noconverge': 'yakınsamadı', 'c.fit.diverged': 'ıraksadı', 'c.fit.invalid': 'başlangıçta model tanımsız', 'c.fit.startbad': 'başlangıç değerleri sayı değil', 'c.form.unknown': 'biçim tanınmıyor',
-  // step 2
-  'd.h': 'Veri', 'd.mode': 'Girdi', 'd.single': 'Tek nokta (yaş ve üst boy)', 'd.table': 'Tablo (örnek alan, dönem, yaş, üst boy)', 'd.ds': 'Onaylanmış ağaç verisinden (H0 Örnek Alan aracıyla aynı tanımla)',
-  'd.nods': 'Bu tarayıcıda onaylanmış veri yok.', 'd.A': 'Yaş (yıl)', 'd.H': 'Üst boy (m)',
-  'd.agetype': 'Verideki yaşın türü', 'd.agetype.need': 'Verideki yaşın türünü seçin.', 'd.agetype.diff': p => `Verideki yaş türü (${p.d}) denklemin yaş türüyle (${p.m}) aynı değil; araç yaşları çevirmez (K8). Aynı türde yaş kullanın.`,
-  'd.col.plot': 'Örnek alan', 'd.col.period': 'Dönem', 'd.col.A': 'Yaş', 'd.col.H': 'Üst boy (m)', 'd.col.need': 'Yaş ve üst boy sütunlarını seçin.',
-  'd.imp': 'Üst boy tablosu', 'd.imp.sub': 'Her satır bir örnek alan ya da ağaç: yaş ve üst boy zorunlu; örnek alan ve dönem isteğe bağlı.',
-  'd.ds.note': 'Üst boy H0 ve yaş, Örnek Alan ve Meşcere aracının fonksiyonlarıyla hesaplanır: H0, hektardaki en uzun 100 ağacın ortalama boyudur (örnek alanda k = 100·A/10000, kesirli k ağırlıklı) ve yalnızca ölçülmüş boylardan hesaplanır; yaş, yaşı kayıtlı ağaçların ortalaması. Dönemler ayrı birimlerdir.',
-  'd.single.bad': 'Yaş ve üst boy pozitif sayı olmalı.', 'd.dec': 'Ondalık ayırıcı', 'd.dec.dot': 'Nokta (24.5)', 'd.dec.comma': 'Virgül (24,5)',
-  // step 3
-  'r.model': p => `Denklem: ${p.form}. Standart yaş ${p.a0} yıl (${p.age}). Üst boy: ${p.top}.`,
-  'r.src': p => `Kullanıcı katsayılarıyla üretildi: ${p.src}`,
-  'r.sum': p => `${p.n} nokta: ${p.ok} hesaplandı, ${p.bad} hesaplanamadı, ${p.out} geçerlilik aralığı dışında.`,
-  't.unit': 'Birim', 't.plot': 'Örnek alan', 't.period': 'Dönem', 't.A': 'Yaş (yıl)', 't.H': 'Üst boy (m)', 't.Hsrc': 'Üst boyun kaynağı', 't.SI': p => `Bonitet endeksi SI${p.a0} (m)`, 't.cls': 'Sınıf', 't.note': 'Not', 't.state': 'Durum',
-  'src.given': 'girilen', 'src.h0dbh': 'H0, en kalın 100', 'src.h0height': 'H0, en uzun 100', 'u.single': 'Nokta', 'cls.out': 'sınıf dışı',
-  'st.ok': 'tamam', 'st.invalid': 'hesaplanmadı',
-  'ch.title': p => `Bonitet eğrileri (standart yaş ${p.a0})`, 'ch.x': p => `Yaş (yıl, ${p.age})`, 'ch.y': 'Üst boy (m)', 'ch.curve': p => `SI ${p.si}`, 'ch.obs': 'gözlemler',
-  'ch.note.cls': 'Eğriler sınıf sınırlarındaki bonitet endeksleridir.', 'ch.note.q': 'Sınıf tanımlanmadığı için eğriler hesaplanan endekslerin en küçüğü, ortancası ve en büyüğüdür.',
-  'ex.xlsx': 'Excel raporu', 'ex.csv': 'Sonuçlar (CSV)', 'ex.json': 'Sonuç kayıtları (JSON)',
-  'sheet.info': 'Bilgi', 'sheet.res': 'Bonitet', 'sheet.curves': 'Eğriler',
-  'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.form': 'Denklem', 'x.params': 'Katsayılar', 'x.source': 'Kaynak', 'x.a0': 'Standart yaş', 'x.age': 'Yaş türü', 'x.top': 'Üst boy tanımı', 'x.cls': 'Sınıflar', 'x.valid': 'Geçerlilik aralığı', 'x.input': 'Girdi',
-  // problems
-  'c.a.bad': 'yaş geçersiz', 'c.h.bad': 'üst boy geçersiz', 'c.h.aboveasym': p => `üst boy (${p.h} m) denklemin asimptotunda ya da üstünde (b₀ = ${p.b0} m)`, 'c.par.b1pos': 'b₁ pozitif olmalı', 'c.par.b2pos': 'b₂ pozitif olmalı', 'c.par.b0pos': 'b₀ pozitif olmalı',
-  'c.par.b1neg': 'Schumacher biçiminde büyüme için b₁ negatif olmalı (exp(−b₁/A) yazan kaynaklarda −b₁ girin)', 'c.par.missing': p => `${p.key} katsayısı yok`, 'c.result.bad': 'sonuç tanımsız', 'c.a0.bad': 'standart yaş geçersiz',
-  'c.valid.A': p => `yaş (${p.value}) setin geçerlilik aralığı dışında`, 'c.valid.H': p => `üst boy (${p.value}) setin geçerlilik aralığı dışında`,
-  'c.h0.none': 'H0 hesaplanamadı (seçilen ağaçlardan birinin boyu ölçülmemiş)', 'c.age.none': 'birimde yaşı kayıtlı ağaç yok', 'c.num.bad': p => `sayı okunamadı ("${p.text}")`, 'c.unit.empty': 'birimde ağaç yok',
-};
 const en = {
   'step.1': 'Model', 'step.2': 'Data', 'step.3': 'Results',
   'privacy': 'Your data and coefficient sets are processed and stored in this browser; they are not sent to the server.',
@@ -137,5 +67,5 @@ const en = {
   'c.valid.A': p => `age (${p.value}) outside the validity range of the set`, 'c.valid.H': p => `top height (${p.value}) outside the validity range of the set`,
   'c.h0.none': 'H0 not available (a selected tree has no measured height)', 'c.age.none': 'no tree with a recorded age in the unit', 'c.num.bad': p => `number not readable ("${p.text}")`, 'c.unit.empty': 'no trees in the unit',
 };
-export const T = makeT({ tr, en });
-export const TXT = { tr, en };
+export const T = makeT({ en });
+export const TXT = { en };

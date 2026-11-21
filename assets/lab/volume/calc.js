@@ -38,7 +38,7 @@ const WVAR = { d2h: t => t.D * t.D * t.H, d2: t => t.D * t.D };
 for (const [id, f] of Object.entries(FORMS)) {
   try {
     registerForm({ id: 'volume.' + id, tool: 'volume', params: f.params.map(key => ({ key })), inputs: f.needsH ? { D: { unit: 'cm' }, H: { unit: 'm' } } : { D: { unit: 'cm' } },
-      output: { name: 'V', unit: 'm3' }, formula: { tr: f.formula, en: f.formula }, transform: f.scale });
+      output: { name: 'V', unit: 'm3' }, formula: { en: f.formula }, transform: f.scale });
   } catch (e) { /* already registered (module loaded twice in one page) */ }
 }
 

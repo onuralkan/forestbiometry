@@ -2,28 +2,6 @@
 import { makeT } from '../core/i18n.js';
 
 export const T = makeT({
-  tr: {
-    privacy: 'Verileriniz yalnızca bu tarayıcıda kalır; sunucuya gönderilmez.',
-    'step.1': 'Tomruklar', 'step.2': 'Kurallar', 'step.3': 'Sonuçlar', next: 'Devam', back: 'Geri', reset: 'Oturumu sıfırla', calc: 'Hesapla', none: '—',
-    restored: p => `Önceki oturum geri yüklendi (${p.when}).`,
-    'mode.h': 'Giriş', 'mode.single': 'Tek tomruk', 'mode.table': 'Tomruk tablosu',
-    'in.ds': 'İnce uç çapı, kabuksuz (cm)', 'in.db': 'Kalın uç çapı (cm, isteğe bağlı)', 'in.dm': 'Orta çap (cm, isteğe bağlı)', 'in.L': 'Boy (m)',
-    'tb.h': 'Tomruk tablosu', 'tb.sub': 'Her satır bir tomruk: ince uç çapı (cm, kabuksuz), boy (m); kalın uç ve orta çap isteğe bağlı (kübik hacim ve tomruk bölme için).',
-    'map.id': 'Tomruk (isteğe bağlı)', 'map.ds': 'İnce uç çapı (cm)', 'map.db': 'Kalın uç çapı (cm)', 'map.dm': 'Orta çap (cm)', 'map.L': 'Boy (m)',
-    'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'nokta (12.5)', 'dec.comma': 'virgül (12,5)', 'map.use': 'Bu tabloyu kullan', 'sample': 'Benzetim tablosunu yükle', 'sample.note': 'Benzetim verisi denemek içindir (rastgele sayılar).',
-    'src.info': p => `${p.n} tomruk.`, 'need.data': 'Önce tomruk girin.', 'p.single': 'İnce uç çapı ve boy pozitif olmalı; kalın uç ince uçtan küçük olamaz.',
-    'r.h': 'Board-foot kuralları', 'r.sub': 'Kershaw ve ark. (2016) §7.3: 1 inç kalınlığında kereste için board foot; ince uç çapı (inç) ve boy (feet) ile.',
-    'r.scribner': 'Scribner (7.3)', 'r.doyle': 'Doyle (7.5)', 'r.intl8': 'International ⅛ inç (7.7–7.10; yalnız 8, 12, 16, 20 ft)', 'r.intl4': 'International ¼ inç (Grosenbaugh 1952; her boy)',
-    'o.h': 'Ölçme düzeni', 'o.roundD': 'Çap en yakın inçe yuvarlanır', 'o.len': 'Ölçme boyu', 'o.len.whole': 'tam feet (aşağı)', 'o.len.even': 'çift feet (aşağı)', 'o.len.none': 'yuvarlanmaz',
-    'o.max': 'En uzun ölçme boyu (ft, isteğe bağlı)', 'o.round5': 'International kurallarında 5 board foot\'a yuvarla (Clark tabloları gibi)',
-    'o.note': '§7.4.1: çap kabuksuz, ince uçta, en yakın inçe; kesim payı ölçme boyuna girmez. En uzun ölçme boyunu aşan tomruk iki ya da daha çok parça olarak ölçülür, eşit bölünmezse uzun parça dipte kalır; ayrım noktasının çapı ince ve kalın uç arasında doğrusal kabul edilir (araç kuralı; kalın uç gerekir). Kitaptaki değerler (16 ft doğu, 40 ft batı) varsayılan değildir.',
-    'p.rules': 'En az bir kural seçin', 'p.max': 'En uzun ölçme boyu pozitif bir sayı olmalı',
-    'res.h': 'Tomruklar', 'res.id': 'Tomruk', 'res.ds': 'İnce uç (cm)', 'res.L': 'Boy (m)', 'res.Lft': 'Ölçme boyu (ft)', 'res.Din': 'Ölçme çapı (in)', 'res.seg': 'Parça', 'res.bf': p => `${p.r} (board foot)`,
-    'res.sm': 'Smalian (m³)', 'res.hu': 'Huber (m³)', 'res.ne': 'Newton (m³)', 'res.tot': 'Toplam', 'res.partial': 'Bazı tomruklar bu kuralla hesaplanamadı; kısmi toplam gösterilmez.', 'res.mbf': p => `Toplam: ${p.list}.`, 'res.note': 'Board foot metrik bir birim değildir; ABD ve Kanada ticaretindeki tanımıyla verilir (1 board foot = 1 in × 12 in × 1 ft kereste). Kübik hacim ölçülen metrik değerlerden, yuvarlamasız hesaplanır.',
-    'e.input': 'geçersiz ölçü', 'e.db': 'kalın uç ince uçtan küçük', 'e.short': 'ölçme boyu sıfır', 'e.split.db': 'bölmek için kalın uç çapı gerekir', 'e.max': 'geçersiz en uzun boy',
-    'e.intl8.length': 'bu boy için denklem yok (8/12/16/20 ft)', 'e.doyle.small': 'çap 4 inç ya da daha küçük', 'e.nonpositive': 'kural pozitif hacim vermiyor',
-    'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Tomruklar (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.', 'x.info': 'Bilgi', 'x.logs': 'Tomruklar', 'x.segs': 'Parçalar', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.src': 'Kaynak', 'x.rule': 'Kural',
-  },
   en: {
     privacy: 'Your data stay in this browser; nothing is sent to the server.',
     'step.1': 'Logs', 'step.2': 'Rules', 'step.3': 'Results', next: 'Next', back: 'Back', reset: 'Reset session', calc: 'Compute', none: '—',

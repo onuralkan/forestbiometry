@@ -175,19 +175,16 @@ function radarChart(o) {
 __fb_m["core/citation.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "FORMATS": () => FORMATS, "NAMES": () => NAMES, "cite": () => cite, "plain": () => plain });
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
-// Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// Input c = { author:{ family, given }, year, base (canonical URL with trailing '/'), site:{ en },
+//             tool: null | { file, v, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
 // doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
 const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MON_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const MLA_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const IEEE_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
 const VAN_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SHORT_TR = ['Oca.', 'Şub.', 'Mar.', 'Nis.', 'May.', 'Haz.', 'Tem.', 'Ağu.', 'Eyl.', 'Eki.', 'Kas.', 'Ara.'];
-const VAN_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
 const FORMATS = ['apa', 'mla', 'chicago', 'harvard', 'ieee', 'vancouver', 'bibtex', 'ris'];
 const NAMES = { apa: 'APA 7', mla: 'MLA 9', chicago: 'Chicago (author-date)', harvard: 'Harvard', ieee: 'IEEE', vancouver: 'Vancouver', bibtex: 'BibTeX', ris: 'RIS' };
@@ -197,9 +194,9 @@ const it = s => `<i>${esc(s)}</i>`;
 const plain = html => html.replace(/<\/?i>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 function parts(c) {
-  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1, tr = c.lang === 'tr';
-  const site = c.site[c.lang], tool = c.tool ? c.tool[c.lang] : null;
-  return { tr, y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
+  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1;
+  const site = c.site.en, tool = c.tool ? c.tool.en : null;
+  return { y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
     url: c.base + (c.tool ? c.tool.file : ''), fam: c.author.family, given: c.author.given, ini: c.author.given.charAt(0) + '.', year: c.year };
 }
 const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -208,54 +205,42 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 function cite(fmt, c) {
   const body = core(fmt, c);
   if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
-  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  const u = esc('https://doi.org/' + c.doi);
   switch (fmt) {
-    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'apa': return `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
     case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
     case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
     default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
   }
 }
 function core(fmt, c) {
-  const p = parts(c), tr = p.tr, v = p.v;
+  const p = parts(c), v = p.v;
   switch (fmt) {
     case 'apa':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Sürüm ${v})` : ''} [Web uygulaması].${p.container ? ` ${esc(p.container)}.` : ''} ${p.d} ${MON_TR[p.mi]} ${p.y} tarihinde ${esc(p.url)} adresinden erişildi.`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
     case 'mla':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Sürüm ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Erişim ${p.d} ${SHORT_TR[p.mi]} ${p.y}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
     case 'chicago':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Sürüm ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Erişim ${p.d} ${MON_TR[p.mi]} ${p.y}. ${esc(p.url)}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
     case 'harvard':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (sürüm ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Erişim adresi: ${esc(p.url)} (Erişim tarihi: ${p.d} ${MON_TR[p.mi]} ${p.y}).`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
     case 'ieee': {
-      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ${tr ? 'sür.' : 'ver.'} ${v}, ` : `${it(p.title)}, `;
-      return tr
-        ? `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Çevrimiçi]. Erişim: ${esc(p.url)} (erişim tarihi: ${p.d} ${SHORT_TR[p.mi]} ${p.y}).`
-        : `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
+      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ver. ${v}, ` : `${it(p.title)}, `;
+      return `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
     }
     case 'vancouver':
-      return tr
-        ? `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [İnternet]. ${v ? `Sürüm ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [erişim ${p.y} ${VAN_TR[p.mi]} ${p.d}]. Erişim adresi: ${esc(p.url)}`
-        : `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
+      return `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
     case 'bibtex': {
       const key = `${p.fam.toLowerCase()}${p.year}${c.tool ? c.tool.file.replace(/\.php$/, '').replace(/[^a-z0-9]/g, '') : 'forestbiometry'}`;
       const tt = p.title.replace(/–/g, '--');
-      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
+      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{Web application${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (`Version ${v}. `) : ''}Accessed ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `Version ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }
@@ -273,11 +258,8 @@ __fb_r("core/reset-all.js");
    // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
-const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
+const ui = 'en';
 const T = {
-  tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
-    copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
     note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
@@ -352,7 +334,7 @@ const FORMS = new Map();
 
 /**
  * form = { id, tool, params: [{ key, label? }], inputs: { <var>: { unit, bark? } }, output: { name, unit, bark? },
- *          formula: { tr, en } (text shown to the user), name?: { tr, en } (author and year, shown in the form list instead of
+ *          formula: { en } (text shown to the user), name?: { en } (author and year, shown in the form list instead of
  *          the formula, the formula then below it), transform?: 'none'|'log'|'log10' (the scale the equation is
  *          written on; default 'none'), eval?(params, x) → number (optional; the tool's own calculator) }
  */
@@ -524,12 +506,13 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
-// Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
-// languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
-const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
+// Tiny i18n helper. The site is English only (20 Nov 2026; Turkish removed from the code 21 Nov 2026): `lang` is
+// always 'en' and every dictionary has a single `en` table. Numbers on screen use a decimal point and no thousands
+// separator; the interface never changes how data are parsed or stored.
+const lang = 'en';
 function makeT(dict) {
   return (key, p) => {
-    const s = (dict[lang] && dict[lang][key]) ?? dict.tr[key];
+    const s = dict.en[key];
     if (s == null) return key;
     return typeof s === 'function' ? s(p || {}) : s;
   };
@@ -537,23 +520,23 @@ function makeT(dict) {
 /**
  * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
  * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
- * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * point (English only). '−' is not used: negative numbers keep
  * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
  * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
 /** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
-const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+const SCREEN_DECIMAL = '.';
 /** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
-const LIST_SEP = lang === 'tr' ? '; ' : ', ';
+const LIST_SEP = ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
+  return s === '-0' ? '0' : s;
 }
-/** Decimal separator of CSV exports (both languages). */
+/** Decimal separator of CSV exports. */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -571,12 +554,6 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
-    auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
-    encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
-    fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
-    comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
     auto: p => `detected: ${p.d}`, header: 'First row is a header', enc: 'Text encoding', sheet: 'Worksheet', pasted: 'pasted table',
     encwarn: 'Reading the file as UTF-8 produced broken characters; Turkish Excel CSV files are often Windows-1254.',
@@ -872,14 +849,12 @@ const rComment = text => String(text).split('\n').map(l => ('# ' + l).trimEnd())
  * o = { title, tool: { id, version }, site, created, lang, packages: ['nlme', …], notes: [lines] }
  */
 function header(o) {
-  const tr = o.lang === 'tr', pk = o.packages || [];
+  const pk = o.packages || [];
   const lines = [
     `${o.title}`,
-    tr ? `Üreten: ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}` : `Written by ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}`,
-    tr ? 'Bu betik aracın yaptığı analizi aynı ayarlarla R\'da yeniden yapar. Veri betiğe gömülmez: aşağıdaki dosya adını kendi dosyanızın yoluyla değiştirin.'
-       : 'This script redoes the tool\'s analysis in R with the same settings. The data are not embedded: change the file name below to the path of your file.',
-    tr ? `Paketler: ${pk.length ? pk.join(', ') : 'yalnızca temel R (stats, utils)'}. Sürümler çalıştırınca yazdırılır.`
-       : `Packages: ${pk.length ? pk.join(', ') : 'base R only (stats, utils)'}. Their versions are printed when the script runs.`,
+    `Written by ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}`,
+    'This script redoes the tool\'s analysis in R with the same settings. The data are not embedded: change the file name below to the path of your file.',
+    `Packages: ${pk.length ? pk.join(', ') : 'base R only (stats, utils)'}. Their versions are printed when the script runs.`,
     ...(o.notes || []),
   ];
   const libs = pk.map(p => `suppressPackageStartupMessages(library(${p}))`);
@@ -897,10 +872,10 @@ function header(o) {
  * significant digits, the same double) and read back by fb_num like every other cell.
  */
 function readBlock(imp, lang, fileName, decimal = '.') {
-  const tr = lang === 'tr', kind = imp && imp.kind, header = !imp || imp.header !== false;
+  const kind = imp && imp.kind, header = !imp || imp.header !== false;
   const file = String(fileName || (imp && imp.name) || 'data.csv').replace(/\s+\([^)]*\)$/, '');   // the sample's label "(simulated)" is not part of its file name
   if (kind === 'xlsx') {
-    return [rComment(tr ? 'Veri: Excel dosyası (readxl paketi gerekir); sayılar seçilen ondalık ayırıcıyla metne yazılır, sonra bütün hücreler metin olarak okunur.' : 'Data: Excel file (needs the readxl package); numbers written as text with the chosen decimal separator, every cell then read as text.'),
+    return [rComment('Data: Excel file (needs the readxl package); numbers written as text with the chosen decimal separator, every cell then read as text.'),
       `data_file <- ${rStr(file)}`,
       `xl <- readxl::read_excel(data_file, sheet = ${rStr(imp.sheet || 1)}, col_names = ${header ? 'TRUE' : 'FALSE'}, col_types = "list", .name_repair = "minimal")`,
       `xl_cell <- function(v) if (is.null(v) || length(v) == 0 || (length(v) == 1 && is.na(v))) "" else if (is.numeric(v)) sub(".", ${rStr(decimal)}, sprintf("%.17g", v), fixed = TRUE) else as.character(v)`,
@@ -911,9 +886,8 @@ function readBlock(imp, lang, fileName, decimal = '.') {
   const delim = csvLike ? ',' : (imp && (imp.delim || imp.detected)) || ',';
   const enc = csvLike ? 'UTF-8' : imp && imp.encoding ? String(imp.encoding).toUpperCase().replace('WINDOWS-', 'windows-') : 'UTF-8';
   const note = csvLike
-    ? (tr ? 'Veri: aracın betikle birlikte indirdiği CSV dosyası (tablo tarayıcıdaydı; aynı tablo, virgülle ayrılmış, UTF-8).' : 'Data: the CSV file the tool downloads with this script (the table was in the browser; the same table, comma-separated, UTF-8).')
-    : (tr ? `Veri: metin dosyası; ayırıcı ${JSON.stringify(delim)}, karakter kodlaması ${enc}, ${header ? 'ilk satır başlık' : 'başlık satırı yok'}; bütün hücreler metin olarak okunur.`
-          : `Data: text file; delimiter ${JSON.stringify(delim)}, encoding ${enc}, ${header ? 'first row is a header' : 'no header row'}; every cell read as text.`);
+    ? ('Data: the CSV file the tool downloads with this script (the table was in the browser; the same table, comma-separated, UTF-8).')
+    : (`Data: text file; delimiter ${JSON.stringify(delim)}, encoding ${enc}, ${header ? 'first row is a header' : 'no header row'}; every cell read as text.`);
   return [rComment(note),
     `data_file <- ${rStr(csvLike ? csvName(imp) : file)}`,
     `dat <- read.table(data_file, sep = ${rStr(delim)}, header = ${header ? 'TRUE' : 'FALSE'}, quote = "\\"", comment.char = "", colClasses = "character",`,
@@ -958,7 +932,7 @@ const FB_OUT = `fb_out <- function(x) {
  */
 const fbModel = lang => `fb_model <- function(rhs, params, vars) {
   fn <- tryCatch(deriv(rhs, params, function.arg = c(params, vars)), error = function(e) NULL)
-  if (is.null(fn)) message(${rStr(lang === 'tr' ? 'deriv bu formülün türevini alamıyor (örneğin abs); nls sayısal türev kullanır' : 'deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives')})
+  if (is.null(fn)) message(${rStr('deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives')})
   form <- if (is.null(fn)) call("~", quote(.y), rhs) else call("~", quote(.y), as.call(c(quote(fn), lapply(c(params, vars), as.name))))
   list(rhs = rhs, params = params, fn = fn, form = as.formula(form))
 }
@@ -982,8 +956,6 @@ const { download } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { embed: 'Girdi verisini kayda ekle', embedHelp: 'İşaretli değilse JSON kaydında girdi dosyalarının yalnızca SHA-256 parmak izi bulunur; işaretliyse verinin kendisi de girer ve kayıt tek başına yeniden üretilebilir. Kaydı paylaşırsanız veriyi de paylaşmış olursunuz.',
-    fail: 'Kayıt hazırlanamadı', btn: 'Çalışma kaydı (JSON)' },
   en: { embed: 'Include the input data in the record', embedHelp: 'Unchecked, the JSON record holds only the SHA-256 fingerprint of each input file; checked, the data itself goes in too and the record reproduces on its own. If you share the record, you share the data.',
     fail: 'The record could not be prepared', btn: 'Run record (JSON)' },
 });
@@ -1235,19 +1207,7 @@ const { get, del, keys } = __fb_r("core/store.js");
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
-const tr = document.documentElement.lang !== 'en';
-const T = tr ? {
-  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
-  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
-  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
-    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
-    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
-    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
-    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
-    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
-    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
-  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
-} : {
+const T = {
   label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
   none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
   ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
@@ -1631,7 +1591,7 @@ function cellText(c) {
   return c.w != null ? c.w : String(c.v);
 }
 function padTo(a, n) { const r = a.slice(); while (r.length < n) r.push(''); return r; }
-function colName(i) { return (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'Column ' : 'Sütun ') + (i + 1); }
+function colName(i) { return 'Column ' + (i + 1); }
 function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k = seen.get(x) || 0; seen.set(x, k + 1); return k ? `${x} (${k + 1})` : x; }); }
 };
 
@@ -1683,13 +1643,13 @@ const FORMS = {
     dy: (p, t) => { const e = E(-p[2] * t); return p[0] * E(-p[1] * e) * p[1] * p[2] * e; },
     ok: p => p[0] > 0 && p[1] > 0 && p[2] > 0,
     inflection: p => p[1] > 1 ? Math.log(p[1]) / p[2] : null, asymptote: p => p[0] },
-  logi: { id: 'logi', name: lang === 'tr' ? 'Lojistik' : 'Logistic', names: { tr: 'Lojistik', en: 'Logistic' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0 / (1 + b1·e^(−b2·t))',
+  logi: { id: 'logi', name: 'Logistic', names: { en: 'Logistic' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0 / (1 + b1·e^(−b2·t))',
     f: (p, t) => p[0] / (1 + p[1] * E(-p[2] * t)),
     grad: (p, t) => { const e = E(-p[2] * t), q = 1 + p[1] * e; return [1 / q, -p[0] * e / (q * q), p[0] * p[1] * t * e / (q * q)]; },
     dy: (p, t) => { const e = E(-p[2] * t), q = 1 + p[1] * e; return p[0] * p[1] * p[2] * e / (q * q); },
     ok: p => p[0] > 0 && p[1] > 0 && p[2] > 0,
     inflection: p => p[1] > 1 ? Math.log(p[1]) / p[2] : null, asymptote: p => p[0] },
-  mono: { id: 'mono', name: lang === 'tr' ? 'Monomoleküler' : 'Monomolecular', names: { tr: 'Monomoleküler', en: 'Monomolecular' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0·(1 − b1·e^(−b2·t))',
+  mono: { id: 'mono', name: 'Monomolecular', names: { en: 'Monomolecular' }, params: ['b0', 'b1', 'b2'], status: 'A', formula: 'y = b0·(1 − b1·e^(−b2·t))',
     f: (p, t) => p[0] * (1 - p[1] * E(-p[2] * t)),
     grad: (p, t) => { const e = E(-p[2] * t); return [1 - p[1] * e, -p[0] * e, p[0] * p[1] * t * e]; },
     dy: (p, t) => p[0] * p[1] * p[2] * E(-p[2] * t),
@@ -1704,7 +1664,7 @@ const FORMS = {
 };
 const FORM_IDS = Object.keys(FORMS);
 for (const f of Object.values(FORMS)) {
-  try { registerForm({ id: 'growth.' + f.id, tool: 'growth', params: f.params.map(key => ({ key })), inputs: { t: { unit: 'yr' } }, output: { name: 'y', unit: '-' }, formula: { tr: f.formula, en: f.formula }, transform: 'none' }); }
+  try { registerForm({ id: 'growth.' + f.id, tool: 'growth', params: f.params.map(key => ({ key })), inputs: { t: { unit: 'yr' } }, output: { name: 'y', unit: '-' }, formula: { en: f.formula }, transform: 'none' }); }
   catch (e) { /* already registered */ }
 }
 
@@ -1807,26 +1767,6 @@ const { makeT } = __fb_r("core/i18n.js");
 
 
 const T = makeT({
-  tr: {
-    privacy: 'Dosyanız yalnızca bu tarayıcıda işlenir ve saklanır (IndexedDB); sunucuya gönderilmez.',
-    'step.1': 'Veri', 'step.2': 'Modeller', 'step.3': 'Sonuçlar', next: 'Devam', back: 'Geri', reset: 'Oturumu sıfırla', none: '—', calc: 'Fit et',
-    restored: p => `Önceki oturum geri yüklendi (${p.when}).`,
-    'd.h': 'Yaş–büyüklük verisi', 'd.sub': 'Her satır bir gözlem: yaş (yıl) ve büyüklük (boy, çap, hacim…). Dizi sütunu isteğe bağlıdır (ör. gövde analizinde ağaç); bütün gözlemlere tek eğri fit edilir.',
-    'd.col.series': 'Dizi (isteğe bağlı)', 'd.col.t': 'Yaş (yıl)', 'd.col.y': 'Büyüklük', 'd.var': 'Değişkenin adı', 'd.unit': 'Birimi', 'd.dec': 'Ondalık ayırıcı', 'd.dec.dot': 'nokta', 'd.dec.comma': 'virgül',
-    'd.need': 'Yaş ve büyüklük sütunlarını seçin.', 'd.read': p => `${p.n} gözlem okundu${p.s ? `, ${p.s} dizi` : ''}.`, 'd.prob': p => `${p.n} satır okunamadı (satır ${p.rows}).`,
-    'd.sample': 'Örnek veriyi yükle', 'd.sample.note': 'Örnek veri benzetimdir (gerçek ölçüm değildir): üç gövde analizi dizisi, yaş ve boy.',
-    'm.h': 'Fit edilecek modeller', 'm.note': 'Bütün parametreler pozitif kalır (büyüyen, asimptotlu eğriler). Başlangıç değerleri küçük bir ızgaranın en iyisidir.', 'm.need': 'En az bir model seçin.',
-    'm.src.B': 'kaynak okundu [B]', 'm.src.A': 'ikincil kaynaktan aktarılan [A]', 'm.korf': 'Korf: kaynağı henüz okunmadığı için eklenmedi.',
-    'r.h': 'Model karşılaştırması', 'r.model': 'Model', 'r.status': 'Durum', 'r.params': 'Katsayılar (standart hata)', 'r.rmse': 'RMSE', 'r.bias': 'Yanlılık', 'r.rse': 'σ̂', 'r.aic': 'AIC', 'r.asym': 'Asimptot', 'r.infl': 'Dönüm noktası yaşı', 'r.mai': 'Ortalama yıllık artımın (MAI) doruk yaşı',
-    'r.status.ok': 'yakınsadı', 'r.status.noconverge': 'yakınsamadı', 'r.status.invalid': 'fit edilemedi',
-    'r.note': 'Yanlılık = gözlenen − tahmin. σ̂ = √(SSE/(n − p)). AIC yalnızca aynı veriye fit edilen modeller arasında karşılaştırılabilir. Standart hatalar bağımsız gözlem varsayımıyla hesaplanır; aynı dizinin ölçümleri bağımsız değildir, gerçek belirsizlik daha büyüktür.',
-    'r.curves': 'Gözlemler ve fit edilen eğriler', 'r.age': 'Yaş (yıl)', 'r.sel': 'Ayrıntı için model', 'r.inc': 'Cari yıllık artım (CAI) ve ortalama yıllık artım (MAI)', 'r.cai': 'CAI = dy/dt', 'r.maiL': 'MAI = y/t', 'r.resid': 'Artıklar (gözlenen − tahmin)',
-    'r.der': p => `Asimptot ${p.a}; dönüm noktası yaşı (en büyük cari yıllık artım) ${p.i}; ortalama yıllık artımın (MAI) doruk yaşı ${p.m}.`, 'r.der.none': 'yok',
-    'r.cit': 'Kaynak (zorunlu; ör. "kendi gövde analizim, 2025, yayımlanmamış")', 'r.save': 'Katsayı kütüphanesine kaydet', 'r.saved': 'Fit edilen eğri kütüphaneye kaydedildi.', 'r.cit.need': 'Kaydetmek için kaynak yazın.',
-    'r.rcode': 'R kodu (.R)', 'r.rcode.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı gözlemler, fonksiyonlar ve başlangıç değerleri; artımlar ve doruk yaşları R\'ın deriv fonksiyonuyla; seçilen fonksiyonun tablosu. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylanmış paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
-    'r.excel': 'Excel', 'r.csv': 'CSV', 'r.json': 'JSON', 'r.svg': 'SVG', 'r.tab': 'Eğri tablosu', 'r.step': 'Adım (yıl)',
-    'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.pred': 'Tahminler', 'x.curve': 'Eğriler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.lang': 'Dil', 'x.data': 'Veri', 'x.var': 'Değişken', 'x.forms': 'Biçimler',
-  },
   en: {
     privacy: 'Your file is processed and stored only in this browser (IndexedDB); nothing is sent to the server.',
     'step.1': 'Data', 'step.2': 'Models', 'step.3': 'Results', next: 'Continue', back: 'Back', reset: 'Reset session', none: '—', calc: 'Fit',
@@ -1879,46 +1819,43 @@ const R_FORMS = {
  * results { tMax, obs, fits }, o = { lang, created, version, fileName }.
  */
 function buildR(s, R, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), named = F => (F.names ? { ...F, name: F.names[tr ? 'tr' : 'en'] } : F), hd = c => c == null ? '' : String(s.src.headers[c]);
+  const named = F => (F.names ? { ...F, name: F.names['en'] } : F), hd = c => c == null ? '' : String(s.src.headers[c]);
   const ok = R.fits.filter(q => q.status === 'ok'), sel = ok.find(q => q.form === s.sel);
   const out = [];
-  out.push(header({ title: T('Büyüme Fonksiyonu Fit Etme: R kodu', 'Growth Function Fitter: R code'), tool: { id: 'buyume-islevi', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Fonksiyonlar doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton, türevler R\'ın deriv fonksiyonuyla). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
-      'The functions are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton, derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Yanlılık = gözlenen − tahmin (araçtaki gibi); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC R\'ın logLik\'iyle (k = p + 1). Standart hatalar gözlemlerin bağımsız olduğunu varsayar; aynı ağacın yinelenen ölçümlerinde bu varsayım tutmaz.',
-      'Bias = observed − predicted (as in the tool); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC from R\'s logLik (k = p + 1). Standard errors assume independent observations, which repeated measurements of the same tree are not.'),
-    T('Cari yıllık artım CAI = dy/dt (R\'ın deriv fonksiyonuyla), ortalama yıllık artım MAI = y/t; MAI\'nin doruğu t·y\' − y\'nin +\'dan −\'ye geçtiği yaş.',
-      'Current annual increment CAI = dy/dt (from R\'s deriv), mean annual increment MAI = y/t; MAI culminates where t·y\' − y turns from + to −.')] }));
+  out.push(header({ title: 'Growth Function Fitter: R code', tool: { id: 'buyume-islevi', version: o.version }, created: o.created, lang: o.lang, packages: [],
+    notes: ['The functions are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton, derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.',
+    'Bias = observed − predicted (as in the tool); RMSE = √(SSE/n); σ = √(SSE/(n − p)); AIC from R\'s logLik (k = p + 1). Standard errors assume independent observations, which repeated measurements of the same tree are not.',
+    'Current annual increment CAI = dy/dt (from R\'s deriv), mean annual increment MAI = y/t; MAI culminates where t·y\' − y turns from + to −.'] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
-  out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
-    `dec <- ${rStr(s.decimal)}   # ${T('ondalık ayırıcı', 'decimal separator')}`,
-    `col_t <- ${s.map.t + 1}   # ${T('yaş', 'age')}: ${hd(s.map.t)}`,
-    `col_y <- ${s.map.y + 1}   # ${T('büyüklük', 'size')}: ${hd(s.map.y)}`, '',
-    rComment(T('Gözlemler: yaş ve büyüklük sayı ve > 0; bütünüyle boş satırlar atlanır.', 'Observations: age and size numbers and > 0; entirely empty rows are skipped.')),
+  out.push(rComment('Settings (as in the tool)'),
+    `dec <- ${rStr(s.decimal)}   # decimal separator`,
+    `col_t <- ${s.map.t + 1}   # age: ${hd(s.map.t)}`,
+    `col_y <- ${s.map.y + 1}   # size: ${hd(s.map.y)}`, '',
+    rComment('Observations: age and size numbers and > 0; entirely empty rows are skipped.'),
     `tn <- fb_num(dat[[col_t]], dec); yn <- fb_num(dat[[col_y]], dec)`,
     `blank <- apply(as.matrix(dat), 1, function(r) all(trimws(r) == ""))`,
     `use <- !blank & tn$status == "ok" & yn$status == "ok" & tn$value > 0 & yn$value > 0`,
     `gd <- data.frame(row = row_no[use], t = tn$value[use], .y = yn$value[use])`,
     `t_max <- max(gd$t)`,
-    `cat(${rStr(T('Gözlem: ', 'Observations: '))}, nrow(gd), ${rStr(T('; dışarıda kalan satır: ', '; rows left out: '))}, sum(!blank & !use), "\\n")`, '');
+    `cat(${rStr('Observations: ')}, nrow(gd), ${rStr('; rows left out: ')}, sum(!blank & !use), "\\n")`, '');
   out.push(fbModel(o.lang), '');
   out.push(`fb_nls <- function(form, data, start, fallback) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(form, data = data, start = start, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(${rStr('nls did not converge from the tool\'s start; starting from the tool\'s estimates')})
     f <- tryCatch(nls(form, data = data, start = fallback, control = ctl), error = function(e) NULL)
   }
   f
 }
-# ${T('y(t), CAI(t) = dy/dt (deriv), MAI(t) = y/t', 'y(t), CAI(t) = dy/dt (deriv), MAI(t) = y/t')}
+# y(t), CAI(t) = dy/dt (deriv), MAI(t) = y/t
 fb_curve <- function(m, b, t) {
   d <- deriv(m$rhs, "t", function.arg = c(m$params, "t"))
   v <- do.call(d, c(as.list(b), list(t = t)))
   data.frame(t = t, y = as.vector(v), cai = as.vector(attr(v, "gradient")), mai = as.vector(v) / t)
 }
-# ${T('MAI\'nin doruğu: (0, 10·t_max] aralığında t·y\' − y\'nin +\'dan −\'ye ilk geçişi (4000 aralık), uniroot ile', 'MAI culmination: the first change of t·y\' − y from + to − on (0, 10·t_max] (4000 intervals), by uniroot')}
+# MAI culmination: the first change of t·y' − y from + to − on (0, 10·t_max] (4000 intervals), by uniroot
 fb_mai_peak <- function(m, b) {
   hi <- 10 * t_max; k <- 4000; g <- function(t) { cc <- fb_curve(m, b, t); t * cc$cai - cc$y }
   tt <- hi * (1:k) / k; gv <- g(tt)
@@ -1930,12 +1867,12 @@ res <- list(); fits <- list(); models <- list()
 `);
   for (const q of R.fits) {
     const F = named(FORMS[q.form]), id = q.form;
-    if (q.status !== 'ok') { out.push(rComment(T(`${F.name}: araçta fit edilmedi (${q.status}); R'da da fit edilmez.`, `${F.name}: not fitted by the tool (${q.status}); not fitted in R either.`)), ''); continue; }
+    if (q.status !== 'ok') { out.push(rComment(`${F.name}: not fitted by the tool (${q.status}); not fitted in R either.`), ''); continue; }
     const L = th => `list(${F.params.map((p, j) => `${p} = ${rNum(th[j])}`).join(', ')})`;
     out.push(rComment(`${F.name}: ${F.formula}`),
       `models$${id} <- m <- fb_model(quote(${R_FORMS[id].rhs}), c(${F.params.map(rStr).join(', ')}), "t")`,
       `fits$${id} <- f <- fb_nls(m$form, gd, ${L(q.start)}, ${L(q.theta)})`,
-      `if (is.null(f)) cat(${rStr(F.name + T(': fit edilemedi', ': not fitted'))}, "\\n") else {`,
+      `if (is.null(f)) cat(${rStr(F.name + ': not fitted')}, "\\n") else {`,
       `  b <- coef(f); e <- gd$.y - fitted(f); se <- summary(f)$coefficients[, 2]; sse <- sum(e^2)`,
       `  infl <- unname(${R_FORMS[id].infl}); if (!is.na(infl) && infl <= 0) infl <- NA`,
       `  tm <- fb_mai_peak(m, b)`,
@@ -1948,7 +1885,7 @@ res <- list(); fits <- list(); models <- list()
   }
   if (sel) {
     const F = named(FORMS[sel.form]);
-    out.push(rComment(T(`Seçilen fonksiyon: ${F.name}. Tablo: t = adım, 2·adım, … 1,25·t_max'a kadar; y, CAI, MAI.`, `Chosen function: ${F.name}. Table: t = step, 2·step, … up to 1.25·t_max; y, CAI, MAI.`)),
+    out.push(rComment(`Chosen function: ${F.name}. Table: t = step, 2·step, … up to 1.25·t_max; y, CAI, MAI.`),
       `step <- ${rNum(s.step)}`,
       `tab <- fb_curve(models$${sel.form}, coef(fits$${sel.form}), step * seq_len(floor((1.25 * t_max + 1e-9) / step)))`,
       `print(tab)`,
@@ -1990,7 +1927,7 @@ const { tableCsv, csvName } = __fb_r("core/rcode.js");
 
 
 
-const BASE = './', KEY = 'session:' + G.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + G.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const t = String(v ?? '').trim(); if (!t) return null; const x = Number(t.replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -2032,8 +1969,8 @@ function renderStep1() {
   renderImport($('impbox'), { imp: S.imp, src: S.src }, { base: BASE, title: T('d.h'), onChange: setTable, onError: m => status(m, 'err') });
   $('sample') && $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/growth/ornek/ornek-buyume.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-buyume.csv (benzetim)' : 'ornek-buyume.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
-    S.variable = lang === 'tr' ? 'boy' : 'height'; S.unit = 'm'; setTable({ imp, src: await readImport(imp, BASE) });
+    const imp = { kind: 'csv', name: 'ornek-buyume.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    S.variable = 'height'; S.unit = 'm'; setTable({ imp, src: await readImport(imp, BASE) });
   });
   if (S.src) {
     for (const k of ['series', 't', 'y']) $('m-' + k).addEventListener('change', e => { S.map[k] = e.target.value === '' ? null : +e.target.value; R = null; save(); renderStep1(); renderSteps(); });
@@ -2085,8 +2022,8 @@ function renderStep3() {
     const F = G.FORMS[q.form], cv = G.curve(q.form, q.theta, tEnd, tEnd / 300), d = q.derived;
     const st = num(S.step3) > 0 ? num(S.step3) : 5, tab = G.curve(q.form, q.theta, tEnd, st);
     h += `<div class="card"><h2>${esc(F.name)}</h2><div class="lims"><label>${T('r.sel')} <select id="selform">${okFits.map(x => `<option value="${x.form}"${x.form === S.sel ? ' selected' : ''}>${esc(G.FORMS[x.form].name)}</option>`).join('')}</select></label></div>
-      <p class="small" id="derived">${esc(T('r.der', { a: f(d.asymptote, 2) + unitTxt(), i: d.inflection != null ? `${f(d.inflection, 1)} ${lang === 'tr' ? 'yaş' : 'years'}` : T('r.der.none'), m: d.maiCulmination != null ? `${f(d.maiCulmination, 1)} ${lang === 'tr' ? 'yaş' : 'years'} (MAI ${f(d.maiMax, 3)})` : T('r.der.none') }))}</p>
-      <figure class="chartbox" id="ch-inc">${plotChart({ title: T('r.inc'), xLabel: T('r.age'), yLabel: (S.variable || 'y') + unitTxt() + (lang === 'tr' ? '/yıl' : '/yr'), xmin: 0, xmax: tEnd,
+      <p class="small" id="derived">${esc(T('r.der', { a: f(d.asymptote, 2) + unitTxt(), i: d.inflection != null ? `${f(d.inflection, 1)} years` : T('r.der.none'), m: d.maiCulmination != null ? `${f(d.maiCulmination, 1)} years (MAI ${f(d.maiMax, 3)})` : T('r.der.none') }))}</p>
+      <figure class="chartbox" id="ch-inc">${plotChart({ title: T('r.inc'), xLabel: T('r.age'), yLabel: (S.variable || 'y') + unitTxt() + ('/yr'), xmin: 0, xmax: tEnd,
         ymax: 1.1 * Math.max(...cv.filter(c => c.t >= Math.min(...R.obs.map(o => o.t))).flatMap(c => [c.cai, c.mai]).filter(Number.isFinite)), lines: [{ name: T('r.cai'), pts: cv.map(c => [c.t, c.cai]), k: 0 }, { name: T('r.maiL'), pts: cv.map(c => [c.t, c.mai]), k: 1, dash: true }], fmt: v => fmtNum(v, 3), height: 320 })}<figcaption class="small">${T('r.inc')} <button type="button" class="btn ghost small" data-svg="ch-inc">${T('r.svg')}</button></figcaption></figure>
       <figure class="chartbox" id="ch-res">${scatterChart({ title: T('r.resid'), points: q.residuals.map(r => [r.t, r.res]), xLabel: T('r.age'), yLabel: T('r.bias'), hline: 0, fmt: v => fmtNum(v, 2), height: 300 })}<figcaption class="small">${T('r.resid')}</figcaption></figure>
       <details class="more"><summary>${T('r.tab')}</summary><div class="lims"><label>${T('r.step')} <input type="text" inputmode="decimal" size="4" id="tstep" value="${esc(S.step3)}"></label></div><div class="tscroll"><table class="grid" id="ttab"><thead><tr><th>${T('r.age')}</th><th>${esc(S.variable || 'y')}</th><th>CAI</th><th>MAI</th></tr></thead><tbody>${tab.map(c => `<tr><td class="num">${f(c.t, 1)}</td><td class="num">${f(c.y, 3)}</td><td class="num">${f(c.cai, 4)}</td><td class="num">${f(c.mai, 4)}</td></tr>`).join('')}</tbody></table></div></details>
@@ -2105,7 +2042,7 @@ function renderStep3() {
   });
   el.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.svg + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
   $('back2').addEventListener('click', () => go(2));
-  const name = ext => `${lang === 'tr' ? 'buyume-islevi' : 'growth'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `growth-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), cmpRows(), lang));
   $('x-r').addEventListener('click', () => {
     const file = S.imp && S.imp.kind !== 'dataset' && S.imp.kind !== 'paste' ? S.imp.name : null;

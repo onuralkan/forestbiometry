@@ -40,7 +40,7 @@ const hID = { T: ID, methodName: r => r.method, notes, poolLabel: 'pool' };
 const F = REP.fitRows(X.units, hTR), H = F[0], col = name => H.indexOf(name);
 const all = X.units.flatMap(u => u.results.map(r => [u, r]));
 ok(F.length === 1 + all.length && F.every(r => r.length === H.length), `fits: ${F.length - 1} rows, ${H.length} columns, rectangular`);
-eq([H[0], H[1], H[2], H[5], H[8]], ['Örnek alan', 'Dönem', 'n', 'method_id', 'status'], 'fits: header (Turkish labels, machine codes)');
+eq([H[0], H[1], H[2], H[5], H[8]], [TR('col.plot'), TR('col.per'), 'n', 'method_id', 'status'], 'fits: header (labels, machine codes)');
 all.forEach(([u, r], i) => {
   const row = F[i + 1], fam = D.family(r.family), tag = `${u.plot}/${u.period} ${r.method}`;
   eq([row[0], row[1], row[2], row[5], row[8]], [u.plot, u.period, u.d.length, r.method, r.status], `${tag}: unit, n, method, status`);
@@ -54,11 +54,11 @@ all.forEach(([u, r], i) => {
   }
 });
 { const r = F.find(x => x[5] === 'weibull.mom'); ok(/varDivisor = n-1/.test(r[H.length - 1]), 'moment divisor written in the settings column: ' + r[H.length - 1]); }
-{ const r = F.find(x => x[5] === 'weibull.ml' && x[0] === 'P1' && x[1] === '2019' && /1\.1/.test(x[col('Sabit parametreler')] || ''));
-  ok(r && /a = 1\.1 \(kullanıcı\)/.test(r[col('Sabit parametreler')]), 'fixed location written with its origin'); }
+{ const r = F.find(x => x[5] === 'weibull.ml' && x[0] === 'P1' && x[1] === '2019' && /1\.1/.test(x[col(TR('x.fixed'))] || ''));
+  ok(r && r[col(TR('x.fixed'))].includes('a = 1.1 (' + TR('x.origin.user') + ')'), 'fixed location written with its origin'); }
 ok(F.filter(x => x[0] === 'P2').every(x => x[8] === 'invalid' && x[9].includes('pr.constant')), 'equal diameters: every method invalid with the reason');
 
-/* 2. labels never change numbers: Turkish labels vs keys-only "language" */
+/* 2. labels never change numbers: English labels vs keys-only "language" */
 const FI = REP.fitRows(X.units, hID);
 ok(F.length === FI.length && F.slice(1).every((r, i) => r.every((v, j) => typeof v === 'number' ? v === FI[i + 1][j] : true)) && F.slice(1).every((r, i) => r.filter(v => typeof v === 'number').length === FI[i + 1].filter(v => typeof v === 'number').length), 'fits: identical numbers whatever the labels');
 ok(F.slice(1).every(r => r[5] === FI[F.indexOf(r)][5] && r[8] === FI[F.indexOf(r)][8]), 'machine codes identical across languages');
@@ -69,9 +69,9 @@ ok(P.length === 1 + okRes.reduce((s, [, r]) => s + D.family(r.family).params.len
 { let i = 1, good = true;
   for (const [u, r] of okRes) for (const q of D.family(r.family).params) { const row = P[i++]; if (row[0] !== u.plot || row[4] !== r.method || row[6] !== q.key || row[7] !== r.params[q.key]) good = false; }
   ok(good, 'parameters: values exact, in order'); }
-ok(P.some(r => r[4] === 'beta.ml' && r[6] === 'L' && r[10] === 'kullanıcı') && P.some(r => r[4] === 'beta.ml' && r[6] === 'alpha' && r[10] === 'kestirildi'), 'parameters: fixed bounds marked user, shapes marked estimated');
-ok(P.some(r => r[4] === 'weibull.ml' && r[6] === 'a' && r[7] === 0 && r[10] === 'sıfır (iki parametreli biçim)'), 'parameters: a = 0 marked as the two-parameter form');
-ok(P.some(r => r[4] === 'lognormal.mom' && r[6] === 'mu' && r[8] === 'ln cm') && P.some(r => r[4] === 'lognormal.mom' && r[6] === 'sigma' && r[8] === 'log ölçek'), 'parameters: lognormal units on the log scale');
+ok(P.some(r => r[4] === 'beta.ml' && r[6] === 'L' && r[10] === TR('x.origin.user')) && P.some(r => r[4] === 'beta.ml' && r[6] === 'alpha' && r[10] === TR('x.estimated')), 'parameters: fixed bounds marked user, shapes marked estimated');
+ok(P.some(r => r[4] === 'weibull.ml' && r[6] === 'a' && r[7] === 0 && r[10] === TR('x.origin.zero')), 'parameters: a = 0 marked as the two-parameter form');
+ok(P.some(r => r[4] === 'lognormal.mom' && r[6] === 'mu' && r[8] === 'ln cm') && P.some(r => r[4] === 'lognormal.mom' && r[6] === 'sigma' && r[8] === TR('unit.log')), 'parameters: lognormal units on the log scale');
 
 /* 4. units */
 const U = REP.unitRows(X.units, hTR);
@@ -94,7 +94,7 @@ X.units.forEach((u, i) => eq(U[i + 1].slice(0, 10), [u.plot, u.period, u.desc.n,
   const Rr = REP.recoverRows(rr, hTR), h = Rr[0];
   ok(Rr.length === 5 && Rr.every(r => r.length === h.length), 'recovery: rows and rectangular columns');
   ok(rr.slice(0, 3).every((r, i) => D.family(r.family).params.every((q, j) => Rr[i + 1][6 + 2 * j] === (q.label ?? q.key) && Rr[i + 1][7 + 2 * j] === r.params[q.key])), 'recovery: parameters exact');
-  const tm = h.indexOf('Hedef: mean'), bm = h.indexOf('Geri hesap: backMean'), bq = h.indexOf('Geri hesap: backDq');
+  const tm = h.indexOf(TR('x.target', { k: 'mean' })), bm = h.indexOf(TR('x.diag', { k: 'backMean' })), bq = h.indexOf(TR('x.diag', { k: 'backDq' }));
   ok(tm > 0 && bm > 0 && rr.slice(0, 3).every((r, i) => Rr[i + 1][tm] === 20 && Rr[i + 1][bm] === r.diagnostics.backMean && Rr[i + 1][bq] === r.diagnostics.backDq), 'recovery: targets and back-calculated values exact');
   ok(Rr[4][4] === 'invalid' && Rr[4][7] === null && Rr[4][5].includes('pr.sum.dq'), 'recovery: inconsistent summary → no numbers, reason'); }
 { const s = D.weibullSummary(FX.w2), ws = ['weibull.m2', 'weibull.m3', 'weibull.m4', 'weibull.m5'].filter(id => { try { D.method(id); return true; } catch (e) { return false; } });
@@ -102,15 +102,15 @@ X.units.forEach((u, i) => eq(U[i + 1].slice(0, 10), [u.plot, u.period, u.desc.n,
   const Rw = REP.recoverRows(rw, hTR), h = Rw[0];
   ok(ws.length === 4 && rw.every(r => r.status === 'ok'), 'Weibull M2–M5 from raw-data targets');
   ok(rw.every((r, i) => Rw[i + 1][7] === r.params.a && Rw[i + 1][9] === r.params.b && Rw[i + 1][11] === r.params.c), 'Weibull recovery: a, b, c exact');
-  ok(rw.every((r, i) => /a = .*half-dmin, Dmin = /.test(Rw[i + 1][h.indexOf('Sabit parametreler')])), 'Weibull recovery: location policy and Dmin written');
+  ok(rw.every((r, i) => /a = .*half-dmin, Dmin = /.test(Rw[i + 1][h.indexOf(TR('x.fixed'))])), 'Weibull recovery: location policy and Dmin written');
   ok(rw.every((r, i) => /origin = measured/.test(Rw[i + 1][h.length - 1]) && /from = raw/.test(Rw[i + 1][h.length - 1])), 'Weibull recovery: origin of the targets written');
   // a 'multiple' result: candidates listed, no single parameter set
   const mult = { ...rw[0], status: 'multiple', params: null, diagnostics: { candidates: [{ a: 1, b: 20, c: 2.5, backMean: 18 }, { a: 1, b: 31, c: 0.4, backMean: 18 }] } };
   const Rm = REP.recoverRows([mult], hTR)[1];
-  ok(Rm[4] === 'multiple' && Rm[9] === null && /b = 20, c = 2\.5 \| .*b = 31, c = 0\.4/.test(Rm[REP.recoverRows([mult], hTR)[0].indexOf('Aday çözümler')]), 'multiple solutions: candidates listed, no parameters'); }
+  ok(Rm[4] === 'multiple' && Rm[9] === null && /b = 20, c = 2\.5 \| .*b = 31, c = 0\.4/.test(Rm[REP.recoverRows([mult], hTR)[0].indexOf(TR('x.cands'))]), 'multiple solutions: candidates listed, no parameters'); }
 
 /* 7. info sheet */
-eq(REP.infoRows([['A', 1], null, ['B', null]], TR), [['Ayar', 'Değer'], ['A', 1], ['B', '–']], 'info rows: header, skipped entries, empty value as –');
+eq(REP.infoRows([['A', 1], null, ['B', null]], TR), [[TR('x.k'), TR('x.v')], ['A', 1], ['B', '–']], 'info rows: header, skipped entries, empty value as –');
 
 console.log(`dist export: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

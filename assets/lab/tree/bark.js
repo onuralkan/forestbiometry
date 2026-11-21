@@ -24,12 +24,12 @@ const fin = x => typeof x === 'number' && Number.isFinite(x);
  * under-bark diameter (cm); 'B1' single and 'B2' double bark thickness (mm). f(p, D) is on the form's own scale.
  */
 export const FORMS = {
-  ratio: { params: ['k'], out: 'dub', scale: 'none', formula: { tr: 'd_kabuksuz = k·D', en: 'd_ub = k·D' }, f: (p, D) => p.k * D },
-  lin: { params: ['a', 'b'], out: 'dub', scale: 'none', formula: { tr: 'd_kabuksuz = a + b·D', en: 'd_ub = a + b·D' }, f: (p, D) => p.a + p.b * D },
-  'b1.lin': { params: ['a', 'b'], out: 'B1', scale: 'none', formula: { tr: 'B (tek taraf, mm) = a + b·D', en: 'B (single, mm) = a + b·D' }, f: (p, D) => p.a + p.b * D },
-  'b2.lin': { params: ['a', 'b'], out: 'B2', scale: 'none', formula: { tr: '2B (çift, mm) = a + b·D', en: '2B (double, mm) = a + b·D' }, f: (p, D) => p.a + p.b * D },
-  'b1.loglog': { params: ['a', 'b'], out: 'B1', scale: 'log', formula: { tr: 'ln B (tek taraf, mm) = a + b·ln D', en: 'ln B (single, mm) = a + b·ln D' }, f: (p, D) => p.a + p.b * Math.log(D) },
-  'b2.loglog': { params: ['a', 'b'], out: 'B2', scale: 'log', formula: { tr: 'ln 2B (çift, mm) = a + b·ln D', en: 'ln 2B (double, mm) = a + b·ln D' }, f: (p, D) => p.a + p.b * Math.log(D) },
+  ratio: { params: ['k'], out: 'dub', scale: 'none', formula: { en: 'd_ub = k·D' }, f: (p, D) => p.k * D },
+  lin: { params: ['a', 'b'], out: 'dub', scale: 'none', formula: { en: 'd_ub = a + b·D' }, f: (p, D) => p.a + p.b * D },
+  'b1.lin': { params: ['a', 'b'], out: 'B1', scale: 'none', formula: { en: 'B (single, mm) = a + b·D' }, f: (p, D) => p.a + p.b * D },
+  'b2.lin': { params: ['a', 'b'], out: 'B2', scale: 'none', formula: { en: '2B (double, mm) = a + b·D' }, f: (p, D) => p.a + p.b * D },
+  'b1.loglog': { params: ['a', 'b'], out: 'B1', scale: 'log', formula: { en: 'ln B (single, mm) = a + b·ln D' }, f: (p, D) => p.a + p.b * Math.log(D) },
+  'b2.loglog': { params: ['a', 'b'], out: 'B2', scale: 'log', formula: { en: 'ln 2B (double, mm) = a + b·ln D' }, f: (p, D) => p.a + p.b * Math.log(D) },
 };
 for (const [id, f] of Object.entries(FORMS)) {
   try {

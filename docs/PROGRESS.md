@@ -3,12 +3,12 @@
 Kept short on purpose (21 Nov 2026, user decision): current state only. Completed work with its checks up to 21 Nov 2026 is in `docs/PROGRESS_ARCHIVE.md` (frozen; grep it, do not read it whole); after that, the git log is the history. Whether something is live is not recorded here: a change is live when its push to `main` has a successful run of "Deploy to forestbiometry.online" in GitHub Actions.
 
 ## Current state (21 Nov 2026)
-24 tools in 8 modules, no planned tools (P8; 34 ids out of scope). Last release v2026.11.2 (Zenodo version DOI 10.5281/zenodo.24339226). The site is English only (stage 1 of the Turkish removal live since 20 Nov 2026; stage 2, removing the remaining Turkish code, is an open task below).
+24 tools in 8 modules, no planned tools (P8; 34 ids out of scope). Last release v2026.11.2 (Zenodo version DOI 10.5281/zenodo.24339226). The site is English only: Turkish hidden on 20 Nov 2026 (stage 1) and removed from the code on 21 Nov 2026 (stage 2: PHP `$tr` branches, JS `tr` dictionaries and `lang === 'tr'` branches, Turkish R-code comments and citation formats, `inc/guide/tr/`; page HTML checked identical apart from the removed Turkish; tests rewritten for English only).
 
 ## Active branches (each agent updates its own row when it starts and finishes)
 | Branch | Task | State |
 |---|---|---|
-| `claude/sleepy-cerf-52g02s` | Agent rules and docs slimmed (CLAUDE.md, PROGRESS split, CI skips docs-only pushes) | done, 21 Nov 2026 |
+| `claude/sleepy-cerf-52g02s` | Agent rules slimmed; English only stage 2 (Turkish code removed) | done, 21 Nov 2026 |
 | `claude/zealous-bardeen-kmh3fd` | old SI03/SI04, SS01/SS02 work, superseded by `main` | abandoned; do not merge |
 
 ## Next step
@@ -26,8 +26,7 @@ Open tasks (assessment of 18 Nov 2026, in order of priority; updated with the de
 3b. ✔ **Systems of Equations, LR test:** closed on 19 Nov 2026 with 1.0.0-beta.2 (row below).
 4. **Small consistency:** ✔ English sample data notes unified as "simulated" and ✔ Relative Ranking placed under SM-06 in the catalogue (19 Nov 2026); screen reader accessibility trial and colour contrast measurement left for later (user decision). The move and the "simulated" fix are live (19 Nov 2026, with Model Evaluation 1.2.0-beta.1). ✔ Warning boxes inside a table cell or a sentence were breaking apart at line wraps (Height–Diameter correlation warning, noticed by the user; Diameter Distribution, Tree Measurement); fixed with a single rule in `lab.css`, live (19 Nov 2026, user decision).
 5. **Hosting:** the bot protection page (200 "One moment / Checking your browser") is still intermittent; in the live site test the "admin.php must have been removed" check therefore gives a false failure. The PHP version on the server has not been verified.
-6. **English only, stage 2 (approved 21 Nov 2026):** remove the remaining Turkish code in one dedicated task (`tr` blocks of `i18n.js`, `$tr ? … : …` branches in PHP (~410), `inc/guide/tr/`), instead of cleaning it up piecemeal in unrelated work.
-7. **References in two places:** generate `inc/kaynakca.json` from `docs/kaynakca.json` with a script instead of editing both (approved 21 Nov 2026).
+6. **References in two places:** generate `inc/kaynakca.json` from `docs/kaynakca.json` with a script instead of editing both (approved 21 Nov 2026).
 
 ## Open gaps (⚑ = awaiting a decision; original numbering kept, resolved items in PROGRESS_ARCHIVE.md)
 6. References marked **[D]** in METHODS.md have not been verified.

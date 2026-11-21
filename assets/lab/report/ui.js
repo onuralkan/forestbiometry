@@ -90,8 +90,8 @@ function bind() {
   $('print').addEventListener('click', () => { clearTimeout(timer); preview(); save(); print(); });
   $('html').addEventListener('click', () => {
     clearTimeout(timer); preview(); save();
-    const title = S.meta.title || (S.lang === 'en' ? 'Inventory report' : 'Envanter raporu');
-    download(`${(S.lang === 'en' ? 'report' : 'rapor')}-${S.meta.date || new Date().toISOString().slice(0, 10)}.html`, standalone($('preview').innerHTML, title, S.lang), 'text/html;charset=utf-8');
+    const title = S.meta.title || ('Inventory report');
+    download(`${('report')}-${S.meta.date || new Date().toISOString().slice(0, 10)}.html`, standalone($('preview').innerHTML, title, S.lang), 'text/html;charset=utf-8');
   });
 }
 

@@ -36,39 +36,35 @@ const rList = (names, vals) => `list(${names.map((p, j) => `${rName(p)} = ${rNum
  * o = { lang, created, version, fileName }.
  */
 export function buildR(s, R, iv, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]);
+  const hd = c => c == null ? '' : String(s.src.headers[c]);
   const fitted = R.fits.filter(q => q.fit.status === 'ok' || q.fit.status === 'singular');
   const out = [];
-  out.push(header({ title: T('Doğrusal Olmayan Regresyon: R kodu', 'Nonlinear Regression: R code'), tool: { id: 'dogrusal-olmayan-regresyon', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt, tam Jacobian; R: nls, Gauss–Newton, türevler R\'ın deriv fonksiyonuyla). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
-      'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Ağırlık (Parresol 2001): Var(e) = σ²ψ; nls ağırlığı 1/ψ. ψ = X^θ (θ verilmişse o, verilmemişse ağırlıksız fit artıklarından ln e² = ln σ² + θ ln X ile) ya da ψ bir sütundan.',
-      'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.'),
-    T('Hata = gözlenen − tahmin; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S ağırlıklı artık kareler toplamı. AIC R\'ın logLik\'iyle (k = katsayı sayısı + 1; kestirilen θ sayılmaz), aracınkiyle aynı.',
-      'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.')] }));
+  out.push(header({ title: 'Nonlinear Regression: R code', tool: { id: 'dogrusal-olmayan-regresyon', version: o.version }, created: o.created, lang: o.lang, packages: [],
+    notes: ['The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt with exact Jacobians; R: nls, Gauss–Newton with derivatives from R\'s deriv). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.',
+    'Weights (Parresol 2001): Var(e) = σ²ψ; the nls weight is 1/ψ. ψ = X^θ (θ as given or, when not given, from ln e² = ln σ² + θ ln X on the unweighted residuals) or ψ from a column.',
+    'Error = observed − predicted; RMSE = √(SSE/n); R² = 1 − SSE/SST; σ = √(S/(n − p)), S the weighted residual sum of squares. AIC from R\'s logLik (k = number of coefficients + 1; an estimated θ not counted), as in the tool.'] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   // the columns every model and weight uses: a number in each (weight columns > 0), as the tool compares models on the same rows
   const need = new Map([[s.y, false]]);
   for (const q of R.fits) { if (!q.c) continue; for (const v of q.c.vars) if (!need.has(q.md.map[v])) need.set(q.md.map[v], false); if (q.wcol != null) need.set(q.wcol, true); }
   const cols = [...need.keys()];
-  out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
-    `dec <- ${rStr(s.decimal)}   # ${T('ondalık ayırıcı', 'decimal separator')}`,
-    `col_y <- ${s.y + 1}   # ${T('bağımlı değişken', 'response')}: ${hd(s.y)}`,
+  out.push(rComment('Settings (as in the tool)'),
+    `dec <- ${rStr(s.decimal)}   # decimal separator`,
+    `col_y <- ${s.y + 1}   # response: ${hd(s.y)}`,
     `num <- function(k) fb_num(dat[[k]], dec)$value`, '',
-    rComment(T('Ortak satırlar: modellerin ve ağırlıkların kullandığı her sütunda sayı (ağırlık sütunlarında > 0); bütün modeller aynı satırlarda (gözlemlerde) karşılaştırılır.',
-      'Common rows: a number in every column the models and weights use (> 0 in weight columns); all models are compared on the same trees.')),
+    rComment('Common rows: a number in every column the models and weights use (> 0 in weight columns); all models are compared on the same trees.'),
     `need <- c(${cols.map(c => c + 1).join(', ')})   # ${cols.map(hd).join(', ')}`,
     `positive <- c(${cols.map(c => need.get(c) ? 'TRUE' : 'FALSE').join(', ')})`,
     `keep <- Reduce(\`&\`, lapply(seq_along(need), function(j) { v <- num(need[j]); !is.na(v) & (!positive[j] | v > 0) }))`,
     `y <- num(col_y)[keep]; rows_used <- row_no[keep]; n <- length(y)`,
-    `cat(${rStr(T('Kullanılan satır: ', 'Rows used: '))}, n, ${rStr(T('; dışarıda kalan: ', '; left out: '))}, sum(!keep), "\\n")`, '');
+    `cat(${rStr('Rows used: ')}, n, ${rStr('; left out: ')}, sum(!keep), "\\n")`, '');
   out.push(fbModel(o.lang), '');
   out.push(`fb_nls <- function(form, data, start, fallback) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(form, data = data, start = start, weights = .w, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(${rStr(T('nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', 'nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(${rStr('nls did not converge from the tool\'s start; starting from the tool\'s estimates')})
     f <- tryCatch(nls(form, data = data, start = fallback, weights = .w, control = ctl), error = function(e) NULL)
   }
   f
@@ -92,28 +88,28 @@ fits <- list()
   for (const q of R.fits) {
     const id = 'm' + (q.i + 1), x = q.fit;
     const title = `${q.label}: ${q.md.kind === 'ready' ? (q.md.ready + ', ') : ''}y = ${q.c ? q.c.text : q.md.expr}`;
-    if (!fitted.includes(q)) { out.push(rComment(T(`${title}\nAraçta fit edilmedi (${x.status}${x.code ? ', ' + x.code : ''}); R'da da fit edilmez.`, `${title}\nNot fitted by the tool (${x.status}${x.code ? ', ' + x.code : ''}); not fitted in R either.`)), ''); continue; }
+    if (!fitted.includes(q)) { out.push(rComment(`${title}\nNot fitted by the tool (${x.status}${x.code ? ', ' + x.code : ''}); not fitted in R either.`), ''); continue; }
     const vars = q.c.vars, w = x.weight || { kind: 'none' }, wc = q.wcol;
-    out.push(rComment(`${title}\n${vars.map(v => `${v} = ${hd(q.md.map[v])}`).join(', ')}${w.kind === 'none' ? '' : `; ${T('ağırlık', 'weight')}: ${w.kind === 'power' ? `ψ = ${hd(wc)}^θ${w.estimated ? T(' (θ kestirilir)', ' (θ estimated)') : ''}` : `ψ = ${hd(wc)}`}`}`),
+    out.push(rComment(`${title}\n${vars.map(v => `${v} = ${hd(q.md.map[v])}`).join(', ')}${w.kind === 'none' ? '' : `; weight: ${w.kind === 'power' ? `ψ = ${hd(wc)}^θ${w.estimated ? ' (θ estimated)' : ''}` : `ψ = ${hd(wc)}`}`}`),
       `${id}_data <- data.frame(.y = y, ${vars.map(v => `${rName(v)} = num(${q.md.map[v] + 1})[keep]`).join(', ')}, check.names = FALSE)`,
       `${id} <- fb_model(quote(${toR(q.c.ast)}), ${rStrs(q.c.params)}, ${rStrs(vars)})`,
-      `${id}_start <- ${rList(q.c.params, x.start)}   # ${q.md.kind === 'ready' && !(q.md.starts && Object.values(q.md.starts).some(v => String(v).trim() !== '')) ? T('aracın veriden seçtiği başlangıç', 'the start the tool chose from the data') : T('kullanıcının başlangıç değerleri', 'the user\'s starting values')}`,
-      `${id}_tool <- ${rList(q.c.params, x.theta)}   # ${T('aracın kestirimleri', 'the tool\'s estimates')}`);
+      `${id}_start <- ${rList(q.c.params, x.start)}   # ${q.md.kind === 'ready' && !(q.md.starts && Object.values(q.md.starts).some(v => String(v).trim() !== '')) ? 'the start the tool chose from the data' : 'the user\'s starting values'}`,
+      `${id}_tool <- ${rList(q.c.params, x.theta)}   # the tool's estimates`);
     if (w.kind === 'power' && w.estimated) out.push(
       `${id}_wx <- num(${wc + 1})[keep]`,
       `${id}_data$.w <- 1`,
-      `${id}_u <- fb_nls(${id}$form, ${id}_data, ${rList(q.c.params, x.ustart)}, NULL)   # ${T('ağırlıksız fit (aracın başlangıcı)', 'unweighted fit (the tool\'s start)')}`,
+      `${id}_u <- fb_nls(${id}$form, ${id}_data, ${rList(q.c.params, x.ustart)}, NULL)   # unweighted fit (the tool's start)`,
       `${id}_e <- ${id}_data$.y - fitted(${id}_u); ${id}_ok <- ${id}_e != 0 & is.finite(${id}_e)`,
-      `${id}_theta <- unname(coef(lm(log(${id}_e[${id}_ok]^2) ~ log(${id}_wx[${id}_ok])))[2])   # ${T('Parresol 2001, Denk. 4–5', 'Parresol 2001, Eq. 4–5')}`,
+      `${id}_theta <- unname(coef(lm(log(${id}_e[${id}_ok]^2) ~ log(${id}_wx[${id}_ok])))[2])   # Parresol 2001, Eq. 4–5`,
       `cat(${rStr(id + ': θ = ')}, signif(${id}_theta, 10), "\\n"); res[[${rStr(id + '.theta_w')}]] <- ${id}_theta`,
       `${id}_data$.w <- 1 / ${id}_wx^${id}_theta`,
-      `${id}_start <- as.list(coef(${id}_u))   # ${T('araçtaki gibi ağırlıklı fit ağırlıksız kestirimlerden başlar', 'as in the tool, the weighted fit starts from the unweighted estimates')}`);
+      `${id}_start <- as.list(coef(${id}_u))   # as in the tool, the weighted fit starts from the unweighted estimates`);
     else if (w.kind === 'power') out.push(`${id}_theta <- ${rNum(w.theta)}`, `${id}_data$.w <- 1 / num(${wc + 1})[keep]^${id}_theta`);
     else if (w.kind === 'column') out.push(`${id}_data$.w <- 1 / num(${wc + 1})[keep]`);
     else out.push(`${id}_data$.w <- 1`);
     out.push(`fits[[${rStr(id)}]] <- f <- fb_nls(${id}$form, ${id}_data, ${id}_start, ${id}_tool)`,
       `cat("\\n", ${rStr(q.label)}, "\\n")`,
-      `if (is.null(f)) cat(${rStr(T('fit edilemedi', 'not fitted'))}, "\\n") else res <- c(res, fb_report(${rStr(id)}, f, ${id}_data, ${rNum(x.level)}, ${x.status === 'ok' ? 'TRUE' : 'FALSE'}))`, '');
+      `if (is.null(f)) cat(${rStr('not fitted')}, "\\n") else res <- c(res, fb_report(${rStr(id)}, f, ${id}_data, ${rNum(x.level)}, ${x.status === 'ok' ? 'TRUE' : 'FALSE'}))`, '');
   }
   // interval at a point (the page's interval card)
   const q = iv && R.fits[iv.idx];
@@ -122,11 +118,10 @@ fits <- list()
     const psi = w.kind === 'none' ? 1 : w.kind === 'power' ? iv.wv ** w.theta : iv.wv;
     const r = interval(q.c, q.fit, iv.point, psi);
     if (r && q.c.vars.every(v => iv.point[v] > 0)) {
-      out.push(rComment(T(`Bir noktada tahmin, ortalamanın güven aralığı ve yeni gözlemin tahmin aralığı (Parresol 2001, Denk. 10–11; gradyan R\'ın deriv\'iyle, olmazsa sayısal): ${q.label}`,
-        `Prediction at a point, confidence interval of the mean and prediction interval of a new observation (Parresol 2001, Eq. 10–11; gradient from R\'s deriv, else numerical): ${q.label}`)),
+      out.push(rComment(`Prediction at a point, confidence interval of the mean and prediction interval of a new observation (Parresol 2001, Eq. 10–11; gradient from R\'s deriv, else numerical): ${q.label}`),
         `f <- fits[[${rStr(id)}]]`,
         `pt <- ${rList(q.c.vars, q.c.vars.map(v => iv.point[v]))}`,
-        `psi_pt <- ${w.kind === 'none' ? '1' : w.kind === 'power' ? `${rNum(iv.wv)}^${id}_theta` : rNum(iv.wv)}   # ${T('ψ noktada', 'ψ at the point')}`,
+        `psi_pt <- ${w.kind === 'none' ? '1' : w.kind === 'power' ? `${rNum(iv.wv)}^${id}_theta` : rNum(iv.wv)}   # ψ at the point`,
         `g <- fb_grad(${id}, coef(f), pt)`,
         `yhat <- eval(${id}$rhs, c(as.list(coef(f)), pt)); S2 <- drop(g %*% vcov(f) %*% t(g)); tq <- qt(1 - (1 - ${rNum(q.fit.level)}) / 2, df.residual(f)); s2 <- summary(f)$sigma^2`,
         `iv <- c(yhat = yhat, ci_lo = yhat - tq * sqrt(S2), ci_hi = yhat + tq * sqrt(S2), pi_lo = yhat - tq * sqrt(S2 + s2 * psi_pt), pi_hi = yhat + tq * sqrt(S2 + s2 * psi_pt))`,

@@ -38,14 +38,14 @@ const BASKERVILLE_SCALES = ['log'];
 
 /** Registered forms. f(p, D, H) gives B on the form's own scale (linear, ln B or log10 B). */
 const FORMS = {
-  'pow.d': { params: ['a', 'b'], needsH: false, scale: 'none', formula: { tr: 'B = a·D^b', en: 'B = a·D^b' }, f: (p, D) => p.a * D ** p.b },
-  'pow.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'none', formula: { tr: 'B = a·D^b·H^c', en: 'B = a·D^b·H^c' }, f: (p, D, H) => p.a * D ** p.b * H ** p.c },
-  'pow.d2h': { params: ['a', 'b'], needsH: true, scale: 'none', formula: { tr: 'B = a·(D²H)^b', en: 'B = a·(D²H)^b' }, f: (p, D, H) => p.a * (D * D * H) ** p.b },
-  'lin.d2h': { params: ['a', 'b'], needsH: true, scale: 'none', formula: { tr: 'B = a + b·D²H', en: 'B = a + b·D²H' }, f: (p, D, H) => p.a + p.b * D * D * H },
-  'log.d': { params: ['a', 'b'], needsH: false, scale: 'log', formula: { tr: 'ln B = a + b·ln D', en: 'ln B = a + b·ln D' }, f: (p, D) => p.a + p.b * Math.log(D) },
-  'log.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log', formula: { tr: 'ln B = a + b·ln D + c·ln H', en: 'ln B = a + b·ln D + c·ln H' }, f: (p, D, H) => p.a + p.b * Math.log(D) + p.c * Math.log(H) },
-  'log10.d': { params: ['a', 'b'], needsH: false, scale: 'log10', formula: { tr: 'log₁₀ B = a + b·log₁₀ D', en: 'log₁₀ B = a + b·log₁₀ D' }, f: (p, D) => p.a + p.b * Math.log10(D) },
-  'log10.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log10', formula: { tr: 'log₁₀ B = a + b·log₁₀ D + c·log₁₀ H', en: 'log₁₀ B = a + b·log₁₀ D + c·log₁₀ H' }, f: (p, D, H) => p.a + p.b * Math.log10(D) + p.c * Math.log10(H) },
+  'pow.d': { params: ['a', 'b'], needsH: false, scale: 'none', formula: { en: 'B = a·D^b' }, f: (p, D) => p.a * D ** p.b },
+  'pow.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'none', formula: { en: 'B = a·D^b·H^c' }, f: (p, D, H) => p.a * D ** p.b * H ** p.c },
+  'pow.d2h': { params: ['a', 'b'], needsH: true, scale: 'none', formula: { en: 'B = a·(D²H)^b' }, f: (p, D, H) => p.a * (D * D * H) ** p.b },
+  'lin.d2h': { params: ['a', 'b'], needsH: true, scale: 'none', formula: { en: 'B = a + b·D²H' }, f: (p, D, H) => p.a + p.b * D * D * H },
+  'log.d': { params: ['a', 'b'], needsH: false, scale: 'log', formula: { en: 'ln B = a + b·ln D' }, f: (p, D) => p.a + p.b * Math.log(D) },
+  'log.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log', formula: { en: 'ln B = a + b·ln D + c·ln H' }, f: (p, D, H) => p.a + p.b * Math.log(D) + p.c * Math.log(H) },
+  'log10.d': { params: ['a', 'b'], needsH: false, scale: 'log10', formula: { en: 'log₁₀ B = a + b·log₁₀ D' }, f: (p, D) => p.a + p.b * Math.log10(D) },
+  'log10.dh': { params: ['a', 'b', 'c'], needsH: true, scale: 'log10', formula: { en: 'log₁₀ B = a + b·log₁₀ D + c·log₁₀ H' }, f: (p, D, H) => p.a + p.b * Math.log10(D) + p.c * Math.log10(H) },
 };
 // BC-02: linear component equations of an additive system, B = b0 + Σ b_j·term_j over a subset of D, D², D²H, H
 // (Parresol 1999 §1.1.4–1.1.5 [B]; fitted in sur.js, applied here like any other set).
@@ -54,7 +54,7 @@ const FORMS = {
   for (let m = 1; m < 16; m++) {
     const ts = order.filter((_, i) => m & (1 << i)), params = ['b0', ...ts.map((_, i) => 'b' + (i + 1))];
     const text = 'B = b0 + ' + ts.map((t, i) => `b${i + 1}·${T[t][0]}`).join(' + ');
-    FORMS['lt.' + ts.join('.')] = { params, needsH: ts.some(t => t === 'd2h' || t === 'h'), scale: 'none', linear: ts, formula: { tr: text, en: text },
+    FORMS['lt.' + ts.join('.')] = { params, needsH: ts.some(t => t === 'd2h' || t === 'h'), scale: 'none', linear: ts, formula: { en: text },
       f: (p, D, H) => ts.reduce((s, t, i) => s + p['b' + (i + 1)] * T[t][1](D, H), p.b0) };
   }
 }
@@ -272,12 +272,10 @@ __fb_x(__fb_e, { "EXTRA": () => EXTRA });
 // Biomass: the tool's own optional fields of a coefficient set (stored in set.meta), shared by the tool page and the
 // coefficient library page (DI-02). Used only by the Monte Carlo uncertainty (BC04, mc.js); empty = not given.
 const EXTRA = [
-  { key: 'cov', type: 'text', label: { tr: 'Katsayı kovaryans matrisi (isteğe bağlı)', en: 'Coefficient covariance matrix (optional)' },
-    note: { tr: 'Kaynak katsayıların kovaryans matrisini veriyorsa katsayı sırasıyla (a, b, c), satır satır girin: satırlar ";" ile, ondalık nokta (ör. "0.04 -0.008; -0.008 0.0025"). Yalnızca belirsizlik hesabında kullanılır.',
-      en: 'If the source gives the covariance matrix of the coefficients, enter it in coefficient order (a, b, c), row by row: rows separated by ";", decimal point (e.g. "0.04 -0.008; -0.008 0.0025"). Used only for the uncertainty.' } },
-  { key: 'rse', type: 'number', label: { tr: 'Artık standart hatası (isteğe bağlı)', en: 'Residual standard error (optional)' },
-    note: { tr: 'Denklemin kendi ölçeğinde: doğrusal biçimlerde kg, ln biçimlerinde ln B, log₁₀ biçimlerinde log₁₀ B. Baskerville düzeltmesindeki SEE ile aynı olabilir; araç birinden ötekini almaz.',
-      en: 'On the scale of the equation: kg for linear forms, ln B for ln forms, log₁₀ B for log₁₀ forms. It may be the SEE of the Baskerville correction; the tool does not copy one into the other.' } }];
+  { key: 'cov', type: 'text', label: { en: 'Coefficient covariance matrix (optional)' },
+    note: { en: 'If the source gives the covariance matrix of the coefficients, enter it in coefficient order (a, b, c), row by row: rows separated by ";", decimal point (e.g. "0.04 -0.008; -0.008 0.0025"). Used only for the uncertainty.' } },
+  { key: 'rse', type: 'number', label: { en: 'Residual standard error (optional)' },
+    note: { en: 'On the scale of the equation: kg for linear forms, ln B for ln forms, log₁₀ B for log₁₀ forms. It may be the SEE of the Baskerville correction; the tool does not copy one into the other.' } }];
 };
 
 // ---- assets/lab/biomass/i18n.js
@@ -288,93 +286,6 @@ const { makeT } = __fb_r("core/i18n.js");
 
 
 const T = makeT({
-  tr: {
-    privacy: 'Verileriniz ve katsayı setleriniz yalnızca bu tarayıcıda kalır; sunucuya gönderilmez. Site hiçbir tür katsayısı, odun yoğunluğu, genişletme faktörü ya da karbon oranı içermez: hepsini siz girersiniz.',
-    'step.1': 'Veri', 'step.2': 'Ayarlar', 'step.3': 'Sonuçlar', next: 'Devam', back: 'Geri', reset: 'Oturumu sıfırla', calc: 'Hesapla', none: '—',
-    restored: p => `Önceki oturum geri yüklendi (${p.when}).`,
-    'tb.h': 'Ağaç tablosu', 'tb.sub': 'Her satır bir ağaç: örnek alan, göğüs çapı ve örnek alan büyüklüğü zorunlu; ağaç, tür, boy ve dönem isteğe bağlı. Hacimden dönüşüm için hacim sütunu da ekleyin.',
-    'map.h': 'Sütunlar ve birimler', 'map.req': 'zorunlu', 'map.opt': 'İsteğe bağlı', 'map.plot': 'Örnek alan', 'map.dbh': 'Göğüs çapı', 'map.area': 'Örnek alan büyüklüğü', 'map.tree': 'Ağaç',
-    'map.species': 'Tür', 'map.height': 'Boy', 'map.period': 'Dönem', 'map.dunit': 'Çap birimi', 'map.hunit': 'Boy birimi', 'map.aunit': 'Alan birimi', 'map.aconst': 'Bütün örnek alanlar (aynı büyüklük)',
-    'map.use': 'Bu tabloyu kullan', 'map.ok': p => `Tablo okundu: ${p.trees} ağaç, ${p.plots} örnek alan.`,
-    'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'nokta (12.5)', 'dec.comma': 'virgül (12,5)', 'dec.v.dot': 'Sayılarda ondalık nokta görülüyor.', 'dec.v.comma': 'Sayılarda ondalık virgül görülüyor.', 'dec.v.none': 'Ondalık ayırıcı görülmedi.', 'dec.v.conflict': 'Hem nokta hem virgül var; seçin.', 'dec.v.ambiguous': p => `Belirsiz değerler var (${p.ex}); seçin.`,
-    'pr.h': p => `${p.n} sorun nedeniyle tablo kullanılamadı:`, 'pr.row': p => `Satır ${p.row}`, 'pr.more': p => `… ve ${p.n} sorun daha.`,
-    'src.h': 'ya da onaylanmış veri', 'src.approved': 'Etkin veri paketi', 'src.use': 'Bu veriyi kullan', 'src.none': 'Onaylanmış veri yok.', 'src.checker': 'Veri Denetçisi', 'src.current': 'Kullanılan veri',
-    'src.info': p => `${p.name}: ${p.trees} ağaç kaydı, ${p.plots} örnek alan.`, 'src.bad': p => `Veri paketi kullanılamadı (${p.codes}).`, 'src.sample': 'Benzetim ağaç tablosunu yükle', 'src.sample.note': 'Benzetim verisi denemek içindir; katsayı içermez, setleri siz girersiniz.',
-    'need.ds': 'Önce bir veri seçin.',
-    'a.h': 'Yaklaşım', 'a.allometric': 'Allometrik denklemler (ağaç düzeyi, bileşen başına)', 'a.volume': 'Hacimden dönüşüm (IPCC 2006 Denklem 2.8b: V · WD · BEF ya da V · BCEF, × (1 + R))',
-    'a.both': 'İkisi birden: aynı ağaçlar iki yolla, sonuçlar ayrı satırlarda', 'a.allometric.s': 'Allometrik', 'a.volume.s': 'Hacimden dönüşüm',
-    'v.from': 'Hacimlerin kaynağı', 'v.from.col': 'Tablodaki bir sütun', 'v.from.secvol': 'Seksiyon Hacmi aracından aktarılan hacimler (bu veri paketi için)',
-    'dv.none': 'Bu veri paketi için aktarılmış hacim yok. Seksiyon Hacmi aracında onaylanmış veriyi bağlayıp sonuçlarda "Hacimleri aktar"ı kullanın.', 'dv.link': 'Seksiyon Hacmi',
-    'dv.bad': p => `Aktarılan hacim kaydı okunamadı (${p.codes}).`,
-    'dv.info': p => `Aktarılan hacimler: ${p.tool}, ${p.when}, yöntem ${p.m}; ${p.n} ağaç (${p.ok} hesaplanmış); kabuk tarafları: ${p.sides}.`,
-    'p.vnone': 'Seksiyon Hacmi aracından aktarılmış hacim yok',
-    'r.vfrom.secvol': p => `Hacimler Seksiyon Hacmi aracından (${p.tool}, yöntem ${p.m}, ${p.when}); değerler yuvarlanmadan alındı.`, 'r.vfrom.col': p => `Hacimler "${p.c}" sütunundan.`,
-    'b.h': 'İki yaklaşım (Mg/ha)', 'b.sub': 'Aynı ağaçlar iki yolla hesaplandı; her yaklaşım ayrı satırdadır, ortalaması alınmaz. İki yolun tanımları (bileşenler, hacmin kapsamı, faktörler) farklıdır; fark bir hata ölçüsü değildir.', 'b.appr': 'Yaklaşım',
-    'x.cmpu': 'Karşılaştırma birimler', 'x.cmpt': 'Karşılaştırma ağaçlar', 'x.vfrom': 'Hacim kaynağı', 'x.pkg': 'Veri paketi SHA-256',
-    'mc.h': 'Belirsizlik (Monte Carlo)', 'mc.sub': 'Yalnızca setlerin kaynağında verilenler benzetilir: katsayı kovaryansı ve artık standart hatası (katsayı setinin "Denklemin tanımı" alanları). Her tekrarda bir setin katsayıları bir kez çekilir ve o seti kullanan bütün ağaçlarda ortaktır; artık her ağaç ve bileşen için ayrı çekilir, denklemin ölçeğinde eklenir. Artık benzetilen log biçimlerinde ters dönüşüm düzeltmesi ayrıca uygulanmaz.',
-    'mc.vol': 'Hacimden dönüşümde belirsizlik bilgisi yok: faktörlerin belirsizliği girilmez, hesaplanmaz.',
-    'mc.B': 'Tekrar sayısı', 'mc.seed': 'Tohum', 'mc.level': 'Aralık düzeyi', 'mc.run': 'Belirsizliği hesapla', 'mc.busy': 'Hesaplanıyor…',
-    'mc.st.noinfo': 'Belirsizlik bilgisi yok: kullanılan setlerin hiçbirinde katsayı kovaryansı ya da artık standart hatası verilmemiş. Hesap yapılmadı.', 'mc.st.bad': 'Belirsizlik hesaplanamadı.',
-    'mc.p.cov.shape': 'kovaryans matrisi katsayı sayısıyla uyuşmuyor', 'mc.p.cov.diag': 'kovaryans köşegeni pozitif olmalı', 'mc.p.cov.sym': 'kovaryans matrisi simetrik değil', 'mc.p.cov.notpd': 'kovaryans matrisi pozitif tanımlı değil',
-    'mc.p.rse.bad': 'artık standart hatası pozitif bir sayı olmalı', 'mc.p.form.unknown': 'bilinmeyen biçim', 'mc.p.B.range': 'tekrar sayısı 100 ile 20000 arasında bir tam sayı olmalı', 'mc.p.seed.range': 'tohum 0 ile 4294967295 arasında bir tam sayı olmalı', 'mc.p.level.range': 'aralık düzeyi geçersiz',
-    'mc.settings': p => `${p.B} tekrar, tohum ${p.seed}, %${p.level} yüzdelik aralığı (örneklem yüzdeliği, tip 7; Hyndman–Fan).`,
-    'mc.part.coef': 'katsayı kovaryansı', 'mc.part.resid': 'artık', 'mc.part.none': 'bilgi yok, nokta değerinde sabit',
-    'mc.fixed': p => `${p.n} sette belirsizlik bilgisi yok; bu setler nokta değerinde tutuldu, aralıklar bu yüzden eksik kalır.`,
-    'mc.neg': p => `Doğrusal biçimlerde ${p.n} çekilişte negatif kütle çıktı; ortalama yansız kalsın diye kesilmedi.`,
-    'mc.point': 'Nokta', 'mc.mean': 'Ortalama', 'mc.sd': 'SS', 'mc.lo': 'Alt', 'mc.hi': 'Üst', 'mc.trees': 'Ağaç düzeyinde (ilk 200; tamamı Excel\'de)',
-    'mc.c.point': 'nokta', 'mc.c.mean': 'ortalama', 'mc.c.median': 'ortanca', 'mc.c.sd': 'SS', 'mc.c.cv': 'CV', 'mc.c.lo': 'alt', 'mc.c.hi': 'üst',
-    'mc.assume': 'Varsayımlar: katsayı hataları çok değişkenli normal, artıklar normal; ağaçlar, bileşenler ve setler arasında bağımsızlık. Ölçüm hataları (çap, boy) ve karbon oranının belirsizliği dahil değil. Hesaplanamayan ağacı olan birimde aralık verilmez.',
-    'x.mcu': 'Belirsizlik birimler', 'x.mct': 'Belirsizlik ağaçlar',
-    'sy.h': 'Kendi verinize toplanabilir bileşen sistemi fit et (Parresol 1999, 2001)', 'sy.sub': 'Kesilip tartılmış ağaçlarınızdan bileşen denklemleri ile toplam ağaç denklemi birlikte fit edilir: kısıtlı görünüşte ilişkisiz regresyon (SUR). Toplam denklemi bileşenlerdeki bütün terimleri içerir ve katsayıları bileşen katsayılarının toplamına kısıtlanır; böylece bileşen tahminleri her ağaçta toplam tahminine eşit olur. Doğrusal olmayan seçenekte bileşenler kuvvet biçimlerindedir (a·D^b, a·D^b·H^c, a·(D²H)^b), toplam onların aynı katsayılarla toplamıdır ve sistem doğrusal olmayan SUR (NSUR) ile fit edilir (Parresol 2001). Fit edilen setler katsayı kütüphanesine kaydedilir ve yukarıdaki eşlemede kullanılır.',
-    'sy.imp': 'Örnek ağaç tablosu', 'sy.imp.sub': 'Her satır bir ağaç: göğüs çapı (cm), boy (m; D²H ya da H terimi için), bileşen kütleleri (kg); toplam sütunu isteğe bağlı (yoksa bileşenlerin toplamı).',
-    'sy.D': 'Göğüs çapı (cm)', 'sy.H': 'Boy (m)', 'sy.col': 'Sütun (kg)', 'sy.terms': 'Terimler (b0 her zaman var)', 'sy.w': 'Ağırlık', 'sy.w.none': 'yok (eşit varyans)', 'sy.k.auto': 'kestirilsin', 'sy.k.est': 'kestirildi',
-    'sy.tot': 'Toplam ağaç', 'sy.tot.sum': '— bileşenlerin toplamı —', 'sy.tot.terms': 'bileşenlerin bütün terimleri',
-    'sy.note': 'Ağırlık: hata varyansı σ² ∝ X^k (Parresol 1999 Denklem 12); k boş bırakılırsa ayrı en küçük kareler artıklarından ln e² = a₁ + k·ln X regresyonuyla kestirilir (Denklem 15). Değeri eksik ya da geçersiz ağaçlar satır numarasıyla dışarıda bırakılır.',
-    'sy.fit': 'Sistemi fit et', 'sy.p.D': 'çap sütunu seçilmedi', 'sy.p.col': 'her bileşen için bir sütun seçin', 'sy.p.terms': 'her bileşen en az bir terim içermeli', 'sy.p.k': 'k bir sayı olmalı ya da boş bırakılmalı', 'sy.p.cit': 'Kaynak/açıklama alanını doldurun (ör. "Kendi kesim verimiz, 2026, n = 39").',
-    'sy.drop': p => `${p.n} ağaç dışarıda bırakıldı (eksik ya da geçersiz değer): satırlar ${p.rows}.`,
-    'sy.e.comps.few': 'en az iki bileşen gerekir', 'sy.e.terms.none': 'her bileşen en az bir terim içermeli', 'sy.e.n.few': 'katsayı sayısına göre ağaç sayısı çok az', 'sy.e.weight.var': 'ağırlık değişkeni pozitif olmalı', 'sy.e.weight.k': 'varyans üssü kestirilemedi', 'sy.e.singular': 'denklem sistemi tekil (terimler doğrusal bağımlı olabilir)', 'sy.e.sigma.singular': 'artık kovaryans matrisi tekil', 'sy.e.restrictions.singular': 'kısıtlar tekil',
-    'sy.sum': p => `${p.n} ağaç, ${p.m} denklem, ${p.q} toplanabilirlik kısıtı.`, 'sy.eq': 'Denklem', 'sy.term': 'Terim', 'sy.int': 'b0 (sabit)', 'sy.sur': 'Kısıtlı SUR', 'sy.sep': 'Ayrı fit etme', 'sy.se': 'SH', 'sy.bias': 'Yanlılık y − ŷ (kg)', 'sy.corr': 'Denklemler arası artık korelasyonları',
-    'sy.method': 'Yöntem: Parresol (1999) yordam 3, kısıtlı (ağırlıklı) SUR, Denklem 31–35; Σ̂ ayrı (ağırlıklı) en küçük kareler artıklarından. Se = √(SSE/(n − K)) ve FI = 1 − SSE/SST kg ölçeğinde. "Ayrı fit etme" her denklemin tek başına (ağırlıklı) en küçük kareler çözümüdür ve toplanabilir değildir.',
-    'sy.kind': 'Sistem', 'sy.kind.linear': 'doğrusal (Parresol 1999)', 'sy.kind.nonlinear': 'doğrusal olmayan, kuvvet biçimleri (Parresol 2001)',
-    'sn.m': 'Hata yapısı', 'sn.m.weighted': 'toplamsal hata, ağırlıklı NSUR', 'sn.m.log': 'logaritmik ölçek (çarpımsal hata)', 'sn.form': 'Biçim', 'sn.w.log': 'logaritma (ağırlık yok)', 'sn.tot.f': 'bileşen fonksiyonlarının toplamı, aynı katsayılarla',
-    'sn.note': 'Bileşen denklemleri kuvvet biçimlerinden seçilir; toplam denklemi bileşen fonksiyonlarının aynı katsayılarla toplamıdır, böylece tahminler her ağaçta toplanır (Parresol 2001 yordam 2, Denklem 18). Ağırlık: hata varyansı σ²·ψ, ψ = exp(gᵀθ) (Denklem 2); θ boş bırakılırsa ağırlıksız fit işleminin artıklarından ln e² regresyonuyla kestirilir (Denklem 4); iki θ’lı biçimlerde iki sayıyı boşlukla yazın. Logaritmik ölçekte bütün denklemler ln ölçeğinde fit edilir (Örnek 2). Bileşen kütlesi 0 olan ağaçlar logaritmik ölçekte dışarıda kalır.',
-    'sn.p.th': 'θ sayı(lar)ı biçimin θ sayısıyla eşleşmeli ya da boş bırakılmalı',
-    'sn.sum': p => `${p.n} ağaç, ${p.m} denklem, ${p.p} katsayı; ${p.method}.`, 'sn.par': 'Katsayı', 'sn.df': 's.d.',
-    'sn.tot.sum': 'Toplam ağaç denkleminin ayrı katsayısı yoktur: bileşen fonksiyonlarının NSUR katsayılarıyla toplamıdır. "Ayrı fit etme" her bileşenin tek başına (ağırlıklı) doğrusal olmayan en küçük kareler çözümü; toplam satırında bunların toplamı (yordam 1).',
-    'sn.method.weighted': 'Yöntem: Parresol (2001) yordam 2, ağırlıklı doğrusal olmayan görünüşte ilişkisiz regresyon (NSUR), Gauss–Newton (Denklem 24); Σ̂ ayrı (ağırlıklı) fit işlemlerinin artıklarından, toplamınki bileşen fit işlemlerinin toplamından (Denklem 21). Se = √(SSE/(n − K)) ve FI = 1 − SSE/SST kg ölçeğinde (toplamda K = bütün katsayılar).',
-    'sn.method.log': 'Yöntem: Parresol (2001) Örnek 2, bütün denklemler ln ölçeğinde, ln B_toplam = ln(Σ f_i), NSUR (Denklem 32); Σ̂ ln ölçeğindeki ayrı fit etme artıklarından. Tahmin exp(ln f): ters dönüşüm düzeltmesi uygulanmaz (makaledeki gibi). Se ve FI kg ölçeğinde.',
-    'sn.iv.h': 'Güven ve tahmin aralığı', 'sn.iv.go': 'Hesapla', 'sn.iv.bad': 'Pozitif bir çap (ve boy) girin.', 'sn.iv.ci': 'Ortalama için güven aralığı', 'sn.iv.pi': 'Yeni ağaç için tahmin aralığı',
-    'sn.iv.note': p => `%95 aralıklar, t = ${p.t} (serbestlik derecesi ${p.df}); Parresol 2001 Denklem 27–28.`, 'sn.iv.log': 'Aralıklar ln ölçeğinde kurulup ters dönüşümle geri çevrilir, bu yüzden simetrik değildir.', 'sn.iv.out': 'Çap, fit etme verisinin aralığı dışında.',
-    'sn.save.note': 'Yalnızca bileşen setleri kaydedilir (kayıtlı kuvvet biçimleriyle); toplam, bunların eşlemede toplanmasıyla elde edilir. Her setin NSUR kovaryansı kaydedilir; denklemler arası kovaryanslar sete yazılmaz.',
-    'sn.saved': p => `${p.n} bileşen seti kaydedildi; eşleme tablosunda seçebilirsiniz.`,
-    'sy.e.method': 'yöntem tanınmadı', 'sy.e.form': 'biçim tanınmadı', 'sy.e.weight': 'ağırlık biçimi tanınmadı', 'sy.e.weight.theta': 'ağırlık üssü (θ) kestirilemedi ya da geçersiz', 'sy.e.start': 'başlangıç değerleri bulunamadı (pozitif kütleler gerekir)', 'sy.e.converge': 'fit etme yakınsamadı', 'sy.e.sum.unweighted': 'toplam bileşenlerin toplamıyken ağırlıksız sistemde toplam denkleminin artığı bileşen artıklarının toplamıdır, Σ̂ tekil olur: ağırlık seçin ya da logaritmik ölçeği kullanın',
-    'sy.save.h': 'Katsayı kütüphanesine kaydet', 'sy.save.tot': 'Toplam denklemini de kaydet', 'sy.cit': 'Kaynak / açıklama (zorunlu)', 'sy.cit.ph': 'ör. Kendi kesim verimiz, 2026, n = 39', 'sy.save': 'Setleri kaydet',
-    'sy.saved': p => `${p.n} set kaydedildi; eşleme tablosunda seçebilirsiniz. Her setin kovaryansı kaydedildi (eşit varyanslı denklemlerde artık standart hatası da); denklemler arası kovaryanslar sete yazılmaz, belirsizlik hesabı setleri bağımsız sayar.`,
-    'c.h': 'Bileşenler ve karbon oranları', 'c.sub': 'Her bileşen ayrı bir katsayı setiyle hesaplanır; karbon oranı (CF) bileşen başına sizden, 0 ile 1 arasında. CO₂ = C × 44/12.',
-    'c.name': 'Bileşen', 'c.cf': 'Karbon oranı (CF)', 'c.add': 'Bileşen ekle', 'c.rm': 'Kaldır', 'c.default': 'toprak üstü',
-    'm.h': 'Tür → katsayı seti', 'm.sub': 'Her tür ve bileşen için bir set seçin. Seçilmeyen tür başka bir türün denklemiyle hesaplanmaz; ağaçları satır numaralarıyla raporlanır.',
-    'm.sp': 'Tür', 'm.n': 'Kayıt', 'm.nosp': '(tür yok)', 'm.choose': '— set seçin —', 'm.all': 'Bu sütunu bütün türlere uygula', 'm.total': 'Ayrı toplam denklemi (isteğe bağlı)', 'm.nosets': 'Henüz biyokütle katsayı seti yok. Aşağıdaki düzenleyiciden girin.',
-    'e.h': 'Kaydı olmayan örnek alan × dönem', 'e.unmeasured': 'ölçülmedi (dışarıda)', 'e.empty': 'boş (0)',
-    'v.h': 'Hacim ve faktörler', 'v.col': 'Hacim sütunu (m³, ağaç başına)', 'v.bark': 'Hacmin kabuk tarafı', 'v.mode': 'Faktör türü', 'v.bef': 'WD ve BEF', 'v.bcef': 'BCEF',
-    'v.D': 'Temel odun yoğunluğu WD (Mg/m³)', 'v.BEF': 'BEF (–)', 'v.BCEF': 'BCEF (Mg/m³)', 'v.R': 'Kök/gövde oranı R, toprak altı / toprak üstü (–)', 'v.fbark': 'Faktörlerin tanımlandığı kabuk tarafı', 'v.src': 'Faktörlerin kaynağı (zorunlu)', 'v.cf': 'Karbon oranı (CF)',
-    'v.note': 'Hacmin tanımı (ticari gövde, toplam gövde) faktörlerin tanımıyla aynı olmalıdır; araç bunu denetleyemez. Kabuk tarafları farklıysa hesap yapılmaz.',
-    ob: 'kabuklu', ib: 'kabuksuz',
-    'p.cf': p => `${p.c}: karbon oranı 0 ile 1 arasında bir sayı olmalı`, 'p.comp': 'En az bir bileşen gerekli', 'p.compdup': 'Bileşen adları farklı olmalı', 'p.map': 'Hiçbir tür için set seçilmedi',
-    'p.vcol': 'Hacim sütunu seçilmedi', 'p.vnum': p => `${p.what}: pozitif bir sayı girin`, 'p.vsrc': 'Faktörlerin kaynağını yazın', 'p.vbark': 'Kabuk tarafları farklı: hacim ve faktörler aynı tarafta olmalı',
-    'r.tiles': 'Özet', 't.trees': 'Ağaç kaydı', 't.ok': 'Hesaplanan', 't.unmapped': 'Seti olmayan türde', 't.noh': 'Boyu eksik', 't.out': 'Geçerlilik aralığı dışında', 't.est': 'Tahmini boyla', 't.nov': 'Hacmi eksik', 't.units': 'Örnek alan × dönem',
-    'r.unmapped': p => `Seti seçilmemiş tür "${p.sp}" (${p.c}): satırlar ${p.rows}. Bu ağaçlar hesaplanmadı.`, 'r.noh': p => `Boyu eksik ağaçlar (${p.c}): satırlar ${p.rows}. Boy tahmini Boy–Çap aracında yapılır.`,
-    'r.nov': p => `Hacmi eksik ağaçlar: satırlar ${p.rows}.`, 'r.est': p => `${p.n} ağaç (${p.c}) tahmini boyla hesaplandı.`, 'r.out': p => `${p.n} ağaç (${p.c}) setin geçerlilik aralığı dışında: hesaplandı, dikkatle kullanın.`,
-    'r.inv': p => `${p.n} ağaç (${p.c}) hesaplanamadı (geçersiz girdi ya da sonuç).`, 'r.uns': p => `${p.n} ağaç (${p.c}): log₁₀ denkleminde Baskerville düzeltmesinin kaynağı bekleniyor; hesaplanmadı.`,
-    'r.note': p => `Kullanıcı katsayılarıyla üretildi: ${p.list}.`, 'r.vnote': p => `Kullanıcı faktörleriyle üretildi: ${p.src}.`, 'r.add': p => `Ayrı toplam denklemi ile bileşen toplamı arasındaki en büyük göreli fark: ${p.r} %.`,
-    'u.h': 'Örnek alan × dönem (Mg/ha)', 'u.plot': 'Örnek alan', 'u.period': 'Dönem', 'u.n': 'Ağaç', 'u.B': 'Toplam B', 'u.C': 'C', 'u.CO2': 'CO₂', 'u.AGB': 'Toprak üstü', 'u.BGB': 'Toprak altı', 'u.miss': 'eksik ağaç var',
-    'u.note': 'Bir birimde hesaplanamayan ağaç varsa o birimin toplamı verilmez (–); kısmi toplam toplam gibi gösterilmez. Hektara çevirme sabit alanlı örnek alanlar içindir (10000 / alan).',
-    'g.h': 'Ağaçlar', 'g.row': 'Satır', 'g.status': 'Durum', 'g.set': 'Set', 'g.more': p => `İlk ${p.k} / ${p.n} ağaç; tamamı Excel ve CSV'de.`,
-    'st.ok': 'tamam', 'st.noheight': 'boy yok', 'st.unmapped': 'set yok', 'st.invalid': 'geçersiz', 'st.unsupported': 'kaynak bekleniyor', 'st.novolume': 'hacim yok',
-    'ch.title': 'Örnek alan × dönem biyokütlesi', 'ch.y': 'Mg/ha', 'ch.svg': 'Grafik (SVG)',
-    'x.h': 'İndir', 'x.xlsx': 'Excel raporu', 'x.csv': 'Ağaçlar (CSV)', 'x.json': 'JSON', 'x.fail': 'Excel kitaplığı yüklenemedi.',
-    'x.info': 'Bilgi', 'x.units': 'Birimler', 'x.trees': 'Ağaçlar', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.lang': 'Dil', 'x.data': 'Veri', 'x.approach': 'Yaklaşım',
-    'x.set': 'Katsayı seti', 'x.src': 'Kaynak', 'x.factors': 'Faktörler', 'x.rule': 'Kurallar',
-  },
   en: {
     privacy: 'Your data and coefficient sets stay in this browser; nothing is sent to the server. The site contains no species coefficients, wood densities, expansion factors or carbon fractions: you enter all of them.',
     'step.1': 'Data', 'step.2': 'Settings', 'step.3': 'Results', next: 'Continue', back: 'Back', reset: 'Reset session', calc: 'Compute', none: '—',
@@ -1063,7 +974,7 @@ const { readDerived, volumeLookup, storeKey, KIND_VOLUME } = __fb_r("core/derive
 
 
 
-const BASE = './', KEY = 'session:' + B.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
+const BASE = './', KEY = 'session:' + B.TOOL.id, LOC = 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
 let S = blank(), R = null, sets = [], approved = null, dv = null, U = null;
@@ -1076,7 +987,7 @@ function save() { AS.save(); }
 function flush() { return AS.flush(); }
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const setsById = () => new Map(sets.map(s => [s.id, s]));
-const setLabel = s => { const fm = formOf(s.form); return `${fm ? (fm.formula[lang] || fm.formula.tr) : s.form}${[s.species, s.component].filter(Boolean).length ? ' · ' + [s.species, s.component].filter(Boolean).join(' · ') : ''} — ${s.source.citation}`; };
+const setLabel = s => { const fm = formOf(s.form); return `${fm ? (fm.formula[lang]) : s.form}${[s.species, s.component].filter(Boolean).length ? ' · ' + [s.species, s.component].filter(Boolean).join(' · ') : ''} — ${s.source.citation}`; };
 
 /* ---------------- step 1: data ---------------- */
 const MAPKEYS = ['plot', 'dbh', 'area', 'tree', 'species', 'height', 'period'];
@@ -1146,7 +1057,7 @@ function renderStep1() {
   $('useapp') && $('useapp').addEventListener('click', () => useDataset(approved, { kind: 'approved', name: approved.source && approved.source.trees && approved.source.trees.name }));
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/structure/ornek/ornek-mescere.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-mescere.csv (benzetim)' : 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) }); S.tbl.spec.decimal = '.'; S.tbl.spec.decChosen = true; renderMap(); $('usetbl').click();
   });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -1533,7 +1444,7 @@ function renderStep3() {
   });
 }
 const partRecord = P => ({ counts: P.counts || null, unmapped: P.unmapped || null, noheight: P.noheight || null, missing: P.missing || null, units: P.units });
-const fname = () => `${lang === 'tr' ? 'biyokutle-karbon' : 'biomass-carbon'}-${new Date().toISOString().slice(0, 10)}`;
+const fname = () => `biomass-carbon-${new Date().toISOString().slice(0, 10)}`;
 function partSettings(P) {
   return P.kind === 'allometric' ? { approach: 'allometric', components: S.comps.map(c => ({ key: c.key, label: c.label, CF: num(c.CF) })), map: S.map, total: S.total, emptyCombos: S.ec }
     : { approach: 'volume', volumeFrom: P.cfg.from, volumeColumn: P.cfg.col, volumeBark: P.cfg.bark, factors: P.cfg.factors, CF: P.cfg.CF, factorSource: P.cfg.src, emptyCombos: S.ec };
@@ -1818,19 +1729,16 @@ function radarChart(o) {
 __fb_m["core/citation.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "FORMATS": () => FORMATS, "NAMES": () => NAMES, "cite": () => cite, "plain": () => plain });
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
-// Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// Input c = { author:{ family, given }, year, base (canonical URL with trailing '/'), site:{ en },
+//             tool: null | { file, v, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
 // doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
 const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MON_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const MLA_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const IEEE_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
 const VAN_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SHORT_TR = ['Oca.', 'Şub.', 'Mar.', 'Nis.', 'May.', 'Haz.', 'Tem.', 'Ağu.', 'Eyl.', 'Eki.', 'Kas.', 'Ara.'];
-const VAN_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
 const FORMATS = ['apa', 'mla', 'chicago', 'harvard', 'ieee', 'vancouver', 'bibtex', 'ris'];
 const NAMES = { apa: 'APA 7', mla: 'MLA 9', chicago: 'Chicago (author-date)', harvard: 'Harvard', ieee: 'IEEE', vancouver: 'Vancouver', bibtex: 'BibTeX', ris: 'RIS' };
@@ -1840,9 +1748,9 @@ const it = s => `<i>${esc(s)}</i>`;
 const plain = html => html.replace(/<\/?i>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 function parts(c) {
-  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1, tr = c.lang === 'tr';
-  const site = c.site[c.lang], tool = c.tool ? c.tool[c.lang] : null;
-  return { tr, y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
+  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1;
+  const site = c.site.en, tool = c.tool ? c.tool.en : null;
+  return { y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
     url: c.base + (c.tool ? c.tool.file : ''), fam: c.author.family, given: c.author.given, ini: c.author.given.charAt(0) + '.', year: c.year };
 }
 const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -1851,54 +1759,42 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 function cite(fmt, c) {
   const body = core(fmt, c);
   if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
-  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  const u = esc('https://doi.org/' + c.doi);
   switch (fmt) {
-    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'apa': return `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
     case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
     case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
     default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
   }
 }
 function core(fmt, c) {
-  const p = parts(c), tr = p.tr, v = p.v;
+  const p = parts(c), v = p.v;
   switch (fmt) {
     case 'apa':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Sürüm ${v})` : ''} [Web uygulaması].${p.container ? ` ${esc(p.container)}.` : ''} ${p.d} ${MON_TR[p.mi]} ${p.y} tarihinde ${esc(p.url)} adresinden erişildi.`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
     case 'mla':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Sürüm ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Erişim ${p.d} ${SHORT_TR[p.mi]} ${p.y}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
     case 'chicago':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Sürüm ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Erişim ${p.d} ${MON_TR[p.mi]} ${p.y}. ${esc(p.url)}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
     case 'harvard':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (sürüm ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Erişim adresi: ${esc(p.url)} (Erişim tarihi: ${p.d} ${MON_TR[p.mi]} ${p.y}).`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
     case 'ieee': {
-      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ${tr ? 'sür.' : 'ver.'} ${v}, ` : `${it(p.title)}, `;
-      return tr
-        ? `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Çevrimiçi]. Erişim: ${esc(p.url)} (erişim tarihi: ${p.d} ${SHORT_TR[p.mi]} ${p.y}).`
-        : `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
+      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ver. ${v}, ` : `${it(p.title)}, `;
+      return `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
     }
     case 'vancouver':
-      return tr
-        ? `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [İnternet]. ${v ? `Sürüm ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [erişim ${p.y} ${VAN_TR[p.mi]} ${p.d}]. Erişim adresi: ${esc(p.url)}`
-        : `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
+      return `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
     case 'bibtex': {
       const key = `${p.fam.toLowerCase()}${p.year}${c.tool ? c.tool.file.replace(/\.php$/, '').replace(/[^a-z0-9]/g, '') : 'forestbiometry'}`;
       const tt = p.title.replace(/–/g, '--');
-      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
+      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{Web application${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (`Version ${v}. `) : ''}Accessed ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `Version ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }
@@ -1916,11 +1812,8 @@ __fb_r("core/reset-all.js");
    // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
-const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
+const ui = 'en';
 const T = {
-  tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
-    copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
     note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
@@ -1988,26 +1881,6 @@ const { downloadJSON } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: {
-    h: 'Katsayı setleri', sub: 'Bu araç hiçbir tür ya da yöre katsayısı içermez. Setleri siz girersiniz; kaynak alanı zorunludur. Setler yalnızca bu tarayıcıda saklanır.',
-    none: 'Henüz kayıtlı set yok.', form: 'Denklem biçimi', new: 'Yeni set', edit: 'Düzenle', del: 'Sil', delq: 'Bu set silinsin mi?',
-    save: 'Seti kaydet', cancel: 'Vazgeç', exp: 'Setleri indir (JSON)', imp: 'JSON\'dan yükle',
-    params: 'Katsayılar', units: 'Birimler', input: 'Girdi', output: 'Çıktı', valid: 'Geçerlilik aralığı (isteğe bağlı)', vmin: 'en küçük', vmax: 'en büyük',
-    meta: 'Kapsam', species: 'Tür', region: 'Yöre', component: 'Bileşen',
-    tr_h: 'Ters dönüşüm düzeltmesi', 'corr.none': 'yok', 'corr.baskerville': 'Baskerville, exp(SEE²/2)', 'corr.snowdon': 'Snowdon oranı', 'corr.user': 'kullanıcı faktörü',
-    see: p => p.kind === 'log10' ? 'SEE (log10 ölçeğinde)' : 'SEE (ln ölçeğinde)', fac: 'Faktör',
-    src: 'Kaynak', cit: 'Künye (zorunlu)', doi: 'DOI', page: 'Sayfa', table: 'Tablo', note: 'Not',
-    cith: 'Ör. Yazar (yıl), dergi, cilt: sayfa; ya da "Kendi verilerim, yayımlanmamış".',
-    extra: 'Denklemin tanımı', choose: '— seçin —', 'p.extra.missing': p => `${p.what} seçilmedi`, 'p.extra.num': p => `${p.what} pozitif bir sayı olmalı`,
-    saved: 'Set kaydedildi.', imported: p => `${p.n} set yüklendi.`, rejected: p => `${p.n} set geçersiz olduğu için yüklenmedi: ${p.why}`,
-    th_form: 'Biçim', th_scope: 'Kapsam', th_src: 'Kaynak', th_mod: 'Son değişiklik', origin_fitted: 'fit edilen',
-    'p.schema': 'şema geçersiz', 'p.id': 'kimlik yok', 'p.tool': 'araç yok', 'p.form.unknown': 'biçim tanınmıyor', 'p.form.tool': 'biçim bu araca ait değil',
-    'p.param.missing': p => `${p.key} katsayısı girilmedi`, 'p.param.extra': p => `${p.key} bu biçimde yok`, 'p.param.nonfinite': p => `${p.key} sayı değil`,
-    'p.unit.input': p => `${p.key} girdisinin birimi yok`, 'p.unit.output': 'çıktı birimi yok', 'p.bark': 'kabuk durumu kabuklu (ob) ya da kabuksuz (ib) olmalı',
-    'p.valid.bad': p => `${p.key ?? ''} geçerlilik aralığı geçersiz (en küçük < en büyük olmalı)`, 'p.transform.bad': 'dönüşüm biçimle uyuşmuyor',
-    'p.correction.bad': 'düzeltme türü geçersiz', 'p.correction.value': 'düzeltme için pozitif bir değer girin', 'p.source.missing': 'kaynak künyesi zorunlu',
-    'p.origin.bad': 'köken geçersiz', 'p.fit.missing': 'fit etme özeti yok', 'p.library.schema': 'dosya bir katsayı kütüphanesi değil', 'p.num': p => `${p.what}: sayı okunamadı ("${p.text}")`,
-  },
   en: {
     h: 'Coefficient sets', sub: 'This tool contains no species or regional coefficients. You enter the sets; the source is mandatory. Sets are stored in this browser only.',
     none: 'No set saved yet.', form: 'Equation form', new: 'New set', edit: 'Edit', del: 'Delete', delq: 'Delete this set?',
@@ -2036,7 +1909,7 @@ const readNum = t => { const s = String(t ?? '').trim().replace(/−/g, '-'); re
 const show = v => v == null ? '' : String(v);              // full precision as stored
 /** Problems of a set against a tool's own fields (set.meta; e.g. the age type of a site-index equation), as in the editor. */
 function metaProblems(extra, s) {
-  return (extra || []).flatMap(x => { const v = (s.meta || {})[x.key], what = x.label[lang] || x.label.tr;
+  return (extra || []).flatMap(x => { const v = (s.meta || {})[x.key], what = x.label[lang];
     if (v == null || v === '') return x.required ? [{ code: 'extra.missing', what }] : [];
     if (x.type === 'choice' && !x.values.some(o => o.v === v)) return [{ code: 'extra.missing', what }];
     return x.type === 'number' && !(Number.isFinite(v) && v > 0) ? [{ code: 'extra.num', what }] : []; });
@@ -2045,7 +1918,7 @@ function metaProblems(extra, s) {
 /**
  * Mounts the library + editor into el. opts = { tool, onChange?(sets), extra? }. Returns { refresh() }.
  * extra: tool-specific fields stored in set.meta, e.g. the age type of a site-index equation:
- *   [{ key, label: { tr, en }, type: 'choice' | 'number' | 'text', values?: [{ v, tr, en }], required?: bool, note?: { tr, en } }]
+ *   [{ key, label: { en }, type: 'choice' | 'number' | 'text', values?: [{ v, en }], required?: bool, note?: { en } }]
  * A required extra field left empty refuses the save (problem 'extra.missing'); numbers use a decimal point.
  * Every control has a stable id prefixed with 'cf-' so tools and tests can address it.
  * opts.compact: no list of sets and no JSON buttons (the coefficient library page, DI-02, shows its own list); the
@@ -2079,17 +1952,17 @@ function mountCoefEditor(el, opts) {
   }
   function render() {
     const row = s => { const f = C.form(s.form);
-      return `<tr data-id="${esc(s.id)}"><td>${esc(f ? (f.name ? f.name[lang] || f.name.tr : f.formula[lang] || f.formula.tr) : s.form)}</td><td>${esc([s.species, s.region, s.component].filter(Boolean).join(' · ') || '–')}${s.origin === 'fitted' ? ` <span class="muted small">(${T('origin_fitted')})</span>` : ''}</td>
+      return `<tr data-id="${esc(s.id)}"><td>${esc(f ? (f.name ? f.name[lang] : f.formula[lang]) : s.form)}</td><td>${esc([s.species, s.region, s.component].filter(Boolean).join(' · ') || '–')}${s.origin === 'fitted' ? ` <span class="muted small">(${T('origin_fitted')})</span>` : ''}</td>
         <td class="small">${esc(s.source.citation)}</td><td class="small">${esc(String(s.modified || '').slice(0, 10))}</td>
         <td><button type="button" class="btn ghost small" data-act="edit">${T('edit')}</button> <button type="button" class="btn ghost small" data-act="del">${T('del')}</button></td></tr>`; };
     const pickF = forms.find(f => f.id === pick) || forms[0] || null;
     let h = `<div class="card coefcard"><h2>${T('h')}</h2><p class="muted small">${T('sub')}</p>
       ${opts.compact ? '' : sets.length ? `<div class="tscroll"><table class="grid" id="cf-list"><thead><tr><th>${T('th_form')}</th><th>${T('th_scope')}</th><th>${T('th_src')}</th><th>${T('th_mod')}</th><th></th></tr></thead><tbody>${sets.map(row).join('')}</tbody></table></div>` : `<p class="small" id="cf-none">${T('none')}</p>`}
-      <div class="lims"><label>${T('form')} <select id="cf-form">${forms.map(f => `<option value="${esc(f.id)}"${f.id === pick ? ' selected' : ''}>${esc(f.name ? f.name[lang] || f.name.tr : f.formula[lang] || f.formula.tr)}</option>`).join('')}</select></label>
+      <div class="lims"><label>${T('form')} <select id="cf-form">${forms.map(f => `<option value="${esc(f.id)}"${f.id === pick ? ' selected' : ''}>${esc(f.name ? f.name[lang] : f.formula[lang])}</option>`).join('')}</select></label>
         <button type="button" class="btn ghost small" id="cf-new"${forms.length ? '' : ' disabled'}>${T('new')}</button>
         ${opts.compact ? '' : `<button type="button" class="btn ghost small" id="cf-exp"${sets.length ? '' : ' disabled'}>${T('exp')}</button>
         <label class="btn ghost small">${T('imp')} <input type="file" id="cf-imp" accept=".json,application/json" hidden></label>`}</div>
-      ${pickF && pickF.name ? `<p class="small muted" id="cf-formula">${esc(pickF.formula[lang] || pickF.formula.tr)}</p>` : ''}
+      ${pickF && pickF.name ? `<p class="small muted" id="cf-formula">${esc(pickF.formula[lang])}</p>` : ''}
       ${msg ? `<p class="note ${msg.kind}" id="cf-msg">${esc(msg.text)}</p>` : ''}
       ${draft ? editor() : ''}</div>`;
     el.innerHTML = h; bind();
@@ -2097,7 +1970,7 @@ function mountCoefEditor(el, opts) {
   function editor() {
     const f = C.form(draft.form), inp = (id, v, lab, size = 12) => `<label>${lab} <input type="text" inputmode="decimal" size="${size}" id="${id}" value="${esc(v)}"></label>`;
     const tx = draft.transform;
-    return `<form id="cf-edit" class="coefedit" novalidate><h3>${esc(f.formula[lang] || f.formula.tr)}</h3>
+    return `<form id="cf-edit" class="coefedit" novalidate><h3>${esc(f.formula[lang])}</h3>
       <h3>${T('params')}</h3><div class="lims">${f.params.map(q => inp('cf-p-' + q.key, text.params[q.key], esc(q.label ?? q.key))).join('')}</div>
       <h3>${T('units')}</h3><p class="small">${Object.entries(draft.inputs).map(([k, v]) => `${T('input')} ${esc(k)}: ${esc(v.unit)}${v.bark ? ` (${esc(v.bark)})` : ''}`).join('; ')}; ${T('output')} ${esc(draft.output.name || '')}: ${esc(draft.output.unit)}${draft.output.bark ? ` (${esc(draft.output.bark)})` : ''}</p>
       <h3>${T('valid')}</h3><div class="lims">${Object.keys(f.inputs).map(k => `${inp(`cf-v-${k}-0`, text.valid[k][0], `${esc(k)} ${T('vmin')}`, 7)} ${inp(`cf-v-${k}-1`, text.valid[k][1], T('vmax'), 7)}`).join('')}</div>
@@ -2111,7 +1984,7 @@ function mountCoefEditor(el, opts) {
   }
   function extraHTML() {
     const xs = opts.extra || []; if (!xs.length) return '';
-    const L = o => o[lang] || o.tr, m = draft.meta || {};
+    const L = o => o[lang], m = draft.meta || {};
     return `<h3>${T('extra')}</h3><div class="lims">${xs.map(x => x.type === 'choice'
       ? `<label>${esc(L(x.label))} <select id="cf-x-${x.key}"><option value="">${T('choose')}</option>${x.values.map(v => `<option value="${esc(v.v)}"${m[x.key] === v.v ? ' selected' : ''}>${esc(L(v))}</option>`).join('')}</select></label>`
       : `<label>${esc(L(x.label))} <input type="text" ${x.type === 'number' ? 'inputmode="decimal" size="8"' : 'size="28"'} id="cf-x-${x.key}" value="${esc(m[x.key] ?? '')}"></label>`).join('')}</div>
@@ -2153,8 +2026,8 @@ function mountCoefEditor(el, opts) {
       if ((opts.extra || []).length) { draft.meta = {}; for (const x of opts.extra) { const v = $('cf-x-' + x.key).value.trim(); if (v !== '') draft.meta[x.key] = x.type === 'number' ? readNum(v) : v; } }
     };
     const extraProblems = () => (opts.extra || []).flatMap(x => { const v = (draft.meta || {})[x.key];
-      if (v == null) return x.required ? [{ code: 'extra.missing', what: x.label[lang] || x.label.tr }] : [];
-      return x.type === 'number' && !(Number.isFinite(v) && v > 0) ? [{ code: 'extra.num', what: x.label[lang] || x.label.tr }] : []; });
+      if (v == null) return x.required ? [{ code: 'extra.missing', what: x.label[lang] }] : [];
+      return x.type === 'number' && !(Number.isFinite(v) && v > 0) ? [{ code: 'extra.num', what: x.label[lang] }] : []; });
     $('cf-cancel').addEventListener('click', () => { draft = null; msg = null; render(); });
     ed.addEventListener('submit', async e => {
       e.preventDefault(); collectMeta();
@@ -2193,7 +2066,7 @@ const FORMS = new Map();
 
 /**
  * form = { id, tool, params: [{ key, label? }], inputs: { <var>: { unit, bark? } }, output: { name, unit, bark? },
- *          formula: { tr, en } (text shown to the user), name?: { tr, en } (author and year, shown in the form list instead of
+ *          formula: { en } (text shown to the user), name?: { en } (author and year, shown in the form list instead of
  *          the formula, the formula then below it), transform?: 'none'|'log'|'log10' (the scale the equation is
  *          written on; default 'none'), eval?(params, x) → number (optional; the tool's own calculator) }
  */
@@ -2430,12 +2303,13 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
-// Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
-// languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
-const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
+// Tiny i18n helper. The site is English only (20 Nov 2026; Turkish removed from the code 21 Nov 2026): `lang` is
+// always 'en' and every dictionary has a single `en` table. Numbers on screen use a decimal point and no thousands
+// separator; the interface never changes how data are parsed or stored.
+const lang = 'en';
 function makeT(dict) {
   return (key, p) => {
-    const s = (dict[lang] && dict[lang][key]) ?? dict.tr[key];
+    const s = dict.en[key];
     if (s == null) return key;
     return typeof s === 'function' ? s(p || {}) : s;
   };
@@ -2443,23 +2317,23 @@ function makeT(dict) {
 /**
  * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
  * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
- * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * point (English only). '−' is not used: negative numbers keep
  * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
  * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
 /** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
-const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+const SCREEN_DECIMAL = '.';
 /** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
-const LIST_SEP = lang === 'tr' ? '; ' : ', ';
+const LIST_SEP = ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
+  return s === '-0' ? '0' : s;
 }
-/** Decimal separator of CSV exports (both languages). */
+/** Decimal separator of CSV exports. */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -2477,12 +2351,6 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
-    auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
-    encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
-    fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
-    comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
     auto: p => `detected: ${p.d}`, header: 'First row is a header', enc: 'Text encoding', sheet: 'Worksheet', pasted: 'pasted table',
     encwarn: 'Reading the file as UTF-8 produced broken characters; Turkish Excel CSV files are often Windows-1254.',
@@ -2813,8 +2681,6 @@ const { download } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { embed: 'Girdi verisini kayda ekle', embedHelp: 'İşaretli değilse JSON kaydında girdi dosyalarının yalnızca SHA-256 parmak izi bulunur; işaretliyse verinin kendisi de girer ve kayıt tek başına yeniden üretilebilir. Kaydı paylaşırsanız veriyi de paylaşmış olursunuz.',
-    fail: 'Kayıt hazırlanamadı', btn: 'Çalışma kaydı (JSON)' },
   en: { embed: 'Include the input data in the record', embedHelp: 'Unchecked, the JSON record holds only the SHA-256 fingerprint of each input file; checked, the data itself goes in too and the record reproduces on its own. If you share the record, you share the data.',
     fail: 'The record could not be prepared', btn: 'Run record (JSON)' },
 });
@@ -3066,19 +2932,7 @@ const { get, del, keys } = __fb_r("core/store.js");
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
-const tr = document.documentElement.lang !== 'en';
-const T = tr ? {
-  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
-  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
-  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
-    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
-    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
-    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
-    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
-    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
-    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
-  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
-} : {
+const T = {
   label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
   none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
   ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
@@ -3733,7 +3587,7 @@ function cellText(c) {
   return c.w != null ? c.w : String(c.v);
 }
 function padTo(a, n) { const r = a.slice(); while (r.length < n) r.push(''); return r; }
-function colName(i) { return (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'Column ' : 'Sütun ') + (i + 1); }
+function colName(i) { return 'Column ' + (i + 1); }
 function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k = seen.get(x) || 0; seen.set(x, k + 1); return k ? `${x} (${k + 1})` : x; }); }
 };
 

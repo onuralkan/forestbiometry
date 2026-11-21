@@ -18,7 +18,7 @@ const SITE = await readFile(new URL('../../inc/site.php', import.meta.url), 'utf
 const TOOL_IDS = [...SITE.matchAll(/'file' => '([a-z0-9-]+)\.php', 'v' =>/g)].map(m => m[1]);
 const CAT = await readFile(new URL('../../inc/catalog.php', import.meta.url), 'utf8');
 const N_TOOLS = (SITE.match(/'file' => '[a-z0-9-]+\.php', 'v' =>/g) || []).length, N_CATS = (CAT.slice(CAT.indexOf('function site_modules'), CAT.indexOf('function site_catalog')).match(/\['id' => '/g) || []).length;
-const CATALOG = [...CAT.matchAll(/\['([A-Z]{2}-\d\d)', '(live|dev|planned|out)', '[^']*', '[^']*'(?:, '([a-z-]+\.php)')?\]/g)].map(m => ({ id: m[1], status: m[2], page: m[3] || null }));
+const CATALOG = [...CAT.matchAll(/\['([A-Z]{2}-\d\d)', '(live|dev|planned|out)', '[^']*'(?:, '([a-z-]+\.php)')?\]/g)].map(m => ({ id: m[1], status: m[2], page: m[3] || null }));
 const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png'), fullPage: true }); };
 
 // 1. home page (20 Nov 2026, user decision): short intro, a search over every tool, six direct links, the way to the
@@ -32,7 +32,7 @@ ok((await page.textContent('.hp-data')).includes('Your data are not sent to a se
   ok((await page.locator('.hp-res .hm-item').count()) === N_TOOLS, `home search covers all ${N_TOOLS} tools, not only the six direct links`);
   await page.fill('#tool-q', 'weibull'); ok((await res()).includes('cap-dagilimi.php') && (await res()).includes('boy-cap.php'), 'home search by method: Weibull finds Diameter Distribution and Height–Diameter: ' + (await res()).join(', '));
   await page.fill('#tool-q', 'RMSE'); ok((await res()).includes('model-degerlendirme.php'), 'home search: RMSE finds Model Evaluation');
-  await page.fill('#tool-q', 'GOVDE PROFILI'); ok((await res())[0] === 'govde-profili.php' && (await page.textContent('#tool-count')).includes(`of ${N_TOOLS} tools`), 'home search: Turkish letters and case ignored; the tool named so first: ' + (await res()).join(', '));
+  await page.fill('#tool-q', 'STEM TAPER'); ok((await res())[0] === 'govde-profili.php' && (await page.textContent('#tool-count')).includes(`of ${N_TOOLS} tools`), 'home search: case ignored; the tool named so first: ' + (await res()).join(', '));
   await page.press('#tool-q', 'Enter'); ok(await page.evaluate(() => document.activeElement.getAttribute('href')) === 'govde-profili.php', 'home search: Enter moves to the first result');
   await page.fill('#tool-q', 'zzzz'); ok(await page.isVisible('#hm-none') && (await res()).length === 0, 'home search without a match says so');
   await page.focus('#tool-q'); await page.press('#tool-q', 'Escape'); ok((await page.inputValue('#tool-q')) === '' && await page.isHidden('#hp-results'), 'home search: Escape clears');
@@ -124,7 +124,7 @@ ok((await page.locator('#side .b-cat').count()) === N_CATS && N_CATS === 8 && (a
 ok((await page.locator('.hm-mod').count()) === N_CATS && (await page.locator('.hm-mod[hidden], .hm-item[hidden]').count()) === 0, `home directory: ${N_CATS} modules, every tool visible without a click`);
 { const vis = () => page.$$eval('.hm-item:not([hidden]) a', a => a.map(x => x.getAttribute('href')));
   ok((await page.locator('.hm-chip[data-mod]').count()) === N_CATS + 1, 'module filters: all + one per module');
-  await page.fill('#tool-q', 'GOVDE PROFILI'); ok((await vis()).includes('govde-profili.php') && (await page.textContent('#tool-count')).includes(`of ${N_TOOLS} tools`), 'search: Turkish letters and case ignored, count of the shown tools');
+  await page.fill('#tool-q', 'STEM TAPER'); ok((await vis()).includes('govde-profili.php') && (await page.textContent('#tool-count')).includes(`of ${N_TOOLS} tools`), 'search: case ignored, count of the shown tools');
   await page.fill('#tool-q', 'zzzz'); ok(await page.isVisible('#hm-none'), 'search without a match says so');
   await page.click('#hm-reset'); await page.click('.hm-chip[data-mod="SV"]'); ok((await vis()).length === (await page.locator('.hm-mod[data-mod="SV"] .hm-item').count()) && page.url().includes('m=SV'), 'module filter, kept in the address');
   await page.click('.hm-task[data-task="agac"]'); ok((await vis()).includes('agac-olcumu.php') && (await vis()).includes('biyokutle-karbon.php') && await page.isVisible('#hm-task-note'), 'task filter across modules (guide task cards)');

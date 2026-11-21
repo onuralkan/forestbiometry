@@ -20,7 +20,7 @@ import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { sha256JSON } from '../core/record.js';
 import { readDerived, volumeLookup, storeKey, KIND_VOLUME } from '../core/derived.js';
 
-const BASE = './', KEY = 'session:' + B.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
+const BASE = './', KEY = 'session:' + B.TOOL.id, LOC = 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
 let S = blank(), R = null, sets = [], approved = null, dv = null, U = null;
@@ -33,7 +33,7 @@ function save() { AS.save(); }
 function flush() { return AS.flush(); }
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const setsById = () => new Map(sets.map(s => [s.id, s]));
-const setLabel = s => { const fm = formOf(s.form); return `${fm ? (fm.formula[lang] || fm.formula.tr) : s.form}${[s.species, s.component].filter(Boolean).length ? ' · ' + [s.species, s.component].filter(Boolean).join(' · ') : ''} — ${s.source.citation}`; };
+const setLabel = s => { const fm = formOf(s.form); return `${fm ? (fm.formula[lang]) : s.form}${[s.species, s.component].filter(Boolean).length ? ' · ' + [s.species, s.component].filter(Boolean).join(' · ') : ''} — ${s.source.citation}`; };
 
 /* ---------------- step 1: data ---------------- */
 const MAPKEYS = ['plot', 'dbh', 'area', 'tree', 'species', 'height', 'period'];
@@ -103,7 +103,7 @@ function renderStep1() {
   $('useapp') && $('useapp').addEventListener('click', () => useDataset(approved, { kind: 'approved', name: approved.source && approved.source.trees && approved.source.trees.name }));
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/structure/ornek/ornek-mescere.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-mescere.csv (benzetim)' : 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) }); S.tbl.spec.decimal = '.'; S.tbl.spec.decChosen = true; renderMap(); $('usetbl').click();
   });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -490,7 +490,7 @@ function renderStep3() {
   });
 }
 const partRecord = P => ({ counts: P.counts || null, unmapped: P.unmapped || null, noheight: P.noheight || null, missing: P.missing || null, units: P.units });
-const fname = () => `${lang === 'tr' ? 'biyokutle-karbon' : 'biomass-carbon'}-${new Date().toISOString().slice(0, 10)}`;
+const fname = () => `biomass-carbon-${new Date().toISOString().slice(0, 10)}`;
 function partSettings(P) {
   return P.kind === 'allometric' ? { approach: 'allometric', components: S.comps.map(c => ({ key: c.key, label: c.label, CF: num(c.CF) })), map: S.map, total: S.total, emptyCombos: S.ec }
     : { approach: 'volume', volumeFrom: P.cfg.from, volumeColumn: P.cfg.col, volumeBark: P.cfg.bark, factors: P.cfg.factors, CF: P.cfg.CF, factorSource: P.cfg.src, emptyCombos: S.ec };

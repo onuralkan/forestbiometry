@@ -10,7 +10,7 @@ import { downloadRecord, recordButton } from '../core/record-ui.js';
 import { radarChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 
-const BASE = './', KEY = 'session:' + C.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + C.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const fv = x => x == null ? '–' : fmtNum(x, 6);
@@ -55,7 +55,7 @@ function renderStep1() {
   renderImport($('impbox'), { imp: S.imp, src: S.src }, { base: BASE, title: T('imp.h'), sub: T('imp.sub'), onChange: setTable, onError: m => status(m, 'err'), rawRows: true });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/rank/ornek/ornek-olcutler.xlsx')).arrayBuffer();
-    const imp = { kind: 'xlsx', name: lang === 'tr' ? 'ornek-olcutler.xlsx (benzetim)' : 'ornek-olcutler.xlsx (simulated)', buf, header: false, sheet: null };
+    const imp = { kind: 'xlsx', name: 'ornek-olcutler.xlsx (simulated)', buf, header: false, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
   });
   $('reset').addEventListener('click', async () => { S = blank(); D = Rk = null; status(''); render(); await del(KEY); });
@@ -179,11 +179,11 @@ function tabRadar(p) {
   $('rall').addEventListener('click', () => { Object.assign(rd, { best: true, nb: Rk.m, worst: false }); re(); });
   $('rclr').addEventListener('click', () => { Object.assign(rd, { best: false, worst: false, extra: [] }); re(); });
   p.querySelectorAll('[data-x]').forEach(x => x.addEventListener('change', () => { const r = +x.dataset.x; rd.extra = x.checked ? [...rd.extra, r] : rd.extra.filter(y => y !== r); re(); p.querySelector('details').open = true; }));
-  $('svg') && $('svg').addEventListener('click', () => download(`${lang === 'tr' ? 'nispi-sira-radar' : 'relative-rank-radar'}.svg`, svgForDownload($('ch-r').querySelector('svg')), 'image/svg+xml'));
+  $('svg') && $('svg').addEventListener('click', () => download(`relative-rank-radar.svg`, svgForDownload($('ch-r').querySelector('svg')), 'image/svg+xml'));
 }
 
 /* ---------------- exports ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function rankRows() {
   return [[T('th.ord'), T('th.model'), T('th.row'), ...Rk.per.map(c => `${T('R')}: ${c.name}`), T('th.sum'), T('th.overall')],
     ...Rk.rows.map(r => [r.ordinal, r.label, r.row, ...r.R, r.sum, r.overall])];

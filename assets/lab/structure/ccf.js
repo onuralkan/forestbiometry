@@ -16,8 +16,8 @@ export const HA = 10000;
 
 /** Forms of the library: crown width of an open-grown tree (Kershaw eq. 8.26 route) or its crown area directly (van Laar). */
 export const FORMS = {
-  cw: { params: ['b0', 'b1'], out: 'CW', formula: { tr: 'CW (m) = b0 + b1·d', en: 'CW (m) = b0 + b1·d' }, f: (p, d) => p.b0 + p.b1 * d },
-  mca: { params: ['b0', 'b1', 'b2'], out: 'MCA', formula: { tr: 'MCA (m²) = b0 + b1·d + b2·d²', en: 'MCA (m²) = b0 + b1·d + b2·d²' }, f: (p, d) => p.b0 + p.b1 * d + p.b2 * d * d },
+  cw: { params: ['b0', 'b1'], out: 'CW', formula: { en: 'CW (m) = b0 + b1·d' }, f: (p, d) => p.b0 + p.b1 * d },
+  mca: { params: ['b0', 'b1', 'b2'], out: 'MCA', formula: { en: 'MCA (m²) = b0 + b1·d + b2·d²' }, f: (p, d) => p.b0 + p.b1 * d + p.b2 * d * d },
 };
 for (const [id, f] of Object.entries(FORMS)) {
   try {

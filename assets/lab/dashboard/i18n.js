@@ -2,33 +2,6 @@
 import { makeT } from '../core/i18n.js';
 
 export const T = makeT({
-  tr: {
-    privacy: 'Veri ve kayıtlar yalnızca bu tarayıcıda okunur; sunucuya gönderilmez.',
-    'src.h': 'Veri paketi', 'src.pick': 'Gösterilen paket', 'src.active': 'etkin', 'src.sample': 'Örnek paketi göster (benzetim verisi)',
-    'src.none': 'Bu tarayıcıda onaylanmış veri paketi yok. Veriyi Veri Denetçisi\'nde onaylayın ya da Envanter Verisi Yöneticisi\'ne içe aktarın.',
-    'src.samplenote': 'Gösterilen: Örnek Alan aracının örnek veri paketi (benzetim, yalnızca deneme için).', 'src.checker': 'Veri Denetçisi', 'src.manager': 'Envanter Verisi Yöneticisi',
-    'f.h': 'Süzgeçler', 'f.period': 'Dönem', 'f.stratum': 'Tabaka', 'f.species': 'Tür', 'f.plot': 'Örnek alan', 'f.all': 'hepsi', 'f.noper': 'dönemsiz', 'f.nosp': 'tür yok',
-    'f.width': 'Çap sınıfı genişliği (cm)', 'f.auto': 'otomatik', 'f.ec': 'Kaydı olmayan örnek alan × dönem', 'f.ec.unmeasured': 'ölçülmedi (dışarıda)', 'f.ec.empty': 'boş (N = G = 0)',
-    'f.est': 'Tahmini boyları da göster',
-    'r.h': 'Çalışma kayıtları', 'r.sub': 'Araçların indirdiği JSON kayıtları (run-record/1). Çap Dağılımı kayıtlarının yoğunlukları histogramın, Boy–Çap kayıtlarının eğrileri saçılım grafiğinin üstüne çizilir; öteki araçların kayıtları listelenir.',
-    'r.file': 'Kayıt ekle (.json)', 'r.none': 'Kayıt eklenmedi.', 'r.bad': p => `${p.f}: çalışma kaydı değil.`, 'r.read': p => `${p.f}: JSON olarak okunamadı.`,
-    'r.c.file': 'Dosya', 'r.c.tool': 'Araç', 'r.c.when': 'Zaman', 'r.c.seal': 'Mühür', 'r.c.src': 'Veri', 'r.c.show': 'Çiz', 'r.rm': 'Kaldır',
-    'seal.ok': 'geçerli', 'seal.bad': 'TUTMUYOR', 'seal.none': 'yok',
-    'src.yes': 'bu paketten', 'src.no': 'BAŞKA bir paketten', 'src.unk': 'dosyadan (eşleşme bilinmiyor)',
-    'k.dist': 'çap dağılımı', 'k.hd': 'boy–çap', 'k.other': 'çizilmez',
-    'p.tiles': 'Özet', 't.plots': 'Örnek alan × dönem', 't.records': 'Kayıt', 't.species': 'Tür', 't.Nha': 'Ortalama N (ağaç/ha)', 't.Gha': 'Ortalama G (m²/ha)',
-    't.sub': p => `${p.n} örnek alan × dönem üzerinden, ağırlıksız`,
-    'ch.hist': 'Çap dağılımı', 'ch.d': 'Göğüs çapı (cm)', 'ch.dens': 'Yoğunluk', 'ch.hist.note': p => `${p.n} kayıt, sınıf genişliği ${p.w} cm; çubuklar yoğunluk (frekans / (n · genişlik)).`,
-    'ch.curves': p => `Kayıtlardan çizilen yoğunluklar: ${p.list}.`, 'ch.nocurve': 'Bu süzgeçte çizilecek kayıt sonucu yok (Çap Dağılımı kaydının örnek alanı ve dönemi süzgeçle aynı olmalı; "hepsi" seçiliyken birleştirilmiş sonuç çizilir).',
-    'ch.trunc': 'eşikli (koşullu yoğunluk)',
-    'ch.sp': 'Tür katılımı', 'ch.share': 'Pay (%)', 'ch.byN': 'ağaç sayısı', 'ch.byG': 'göğüs yüzeyi',
-    'ch.N': 'Hektarda ağaç sayısı', 'ch.G': 'Hektarda göğüs yüzeyi', 'ch.plot': 'Örnek alan', 'ch.Nha': 'N (ağaç/ha)', 'ch.Gha': 'G (m²/ha)',
-    'ch.hd': 'Boy–çap', 'ch.h': 'Boy (m)', 'ch.hd.note': p => `${p.m} ölçülmüş boy${p.e ? `, ${p.e} tahmini boy ${p.show ? 'dahil' : 'gösterilmiyor'}` : ''}.`, 'ch.hd.curves': p => `Kayıttan eğriler: ${p.list} (★ seçilen model).`,
-    'ch.map': 'Ağaç haritası', 'ch.x': 'x (m)', 'ch.y': 'y (m)', 'ch.map.need': 'Harita için tek bir örnek alan seçin; o alanın ağaçlarında x, y koordinatı olmalı.', 'ch.map.none': 'Bu örnek alanda koordinatlı ağaç yok.',
-    'nav.h': 'Grafiklere git', 'nav.up': '↑ Süzgeçler',
-    'ch.empty': 'Bu süzgeçte kayıt yok.', svg: 'SVG', csv: 'CSV', 'ch.n': 'kayıt',
-    'x.class': 'Sınıf alt sınırı (cm)', 'x.classhi': 'Sınıf üst sınırı (cm)', 'x.count': 'Sayı', 'x.dens': 'Yoğunluk',
-  },
   en: {
     privacy: 'Data and records are read in this browser only; nothing is sent to the server.',
     'src.h': 'Data package', 'src.pick': 'Package shown', 'src.active': 'active', 'src.sample': 'Show the sample package (simulated data)',

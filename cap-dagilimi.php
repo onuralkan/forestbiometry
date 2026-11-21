@@ -2,19 +2,17 @@
 // Diameter Distribution Lab on the new engine (assets/lab/dist/, docs/DIST_SPEC.md). Published at stage P08 by the
 // user's decision (10 November 2026); the Weibull-only 1.0.0 tool is kept in legacy/weibull/ (not uploaded).
 require __DIR__ . '/inc/site.php';
-$tr = site_ctx()['tr'];
 site_top([
-    'title'  => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
-    'kicker' => $tr ? 'Çap dağılımları' : 'Diameter distributions',
-    'lede'   => $tr ? 'Tek ağaç çaplarına ya da çap sınıflarına sekiz olasılık dağılımı fit edin ya da özet değerlerden parametreleri geri kazanın; her örnek alan ve dönem ayrı hesaplanır.'
-                    : 'Fit eight probability distributions to individual tree diameters or diameter classes, or recover their parameters from summary values; each plot and period is computed separately.',
-    'desc'   => $tr ? 'Çap dağılımları: Weibull, normal, lognormal, gama, beta, Johnson SB, üstel, log-lojistik; en çok olabilirlik, momentler, yüzdelikler; özetlerden geri kazanım.' : 'Diameter distributions: Weibull, normal, lognormal, gamma, beta, Johnson SB, exponential, log-logistic; maximum likelihood, moments, percentiles; recovery from summaries.',
+    'title'  => 'Diameter Distribution Lab',
+    'kicker' => 'Diameter distributions',
+    'lede'   => 'Fit eight probability distributions to individual tree diameters or diameter classes, or recover their parameters from summary values; each plot and period is computed separately.',
+    'desc'   => 'Diameter distributions: Weibull, normal, lognormal, gamma, beta, Johnson SB, exponential, log-logistic; maximum likelihood, moments, percentiles; recovery from summaries.',
 ]);
 ?>
   <p class="privacy" id="privacy"></p>
-  <noscript><p class="card"><?= $tr ? 'Bu araç JavaScript gerektirir.' : 'This tool needs JavaScript.' ?></p></noscript>
+  <noscript><p class="card"><?= 'This tool needs JavaScript.' ?></p></noscript>
   <div id="wf"></div>
-  <nav class="steps" id="steps" aria-label="<?= $tr ? 'Adımlar' : 'Steps' ?>"></nav>
+  <nav class="steps" id="steps" aria-label="<?= 'Steps' ?>"></nav>
   <div id="status" class="status" role="status" aria-live="polite"></div>
   <section id="step1" class="step"></section>
   <section id="step2" class="step" hidden></section>

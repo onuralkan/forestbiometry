@@ -175,19 +175,16 @@ function radarChart(o) {
 __fb_m["core/citation.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "FORMATS": () => FORMATS, "NAMES": () => NAMES, "cite": () => cite, "plain": () => plain });
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
-// Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// Input c = { author:{ family, given }, year, base (canonical URL with trailing '/'), site:{ en },
+//             tool: null | { file, v, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
 // doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
 const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MON_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const MLA_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const IEEE_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
 const VAN_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SHORT_TR = ['Oca.', 'Şub.', 'Mar.', 'Nis.', 'May.', 'Haz.', 'Tem.', 'Ağu.', 'Eyl.', 'Eki.', 'Kas.', 'Ara.'];
-const VAN_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
 const FORMATS = ['apa', 'mla', 'chicago', 'harvard', 'ieee', 'vancouver', 'bibtex', 'ris'];
 const NAMES = { apa: 'APA 7', mla: 'MLA 9', chicago: 'Chicago (author-date)', harvard: 'Harvard', ieee: 'IEEE', vancouver: 'Vancouver', bibtex: 'BibTeX', ris: 'RIS' };
@@ -197,9 +194,9 @@ const it = s => `<i>${esc(s)}</i>`;
 const plain = html => html.replace(/<\/?i>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 function parts(c) {
-  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1, tr = c.lang === 'tr';
-  const site = c.site[c.lang], tool = c.tool ? c.tool[c.lang] : null;
-  return { tr, y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
+  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1;
+  const site = c.site.en, tool = c.tool ? c.tool.en : null;
+  return { y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
     url: c.base + (c.tool ? c.tool.file : ''), fam: c.author.family, given: c.author.given, ini: c.author.given.charAt(0) + '.', year: c.year };
 }
 const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -208,54 +205,42 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 function cite(fmt, c) {
   const body = core(fmt, c);
   if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
-  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  const u = esc('https://doi.org/' + c.doi);
   switch (fmt) {
-    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'apa': return `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
     case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
     case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
     default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
   }
 }
 function core(fmt, c) {
-  const p = parts(c), tr = p.tr, v = p.v;
+  const p = parts(c), v = p.v;
   switch (fmt) {
     case 'apa':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Sürüm ${v})` : ''} [Web uygulaması].${p.container ? ` ${esc(p.container)}.` : ''} ${p.d} ${MON_TR[p.mi]} ${p.y} tarihinde ${esc(p.url)} adresinden erişildi.`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
     case 'mla':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Sürüm ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Erişim ${p.d} ${SHORT_TR[p.mi]} ${p.y}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
     case 'chicago':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Sürüm ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Erişim ${p.d} ${MON_TR[p.mi]} ${p.y}. ${esc(p.url)}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
     case 'harvard':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (sürüm ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Erişim adresi: ${esc(p.url)} (Erişim tarihi: ${p.d} ${MON_TR[p.mi]} ${p.y}).`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
     case 'ieee': {
-      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ${tr ? 'sür.' : 'ver.'} ${v}, ` : `${it(p.title)}, `;
-      return tr
-        ? `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Çevrimiçi]. Erişim: ${esc(p.url)} (erişim tarihi: ${p.d} ${SHORT_TR[p.mi]} ${p.y}).`
-        : `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
+      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ver. ${v}, ` : `${it(p.title)}, `;
+      return `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
     }
     case 'vancouver':
-      return tr
-        ? `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [İnternet]. ${v ? `Sürüm ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [erişim ${p.y} ${VAN_TR[p.mi]} ${p.d}]. Erişim adresi: ${esc(p.url)}`
-        : `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
+      return `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
     case 'bibtex': {
       const key = `${p.fam.toLowerCase()}${p.year}${c.tool ? c.tool.file.replace(/\.php$/, '').replace(/[^a-z0-9]/g, '') : 'forestbiometry'}`;
       const tt = p.title.replace(/–/g, '--');
-      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
+      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{Web application${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (`Version ${v}. `) : ''}Accessed ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `Version ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }
@@ -273,11 +258,8 @@ __fb_r("core/reset-all.js");
    // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
-const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
+const ui = 'en';
 const T = {
-  tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
-    copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
     note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
@@ -390,12 +372,13 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
-// Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
-// languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
-const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
+// Tiny i18n helper. The site is English only (20 Nov 2026; Turkish removed from the code 21 Nov 2026): `lang` is
+// always 'en' and every dictionary has a single `en` table. Numbers on screen use a decimal point and no thousands
+// separator; the interface never changes how data are parsed or stored.
+const lang = 'en';
 function makeT(dict) {
   return (key, p) => {
-    const s = (dict[lang] && dict[lang][key]) ?? dict.tr[key];
+    const s = dict.en[key];
     if (s == null) return key;
     return typeof s === 'function' ? s(p || {}) : s;
   };
@@ -403,23 +386,23 @@ function makeT(dict) {
 /**
  * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
  * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
- * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * point (English only). '−' is not used: negative numbers keep
  * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
  * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
 /** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
-const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+const SCREEN_DECIMAL = '.';
 /** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
-const LIST_SEP = lang === 'tr' ? '; ' : ', ';
+const LIST_SEP = ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
+  return s === '-0' ? '0' : s;
 }
-/** Decimal separator of CSV exports (both languages). */
+/** Decimal separator of CSV exports. */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -437,12 +420,6 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
-    auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
-    encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
-    fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
-    comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
     auto: p => `detected: ${p.d}`, header: 'First row is a header', enc: 'Text encoding', sheet: 'Worksheet', pasted: 'pasted table',
     encwarn: 'Reading the file as UTF-8 produced broken characters; Turkish Excel CSV files are often Windows-1254.',
@@ -654,8 +631,6 @@ const { download } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { embed: 'Girdi verisini kayda ekle', embedHelp: 'İşaretli değilse JSON kaydında girdi dosyalarının yalnızca SHA-256 parmak izi bulunur; işaretliyse verinin kendisi de girer ve kayıt tek başına yeniden üretilebilir. Kaydı paylaşırsanız veriyi de paylaşmış olursunuz.',
-    fail: 'Kayıt hazırlanamadı', btn: 'Çalışma kaydı (JSON)' },
   en: { embed: 'Include the input data in the record', embedHelp: 'Unchecked, the JSON record holds only the SHA-256 fingerprint of each input file; checked, the data itself goes in too and the record reproduces on its own. If you share the record, you share the data.',
     fail: 'The record could not be prepared', btn: 'Run record (JSON)' },
 });
@@ -907,19 +882,7 @@ const { get, del, keys } = __fb_r("core/store.js");
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
-const tr = document.documentElement.lang !== 'en';
-const T = tr ? {
-  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
-  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
-  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
-    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
-    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
-    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
-    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
-    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
-    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
-  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
-} : {
+const T = {
   label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
   none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
   ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
@@ -1574,7 +1537,7 @@ function cellText(c) {
   return c.w != null ? c.w : String(c.v);
 }
 function padTo(a, n) { const r = a.slice(); while (r.length < n) r.push(''); return r; }
-function colName(i) { return (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'Column ' : 'Sütun ') + (i + 1); }
+function colName(i) { return 'Column ' + (i + 1); }
 function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k = seen.get(x) || 0; seen.set(x, k + 1); return k ? `${x} (${k + 1})` : x; }); }
 };
 
@@ -1834,88 +1797,6 @@ const { makeT } = __fb_r("core/i18n.js");
 // Model Evaluation: TR/EN texts.
 
 
-const tr = {
-  'step.1': 'Veri', 'step.2': 'Sütunlar ve ayarlar', 'step.3': 'Sonuçlar',
-  'privacy': 'Dosyanız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Oturum yalnızca bu tarayıcıda (IndexedDB) saklanır.',
-  'imp.h': 'Gözlenen ve tahmin edilen değerler', 'imp.sub': 'Her satırda bir gözlem: gözlenen değer ve bir ya da daha fazla modelin tahmini. Örnek alan, tür, çap ve doğrulama katı sütunları isteğe bağlıdır.',
-  'ds.h': 'Onaylanmış veriden al', 'ds.sub': 'Veri Denetçisi\'nde onaylanan veride tahmin sütunları (eşlenmemiş sütunlar) varsa onları kullanabilirsiniz.', 'ds.use': 'Onaylanmış veriyi tablo olarak aç', 'ds.none': 'Bu tarayıcıda onaylanmış veri yok.',
-  'sample': 'Örnek dosyayı yükle', 'sample.note': 'Örnek dosya benzetimdir (gerçek ölçüm ya da model değildir); bilerek boş ve okunamayan hücreler içerir.',
-  'next': 'Devam', 'back': 'Geri', 'calc': 'Hesapla', 'reset': 'Oturumu sıfırla', 'need.data': 'Önce bir tablo yükleyin.',
-  'restored': p => `Önceki oturum geri yüklendi (${p.when}).`,
-  'handoff': p => `Başka bir araçtan aktarılan tablo yüklendi: ${p.name}. Gözlenen ve model sütunları seçili.`,
-  'obs.h': 'Gözlenen değer', 'obs.col': 'Gözlenen değer sütunu', 'none': '— yok —',
-  'mod.h': 'Tahmin sütunları (modeller)', 'mod.sub': 'Bir ya da daha fazla sütun seçin. Her model için adı ve tahminlerin nereden geldiğini siz belirtin; araç dış doğrulama olduğunu varsaymaz.',
-  'mod.name': 'Ad', 'mod.role': 'Tahminlerin kaynağı',
-  'role.unknown': 'Belirtilmedi', 'role.training': 'Model geliştirme verisi (model bu verilerle kuruldu)', 'role.test': 'Bağımsız test verisi', 'role.cv': 'Çapraz doğrulama tahminleri',
-  'grp.h': 'Gruplar (isteğe bağlı)', 'grp.plot': 'Örnek alan', 'grp.species': 'Tür', 'grp.fold': 'Doğrulama katı', 'grp.dclass': 'Çap sınıfı', 'grp.dcol': 'Çap sütunu (cm)', 'grp.breaks': 'Çap sınıfı sınırları (cm; boşluk ya da ";")', 'grp.open': 'Son sınırın üstü açık sınıf',
-  'cls.few': 'En az iki sınır gerekir (açık üst sınıf seçiliyse bir).', 'cls.bad': 'Sınırlar sıfır ya da pozitif sayı olmalı.', 'cls.order': 'Sınırlar kesin artan olmalı; sınıflar çakışamaz.',
-  'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'Nokta (24.5)', 'dec.comma': 'Virgül (24,5)', 'dec.choose': 'Ondalık ayırıcıyı seçin.',
-  'dec.v.dot': 'Metin hücrelerinde ondalık nokta kullanılmış görünüyor.', 'dec.v.comma': 'Metin hücrelerinde ondalık virgül kullanılmış görünüyor.', 'dec.v.none': 'Metin olarak yazılmış ondalıklı sayı yok. Yine de seçin.',
-  'dec.v.ambiguous': p => `Belirsiz: ${p.ex} gibi değerler ondalık da binlik ayırıcılı tam sayı da olabilir. Otomatik algılama yapılmadı; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.`,
-  'dec.v.conflict': 'Çelişkili: bazı değerler noktalı, bazıları virgüllü. Birini seçin; diğer biçimdekiler okunamayan değer sayılacak.',
-  'rs.h': 'Hangi satırlar?', 'rs.common': 'Ortak geçerli satırlar (varsayılan): bütün modellerin ve gözlenen değerin dolu olduğu satırlar. Modeller aynı örneklemle karşılaştırılır.',
-  'rs.own': 'Her model kendi geçerli satırlarıyla. Modellerin örneklemleri farklı olabilir; karşılaştırma doğrudan yapılamaz.',
-  'norm.h': 'Bağıl ölçütler (isteğe bağlı)', 'norm.none': 'Hesaplama', 'norm.mean': 'Gözlenen ortalamaya göre (%)', 'norm.range': 'Gözlenen aralığa (max − min) göre (%)', 'norm.sd': 'Gözlenen standart sapmaya göre (%)',
-  'need.obs': 'Gözlenen sütunu seçin.', 'need.model': 'En az bir tahmin sütunu seçin.', 'same.col': 'Tahmin sütunu gözlenen sütunla aynı olamaz.',
-  'tab.summary': 'Özet', 'tab.charts': 'Grafikler', 'tab.groups': 'Gruplar', 'tab.export': 'İndir',
-  'sign': 'İşaret kuralı: e = gözlenen − tahmin. Negatif yanlılık, modelin ortalamada fazla tahmin ettiğini gösterir.',
-  'noinf': 'Bu araç yalnızca gözlenen ve tahmin edilen değerleri görür. Model parametreleri, serbestlik dereceleri ve artık yapısı bilinmediği için AIC, parametre güven aralıkları ya da modelin istatistiksel anlamlılığı hesaplanmaz.',
-  'm.model': 'Model', 'm.role': 'Kaynak', 'm.n': 'n', 'm.bias': 'Yanlılık ē', 'm.mae': 'MAE', 'm.rmse': 'RMSE', 'm.r2': 'R² (1 − SSE/SST)',
-  'm.rbias': 'Yanlılık %', 'm.rmae': 'MAE %', 'm.rrmse': 'RMSE %', 'm.den': 'Payda', 'm.mobs': 'Gözlenen ort.', 'm.mpred': 'Tahmin ort.',
-  'undef': 'tanımsız', 'r2.constant': 'Gözlenen değerler sabit (SST = 0); R² tanımsız.', 'r2.n0': 'Geçerli çift yok.',
-  'rel.mean-nonpositive': 'gözlenen ortalama ≤ 0', 'rel.range-zero': 'aralık = 0', 'rel.sd-zero': 'standart sapma = 0', 'rel.sd-n': 'n < 2',
-  'acc.h': 'Satır sayımı', 'acc.rows': 'Tablodaki satır', 'acc.obsE': 'Gözlenen boş', 'acc.obsB': 'Gözlenen okunamadı', 'acc.predE': 'Tahmin boş', 'acc.predB': 'Tahmin okunamadı',
-  'acc.own': 'Bu modelin geçerli çifti', 'acc.used': 'Kullanılan', 'acc.dropped': 'Dışarıda kalan satır',
-  'acc.note': 'Bir satır birden fazla nedenle dışarıda kalabilir (ör. gözlenen ve tahmin birlikte boş); sayımlar bu yüzden toplanmaz.',
-  'common.n': p => `Ortak geçerli satır: ${p.n} / ${p.N}.`,
-  'own.warn': 'Modeller farklı satır kümeleriyle değerlendirildi; ölçütler doğrudan karşılaştırılamaz. Aşağıdaki tablo her iki modelin ortak kullandığı satır sayısını gösterir.',
-  'own.same': 'Modellerin geçerli satırları aynı; örneklem farkı yok.',
-  'ov.h': 'Ortak satır sayısı (model × model)',
-  'role.note': p => `Kaynak beyanı: ${p.list}.`, 'role.warn.training': 'Model geliştirme verisi üzerindeki başarı, yeni veriler için beklenen başarıdan genellikle iyimserdir.',
-  'role.warn.unknown': 'Kaynağı belirtilmeyen tahminler dış doğrulama olarak yorumlanmamalıdır.',
-  'ch.pick': 'Model', 'ch.op': p => `${p.m}: gözlenen ve tahmin edilen (kesikli çizgi 1:1)`, 'ch.rp': p => `${p.m}: artık e = gözlenen − tahmin, tahmine karşı`,
-  'ch.obs': 'Gözlenen', 'ch.pred': 'Tahmin edilen', 'ch.res': 'e = gözlenen − tahmin', 'ch.svg': 'Grafiği indir (SVG)', 'ch.n': p => `${p.n} nokta`,
-  'g.pick': 'Gruplama', 'g.none': 'Grup sütunu seçilmedi (Sütunlar ve ayarlar adımında seçebilirsiniz).', 'g.label': 'Grup', 'g.blank': '(boş)',
-  'ex.h': 'Sonuçları indir', 'ex.xlsx': 'Tam rapor (Excel)', 'ex.metrics': 'Ölçüt tablosu (CSV)', 'ex.groups': 'Grup tablosu (CSV)', 'ex.rows': 'Satır bazında artıklar (CSV)',
-  'ex.note': 'CSV: her iki dilde "," sütun ayırıcı ve ondalık nokta. Başlıklar seçili dilde yazılır.',
-  'sheet.info': 'Bilgi', 'sheet.metrics': 'Olcutler', 'sheet.acc': 'Satir sayimi', 'sheet.groups': 'Gruplar', 'sheet.rows': 'Artiklar',
-  'x.k': 'Ayar', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.src': 'Veri', 'x.obs': 'Gözlenen sütun', 'x.rs': 'Satır kümesi', 'x.norm': 'Bağıl ölçüt paydası', 'x.dec': 'Ondalık ayırıcı',
-  'x.def': 'Tanımlar: e = gözlenen − tahmin; yanlılık = ort(e); MAE = ort(|e|); RMSE = √(ort(e²)), payda n; R² = 1 − SSE/SST (sabit gözlenende tanımsız, negatif olabilir)',
-  'x.row': 'Satır', 'x.obsv': 'Gözlenen', 'x.pred': 'Tahmin', 'x.e': 'e', 'x.group': 'Grup türü',
-  'tab.infer': 'Çıkarım',
-  'w.h': 'Ağırlık (isteğe bağlı)', 'w.sub': 'Bir ağırlık sütunu seçilirse yanlılık, MAE, RMSE, R² ve ortalamalar ağırlıklı hesaplanır: her ortalama Σw·(…)/Σw olur (ör. örnekleme ağırlığı ya da hektara çevirme katsayısı). Ağırlık boş, okunamayan, sıfır ya da negatifse satır dışarıda kalır ve sayılır.',
-  'w.col': 'Ağırlık sütunu', 'w.same': 'Ağırlık sütunu gözlenen ya da tahmin sütunlarından biri olamaz.',
-  'w.note': p => `Ölçütler "${p.col}" sütunuyla ağırlıklıdır. n çift sayısıdır; ağırlık toplamı ayrıca kaydedilir.`,
-  'inf.h': 'Yanlılık için çıkarım', 'inf.sub': 'Hataların (e = gözlenen − tahmin) ortalaması için güven aralığı ve isteğe bağlı eşdeğerlik testleri. Çiftlerin birbirinden bağımsız olduğu varsayılır; aynı örnek alandaki ağaçlar gibi gruplanmış verilerde aralık gerçekte olduğundan dar çıkabilir.',
-  'inf.weighted': 'Ağırlık seçiliyken güven aralığı ve eşdeğerlik testleri hesaplanmaz; bu yöntemler ağırlıksız çiftler için tanımlıdır.',
-  'inf.level': 'Güven düzeyi', 'inf.n': 'n < 2', 'inf.margin': 'eşdeğerlik sınırı pozitif bir sayı olmalı', 'inf.sd-zero': 'hataların standart sapması 0',
-  'eq.h': 'Eşdeğerlik testi (isteğe bağlı)', 'eq.sub': 'Sıfır hipotezi "model yanlı": |ortalama hata| ≥ δ. Bu hipotez reddedilirse ortalama hatanın ±δ içinde olduğu gösterilmiş olur; ispat yükü modeldedir (Robinson ve Froese 2004). δ sizin seçiminizdir ve sonucu belirler.',
-  'eq.none': 'Yapma', 'eq.abs': 'Sınır veri biriminde (δ)', 'eq.rel': 'Sınır hataların standart sapmasına oranla (ε; δ = ε·s)',
-  'eq.delta': 'δ (veri biriminde)', 'eq.eps': 'ε (ör. 0,25)', 'eq.alpha': 'Anlamlılık düzeyi α', 'eq.need': 'Eşdeğerlik sınırını pozitif bir sayı olarak girin.',
-  'ci.h': p => `Ortalama hata (yanlılık) için %${p.l} güven aralığı`, 'ci.sd': 's (hata)', 'ci.se': 's/√n', 'ci.t': 't', 'ci.lo': 'Alt', 'ci.hi': 'Üst',
-  'ci.note': p => `ē ± t·s/√n; t, n − 1 serbestlik dereceli t dağılımının %${p.l} iki yönlü (çift kuyruklu) değeri; s paydası n − 1. Aralık 0'ı içermiyorsa yanlılık bu düzeyde sıfırdan farklıdır.`,
-  'eq.off': 'Eşdeğerlik testi seçilmedi (Sütunlar ve ayarlar adımında seçebilirsiniz).',
-  'eq.res': p => `Eşdeğerlik testleri (α = ${p.a})`, 'eq.abs.set': p => `Sınır: δ = ${p.v} (veri biriminde).`, 'eq.rel.set': p => `Sınır: ε = ${p.v} × s (her model kendi s değeriyle).`,
-  'eq.tost': p => `TOST: %${p.l} aralık ±δ içinde mi?`, 'eq.wellek': 'Eşdeğerlik için eşleştirilmiş t testi', 'eq.dec': 'Eşdeğer?', 'eq.power': 'Güç (μ = 0)',
-  'eq.yes': 'Evet', 'eq.no': 'Gösterilemedi',
-  'eq.read': '"Evet": yanlılık hipotezi reddedildi, ortalama hata ±δ içinde (seçilen α ile). "Gösterilemedi": model yanlı olabilir ya da örneklem eşdeğerliği göstermeye yetmiyor olabilir; bu, modelin yanlı olduğunu kanıtlamaz. Eşleştirilmiş t testinde |t| < C ise eşdeğerliğe karar verilir; C, serbestlik dereceleri 1 ve n − 1, merkezîlik parametresi ψ² = nε² olan merkezî olmayan F dağılımının α yüzdeliğinin kareköküdür. Güç, gerçek ortalama hata 0 iken eşdeğerliğin gösterilme olasılığıdır.',
-  'eq.note': 'Testler yalnızca ortalama hatayı (yanlılığı) inceler; tek tek tahminlerin isabetini değil. Eşleştirilmiş t testi hataların normal dağıldığını varsayar.',
-  'acc.wE': 'Ağırlık boş', 'acc.wB': 'Ağırlık okunamadı ya da ≤ 0', 'rel.sd-weighted': 'ağırlıklıyken standart sapma paydası tanımlı değil',
-  'ex.infer': 'Çıkarım tablosu (CSV)', 'sheet.infer': 'Cikarim',
-  'x.level': 'Güven düzeyi', 'x.mtype': 'Eşdeğerlik sınırı', 'x.mvalue': 'Sınır değeri', 'x.tostlo': 'TOST alt', 'x.tosthi': 'TOST üst', 'x.tostdec': 'TOST eşdeğer?', 'x.wdec': 't testi eşdeğer?',
-  'x.weight': 'Ağırlık sütunu', 'x.w': 'Ağırlık',
-  'bt.h': 'Bootstrap güven aralıkları (isteğe bağlı)', 'bt.on': 'Yanlılık, MAE, RMSE ve R² için bootstrap aralıklarını hesapla',
-  'bt.sub': 'Çiftler yerine koyarak yeniden örneklenir (DiCiccio ve Efron 1996). Yüzdelik aralık ve BCa (yanlılığı düzeltilmiş ve hızlandırılmış) aralık verilir; güven düzeyi yukarıdakiyle aynıdır. Aynı tohum aynı sonucu verir.',
-  'bt.B': 'Tekrar sayısı B', 'bt.seed': 'Tohum', 'bt.needseed': 'Tohum 0 ile 4294967295 arasında bir tam sayı olmalı.',
-  'bt.off': 'Bootstrap aralıkları seçilmedi (Sütunlar ve ayarlar adımında seçebilirsiniz).',
-  'bt.res': p => `Bootstrap %${p.l} güven aralıkları`, 'bt.stat': 'Ölçüt', 'bt.est': 'Örneklem değeri θ̂', 'bt.pct': 'Yüzdelik', 'bt.Bok': 'Geçerli tekrar',
-  'bt.s.bias': 'Yanlılık ē', 'bt.s.mae': 'MAE', 'bt.s.rmse': 'RMSE', 'bt.s.r2': 'R²',
-  'bt.r.est': 'ölçüt bu veride tanımsız', 'bt.r.reps': 'geçerli tekrar yok', 'bt.r.jack': 'bir çift çıkarılınca ölçüt tanımsız; hızlandırma sabiti â hesaplanamadı',
-  'bt.r.z0': 'bütün bootstrap kopyaları (θ*) örneklem değerinin (θ̂) bir yanında; ẑ₀ sonsuz', 'bt.r.a': 'hızlandırma düzeltmesi tanımsız (1 − â(ẑ₀ + z) ≤ 0)',
-  'bt.note': p => `B = ${p.B}, tohum ${p.seed}. Yüzdelik aralık, bootstrap kopyalarının (θ*) (1 − γ)/2 ve (1 + γ)/2 yüzdelikleri arasıdır: Ĝ⁻¹(α), sıralanmış kopyaların ⌈αB⌉'incisidir. BCa: Ĝ⁻¹(Φ(ẑ₀ + (ẑ₀ + z_α)/(1 − â(ẑ₀ + z_α)))); ẑ₀ = Φ⁻¹(örneklem değerinden (θ̂) küçük kopyaların oranı), â jackknife'tan. Gözlenen değerleri sabit kalan tekrarlarda R² tanımsızdır; bu tekrarlar R² için dışarıda kalır. Çiftlerin bağımsız olduğu varsayılır.`,
-  'bt.edge': "* Uç nokta en küçük ya da en büyük kopyadan alındı; B'yi artırın, aralık güvenilir olmayabilir.", 'bt.edgeshort': 'uç nokta en küçük/en büyük kopyada',
-  'ex.boot': 'Bootstrap tablosu (CSV)', 'x.pctlo': 'Yüzdelik alt', 'x.pcthi': 'Yüzdelik üst', 'x.bcalo': 'BCa alt', 'x.bcahi': 'BCa üst', 'x.note': 'Not',
-};
 const en = {
   'step.1': 'Data', 'step.2': 'Columns and settings', 'step.3': 'Results',
   'privacy': 'Your file is read and processed in this browser and is not sent to the server. The session is kept only in this browser (IndexedDB).',
@@ -1998,7 +1879,7 @@ const en = {
   'bt.edge': '* An endpoint was taken from the smallest or largest replication; increase B, the interval may be unreliable.', 'bt.edgeshort': 'endpoint at the smallest/largest replication',
   'ex.boot': 'Bootstrap table (CSV)', 'x.pctlo': 'Percentile lower', 'x.pcthi': 'Percentile upper', 'x.bcalo': 'BCa lower', 'x.bcahi': 'BCa upper', 'x.note': 'Note',
 };
-const T = makeT({ tr, en });
+const T = makeT({ en });
 };
 
 // ---- assets/lab/eval/ui.js
@@ -2028,7 +1909,7 @@ const { classesFromBreaks } = __fb_r("stand/calc.js");
 
 
 
-const BASE = './', KEY = 'session:' + E.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + E.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -2081,7 +1962,7 @@ function renderStep1() {
   });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/eval/ornek/ornek-tahminler.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-tahminler.csv (benzetim)' : 'ornek-tahminler.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-tahminler.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
     S.obs = S.src.headers.indexOf('h_obs');
     S.models = ['h_m1', 'h_m2'].map(h => ({ col: S.src.headers.indexOf(h), name: h, role: 'unknown' }));
@@ -2310,7 +2191,7 @@ function tabGroups(p) {
 }
 
 /* ---------------- exports (headers in the chosen language) ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 const undef = v => v == null ? T('undef') : v;
 function mHead(first) { return [first, T('m.n'), T('m.bias'), T('m.mae'), T('m.rmse'), T('m.r2'), ...(S.norm ? [T('m.rbias'), T('m.rmae'), T('m.rrmse'), T('m.den'), T('x.norm')] : []), T('m.mobs'), T('m.mpred')]; }
 function mVals(m) {

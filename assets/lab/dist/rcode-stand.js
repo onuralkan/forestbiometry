@@ -83,12 +83,12 @@ function rFunctions(model, T) {
   // targets
   if (approach === 'ppm') {
     const half = opt.ppmLoc === 'half-dmin';
-    out.push(rComment(T(`Hedefler (PPM): birim başına Weibull ML, konum ${half ? 'a = Dmin/2' : `a = ${opt.a}`} sabit; başlangıç momentlerden.`, `Targets (PPM): Weibull ML per unit, location ${half ? 'a = Dmin/2' : `a = ${opt.a}`} fixed; start from the moments.`)),
+    out.push(rComment(`Targets (PPM): Weibull ML per unit, location ${half ? 'a = Dmin/2' : `a = ${opt.a}`} fixed; start from the moments.`),
       `fb_target <- function(d) { a <- ${half ? '0.5 * min(d)' : rNum(opt.a)}; x <- d - a; m <- mean(x); v <- mean((x - m)^2)
   c0 <- uniroot(function(c) gamma(1 + 2 / c) / gamma(1 + 1 / c)^2 - 1 - v / m^2, c(0.05, 200))$root
   r <- tryCatch(fb_run(d, "weibull", "ml", fix = list(a = a), start = list(b = m / gamma(1 + 1 / c0), c = c0)), error = function(e) NULL)
   if (is.null(r)) NULL else c(b = r$est[["b"]], c = r$est[["c"]]${half ? ', dmin = min(d)' : ''}) }`);
-  } else out.push(rComment(T('Hedefler (PRM): ortalama, moment varyansı (n bölenli), Dq, Dmin, yüzdelikler (tip 7).', 'Targets (PRM): mean, moment variance (divisor n), Dq, Dmin, percentiles (type 7).')),
+  } else out.push(rComment('Targets (PRM): mean, moment variance (divisor n), Dq, Dmin, percentiles (type 7).'),
     `fb_target <- function(d) { s <- sort(d); m <- mean(d); v <- mean((d - m)^2)
   t <- c(${keys.map(k => `${k} = ${{ mean: 'm', variance: 'v', dq: 'sqrt(m^2 + v)', dmin: 's[1]', median: 'fb_q7(s, 0.5)', q25: 'fb_q7(s, 0.25)', q31: 'fb_q7(s, 0.31)', q50: 'fb_q7(s, 0.5)', q63: 'fb_q7(s, 0.63)', q95: 'fb_q7(s, 0.95)' }[k]}`).join(', ')})
   if (all(is.finite(t) & t > 0)) t else NULL }`);
@@ -115,15 +115,15 @@ function rFunctions(model, T) {
   back <- rep(1, length(keys)); rounds <- NA
   ${model.fit === 'sur' ? 'f <- fb_sur(Z, Y, iterate = TRUE); B <- f$B; rounds <- f$rounds'
     : model.fit === 'logols' ? `B <- sapply(seq_len(ncol(Y)), function(k) unname(lm.fit(Z, log(Y[, k]))$coefficients))${opt.back === 'mean' ? `
-  back <- exp(sapply(seq_len(ncol(Y)), function(k) sum((log(Y[, k]) - Z %*% B[, k])^2) / (nrow(Z) - ncol(Z))) / 2)   # ${T('ortalama: exp(Zβ + s²/2)', 'mean: exp(Zβ + s²/2)')}` : `   # ${T('medyan: exp(Zβ)', 'median: exp(Zβ)')}`}`
+  back <- exp(sapply(seq_len(ncol(Y)), function(k) sum((log(Y[, k]) - Z %*% B[, k])^2) / (nrow(Z) - ncol(Z))) / 2)   # mean: exp(Zβ + s²/2)` : `   # median: exp(Zβ)`}`
       : 'B <- sapply(seq_len(ncol(Y)), function(k) fb_nls_exp(Z, Y[, k]))'}
   model <- list(B = B, back = back, rows = rows, Z = Z, Y = Y, rounds = rounds)${model.fit === 'cdfr' || model.fit === 'mcdfr' ? '\n  model <- fb_cdf(model)' : ''}
   model }`);
   if (model.fit === 'cdfr' || model.fit === 'mcdfr') {
     const w = model.cdf && model.cdf.width != null ? model.cdf.width : 2;
     out.push(rComment(model.fit === 'cdfr'
-      ? T('CDFR (kaynak): Σᵢ (1/nᵢ) Σⱼ [(j − 0,5)/nᵢ − F(dᵢ₍ⱼ₎; θᵢ)]², θᵢ modelin birim için tahmin ettiği parametreler (PRM\'de geri kazanımla). Dmin denklemi NLS ile fit edilip sabit tutulur. Geri kazanımı başarısız ya da çok köklü β uygun değildir: adım reddedilir.', 'CDFR (source): Σᵢ (1/nᵢ) Σⱼ [(j − 0.5)/nᵢ − F(dᵢ₍ⱼ₎; θᵢ)]², θᵢ the parameters the model predicts for unit i (by recovery for PRM). The Dmin equation is fitted by NLS and held fixed. A β where a recovery fails or has several roots is infeasible: the step is rejected.')
-      : T(`Değiştirilmiş CDFR (kaynak): Σᵢ 1/(mᵢ − 1) Σ_{j<mᵢ} [Cᵢⱼ − F(uᵢⱼ; θᵢ)]², ${w} cm genişlikli sınıflar ⌊min/w⌋·w'den, uᵢⱼ sınıfın üst sınırı, Cᵢⱼ gözlenen birikimli oran; son sınıf yalnızca amaçtan çıkar; tek sınıflı birim dışarıda.`, `Modified CDFR (source): Σᵢ 1/(mᵢ − 1) Σ_{j<mᵢ} [Cᵢⱼ − F(uᵢⱼ; θᵢ)]², classes of width ${w} cm from ⌊min/w⌋·w, uᵢⱼ the class upper bound, Cᵢⱼ the observed cumulative proportion; the last class is left out of the objective only; a unit with one class is left out.`)),
+      ? 'CDFR (source): Σᵢ (1/nᵢ) Σⱼ [(j − 0.5)/nᵢ − F(dᵢ₍ⱼ₎; θᵢ)]², θᵢ the parameters the model predicts for unit i (by recovery for PRM). The Dmin equation is fitted by NLS and held fixed. A β where a recovery fails or has several roots is infeasible: the step is rejected.'
+      : `Modified CDFR (source): Σᵢ 1/(mᵢ − 1) Σ_{j<mᵢ} [Cᵢⱼ − F(uᵢⱼ; θᵢ)]², classes of width ${w} cm from ⌊min/w⌋·w, uᵢⱼ the class upper bound, Cᵢⱼ the observed cumulative proportion; the last class is left out of the objective only; a unit with one class is left out.`),
       `fb_cdf <- function(model) {
   rows <- model$rows; free <- which(keys != "dmin"); p <- nrow(model$B); w <- ${rNum(w)}
   obs <- do.call(rbind, lapply(seq_along(rows), function(i) { d <- sort(rows[[i]]$u$d); n <- length(d)
@@ -147,27 +147,26 @@ function rFunctions(model, T) {
  * pred = the tool's prediction for x or null, o = { lang, created, version, fileName }.
  */
 export function buildStandR(s, cfg, model, x, pred, o, cv = null) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]), out = [];
+  const T = (a, b) => (b), hd = c => c == null ? '' : String(s.src.headers[c]), out = [];
   const set = model.set, approach = model.approach, keys = model.keys, terms = model.terms, sb = model.family === 'johnsonsb';
-  out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu (meşcere modeli)', 'Diameter Distribution Lab: R code (stand model)'), tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang,
+  out.push(header({ title: 'Diameter Distribution Lab: R code (stand model)', tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang,
     packages: ['fitdistrplus', ...(sb ? ['nleqslv'] : [])],
-    notes: [T(`Aşama 3b–3c: meşcere modelini geliştirme, örnek alan katlı çapraz doğrulama ve tahmin. Yanıt kümesi ${set}; terimler ${terms.join(', ')}; yöntem ${model.fit}. Model biçimi (Poudel ve Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; hata özgün ölçekte toplamsal (log-OLS'de çarpımsal).`,
-      `Stages 3b–3c: stand model training, plot-level cross-validation and prediction. Response set ${set}; terms ${terms.join(', ')}; method ${model.fit}. Model form (Poudel and Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; additive error on the original scale (multiplicative for log-OLS).`)] }));
+    notes: [`Stages 3b–3c: stand model training, plot-level cross-validation and prediction. Response set ${set}; terms ${terms.join(', ')}; method ${model.fit}. Model form (Poudel and Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; additive error on the original scale (multiplicative for log-OLS).`] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal), FB_NUM, '', FB_OUT, '');
   out.push(...dataBlock({ ...s, mode: 'each' }, null, T, hd, false, s.unit === 'mm' ? 0.1 : 1, false), R_FAMILIES, R_METHODS, R_STAND, `res <- list()`, '');
   const cols = Object.entries(s.cols || {}).filter(([, c]) => c != null);
-  out.push(rComment(T('Birimler: örnek alan × dönem; meşcere değişkeni birimin bütün satırlarında aynı tek pozitif sayı olmalı (yoksa birim dışarıda kalır).', 'Units: plot × period; a stand variable must be the same single positive number on every row of the unit (else the unit is left out).')),
+  out.push(rComment('Units: plot × period; a stand variable must be the same single positive number on every row of the unit (else the unit is left out).'),
     `stand_cols <- c(${cols.map(([k, c]) => `${k} = ${c + 1}`).join(', ')})   # ${cols.map(([k, c]) => `${k}: ${hd(c)}`).join(', ')}`,
     `ids <- unique(data.frame(plot = plot_all, period = per_all)[use, ])`,
     `units <- lapply(seq_len(nrow(ids)), function(i) { r <- use & in_unit(ids$plot[i], ids$period[i]); x <- list(); ok <- TRUE
   for (k in names(stand_cols)) { v <- fb_num(dat[[stand_cols[[k]]]][r], dec); u <- unique(v$value) ; if (any(v$status != "ok") || length(u) != 1 || !(u > 0)) ok <- FALSE else x[[k]] <- u }
   list(plot = ids$plot[i], period = ids$period[i], d = d_all[r], x = x, ok = ok) })`,
-    `units <- Filter(function(u) u$ok, units); cat(${rStr(T('Birim: ', 'Units: '))}, length(units), "\\n")`,
+    `units <- Filter(function(u) u$ok, units); cat(${rStr('Units: ')}, length(units), "\\n")`,
     `terms <- ${rVec(terms, rStr)}; keys <- ${rVec(keys, rStr)}; need <- ${rVec([...new Set(terms.flatMap(t => ({ RS: ['N', 'H'], lnN: ['N'], lnH: ['H'], invA: ['A'] })[t]))], rStr)}`, '');
   out.push(...rFunctions(model, T), '');
-  out.push(rComment(T('Model geliştirme: bütün birimler', 'Training: all units')),
+  out.push(rComment('Training: all units'),
     `model <- fb_train(units); B <- model$B; colnames(B) <- keys; print(B)`,
-    `cat(${rStr(T('Model geliştirme birimi: ', 'Training units: '))}, nrow(model$Y), ${rStr(T('; örnek alan: ', '; plots: '))}, length(unique(sapply(model$rows, function(r) r$u$plot))), "\\n")`,
+    `cat(${rStr('Training units: ')}, nrow(model$Y), ${rStr('; plots: ')}, length(unique(sapply(model$rows, function(r) r$u$plot))), "\\n")`,
     ...(model.fit === 'sur' ? ['cat("SUR rounds:", model$rounds, "\\n")'] : []),
     ...(model.fit === 'cdfr' || model.fit === 'mcdfr' ? ['print(model$cdf); res[["cdf.start"]] <- model$cdf[["start"]]; res[["cdf.objective"]] <- model$cdf[["objective"]]'] : []),
     `for (k in seq_len(ncol(B))) { pr <- exp(drop(model$Z %*% B[, k])) * model$back[k]; r <- model$Y[, k] - pr; key <- keys[k]`,
@@ -176,8 +175,7 @@ export function buildStandR(s, cfg, model, x, pred, o, cv = null) {
   const plots = [...new Set((model.trainingUnits || []).map(u => u.plot))];
   const asg = cv && cv.assignment ? cv.assignment : null;
   if (asg) {
-    out.push(rComment(T(`Örnek alan katlı çapraz doğrulama (K = ${cv.K}): örnek alanlar doğal sırayla, j. örnek alan j mod K katına (aracın ataması; bir alanın bütün dönemleri aynı katta). Her katta model yalnızca öbür katlarla geliştirilir; dışarıdaki her birim için tahmin edilen dağılımda −ln L ve KS D. Başarısız tahminler sayılır.`,
-      `Plot-level cross-validation (K = ${cv.K}): plots in natural order, plot j to fold j mod K (the tool's assignment; all periods of a plot in one fold). In each fold the model is trained on the other folds only; for every held-out unit −ln L and KS D under the predicted distribution. Failed predictions are counted.`)),
+    out.push(rComment(`Plot-level cross-validation (K = ${cv.K}): plots in natural order, plot j to fold j mod K (the tool's assignment; all periods of a plot in one fold). In each fold the model is trained on the other folds only; for every held-out unit −ln L and KS D under the predicted distribution. Failed predictions are counted.`),
       `fold <- c(${Object.entries(asg).sort((a, b) => natural(a[0], b[0])).map(([pl, f]) => `${rStr(pl)} = ${f}`).join(', ')})`,
       `cvu <- list()`,
       `for (f in sort(unique(fold))) {
@@ -187,19 +185,19 @@ export function buildStandR(s, cfg, model, x, pred, o, cv = null) {
     ${sb ? 'll <- dfb_johnsonsb(u$d, p[["xi"]], p[["lambda"]], p[["gamma"]], p[["delta"]], log = TRUE); pf <- function(q) pfb_johnsonsb(q, p[["xi"]], p[["lambda"]], p[["gamma"]], p[["delta"]])'
       : 'll <- dweibull(u$d - p[["a"]], shape = p[["c"]], scale = p[["b"]], log = TRUE); pf <- function(q) pweibull(q - p[["a"]], shape = p[["c"]], scale = p[["b"]])'}
     nll <- -sum(ll); cvu[[length(cvu) + 1]] <- list(ok = is.finite(nll), n = length(u$d), nll = nll, ks = fb_gof(u$d, pf)[["ks"]]) } }`,
-      `ok <- Filter(function(r) r$ok, cvu); cat(${rStr(T('Çapraz doğrulama: ', 'Cross-validation: '))}, length(ok), "/", length(cvu), ${rStr(T(' birim; −ln L/ağaç ', ' units; −ln L per tree '))}, mean(sapply(ok, function(r) r$nll / r$n)), " KS ", mean(sapply(ok, function(r) r$ks)), "\\n")`,
+      `ok <- Filter(function(r) r$ok, cvu); cat(${rStr('Cross-validation: ')}, length(ok), "/", length(cvu), ${rStr(' units; −ln L per tree ')}, mean(sapply(ok, function(r) r$nll / r$n)), " KS ", mean(sapply(ok, function(r) r$ks)), "\\n")`,
       `res[["cv.units"]] <- length(cvu); res[["cv.ok"]] <- length(ok); res[["cv.nll"]] <- sum(sapply(ok, function(r) r$nll)); res[["cv.nllPerTree"]] <- mean(sapply(ok, function(r) r$nll / r$n)); res[["cv.ks"]] <- mean(sapply(ok, function(r) r$ks))`, '');
   }
   void plots;
   // prediction
   if (x) {
-    out.push(rComment(T('Tahmin: tahmin sekmesindeki meşcere değişkenleri', 'Prediction: the stand variables of the prediction tab')),
+    out.push(rComment('Prediction: the stand variables of the prediction tab'),
       `x0 <- ${`list(${Object.entries(x).filter(([, v]) => Number.isFinite(v)).map(([k, v]) => `${k} = ${rNum(v)}`).join(', ')})`}`,
       `resp <- fb_resp(model, x0); print(resp); for (k in names(resp)) res[[paste0("pred.", k)]] <- resp[[k]]`);
     if (approach === 'ppm') out.push(`p <- c(a = ${model.options.ppmLoc === 'half-dmin' ? '0.5 * resp[["dmin"]]' : rNum(model.options.a)}, b = resp[["b"]], c = resp[["c"]]); print(p); for (k in names(p)) res[[paste0("pred.param.", k)]] <- p[[k]]`);
     else if (model.family === 'weibull') out.push(...recoverBody('weibull', null, model.options.loc === 'user' ? { loc: 'user', a: model.options.aUser } : { loc: 'half-dmin' }, [{ method: model.method }], T, 'as.list(resp)'));
     else out.push(...recoverBody('parresol', null, {}, [{ method: 'johnsonsb.parresol' }], T, `c(list(xi = ${rNum(model.options.xi)}), as.list(resp))`));
-    if (pred && pred.status !== 'ok') out.push(rComment(T(`Araçta tahmin geçersizdi (${pred.status}): yanıtlar tutarsız ya da geri kazanım çözümsüz; R aynı hesabı yapar, sonucu yorumlarken bunu göz önünde tutun.`, `In the tool the prediction was not valid (${pred.status}): inconsistent responses or no recovery; R does the same computation, keep that in mind when reading it.`)));
+    if (pred && pred.status !== 'ok') out.push(rComment(`In the tool the prediction was not valid (${pred.status}): inconsistent responses or no recovery; R does the same computation, keep that in mind when reading it.`));
   }
   out.push('', `fb_out(res)`, '');
   return out.join('\n');

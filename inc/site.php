@@ -40,90 +40,64 @@ function lang(): string {
 function site_ctx(): array {
     static $c = null;
     if ($c) return $c;
-    $L = lang(); $tr = $L === 'tr';
-    $c = ['L' => $L, 'tr' => $tr, 'other' => $tr ? 'en' : 'tr',
+    $c = ['L' => lang(),
           // brand (20 Nov 2026, user decision): "Forest Biometry" in both languages; the descriptive subtitle stays
-          'site' => 'Forest Biometry', 'sub' => $tr ? 'Ormancılık Biyometrisi Araçları' : 'Forest Biometrics Tools'];
+          'site' => 'Forest Biometry', 'sub' => 'Forest Biometrics Tools'];
     return $c;
 }
 
 /** Tool pages of the platform. 'cat' = home module of the catalogue (inc/catalog.php; the page may cover ids of other modules too), 'icon' = site_icon() name, 'short' = sidebar label. */
-function site_tools(?bool $tr = null): array {
-    $tr = $tr ?? site_ctx()['tr'];
+function site_tools(): array {
     return [
-        ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => $tr ? 'Veri Denetçisi' : 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.2.0', 'lab' => 'checker', 'title' => $tr ? 'Ormancılık Verisi Denetçisi' : 'Forest Data Checker',
-         'desc' => $tr ? 'Ağaç ve örnek alan tablolarınızı içe aktarın, sütunları eşleyin, biçim hatalarını ve şüpheli ölçümleri bulun; düzeltmeleri gerekçesiyle kaydedip veriyi onaylayın.'
-                       : 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
-        ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => $tr ? 'Örnek Alan ve Meşcere' : 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.2.1', 'lab' => 'stand', 'title' => $tr ? 'Örnek Alan ve Meşcere Hesaplayıcısı' : 'Plot & Stand Metrics',
-         'desc' => $tr ? 'Onaylanmış veriden her örnek alan ve dönem için hektarda ağaç sayısı ve göğüs yüzeyi, ortalama çaplar, çap sınıfları ve tür katılımı; örnek alanlar arası özet ve tasarıma dayalı kestirim.'
-                       : 'From approved data, per plot and period: stems and basal area per hectare, mean diameters, diameter classes and species composition; between-plot summary and design-based forest estimate.'],
-        ['n' => 3, 'cat' => 'SM', 'icon' => 'eval', 'short' => $tr ? 'Model Başarısı' : 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.2.0-beta.2', 'lab' => 'eval', 'title' => $tr ? 'Model Başarısı Değerlendiricisi' : 'Model Evaluation',
-         'desc' => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE ve tahmin R² (isteğe bağlı ağırlıklı); yanlılık için güven aralığı, bootstrap aralıkları ve eşdeğerlik testleri; gözlenen–tahmin ve artık grafikleri, gruplara göre başarı tabloları.'
-                       : 'Bias, MAE, RMSE and prediction R² from observed and predicted values (optionally weighted); a confidence interval for the bias, bootstrap intervals and equivalence tests; observed–predicted and residual plots, performance tables by group.'],
-        ['n' => 4, 'cat' => 'SS', 'icon' => 'dist', 'short' => $tr ? 'Çap Dağılımı' : 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'v' => '2.2.1', 'lab' => 'dist', 'title' => $tr ? 'Çap Dağılımı Laboratuvarı' : 'Diameter Distribution Lab',
-         'desc' => $tr ? 'Weibull, normal, lognormal, gama, sabit sınırlı beta, Johnson SB, üstel ve log-lojistik: en çok olabilirlik, momentler ve yüzdeliklerle doğrudan fit etme, örnek alan ve dönem bazında; ortalama ile varyans ya da Dq\'dan geri kazanım; Weibull için Poudel ve Cao M2–M10, Johnson SB için Parresol; Excel ve CSV çıktısı. Ölçüm eşiğinde koşullu en çok olabilirlik; sınıf tabloları ve sınıflandırılmış sıklıklara fit etme; model karşılaştırma, Q–Q ve P–P grafikleri; bootstrap p değerleri ve aralıklar.'
-                       : 'Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic: direct fitting by maximum likelihood, moments and percentiles, per plot and period; recovery from the mean and the variance or Dq; Poudel and Cao M2–M10 for the Weibull, Parresol for the Johnson SB; Excel and CSV output. Conditional maximum likelihood for measurement thresholds; class tables and fitting from class frequencies; model comparison, Q–Q and P–P plots; bootstrap p-values and intervals.'],
-        ['n' => 5, 'cat' => 'SM', 'icon' => 'hd', 'short' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter', 'file' => 'boy-cap.php', 'v' => '1.1.1', 'lab' => 'hd', 'title' => $tr ? 'Boy–Çap Modelleme' : 'Height–Diameter Modelling',
-         'desc' => $tr ? 'Sabit etkili sürüm: Näslund, Michailoff, Curtis, kuvvet, Chapman–Richards ve Weibull denklemlerini doğrusal olmayan en küçük karelerle fit edin; aynı ağaçlar üzerinde karşılaştırma, örnek alan bazında çapraz doğrulama, eksik boylar için ayrı tahmin sütunu. Karma etkili modeller için Karma Etkili Modeller aracını kullanın.'
-                       : 'Fixed-effects version: fit the Näslund, Michailoff, Curtis, power, Chapman–Richards and Weibull equations by nonlinear least squares; comparison on the same trees, plot-based cross-validation, a separate prediction column for missing heights. For mixed-effects models use the Mixed-Effects Models tool.'],
-        ['n' => 6, 'cat' => 'SI', 'icon' => 'sampling', 'short' => $tr ? 'Örnekleme Planlayıcısı' : 'Sampling Planner', 'file' => 'ornekleme.php', 'v' => '1.1.0', 'lab' => 'sampling', 'title' => $tr ? 'Envanter Örnekleme Planlayıcısı' : 'Inventory Sampling Planner',
-         'desc' => $tr ? 'Basit rastgele örneklemede bir ortalamayı hedeflenen bağıl hatayla kestirmek için yaklaşık örnek alan sayısı: pilot ölçümlerden ya da girilen CV\'den, isteğe bağlı sonlu popülasyon düzeltmesiyle.'
-                       : 'Approximate number of plots to estimate a mean with a target relative error under simple random sampling: from pilot measurements or a CV you enter, with an optional finite population correction.'],
-        ['n' => 7, 'cat' => 'SM', 'icon' => 'rank', 'short' => $tr ? 'Nispi Sıralama' : 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.1.0', 'lab' => 'rank', 'title' => $tr ? 'Nispi Sıralama' : 'Relative Ranking',
-         'desc' => $tr ? 'Başarı ölçütleri tablosundan (R², FI, RMSE, MAE, yanlılık (Bias), AIC, BIC…) ölçüt bazında ve genel nispi sıralar; en iyi ve en kötü modellerin radar grafiği.'
-                       : 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.',
+        ['n' => 1, 'cat' => 'DI', 'icon' => 'checker', 'short' => 'Data Checker', 'file' => 'veri-denetcisi.php', 'v' => '1.2.0', 'lab' => 'checker', 'title' => 'Forest Data Checker',
+         'desc' => 'Import tree and plot tables, map the columns, find format errors and suspect measurements; record every fix with a reason and approve the data.'],
+        ['n' => 2, 'cat' => 'SS', 'icon' => 'plot', 'short' => 'Plot & Stand Metrics', 'file' => 'ornek-alan.php', 'v' => '1.2.1', 'lab' => 'stand', 'title' => 'Plot & Stand Metrics',
+         'desc' => 'From approved data, per plot and period: stems and basal area per hectare, mean diameters, diameter classes and species composition; between-plot summary and design-based forest estimate.'],
+        ['n' => 3, 'cat' => 'SM', 'icon' => 'eval', 'short' => 'Model Evaluation', 'file' => 'model-degerlendirme.php', 'v' => '1.2.0-beta.2', 'lab' => 'eval', 'title' => 'Model Evaluation',
+         'desc' => 'Bias, MAE, RMSE and prediction R² from observed and predicted values (optionally weighted); a confidence interval for the bias, bootstrap intervals and equivalence tests; observed–predicted and residual plots, performance tables by group.'],
+        ['n' => 4, 'cat' => 'SS', 'icon' => 'dist', 'short' => 'Diameter Distribution', 'file' => 'cap-dagilimi.php', 'v' => '2.2.1', 'lab' => 'dist', 'title' => 'Diameter Distribution Lab',
+         'desc' => 'Weibull, normal, lognormal, gamma, fixed-bound beta, Johnson SB, exponential and log-logistic: direct fitting by maximum likelihood, moments and percentiles, per plot and period; recovery from the mean and the variance or Dq; Poudel and Cao M2–M10 for the Weibull, Parresol for the Johnson SB; Excel and CSV output. Conditional maximum likelihood for measurement thresholds; class tables and fitting from class frequencies; model comparison, Q–Q and P–P plots; bootstrap p-values and intervals.'],
+        ['n' => 5, 'cat' => 'SM', 'icon' => 'hd', 'short' => 'Height–Diameter', 'file' => 'boy-cap.php', 'v' => '1.1.1', 'lab' => 'hd', 'title' => 'Height–Diameter Modelling',
+         'desc' => 'Fixed-effects version: fit the Näslund, Michailoff, Curtis, power, Chapman–Richards and Weibull equations by nonlinear least squares; comparison on the same trees, plot-based cross-validation, a separate prediction column for missing heights. For mixed-effects models use the Mixed-Effects Models tool.'],
+        ['n' => 6, 'cat' => 'SI', 'icon' => 'sampling', 'short' => 'Sampling Planner', 'file' => 'ornekleme.php', 'v' => '1.1.0', 'lab' => 'sampling', 'title' => 'Inventory Sampling Planner',
+         'desc' => 'Approximate number of plots to estimate a mean with a target relative error under simple random sampling: from pilot measurements or a CV you enter, with an optional finite population correction.'],
+        ['n' => 7, 'cat' => 'SM', 'icon' => 'rank', 'short' => 'Relative Ranking', 'file' => 'nispi-siralama.php', 'v' => '1.1.0', 'lab' => 'rank', 'title' => 'Relative Ranking',
+         'desc' => 'Relative ranks per criterion and overall from a goodness-of-fit table (R², FI, RMSE, MAE, Bias, AIC, BIC…); radar chart of the best and worst models.',
          'after' => 'model-degerlendirme.php'],   // listed under SM-06, right after Model Evaluation (19 Nov 2026, user decision)
-        ['n' => 8, 'cat' => 'SV', 'icon' => 'secvol', 'short' => $tr ? 'Seksiyon Hacmi' : 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.2', 'lab' => 'secvol', 'title' => $tr ? 'Seksiyon Hacmi' : 'Stem Section Volume',
-         'desc' => $tr ? 'Ölçülmüş seksiyon çaplarından tek ağaç gövde hacmi: Huber, Smalian, Newton ve Hohenadl; dip kütük ve uç seksiyon ayrı, kabuklu ve kabuksuz hacim, şekil katsayısı, ticari hacim ve örnek alan büyüklüğüyle hektara çevrilmiş toplam.'
-                       : 'Single-tree stem volume from measured section diameters: Huber, Smalian, Newton and Hohenadl; stump and top piece apart, over- and under-bark volume, form factor, merchantable volume and per-hectare totals from plot sizes.'],
-        ['n' => 9, 'cat' => 'SQ', 'icon' => 'siteindex', 'short' => $tr ? 'Bonitet' : 'Site Index', 'file' => 'bonitet.php', 'v' => '1.0.0-beta.4', 'lab' => 'siteindex', 'title' => $tr ? 'Bonitet Hesaplayıcısı' : 'Site Index',
-         'desc' => $tr ? 'Üst boy ve yaştan standart yaştaki bonitet endeksi: Chapman–Richards ve Schumacher fark denklemleri kendi katsayı setinizle (kaynağı zorunlu), ya da kendi gövde analizi ve tekrarlı ölçümlerinizden kestirilen katsayılarla; yaş türü, kullanıcı tanımlı bonitet sınıfları, eğri demeti, bootstrap ya da delta yöntemiyle güven aralığı; onaylanmış veriden H0.'
-                       : 'Site index at a base age from top height and age: Chapman–Richards and Schumacher difference equations with your own coefficient set (source required), or with coefficients fitted to your own stem analyses and repeated measurements; age type, user-defined site classes, curve family, confidence intervals by bootstrap or the delta method; H0 from approved data.'],
-        ['n' => 10, 'cat' => 'SS', 'icon' => 'structure', 'short' => $tr ? 'Meşcere Yapısı' : 'Stand Structure', 'file' => 'mescere-yapisi.php', 'v' => '1.0.0-beta.5', 'lab' => 'structure', 'title' => $tr ? 'Meşcere Yapısı ve Rekabet' : 'Stand Structure & Competition',
-         'desc' => $tr ? 'Örnek alan ve dönem başına çap yapısı, Gini ve Lorenz eğrisi, Shannon ve Simpson, SDI, Curtis RD, göreli aralık ve tepe rekabet faktörü (CCF); ağaç düzeyinde BAL; koordinatlar varsa Clark–Evans, W, M, T, U ve Hegyi rekabet endeksi, kenar etkisi düzeltmesiyle.'
-                       : 'Per plot and period: diameter structure, Gini and the Lorenz curve, Shannon and Simpson, SDI, Curtis RD, relative spacing and the crown competition factor (CCF); tree-level BAL; with coordinates, Clark–Evans, W, M, T, U and the Hegyi competition index, with edge correction.'],
-        ['n' => 11, 'cat' => 'SV', 'icon' => 'taper', 'short' => $tr ? 'Gövde Profili' : 'Taper', 'file' => 'govde-profili.php', 'v' => '1.0.0-beta.3', 'lab' => 'taper', 'title' => $tr ? 'Gövde Profili' : 'Stem Taper',
-         'desc' => $tr ? 'Max ve Burkhart (1976) ve Kozak (2004) profil denklemleriyle, kendi katsayı setinizle ya da gövde ölçümlerinize fit ederek herhangi bir yükseklikteki çap, bir çapın yüksekliği, toplam ve tepe çapına kadar ticari hacim; kabuklu ve kabuksuz profil.'
-                       : 'Max and Burkhart (1976) and Kozak (2004) taper equations, with your own coefficient set or fitted to your stem measurements: diameter at any height, the height of a diameter, total and merchantable volume to a top diameter; outside- and inside-bark profiles.'],
-        ['n' => 12, 'cat' => 'SQ', 'icon' => 'growth', 'short' => $tr ? 'Büyüme Fonksiyonu' : 'Growth Functions', 'file' => 'buyume-islevi.php', 'v' => '1.0.0-beta.1', 'lab' => 'growth', 'title' => $tr ? 'Büyüme Fonksiyonu Fit Etme' : 'Growth Function Fitter',
-         'desc' => $tr ? 'Yaş–büyüklük verinize Chapman–Richards, Schumacher, Gompertz, lojistik, monomoleküler ve Weibull büyüme fonksiyonlarını fit edin; modelleri AIC ve RMSE ile karşılaştırın; cari ve ortalama artım, dönüm noktası ve ortalama artımın doruğu.'
-                       : 'Fit Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular and Weibull growth functions to your age–size data; compare the models by AIC and RMSE; current and mean annual increment, inflection point and culmination of the mean annual increment.'],
-        ['n' => 13, 'cat' => 'DI', 'icon' => 'library', 'short' => $tr ? 'Katsayı Kütüphanesi' : 'Coefficient Library', 'file' => 'katsayi-kutuphanesi.php', 'v' => '1.0.0-beta.1', 'lab' => 'coeflib', 'title' => $tr ? 'Katsayı Kütüphanesi' : 'Coefficient Library',
-         'desc' => $tr ? 'Bütün araçlardaki katsayı setleriniz tek yerde: arama ve süzme, ayrıntı, düzenleme, kopyalama, silme; aynı katsayılı ve sorunlu setlerin bulunması; kütüphanenin tamamını tek JSON dosyasıyla yedekleme ve önizlemeli geri yükleme.'
-                       : 'The coefficient sets of every tool in one place: search and filter, details, editing, copying, deleting; finding sets with the same coefficients and sets with problems; backing up the whole library in one JSON file and restoring it with a preview.'],
-        ['n' => 14, 'cat' => 'DI', 'icon' => 'verify', 'short' => $tr ? 'Kayıt Doğrulayıcı' : 'Record Verifier', 'file' => 'kayit-dogrulayici.php', 'v' => '1.0.0-beta.1', 'lab' => 'record', 'title' => $tr ? 'Kayıt Doğrulayıcı' : 'Record Verifier',
-         'desc' => $tr ? 'Araçların indirdiği çalışma kayıtlarını (JSON) açın: kaydın değişmediğini mühürle denetleyin; aracı, sürümü, kaynak kodunun commit\'ini ve ayarları görün; özgün veri dosyalarınızın kayıttaki girdilerle bayt bayt aynı olduğunu SHA-256 parmak iziyle doğrulayın.'
-                       : 'Open the run records (JSON) that the tools download: check with the seal that a record has not changed; see the tool, its version, the source-code commit and the settings; confirm with SHA-256 fingerprints that your original data files are byte for byte the inputs of the record.'],
-        ['n' => 15, 'cat' => 'DI', 'icon' => 'database', 'short' => $tr ? 'Veri Yöneticisi' : 'Data Manager', 'file' => 'veri-yoneticisi.php', 'v' => '1.0.0-beta.1', 'lab' => 'projects', 'title' => $tr ? 'Envanter Verisi Yöneticisi' : 'Inventory Data Manager',
-         'desc' => $tr ? 'Onaylanmış veri paketlerinizi tarayıcıda proje olarak saklayın: ad, yer, yıl ve notlar; örnek alan × dönem özeti; birini etkin yapın, onaylanmış veriyi okuyan araçlar onu kullansın; içe ve dışa aktarma, kopya, yedek.'
-                       : 'Keep your approved data packages in the browser as projects: name, place, year and notes; plot × period overview; make one active and the tools that read approved data use it; import and export, copies, backup.'],
-        ['n' => 16, 'cat' => 'DI', 'icon' => 'dashboard', 'short' => $tr ? 'Veri Görselleştirme' : 'Data Visualization', 'file' => 'pano.php', 'v' => '1.0.0-beta.1', 'lab' => 'dashboard', 'title' => $tr ? 'Veri Görselleştirme' : 'Data Visualization',
-         'desc' => $tr ? 'Bir veri paketini tek bakışta görün: özet, çap dağılımı, tür katılımı, örnek alan başına N/ha ve G/ha, boy–çap ve ağaç haritası; dönem, tabaka, tür ve örnek alan süzgeçleri; araçların çalışma kayıtlarından çap dağılımı yoğunlukları ve boy–çap eğrileri aynı grafikte.'
-                       : 'See a data package at a glance: summary, diameter distribution, species composition, N/ha and G/ha per plot, height–diameter and a tree map; period, stratum, species and plot filters; diameter densities and height curves from the tools\' run records on the same charts.'],
-        ['n' => 17, 'cat' => 'DI', 'icon' => 'report', 'short' => $tr ? 'Rapor Üretici' : 'Report Generator', 'file' => 'rapor.php', 'v' => '1.0.0-beta.1', 'lab' => 'report', 'title' => $tr ? 'Rapor Üretici' : 'Report Generator',
-         'desc' => $tr ? 'Bir veri paketini ve araçların çalışma kayıtlarını tek raporda toplayın: başlık ve notlar, paket özeti, grafikler, kayıtların ayarları ve sonuç tabloları, kaynaklar ve atıflar, tekrarlanabilirlik eki; yazdırın, PDF olarak ya da HTML dosyası olarak kaydedin.'
-                       : 'Gather a data package and the tools\' run records in one report: title and notes, package summary, charts, the records\' settings and result tables, references and citations, a reproducibility appendix; print it, save it as PDF or as an HTML file.'],
-        ['n' => 18, 'cat' => 'TM', 'icon' => 'measure', 'short' => $tr ? 'Ağaç Ölçümü' : 'Tree Measurement', 'file' => 'agac-olcumu.php', 'v' => '1.0.0-beta.4', 'lab' => 'tree', 'title' => $tr ? 'Ağaç Ölçümü' : 'Tree Measurement',
-         'desc' => $tr ? 'Eğim ölçer ya da mesafe ölçer okumalarından ağaç boyu (tanjant, bakış doğrusu uzaklığı, gölge ve iki sırık yöntemleri); çap ya da çevreden göğüs yüzeyi, birbirine dik iki çap ya da elips, ağaç listesinde ortalama göğüs yüzeyli ağacın çapı; kabuk kalınlığı, kabuksuz çap, örnek ağaçlardan kabuk oranı ve kabuk denklemleri; tepe çapı ve izdüşüm alanı, tepe uzunluğu ve oranı, tepe yüzeyi ve hacmi, tepe örtüsü; göğüs yüksekliği, mutlak ve normal şekil katsayısı, biçim üssü ve şekil bölümü; ağaç yaşı, burgu örneğinden geçmiş çaplar, meşcerenin ortalama yaşı ve artım yüzdesi.'
-                       : 'Tree height from clinometer or rangefinder readings (tangent, line-of-sight distance, shadow and two-pole methods); basal area from a diameter or girth, two diameters at right angles or an ellipse, the diameter of the tree of mean basal area in a tree list; bark thickness, under-bark diameter, the bark factor from sample trees and bark equations; crown width and projection area, crown length and ratio, crown surface and volume, crown cover; breast-height, absolute and normal form factors, form exponent and form quotient; tree age, past diameters from an increment core, mean stand age and growth percent.'],
-        ['n' => 19, 'cat' => 'BC', 'icon' => 'biomass', 'short' => $tr ? 'Biyokütle ve Karbon' : 'Biomass & Carbon', 'file' => 'biyokutle-karbon.php', 'v' => '1.0.0-beta.5', 'lab' => 'biomass', 'title' => $tr ? 'Biyokütle ve Karbon' : 'Biomass and Carbon',
-         'desc' => $tr ? 'Ağaç tablonuzdan ya da onaylanmış veriden bileşen biyokütlesi, karbon ve CO₂: kendi katsayı setlerinizle allometrik denklemler (tür eşlemesi, eksik boy ve eşlenmeyen tür satır numarasıyla) ya da hacimden dönüşüm (IPCC 2006); örnek alan × dönem başına Mg/ha. Platform hiçbir katsayı, odun yoğunluğu ya da karbon oranı içermez.'
-                       : 'Component biomass, carbon and CO₂ from your tree table or approved data: allometric equations with your own coefficient sets (species mapping; missing heights and unmapped species with row numbers) or conversion from volume (IPCC 2006); Mg/ha per plot × period. The site ships no coefficients, densities or carbon fractions.'],
-        ['n' => 20, 'cat' => 'SV', 'icon' => 'volume', 'short' => $tr ? 'Hacim Denklemleri' : 'Volume Equations', 'file' => 'hacim-denklemleri.php', 'v' => '1.0.0-beta.2', 'lab' => 'volume', 'title' => $tr ? 'Hacim Denklemleri' : 'Volume Equations',
-         'desc' => $tr ? 'Hacmi bilinen ağaçlarınızdan (ör. Seksiyon Hacmi sonuçları) standart ve yerel hacim denklemleri fit etme: sabit şekil katsayısı, birleşik değişken, logaritmik ve yerel biçimler (Kershaw ve ark. 2016); ağırlıklı en küçük kareler, ters dönüşüm düzeltmesi, katsayı kütüphanesine kayıt ve Model Başarısı\'na aktarım.'
-                       : 'Fitting standard and local volume equations to your trees of known volume (e.g. Stem Section Volume results): constant form factor, combined variable, logarithmic and local forms (Kershaw et al. 2016); weighted least squares, back-transformation correction, saving to the coefficient library and sending to Model Evaluation.'],
-        ['n' => 21, 'cat' => 'SV', 'icon' => 'logscale', 'short' => $tr ? 'Tomruk Ölçümü' : 'Log Scaling', 'file' => 'tomruk-olcumu.php', 'v' => '1.0.0-beta.1', 'lab' => 'logscale', 'title' => $tr ? 'Tomruk Ölçümü' : 'Log Scaling',
-         'desc' => $tr ? 'Tomrukların ince uç çapı ve boyundan Scribner, Doyle ve International (⅛ ve ¼ inç) board-foot kurallarıyla hacim (Kershaw ve ark. 2016); uç ve orta çaplardan Smalian, Huber ve Newton ile m³; ölçme boyunu aşan tomruğun bölünmesi. Ölçüler cm ve m cinsinden girilir.'
-                       : 'Board feet by the Scribner, Doyle and International (⅛ and ¼ inch) log rules from the small-end diameter and length (Kershaw et al. 2016); m³ by Smalian, Huber and Newton from end and middle diameters; splitting logs longer than the scaling length. Measurements in cm and m.'],
-        ['n' => 22, 'cat' => 'SM', 'icon' => 'nlreg', 'short' => $tr ? 'Doğrusal Olmayan Regresyon' : 'Nonlinear Regression', 'file' => 'dogrusal-olmayan-regresyon.php', 'v' => '1.0.0-beta.2', 'lab' => 'nlsreg', 'title' => $tr ? 'Doğrusal Olmayan Regresyon' : 'Nonlinear Regression',
-         'desc' => $tr ? 'Kendi verinize doğrusal olmayan modeller: hazır biçimler (Chapman–Richards, Schumacher, Gompertz, lojistik, monomoleküler, Weibull, kuvvet) ya da serbest formül; ağırlıklı en küçük kareler (ψ = X^θ, θ kestirilebilir), katsayı güven aralıkları, ortalama ve yeni gözlem aralıkları, AIC ile karşılaştırma; katsayı kütüphanesine kayıt ve Model Başarısı\'na aktarım.'
-                       : 'Nonlinear models for your own data: ready-made forms (Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular, Weibull, power) or a free formula; weighted least squares (ψ = X^θ, θ can be estimated), coefficient confidence intervals, mean and new-observation intervals, comparison by AIC; saving to the coefficient library and hand-off to Model Evaluation.'],
-        ['n' => 23, 'cat' => 'SM', 'icon' => 'mixed', 'short' => $tr ? 'Karma Etkili Modeller' : 'Mixed-Effects Models', 'file' => 'karma-modeller.php', 'v' => '1.0.0-beta.1', 'lab' => 'mixed', 'title' => $tr ? 'Karma Etkili Modeller' : 'Mixed-Effects Models',
-         'desc' => $tr ? 'Gruplanmış veriye (ör. örnek alanlardaki ağaçlar) doğrusal ve doğrusal olmayan karma etkili modeller: grup başına rastgele etkiler, ML ya da REML, köşegen ya da genel kovaryans, varPower varyans fonksiyonu, AIC/BIC ve olabilirlik oranı testi; birkaç ölçümle yeni örnek alan kalibrasyonu; katsayı kütüphanesine kayıt.'
-                       : 'Linear and nonlinear mixed-effects models for grouped data (e.g. trees in plots): random effects per group, ML or REML, diagonal or general covariance, the varPower variance function, AIC/BIC and the likelihood-ratio test; calibration of a new plot from a few measurements; saving to the coefficient library.'],
-        ['n' => 24, 'cat' => 'SM', 'icon' => 'eqsys', 'short' => $tr ? 'Denklem Sistemleri' : 'Systems of Equations', 'file' => 'denklem-sistemleri.php', 'v' => '1.0.0-beta.2', 'lab' => 'eqsys', 'title' => $tr ? 'Denklem Sistemleri' : 'Systems of Equations',
-         'desc' => $tr ? 'Birbiriyle ilişkili birden çok denklemi birlikte fit etme: kendi formülleriniz (doğrusal ya da doğrusal olmayan), denklemler arasında ortak katsayılarla uyumlu sistemler, OLS, SUR ve yinelemeli SUR, üç artık kovaryansı tanımı; denklem başına R², sistem R² (OLS ve McElroy), log L; katsayı kütüphanesine kayıt.'
-                       : 'Fitting several related equations together: your own formulas (linear or nonlinear), compatible systems with coefficients shared between equations, OLS, SUR and iterated SUR, three residual covariance definitions; R² per equation, system R² (OLS and McElroy), log L; saving to the coefficient library.'],
+        ['n' => 8, 'cat' => 'SV', 'icon' => 'secvol', 'short' => 'Section Volume', 'file' => 'seksiyon-hacmi.php', 'v' => '1.0.0-beta.2', 'lab' => 'secvol', 'title' => 'Stem Section Volume',
+         'desc' => 'Single-tree stem volume from measured section diameters: Huber, Smalian, Newton and Hohenadl; stump and top piece apart, over- and under-bark volume, form factor, merchantable volume and per-hectare totals from plot sizes.'],
+        ['n' => 9, 'cat' => 'SQ', 'icon' => 'siteindex', 'short' => 'Site Index', 'file' => 'bonitet.php', 'v' => '1.0.0-beta.4', 'lab' => 'siteindex', 'title' => 'Site Index',
+         'desc' => 'Site index at a base age from top height and age: Chapman–Richards and Schumacher difference equations with your own coefficient set (source required), or with coefficients fitted to your own stem analyses and repeated measurements; age type, user-defined site classes, curve family, confidence intervals by bootstrap or the delta method; H0 from approved data.'],
+        ['n' => 10, 'cat' => 'SS', 'icon' => 'structure', 'short' => 'Stand Structure', 'file' => 'mescere-yapisi.php', 'v' => '1.0.0-beta.5', 'lab' => 'structure', 'title' => 'Stand Structure & Competition',
+         'desc' => 'Per plot and period: diameter structure, Gini and the Lorenz curve, Shannon and Simpson, SDI, Curtis RD, relative spacing and the crown competition factor (CCF); tree-level BAL; with coordinates, Clark–Evans, W, M, T, U and the Hegyi competition index, with edge correction.'],
+        ['n' => 11, 'cat' => 'SV', 'icon' => 'taper', 'short' => 'Taper', 'file' => 'govde-profili.php', 'v' => '1.0.0-beta.3', 'lab' => 'taper', 'title' => 'Stem Taper',
+         'desc' => 'Max and Burkhart (1976) and Kozak (2004) taper equations, with your own coefficient set or fitted to your stem measurements: diameter at any height, the height of a diameter, total and merchantable volume to a top diameter; outside- and inside-bark profiles.'],
+        ['n' => 12, 'cat' => 'SQ', 'icon' => 'growth', 'short' => 'Growth Functions', 'file' => 'buyume-islevi.php', 'v' => '1.0.0-beta.1', 'lab' => 'growth', 'title' => 'Growth Function Fitter',
+         'desc' => 'Fit Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular and Weibull growth functions to your age–size data; compare the models by AIC and RMSE; current and mean annual increment, inflection point and culmination of the mean annual increment.'],
+        ['n' => 13, 'cat' => 'DI', 'icon' => 'library', 'short' => 'Coefficient Library', 'file' => 'katsayi-kutuphanesi.php', 'v' => '1.0.0-beta.1', 'lab' => 'coeflib', 'title' => 'Coefficient Library',
+         'desc' => 'The coefficient sets of every tool in one place: search and filter, details, editing, copying, deleting; finding sets with the same coefficients and sets with problems; backing up the whole library in one JSON file and restoring it with a preview.'],
+        ['n' => 14, 'cat' => 'DI', 'icon' => 'verify', 'short' => 'Record Verifier', 'file' => 'kayit-dogrulayici.php', 'v' => '1.0.0-beta.1', 'lab' => 'record', 'title' => 'Record Verifier',
+         'desc' => 'Open the run records (JSON) that the tools download: check with the seal that a record has not changed; see the tool, its version, the source-code commit and the settings; confirm with SHA-256 fingerprints that your original data files are byte for byte the inputs of the record.'],
+        ['n' => 15, 'cat' => 'DI', 'icon' => 'database', 'short' => 'Data Manager', 'file' => 'veri-yoneticisi.php', 'v' => '1.0.0-beta.1', 'lab' => 'projects', 'title' => 'Inventory Data Manager',
+         'desc' => 'Keep your approved data packages in the browser as projects: name, place, year and notes; plot × period overview; make one active and the tools that read approved data use it; import and export, copies, backup.'],
+        ['n' => 16, 'cat' => 'DI', 'icon' => 'dashboard', 'short' => 'Data Visualization', 'file' => 'pano.php', 'v' => '1.0.0-beta.1', 'lab' => 'dashboard', 'title' => 'Data Visualization',
+         'desc' => 'See a data package at a glance: summary, diameter distribution, species composition, N/ha and G/ha per plot, height–diameter and a tree map; period, stratum, species and plot filters; diameter densities and height curves from the tools\' run records on the same charts.'],
+        ['n' => 17, 'cat' => 'DI', 'icon' => 'report', 'short' => 'Report Generator', 'file' => 'rapor.php', 'v' => '1.0.0-beta.1', 'lab' => 'report', 'title' => 'Report Generator',
+         'desc' => 'Gather a data package and the tools\' run records in one report: title and notes, package summary, charts, the records\' settings and result tables, references and citations, a reproducibility appendix; print it, save it as PDF or as an HTML file.'],
+        ['n' => 18, 'cat' => 'TM', 'icon' => 'measure', 'short' => 'Tree Measurement', 'file' => 'agac-olcumu.php', 'v' => '1.0.0-beta.4', 'lab' => 'tree', 'title' => 'Tree Measurement',
+         'desc' => 'Tree height from clinometer or rangefinder readings (tangent, line-of-sight distance, shadow and two-pole methods); basal area from a diameter or girth, two diameters at right angles or an ellipse, the diameter of the tree of mean basal area in a tree list; bark thickness, under-bark diameter, the bark factor from sample trees and bark equations; crown width and projection area, crown length and ratio, crown surface and volume, crown cover; breast-height, absolute and normal form factors, form exponent and form quotient; tree age, past diameters from an increment core, mean stand age and growth percent.'],
+        ['n' => 19, 'cat' => 'BC', 'icon' => 'biomass', 'short' => 'Biomass & Carbon', 'file' => 'biyokutle-karbon.php', 'v' => '1.0.0-beta.5', 'lab' => 'biomass', 'title' => 'Biomass and Carbon',
+         'desc' => 'Component biomass, carbon and CO₂ from your tree table or approved data: allometric equations with your own coefficient sets (species mapping; missing heights and unmapped species with row numbers) or conversion from volume (IPCC 2006); Mg/ha per plot × period. The site ships no coefficients, densities or carbon fractions.'],
+        ['n' => 20, 'cat' => 'SV', 'icon' => 'volume', 'short' => 'Volume Equations', 'file' => 'hacim-denklemleri.php', 'v' => '1.0.0-beta.2', 'lab' => 'volume', 'title' => 'Volume Equations',
+         'desc' => 'Fitting standard and local volume equations to your trees of known volume (e.g. Stem Section Volume results): constant form factor, combined variable, logarithmic and local forms (Kershaw et al. 2016); weighted least squares, back-transformation correction, saving to the coefficient library and sending to Model Evaluation.'],
+        ['n' => 21, 'cat' => 'SV', 'icon' => 'logscale', 'short' => 'Log Scaling', 'file' => 'tomruk-olcumu.php', 'v' => '1.0.0-beta.1', 'lab' => 'logscale', 'title' => 'Log Scaling',
+         'desc' => 'Board feet by the Scribner, Doyle and International (⅛ and ¼ inch) log rules from the small-end diameter and length (Kershaw et al. 2016); m³ by Smalian, Huber and Newton from end and middle diameters; splitting logs longer than the scaling length. Measurements in cm and m.'],
+        ['n' => 22, 'cat' => 'SM', 'icon' => 'nlreg', 'short' => 'Nonlinear Regression', 'file' => 'dogrusal-olmayan-regresyon.php', 'v' => '1.0.0-beta.2', 'lab' => 'nlsreg', 'title' => 'Nonlinear Regression',
+         'desc' => 'Nonlinear models for your own data: ready-made forms (Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular, Weibull, power) or a free formula; weighted least squares (ψ = X^θ, θ can be estimated), coefficient confidence intervals, mean and new-observation intervals, comparison by AIC; saving to the coefficient library and hand-off to Model Evaluation.'],
+        ['n' => 23, 'cat' => 'SM', 'icon' => 'mixed', 'short' => 'Mixed-Effects Models', 'file' => 'karma-modeller.php', 'v' => '1.0.0-beta.1', 'lab' => 'mixed', 'title' => 'Mixed-Effects Models',
+         'desc' => 'Linear and nonlinear mixed-effects models for grouped data (e.g. trees in plots): random effects per group, ML or REML, diagonal or general covariance, the varPower variance function, AIC/BIC and the likelihood-ratio test; calibration of a new plot from a few measurements; saving to the coefficient library.'],
+        ['n' => 24, 'cat' => 'SM', 'icon' => 'eqsys', 'short' => 'Systems of Equations', 'file' => 'denklem-sistemleri.php', 'v' => '1.0.0-beta.2', 'lab' => 'eqsys', 'title' => 'Systems of Equations',
+         'desc' => 'Fitting several related equations together: your own formulas (linear or nonlinear), compatible systems with coefficients shared between equations, OLS, SUR and iterated SUR, three residual covariance definitions; R² per equation, system R² (OLS and McElroy), log L; saving to the coefficient library.'],
     ];
 }
 
@@ -195,9 +169,8 @@ function site_current_tool(): ?array {
 }
 
 function site_top(array $o = []): void {
-    $c = site_ctx(); $tr = $c['tr'];
+    $c = site_ctx();
     $pageTitle = ($o['title'] ?? '') !== '' && $o['title'] !== $c['site'] ? $o['title'] . ' | ' . $c['site'] : $c['site'] . ' | ' . $c['sub'];
-    $q = $_GET; $q['lang'] = $c['other']; $langHref = '?' . http_build_query($q);
     $here = basename($_SERVER['SCRIPT_NAME'] ?? ''); $cur = site_current_tool();
     $tools = site_tools();
     // 'side' => false: the home page and the tools index (20 Nov 2026): no sidebar beside the content; the tool menu is a
@@ -222,29 +195,29 @@ function site_top(array $o = []): void {
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
 <body class="bench"<?= $cur ? ' data-tool="' . h(basename($cur['file'], '.php')) . '"' : '' ?>>
-<a class="skip" href="#main"><?= $tr ? 'İçeriğe geç' : 'Skip to content' ?></a>
+<a class="skip" href="#main"><?= 'Skip to content' ?></a>
 <header class="b-top">
-  <button type="button" class="b-iconbtn b-menu" id="navopen" aria-controls="side" aria-expanded="false" aria-label="<?= $tr ? 'Araç menüsünü aç' : 'Open the tools menu' ?>"><?= site_icon('menu') ?></button>
-  <a class="b-brand" href="./" aria-label="<?= h($c['site']) ?>, <?= $tr ? 'ana sayfa' : 'home page' ?>"><?= site_mark() ?><span class="b-brand-name"><?= h($c['site']) ?></span></a>
-  <nav class="b-nav" aria-label="<?= $tr ? 'Site' : 'Site' ?>">
-    <a href="araclar.php"<?= $here === 'araclar.php' || $cur ? ' aria-current="' . ($cur ? 'true' : 'page') . '"' : '' ?>><?= $tr ? 'Araçlar' : 'Tools' ?></a>
-    <a href="kilavuz.php"<?= $here === 'kilavuz.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Kılavuz' : 'Guide' ?></a>
-    <a href="kaynakca.php"<?= $here === 'kaynakca.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Kaynakça' : 'References' ?></a>
-    <a href="hakkinda.php"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= $tr ? 'Hakkında' : 'About' ?></a>
+  <button type="button" class="b-iconbtn b-menu" id="navopen" aria-controls="side" aria-expanded="false" aria-label="<?= 'Open the tools menu' ?>"><?= site_icon('menu') ?></button>
+  <a class="b-brand" href="./" aria-label="<?= h($c['site']) ?>, <?= 'home page' ?>"><?= site_mark() ?><span class="b-brand-name"><?= h($c['site']) ?></span></a>
+  <nav class="b-nav" aria-label="<?= 'Site' ?>">
+    <a href="araclar.php"<?= $here === 'araclar.php' || $cur ? ' aria-current="' . ($cur ? 'true' : 'page') . '"' : '' ?>><?= 'Tools' ?></a>
+    <a href="kilavuz.php"<?= $here === 'kilavuz.php' ? ' aria-current="page"' : '' ?>><?= 'Guide' ?></a>
+    <a href="kaynakca.php"<?= $here === 'kaynakca.php' ? ' aria-current="page"' : '' ?>><?= 'References' ?></a>
+    <a href="hakkinda.php"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= 'About' ?></a>
   </nav>
   <span class="b-tools">
-    <button type="button" class="b-citebtn" id="citebtn" data-cite-open aria-haspopup="dialog"><?= site_icon('cite') ?><span><?= $tr ? 'Atıf' : 'Cite' ?></span></button>
-    <button type="button" id="theme" class="b-iconbtn" aria-label="<?= $tr ? 'Koyu / açık tema' : 'Dark / light theme' ?>"><?= site_icon('theme') ?></button>
+    <button type="button" class="b-citebtn" id="citebtn" data-cite-open aria-haspopup="dialog"><?= site_icon('cite') ?><span><?= 'Cite' ?></span></button>
+    <button type="button" id="theme" class="b-iconbtn" aria-label="<?= 'Dark / light theme' ?>"><?= site_icon('theme') ?></button>
   </span>
 </header>
 <div class="b-shell">
-<aside class="b-side" id="side" aria-label="<?= $tr ? 'Araçlar' : 'Tools' ?>">
+<aside class="b-side" id="side" aria-label="<?= 'Tools' ?>">
   <div class="b-side-head">
-    <span class="b-side-title"><?= $tr ? 'Araçlar' : 'Tools' ?></span>
-    <button type="button" class="b-iconbtn b-narrow" id="sidenarrow" aria-pressed="false" aria-label="<?= $tr ? 'Kenar çubuğunu daralt / genişlet' : 'Narrow / widen the sidebar' ?>"><?= site_icon('collapse') ?></button>
-    <button type="button" class="b-iconbtn b-close" id="navclose" aria-label="<?= $tr ? 'Menüyü kapat' : 'Close the menu' ?>"><?= site_icon('close') ?></button>
+    <span class="b-side-title"><?= 'Tools' ?></span>
+    <button type="button" class="b-iconbtn b-narrow" id="sidenarrow" aria-pressed="false" aria-label="<?= 'Narrow / widen the sidebar' ?>"><?= site_icon('collapse') ?></button>
+    <button type="button" class="b-iconbtn b-close" id="navclose" aria-label="<?= 'Close the menu' ?>"><?= site_icon('close') ?></button>
   </div>
-  <nav class="b-side-nav" aria-label="<?= $tr ? 'Araçlar, modüllere göre' : 'Tools by module' ?>">
+  <nav class="b-side-nav" aria-label="<?= 'Tools by module' ?>">
     <?php $catalog = site_catalog(); foreach (site_modules() as $mod): $it = site_module_items($mod['id'], $tools, $catalog);
       $open = $it['home'] || ($cur && ($cur['cat'] === $mod['id'] || in_array($cur['file'], array_column($it['also'], 'page'), true))); ?>
     <div class="b-group<?= $open ? '' : ' collapsed' ?>" data-mod="<?= $mod['id'] ?>">
@@ -255,17 +228,17 @@ function site_top(array $o = []): void {
         <?php endforeach; foreach ($it['also'] as $ce): ?>
         <li class="b-also"><a href="<?= h($ce['page']) ?>" title="<?= h($ce['id'] . ' · ' . $ce['name']) ?>"><?= site_icon('dot') ?><span><?= h($ce['name']) ?></span></a></li>
         <?php endforeach; foreach ($it['planned'] as $ce): ?>
-        <li class="b-pl"><span class="b-planned" title="<?= h($ce['id'] . ' · ' . ($ce['status'] === 'dev' ? ($tr ? 'geliştiriliyor' : 'in development') : ($tr ? 'planlı' : 'planned'))) ?>" aria-disabled="true"><?= site_icon('dot') ?><span><?= h($ce['name']) ?><?= $ce['status'] === 'dev' ? ' <em class="b-dev">' . ($tr ? 'yakında' : 'soon') . '</em>' : '' ?></span></span></li>
+        <li class="b-pl"><span class="b-planned" title="<?= h($ce['id'] . ' · ' . ($ce['status'] === 'dev' ? 'in development' : 'planned')) ?>" aria-disabled="true"><?= site_icon('dot') ?><span><?= h($ce['name']) ?><?= $ce['status'] === 'dev' ? ' <em class="b-dev">' . 'soon' . '</em>' : '' ?></span></span></li>
         <?php endforeach; ?>
       </ul>
     </div>
     <?php endforeach; ?>
   </nav>
   <div class="b-side-foot">
-    <a href="kilavuz.php" title="<?= $tr ? 'Kullanım kılavuzu' : 'User guide' ?>"<?= $here === 'kilavuz.php' ? ' aria-current="page"' : '' ?>><?= site_icon('guide') ?><span><?= $tr ? 'Kılavuz' : 'Guide' ?></span></a>
-    <a href="hakkinda.php" title="<?= $tr ? 'Hakkında' : 'About' ?>"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= site_icon('about') ?><span><?= $tr ? 'Hakkında' : 'About' ?></span></a>
-    <a href="kaynakca.php" title="<?= $tr ? 'Kaynakça' : 'References' ?>"<?= $here === 'kaynakca.php' ? ' aria-current="page"' : '' ?>><?= site_icon('cite') ?><span><?= $tr ? 'Kaynakça' : 'References' ?></span></a>
-    <p><?= $tr ? 'Hesaplar tarayıcınızda yapılır; veriniz sunucuya gitmez.' : 'Calculations run in your browser; your data stay with you.' ?></p>
+    <a href="kilavuz.php" title="<?= 'User guide' ?>"<?= $here === 'kilavuz.php' ? ' aria-current="page"' : '' ?>><?= site_icon('guide') ?><span><?= 'Guide' ?></span></a>
+    <a href="hakkinda.php" title="<?= 'About' ?>"<?= $here === 'hakkinda.php' ? ' aria-current="page"' : '' ?>><?= site_icon('about') ?><span><?= 'About' ?></span></a>
+    <a href="kaynakca.php" title="<?= 'References' ?>"<?= $here === 'kaynakca.php' ? ' aria-current="page"' : '' ?>><?= site_icon('cite') ?><span><?= 'References' ?></span></a>
+    <p><?= 'Calculations run in your browser; your data stay with you.' ?></p>
   </div>
 </aside>
 <div class="b-scrim" id="scrim" hidden></div>
@@ -274,7 +247,7 @@ function site_top(array $o = []): void {
   <header class="b-head<?= $cur ? ' has-ico' : '' ?>">
     <?php if ($cur): ?><span class="b-headico" aria-hidden="true"><?= site_icon($cur['icon']) ?></span><?php endif; ?>
     <div>
-    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?php if ($cur): $ids = array_column(array_filter(site_catalog(), function ($c) use ($cur) { return $c['page'] === $cur['file']; }), 'id'); $mt = array_column(site_modules(), 'title', 'id'); if ($ids): ?><span class="b-ids" title="<?= $c['tr'] ? 'Araç kimlikleri (docs/PLATFORM_PLAN.md)' : 'Tool ids (docs/PLATFORM_PLAN.md)' ?>"><?= h(implode(' · ', $ids)) ?></span> · <?php endif; ?><?= h($mt[$cur['cat']] ?? '') ?> · <?php endif; ?><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= $c['tr'] ? 'sürüm' : 'version' ?> <?= h($cur['v']) ?></span> · <a class="b-guide" href="kilavuz.php?k=<?= h(basename($cur['file'], '.php')) ?>"><?= $c['tr'] ? 'Kılavuz' : 'Guide' ?></a><?php endif; ?></p><?php endif; ?>
+    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?php if ($cur): $ids = array_column(array_filter(site_catalog(), function ($c) use ($cur) { return $c['page'] === $cur['file']; }), 'id'); $mt = array_column(site_modules(), 'title', 'id'); if ($ids): ?><span class="b-ids" title="<?= 'Tool ids (docs/PLATFORM_PLAN.md)' ?>"><?= h(implode(' · ', $ids)) ?></span> · <?php endif; ?><?= h($mt[$cur['cat']] ?? '') ?> · <?php endif; ?><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= 'version' ?> <?= h($cur['v']) ?></span> · <a class="b-guide" href="kilavuz.php?k=<?= h(basename($cur['file'], '.php')) ?>"><?= 'Guide' ?></a><?php endif; ?></p><?php endif; ?>
     <h1><?= h($o['title'] ?? $c['site']) ?></h1>
     <?php if (!empty($o['lede'])): ?><p class="b-lede"><?= h($o['lede']) ?></p><?php endif; ?>
     </div>
@@ -347,13 +320,13 @@ function site_modules_html(array $entries): string {
 }
 
 function site_bottom(string $script = ''): void {
-    $c = site_ctx(); $tr = $c['tr'];
+    $c = site_ctx();
     ?>
 </main>
 </div>
 <footer class="b-foot">
-  <span><?= h($c['site']) ?> · forestbiometry.online · © <?= date('Y') ?> · <?= $tr ? 'Yazar ve sorumlu' : 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
-  <span><a href="araclar.php"><?= $tr ? 'Araçlar dizini' : 'Tools index' ?></a> · <a href="kilavuz.php"><?= $tr ? 'Kılavuz' : 'Guide' ?></a> · <a href="hakkinda.php"><?= $tr ? 'Hakkında' : 'About' ?></a> · <a href="kaynakca.php"><?= $tr ? 'Kaynakça' : 'References' ?></a></span>
+  <span><?= h($c['site']) ?> · forestbiometry.online · © <?= date('Y') ?> · <?= 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
+  <span><a href="araclar.php"><?= 'Tools index' ?></a> · <a href="kilavuz.php"><?= 'Guide' ?></a> · <a href="hakkinda.php"><?= 'About' ?></a> · <a href="kaynakca.php"><?= 'References' ?></a></span>
 </footer>
 <script>
 (function () {
@@ -387,13 +360,13 @@ function site_bottom(string $script = ''): void {
 })();
 </script>
 <?php
-    $cur = site_current_tool(); $en = site_tools(false); $trT = site_tools(true); $ct = null;
-    if ($cur) foreach ($trT as $i => $t) if ($t['file'] === $cur['file']) $ct = ['file' => $t['file'], 'v' => $t['v'], 'tr' => $t['title'], 'en' => $en[$i]['title']];
+    $cur = site_current_tool(); $ct = null;
+    if ($cur) foreach (site_tools() as $t) if ($t['file'] === $cur['file']) $ct = ['file' => $t['file'], 'v' => $t['v'], 'en' => $t['title']];
     $cd = ['author' => ['family' => SITE_AUTHOR['family'], 'given' => SITE_AUTHOR['given']], 'year' => SITE_YEAR, 'base' => SITE_BASE,
-           'site' => ['tr' => 'Ormancılık Biyometrisi Araçları', 'en' => 'Forest Biometrics Tools'], 'tool' => $ct, 'doi' => SITE_DOI,
+           'site' => ['en' => 'Forest Biometrics Tools'], 'tool' => $ct, 'doi' => SITE_DOI,
            'ids' => $cur ? array_values(array_column(array_filter(site_catalog(), function ($e) use ($cur) { return $e['page'] === $cur['file']; }), 'id')) : [], 'commit' => site_commit()];
 ?>
-<dialog id="citedlg" class="dlg citedlg" aria-label="<?= $tr ? 'Kaynak gösterme' : 'How to cite' ?>"></dialog>
+<dialog id="citedlg" class="dlg citedlg" aria-label="<?= 'How to cite' ?>"></dialog>
 <script type="application/json" id="cite-data"><?= json_encode($cd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
 <?php if ($cur): ?><script>/* tools used in this browser, newest first, for "Recently used" on the home page; only the page name is kept */
 try { (function (f) { var r = JSON.parse(localStorage.getItem('recentTools') || '[]').filter(function (x) { return x !== f; }); r.unshift(f); localStorage.setItem('recentTools', JSON.stringify(r.slice(0, 6))); })(<?= json_encode($cur['file']) ?>); } catch (e) {}</script>
@@ -433,10 +406,8 @@ try { (function (f) { var r = JSON.parse(localStorage.getItem('recentTools') || 
   function warn() {
     if (note || box.children.length) return;
     note = document.createElement('div'); note.id = 'bootwarn'; note.className = 'note warn'; note.setAttribute('role', 'alert');
-    note.innerHTML = <?= json_encode($tr
-        ? '<b>Araç yüklenemedi ya da çok yavaş yükleniyor.</b> Tarayıcı aracın program dosyalarını alamadı (bağlantı kesintisi ya da sunucunun güvenlik kontrolü olabilir). Verileriniz bu tarayıcıda kalır. Sayfayı yenileyin; sorun sürerse bu sitenin açık diğer sekmelerini kapatıp yeniden deneyin. '
-        : '<b>The tool did not load, or is loading very slowly.</b> The browser did not receive its program files (a connection problem or the server\'s security check). Your data stay in this browser. Reload the page; if it persists, close other open tabs of this site and try again. ', JSON_UNESCAPED_UNICODE) ?>;
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'btn small'; b.textContent = <?= json_encode($tr ? 'Yenile' : 'Reload', JSON_UNESCAPED_UNICODE) ?>;
+    note.innerHTML = <?= json_encode('<b>The tool did not load, or is loading very slowly.</b> The browser did not receive its program files (a connection problem or the server\'s security check). Your data stay in this browser. Reload the page; if it persists, close other open tabs of this site and try again. ', JSON_UNESCAPED_UNICODE) ?>;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'btn small'; b.textContent = <?= json_encode('Reload', JSON_UNESCAPED_UNICODE) ?>;
     b.addEventListener('click', function () { location.reload(); }); note.appendChild(b);
     box.parentNode.insertBefore(note, box);
   }

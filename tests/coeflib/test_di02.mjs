@@ -29,8 +29,8 @@ ok(L.problemsOf(all.find(s => s.tool === 'siteindex'), extraCheck).some(q => q.c
 ok(validateCoef({ ...all[0], tool: 'nope' }).length > 0, 'a set of an unknown tool is invalid');
 
 // filters
-const f1 = L.filterSets(all, { q: 'GOVDE profili' });
-ok(f1.length === all.filter(s => s.tool === 'taper').length && f1.length > 0, 'search is case- and accent-insensitive and matches the tool name (gövde profili → taper sets)');
+const f1 = L.filterSets(all, { q: 'STEM taper' });
+ok(f1.length === all.filter(s => s.tool === 'taper').length && f1.length > 0, 'search is case- and accent-insensitive and matches the tool name (stem taper → taper sets)');
 ok(L.filterSets(all, { tool: 'growth' }).every(s => s.tool === 'growth') && L.filterSets(all, { tool: 'growth', q: 'isparta' }).length === formsFor('growth').length, 'tool filter and region search combine');
 ok(['ISPARTA', 'ısparta', 'İsparta'].every(q => L.filterSets(all, { q }).length === formsFor('growth').length), 'Turkish I/ı/İ/i are the same letter in a search');
 ok(L.filterSets(all, { q: 'abies bolu' }).length === formsFor('siteindex').length + formsFor('biomass').length + formsFor('bark').length + formsFor('ccf').length + formsFor('volume').length + formsFor('nls').length && L.filterSets(all, { q: 'abies istanbul' }).length === 0, 'all words must occur');

@@ -1,10 +1,11 @@
-// User guide (kilavuz.php, inc/guide/{tr,en}/<id>.php): structure and agreement with the tools.
+// User guide (kilavuz.php, inc/guide/en/<id>.php): structure and agreement with the tools.
 //   node tests/site/test_guide.mjs
 // One file per section and language; the sections in kilavuz.php's order (general, workflow, then site_tools()) are read
 // and joined, so the checks below see the whole guide. Every tool has a section in both languages (same ids, same
 // number of subsections); every section opens and closes once; interface labels the guide names (buttons, tabs,
 // options) are present in the tools' own interface strings, so a renamed label breaks the test instead of leaving the
 // guide wrong; the DOI is the site's; every tool is on at least one task card of the start page.
+import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -17,23 +18,22 @@ const site = await rd('inc/site.php');
 const tools = [...site.matchAll(/'file' => '([a-z-]+)\.php', 'v' =>/g)].map(m => m[1]);
 ok(tools.length >= 7 && tools.length === (site.match(/'file' => '[a-z0-9-]+\.php'/g) || []).length, `tools read from site_tools(): ${tools.length}`);
 const order = ['genel', 'is-akisi', 'sorun-giderme', ...tools];
-const files = { tr: (await readdir(path.join(root, 'inc/guide/tr'))).sort(), en: (await readdir(path.join(root, 'inc/guide/en'))).sort() };
-ok(files.tr.join() === files.en.join(), 'the same section files in both languages');
-ok(order.every(id => files.tr.includes(id + '.php')) && files.tr.every(f => order.includes(f.replace(/\.php$/, ''))), 'a file for the general part, the workflow and every tool, and no other: ' + files.tr.filter(f => !order.includes(f.replace(/\.php$/, ''))));
-const G = { tr: '', en: '' };
-for (const l of ['tr', 'en']) for (const id of order) {
+const files = { en: (await readdir(path.join(root, 'inc/guide/en'))).sort() };
+ok(!existsSync(path.join(root, 'inc/guide/tr')), 'no Turkish guide (English only)');
+ok(order.every(id => files.en.includes(id + '.php')) && files.en.every(f => order.includes(f.replace(/\.php$/, ''))), 'a file for the general part, the workflow and every tool, and no other: ' + files.en.filter(f => !order.includes(f.replace(/\.php$/, ''))));
+const G = { en: '' };
+for (const l of ['en']) for (const id of order) {
   if (!files[l].includes(id + '.php')) continue;
   const t = await rd(`inc/guide/${l}/${id}.php`);
   ok(t.startsWith('<section class="card guide-sec">\n<?= $sec(\'' + id + "'") && t.trimEnd().endsWith('</section>'), `${l}/${id}.php: one section whose heading id is the file name`);
   G[l] += t + '\n';
 }
 const ids = s => [...s.matchAll(/\$sec\('([a-z-]+)'/g)].map(m => m[1]);
-ok(ids(G.tr).join() === ids(G.en).join() && ids(G.tr).join() === order.join(), 'same sections in the same order in both languages: ' + ids(G.tr));
+ok(ids(G.en).join() === order.join(), 'sections in the order of the tools: ' + ids(G.en));
 const subs = s => s.split(/<section /).slice(1).map(x => (x.match(/<h3>/g) || []).length);
 for (const [k, g] of Object.entries(G)) { const parts = g.split('<section ').slice(1); ok(parts.every(x => (x.match(/<\/section>/g) || []).length === 1), `${k}: every section closes before the next one opens (sections are not nested)`); }
-ok(subs(G.tr).join() === subs(G.en).join(), 'same number of subsections per section: ' + subs(G.tr) + ' / ' + subs(G.en));
 const doi = (site.match(/const SITE_DOI = '([^']+)'/) || [])[1];
-ok(doi && G.tr.includes(doi) && G.en.includes(doi), 'the DOI in the guide is the site\'s');
+ok(doi && G.en.includes(doi), 'the DOI in the guide is the site\'s');
 ok(/href="kilavuz\.php\?k=<\?= h\(basename\(\$cur\['file'\], '\.php'\)\) \?>"/.test(site), 'every tool header links to its own guide page');
 const cards = await rd('inc/guide/cards.php'), onCards = new Set([...cards.matchAll(/'ids' => \[([^\]]*)\]/g)].flatMap(m => [...m[1].matchAll(/'([a-z-]+)'/g)].map(x => x[1])));
 ok(tools.every(t => onCards.has(t)), 'every tool is on at least one task card: missing ' + tools.filter(t => !onCards.has(t)));
@@ -72,14 +72,13 @@ const L = {
 for (const [file, pairs] of Object.entries(L)) {
   const src = await rd(file);
   for (const [tr, en] of pairs) {
-    ok(src.includes(tr) && G.tr.includes(tr), `"${tr}": in ${file} and in the Turkish guide`);
     if (en) ok(src.includes(en) && G.en.includes(en), `"${en}": in ${file} and in the English guide`);
   }
 }
 // numbers the guide states, against the code
 const chk = await rd('assets/lab/checker/calc.js'), hd = await rd('assets/lab/hd/ui.js'), smp = await rd('assets/lab/sampling/ui.js');
-ok(/dbhMin: 1, dbhMax: 200, hMin: 2, hMax: 60, slMin: 15, slMax: 200/.test(chk) && G.tr.includes('1–200 cm') && G.en.includes('1–200 cm'), 'checker default diameter limits 1–200 cm');
-ok(/bh:\s*'1\.3'|bh: 1\.3|'1\.3'/.test(hd) && G.tr.includes('1,3 m') && G.en.includes('1.3 m'), 'breast height default 1.3 m');
+ok(/dbhMin: 1, dbhMax: 200, hMin: 2, hMax: 60, slMin: 15, slMax: 200/.test(chk) && G.en.includes('1–200 cm'), 'checker default diameter limits 1–200 cm');
+ok(/bh:\s*'1\.3'|bh: 1\.3|'1\.3'/.test(hd) && G.en.includes('1.3 m'), 'breast height default 1.3 m');
 ok(/eText:\s*'10'/.test(smp) && /level(Text)?:\s*'95'/.test(smp), 'sampling defaults E = 10 %, 95 %');
 console.log(`guide: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

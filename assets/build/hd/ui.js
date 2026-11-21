@@ -175,19 +175,16 @@ function radarChart(o) {
 __fb_m["core/citation.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "FORMATS": () => FORMATS, "NAMES": () => NAMES, "cite": () => cite, "plain": () => plain });
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
-// Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// Input c = { author:{ family, given }, year, base (canonical URL with trailing '/'), site:{ en },
+//             tool: null | { file, v, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
 // doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
 const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MON_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const MLA_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const IEEE_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
 const VAN_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SHORT_TR = ['Oca.', 'Şub.', 'Mar.', 'Nis.', 'May.', 'Haz.', 'Tem.', 'Ağu.', 'Eyl.', 'Eki.', 'Kas.', 'Ara.'];
-const VAN_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
 const FORMATS = ['apa', 'mla', 'chicago', 'harvard', 'ieee', 'vancouver', 'bibtex', 'ris'];
 const NAMES = { apa: 'APA 7', mla: 'MLA 9', chicago: 'Chicago (author-date)', harvard: 'Harvard', ieee: 'IEEE', vancouver: 'Vancouver', bibtex: 'BibTeX', ris: 'RIS' };
@@ -197,9 +194,9 @@ const it = s => `<i>${esc(s)}</i>`;
 const plain = html => html.replace(/<\/?i>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 function parts(c) {
-  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1, tr = c.lang === 'tr';
-  const site = c.site[c.lang], tool = c.tool ? c.tool[c.lang] : null;
-  return { tr, y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
+  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1;
+  const site = c.site.en, tool = c.tool ? c.tool.en : null;
+  return { y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
     url: c.base + (c.tool ? c.tool.file : ''), fam: c.author.family, given: c.author.given, ini: c.author.given.charAt(0) + '.', year: c.year };
 }
 const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -208,54 +205,42 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 function cite(fmt, c) {
   const body = core(fmt, c);
   if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
-  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  const u = esc('https://doi.org/' + c.doi);
   switch (fmt) {
-    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'apa': return `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
     case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
     case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
     default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
   }
 }
 function core(fmt, c) {
-  const p = parts(c), tr = p.tr, v = p.v;
+  const p = parts(c), v = p.v;
   switch (fmt) {
     case 'apa':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Sürüm ${v})` : ''} [Web uygulaması].${p.container ? ` ${esc(p.container)}.` : ''} ${p.d} ${MON_TR[p.mi]} ${p.y} tarihinde ${esc(p.url)} adresinden erişildi.`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
     case 'mla':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Sürüm ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Erişim ${p.d} ${SHORT_TR[p.mi]} ${p.y}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
     case 'chicago':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Sürüm ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Erişim ${p.d} ${MON_TR[p.mi]} ${p.y}. ${esc(p.url)}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
     case 'harvard':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (sürüm ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Erişim adresi: ${esc(p.url)} (Erişim tarihi: ${p.d} ${MON_TR[p.mi]} ${p.y}).`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
     case 'ieee': {
-      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ${tr ? 'sür.' : 'ver.'} ${v}, ` : `${it(p.title)}, `;
-      return tr
-        ? `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Çevrimiçi]. Erişim: ${esc(p.url)} (erişim tarihi: ${p.d} ${SHORT_TR[p.mi]} ${p.y}).`
-        : `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
+      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ver. ${v}, ` : `${it(p.title)}, `;
+      return `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
     }
     case 'vancouver':
-      return tr
-        ? `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [İnternet]. ${v ? `Sürüm ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [erişim ${p.y} ${VAN_TR[p.mi]} ${p.d}]. Erişim adresi: ${esc(p.url)}`
-        : `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
+      return `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
     case 'bibtex': {
       const key = `${p.fam.toLowerCase()}${p.year}${c.tool ? c.tool.file.replace(/\.php$/, '').replace(/[^a-z0-9]/g, '') : 'forestbiometry'}`;
       const tt = p.title.replace(/–/g, '--');
-      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
+      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{Web application${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (`Version ${v}. `) : ''}Accessed ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `Version ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }
@@ -273,11 +258,8 @@ __fb_r("core/reset-all.js");
    // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
-const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
+const ui = 'en';
 const T = {
-  tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
-    copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
     note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
@@ -390,12 +372,13 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
-// Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
-// languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
-const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
+// Tiny i18n helper. The site is English only (20 Nov 2026; Turkish removed from the code 21 Nov 2026): `lang` is
+// always 'en' and every dictionary has a single `en` table. Numbers on screen use a decimal point and no thousands
+// separator; the interface never changes how data are parsed or stored.
+const lang = 'en';
 function makeT(dict) {
   return (key, p) => {
-    const s = (dict[lang] && dict[lang][key]) ?? dict.tr[key];
+    const s = dict.en[key];
     if (s == null) return key;
     return typeof s === 'function' ? s(p || {}) : s;
   };
@@ -403,23 +386,23 @@ function makeT(dict) {
 /**
  * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
  * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
- * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * point (English only). '−' is not used: negative numbers keep
  * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
  * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
 /** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
-const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+const SCREEN_DECIMAL = '.';
 /** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
-const LIST_SEP = lang === 'tr' ? '; ' : ', ';
+const LIST_SEP = ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
+  return s === '-0' ? '0' : s;
 }
-/** Decimal separator of CSV exports (both languages). */
+/** Decimal separator of CSV exports. */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -437,12 +420,6 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
-    auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
-    encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
-    fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
-    comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
     auto: p => `detected: ${p.d}`, header: 'First row is a header', enc: 'Text encoding', sheet: 'Worksheet', pasted: 'pasted table',
     encwarn: 'Reading the file as UTF-8 produced broken characters; Turkish Excel CSV files are often Windows-1254.',
@@ -783,14 +760,12 @@ const rComment = text => String(text).split('\n').map(l => ('# ' + l).trimEnd())
  * o = { title, tool: { id, version }, site, created, lang, packages: ['nlme', …], notes: [lines] }
  */
 function header(o) {
-  const tr = o.lang === 'tr', pk = o.packages || [];
+  const pk = o.packages || [];
   const lines = [
     `${o.title}`,
-    tr ? `Üreten: ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}` : `Written by ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}`,
-    tr ? 'Bu betik aracın yaptığı analizi aynı ayarlarla R\'da yeniden yapar. Veri betiğe gömülmez: aşağıdaki dosya adını kendi dosyanızın yoluyla değiştirin.'
-       : 'This script redoes the tool\'s analysis in R with the same settings. The data are not embedded: change the file name below to the path of your file.',
-    tr ? `Paketler: ${pk.length ? pk.join(', ') : 'yalnızca temel R (stats, utils)'}. Sürümler çalıştırınca yazdırılır.`
-       : `Packages: ${pk.length ? pk.join(', ') : 'base R only (stats, utils)'}. Their versions are printed when the script runs.`,
+    `Written by ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}`,
+    'This script redoes the tool\'s analysis in R with the same settings. The data are not embedded: change the file name below to the path of your file.',
+    `Packages: ${pk.length ? pk.join(', ') : 'base R only (stats, utils)'}. Their versions are printed when the script runs.`,
     ...(o.notes || []),
   ];
   const libs = pk.map(p => `suppressPackageStartupMessages(library(${p}))`);
@@ -808,10 +783,10 @@ function header(o) {
  * significant digits, the same double) and read back by fb_num like every other cell.
  */
 function readBlock(imp, lang, fileName, decimal = '.') {
-  const tr = lang === 'tr', kind = imp && imp.kind, header = !imp || imp.header !== false;
+  const kind = imp && imp.kind, header = !imp || imp.header !== false;
   const file = String(fileName || (imp && imp.name) || 'data.csv').replace(/\s+\([^)]*\)$/, '');   // the sample's label "(simulated)" is not part of its file name
   if (kind === 'xlsx') {
-    return [rComment(tr ? 'Veri: Excel dosyası (readxl paketi gerekir); sayılar seçilen ondalık ayırıcıyla metne yazılır, sonra bütün hücreler metin olarak okunur.' : 'Data: Excel file (needs the readxl package); numbers written as text with the chosen decimal separator, every cell then read as text.'),
+    return [rComment('Data: Excel file (needs the readxl package); numbers written as text with the chosen decimal separator, every cell then read as text.'),
       `data_file <- ${rStr(file)}`,
       `xl <- readxl::read_excel(data_file, sheet = ${rStr(imp.sheet || 1)}, col_names = ${header ? 'TRUE' : 'FALSE'}, col_types = "list", .name_repair = "minimal")`,
       `xl_cell <- function(v) if (is.null(v) || length(v) == 0 || (length(v) == 1 && is.na(v))) "" else if (is.numeric(v)) sub(".", ${rStr(decimal)}, sprintf("%.17g", v), fixed = TRUE) else as.character(v)`,
@@ -822,9 +797,8 @@ function readBlock(imp, lang, fileName, decimal = '.') {
   const delim = csvLike ? ',' : (imp && (imp.delim || imp.detected)) || ',';
   const enc = csvLike ? 'UTF-8' : imp && imp.encoding ? String(imp.encoding).toUpperCase().replace('WINDOWS-', 'windows-') : 'UTF-8';
   const note = csvLike
-    ? (tr ? 'Veri: aracın betikle birlikte indirdiği CSV dosyası (tablo tarayıcıdaydı; aynı tablo, virgülle ayrılmış, UTF-8).' : 'Data: the CSV file the tool downloads with this script (the table was in the browser; the same table, comma-separated, UTF-8).')
-    : (tr ? `Veri: metin dosyası; ayırıcı ${JSON.stringify(delim)}, karakter kodlaması ${enc}, ${header ? 'ilk satır başlık' : 'başlık satırı yok'}; bütün hücreler metin olarak okunur.`
-          : `Data: text file; delimiter ${JSON.stringify(delim)}, encoding ${enc}, ${header ? 'first row is a header' : 'no header row'}; every cell read as text.`);
+    ? ('Data: the CSV file the tool downloads with this script (the table was in the browser; the same table, comma-separated, UTF-8).')
+    : (`Data: text file; delimiter ${JSON.stringify(delim)}, encoding ${enc}, ${header ? 'first row is a header' : 'no header row'}; every cell read as text.`);
   return [rComment(note),
     `data_file <- ${rStr(csvLike ? csvName(imp) : file)}`,
     `dat <- read.table(data_file, sep = ${rStr(delim)}, header = ${header ? 'TRUE' : 'FALSE'}, quote = "\\"", comment.char = "", colClasses = "character",`,
@@ -869,7 +843,7 @@ const FB_OUT = `fb_out <- function(x) {
  */
 const fbModel = lang => `fb_model <- function(rhs, params, vars) {
   fn <- tryCatch(deriv(rhs, params, function.arg = c(params, vars)), error = function(e) NULL)
-  if (is.null(fn)) message(${rStr(lang === 'tr' ? 'deriv bu formülün türevini alamıyor (örneğin abs); nls sayısal türev kullanır' : 'deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives')})
+  if (is.null(fn)) message(${rStr('deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives')})
   form <- if (is.null(fn)) call("~", quote(.y), rhs) else call("~", quote(.y), as.call(c(quote(fn), lapply(c(params, vars), as.name))))
   list(rhs = rhs, params = params, fn = fn, form = as.formula(form))
 }
@@ -893,8 +867,6 @@ const { download } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { embed: 'Girdi verisini kayda ekle', embedHelp: 'İşaretli değilse JSON kaydında girdi dosyalarının yalnızca SHA-256 parmak izi bulunur; işaretliyse verinin kendisi de girer ve kayıt tek başına yeniden üretilebilir. Kaydı paylaşırsanız veriyi de paylaşmış olursunuz.',
-    fail: 'Kayıt hazırlanamadı', btn: 'Çalışma kaydı (JSON)' },
   en: { embed: 'Include the input data in the record', embedHelp: 'Unchecked, the JSON record holds only the SHA-256 fingerprint of each input file; checked, the data itself goes in too and the record reproduces on its own. If you share the record, you share the data.',
     fail: 'The record could not be prepared', btn: 'Run record (JSON)' },
 });
@@ -1146,19 +1118,7 @@ const { get, del, keys } = __fb_r("core/store.js");
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
-const tr = document.documentElement.lang !== 'en';
-const T = tr ? {
-  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
-  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
-  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
-    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
-    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
-    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
-    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
-    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
-    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
-  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
-} : {
+const T = {
   label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
   none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
   ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
@@ -1813,7 +1773,7 @@ function cellText(c) {
   return c.w != null ? c.w : String(c.v);
 }
 function padTo(a, n) { const r = a.slice(); while (r.length < n) r.push(''); return r; }
-function colName(i) { return (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'Column ' : 'Sütun ') + (i + 1); }
+function colName(i) { return 'Column ' + (i + 1); }
 function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k = seen.get(x) || 0; seen.set(x, k + 1); return k ? `${x} (${k + 1})` : x; }); }
 };
 
@@ -2351,89 +2311,6 @@ const { makeT } = __fb_r("core/i18n.js");
 // Height–Diameter Modelling: TR/EN texts.
 
 
-const tr = {
-  'step.1': 'Veri', 'step.2': 'Ayarlar', 'step.3': 'Sonuçlar',
-  'privacy': 'Dosyanız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Oturum yalnızca bu tarayıcıda (IndexedDB) saklanır.',
-  'imp.h': 'Ağaç tablosu', 'imp.sub': 'Her satır bir ağaç: göğüs çapı, ölçülen boy (boş olabilir), isteğe bağlı örnek alan ve tür. Boyu boş ağaçlar fit işlemine girmez; onlar için ayrı bir tahmin sütunu üretilir.',
-  'ds.h': 'Onaylanmış veriden al', 'ds.sub': 'Veri Denetçisi\'nde onaylanan veri (çap cm, boy m, örnek alan, tür, dönem).', 'ds.use': 'Onaylanmış veriyi aç', 'ds.none': 'Bu tarayıcıda onaylanmış veri yok.',
-  'sample': 'Örnek veriyi yükle', 'sample.note': 'Örnek veri sabit tohumla üretilmiş benzetimdir (gerçek ölçüm değildir): 8 örnek alan, iki tür, boyu eksik ağaçlar, okunamayan bir boy, boyu göğüs yüksekliğinin altında bir ağaç ve çap aralığı dışında kalan iki eksik boylu ağaç içerir.',
-  'next': 'Devam', 'back': 'Geri', 'calc': 'Hesapla', 'reset': 'Oturumu sıfırla', 'need.data': 'Önce bir tablo yükleyin.',
-  'restored': p => `Önceki oturum geri yüklendi (${p.when}).`, 'busy': p => `Hesaplanıyor… ${p.what || ''}`, 'none': '— yok —', 'all': '— hepsi —',
-  'col.h': 'Sütunlar ve birimler', 'col.d': 'Çap sütunu', 'col.dunit': 'Çap birimi', 'col.h2': 'Boy sütunu', 'col.hunit': 'Boy birimi',
-  'col.plot': 'Örnek alan sütunu (isteğe bağlı)', 'col.sp': 'Tür sütunu (isteğe bağlı)', 'col.spval': 'Fit edilecek tür', 'col.filter': 'Süzgeç sütunu (isteğe bağlı, ör. dönem)', 'col.fval': 'Süzgeç değeri',
-  'col.need': 'Çap ve boy sütunlarını seçin.', 'col.same': 'Çap ve boy aynı sütun olamaz.',
-  'col.sp.note': 'Bir tür seçilirse yalnızca o türün ağaçları fit edilir ve tahmin edilir. "Hepsi" seçilirse türler tek eğriyle fit edilir; türler arasında fark varsa her tür için ayrı çalıştırın.',
-  'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'Nokta (24.5)', 'dec.comma': 'Virgül (24,5)', 'dec.choose': 'Ondalık ayırıcıyı seçin.',
-  'dec.v.dot': 'Ondalık nokta kullanılmış görünüyor.', 'dec.v.comma': 'Ondalık virgül kullanılmış görünüyor.', 'dec.v.none': 'Metin olarak yazılmış ondalıklı sayı yok; varsayılan nokta seçildi.',
-  'dec.v.ambiguous': p => `Belirsiz: ${p.ex} gibi değerler ondalık da binlik ayırıcılı tam sayı da olabilir; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.`, 'dec.v.conflict': 'Çelişkili: nokta ve virgül birlikte kullanılmış; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.',
-  'bh.h': 'Göğüs yüksekliği', 'bh.label': 'Göğüs yüksekliği bh (m)',
-  'bh.sub': 'Çap, yerden bh yüksekliğinde ölçülmüş kabul edilir. Bütün modeller h = bh + f(d) biçimindedir: d → 0 iken boy bh\'ye iner. Türkiye ve Avrupa\'da genellikle 1,30 m; ABD\'de 4,5 ft = 1,37 m. Boyu bh\'ye eşit ya da küçük ağaçların göğüs çapı olamaz; fit işlemine alınmaz ve sayıları raporlanır.',
-  'bh.bad': 'Göğüs yüksekliği 0 ile 3 m arasında bir sayı olmalı.',
-  'cv.h': 'Çapraz doğrulama', 'cv.plot': 'Örnek alan bazında: bir örnek alanın bütün ağaçları birlikte dışarıda tutulur (yeni örnek alanlara genelleme)',
-  'cv.tree': 'Ağaç bazında: ağaçlar rastgele 10 kata ayrılır (aynı örnek alanlardaki yeni ağaçlar; yeni örnek alanlara genellemeyi ölçmez)', 'cv.none': 'Yapma',
-  'cv.plot.few': 'Örnek alan bazında doğrulama için en az 2 örnek alan gerekir. Örnek alan sütunu seçilmediyse ya da tek örnek alan varsa bu seçenek yoktur; ağaç bazındaki doğrulama yeni örnek alanlara genellemeyi göstermez.',
-  'cv.plot.fewwarn': p => `Yalnızca ${p.n} örnek alan var: örnek alan bazında hata kestirimi çok az örnek alana dayanır ve kararsız olabilir.`,
-  'cv.sub': p => `Her katta modeller yalnızca model geliştirme ağaçlarıyla fit edilir (başlangıç değerleri de model geliştirme verisinden); dışarıdaki ağaçlar yalnızca tahmin edilir. Katlar sabit tohumla (${p.seed}) kurulur ve tekrarlanabilir. ${p.lopo} örnek alana kadar her kat bir örnek alandır; daha fazlasında örnek alanlar ${p.k} kata dağıtılır.`,
-  'tab.models': 'Modeller', 'tab.compare': 'Karşılaştırma', 'tab.charts': 'Grafikler', 'tab.predict': 'Tahmin', 'tab.export': 'İndir',
-  'data.sum': p => `Fit işleminde kullanılan ağaç: ${p.n}; çap aralığı ${p.dmin}–${p.dmax} cm${p.plots ? `; ${p.plots} örnek alan` : ''}. Boyu eksik (tahmin edilecek) ağaç: ${p.missing}.`,
-  'data.exc': p => `Fit etme dışında: ${p.dEmpty} boş çap, ${p.dBad} okunamayan çap, ${p.dNonpos} sıfır ya da negatif çap, ${p.hBad} okunamayan boy, ${p.hLeBh} boyu bh'ye eşit ya da küçük${p.species ? `, ${p.species} başka tür` : ''}${p.filter ? `, süzgeç dışında ${p.filter}` : ''}.`,
-  'inf.multi': p => `Veride ${p.n} örnek alan var. Aynı örnek alandaki ağaçlar bağımsız gözlem değildir; sabit etkili modelin standart hataları bu bağımlılığı yok sayar ve olduğundan küçük çıkar. Bu yüzden standart hata, parametre güven aralığı, ortalama eğrinin güven aralığı, tek ağacın tahmin aralığı ve AIC/BIC bu sürümde verilmez. Modelleri aşağıdaki örnek alan bazında çapraz doğrulamayla karşılaştırın. Örnek alan etkilerini modellemek için Karma Etkili Modeller aracını kullanın.`,
-  'inf.noplot': 'Örnek alan sütunu seçilmedi: ağaçlar bağımsız gözlem kabul edilir. Veri birden çok örnek alandan geliyorsa standart hatalar, aralıklar ve AIC geçerli değildir; o durumda örnek alan sütununu seçin.',
-  'inf.one': 'Tek örnek alan: ağaçlar bağımsız gözlem kabul edilir; standart hatalar ve aralıklar bu varsayıma dayanır.',
-  'm.naslund': 'Näslund', 'm.michailoff': 'Michailoff', 'm.curtis': 'Curtis', 'm.power': 'Kuvvet (Stoffels ve van Soest)', 'm.richards': 'Chapman–Richards', 'm.weibull': 'Weibull (Yang ve ark.)',
-  'm.short.power': 'Kuvvet', 'm.short.weibull': 'Weibull',
-  'src.naslund': 'Näslund (1936)', 'src.michailoff': 'Michailoff (1943)', 'src.curtis': 'Curtis (1967)', 'src.power': 'Stoffels ve van Soest (1953)', 'src.richards': 'Richards (1959)', 'src.weibull': 'Yang, Kozak ve Smith (1978)',
-  'src.note': 'Parametrelemeler Mehtätalo\'nun lmfor R paketindeki (HDmodels) biçimlerle aynıdır; künyeler METHODS.md §10\'da. Parametreler d cm, h m birimleri içindir; başka birimle kestirilen katsayılarla karıştırılamaz.',
-  'p.model': 'Model', 'p.formula': 'Biçim', 'p.status': 'Durum', 'p.param': 'Parametre', 'p.est': 'Kestirim', 'p.se': 'Standart hata', 'p.ci': '%95 güven aralığı (parametre)', 'p.iter': 'Yineleme',
-  'p.asym': 'Asimptot bh + a (m)', 'p.n': 'n', 'p.p': 'p', 'p.src': 'Kaynak',
-  's.ok': 'yakınsadı', 's.toofew': 'yetersiz veri', 's.nostart': 'başlangıç değeri bulunamadı', 's.noconverge': 'yakınsamadı', 's.diverged': 'ıraksadı', 's.invalid': 'başlangıçta tanımsız',
-  'sx.toofew': p => `En az ${p.k} ağaç ve ${p.u} farklı çap gerekir.`, 'sx.nostart': 'Veriden geçerli bir başlangıç değeri türetilemedi.',
-  'sx.noconverge': 'Yineleme sınırına ulaşıldı ya da adım bulunamadı; parametre verilmez.',
-  'sx.diverged': p => `Asimptot veri tarafından belirlenemiyor (ölçülen en büyük h − bh değerinin ${p.k} katını aştı); parametre verilmez. Veri bu çap aralığında doygunluğa ulaşmayan, neredeyse doğrusal bir ilişki gösteriyor olabilir.`,
-  'sx.invalid': 'Model başlangıç değerinde tanımsız.',
-  'w.sign': p => `Beklenen işaret dışında (> 0 beklenir): ${p.params}.`, 'w.singular': 'JᵀJ tekil: standart hata hesaplanamadı.',
-  'w.corr': p => `${p.a} ile ${p.b} parametre kestirimleri arasındaki korelasyon ${p.r}: parametreler birbirinden zor ayrılıyor.`,
-  'c.fit.h': 'Fit etme verisinde başarı (bütün modeller aynı ağaçlarla)', 'c.rmse': 'RMSE (m)', 'c.mae': 'MAE (m)', 'c.bias': 'Yanlılık (m)', 'c.sigma': 'Artık standart hatası σ̂ (m)', 'c.aic': 'AIC', 'c.daic': 'ΔAIC', 'c.bic': 'BIC', 'c.ll': 'ln L',
-  'c.fit.note': 'e = ölçülen − tahmin. RMSE = √(SSE/n) (Model Başarısı Değerlendiricisi ile aynı tanım); σ̂ = √(SSE/(n − p)). Fit etme verisindeki hatalar iyimserdir; genelleme için çapraz doğrulamaya bakın.',
-  'c.aic.note': 'AIC/BIC: normal, bağımsız ve sabit varyanslı hata olabilirliği; σ dahil k = p + 1 parametre. Bütün modeller aynı ağaçlara ve bağımlı değişkenin aynı ölçeğine (h, m) fit edildiği için karşılaştırılabilir. ΔAIC en küçük AIC\'ye göredir.',
-  'c.aic.off': 'AIC/BIC verilmez: veri birden çok örnek alandan geliyor ve bağımsız hata olabilirliği bu veriye uymuyor.',
-  'c.cv.h': 'Çapraz doğrulama (dışarıda tutulan ağaçlarda)', 'c.cv.none': 'Çapraz doğrulama seçilmedi.',
-  'c.cv.kind.plot': p => `Örnek alan bazında; ${p.k} kat${p.lopo ? ' (her kat bir örnek alan)' : ''}. Yeni örnek alanlara genellemeyi değerlendirir.`,
-  'c.cv.kind.tree': p => `Ağaç bazında rastgele; ${p.k} kat. Aynı örnek alanlardaki yeni ağaçları değerlendirir; yeni örnek alanlara genellemeyi göstermez.`,
-  'c.cv.same': p => `Bütün modeller aynı ${p.n} dışarıda tutulan ağaçla karşılaştırıldı.`,
-  'c.cv.dropped': p => `Bir ya da daha fazla model yakınsamadığı için şu katlar karşılaştırmadan çıkarıldı (bütün modeller için): ${p.list}.`,
-  'c.cv.out': p => `Dışarıda tutulan ağaçlardan ${p.n} tanesi o katın model geliştirme verisinin çap aralığı dışındaydı (ekstrapolasyon).`,
-  'c.cv.sel': 'Seçim süreci (her katta model geliştirme AIC\'si en küçük model)', 'c.cv.chosen': 'Seçilme sayısı',
-  'c.cv.sel.note': 'Seçim süreci satırı, model seçimini de katın içinde yapar: her katta yalnızca model geliştirme ağaçlarına göre AIC\'si en küçük model seçilir ve dışarıdaki ağaçlar onunla tahmin edilir. En küçük çapraz doğrulama hatasına bakarak seçilen modelin kendi satırındaki hata iyimserdir; seçilmiş bir modelin beklenen hatası için bu satıra bakın.',
-  'c.cv.folds': 'Katlar', 'c.cv.fold': 'Kat', 'c.cv.ntr': 'Geliştirme', 'c.cv.nte': 'Dışarıda', 'c.cv.nout': 'Aralık dışı', 'c.cv.selm': 'Seçilen',
-  'ch.pick': 'Ayrıntılı grafik ve tahmin modeli', 'ch.pick.none': '— model seçin —', 'ch.need': 'Artık grafikleri ve tahminler için bir model seçin.',
-  'ch.data': p => `Ölçülen boylar ve fit edilen eğriler (${p.n} ağaç)`, 'ch.d': 'Çap d (cm)', 'ch.h': 'Boy h (m)', 'ch.e': 'e = ölçülen − tahmin (m)', 'ch.fit': 'Modelden hesaplanan boy (m)',
-  'ch.resfit': p => `Artıklar ve modelden hesaplanan boy, ${p.m}`, 'ch.resd': p => `Artıklar ve çap, ${p.m}`,
-  'ch.bands': 'Seçili model için kesikli çizgiler ortalama eğrinin %95 güven aralığını, noktalı çizgiler tek ağacın %95 tahmin aralığını gösterir.',
-  'ch.range': 'Eğriler yalnızca fit etme verisinin çap aralığında çizilir.', 'ch.svg': 'Grafiği indir (SVG)', 'ch.models': 'Gösterilen modeller',
-  'ch.spread.h': 'Artık yayılımı (modelden hesaplanan boyun üçte birlik dilimlerinde)', 'ch.spread.part': 'Dilim', 'ch.spread.sd': 'Artıkların standart sapması (m)',
-  'ch.spread.note': 'Bilgi amaçlıdır: aralıklar sabit hata varyansı varsayar. Dilimlerdeki standart sapmalar belirgin biçimde artıyor ya da azalıyorsa tahmin aralığı bazı çaplarda fazla dar, bazılarında fazla geniş olur.',
-  'ch.plot.h': 'Örnek alan bazında ortalama hata', 'ch.plot.note': 'Örnek alanların ortalama hatası sıfırdan sistematik olarak sapıyorsa örnek alan etkisi vardır; sabit etkili tek eğri bunu açıklamaz (örnek alan etkisini modellemek için Karma Etkili Modeller aracını kullanın).',
-  'pr.h': 'Boyu eksik ağaçlar', 'pr.sum': p => `${p.n} ağacın boyu eksik; ${p.out} tanesi fit etme verisinin çap aralığı (${p.dmin}–${p.dmax} cm) dışında.`,
-  'pr.sep': 'Tahmin edilen boy ayrı bir sütundadır; ölçülen boy sütunu değiştirilmez. Dışa aktarmada "durum" sütunu her satırın ölçülen mi, tahmin mi olduğunu söyler.',
-  'pr.row': 'Satır', 'pr.plot': 'Örnek alan', 'pr.sp': 'Tür', 'pr.d': 'd (cm)', 'pr.hhat': 'Tahmin edilen boy (m)', 'pr.flag': 'Aralık', 'pr.outside': 'aralık dışı', 'pr.inside': 'içinde',
-  'pr.more': p => `İlk ${p.k} satır gösteriliyor; tamamı dışa aktarmada.`, 'pr.nomissing': 'Boyu eksik ağaç yok.',
-  'nd.h': 'Yeni çaplar için tahmin', 'nd.sub': p => `Çapları yazın (${p.unit}; boşluk, satır sonu ya da ";" ile ayırın). Ondalık ayırıcı ayarlardaki gibidir.`,
-  'nd.bad': p => `Okunamayan ya da pozitif olmayan: ${p.list}`,
-  'nd.ci': 'Ortalama eğrinin %95 güven aralığı', 'nd.pi': 'Tek ağacın %95 tahmin aralığı', 'nd.lo': 'alt', 'nd.hi': 'üst',
-  'nd.noint': 'Aralık verilmez: veri birden çok örnek alandan geliyor (yukarıdaki açıklama) ya da model için kovaryans hesaplanamadı.',
-  'nd.defs': 'Ortalama eğrinin güven aralığı: o çaptaki ortalama boyun belirsizliği (delta yöntemi, t dağılımı, n − p serbestlik derecesi). Tek ağacın tahmin aralığı: o çaptaki tek bir ağacın boyu için; artık varyansını da içerir ve bağımsız, normal dağılımlı, sabit varyanslı hata varsayar. Her ikisi de modelin doğru biçimde seçildiğini varsayar.',
-  'nd.others': 'Öteki modeller (ŷ, m)',
-  'ex.r': 'R kodu (.R)', 'ex.r.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı satırlar, aynı başlangıç değerleri, aynı çapraz doğrulama katları. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylanmış paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
-  'ex.h': 'Sonuçları indir', 'ex.xlsx': 'Tam rapor (Excel)', 'ex.trees': 'Ağaç tablosu: ölçülen ve tahmin edilen boy (CSV)', 'ex.params': 'Parametreler (CSV)', 'ex.cv': 'Çapraz doğrulama katları (CSV)', 'ex.nd': 'Yeni çap tahminleri (CSV)',
-  'ex.note': 'CSV: her iki dilde "," sütun ayırıcı ve ondalık nokta. Ağaç tablosunda ölçülen boy kaynaktaki hâliyle ve metreye çevrilmiş olarak, tahmin edilen boy ise ayrı sütunda yer alır.',
-  'ex.nomodel': 'Tahmin sütunu için önce "Grafikler" ya da "Tahmin" sekmesinde bir model seçin; seçilmezse ağaç tablosu tahminsiz iner.',
-  'x.k': 'Ayar', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.src': 'Veri', 'x.bh': 'Göğüs yüksekliği (m)', 'x.units': 'Birimler', 'x.cv': 'Çapraz doğrulama', 'x.model': 'Tahmin modeli', 'x.spf': 'Tür', 'x.filter': 'Süzgeç',
-  't.row': 'satir', 't.plot': 'ornek_alan', 't.sp': 'tur', 't.dsrc': 'cap_kaynak', 't.d': 'cap_cm', 't.hsrc': 'boy_kaynak', 't.h': 'boy_olculen_m', 't.state': 'durum', 't.hhat': 'boy_tahmin_m', 't.model': 'tahmin_modeli', 't.out': 'cap_araligi_disinda', 't.fitv': 'model_degeri_m', 't.e': 'artik_olculen_eksi_tahmin_m',
-  'st.fit': 'ölçülen, fit işleminde', 'st.missing': 'boy eksik, tahmin', 'st.lebh': 'ölçülen, boy ≤ bh, fit etme dışı', 'st.hbad': 'boy okunamadı', 'st.dbad': 'çap yok/okunamadı', 'st.dnonpos': 'çap ≤ 0',
-  'yes': 'evet', 'no': 'hayır',
-  'sheet.info': 'Bilgi', 'sheet.params': 'Parametreler', 'sheet.compare': 'Karsilastirma', 'sheet.cv': 'Capraz dogrulama', 'sheet.trees': 'Agaclar', 'sheet.nd': 'Yeni caplar',
-};
 const en = {
   'step.1': 'Data', 'step.2': 'Settings', 'step.3': 'Results',
   'privacy': 'Your file is read and processed in this browser; it is not sent to the server. The session is kept only in this browser (IndexedDB).',
@@ -2517,8 +2394,8 @@ const en = {
   'yes': 'yes', 'no': 'no',
   'sheet.info': 'Info', 'sheet.params': 'Parameters', 'sheet.compare': 'Comparison', 'sheet.cv': 'Cross-validation', 'sheet.trees': 'Trees', 'sheet.nd': 'New diameters',
 };
-const T = makeT({ tr, en });
-const KEYS = { tr: Object.keys(tr), en: Object.keys(en) };
+const T = makeT({ en });
+const KEYS = { en: Object.keys(en) };
 };
 
 // ---- assets/lab/hd/rcode.js
@@ -2550,28 +2427,26 @@ const R_MODELS = {
  * nd = the new diameters (cm) of the page or null, o = { lang, created, fileName }.
  */
 function buildR(s, R, nd, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), col = c => c == null ? null : c + 1, hd = c => c == null ? '' : s.src.headers[c];
+  const col = c => c == null ? null : c + 1, hd = c => c == null ? '' : s.src.headers[c];
   const fd = { cm: 1, mm: 0.1, m: 100 }[s.dunit], fh = { m: 1, dm: 0.1, cm: 0.01 }[s.hunit], p = R.prep;
   const ok = R.fits.filter(f => f.status === 'ok'), sel = s.model && ok.find(f => f.id === s.model);
   const out = [];
-  out.push(header({ title: T('Boy–Çap Modelleme: R kodu', 'Height–Diameter Modelling: R code'), tool: { id: 'boy-cap', version: o.version }, created: o.created, lang: o.lang, packages: [],
-    notes: [T('Modeller doğrusal olmayan en küçük kareler ile fit edilir (araç: Levenberg–Marquardt; R: nls, Gauss–Newton). R aracın çözümünün geldiği başlangıç değerlerinden başlar; orada yakınsamazsa aracın kestirimlerinden başlar ve bunu yazar.',
-      'The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.'),
-    T('Hata = ölçülen − tahmin. RMSE = √(SSE/n); artık standart hatası σ = √(SSE/(n − p)); AIC ve BIC R\'ın logLik\'iyle (k = p + 1), aracınkiyle aynı.', 'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.')] }));
+  out.push(header({ title: 'Height–Diameter Modelling: R code', tool: { id: 'boy-cap', version: o.version }, created: o.created, lang: o.lang, packages: [],
+    notes: ['The models are fitted by nonlinear least squares (tool: Levenberg–Marquardt; R: nls, Gauss–Newton). R starts from the values the tool\'s solution came from; if it does not converge there, it starts from the tool\'s estimates and says so.',
+    'Error = observed − predicted. RMSE = √(SSE/n); residual standard error σ = √(SSE/(n − p)); AIC and BIC from R\'s logLik (k = p + 1), as in the tool.'] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
-  out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
-    `dec <- ${rStr(s.decimal)}          # ${T('ondalık ayırıcı', 'decimal separator')}`,
-    `bh <- ${rNum(p.bh)}               # ${T('göğüs yüksekliği (m)', 'breast height (m)')}`,
+  out.push(rComment('Settings (as in the tool)'),
+    `dec <- ${rStr(s.decimal)}          # decimal separator`,
+    `bh <- ${rNum(p.bh)}               # breast height (m)`,
     `col_d <- ${col(s.dcol)}; f_d <- ${rNum(fd)}   # ${hd(s.dcol)} (${s.dunit} → cm)`,
     `col_h <- ${col(s.hcol)}; f_h <- ${rNum(fh)}   # ${hd(s.hcol)} (${s.hunit} → m)`,
-    s.pcol != null ? `col_plot <- ${col(s.pcol)}   # ${hd(s.pcol)}` : `col_plot <- NA   # ${T('örnek alan sütunu yok', 'no plot column')}`, '');
-  if (s.fcol != null && s.fval != null) out.push(rComment(T(`Süzgeç: ${hd(s.fcol)} = "${s.fval}" olan satırlar (metin, birebir)`, `Filter: rows with ${hd(s.fcol)} = "${s.fval}" (text, exact)`)),
+    s.pcol != null ? `col_plot <- ${col(s.pcol)}   # ${hd(s.pcol)}` : `col_plot <- NA   # no plot column`, '');
+  if (s.fcol != null && s.fval != null) out.push(rComment(`Filter: rows with ${hd(s.fcol)} = "${s.fval}" (text, exact)`),
     `keep <- dat[[${col(s.fcol)}]] == ${rStr(s.fval)}; dat <- dat[keep, , drop = FALSE]; row_no <- row_no[keep]`, '');
-  if (s.scol != null && s.sval != null) out.push(rComment(T(`Tür: ${hd(s.scol)} = "${s.sval}" (boşluklar kırpılarak)`, `Species: ${hd(s.scol)} = "${s.sval}" (spaces trimmed)`)),
+  if (s.scol != null && s.sval != null) out.push(rComment(`Species: ${hd(s.scol)} = "${s.sval}" (spaces trimmed)`),
     `keep <- trimws(dat[[${col(s.scol)}]]) == ${rStr(s.sval)}; dat <- dat[keep, , drop = FALSE]; row_no <- row_no[keep]`, '');
-  out.push(rComment(T('Satırların durumu: fit için çap ve boy geçerli olmalı, boy > bh; boyu boş satırlara ayrı tahmin yapılır (ölçülen boy değiştirilmez).',
-    'Row status: fitting needs a valid diameter and height, height > bh; rows with an empty height get a separate prediction (the measured height is never changed).')),
+  out.push(rComment('Row status: fitting needs a valid diameter and height, height > bh; rows with an empty height get a separate prediction (the measured height is never changed).'),
     `dn <- fb_num(dat[[col_d]], dec); hn <- fb_num(dat[[col_h]], dec)`,
     `d_all <- dn$value * f_d; h_all <- hn$value * f_h`,
     `plot_all <- if (is.na(col_plot)) rep("", nrow(dat)) else trimws(dat[[col_plot]])`,
@@ -2579,16 +2454,16 @@ function buildR(s, R, nd, o) {
     `is_missing <- dn$status == "ok" & d_all > 0 & hn$status == "empty"`,
     `fd <- data.frame(row = row_no[is_fit], plot = plot_all[is_fit], d = d_all[is_fit], h = h_all[is_fit])`,
     `fd$z <- fd$h - bh`,
-    `cat(${rStr(T('Fit edilen ağaç: ', 'Trees fitted: '))}, nrow(fd), ${rStr(T('; boyu boş: ', '; empty height: '))}, sum(is_missing), "\\n")`, '');
+    `cat(${rStr('Trees fitted: ')}, nrow(fd), ${rStr('; empty height: ')}, sum(is_missing), "\\n")`, '');
   // models
-  out.push(rComment(T('Modeller: z = h − bh = f(d; θ)', 'Models: z = h − bh = f(d; θ)')),
+  out.push(rComment('Models: z = h − bh = f(d; θ)'),
     `models <- list(`);
   out.push(MODELS.map(m => `  ${m.id} = list(formula = z ~ ${R_MODELS[m.id].f}, grad = function(th, d) { a <- th[1]; b <- th[2]; ${m.p > 2 ? 'c <- th[3]; ' : ''}${R_MODELS[m.id].g} })`).join(',\n'), ')', '');
   out.push(`fb_fit <- function(id, start, fallback, data) {
   ctl <- nls.control(maxiter = 1000, tol = 1e-8, minFactor = 1e-12)
   f <- tryCatch(nls(models[[id]]$formula, data = data, start = start, control = ctl), error = function(e) NULL)
   if (is.null(f) && !is.null(fallback)) {
-    message(id, ${rStr(T(': nls aracın başlangıcından yakınsamadı; aracın kestirimlerinden başlıyor', ': nls did not converge from the tool\'s start; starting from the tool\'s estimates'))})
+    message(id, ${rStr(': nls did not converge from the tool\'s start; starting from the tool\'s estimates')})
     f <- tryCatch(nls(models[[id]]$formula, data = data, start = fallback, control = ctl), error = function(e) NULL)
   }
   f
@@ -2599,30 +2474,29 @@ fb_metrics <- function(f, data) {
 }
 `);
   const names = m => m.names;
-  out.push(rComment(T('Aracın fit ettiği modeller ve başlangıç değerleri', 'Models the tool fitted, and their starting values')));
+  out.push(rComment('Models the tool fitted, and their starting values'));
   out.push(`starts <- list(`);
   out.push(ok.map(f => { const m = MODELS.find(x => x.id === f.id); const L = th => `c(${names(m).map((nm, j) => `${nm} = ${rNum(th[j])}`).join(', ')})`;
     return `  ${f.id} = list(start = ${L(f.start)}, tool = ${L(f.theta)})`; }).join(',\n'), ')');
-  for (const f of R.fits.filter(x => x.status !== 'ok')) out.push(rComment(T(`${f.id}: araçta fit edilmedi (${f.status}); R'da da fit edilmez.`, `${f.id}: not fitted by the tool (${f.status}); not fitted in R either.`)));
+  for (const f of R.fits.filter(x => x.status !== 'ok')) out.push(rComment(`${f.id}: not fitted by the tool (${f.status}); not fitted in R either.`));
   out.push(`fits <- lapply(names(starts), function(id) fb_fit(id, as.list(starts[[id]]$start), as.list(starts[[id]]$tool), fd)); names(fits) <- names(starts)`,
     `res <- list()`,
     `for (id in names(fits)) {`,
-    `  f <- fits[[id]]; if (is.null(f)) { cat(id, ${rStr(T(': fit edilemedi', ': not fitted'))}, "\\n"); next }`,
+    `  f <- fits[[id]]; if (is.null(f)) { cat(id, ${rStr(': not fitted')}, "\\n"); next }`,
     `  mm <- fb_metrics(f, fd); th <- coef(f)`,
     `  cat("\\n", id, ":", paste(names(th), signif(th, 8), collapse = ", "), "| RMSE", signif(mm[["rmse"]], 8), "\\n")`,
     `  res[paste0(id, ".", names(th))] <- as.list(unname(th)); for (k in names(mm)) res[[paste0(id, ".", k)]] <- unname(mm[[k]])`);
   if (R.inference) out.push(
-    `  ${rComment(T('Ağaçlar bağımsız sayılabildiği için (örnek alan sütunu yok ya da tek örnek alan) standart hata ve t aralıkları, araçtaki gibi:', 'Trees may be treated as independent (no plot column or one plot), so standard errors and t intervals, as in the tool:'))}`,
+    `  ${rComment('Trees may be treated as independent (no plot column or one plot), so standard errors and t intervals, as in the tool:')}`,
     `  se <- summary(f)$coefficients[, 2]; tq <- qt(1 - (1 - ${rNum(LEVEL)}) / 2, df.residual(f))`,
     `  res[paste0(id, ".se.", names(th))] <- as.list(unname(se)); res[paste0(id, ".lo.", names(th))] <- as.list(unname(th - tq * se)); res[paste0(id, ".hi.", names(th))] <- as.list(unname(th + tq * se))`);
-  else out.push(`  ${rComment(T('Birden çok örnek alan: ağaçlar bağımsız değil, araç standart hata, aralık ve AIC vermez (burada hesaplanan AIC karşılaştırma için kullanılmamalı).', 'Several plots: trees are not independent, the tool gives no standard errors, intervals or AIC (the AIC computed here should not be used for comparison).'))}`);
+  else out.push(`  ${rComment('Several plots: trees are not independent, the tool gives no standard errors, intervals or AIC (the AIC computed here should not be used for comparison).')}`);
   out.push(`}`, '');
   // cross-validation
   const cv = R.cv;
   if (cv && !cv.problem && cv.folds) {
     const foldOf = new Array(p.fitRows.length).fill(0); cv.folds.forEach((f, k) => f.test.forEach(i => { foldOf[i] = k + 1; }));
-    out.push(rComment(T(`Çapraz doğrulama (${cv.mode === 'plot' ? (cv.lopo ? 'her seferinde bir örnek alan dışarıda' : 'örnek alan grupları') : 'ağaç düzeyinde'}): her ağacın katı aracınkiyle aynı (araç ${cv.mode === 'plot' && cv.lopo ? 'örnek alanları sırayla' : 'tohum 20261109 ile karıştırıp'} dağıttı). Her katta her model yalnızca model geliştirme ağaçlarına fit edilir; modeller, bütün modellerin yakınsadığı katların ortak dışarıda bırakılan ağaçlarında karşılaştırılır; "seçim" satırı her katta model geliştirme AIC'si en küçük modeli kullanır.`,
-      `Cross-validation (${cv.mode === 'plot' ? (cv.lopo ? 'leave one plot out' : 'groups of plots') : 'tree level'}): each tree's fold is the tool's (the tool ${cv.mode === 'plot' && cv.lopo ? 'took the plots in order' : 'shuffled with seed 20261109'}). In each fold every model is fitted to the training trees only; models are compared on the held-out trees of the folds where all models converged; the "selection" row uses, in each fold, the model with the smallest training AIC.`)),
+    out.push(rComment(`Cross-validation (${cv.mode === 'plot' ? (cv.lopo ? 'leave one plot out' : 'groups of plots') : 'tree level'}): each tree's fold is the tool's (the tool ${cv.mode === 'plot' && cv.lopo ? 'took the plots in order' : 'shuffled with seed 20261109'}). In each fold every model is fitted to the training trees only; models are compared on the held-out trees of the folds where all models converged; the "selection" row uses, in each fold, the model with the smallest training AIC.`),
       `fold <- ${rVec(foldOf)}`,
       `cv_starts <- list(`);
     out.push(cv.folds.map((f, k) => `  list(${MODELS.map((m, j) => `${m.id} = ${f.starts && f.starts[j] ? `list(start = c(${m.names.map((nm, q) => `${nm} = ${rNum(f.starts[j][q])}`).join(', ')}), tool = c(${m.names.map((nm, q) => `${nm} = ${rNum(f.thetas[j][q])}`).join(', ')}))` : 'NULL'}`).join(', ')})`).join(',\n'), ')');
@@ -2637,20 +2511,20 @@ for (k in seq_along(cv_starts)) {
 }
 for (id in names(cv_err)) { e <- cv_err[[id]]; res[[paste0("cv.", id, ".rmse")]] <- sqrt(mean(e^2)); res[[paste0("cv.", id, ".bias")]] <- mean(e); res[[paste0("cv.", id, ".mae")]] <- mean(abs(e)) }
 res[["cv.selection.rmse"]] <- sqrt(mean(sel_err^2)); res[["cv.n"]] <- length(sel_err)
-cat("\\n", ${rStr(T('Çapraz doğrulama RMSE: ', 'Cross-validation RMSE: '))}, paste(names(cv_err), signif(sapply(cv_err, function(e) sqrt(mean(e^2))), 6), collapse = ", "), "\\n")
+cat("\\n", ${rStr('Cross-validation RMSE: ')}, paste(names(cv_err), signif(sapply(cv_err, function(e) sqrt(mean(e^2))), 6), collapse = ", "), "\\n")
 `);
-  } else out.push(rComment(T('Çapraz doğrulama yapılmadı.', 'No cross-validation.')), '');
+  } else out.push(rComment('No cross-validation.'), '');
   // predictions with the chosen model
   if (sel) {
     const m = MODELS.find(x => x.id === sel.id);
-    out.push(rComment(T(`Seçilen model: ${sel.id}. Boyu boş ağaçlara tahmin (ayrı sütun; fit aralığı dışındaki çaplar işaretlenir).`, `Chosen model: ${sel.id}. Predicted heights for trees without a height (separate column; diameters outside the fitted range are flagged).`)),
+    out.push(rComment(`Chosen model: ${sel.id}. Predicted heights for trees without a height (separate column; diameters outside the fitted range are flagged).`),
       `fm <- fits[[${rStr(sel.id)}]]`,
       `miss <- data.frame(row = row_no[is_missing], d = d_all[is_missing])`,
       `miss$h_pred <- bh + predict(fm, newdata = miss); miss$outside <- miss$d < min(fd$d) | miss$d > max(fd$d)`,
       `print(head(miss, 20))`,
       `if (nrow(miss)) { res[["pred.missing.n"]] <- nrow(miss); res[["pred.missing.sum"]] <- sum(miss$h_pred) }`, '');
     if (nd && nd.length) {
-      out.push(rComment(T('Yeni çaplar (cm) için tahmin' + (R.inference ? ', ortalama eğrinin güven aralığı ve tek ağaç tahmin aralığı (delta yöntemi, t)' : ''), 'Predictions for the new diameters (cm)' + (R.inference ? ', confidence interval of the mean curve and single-tree prediction interval (delta method, t)' : ''))),
+      out.push(rComment('Predictions for the new diameters (cm)' + (R.inference ? ', confidence interval of the mean curve and single-tree prediction interval (delta method, t)' : '')),
         `new_d <- ${rVec(nd)}`,
         `nd_tab <- data.frame(d = new_d, h_pred = bh + predict(fm, newdata = data.frame(d = new_d)))`);
       if (R.inference) out.push(`G <- models[[${rStr(sel.id)}]]$grad(coef(fm), new_d); v <- rowSums((G %*% vcov(fm)) * G); tq <- qt(1 - (1 - ${rNum(LEVEL)}) / 2, df.residual(fm)); s2 <- summary(fm)$sigma^2`,
@@ -2658,7 +2532,7 @@ cat("\\n", ${rStr(T('Çapraz doğrulama RMSE: ', 'Cross-validation RMSE: '))}, p
       out.push(`print(nd_tab)`, `for (j in seq_len(nrow(nd_tab))) for (k in names(nd_tab)[-1]) res[[paste0("nd.", j, ".", k)]] <- nd_tab[[k]][j]`, '');
     }
     void m;
-  } else out.push(rComment(T('Araçta model seçilmedi: tahmin bölümü yok.', 'No model chosen in the tool: no predictions.')), '');
+  } else out.push(rComment('No model chosen in the tool: no predictions.'), '');
   out.push(`fb_out(res)`, '');
   return out.join('\n');
 }
@@ -2693,7 +2567,7 @@ const { renderImport, readImport } = __fb_r("core/importer.js");
 
 
 
-const BASE = './', KEY = 'session:' + H.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + H.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -2741,7 +2615,7 @@ function renderStep1() {
   $('useds') && $('useds').addEventListener('click', () => { const src = datasetTable(approved); setTable({ imp: { kind: 'dataset', name: src.name, decimal: '.' }, src }); });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/hd/ornek/ornek-boy-cap.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-boy-cap.csv (benzetim)' : 'ornek-boy-cap.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-boy-cap.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
   });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -3011,7 +2885,7 @@ function updateNd() {
 }
 
 /* ---------------- exports ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function treeRows() {
   const sf = selFit(), prep = R.prep, tbl = R.tbl;
   const out = [[T('t.row'), T('t.plot'), T('t.sp'), T('t.dsrc'), T('t.d'), T('t.hsrc'), T('t.h'), T('t.state'), T('t.hhat'), T('t.model'), T('t.out'), T('t.fitv'), T('t.e')]];

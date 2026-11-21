@@ -12,7 +12,7 @@ const BASE = './', KEY = 'session:' + C.TOOL.id, PAGE = 200;
 const $ = id => document.getElementById(id);
 const UNIT_LABEL = { cm: 'cm', mm: 'mm', m: 'm', dm: 'dm', m2: 'm²', ha: 'ha' };
 const SEV_RANK = { info: 1, warning: 2, error: 3 };
-const DELIM_NAME = { ',': lang === 'tr' ? 'virgül' : 'comma', ';': lang === 'tr' ? 'noktalı virgül' : 'semicolon', '\t': lang === 'tr' ? 'sekme' : 'tab', '|': '|' };
+const DELIM_NAME = { ',': 'comma', ';': 'semicolon', '\t': 'tab', '|': '|' };
 
 let S = blank(), ev = null, approvedDs = null, view = { flt: { sev: 'all', cat: 'all', open: true, q: '' }, lim: PAGE, dlim: PAGE, dtable: 'trees', donly: false };
 function blank() {
@@ -70,7 +70,7 @@ async function onFile(table, file) {
   await setImport(table, { kind: ext === 'xlsx' || ext === 'xlsm' || isZip ? 'xlsx' : 'csv', name, buf, encoding: 'utf-8', delim: null, header: true, sheet: null });
 }
 async function loadSample() {
-  const tag = lang === 'tr' ? ' (örnek)' : ' (sample)';
+  const tag = ' (sample)';
   for (const [table, f] of [['trees', 'agaclar.csv'], ['plots', 'ornek-alanlar.csv']]) {
     const buf = await (await fetch(BASE + 'assets/lab/checker/ornek/' + f)).arrayBuffer();
     S.imports[table] = { kind: 'csv', name: f + tag, buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
@@ -119,7 +119,7 @@ function renderStep1() {
     const table = p.dataset.table, imp = S.imports[table];
     const q = a => p.querySelector(`[data-act="${a}"]`);
     q('file').addEventListener('change', e => onFile(table, e.target.files[0]));
-    q('paste').addEventListener('click', () => { const text = q('pastebox').value; if (text.trim()) setImport(table, { kind: 'paste', name: lang === 'tr' ? 'yapıştırılan tablo' : 'pasted table', text, delim: null, header: true }); });
+    q('paste').addEventListener('click', () => { const text = q('pastebox').value; if (text.trim()) setImport(table, { kind: 'paste', name: 'pasted table', text, delim: null, header: true }); });
     if (!imp || !S.sources[table]) return;
     q('header').addEventListener('change', e => { imp.header = e.target.checked; setImport(table, imp); });
     q('clear').addEventListener('click', () => { S.imports[table] = null; delete S.sources[table]; S.mapping[table] = {}; S.srcVer++; ev = null; save(); render(); });
@@ -483,12 +483,12 @@ function tabLog(p) {
   const rows = logRows(false).slice().reverse();
   p.innerHTML = `<div class="filters"><span class="dl"><button type="button" class="btn ghost small" id="dllog"${rows.length ? '' : ' disabled'}>${T('ex.log')} CSV</button></span></div>` +
     (rows.length ? `<div class="tscroll"><table class="grid"><thead><tr>${T('log.cols').map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>
-    ${rows.map(r => `<tr>${r.map((c, k) => `<td${k === 1 ? ' class="nowrap small"' : ''}>${k === 6 || k === 7 ? `<code>${vis(c ?? '')}</code>` : esc(k === 1 ? new Date(c).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-GB') : c ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : `<p class="muted">${T('log.empty')}</p>`);
+    ${rows.map(r => `<tr>${r.map((c, k) => `<td${k === 1 ? ' class="nowrap small"' : ''}>${k === 6 || k === 7 ? `<code>${vis(c ?? '')}</code>` : esc(k === 1 ? new Date(c).toLocaleString('en-GB') : c ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : `<p class="muted">${T('log.empty')}</p>`);
   $('dllog').addEventListener('click', () => downloadCSV(fname('degisiklik-gunlugu', 'change-log') + '.csv', logRows(), lang));
 }
 
 /* ---------------- approval and exports ---------------- */
-function fname(trName, enName) { return `${lang === 'tr' ? trName : enName}-${new Date().toISOString().slice(0, 10)}`; }
+function fname(trName, enName) { return `${enName}-${new Date().toISOString().slice(0, 10)}`; }
 function issueRows() {
   return [T('x.issueCols'), ...ev.issues.map(i => [T('sev.' + i.severity), T('kind.' + i.kind), T('cat.' + i.category), i.code, T('t.' + i.table), i.row ?? '', i.plot ?? '',
     i.field ? T('f.' + i.field) : '', i.column || '', i.text ?? '', msg(i), i.suggestion ? i.suggestion.value : '', i.accepted ? i.accepted.reason : ''])];
@@ -503,7 +503,7 @@ function tabApprove(p) {
   const s = ev.summary, current = S.approved && S.approved.sig === sig();
   let h = `<div class="card"><h2>${T('ap.h')}</h2><p class="muted">${T('ap.sub')}</p>`;
   if (!s.approvable) h += `<p class="note err">${T('ap.blocked', { e: s.errors })}</p>`;
-  if (S.approved && approvedDs) h += `<p class="note ${current ? 'ok' : 'warn'}">${T('ap.done', { n: approvedDs.trees.length, p: approvedDs.plots.length, when: new Date(S.approved.created).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-GB') })}${current ? '' : ' ' + T('ap.stale')}</p>`;
+  if (S.approved && approvedDs) h += `<p class="note ${current ? 'ok' : 'warn'}">${T('ap.done', { n: approvedDs.trees.length, p: approvedDs.plots.length, when: new Date(S.approved.created).toLocaleString('en-GB') })}${current ? '' : ' ' + T('ap.stale')}</p>`;
   h += `<button type="button" class="btn" id="approve"${s.approvable ? '' : ' disabled'}>${T('ap.btn')}</button></div>
   <div class="card"><h2>${T('ex.h')}</h2><div class="exports">
     <button type="button" class="btn ghost" id="x-issues">${T('ex.issues')} (CSV)</button>
@@ -564,7 +564,7 @@ function render() {
     const saved = await get(KEY);
     if (saved && saved.v === 1) {
       S = { ...blank(), ...saved };
-      status(T('restored', { when: new Date(saved.saved).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-GB') }));
+      status(T('restored', { when: new Date(saved.saved).toLocaleString('en-GB') }));
       const ds = await get('dataset:approved');
       if (ds && S.approved && ds.created === S.approved.created) approvedDs = ds;
       if (S.work && S.workSrcVer === S.srcVer) reeval();

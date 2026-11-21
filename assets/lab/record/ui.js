@@ -14,7 +14,7 @@ let rec = null, chk = null, fileName = '', checked = [];
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const roleText = r => { const k = 'role.' + r, t = T(k); return t === k ? String(r || '') : t; };
 const short = h => h ? `<code title="${esc(h)}">${esc(h.slice(0, 12))}…${esc(h.slice(-6))}</code>` : '–';
-const when = iso => { const d = new Date(iso); return isNaN(d) ? esc(iso || '–') : `${esc(d.toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-GB'))} <span class="muted small">(${esc(iso)})</span>`; };
+const when = iso => { const d = new Date(iso); return isNaN(d) ? esc(iso || '–') : `${esc(d.toLocaleString('en-GB'))} <span class="muted small">(${esc(iso)})</span>`; };
 
 function readingText(x) {
   const out = [];

@@ -20,7 +20,7 @@ import { tableCsv, csvName } from '../core/rcode.js';
 
 const BASE = './', KEY = 'session:cap-dagilimi-2';
 const $ = id => document.getElementById(id);
-const LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const LOC = 'en-GB';
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).trim().replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
 const has = k => T(k) !== k;
@@ -70,7 +70,7 @@ function renderStep1() {
   renderImport($('impbox'), { imp: S.imp, src: S.src }, { base: BASE, title: T('imp.h'), sub: T('imp.sub'), onChange: setTable, onError: m => status(m, 'err') });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/dist/ornek/ornek-caplar.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-caplar.csv (benzetim)' : 'ornek-caplar.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-caplar.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
   });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -338,7 +338,7 @@ function notesOf(r) {
 }
 /* ---------------- exports (tables built in report.js; numbers at full precision, decimal point) ---------------- */
 const stamp = () => new Date().toISOString().slice(0, 10);
-const fname = (tr, en, ext) => `${lang === 'tr' ? tr : en}-${stamp()}.${ext}`;
+const fname = (name, ext) => `${name}-${stamp()}.${ext}`;
 const repH = () => ({ T, methodName, notes: notesOf, poolLabel: T('unit.pool') });
 function settingsInfo() {
   const H = S.src ? S.src.headers : [], col = c => c == null ? null : String(H[c]);
@@ -371,9 +371,9 @@ const chartMeta = (u, rs) => ({ tool: D.TOOL, created: new Date().toISOString(),
   fits: rs.map(r => ({ method: r.method, family: r.family, fixed: r.fixed, params: r.params, settings: r.settings, truncation: r.truncation })) });
 function exportRaw(kind) {
   const h = repH();
-  if (kind === 'fits') return downloadCSV(fname('cap-dagilimi-fit-islemleri', 'diameter-distribution-fits', 'csv'), REP.fitRows(R.units, h));
-  if (kind === 'params') return downloadCSV(fname('cap-dagilimi-parametreler', 'diameter-distribution-parameters', 'csv'), REP.paramRows(R.units, h));
-  return loadXLSX(BASE).then(XLSX => download(fname('cap-dagilimi', 'diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
+  if (kind === 'fits') return downloadCSV(fname('diameter-distribution-fits', 'csv'), REP.fitRows(R.units, h));
+  if (kind === 'params') return downloadCSV(fname('diameter-distribution-parameters', 'csv'), REP.paramRows(R.units, h));
+  return loadXLSX(BASE).then(XLSX => download(fname('diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
     { name: T('sheet.info'), rows: REP.infoRows(settingsInfo(), T), widths: [34, 110] }, { name: T('sheet.fits'), rows: REP.fitRows(R.units, h) },
     { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) },
     { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.ba'), rows: REP.basalRows(R.units, h, u => classesFor(u), perHaOf()) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) },
@@ -381,12 +381,12 @@ function exportRaw(kind) {
 }
 /** R script of a recovery card (stage 2): the card's summary, options and results. */
 function recR(card, summary, opts, results, base) {
-  download(fname(base[0], base[1], 'R'), buildRecoverR(card, summary, opts, results, { lang, created: new Date().toISOString(), version: D.TOOL.version }), 'text/plain;charset=utf-8');
+  download(fname(base[1], 'R'), buildRecoverR(card, summary, opts, results, { lang, created: new Date().toISOString(), version: D.TOOL.version }), 'text/plain;charset=utf-8');
 }
 function exportRec(kind, results, info, base) {
   const h = repH(), rows = REP.recoverRows(results, h);
-  if (kind === 'csv') return downloadCSV(fname(base[0], base[1], 'csv'), rows);
-  return loadXLSX(BASE).then(XLSX => download(fname(base[0], base[1], 'xlsx'), xlsxBlob(XLSX, [{ name: T('sheet.info'), rows: REP.infoRows(info, T), widths: [34, 110] }, { name: T('sheet.rec'), rows },
+  if (kind === 'csv') return downloadCSV(fname(base[1], 'csv'), rows);
+  return loadXLSX(BASE).then(XLSX => download(fname(base[1], 'xlsx'), xlsxBlob(XLSX, [{ name: T('sheet.info'), rows: REP.infoRows(info, T), widths: [34, 110] }, { name: T('sheet.rec'), rows },
     { name: T('sheet.src'), rows: REP.sourceRows(results.map(r => r.method), h), widths: [22, 34, 16, 14, 14, 12, 26] }])), () => status(T('ex.fail'), 'err'));
 }
 /** Methods, units, support and observation policy and sources of the given results (stage P15). */
@@ -431,7 +431,7 @@ function tabParams(p) {
   for (const k of ['xlsx', 'fits', 'params']) $('x-' + k).addEventListener('click', () => exportRaw(k));
   $('x-r').addEventListener('click', () => {
     const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
-    download(fname('cap-dagilimi', 'diameter-distribution', 'R'), buildR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
+    download(fname('diameter-distribution', 'R'), buildR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
       fcol: S.fcol, fval: S.fval, mode: S.mode, dtype: S.dtype, countType: R.countType, outside: S.outside }, R, D.POOL, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
     // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
     if (!file) download(csvName(imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
@@ -549,7 +549,7 @@ function tabBoot(p) {
     const runs = ['gof', 'ci'].map(k => BOOT.get(`${u.id}|${b.fit}|${k}`)).filter(x => x && !x.unsupported).map(x => ({ kind: x.kind, B: x.B, seed: x.seed, step: x.step ?? null, scheme: x.scheme || 'parametric', level: x.level ?? 0.95 }));
     if (!runs.length) return;
     const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
-    download(fname('cap-dagilimi-bootstrap', 'diameter-distribution-bootstrap', 'R'), buildBootR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
+    download(fname('diameter-distribution-bootstrap', 'R'), buildBootR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
       fcol: S.fcol, fval: S.fval, mode: S.mode, dtype: S.dtype, countType: R.countType, outside: S.outside }, R, D.POOL, R.units.indexOf(u), r, runs, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
     if (!file) download(csvName(imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
   });
@@ -1021,7 +1021,7 @@ function standTrain(el) {
   $('st-K').addEventListener('change', e => { q.K = e.target.value; re(); });
   $('st-sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/dist/ornek/ornek-mescere.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-mescere.csv (benzetim)' : 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     const keep = S.st; setTable({ imp, src: await readImport(imp, BASE) }); S.wf = 'stand'; S.st = { ...keep, ncol: null, hcol: null, acol: null, done: false, model: null, cv: null }; guessStandCols(); save(); render();
   });
   $('st-train-btn').addEventListener('click', () => {
@@ -1059,13 +1059,13 @@ function drawStandTrain() {
   h += `<div class="exports"><button type="button" class="btn" id="st-json">${T('st.dl')}</button><button type="button" class="btn ghost" id="st-cvcsv"${cv ? '' : ' disabled'}>${T('st.dlcv')}</button><button type="button" class="btn ghost" id="st-go">${T('st.topredict')}</button><button type="button" class="btn ghost" id="st-r">${T('ex.r')}</button></div><p class="muted small">${T('ex.r.stand')}</p>`;
   out.innerHTML = h;
   $('st-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-mescere-modeli-${stamp()}.json`, m));
-  $('st-cvcsv').addEventListener('click', () => downloadCSV(fname('cap-dagilimi-mescere-dogrulama', 'diameter-distribution-stand-validation', 'csv'),
+  $('st-cvcsv').addEventListener('click', () => downloadCSV(fname('diameter-distribution-stand-validation', 'csv'),
     [[T('x.plot'), T('x.period'), 'fold', 'n', 'neg_log_lik', 'neg_log_lik_per_tree', 'ks_d', 'status'], ...cv.units.map(u => [u.plot, u.period, u.fold + 1, u.n ?? null, u.status === 'ok' ? u.nll : null, u.status === 'ok' ? u.nllPerTree : null, u.status === 'ok' ? u.ks : null, u.status])]));
   $('st-go').addEventListener('click', () => { S.st.tab = 'predict'; S.st.src = 'trained'; save(); renderStand(); });
   $('st-r').addEventListener('click', () => {
     const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
     const x = Object.fromEntries(['N', 'H', 'A'].map(k => [k, num(q.x[k])])), withX = q.src === 'trained' && q.pdone && D.stand.needs(m.terms).every(k => x[k] > 0);
-    download(fname('cap-dagilimi-mescere-modeli', 'diameter-distribution-stand-model', 'R'), buildStandR({ imp, src: S.src, decimal: standDecimal(), unit: S.unit, dcol: S.dcol, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval,
+    download(fname('diameter-distribution-stand-model', 'R'), buildStandR({ imp, src: S.src, decimal: standDecimal(), unit: S.unit, dcol: S.dcol, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval,
       cols: { N: q.ncol, H: q.hcol, A: q.acol } }, standCfg(), m, withX ? x : null, withX ? D.stand.predict(m, x) : null, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }, q.cv && q.cv.status === 'ok' ? q.cv : null), 'text/plain;charset=utf-8');
     if (!file) download(csvName(imp), tableCsv(S.src, cellText, standDecimal()), 'text/csv;charset=utf-8');
   });

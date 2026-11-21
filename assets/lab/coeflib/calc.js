@@ -17,16 +17,16 @@ import '../structure/ccf.js';
 export const TOOL = { id: 'katsayi-kutuphanesi', version: '1.0.0-beta.1' };
 /** Tools that keep sets in the library: catalogue id, page, names. Order = display order. */
 export const TOOLS = [
-  { tool: 'siteindex', id: 'SQ-01', page: 'bonitet.php', name: { tr: 'Bonitet', en: 'Site Index' } },
-  { tool: 'growth', id: 'SQ-03', page: 'buyume-islevi.php', name: { tr: 'Büyüme Fonksiyonu', en: 'Growth Functions' } },
-  { tool: 'taper', id: 'SV-02', page: 'govde-profili.php', name: { tr: 'Gövde Profili', en: 'Stem Taper' } },
-  { tool: 'biomass', id: 'BC-01', page: 'biyokutle-karbon.php', name: { tr: 'Biyokütle ve Karbon', en: 'Biomass and Carbon' } },
-  { tool: 'volume', id: 'SV-04', page: 'hacim-denklemleri.php', name: { tr: 'Hacim Denklemleri', en: 'Volume Equations' } },
-  { tool: 'nls', id: 'SM-02', page: 'dogrusal-olmayan-regresyon.php', name: { tr: 'Doğrusal Olmayan Regresyon', en: 'Nonlinear Regression' } },
-  { tool: 'mixed', id: 'SM-03', page: 'karma-modeller.php', name: { tr: 'Karma Etkili Modeller', en: 'Mixed-Effects Models' } },
-  { tool: 'eqsys', id: 'SM-04', page: 'denklem-sistemleri.php', name: { tr: 'Denklem Sistemleri', en: 'Systems of Equations' } },
-  { tool: 'ccf', id: 'SS-02', page: 'mescere-yapisi.php', name: { tr: 'Meşcere Yapısı: CCF', en: 'Stand Structure: CCF' } },
-  { tool: 'bark', id: 'TM-03', page: 'agac-olcumu.php', name: { tr: 'Ağaç Ölçümü: kabuk', en: 'Tree Measurement: bark' } },
+  { tool: 'siteindex', id: 'SQ-01', page: 'bonitet.php', name: { en: 'Site Index' } },
+  { tool: 'growth', id: 'SQ-03', page: 'buyume-islevi.php', name: { en: 'Growth Functions' } },
+  { tool: 'taper', id: 'SV-02', page: 'govde-profili.php', name: { en: 'Stem Taper' } },
+  { tool: 'biomass', id: 'BC-01', page: 'biyokutle-karbon.php', name: { en: 'Biomass and Carbon' } },
+  { tool: 'volume', id: 'SV-04', page: 'hacim-denklemleri.php', name: { en: 'Volume Equations' } },
+  { tool: 'nls', id: 'SM-02', page: 'dogrusal-olmayan-regresyon.php', name: { en: 'Nonlinear Regression' } },
+  { tool: 'mixed', id: 'SM-03', page: 'karma-modeller.php', name: { en: 'Mixed-Effects Models' } },
+  { tool: 'eqsys', id: 'SM-04', page: 'denklem-sistemleri.php', name: { en: 'Systems of Equations' } },
+  { tool: 'ccf', id: 'SS-02', page: 'mescere-yapisi.php', name: { en: 'Stand Structure: CCF' } },
+  { tool: 'bark', id: 'TM-03', page: 'agac-olcumu.php', name: { en: 'Tree Measurement: bark' } },
 ];
 export const toolInfo = t => TOOLS.find(x => x.tool === t) || null;
 
@@ -45,8 +45,8 @@ const norm = x => String(x ?? '').toLowerCase().normalize('NFKD').replace(/[\u03
 /** Text of a set searched by the filter: form id and formula, species, region, component, citation, DOI, note, tool. */
 export function searchText(s) {
   const f = form(s.form);
-  return norm([s.form, f && f.formula && (f.formula.tr + ' ' + f.formula.en), s.species, s.region, s.component, s.source && s.source.citation, s.source && s.source.doi, s.source && s.source.note, s.tool,
-    toolInfo(s.tool) && toolInfo(s.tool).name.tr, toolInfo(s.tool) && toolInfo(s.tool).name.en].filter(Boolean).join(' '));
+  return norm([s.form, f && f.formula && f.formula.en, s.species, s.region, s.component, s.source && s.source.citation, s.source && s.source.doi, s.source && s.source.note, s.tool,
+    toolInfo(s.tool) && toolInfo(s.tool).name.en].filter(Boolean).join(' '));
 }
 /** Filter: { tool: '' | tool id, q: words (all must occur, case- and accent-insensitive), origin: '' | 'user-entered' | 'fitted', problems: bool (only sets with problems) }. */
 export function filterSets(sets, { tool = '', q = '', origin = '', problems = false } = {}, problemsFn = problemsOf) {

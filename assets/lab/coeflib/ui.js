@@ -18,7 +18,7 @@ const EXTRAS = { taper: TAPER_EXTRA, siteindex: SI_EXTRA, growth: [], biomass: B
 const extraCheck = (tool, s) => metaProblems(EXTRAS[tool] || [], s);
 const probs = s => L.problemsOf(s, extraCheck);
 const ptext = q => { const own = 'p.' + q.code, t = T(own, q); return t !== own ? t : problemText(q); };
-const tname = t => { const i = L.toolInfo(t); return i ? i.name[lang] || i.name.tr : t; };
+const tname = t => { const i = L.toolInfo(t); return i ? i.name[lang] : t; };
 
 let sets = [], F = { tool: '', q: '', origin: '', problems: false }, open = new Set(), plan = null, editor = null, edTool = L.TOOLS[0].tool;
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
@@ -60,7 +60,7 @@ function renderEditorCard() {
 function rowHTML(s, dups) {
   const f = form(s.form), pr = probs(s), info = L.toolInfo(s.tool);
   const state = pr.length ? `<span class="tag st-err" style="text-transform:none;letter-spacing:0">${T('st.prob')}</span>` : dups ? `<span class="tag st-warn" title="${esc(dups.join(', '))}">${T('st.dup')}</span>` : `<span class="tag">${T('st.ok')}</span>`;
-  let h = `<tr data-id="${esc(s.id)}"><td>${esc(tname(s.tool))}${info ? ` <span class="muted small">${info.id}</span>` : ''}</td><td class="small">${esc(f ? f.formula[lang] || f.formula.tr : s.form)}</td>
+  let h = `<tr data-id="${esc(s.id)}"><td>${esc(tname(s.tool))}${info ? ` <span class="muted small">${info.id}</span>` : ''}</td><td class="small">${esc(f ? f.formula[lang] : s.form)}</td>
     <td>${esc([s.species, s.region, s.component].filter(Boolean).join(' · ') || '–')}</td><td class="small">${esc(s.source ? s.source.citation : '')}</td><td class="small">${T('f.origin.' + s.origin) || esc(s.origin)}</td>
     <td class="small">${esc(String(s.modified || '').slice(0, 10))}</td><td>${state}</td>
     <td class="acts"><button type="button" class="btn ghost small" data-act="more" aria-expanded="${open.has(s.id)}">${T('more')}</button> <button type="button" class="btn ghost small" data-act="edit"${info ? '' : ' disabled'}>${T('edit')}</button> <button type="button" class="btn ghost small" data-act="copy"${pr.length ? ' disabled' : ''}>${T('copy')}</button> <button type="button" class="btn ghost small" data-act="del">${T('del')}</button>${info ? ` <a class="small" href="${info.page}">${T('open')}</a>` : ''}</td></tr>`;
@@ -79,7 +79,7 @@ function detailHTML(s, pr) {
 function planHTML() {
   if (!plan.ok) return `<p class="note err" id="rbad">${T('r.bad')}</p>`;
   return `<div id="rplan"><h3>${T('r.h')}</h3><p id="rsum">${esc(T('r.sum', plan))}</p><div class="tscroll"><table class="grid" id="rtab"><thead><tr><th>${T('r.col.act')}</th><th>${T('r.col.set')}</th><th>${T('r.col.note')}</th></tr></thead><tbody>
-    ${plan.items.map(x => { const s = x.set, f = s && form(s.form); return `<tr data-act="${x.action}"><td>${T('r.' + x.action)}</td><td class="small">${s ? esc(`${tname(s.tool)} · ${f ? f.formula[lang] || f.formula.tr : s.form} · ${s.source.citation}`) : esc(String(x.id ?? '#' + (x.index + 1)))}</td>
+    ${plan.items.map(x => { const s = x.set, f = s && form(s.form); return `<tr data-act="${x.action}"><td>${T('r.' + x.action)}</td><td class="small">${s ? esc(`${tname(s.tool)} · ${f ? f.formula[lang] : s.form} · ${s.source.citation}`) : esc(String(x.id ?? '#' + (x.index + 1)))}</td>
       <td class="small">${esc(x.problems ? x.problems.map(ptext).join('; ') : x.dupOf ? T('r.dup', { id: x.dupOf }) : '')}</td></tr>`; }).join('')}</tbody></table></div>
     <div class="nav"><button type="button" class="btn" id="r-apply"${plan.add + plan.replace ? '' : ' disabled'}>${T('r.apply')}</button><button type="button" class="btn ghost" id="r-cancel">${T('r.cancel')}</button></div></div>`;
 }
@@ -89,7 +89,7 @@ function mountEditor() {
     sets = [...sets.filter(x => x.tool !== edTool), ...s]; if (JSON.stringify(s.map(mine)) !== before) render(); } });
 }
 function bind() {
-  const name = ext => `${lang === 'tr' ? 'katsayi-kutuphanesi' : 'coefficient-library'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `coefficient-library-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('b-backup').addEventListener('click', () => downloadJSON(name('json'), L.backup(sets)));
   $('b-csv').addEventListener('click', () => downloadCSV(name('csv'), L.tableRows(sets, probs), lang));
   $('b-xlsx').addEventListener('click', async () => { const XLSX = await loadXLSX(BASE); download(name('xlsx'), xlsxBlob(XLSX, [{ name: T('f.h'), rows: L.tableRows(sets, probs) }]), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); });

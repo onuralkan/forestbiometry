@@ -140,19 +140,18 @@ const sig2 = v => Number(Number(v).toPrecision(2));
 /** The settings and data part of a script: the same rows, units and diameters (or classes) as the page. */
 export function dataBlock(s, R, T, hd, pool, f, g) {
   const out = [];
-  out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
-    `dec <- ${rStr(s.decimal)}; f_unit <- ${rNum(f)}   # ${T('ondalık ayırıcı; ', 'decimal separator; ')}${s.unit === 'mm' ? 'mm → cm' : 'cm'}`,
-    s.fcol != null && s.fval != null ? `keep <- dat[[${s.fcol + 1}]] == ${rStr(s.fval)}   # ${T('süzgeç', 'filter')}: ${hd(s.fcol)} = "${s.fval}"` : `keep <- rep(TRUE, nrow(dat))`,
-    `plot_all <- ${pool ? 'rep("", nrow(dat))' : `trimws(dat[[${s.pcol + 1}]])`}   # ${pool ? T('bütün örnek alanlar birlikte', 'all plots pooled') : T('örnek alan', 'plot') + ': ' + hd(s.pcol)}`,
-    `per_all <- ${s.percol != null ? `{ v <- trimws(dat[[${s.percol + 1}]]); v[v == ""] <- NA; v }` : 'rep(NA_character_, nrow(dat))'}   # ${s.percol != null ? T('dönem', 'period') + ': ' + hd(s.percol) : T('dönem yok', 'no period')}`,
+  out.push(rComment('Settings (as in the tool)'),
+    `dec <- ${rStr(s.decimal)}; f_unit <- ${rNum(f)}   # decimal separator; ${s.unit === 'mm' ? 'mm → cm' : 'cm'}`,
+    s.fcol != null && s.fval != null ? `keep <- dat[[${s.fcol + 1}]] == ${rStr(s.fval)}   # filter: ${hd(s.fcol)} = "${s.fval}"` : `keep <- rep(TRUE, nrow(dat))`,
+    `plot_all <- ${pool ? 'rep("", nrow(dat))' : `trimws(dat[[${s.pcol + 1}]])`}   # ${pool ? 'all plots pooled' : 'plot' + ': ' + hd(s.pcol)}`,
+    `per_all <- ${s.percol != null ? `{ v <- trimws(dat[[${s.percol + 1}]]); v[v == ""] <- NA; v }` : 'rep(NA_character_, nrow(dat))'}   # ${s.percol != null ? 'period' + ': ' + hd(s.percol) : 'no period'}`,
     `in_unit <- function(plot, period) keep & plot_all == plot & (if (is.na(period)) is.na(per_all) else per_all %in% period)`);
-  if (!g) out.push(rComment(T('Çaplar: okunamayan ve sıfır ya da negatif değerler sayılır ve dışarıda kalır (değiştirilmez).', 'Diameters: unreadable and zero or negative values are counted and left out (never altered).')),
+  if (!g) out.push(rComment('Diameters: unreadable and zero or negative values are counted and left out (never altered).'),
     `dn <- fb_num(dat[[${s.dcol + 1}]], dec); d_all <- dn$value * f_unit`,
     `use <- keep & dn$status == "ok" & d_all > 0`,
-    `cat(${rStr(T('Okunan çap: ', 'Diameters read: '))}, sum(use), ${rStr(T('; okunamayan: ', '; unreadable: '))}, sum(keep & dn$status != "ok"), ${rStr(T('; ≤ 0: ', '; ≤ 0: '))}, sum(keep & dn$status == "ok" & !(d_all > 0)), "\\n")`,
+    `cat(${rStr('Diameters read: ')}, sum(use), ${rStr('; unreadable: ')}, sum(keep & dn$status != "ok"), ${rStr('; ≤ 0: ')}, sum(keep & dn$status == "ok" & !(d_all > 0)), "\\n")`,
     `fb_unit <- function(plot, period) d_all[use & in_unit(plot, period)]`, '');
-  else out.push(rComment(T(`Sınıflar: alt sınır ${hd(s.lcol)}, üst sınır ${hd(s.ucol)} (boş = açık son sınıf), sıklık ${hd(s.ncol)}; aynı sınıflar toplanır. Sıklık türü: ${s.countType === 'perha' ? 'hektardaki ağaç (olabilirlik ve AIC yok)' : 'ağaç sayısı'}; sınıfların dışı: ${s.outside === 'unrecorded' ? 'kaydedilmedi (koşullu olabilirlik)' : 'ölçüldü, ağaç yok'}.`,
-      `Classes: lower bound ${hd(s.lcol)}, upper bound ${hd(s.ucol)} (empty = open last class), frequency ${hd(s.ncol)}; identical classes are added. Count type: ${s.countType === 'perha' ? 'trees per hectare (no likelihood, no AIC)' : 'numbers of trees'}; outside the classes: ${s.outside === 'unrecorded' ? 'not recorded (conditional likelihood)' : 'measured, no trees'}.`)),
+  else out.push(rComment(`Classes: lower bound ${hd(s.lcol)}, upper bound ${hd(s.ucol)} (empty = open last class), frequency ${hd(s.ncol)}; identical classes are added. Count type: ${s.countType === 'perha' ? 'trees per hectare (no likelihood, no AIC)' : 'numbers of trees'}; outside the classes: ${s.outside === 'unrecorded' ? 'not recorded (conditional likelihood)' : 'measured, no trees'}.`),
     `lo_n <- fb_num(dat[[${s.lcol + 1}]], dec); hi_raw <- trimws(dat[[${s.ucol + 1}]]); hi_n <- fb_num(hi_raw, dec); n_n <- fb_num(dat[[${s.ncol + 1}]], dec)`,
     `hi_v <- ifelse(hi_raw == "", Inf, hi_n$value * f_unit); ok_c <- lo_n$status == "ok" & (hi_raw == "" | hi_n$status == "ok") & n_n$status == "ok"`,
     `fb_cls <- function(plot, period) { i <- keep & ok_c & in_unit(plot, period)`,
@@ -173,25 +172,23 @@ function fitArgs(r) {
  * unit's id, o = { lang, created, version, fileName }.
  */
 export function buildR(s, R, POOL, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]), g = !!R.grouped;
+  const T = (a, b) => (b), hd = c => c == null ? '' : String(s.src.headers[c]), g = !!R.grouped;
   const pool = s.mode === 'pool' || s.pcol == null, f = s.unit === 'mm' ? 0.1 : 1;
   const out = [];
-  out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu (fit etme)', 'Diameter Distribution Lab: R code (fitting)'), tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
-    notes: [T('Aşama 1: çaplardan ya da sınıflardan fit etme sekmesi. Dağılımlar R\'da aracın parametreleriyle yazılmıştır (fb_<aile>); ML, momentler (mme), iki yüzdelik (qme) ve en küçük uzaklık (mge) fitdistrplus ile; L-momentler, log-momentler, ağırlıklı yüzdelik eşleştirme ve sınıflandırılmış veri olabilirliği betikte açıkça.',
-      'Stage 1: the fitting tab, from diameters or classes. The distributions are written in R with the tool\'s parameters (fb_<family>); ML, moments (mme), two percentiles (qme) and minimum distance (mge) by fitdistrplus; L-moments, log-moments, weighted quantile matching and the grouped-data likelihood written out in the script.'),
-    T('R\'ın eniyileyicisi (Nelder–Mead) aracın sonucunun iki anlamlı basamağından başlar; optimumu kendisi bulur. Uyum ölçütleri KS D, A², W² aracın tanımlarıyla; p değeri yok (parametreler aynı veriden). AIC/BIC yalnızca olabilirliğin en büyüklendiği yöntemlerde. Sınıflandırılmış veride fitdistcens kullanılmaz: ağırlıkların pozitif tam sayı olmasını ister (hektardaki sayılar ve boş sınıflar olmaz).',
-      'R\'s optimiser (Nelder–Mead) starts from two significant digits of the tool\'s result and finds the optimum itself. Fit statistics KS D, A², W² with the tool\'s definitions; no p-values (parameters from the same data). AIC/BIC only for methods that maximise the likelihood. For classes fitdistcens is not used: it requires positive integer weights (no per-hectare counts, no empty classes).')] }));
+  out.push(header({ title: 'Diameter Distribution Lab: R code (fitting)', tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
+    notes: ['Stage 1: the fitting tab, from diameters or classes. The distributions are written in R with the tool\'s parameters (fb_<family>); ML, moments (mme), two percentiles (qme) and minimum distance (mge) by fitdistrplus; L-moments, log-moments, weighted quantile matching and the grouped-data likelihood written out in the script.',
+    'R\'s optimiser (Nelder–Mead) starts from two significant digits of the tool\'s result and finds the optimum itself. Fit statistics KS D, A², W² with the tool\'s definitions; no p-values (parameters from the same data). AIC/BIC only for methods that maximise the likelihood. For classes fitdistcens is not used: it requires positive integer weights (no per-hectare counts, no empty classes).'] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   out.push(...dataBlock(s, R, T, hd, pool, f, g));
   out.push(R_FAMILIES, R_METHODS, `res <- list()`, '');
   R.units.forEach((u, k) => {
     const okR = (u.results || []).map((r, j) => ({ r, j })).filter(x => x.r.status === 'ok');
-    const name = `${u.plot === POOL ? T('bütün örnek alanlar', 'all plots') : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
-    out.push(rComment(`${T('Birim', 'Unit')} ${k + 1}: ${name}`),
+    const name = `${u.plot === POOL ? 'all plots' : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
+    out.push(rComment(`Unit ${k + 1}: ${name}`),
       `x <- ${g ? 'fb_cls' : 'fb_unit'}(${rStr(u.plot === POOL ? '' : u.plot)}, ${u.period == null ? 'NA' : rStr(u.period)}); cat("\\n", ${rStr(name)}, ":", ${g ? 'sum(x$n), "trees,", nrow(x), "classes"' : 'length(x), "trees"'}, "\\n")`);
     const bad = (u.results || []).filter(r => r.status !== 'ok');
-    if (bad.length) out.push(rComment(T(`Araçta sonuç vermeyenler (R'da da fit edilmez): ${bad.map(r => `${r.method} (${r.status})`).join(', ')}`, `No result in the tool (not fitted in R either): ${bad.map(r => `${r.method} (${r.status})`).join(', ')}`)));
+    if (bad.length) out.push(rComment(`No result in the tool (not fitted in R either): ${bad.map(r => `${r.method} (${r.status})`).join(', ')}`));
     for (const { r, j } of okR) {
       const { fam, how, fix, start, opt } = fitArgs(r);
       const key = `u${k + 1}.r${j + 1}`, aic = r.likelihoodMaximised && r.logLik != null;
@@ -255,26 +252,24 @@ fb_boot <- function(kind, x, fam, how, fix, par, opt, L, U, B, seed, step, schem
  * runs = [{ kind: 'gof'|'ci', B, seed, step (cm or null), scheme, level }] (the runs done on the page), o as buildR.
  */
 export function buildBootR(s, R, POOL, k, r, runs, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]), g = !!R.grouped;
+  const T = (a, b) => (b), hd = c => c == null ? '' : String(s.src.headers[c]), g = !!R.grouped;
   const pool = s.mode === 'pool' || s.pcol == null, f = s.unit === 'mm' ? 0.1 : 1, u = R.units[k], out = [];
-  const name = `${u.plot === POOL ? T('bütün örnek alanlar', 'all plots') : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
-  out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu (bootstrap)', 'Diameter Distribution Lab: R code (bootstrap)'), tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
-    notes: [T(`Aşama 3a: bir birimin (${name}) bir fit işleminin (${r.method}) bootstrap'ı. Üreteç aracınkidir (mulberry32, 32 bitlik aritmetik): aynı tohum aynı çekilişleri verir. Çekilişler aracın kestirimlerinden yapılır (aynı örnekler için); R'ın kendi kestirimi yanında yazdırılır.`,
-      `Stage 3a: the bootstrap of one fit (${r.method}) of one unit (${name}). The generator is the tool's (mulberry32, 32-bit arithmetic): the same seed gives the same draws. The draws come from the tool's estimates (for the same samples); R's own estimate is printed beside them.`),
-    T('Parametrik: her tekrar fit edilen gözlem modelinden (eşikli veride koşullu dağılım, sınıflarda sınıf sayıları), aynı ölçüm yuvarlamasıyla çekilir ve aynı yöntemle yeniden fit edilir; p = (1 + #{T_b ≥ T_0})/(B_ok + 1). Parametrik olmayan: ağaçlar birim içinde iadeli (yerine koyarak) çekilir. Aralıklar yüzdelik (tip 7). Yeniden fit edilemeyen tekrarlar sayılır ve dışarıda kalır.',
-      'Parametric: every replicate is drawn from the fitted observation model (the conditional distribution under thresholds, class counts for classes) with the same measurement rounding and refitted with the same method; p = (1 + #{T_b ≥ T_0})/(B_ok + 1). Non-parametric: trees resampled with replacement within the unit. Percentile intervals (type 7). Replicates whose refit fails are counted and left out.')] }));
+  const name = `${u.plot === POOL ? 'all plots' : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
+  out.push(header({ title: 'Diameter Distribution Lab: R code (bootstrap)', tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
+    notes: [`Stage 3a: the bootstrap of one fit (${r.method}) of one unit (${name}). The generator is the tool's (mulberry32, 32-bit arithmetic): the same seed gives the same draws. The draws come from the tool's estimates (for the same samples); R's own estimate is printed beside them.`,
+    'Parametric: every replicate is drawn from the fitted observation model (the conditional distribution under thresholds, class counts for classes) with the same measurement rounding and refitted with the same method; p = (1 + #{T_b ≥ T_0})/(B_ok + 1). Non-parametric: trees resampled with replacement within the unit. Percentile intervals (type 7). Replicates whose refit fails are counted and left out.'] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal), FB_NUM, '', FB_OUT, '', ...dataBlock(s, R, T, hd, pool, f, g), R_FAMILIES, R_METHODS, R_BOOT, `res <- list()`, '');
   const { fam, how, fix, start, opt } = fitArgs(r), L = r.truncation ? r.truncation.lower : null, U = r.truncation ? r.truncation.upper : null;
-  out.push(rComment(`${T('Birim', 'Unit')}: ${name}; ${r.method}`),
+  out.push(rComment(`Unit: ${name}; ${r.method}`),
     `x <- ${g ? 'fb_cls' : 'fb_unit'}(${rStr(u.plot === POOL ? '' : u.plot)}, ${u.period == null ? 'NA' : rStr(u.period)})`,
-    `r0 <- fb_run(x, ${rStr(fam.id)}, ${rStr(how)}, fix = ${rList(fix)}, start = ${rList(start)}, opt = ${rList(opt)})   # ${T('R\'ın kendi kestirimi', 'R\'s own estimate')}`,
-    `par <- ${rList(Object.fromEntries(fam.params.map(q => [q.key, r.params[q.key]])))}   # ${T('aracın kestirimleri: çekilişler bunlardan', 'the tool\'s estimates: the draws come from these')}`,
+    `r0 <- fb_run(x, ${rStr(fam.id)}, ${rStr(how)}, fix = ${rList(fix)}, start = ${rList(start)}, opt = ${rList(opt)})   # R's own estimate`,
+    `par <- ${rList(Object.fromEntries(fam.params.map(q => [q.key, r.params[q.key]])))}   # the tool's estimates: the draws come from these`,
     `print(rbind(tool = unlist(par)[names(r0$est)], R = r0$est))`,
     `fix <- ${rList(fix)}; opt <- ${rList(opt)}; L <- ${L == null ? 'NA' : rNum(L)}; U <- ${U == null ? 'NA' : rNum(U)}`, '');
   for (const run of runs) {
     const tag = run.kind === 'gof' ? 'gof' : `ci.${run.scheme === 'nonparametric' ? 'np' : 'p'}`;
-    out.push(rComment(run.kind === 'gof' ? T(`Parametrik bootstrap p değerleri: B = ${run.B}, tohum ${run.seed}, yuvarlama ${run.step == null ? 'yok' : run.step + ' cm'}`, `Parametric bootstrap p-values: B = ${run.B}, seed ${run.seed}, rounding ${run.step == null ? 'none' : run.step + ' cm'}`)
-      : T(`Bootstrap yüzdelik aralıkları (${run.scheme === 'nonparametric' ? 'parametrik olmayan' : 'parametrik'}): B = ${run.B}, tohum ${run.seed}, düzey ${run.level}`, `Bootstrap percentile intervals (${run.scheme}): B = ${run.B}, seed ${run.seed}, level ${run.level}`)),
+    out.push(rComment(run.kind === 'gof' ? `Parametric bootstrap p-values: B = ${run.B}, seed ${run.seed}, rounding ${run.step == null ? 'none' : run.step + ' cm'}`
+      : `Bootstrap percentile intervals (${run.scheme}): B = ${run.B}, seed ${run.seed}, level ${run.level}`),
       `b <- fb_boot(${rStr(run.kind)}, x, ${rStr(fam.id)}, ${rStr(how)}, fix, par, opt, L, U, B = ${run.B}, seed = ${run.seed}, step = ${run.step == null ? 'NA' : rNum(run.step)}${run.kind === 'ci' ? `, scheme = ${rStr(run.scheme)}, level = ${rNum(run.level)}` : ''})`,
       `str(b); res[[${rStr(tag + '.completed')}]] <- b$completed`,
       run.kind === 'gof' ? `for (k in names(b$p)) { res[[paste0("gof.", k, ".ge")]] <- b$ge[[k]]; res[[paste0("gof.", k, ".p")]] <- b$p[[k]] }`

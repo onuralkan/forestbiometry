@@ -3,7 +3,7 @@
 // No new science: the report copies values from the package (counts by hand below), from the dashboard engine
 // (tested in tests/dashboard/test_di04.mjs) and from run records (values put in here by hand). Checks: number and
 // cell text, table columns, record sections of several tools, sources, citations (core/citation.js), escaping of
-// user text, sections on and off, both languages, the standalone file.
+// user text, sections on and off, the default English title, the standalone file.
 import { readFile } from 'node:fs/promises';
 import * as R from '../../assets/lab/report/calc.js';
 import { renderReport, standalone, para } from '../../assets/lab/report/render.js';
@@ -48,25 +48,25 @@ ok(secs[2].tables[0].cols.join() === 'unit,A,H,SI' && secs[2].coefSources[0] ===
 // the report
 const pkg = R.packagePart(project, { ...blankFilter(), period: '2024' }, 'unmeasured', 0, [{ kind: 'dist', obj: distRec }, { kind: 'hd', obj: hdRec }]);
 ok(pkg.trees === d24.length && pkg.hist.curves.length === 1 && pkg.hd.curves.length === 1, 'package part: 2024 records, one density and one height curve from the records');
-const citeData = { author: { family: 'Alkan', given: 'Onur' }, year: 2026, base: 'https://forestbiometry.online/', site: { tr: 'Ormancılık Biyometrisi Araçları', en: 'Forest Biometrics Tools' }, doi: '10.5281/zenodo.24135603' };
-const tools = { 'cap-dagilimi.php': { v: '2.2.0', tr: 'Çap Dağılımı Laboratuvarı', en: 'Diameter Distribution Lab' }, 'boy-cap.php': { v: '1.1.0', tr: 'Boy–Çap Modelleme', en: 'Height–Diameter Modelling' }, 'bonitet.php': { v: '1.0.0-beta.3', tr: 'Bonitet Hesaplayıcısı', en: 'Site Index' }, 'rapor.php': { v: '1.0.0-beta.1', tr: 'Rapor Üretici', en: 'Report Generator' } };
+const citeData = { author: { family: 'Alkan', given: 'Onur' }, year: 2026, base: 'https://forestbiometry.online/', site: { en: 'Forest Biometrics Tools' }, doi: '10.5281/zenodo.24135603' };
+const tools = { 'cap-dagilimi.php': { v: '2.2.0', en: 'Diameter Distribution Lab' }, 'boy-cap.php': { v: '1.1.0', en: 'Height–Diameter Modelling' }, 'bonitet.php': { v: '1.0.0-beta.3', en: 'Site Index' }, 'rapor.php': { v: '1.0.0-beta.1', en: 'Report Generator' } };
 const meta = { ...R.blankMeta(), title: 'Deneme <b>raporu</b>', author: 'A. Yazar', date: '2026-11-16', intro: 'Birinci paragraf.\n\nİkinci <script>alert(1)</script>', notes: { ...R.blankMeta().notes, charts: 'Grafik notu' } };
-const model = { lang: 'tr', meta, sections: Object.fromEntries(R.SECTIONS.map(s => [s, true])), pkg, records: secs, cite: citeData, tools, generated: { at: '2026-11-16T21:30:00.000Z', commit: 'b'.repeat(40), version: '1.0.0-beta.1' } };
+const model = { lang: 'en', meta, sections: Object.fromEntries(R.SECTIONS.map(s => [s, true])), pkg, records: secs, cite: citeData, tools, generated: { at: '2026-11-16T21:30:00.000Z', commit: 'b'.repeat(40), version: '1.0.0-beta.1' } };
 const html = renderReport(model);
 ok(!html.includes('<script>') && html.includes('&lt;script&gt;') && html.includes('Deneme &lt;b&gt;raporu&lt;/b&gt;') && html.includes('Bolu &lt;test&gt;'), 'user text escaped everywhere');
-ok((html.match(/<section class="r-sec"/g) || []).length === 5 && html.includes('<h2>1. Veri paketi</h2>') && html.includes('<h2>5. Ek: Tekrarlanabilirlik</h2>'), 'five numbered sections');
+ok((html.match(/<section class="r-sec"/g) || []).length === 5 && html.includes('<h2>1. Data package</h2>') && html.includes('<h2>5. Appendix: Reproducibility</h2>'), 'five numbered sections');
 ok(html.includes('<p>Birinci paragraf.</p><p>İkinci') && html.includes('<div class="r-note"><p>Grafik notu</p></div>'), 'intro paragraphs and a section note');
 ok((html.match(/<svg/g) || []).length === 5 && html.includes('weibull · weibull.ml'), 'five charts; density from the record named under the histogram');
-ok(html.includes(cite('apa', { lang: 'tr', ...citeData, accessed: '2026-11-16', tool: null })) && html.includes(cite('apa', { lang: 'tr', ...citeData, accessed: '2026-11-16', tool: { file: 'boy-cap.php', ...tools['boy-cap.php'] } })), 'platform and tool citations as the Cite dialog writes them (APA, report date as access date)');
-ok(html.includes('Bailey, R.L., Dell, T.R. 1973') && html.includes('[B] birincil kaynakta kontrol edildi') && html.includes('Kullanıcı, A. 2020. Bonitet tablosu.'), 'literature from the records with its status; user coefficient source');
+ok(html.includes(cite('apa', { ...citeData, accessed: '2026-11-16', tool: null })) && html.includes(cite('apa', { ...citeData, accessed: '2026-11-16', tool: { file: 'boy-cap.php', ...tools['boy-cap.php'] } })), 'platform and tool citations as the Cite dialog writes them (APA, report date as access date)');
+ok(html.includes('Bailey, R.L., Dell, T.R. 1973') && html.includes('[B] checked in the primary source') && html.includes('Kullanıcı, A. 2020. Bonitet tablosu.'), 'literature from the records with its status; user coefficient source');
 ok(html.includes('b'.repeat(40)) && html.includes('a'.repeat(40)) && html.includes(project.sha256) && html.includes(distRec.integrity.value) && html.includes('ff'.repeat(32)), 'appendix: report and record commits, package fingerprint, seal, input fingerprints');
 const off = renderReport({ ...model, sections: { package: true, charts: false, records: false, sources: false, repro: false } });
 ok((off.match(/<section/g) || []).length === 1 && !off.includes('<svg'), 'sections can be left out');
 const en = renderReport({ ...model, lang: 'en', meta: { ...meta, title: '' } });
 ok(en.includes('<h1>Inventory report</h1>') && en.includes('<h2>1. Data package</h2>') && en.includes('Retrieved November 16, 2026') && en.includes('lang="en"'), 'English report: default title, headings, citation in English');
 const none = renderReport({ ...model, pkg: null, records: [] });
-ok(!none.includes('r-package') && none.includes('Rapora çalışma kaydı eklenmedi.'), 'no package, no records: said so');
-const file = standalone(html, 'Deneme', 'tr');
+ok(!none.includes('r-package') && none.includes('No run records were added to the report.'), 'no package, no records: said so');
+const file = standalone(html, 'Deneme', 'en');
 ok(file.startsWith('<!doctype html>') && file.includes('<meta charset="utf-8">') && file.includes('.ch-l0{stroke:#0072b2}') && file.includes('@page{size:A4'), 'standalone file: doctype, charset, chart colours and page size written in');
 ok(para('a\nb\n\nc') === '<p>a<br>b</p><p>c</p>' && para('  ') === '', 'notes: paragraphs and line breaks');
 

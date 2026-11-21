@@ -2,19 +2,6 @@
 import { makeT } from '../core/i18n.js';
 
 export const T = makeT({
-  tr: {
-    privacy: 'Rapor bu tarayıcıda hazırlanır; paket, kayıtlar ve notlar sunucuya gönderilmez.',
-    'm.h': 'Rapor bilgileri', 'm.title': 'Başlık', 'm.author': 'Hazırlayan', 'm.org': 'Kurum', 'm.date': 'Tarih', 'm.intro': 'Giriş metni', 'm.lang': 'Rapor dili', 'm.tr': 'Türkçe', 'm.en': 'İngilizce',
-    'p.h': 'Veri paketi', 'p.pick': 'Paket', 'p.none': '(paket yok)', 'p.sample': 'Örnek paket (benzetim verisi)', 'p.empty': 'Envanter Verisi Yöneticisi\'nde paket yok; rapor yalnızca kayıtlardan da hazırlanabilir.',
-    'p.samplenote': 'Raporda örnek paket (benzetim verisi) kullanılıyor (yalnızca deneme için).',
-    'f.period': 'Dönem', 'f.stratum': 'Tabaka', 'f.species': 'Tür', 'f.plot': 'Örnek alan', 'f.all': 'hepsi', 'f.noper': 'dönemsiz', 'f.nosp': 'tür yok',
-    'f.width': 'Çap sınıfı genişliği (cm)', 'f.auto': 'otomatik', 'f.ec': 'Kaydı olmayan örnek alan × dönem', 'f.ec.unmeasured': 'ölçülmedi', 'f.ec.empty': 'boş (N = G = 0)',
-    'r.h': 'Çalışma kayıtları', 'r.file': 'Kayıt ekle (.json)', 'r.pano': "Veri Görselleştirme'deki kayıtları al", 'r.none': 'Kayıt eklenmedi.', 'r.bad': p => `${p.f}: çalışma kaydı değil.`, 'r.read': p => `${p.f}: JSON olarak okunamadı.`,
-    'r.rm': 'Kaldır', 'r.up': 'Yukarı', 'r.got': p => `Veri Görselleştirme'den ${p.n} kayıt alındı.`,
-    's.h': 'Bölümler ve notlar', 's.package': 'Veri paketi', 's.charts': 'Grafikler', 's.records': 'Çalışma kayıtları', 's.sources': 'Kaynaklar', 's.repro': 'Ek: Tekrarlanabilirlik', 's.note': 'Not',
-    print: 'Yazdır / PDF olarak kaydet', html: 'HTML indir', 'print.note': 'PDF için yazdırma penceresinde hedef olarak "PDF olarak kaydet"i seçin. Grafikler ve tablolar A4 sayfaya göre dizilir.',
-    preview: 'Önizleme',
-  },
   en: {
     privacy: 'The report is prepared in this browser; the package, records and notes are not sent to the server.',
     'm.h': 'Report details', 'm.title': 'Title', 'm.author': 'Prepared by', 'm.org': 'Institution', 'm.date': 'Date', 'm.intro': 'Introduction', 'm.lang': 'Report language', 'm.tr': 'Turkish', 'm.en': 'English',

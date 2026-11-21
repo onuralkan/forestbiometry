@@ -175,19 +175,16 @@ function radarChart(o) {
 __fb_m["core/citation.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "FORMATS": () => FORMATS, "NAMES": () => NAMES, "cite": () => cite, "plain": () => plain });
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
-// Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// Input c = { author:{ family, given }, year, base (canonical URL with trailing '/'), site:{ en },
+//             tool: null | { file, v, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
 // doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
 const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MON_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const MLA_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const IEEE_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
 const VAN_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SHORT_TR = ['Oca.', 'Şub.', 'Mar.', 'Nis.', 'May.', 'Haz.', 'Tem.', 'Ağu.', 'Eyl.', 'Eki.', 'Kas.', 'Ara.'];
-const VAN_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
 const FORMATS = ['apa', 'mla', 'chicago', 'harvard', 'ieee', 'vancouver', 'bibtex', 'ris'];
 const NAMES = { apa: 'APA 7', mla: 'MLA 9', chicago: 'Chicago (author-date)', harvard: 'Harvard', ieee: 'IEEE', vancouver: 'Vancouver', bibtex: 'BibTeX', ris: 'RIS' };
@@ -197,9 +194,9 @@ const it = s => `<i>${esc(s)}</i>`;
 const plain = html => html.replace(/<\/?i>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 function parts(c) {
-  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1, tr = c.lang === 'tr';
-  const site = c.site[c.lang], tool = c.tool ? c.tool[c.lang] : null;
-  return { tr, y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
+  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1;
+  const site = c.site.en, tool = c.tool ? c.tool.en : null;
+  return { y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
     url: c.base + (c.tool ? c.tool.file : ''), fam: c.author.family, given: c.author.given, ini: c.author.given.charAt(0) + '.', year: c.year };
 }
 const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -208,54 +205,42 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 function cite(fmt, c) {
   const body = core(fmt, c);
   if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
-  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  const u = esc('https://doi.org/' + c.doi);
   switch (fmt) {
-    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'apa': return `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
     case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
     case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
     default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
   }
 }
 function core(fmt, c) {
-  const p = parts(c), tr = p.tr, v = p.v;
+  const p = parts(c), v = p.v;
   switch (fmt) {
     case 'apa':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Sürüm ${v})` : ''} [Web uygulaması].${p.container ? ` ${esc(p.container)}.` : ''} ${p.d} ${MON_TR[p.mi]} ${p.y} tarihinde ${esc(p.url)} adresinden erişildi.`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
     case 'mla':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Sürüm ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Erişim ${p.d} ${SHORT_TR[p.mi]} ${p.y}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
     case 'chicago':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Sürüm ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Erişim ${p.d} ${MON_TR[p.mi]} ${p.y}. ${esc(p.url)}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
     case 'harvard':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (sürüm ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Erişim adresi: ${esc(p.url)} (Erişim tarihi: ${p.d} ${MON_TR[p.mi]} ${p.y}).`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
     case 'ieee': {
-      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ${tr ? 'sür.' : 'ver.'} ${v}, ` : `${it(p.title)}, `;
-      return tr
-        ? `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Çevrimiçi]. Erişim: ${esc(p.url)} (erişim tarihi: ${p.d} ${SHORT_TR[p.mi]} ${p.y}).`
-        : `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
+      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ver. ${v}, ` : `${it(p.title)}, `;
+      return `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
     }
     case 'vancouver':
-      return tr
-        ? `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [İnternet]. ${v ? `Sürüm ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [erişim ${p.y} ${VAN_TR[p.mi]} ${p.d}]. Erişim adresi: ${esc(p.url)}`
-        : `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
+      return `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
     case 'bibtex': {
       const key = `${p.fam.toLowerCase()}${p.year}${c.tool ? c.tool.file.replace(/\.php$/, '').replace(/[^a-z0-9]/g, '') : 'forestbiometry'}`;
       const tt = p.title.replace(/–/g, '--');
-      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
+      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{Web application${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (`Version ${v}. `) : ''}Accessed ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `Version ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }
@@ -273,11 +258,8 @@ __fb_r("core/reset-all.js");
    // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
-const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
+const ui = 'en';
 const T = {
-  tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
-    copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
     note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
@@ -390,12 +372,13 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
-// Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
-// languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
-const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
+// Tiny i18n helper. The site is English only (20 Nov 2026; Turkish removed from the code 21 Nov 2026): `lang` is
+// always 'en' and every dictionary has a single `en` table. Numbers on screen use a decimal point and no thousands
+// separator; the interface never changes how data are parsed or stored.
+const lang = 'en';
 function makeT(dict) {
   return (key, p) => {
-    const s = (dict[lang] && dict[lang][key]) ?? dict.tr[key];
+    const s = dict.en[key];
     if (s == null) return key;
     return typeof s === 'function' ? s(p || {}) : s;
   };
@@ -403,23 +386,23 @@ function makeT(dict) {
 /**
  * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
  * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
- * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * point (English only). '−' is not used: negative numbers keep
  * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
  * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
 /** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
-const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+const SCREEN_DECIMAL = '.';
 /** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
-const LIST_SEP = lang === 'tr' ? '; ' : ', ';
+const LIST_SEP = ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
+  return s === '-0' ? '0' : s;
 }
-/** Decimal separator of CSV exports (both languages). */
+/** Decimal separator of CSV exports. */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -437,12 +420,6 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
-    auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
-    encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
-    fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
-    comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
     auto: p => `detected: ${p.d}`, header: 'First row is a header', enc: 'Text encoding', sheet: 'Worksheet', pasted: 'pasted table',
     encwarn: 'Reading the file as UTF-8 produced broken characters; Turkish Excel CSV files are often Windows-1254.',
@@ -823,14 +800,12 @@ const rComment = text => String(text).split('\n').map(l => ('# ' + l).trimEnd())
  * o = { title, tool: { id, version }, site, created, lang, packages: ['nlme', …], notes: [lines] }
  */
 function header(o) {
-  const tr = o.lang === 'tr', pk = o.packages || [];
+  const pk = o.packages || [];
   const lines = [
     `${o.title}`,
-    tr ? `Üreten: ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}` : `Written by ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}`,
-    tr ? 'Bu betik aracın yaptığı analizi aynı ayarlarla R\'da yeniden yapar. Veri betiğe gömülmez: aşağıdaki dosya adını kendi dosyanızın yoluyla değiştirin.'
-       : 'This script redoes the tool\'s analysis in R with the same settings. The data are not embedded: change the file name below to the path of your file.',
-    tr ? `Paketler: ${pk.length ? pk.join(', ') : 'yalnızca temel R (stats, utils)'}. Sürümler çalıştırınca yazdırılır.`
-       : `Packages: ${pk.length ? pk.join(', ') : 'base R only (stats, utils)'}. Their versions are printed when the script runs.`,
+    `Written by ${o.tool.id} ${o.tool.version}, ${o.site || 'https://forestbiometry.online'}; ${o.created}`,
+    'This script redoes the tool\'s analysis in R with the same settings. The data are not embedded: change the file name below to the path of your file.',
+    `Packages: ${pk.length ? pk.join(', ') : 'base R only (stats, utils)'}. Their versions are printed when the script runs.`,
     ...(o.notes || []),
   ];
   const libs = pk.map(p => `suppressPackageStartupMessages(library(${p}))`);
@@ -848,10 +823,10 @@ function header(o) {
  * significant digits, the same double) and read back by fb_num like every other cell.
  */
 function readBlock(imp, lang, fileName, decimal = '.') {
-  const tr = lang === 'tr', kind = imp && imp.kind, header = !imp || imp.header !== false;
+  const kind = imp && imp.kind, header = !imp || imp.header !== false;
   const file = String(fileName || (imp && imp.name) || 'data.csv').replace(/\s+\([^)]*\)$/, '');   // the sample's label "(simulated)" is not part of its file name
   if (kind === 'xlsx') {
-    return [rComment(tr ? 'Veri: Excel dosyası (readxl paketi gerekir); sayılar seçilen ondalık ayırıcıyla metne yazılır, sonra bütün hücreler metin olarak okunur.' : 'Data: Excel file (needs the readxl package); numbers written as text with the chosen decimal separator, every cell then read as text.'),
+    return [rComment('Data: Excel file (needs the readxl package); numbers written as text with the chosen decimal separator, every cell then read as text.'),
       `data_file <- ${rStr(file)}`,
       `xl <- readxl::read_excel(data_file, sheet = ${rStr(imp.sheet || 1)}, col_names = ${header ? 'TRUE' : 'FALSE'}, col_types = "list", .name_repair = "minimal")`,
       `xl_cell <- function(v) if (is.null(v) || length(v) == 0 || (length(v) == 1 && is.na(v))) "" else if (is.numeric(v)) sub(".", ${rStr(decimal)}, sprintf("%.17g", v), fixed = TRUE) else as.character(v)`,
@@ -862,9 +837,8 @@ function readBlock(imp, lang, fileName, decimal = '.') {
   const delim = csvLike ? ',' : (imp && (imp.delim || imp.detected)) || ',';
   const enc = csvLike ? 'UTF-8' : imp && imp.encoding ? String(imp.encoding).toUpperCase().replace('WINDOWS-', 'windows-') : 'UTF-8';
   const note = csvLike
-    ? (tr ? 'Veri: aracın betikle birlikte indirdiği CSV dosyası (tablo tarayıcıdaydı; aynı tablo, virgülle ayrılmış, UTF-8).' : 'Data: the CSV file the tool downloads with this script (the table was in the browser; the same table, comma-separated, UTF-8).')
-    : (tr ? `Veri: metin dosyası; ayırıcı ${JSON.stringify(delim)}, karakter kodlaması ${enc}, ${header ? 'ilk satır başlık' : 'başlık satırı yok'}; bütün hücreler metin olarak okunur.`
-          : `Data: text file; delimiter ${JSON.stringify(delim)}, encoding ${enc}, ${header ? 'first row is a header' : 'no header row'}; every cell read as text.`);
+    ? ('Data: the CSV file the tool downloads with this script (the table was in the browser; the same table, comma-separated, UTF-8).')
+    : (`Data: text file; delimiter ${JSON.stringify(delim)}, encoding ${enc}, ${header ? 'first row is a header' : 'no header row'}; every cell read as text.`);
   return [rComment(note),
     `data_file <- ${rStr(csvLike ? csvName(imp) : file)}`,
     `dat <- read.table(data_file, sep = ${rStr(delim)}, header = ${header ? 'TRUE' : 'FALSE'}, quote = "\\"", comment.char = "", colClasses = "character",`,
@@ -909,7 +883,7 @@ const FB_OUT = `fb_out <- function(x) {
  */
 const fbModel = lang => `fb_model <- function(rhs, params, vars) {
   fn <- tryCatch(deriv(rhs, params, function.arg = c(params, vars)), error = function(e) NULL)
-  if (is.null(fn)) message(${rStr(lang === 'tr' ? 'deriv bu formülün türevini alamıyor (örneğin abs); nls sayısal türev kullanır' : 'deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives')})
+  if (is.null(fn)) message(${rStr('deriv cannot differentiate this formula (e.g. abs); nls uses numerical derivatives')})
   form <- if (is.null(fn)) call("~", quote(.y), rhs) else call("~", quote(.y), as.call(c(quote(fn), lapply(c(params, vars), as.name))))
   list(rhs = rhs, params = params, fn = fn, form = as.formula(form))
 }
@@ -933,8 +907,6 @@ const { download } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { embed: 'Girdi verisini kayda ekle', embedHelp: 'İşaretli değilse JSON kaydında girdi dosyalarının yalnızca SHA-256 parmak izi bulunur; işaretliyse verinin kendisi de girer ve kayıt tek başına yeniden üretilebilir. Kaydı paylaşırsanız veriyi de paylaşmış olursunuz.',
-    fail: 'Kayıt hazırlanamadı', btn: 'Çalışma kaydı (JSON)' },
   en: { embed: 'Include the input data in the record', embedHelp: 'Unchecked, the JSON record holds only the SHA-256 fingerprint of each input file; checked, the data itself goes in too and the record reproduces on its own. If you share the record, you share the data.',
     fail: 'The record could not be prepared', btn: 'Run record (JSON)' },
 });
@@ -1186,19 +1158,7 @@ const { get, del, keys } = __fb_r("core/store.js");
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
-const tr = document.documentElement.lang !== 'en';
-const T = tr ? {
-  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
-  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
-  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
-    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
-    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
-    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
-    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
-    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
-    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
-  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
-} : {
+const T = {
   label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
   none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
   ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
@@ -1853,7 +1813,7 @@ function cellText(c) {
   return c.w != null ? c.w : String(c.v);
 }
 function padTo(a, n) { const r = a.slice(); while (r.length < n) r.push(''); return r; }
-function colName(i) { return (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'Column ' : 'Sütun ') + (i + 1); }
+function colName(i) { return 'Column ' + (i + 1); }
 function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k = seen.get(x) || 0; seen.set(x, k + 1); return k ? `${x} (${k + 1})` : x; }); }
 };
 
@@ -3811,412 +3771,6 @@ const { makeT } = __fb_r("core/i18n.js");
 // by registry id, so a new family only adds entries here.
 
 
-const tr = {
-  'dev': 'Sürüm 2.0.0: ilk çok dağılımlı sürüm. Önceki Weibull sürümünden farklı olarak momentlerde varsayılan varyans n bölenlidir (n − 1 seçenek). Meşcere modelleri (bir meşcerenin dağılımını meşcere değişkenlerinden tahmin) sonraki sürümlere kaldı.',
-  'step.1': 'Veri', 'step.2': 'Ayarlar', 'step.3': 'Sonuçlar',
-  'privacy': 'Dosyanız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Oturum yalnızca bu tarayıcıda (IndexedDB) saklanır.',
-  'imp.h': 'Çap verisi', 'imp.sub': 'Her satır bir ağaç: çap sütunu zorunlu; örnek alan ve dönem (ölçüm yılı) sütunları isteğe bağlı.',
-  'sample': 'Örnek veriyi yükle', 'sample.note': 'Örnek veri benzetimdir, gerçek ölçüm değildir.',
-  'next': 'Devam', 'back': 'Geri', 'calc': 'Hesapla', 'reset': 'Oturumu sıfırla', 'need.data': 'Önce bir tablo yükleyin.',
-  'restored': p => `Önceki oturum geri yüklendi (${p.when}).`, 'none': '(yok)',
-  'col.h': 'Sütunlar', 'col.d': 'Çap', 'col.unit': 'Çap birimi', 'col.plot': 'Örnek alan', 'col.per': 'Dönem', 'col.filter': 'Süzgeç sütunu', 'col.fval': 'Değer',
-  'col.need': 'Çap sütununu seçin.', 'col.pernote': 'Dönem seçilirse her örnek alan–dönem birleşimi ayrı bir analiz birimidir; aynı alanın tekrar ölçümleri birleştirilmez.',
-  'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'Nokta (24.5)', 'dec.comma': 'Virgül (24,5)',
-  'dec.v.dot': 'Ondalık nokta kullanılmış görünüyor.', 'dec.v.comma': 'Ondalık virgül kullanılmış görünüyor.', 'dec.v.none': 'Metin olarak yazılmış ondalıklı sayı yok; varsayılan nokta seçildi.',
-  'dec.v.ambiguous': p => `Belirsiz: ${p.ex} gibi değerler ondalık da binlik ayırıcılı tam sayı da olabilir; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.`, 'dec.v.conflict': 'Çelişkili: nokta ve virgül birlikte kullanılmış; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.',
-  'mode.h': 'Analiz birimi', 'mode.each': 'Her örnek alan ayrı', 'mode.pool': 'Bütün ağaçlar birlikte (havuz)',
-  'mode.poolnote': 'Havuzda her ağaç eşit ağırlık alır; örnek alanlar farklı büyüklükteyse bu, hektar ağırlıklı bir meşcere dağılımı değildir.',
-  'fam.h': 'Dağılımlar ve kestirim yöntemleri', 'fam.sub': 'Yalnızca uygulanmış ve bağımsız referansla sınanmış dağılım ve yöntemler listelenir. Yöntem (istatistiksel kestirim ilkesi) ile sayısal çözücü ayrı şeylerdir; çözücü sonuçta yazılır.',
-  'fam.weibull': 'Weibull', 'fam.need': 'En az bir yöntem seçin.',
-  'fam.normal': 'Normal', 'fam.lognormal': 'Lognormal (iki parametreli)',
-  'tab.boot': 'Belirsizlik',
-  'bt.sub': 'Bootstrap ile uyum testi p değerleri ve parametre/yüzdelik aralıkları. İki işlem ayrıdır; her biri seçtiğiniz fit işlemi için çalışır. Hesap tarayıcıda arka planda yapılır, iptal edilebilir.',
-  'bt.B': 'Tekrar sayısı B', 'bt.seed': 'Tohum (seed; aynı tohum aynı sonucu verir)', 'bt.round': 'Ölçüm yuvarlaması', 'bt.step': 'Adım (cm)',
-  'bt.round.auto': p => `veriden (${p.s} cm)`, 'bt.round.none': 'yok', 'bt.round.value': 'değer gir',
-  'bt.note': 'Parametrik bootstrap her tekrarda fit edilen gözlem modelinden (eşik varsa koşullu, sınıflı veride sınıf sayıları) aynı büyüklükte veri üretir, aynı yuvarlamayı uygular ve aynı yöntem ve seçeneklerle yeniden kestirir; kullanıcının sabitlediği sınırlar sabit kalır. Yeniden kestirilemeyen tekrarlar durumlarıyla sayılır ve dışarıda bırakılır.',
-  'bt.gof.h': 'Uyum testi p değerleri (parametrik bootstrap)', 'bt.gof.sub': 'p = (1 + T ≥ T₀ olan tekrar sayısı)/(tamamlanan tekrar + 1). Ham veride KS, AD, CvM; sınıflı veride Pearson X².',
-  'bt.ci.h': 'Parametre ve yüzdelik aralıkları (%95, yüzdelik yöntemi)', 'bt.ci.sub': 'Kestirilen parametreler ve fit edilen dağılımın çap yüzdelikleri (Q25, Q50, Q75, Q95) için tekrarların %2,5 ve %97,5 yüzdelikleri (tip 7) ile bootstrap standart hatası.',
-  'bt.scheme.parametric': 'Parametrik (fit edilen modelden)', 'bt.scheme.nonparametric': 'Parametrik olmayan (birim içinde ağaçlar iadeli (yerine koyarak) yeniden örneklenir)',
-  'bt.run': 'Hesapla', 'bt.cancel': 'İptal', 'bt.cancelled': 'Bootstrap iptal edildi; sonuç verilmedi.', 'bt.prog': p => `${p.k} / ${p.B} tekrar`, 'bt.err': p => `Bootstrap hatası: ${p.m}`,
-  'bt.badseed': 'Tohum sıfır ya da pozitif bir tam sayı olmalı.', 'bt.badstep': 'Yuvarlama adımı pozitif bir sayı olmalı.',
-  'bt.unsup': 'Bu fit işlemi için bootstrap yok',
-  'bt.boot.notok': 'fit işlemi başarısız', 'bt.boot.kind': 'özetlerden geri kazanımda veri üreten süreç yok', 'bt.boot.perha': 'hektar sıklığında gerçek ağaç sayısı bilinmiyor',
-  'bt.boot.zero': 'sınıf dışı "ölçüldü, ağaç yok" seçeneğinde (henüz) desteklenmiyor; "kaydedilmedi" seçeneğiyle kullanılabilir', 'bt.boot.npclasses': 'sınıflı veride parametrik olmayan yeniden örnekleme yok',
-  'bt.meta': p => `Tohum ${p.seed}; istenen ${p.B}, tamamlanan ${p.ok} tekrar; başarısız: ${p.f} (%${p.r}); yuvarlama: ${p.st}.`, 'bt.nostep': 'yok',
-  'bt.warn': p => `Tekrarların %${p.r}'i yeniden kestirilemedi: sonuçlar bu tekrarlar dışarıda bırakılarak hesaplandı ve yanlı olabilir.`,
-  'bt.few': p => `Tamamlanan tekrar ${p.m}'den az: sonuç verilmedi.`,
-  'bt.stat': 'İstatistik', 'bt.ge': 'T ≥ T₀ olan tekrar', 'bt.p': 'p (bootstrap)', 'bt.mcse': 'Monte Carlo SH', 'bt.s.ks': 'KS D', 'bt.s.ad': 'AD A²', 'bt.s.cvm': 'CvM W²', 'bt.s.x2': 'Pearson X²',
-  'bt.q': 'Büyüklük', 'bt.est': 'Kestirim', 'bt.lo': 'Alt %2,5', 'bt.hi': 'Üst %97,5', 'bt.se': 'Bootstrap SH', 'bt.pct': p => `Q${p.q} (cm)`,
-  'bt.ci.note': p => `Şema: ${p.s}. Çok alanlı meşcere modellerinde örnek alan düzeyinde yeniden örnekleme ayrı bir şemadır, burada yapılmaz. Wald aralığı verilmez.`,
-  
-  'tab.compare': 'Karşılaştırma', 'sheet.cmp': 'Karsilastirma',
-  'ch.scale.density': 'Yoğunluk (1/cm)', 'ch.scale.count': 'Sayı (ağaç) ve beklenen sınıf sayıları', 'ch.histn': p => `Sınıf sayıları ve beklenen sayılar, ${p.u}`, 'ch.count': 'Ağaç sayısı',
-  'ch.bins2': 'Histogram "Sınıflar" sekmesindeki sınıf kenarlarıyla çizilir (yoğunluk = sayı/(n × genişlik)); eğriler olasılık yoğunluğudur.', 'ch.binsn': 'Çubuklar gözlenen sınıf sayılarıdır; noktalar n × [F(üst) − F(alt)], aynı sınıf kenarlarıyla.',
-  'ch.diag': 'Tanı grafikleri', 'ch.qq': 'Q–Q grafiği', 'ch.qq.x': 'Kuramsal yüzdelik (cm)', 'ch.qq.y': 'Gözlenen çap (cm)', 'ch.pp': 'P–P grafiği', 'ch.pp.x': 'Kuramsal F(d)', 'ch.pp.y': 'Ampirik oran (i − 0,5)/n',
-  'ch.diag.note': 'Çizim konumu (i − 0,5)/n. Ölçüm eşikli fit işlemlerinde kuramsal değerler koşullu dağılımdandır. Noktaların 1:1 doğrusundan sapması uyumsuzluğu gösterir; bu grafikler test değildir.',
-  'cmp.sort': 'Sırala', 'cmp.note': 'Sonuçlar gözlem sürecine göre ayrı tablolardadır; farklı veri ya da gözlem süreçleri aynı sırada karışmaz. Bileşik bir "en iyi model" puanı yoktur: tablo yalnızca seçtiğiniz ölçüte göre sıralanır. KS, AD ve CvM için standart tablolardan p değeri verilmez (parametreler aynı veriden kestirildi); bootstrap p değerleri "Belirsizlik" sekmesindedir. Sınıf hataları "Sınıflar" sekmesindeki ortak sınıf kenarlarıyla, kuyruklar dışında hesaplanır.',
-  'cmp.sorted': p => `Sıralama: ${p.c} (${p.d})`, 'cmp.asc': 'küçük daha iyi', 'cmp.desc': 'büyük daha iyi',
-  'cmp.c.aic': 'AIC', 'cmp.c.bic': 'BIC', 'cmp.c.aicc': 'AICc', 'cmp.c.logLik': 'ln L', 'cmp.c.ks': 'KS D', 'cmp.c.ad': 'AD A²', 'cmp.c.cvm': 'CvM W²', 'cmp.c.l1': 'Σ|O − E| (ağaç)', 'cmp.c.ei': 'EI (ağaç/ha)',
-  'cmp.h.dist': 'Dağılım', 'cmp.h.method': 'Yöntem', 'cmp.h.params': 'Kestirilen parametreler', 'cmp.h.fixed': 'Sabit', 'cmp.h.n': 'n', 'cmp.h.k': 'k',
-  'cmp.logscore': 'ln L (log-skor)', 'cmp.l1': 'Σ|O − E| (ağaç)', 'cmp.ei': 'EI (ağaç/ha)',
-  'cmp.proc.raw': 'Tek ağaç çapları, ölçüm eşiği yok', 'cmp.proc.trunc': p => `Tek ağaç çapları, ölçüm eşiği ${p.L} ≤ d ≤ ${p.U} cm (koşullu olabilirlik)`, 'cmp.proc.cls': p => `Sınıflandırılmış sıklıklar; sınıf dışı: ${p.o}; sıklık: ${p.t}`,
-  'cmp.ml.h': 'En çok olabilirlik fit işlemleri (AIC/BIC ile karşılaştırılabilir)', 'cmp.ml.note': 'Aynı gözlemler, aynı birim, aynı gözlem süreci. k serbest parametre sayısıdır; kullanıcının sabitlediği sınırlar ve konum k\'ye girmez; bunlar veriye bakılarak seçildiyse karşılaştırma bu karmaşıklığı hesaba katmaz. ΔAIC ve ΔBIC tablodaki en küçük değere göredir. AICc = AIC + 2k(k + 1)/(n − k − 1); düzenli modeller için türetilmiştir, n ≤ k + 1 ise verilmez.',
-  'cmp.desc.h': 'Betimsel karşılaştırma (moment, yüzdelik ve benzeri; AIC yok)', 'cmp.desc.note': 'Bu yöntemler olabilirliği en büyüklemediği için AIC/BIC sıralamasına girmez; ln L yalnızca log-skor olarak gösterilir.',
-  'cmp.fail.h': 'Sonuç vermeyen fit işlemleri', 'cmp.x.group': 'Gözlem süreci', 'cmp.x.table': 'Tablo', 'cmp.x.ml': 'en çok olabilirlik', 'cmp.x.desc': 'betimsel',
-  
-  'tab.classes': 'Sınıflar', 'sheet.cls': 'Siniflar',
-  'dt.h': 'Veri türü', 'dt.raw': 'Tek ağaç çapları (her satır bir ağaç)', 'dt.classes': 'Sınıflandırılmış sıklıklar (her satır bir sınıf: alt sınır, üst sınır, sıklık)',
-  'dt.ct.h': 'Sıklık neyi gösteriyor?', 'dt.ct.count': 'Ölçülen ağaç sayısı (tam sayı)', 'dt.ct.perha': 'Hektara genişletilmiş sıklık (ağaç/ha; gerçek ağaç sayısı bilinmez)',
-  'dt.out.h': 'Listelenen sınıfların dışı', 'dt.out.zero': 'Ölçüldü, ağaç yok (sınıf dışı olasılık sıfır gözlemle hesaba girer)', 'dt.out.unrecorded': 'Kaydedilmedi (yalnızca listelenen sınıflar kaydedildi; koşullu olabilirlik)',
-  'dt.note': 'Sınıflar [alt, üst) aralıklarıdır, genişlikleri farklı olabilir; üst sınırı boş bırakılan son sınıf açık uçludur. Sıfır sıklıklı satırlar "ölçülmüş, ağaç yok" sınıflarıdır. Hektara genişletilmiş sıklıkta parametreler bulunur ama ağaç sayısı bilinmediği için ln L, AIC ve BIC verilmez.',
-  'col.lo': 'Alt sınır', 'col.hi': 'Üst sınır (boş = açık uçlu)', 'col.n': 'Sıklık', 'col.need.cls': 'Alt sınır, üst sınır ve sıklık sütunlarını seçin.',
-  'd.n.ha': 'Toplam sıklık (ağaç/ha)', 'd.cls': 'Sınıf sayısı', 'd.occ': 'Dolu sınıf', 'd.crange': 'Sınıf aralığı (cm)',
-  'ch.histc': p => `Sınıf sıklıkları ve yoğunluklar, ${p.u}`, 'ch.binsc': 'Çubuklar sizin sınıflarınızdır (yoğunluk = sıklık/(toplam × genişlik)); açık uçlu son sınıf çizilmez.', 'ch.ecdfc': 'Sınıf sınırlarında birikimli oran',
-  'cl.h': 'Sınıf tanımı', 'cl.mode.auto': 'Otomatik (histogramla aynı)', 'cl.mode.width': 'Başlangıç ve genişlik', 'cl.mode.edges': 'Sınır listesi',
-  'cl.start': 'Başlangıç (cm)', 'cl.width': 'Genişlik (cm)', 'cl.edges': 'Sınırlar (cm, boşlukla; son değer ∞ olabilir)', 'cl.open': 'Son sınıf açık uçlu',
-  'cl.note': 'Sınıflar [alt, üst) aralıklarıdır; olasılık p = F(üst) − F(alt), düzeltme sabiti yoktur. Gözlenen sayılar, beklenen sayılar, hektar değerleri ve kuyruk olasılıkları aynı sınırlardan hesaplanır.',
-  'cl.area': 'Örnek alan büyüklüğü (m²)', 'cl.area.note': 'İsteğe bağlı: girilirse hektar değerleri (N/ha) gösterilir; çarpan 10000/alan. Gözlenen ağaç sayısı n değişmez.',
-  'cl.fit': 'Fit işlemi', 'cl.t.class': 'Sınıf (cm)', 'cl.t.obs': 'Gözlenen', 'cl.t.obsha': 'Gözlenen (ağaç/ha)', 'cl.t.p': 'Olasılık', 'cl.t.exp': 'Beklenen', 'cl.t.expha': 'Beklenen (ağaç/ha)', 'cl.t.obsN': 'Gözlenen N/ha', 'cl.t.expN': 'Beklenen N/ha',
-  'cl.below': p => `${p.b} cm altı`, 'cl.above': p => `${p.b} cm ve üstü`, 'cl.gaps': 'Sınıflar arası boşluklar', 'cl.total': 'Toplam',
-  'cl.sum': p => `Σ|gözlenen − beklenen| = ${p.d} ağaç; hektarda (EI, Poudel ve Cao) = ${p.ei}; sınıfların toplam olasılığı ${p.pv}.`,
-  'cl.note.raw': 'Kuyruk satırları sınıfların dışındaki olasılıktır; yeniden ölçekleme yapılmaz: toplam olasılık 1, beklenen toplam n\'dir.',
-  'cl.note.trunc': 'Ölçüm eşikli fit işlemi: olasılıklar gözlenen koşullu dağılımdandır (eşik dışı olasılık sıfır).', 'cl.note.zero': 'Sınıf dışı "ölçüldü, ağaç yok": kuyruk olasılıkları gösterilir, gözlenen sayıları sıfırdır.',
-  'cl.note.unrec': 'Sınıf dışı "kaydedilmedi": olasılıklar listelenen sınıflar içinde koşulludur (toplam 1).',
-  'pr.cls.none': 'sınıf yok', 'pr.cls.bad': p => `geçersiz sınıf (${p.lo}, ${p.hi})`, 'pr.cls.open': 'açık uçlu sınıf yalnızca sonda olabilir', 'pr.cls.overlap': p => `sınıflar çakışıyor (${p.lo} < ${p.prevHi})`,
-  'pr.cls.edges': 'sınır listesi okunamadı (en az iki sayı)', 'pr.cls.width': 'başlangıç ve pozitif bir genişlik girin',
-  'pr.grp.freq': p => `${p.count} sıklık negatif ya da okunamıyor`, 'pr.grp.notint': p => `${p.count} sıklık tam sayı değil (ör. ${p.example}); ağaç sayısı tam sayıdır, hektar sıklığıysa türü değiştirin`,
-  'pr.grp.few': 'en az iki dolu sınıf gerekir', 'pr.grp.nostart': 'başlangıç değeri bulunamadı', 'pr.grp.support': 'başlangıçta dolu bir sınıfın olasılığı sıfır (sabit sınırları ya da konumu denetleyin)',
-  'w.grp.perha': 'hektara genişletilmiş sıklık: parametreler verildi, ağaç sayısı bilinmediği için ln L, AIC ve BIC verilmedi', 'w.grp.noconverge': 'sınıflı olabilirlik en büyüklenemedi; parametre verilmedi', 'w.grp.boundary': 'çözüm parametre sınırına kaçtı; parametre verilmedi',
-  'm.weibull.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.weibull.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır; kestirimde ham çap gibi kullanılmaz.',
-  'm.normal.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.normal.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır; kestirimde ham çap gibi kullanılmaz.',
-  'm.lognormal.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.lognormal.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır; kestirimde ham çap gibi kullanılmaz.',
-  'm.gamma.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.gamma.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır; kestirimde ham çap gibi kullanılmaz.',
-  'm.beta.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.beta.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır; kestirimde ham çap gibi kullanılmaz.',
-  'm.johnsonsb.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.johnsonsb.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır; kestirimde ham çap gibi kullanılmaz.',
-  'm.exponential.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.exponential.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır; kestirimde ham çap gibi kullanılmaz.',
-  'm.loglogistic.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.loglogistic.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır; kestirimde ham çap gibi kullanılmaz.',
-  
-  'tr.h': 'Ölçüm eşiği', 'tr.sub': 'Yalnızca belli bir çapın üstündeki (ya da iki eşik arasındaki) ağaçlar ölçüldüyse bunu burada bildirin. Eşik gözlemin özelliğidir: dağılımın destek sınırı (ör. Weibull a, beta L) ya da verideki en küçük çap değildir. Eşikli veride fit etme koşullu olabilirlikle yapılır; yalnızca grafiği kesmek doğru değildir.',
-  'tr.mode.none': 'Eşik yok (bütün ağaçlar ölçüldü)', 'tr.mode.lower': 'Alt eşik: yalnızca d ≥ L ölçüldü', 'tr.mode.both': 'Alt ve üst eşik: yalnızca L ≤ d ≤ U ölçüldü',
-  'tr.L': 'L, alt eşik (cm)', 'tr.U': 'U, üst eşik (cm)', 'tr.n.h': 'N neyi temsil ediyor?',
-  'tr.n.observed': 'Eşik üstündeki ağaçlar (ölçülen n)', 'tr.n.population': 'Bütün popülasyon (eşik altı dahil, n / P(L ≤ D ≤ U) ile kestirim)',
-  'tr.on': 'Eşik bildirildi: yalnızca koşullu en çok olabilirlik yöntemleri çalışır. Kesilmemiş veri için geçerli kapalı biçim (ML, momentler, yüzdelikler) yöntemleri kesilmiş gözlemlerde geçerli değildir ve devre dışıdır; özetlerden geri kazanımda ham veriden doldurma da kapanır.',
-  'tr.off': 'Eşik yoksa bütün yöntemler kullanılabilir.', 'tr.disabled': 'kesilmiş veride geçerli değil (koşullu sürümü yok); eşik varken devre dışı',
-  'tr.nofill': 'Ölçüm eşiği bildirildiği için ham veriden doldurma kapalı: eşikli örneğin ortalama ve yüzdelikleri bütün dağılımın özetleri değildir.',
-  'd.n.tr': 'n (ölçülen, eşik içinde)',
-  'dg.trunc': p => `eşik ${p.L} ≤ d ≤ ${p.U} cm; fit edilen dağılımda P(eşik içinde) = ${p.m}; ölçülen n = ${p.n}, eşik dışı dahil kestirilen toplam = ${p.N}; N kapsamı: ${p.s}`,
-  'pr.trunc.none': 'eşik değeri girin', 'pr.trunc.lower': 'alt eşik sıfır ya da pozitif bir sayı olmalı', 'pr.trunc.upper': 'üst eşik pozitif bir sayı olmalı',
-  'pr.trunc.order': p => `üst eşik (${p.upper}) alt eşikten (${p.lower}) büyük olmalı`, 'pr.trunc.outside': p => `${p.count} çap bildirilen eşiğin dışında (ör. ${p.example} cm); eşik ya da veri yanlış`,
-  'pr.trunc.nostart': 'başlangıç için kesilmemiş kestirim yapılamadı', 'w.trunc.noconverge': 'koşullu olabilirlik en büyüklenemedi; parametre verilmedi', 'w.trunc.boundary': 'koşullu çözüm parametre sınırına kaçtı; parametre verilmedi',
-  'sol.nelder-mead': 'Nelder–Mead', 'x.trunc': 'Ölçüm eşiği', 'x.trlo': 'Alt eşik (cm)', 'x.trhi': 'Üst eşik (cm)', 'x.mass': 'P(eşik içinde)', 'x.nscope': 'N (seçilen kapsam)',
-  'm.weibull.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.weibull.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.normal.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.normal.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.lognormal.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.lognormal.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.gamma.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.gamma.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.beta.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.beta.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.johnsonsb.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.johnsonsb.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.exponential.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.exponential.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.loglogistic.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.loglogistic.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  
-  'm.johnsonsb.parresol': 'Parresol (2003): ξ sabitken üç parametre geri kazanımı',
-  'prs.h': 'Johnson SB: Parresol (2003) geri kazanımı', 'prs.sub': 'ξ (alt sınır) sizin verdiğiniz sabit değerdir; λ, γ ve δ ortalama çap, medyan ve Dq\'dan (ya da hektarda ağaç sayısı ile göğüs yüzeyinden) geri kazanılır. γ medyandan [γ = δ ln((ξ + λ − M)/(M − ξ))], λ ve δ birinci ve ikinci ham moment denklemlerinden çözülür. Parresol\'un türe özgü regresyon katsayıları, başlangıç denklemleri ve en küçük üç çaptan alt sınır kestirimi kullanılmaz.',
-  'prs.f.xi': 'ξ, alt sınır (cm)', 'prs.f.median': 'Medyan çap (cm)', 'prs.f.nha': 'N, hektarda ağaç sayısı', 'prs.f.g': 'G, göğüs yüzeyi (m²/ha)',
-  'prs.q.h': 'Dq kaynağı', 'prs.q.ng': 'N ve G\'den', 'prs.q.dq': 'Dq\'yu doğrudan gir', 'prs.q.both': 'İkisi de (tutarlılık denetlenir)',
-  'prs.q.note': 'Dq² = G/(K·N), K = π/40000. İkisi birlikte girilirse N ve G\'den hesaplanan Dq ile girilen Dq arasındaki göreli fark en çok 10⁻³ olmalıdır (araç kuralı); hesapta girilen Dq kullanılır. N burada yalnızca Dq için kullanılır, örnek büyüklüğü değildir.',
-  'prs.fill.h': 'Ham veriden doldur (ortalama, medyan, Dq)', 'prs.fill.sub': 'Yüklü çaplardan ortalama, medyan (tip 7) ve Dq hesaplanır; N ve G ağaç verisinden çıkmaz, Dq doğrudan kullanılır. ξ\'yi siz girersiniz.',
-  'prs.from': p => `Hedefler ham veriden hesaplandı: ${p.u}, n = ${p.n}; medyan tip 7. Bir hedefi değiştirirseniz kayıt "elle girildi" olur.`,
-  'prs.k.mean': 'ortalama', 'prs.k.median': 'medyan', 'prs.k.dq': 'Dq', 'prs.k.nha': 'N', 'prs.k.g': 'G', 'prs.k.xi': 'ξ',
-  'prs.starts': p => `${p.k} başlangıç, ${p.s} çözüm`, 'prs.used': p => `Kullanılan Dq ${p.dq} cm (${p.src}; N ve G'den: ${p.ng}).`,
-  'prs.src.NG': 'N ve G\'den', 'prs.src.dq': 'girilen Dq', 'prs.src.both': 'girilen Dq, N ve G ile tutarlı',
-  'prs.p.note': 'Geri hesaplanan ortalama, medyan ve Dq girilen değerlere eşit olmalıdır. Gerekli koşulların sağlanması tek ya da uygun bir çözümü garanti etmez: birden çok başlangıçtan farklı çözümler çıkarsa sonuç "birden çok çözüm" olur, hiç çözüm yoksa "yakınsamadı".',
-  'prs.chart': 'Geri kazanılan Johnson SB yoğunluğu',
-  'pr.prs.xi': 'ξ sıfır ya da pozitif bir sayı olmalı', 'pr.prs.noq': 'Dq ya da N ile G girin',
-  'pr.prs.dqmismatch': p => `N ve G'den hesaplanan Dq (${p.dqNG} cm) girilen Dq (${p.dq} cm) ile tutarsız (göreli fark ${p.rel})`,
-  'pr.prs.meanbelow': p => `ortalama (${p.mean}) ξ'den (${p.xi}) büyük olmalı`, 'pr.prs.medianbelow': p => `medyan (${p.median}) ξ'den (${p.xi}) büyük olmalı`,
-  'pr.prs.dqbelow': p => `Dq (${p.dq}) ortalamadan (${p.mean}) büyük olmalı`,
-  'w.prs.noconverge': p => `${p.starts} başlangıçtan hiçbiri denklemleri sağlayan bir çözüme ulaşmadı; parametre verilmedi`,
-  'w.prs.ident': p => `çözüm zayıf belirlenmiş (koşul sayısı ${p.cond}); küçük girdi değişiklikleri parametreleri çok değiştirebilir`,
-  'ex.r.stand': 'R kodu (meşcere modeli) model geliştirme ve örnek alan katlı çapraz doğrulamayı R\'da yeniden yapar: aynı birimler ve hedefler, NLS (nls), SUR, log-OLS ya da CDFR (Levenberg–Marquardt betikte açıkça); tahmin sekmesinde bir tahmin yaptıysanız o meşcere için yanıtlar ve geri kazanılan parametreler. Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
-  'ex.r.boot': 'R kodu bu fit işleminin yaptığınız bootstrap çalıştırmalarını (p değerleri, aralıklar) R\'da yeniden yapar: üreteç aracınkidir, aynı tohum aynı tekrarları verir; yeniden fit işlemi fitdistrplus ile. Önce bootstrap\'ı çalıştırın. Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
-  'ex.r.rec': 'R kodu bu kartın geri kazanımını aynı özetlerle R\'da yeniden yapar (özetler betiğe yazılır, veri dosyası gerekmez; Johnson SB kartlarında nleqslv paketi). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
-  'ex.r': 'R kodu (.R)', 'ex.r.note': 'R kodu fit etme çalıştırmasını fitdistrplus paketiyle aynı ayarlarla yeniden yapar: aynı birimler, çaplar ya da sınıflar, dağılımlar (aracın parametreleriyle), yöntemler, sabit parametreler ve eşikler; KS, A², W², AIC/BIC. Geri kazanım kartlarının, bootstrap sekmesinin ve meşcere modellerinin kendi R kodu var. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylı paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
-  'ex.h': 'Dışa aktar (bütün örnek alan ve dönemler)', 'ex.xlsx': 'Excel raporu', 'ex.fits': 'Fit işlemleri (CSV)', 'ex.params': 'Parametreler (CSV)', 'ex.rxlsx': 'Excel raporu', 'ex.rcsv': 'Sonuçlar (CSV)',
-  'ex.note': 'Sayılar tam duyarlıkla ve ondalık noktayla yazılır; CSV alan ayırıcısı virgüldür. Türkçe bölge ayarlı Excel CSV dosyasını tek sütunda açabilir; o durumda Excel raporunu kullanın.', 'ex.fail': 'Excel kitaplığı yüklenemedi.',
-  'sheet.info': 'Bilgi', 'sheet.fits': 'Fit islemleri', 'sheet.params': 'Parametreler', 'sheet.units': 'Ornek alanlar', 'sheet.rec': 'Geri kazanim',
-  'x.k': 'Ayar', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.src': 'Veri', 'x.dcol': 'Çap sütunu (birim)', 'x.pcol': 'Örnek alan sütunu', 'x.percol': 'Dönem sütunu', 'x.filter': 'Süzgeç',
-  'x.mode': 'Analiz birimi', 'x.dec': 'Ondalık ayırıcı', 'x.loc': 'Weibull konumu a (hesaplananlar)', 'x.bounds': 'Kullanıcının sabitlediği sınırlar', 'x.methods': 'Seçilen yöntemler (seçenekler)',
-  'x.acc': 'Okunan / okunamayan / sıfırdan büyük olmayan çap', 'x.badrows': 'Analize girmeyen kaynak satırları', 'x.in': p => `Girdi: ${p.k}`,
-  'x.n.ll': 'ln L çap ölçeğindedir (log dönüşümlü dağılımlarda Jacobian dahil); bu yüzden aynı birimdeki dağılımlar arasında karşılaştırılabilir.',
-  'x.n.aic': 'AIC = 2k − 2 ln L ve BIC = k ln n − 2 ln L yalnızca olabilirliği en büyükleyen yöntemlerde verilir; k serbest parametre sayısı, n gözlenen ağaç sayısıdır.',
-  'x.n.p': 'KS ve AD için standart tablolardan p değeri verilmez: parametreler aynı veriden kestirildiğinde bu tablolar geçerli değildir; yeniden kestirimli parametrik bootstrap p değerleri Belirsizlik sekmesindedir.',
-  'x.n.var': 'Moment yöntemlerinde varyans varsayılan olarak n bölenlidir (n − 1 seçenektir); kullanılan bölen Ayarlar sütununda yazar.',
-  'x.n.trunc': 'Ölçüm eşiği bildirildiyse yalnızca koşullu en çok olabilirlik kullanılır; ln L koşullu olabilirliktir, KS ve AD koşullu dağılımla hesaplanır, "P(eşik içinde)" fit edilen dağılımdaki gözlem aralığı olasılığıdır.',
-  'x.n.num': 'Sayılar tam duyarlıktadır; ekrandaki değerler yuvarlanmıştır. Durumu "ok" olmayan satırlarda parametre yazılmaz; neden "Neden / not" sütunundadır.',
-  'x.plot': 'Örnek alan', 'x.period': 'Dönem', 'x.family': 'Dağılım', 'x.method': 'Yöntem', 'x.estimator': 'Kestirim ilkesi', 'x.status': 'Durum', 'x.reason': 'Neden / not',
-  'x.par': p => `Parametre ${p.i}`, 'x.val': p => `Değer ${p.i}`, 'x.fixed': 'Sabit parametreler', 'x.pneg': 'P(D < 0)', 'x.solver': 'Çözücü', 'x.iter': 'Yineleme', 'x.settings': 'Ayarlar',
-  'x.parname': 'Parametre', 'x.value': 'Değer', 'x.punit': 'Birim', 'x.role': 'Rol', 'x.kind': 'Kestirim / sabit', 'x.estimated': 'kestirildi',
-  'x.origin.zero': 'sıfır (iki parametreli biçim)', 'x.origin.user': 'kullanıcı', 'x.origin.rule': 'kural', 'x.origin.data': 'veri',
-  'x.unique': 'Farklı değer', 'x.mean': 'Ortalama (cm)', 'x.varN': 'Varyans, n bölen (cm²)', 'x.varN1': 'Varyans, n − 1 bölen (cm²)', 'x.state': 'Durum',
-  'x.target': p => `Hedef: ${p.k}`, 'x.diag': p => `Geri hesap: ${p.k}`, 'x.cands': 'Aday çözümler',
-  'wb.h': 'Weibull: Poudel ve Cao (2013) geri kazanımı (M2–M10)', 'wb.sub': 'Weibull parametreleri özet hedeflerden geri kazanılır: ortalama, Dq, varyans ya da yüzdelikler. Hedefleri siz verirsiniz (bir örnek alanda ölçülmüş ya da bir meşcere modelinin tahmini); burada meşcere regresyonu yapılmaz. Ham çaplarınız varsa hedefler onlardan da hesaplanabilir.',
-  'm.weibull.m2': 'M2: ortalama ve varyans', 'm.weibull.m3': 'M3: Dq ve varyans', 'm.weibull.m4': 'M4: Q31 ve Q63', 'm.weibull.m5': 'M5: Q50 ve Q95',
-  'm.weibull.m6': 'M6: Dq, Q25 ve Q95 (hibrit)', 'm.weibull.m7': 'M7: Dq, Q31 ve Q63 (hibrit)', 'm.weibull.m8': 'M8: ortalama ve Q95 (hibrit)', 'm.weibull.m9': 'M9: Dq ve Q95 (hibrit)', 'm.weibull.m10': 'M10: Dq, Q25, Q50, Q95, Dmin ve n (hibrit)',
-  'mnote.weibull.m6': 'c, Q25 ve Q95 oranından [c = ln(A.95/A.25)/ln((Q95 − a)/(Q25 − a))], b Dq\'dan [b = B_q(c)]. Dq ve yüzdelik oranı tam eşleşir; yüzdeliklerin kendisi eşleşmek zorunda değildir.',
-  'mnote.weibull.m7': 'M6 gibi, Q31 ve Q63 oranıyla.',
-  'mnote.weibull.m8': 'b = (Q95 − a)/A.95^(1/c); a + bΓ(1 + 1/c) = ortalama c için çözülür. Birden çok kök olabilir: aralıktaki bütün kökler aranır; birden çoksa "birden çok çözüm" verilir, adaylar listelenir, gizli bir c > 1 kuralıyla seçim yapılmaz.',
-  'mnote.weibull.m9': 'M8\'deki b ile a² + 2abΓ(1 + 1/c) + b²Γ(1 + 2/c) = Dq² çözülür; kökler M8\'deki gibi ele alınır.',
-  'mnote.weibull.m10': 'Konum kendi kuralıyla: a = (n^(1/3)·Dmin − Q50)/(n^(1/3) − 1); n örnek alanda ölçülen ağaç sayısıdır (hektardaki sayı değil), Dmin en küçük çap. Sonra c = C.25,.95(a), b = B_q(c). Konum seçeneği bu yöntemde kullanılmaz; formül negatif ya da Q25\'ten büyük bir a verirse sonuç verilmez (sıfıra çekilmez).',
-  'wb.f.q25': 'Q25, %25 yüzdelik (cm)', 'wb.f.n': 'Ağaç sayısı n (örnek alanda ölçülen)', 'wb.k.q25': 'Q25', 'wb.k.dmin': 'Dmin', 'wb.k.n': 'n',
-  'wb.fx.m10': p => `a = ${p.a} (M10 kuralı: Dmin = ${p.d}, n = ${p.n})`,
-  'wb.hybrid.note': '* Hibrit yöntemde bu hedef yapı gereği eşleştirilmez; geri hesaplanan değer bilgi içindir, farklı olması beklenebilir.',
-  'pr.m10.aneg': p => `M10 konum formülü negatif bir a verdi (a = ${p.a} cm; Dmin = ${p.dmin}, Q50 = ${p.q50}, n = ${p.n}); sıfıra çekilmez, sonuç verilmez`, 'pr.m10.a': 'M10 konumu hesaplanamadı',
-  'w.m10.aabove': p => `M10 konumu a = ${p.a} cm, Dmin = ${p.dmin} cm'den küçük değil: dağılım Dmin'in altına olasılık vermez`,
-  'mnote.weibull.m2': 'b = (ortalama − a)/Γ₁, b²(Γ₂ − Γ₁²) = v denklemi c için çözülür (Γ_r = Γ(1 + r/c)).',
-  'mnote.weibull.m3': 'b = [−aΓ₁ + √(a²Γ₁² + Γ₂(Dq² − a²))]/Γ₂ (pozitif kök), b²(Γ₂ − Γ₁²) = v denklemi c için çözülür. Ortalama kullanılmaz.',
-  'mnote.weibull.m4': 'c = ln(A.63/A.31) / ln[(Q63 − a)/(Q31 − a)], b = (Q31 − a)/A.31^(1/c), A_p = −ln(1 − p); kapalı biçim.',
-  'mnote.weibull.m5': 'Aynı formül, p = 0,50 ve r = 0,95 ile; kapalı biçim.',
-  'wb.loc.h': 'Konum a', 'wb.loc.half-dmin': 'a = 0,5 × Dmin (Poudel ve Cao\'nun M2–M9 için kuralı)', 'wb.loc.user': 'a\'yı kendim veriyorum (0 = iki parametreli biçim; kaynağın kuralı değildir)',
-  'wb.dmin': 'Dmin, meşcerenin en küçük çapı (cm)', 'wb.a': 'Sabit a (cm)',
-  'wb.dmin.note': 'Dmin, Poudel ve Cao\'da D0 olarak geçer; bu platformda D0 baskın çapın adıdır. Dmin bir hedef değerdir (ölçülmüş ya da tahmin edilmiş en küçük çap); dağılımın kuramsal sıfırıncı yüzdeliği Q(0) = a ile aynı şey değildir.',
-  'wb.a.note': 'Verdiğiniz a bütün yöntemlerde sabit tutulur; ortalama, Dq ve yüzdelikler a\'dan büyük olmalıdır. Bu, ölçüm eşiğiyle aynı şey değildir.',
-  'wb.t.h': 'Hedef değerler', 'wb.origin.measured': 'ölçülmüş (bir örnek alandan)', 'wb.origin.predicted': 'tahmin edilmiş (bir meşcere modelinin çıktısı)',
-  'wb.f.mean': 'Ortalama çap (cm)', 'wb.f.dq': 'Dq (cm)', 'wb.f.variance': 'Varyans (cm²)', 'wb.f.q31': 'Q31, %31 yüzdelik (cm)', 'wb.f.q63': 'Q63, %63 yüzdelik (cm)', 'wb.f.q50': 'Q50, medyan (cm)', 'wb.f.q95': 'Q95, %95 yüzdelik (cm)',
-  'wb.k.mean': 'ortalama', 'wb.k.variance': 'varyans', 'wb.k.dq': 'Dq', 'wb.k.q31': 'Q31', 'wb.k.q63': 'Q63', 'wb.k.q50': 'Q50', 'wb.k.q95': 'Q95',
-  'wb.fill.h': 'Hedefleri yüklü ham veriden hesapla', 'wb.fill.sub': 'Ölçülmüş çapları yüklediyseniz bir birimin (örnek alan × dönem) özetleri hesaplanıp alanlara yazılır: ortalama, n bölenli varyans, Dq, en küçük çap, yüzdelikler (Hyndman ve Fan tip 7). Kaynak "ölçülmüş" olarak kaydedilir.',
-  'wb.fill.unit': 'Birim', 'wb.fill.btn': 'Hedefleri doldur', 'wb.fill.none': 'Ham veri yüklenmedi: "Ölçülmüş çaplara fit etme" sekmesinde bir tablo yükleyip çap sütununu seçin.',
-  'wb.from': p => `Hedefler ham veriden hesaplandı: ${p.u}, n = ${p.n}; varyans n bölen, yüzdelikler tip 7. Bir hedefi değiştirirseniz kayıt "elle girildi" olur.`,
-  'wb.t.loc': 'Konum a', 'wb.t.targets': 'Hedef → geri hesaplanan',
-  'wb.fx.half': p => `a = ${p.a} (0,5 × Dmin, Dmin = ${p.d})`, 'wb.fx.user': p => `a = ${p.a} (kullanıcı)`,
-  'wb.roots': p => `${p.k} kök, c ∈ [${p.lo}, ${p.hi}]`,
-  'wb.used': p => `Hedeflerin kaynağı: ${p.o}; ${p.src}${p.div ? `; ${p.div}` : ''}.`, 'wb.src.raw': 'yüklü ham veriden hesaplandı', 'wb.src.typed': 'elle girildi',
-  'wb.p.note': 'Geri hesaplanan değerler hedeflere eşit olmalıdır (geri kazanımın denetimi; uyum ölçütü değildir). Ham veri olmadığından olabilirlik hesaplanmaz.', 'wb.chart': 'Geri kazanılan Weibull yoğunlukları',
-  'st.multiple': 'birden çok çözüm',
-  'pr.wsum.missing': p => `${p.key} girilmedi ya da pozitif değil`, 'pr.wsum.dmin': 'Dmin girin (a = 0,5 × Dmin kuralı)',
-  'pr.wsum.meanbelow': p => `ortalama (${p.mean} cm) a = ${p.a} cm'den büyük olmalı`, 'pr.wsum.dqbelow': p => `Dq (${p.dq} cm) a = ${p.a} cm'den büyük olmalı`,
-  'pr.wsum.qbelow': p => `${p.key} (${p.q} cm) a = ${p.a} cm'den büyük olmalı`, 'pr.wsum.qorder': p => `üst yüzdelik (${p.qr} cm) alttakinden (${p.qp} cm) büyük olmalı`,
-  'pr.wsum.noroot': p => `şekil c için ${p.lo}–${p.hi} aralığında çözüm yok (hedefler bu konumla bir Weibull'a karşılık gelmiyor)`,
-  'w.wsum.multiple': p => `${p.count} çözüm bulundu; yöntem tek başına seçemez, parametre verilmedi`, 'w.wsum.resid': 'çözüm hedefleri yeterli duyarlıkla sağlamıyor; parametre verilmedi',
-  'fam.exponential': 'Üstel (negatif üstel, sabit konum)', 'm.exponential.ml': 'En çok olabilirlik (= momentler)', 'role.rate': 'hız (oran)',
-  'mnote.exponential.ml': 'r = 1/(ortalama − a). Momentler yöntemi (E[D] = a + 1/r) aynı denklemi verir; bu yüzden tek sonuç gösterilir. r hızdır (1/cm); ölçek 1/r (cm) ayrıca yazılır, ikisi karıştırılmamalıdır. Sınıf sıklıklarının logaritmasına bir doğru fit etmek ayrı bir yöntemdir ve burada sunulmaz.',
-  'fnote.exponential': 'F(d) = 1 − exp[−r(d − a)], d ≥ a. Ters J biçimli (değişik yaşlı) meşcereler için basit bir karşılaştırma modelidir. Konum a kestirilmez: a = 0 her zaman, yazarsanız sabit a ile de hesaplanır (Weibull ile aynı sabit konum).',
-  'dg.scale': p => `ölçek 1/r = ${p.s} cm`,
-  'fam.loglogistic': 'Log-lojistik (Fisk)', 'm.loglogistic.ml': 'En çok olabilirlik', 'm.loglogistic.pct': 'İki yüzdelik', 'm.loglogistic.logmom': 'Log-momentler (sıradan momentler değil)',
-  'mnote.loglogistic.ml': 'Kapalı biçimi yoktur; y = ln d, z = c·y − c ln b için log-olabilirlik (β = c ln b, c) üzerinde içbükeydir, tek en büyük vardır. Newton adımları (kesin Hessian, adım yarılama) log-moment kestiriminden başlar. ln L çap ölçeğindedir (Jacobian −Σ ln d dahil).',
-  'opt.note.loglogistic.pct': 'c = [logit(r) − logit(p)] / ln(Q_r/Q_p), b = Q_p/[p/(1 − p)]^(1/c); kapalı biçim. Örnek yüzdelikleri tip 7. Varsayılan 0,25 ve 0,75 (çeyrekler) araç kuralıdır, kaynaktan alınmış bir en iyi çift değildir; 0 < p < r < 1.',
-  'mnote.loglogistic.logmom': 'ln D lojistik dağılır: b = exp[ortalama(ln d)], c = π/√[3·var_n(ln d)] (n bölen). Çapların ortalama ve varyansını değil, logaritmalarının ortalama ve varyansını eşler; sıradan momentler yöntemi değildir.',
-  'fnote.loglogistic': 'F(d) = 1/[1 + (b/d)^c], d > 0; b ölçek ve aynı zamanda medyandır (cm), c şekildir. Ortalama çap yalnızca c > 1, varyans yalnızca c > 2 için vardır; bu yüzden sıradan momentler yöntemi sunulmaz. Konum parametresi yok.',
-  'dg.ll.nomean': p => `c = ${p.c} ≤ 1: bu dağılımın ortalaması ve varyansı yoktur (sonsuz); ortalama çap ya da Dq bu modelden hesaplanamaz`,
-  'dg.ll.novar': p => `c = ${p.c} ≤ 2: ortalama vardır (${p.m} cm) ama varyans yoktur (sonsuz); Dq bu modelden hesaplanamaz`,
-  'fam.gengamma': 'Genelleştirilmiş gama (konumsuz)', 'm.gengamma.ml': 'En çok olabilirlik', 'sup.gengamma': 'd > 0', 'sol.profile': 'profil olabilirlik (ızgara ve Brent)',
-  'mnote.gengamma.ml': 'Kapalı biçimi yoktur. D^c iki parametreli gama dağıldığı için c sabitken a ve b, d^c üzerindeki gama en çok olabilirlik kestirimidir; olabilirlik yalnızca c üzerinde profillenir. ln c ızgarasında (121 nokta, 0,01 ≤ c ≤ 100) en büyük değer bulunur, sonra c için skor denklemi Brent ile çözülür. En büyük değer ızgaranın kenarındaysa sonuç sınırdadır (ör. c → 0: lognormale yaklaşan sınır) ve parametre verilmez.',
-  'fnote.gengamma': 'f(d) = c/[bΓ(a)]·(d/b)^(ac − 1)·exp[−(d/b)^c], d > 0; a ve c şekil, b ölçek (cm). Buradaki a, Weibull dağılımındaki konum parametresi değildir; konum yoktur (üç parametreli kaydırılmış gama değildir). c = 1 iki parametreli gama, a = 1 iki parametreli Weibull verir. Yalnızca c > 0 kapsanır. Fazladan bir parametre ln L değerini büyütür; bu, daha iyi bir biyolojik model olduğu anlamına gelmez.',
-  'm.gengamma.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.gengamma.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.gengamma.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.gengamma.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır.',
-  'w.gg.cedge': p => p.side === 'low' ? `en büyük olabilirlik c aralığının alt kenarında (c = ${p.c}): olabilirlik c → 0 yönünde, lognormal sınırına doğru artıyor; parametre verilmedi` : `en büyük olabilirlik c aralığının üst kenarında (c = ${p.c}); parametre verilmedi`,
-  'w.gg.ashape': 'şekil a sayısal aralığın dışında; parametre verilmedi', 'w.gg.noconverge': 'c için skor denklemi çözülemedi; parametre verilmedi',
-  'w.gg.multimodal': p => `profil olabilirlikte ${p.count} yerel en büyük var; en büyüğü verildi, model zayıf belirlenmiş olabilir`, 'pr.gg.few': p => `yalnızca ${p.unique} farklı çap var; üç parametre için en az üç gerekli`,
-  'cmp.kdiff': 'Bu tabloda serbest parametre sayısı (k) farklı modeller var. Fazladan parametre, iç içe modellerde ln L değerini hiç küçültmez; AIC ve BIC bunun için ceza ekler. Daha esnek bir aile kendiliğinden daha iyi bir biyolojik model değildir: parametrelerin yorumlanabilirliği, kararlılığı ve alan düzeyinde doğrulama da önemlidir.',
-  'fam.gumbel': 'Gumbel (maksimum biçimi)', 'm.gumbel.ml': 'En çok olabilirlik', 'm.gumbel.mom': 'Momentler (ortalama ve varyans)', 'sup.gumbel': 'bütün gerçel sayılar; negatif çap olasılığı raporlanır',
-  'mnote.gumbel.ml': 'β = d̄ − Σ d e^(−d/β) / Σ e^(−d/β) tek köklüdür (sol taraf β ile artar); Brent ile çözülür, μ = −β ln[(1/n) Σ e^(−d/β)]. Başlangıç moment kestirimidir.',
-  'mnote.gumbel.mom': 'β = √(6v)/π, μ = d̄ − γ_E β (γ_E = 0,5772… Euler–Mascheroni sabiti); kapalı biçim. Varsayılan bölen n.',
-  'fnote.gumbel': 'Maksimum biçimi: F(d) = exp{−exp[−(d − μ)/β]}, μ konum (cm), β > 0 ölçek (cm); sağa çarpık. Ortalama μ + γ_E β, varyans π²β²/6. Minimum biçimi (sola çarpık, ortalaması μ − γ_E β) farklı bir dağılımdır ve sunulmaz. Destek bütün gerçel sayılardır: negatif çap olasılığı F(0) her sonuçla raporlanır.',
-  'm.gumbel.tml': 'Koşullu en çok olabilirlik (ölçüm eşiği)', 'mnote.gumbel.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] en büyüklenir: yalnızca eşik içindeki ağaçların ölçüldüğü bilgisiyle. Başlangıç kesilmemiş en çok olabilirlik kestirimidir; çözücü Nelder–Mead.',
-  'm.gumbel.gml': 'En çok olabilirlik (sınıflı veri)', 'mnote.gumbel.gml': 'Σ n_j ln p_j en büyüklenir, p_j = F(üst) − F(alt). Sınıf orta noktaları yalnızca başlangıç değeri için kullanılır.',
-  'dg.pBelowZero.gumbel': p => `negatif çap olasılığı F(0) = exp[−exp(μ/β)] = ${p.p}`, 'w.gb.noconverge': 'β denklemi çözülemedi; parametre verilmedi',
-  'ba.h': 'Göğüs yüzeyi çap dağılımı (betimsel)', 'ba.sub': 'Her ağaç göğüs yüzeyiyle g = πd²/40000 (m²) ağırlıklandırılır: F_G(x) = Σ_{d ≤ x} g / Σ g (Kangas ve Maltamo 2000). Ağaç sayısına göre dağılımın yanında betimsel bir görünümdür; hiçbir dağılım ailesi göğüs yüzeyi ağırlıklı veriye fit edilmez ve yukarıdaki fit işlemleri değişmez.',
-  'ba.t.p': 'Göğüs yüzeyi yüzdeliği (%)', 'ba.t.d': 'Çap (cm)', 'ba.def': 'Yüzdelik tanımı (araç kuralı): F_G(d) ≥ p koşulunu sağlayan en küçük gözlenen çap (ağırlıklı basamak fonksiyonunun tersi). dgM, göğüs yüzeyinin %50 yüzdeliğidir: göğüs yüzeyinin yarısı bu çaptan kalın ağaçlardadır.',
-  'ba.chart': 'Ağaç sayısına ve göğüs yüzeyine göre birikimli dağılım', 'ba.fn': 'Ağaç sayısı F_N', 'ba.fg': 'Göğüs yüzeyi F_G', 'ba.cum': 'Birikimli pay',
-  'ba.u.ha': 'm²/ha', 'ba.u.plot': 'm² (örnek alanda; hektar değeri için alan girin)', 'ba.u.nha': 'ağaç/ha', 'ba.u.plotshort': 'm², örnek alan',
-  'ba.cls.h': 'Sınıf göğüs yüzeyi ve ağaç sayısına dönüşüm', 'ba.t.share': 'G payı (%)', 'ba.t.fobs': 'f = G / ḡ (gözlenen ḡ)', 'ba.t.fmid': 'f = G / g(orta çap), yaklaşık',
-  'ba.cls.note': 'Sınıf göğüs yüzeyi G_k, sınıfın ortalama ağacının göğüs yüzeyi ḡ_k ile ağaç sayısına çevrilir: f_k = G_k / ḡ_k (Kangas ve Maltamo 2000, Denklem 1). ḡ_k sınıftaki ağaçlardan hesaplanınca f_k gözlenen sayıya tam eşittir. Yalnızca sınıf sınırları biliniyorsa ḡ_k sınıf orta çapının göğüs yüzeyiyle alınır; bu bir yaklaştırmadır (açık sınıfta verilmez). Sınıflar yukarıdaki tanımdır.',
-  'ba.grouped': 'Göğüs yüzeyi çap dağılımı ham çaplardan hesaplanır; sınıflandırılmış sıklıklarda verilmez.',
-  'sheet.ba': 'GY dagilimi', 'ba.x.kind': 'Tablo', 'ba.x.what': 'Satır', 'ba.x.d': 'Çap (cm)', 'ba.x.b': 'G', 'ba.x.share': 'G payı', 'ba.x.gobs': 'ḡ gözlenen (m²)', 'ba.x.fobs': 'f = G/ḡ gözlenen', 'ba.x.fmid': 'f = G/g(orta çap), yaklaşık', 'ba.x.unit': 'G birimi', 'ba.x.pct': 'göğüs yüzeyi yüzdeliği', 'ba.x.cls': 'sınıf',
-  'w.ll.boundary': 'şekil c 10⁶\'yı aştı (çaplar neredeyse eşit); parametre verilmedi', 'w.ll.noconverge': 'Newton adımları yakınsamadı; parametre verilmedi',
-  'fam.johnsonsb': 'Johnson SB (sabit ξ ve λ)', 'm.johnsonsb.cml': 'Koşullu en çok olabilirlik (ξ, λ sabit)', 'm.johnsonsb.mom': 'Momentler (sayısal)',
-  'm.johnsonsb.kb': 'Yüzdelikler 0,50 ve 0,95 (Knoebel–Burkhart)', 'm.johnsonsb.pct': 'İki yüzdelik (kullanıcı çifti)',
-  'mnote.johnsonsb.cml': 't = ln[(d − ξ)/(ξ + λ − d)] ile δ = 1/s_t, γ = −ortalama(t)/s_t; s_t² n bölenli. Bu, ξ ve λ verildiğinde γ ve δ\'nın en çok olabilirlik kestirimidir; dört parametrenin birlikte kestirimi değildir.',
-  'opt.note.johnsonsb.mom': 'E[D] ve Var[D] örnek ortalaması ve varyansına sayısal olarak eşlenir (normal ağırlıklı integraller Gauss–Legendre ile; δ sabitken γ, sonra δ için Brent). v varsayılan n bölen, n − 1 seçenek.',
-  'mnote.johnsonsb.kb': 'δ = (z_r − z_p)/(t_r − t_p), γ = z_p − δ t_p; t_q = logit[(Q_q − ξ)/λ], z_q = Φ⁻¹(q); p = 0,50; r = 0,95. Kaynak: Knoebel ve Burkhart (1991) yaklaşımı; ForestFit paketindeki "KB" seçeneği. Örnek yüzdelikleri tip 7.',
-  'opt.note.johnsonsb.pct': 'Aynı formül, sizin seçtiğiniz 0 < p < r < 1 çiftiyle (genel yüzdelik yöntemi). Örnek yüzdelikleri tip 7.',
-  'fnote.johnsonsb': 'z = γ + δ ln[(d − ξ)/(ξ + λ − d)], F(d) = Φ(z); destek ξ < d < ξ + λ. ξ (alt sınır) ve λ (aralık) sizin girdiğiniz sabit değerlerdir; yalnızca γ ve δ kestirilir. Seçmek için ξ ve λ girin.',
-  'role.range': 'aralık',
-  'bnd.h.johnsonsb': 'Johnson SB sınırları ξ ve λ', 'bnd.sub.johnsonsb': 'Destek ξ < d < ξ + λ. ξ alt sınır, λ aralıktır (üst sınır ξ + λ). Sınırlar ölçüm eşiği ya da örneklemin en küçük/en büyük çapı değildir; programların veriden hesapladığı sınır sabitleri evrensel değildir. Otomatik öneri yok. Sınırın üzerindeki ya da dışındaki gözlemler değiştirilmez, o birim için sonuç verilmez.',
-  'bnd.xi': 'ξ, alt sınır (cm)', 'bnd.lambda': 'λ, aralık (cm)', 'bnd.sbU': p => `Üst sınır ξ + λ = ${p.u} cm.`,
-  'pr.sb.missing': 'Johnson SB için ξ ve λ girin', 'pr.sb.xineg': 'ξ negatif olamaz', 'pr.sb.lambda': 'λ pozitif olmalı',
-  'pr.sb.degenerate': 'dönüştürülmüş değerlerin varyansı sıfır; kestirim yapılamaz', 'pr.sb.mean': 'ortalama ξ ile ξ + λ arasında değil; momentler uygun değil',
-  'pr.sb.var': 'varyans bu sınırlar için çok büyük; momentler uygun değil', 'w.sb.boundary': 'moment çözümü δ arama aralığının (10⁻³–10⁴) dışında; parametre verilmedi',
-  'w.sb.noconverge': 'moment denklemleri yakınsamadı; parametre verilmedi',
-  'fam.beta': 'Beta (konum–ölçek, sabit sınırlar)', 'm.beta.ml': 'En çok olabilirlik', 'm.beta.mom': 'Momentler (ortalama ve varyans)', 'sol.newton': 'Newton (adım yarılamalı)',
-  'mnote.beta.ml': 'L ve U sabitken α ve β için beta log-olabilirliği en büyüklenir; çap ölçeğine geçişteki −n ln(U − L) terimi dahildir. Log-olabilirlik içbükeydir, Newton adımları momentlerden başlar.',
-  'opt.note.beta.mom': 'μ_y = (ortalama − L)/(U − L), v_y = v/(U − L)², t = μ_y(1 − μ_y)/v_y − 1, α = μ_y t, β = (1 − μ_y) t. 0 < μ_y < 1 ve 0 < v_y < μ_y(1 − μ_y) gerekir; sağlanmazsa sonuç verilmez.',
-  'fnote.beta': 'Y = (D − L)/(U − L) ~ Beta(α, β). L ve U dağılımın destek sınırlarıdır (cm) ve sizin girdiğiniz sabit değerlerdir: kestirilmez, veriden otomatik alınmaz. Seçmek için sınırları girin.',
-  'role.lower': 'alt sınır', 'role.upper': 'üst sınır',
-  'bnd.h.beta': 'Beta sınırları L ve U', 'bnd.sub.beta': 'Beta dağılımının desteği L < d < U. Sınırlar ölçüm eşiği değildir, örneklemin en küçük/en büyük çapı da değildir; bilgiye dayanan sabit değerler girin. Otomatik öneri yok. Her gözlem L ile U arasında olmalıdır; sınırın üzerindeki ya da dışındaki gözlemler değiştirilmez, o birim için sonuç verilmez.',
-  'bnd.L': 'L, alt sınır (cm)', 'bnd.U': 'U, üst sınır (cm)', 'bnd.obs': p => `Bilgi: verideki en küçük çap ${p.lo} cm, en büyük ${p.hi} cm (sınır değildir).`,
-  'pr.bounds.missing': 'beta için L ve U girin', 'pr.bounds.negative': 'L negatif olamaz', 'pr.bounds.order': p => `U, L'den büyük olmalı (L = ${p.L}, U = ${p.U})`,
-  'pr.bound.outside': p => `${p.count} gözlem sınırların dışında (ör. ${p.example} cm; L = ${p.L}, U = ${p.U})`,
-  'pr.bound.on': p => `${p.count} gözlem tam sınırın üzerinde (ör. ${p.example} cm); destek açık aralıktır (L < d < U), gözlemler kaydırılmaz`,
-  'pr.beta.mean': 'ortalama L ile U arasında değil; momentler uygun değil', 'pr.beta.var': 'varyans bu sınırlar için çok büyük (v_y ≥ μ_y(1 − μ_y)); momentler uygun değil',
-  'w.shape.boundary': 'şekil parametresi 10⁸\'i aştı; parametre verilmedi', 'w.shape.noconverge': 'Newton adımları yakınsamadı; parametre verilmedi',
-  'fam.gamma': 'Gama (iki parametreli)', 'm.gamma.ml': 'En çok olabilirlik', 'm.gamma.mom': 'Momentler (ortalama ve varyans)', 'm.gamma.rec': 'ortalama ve varyans (ya da Dq)', 'sol.brent': 'Brent',
-  'mnote.gamma.ml': 'ln k − ψ(k) = ln(ortalama) − ortalama(ln d) denklemi k için çözülür (ψ digamma; sol taraf k ile azalır, tek kök), θ = ortalama/k. Çözüm bulunamazsa sonuç verilmez; moment kestirimi bu etiketle gösterilmez.',
-  'opt.note.gamma.mom': 'k = ortalama²/v, θ = v/ortalama; v varsayılan olarak n bölenli moment varyansıdır, n − 1 seçenektir.',
-  'fnote.gamma': 'k şekil parametresidir (birimsiz), θ ölçek parametresidir (cm); ortalama kθ, varyans kθ². Bazı programlar ölçek yerine oran β = 1/θ (1/cm) kullanır. Yalnızca d > 0 için tanımlı; konum parametreli (kaydırılmış) gama yok.',
-  'mnote.gamma.rec': 'k = ortalama²/v, θ = v/ortalama.',
-  'w.k.overflow': 'şekil k sayısal aralığı aşıyor (çaplar neredeyse eşit: ln(ortalama) − ortalama(ln d) sıfıra çok yakın); parametre verilmedi',
-  'w.k.boundary': 'şekil çözümü arama aralığının (10⁻⁴–10⁸) altında kaldı; parametre verilmedi', 'w.k.noconverge': 'şekil denklemi yakınsamadı; parametre verilmedi',
-  'm.normal.ml': 'En çok olabilirlik (= momentler)', 'm.lognormal.ml': 'En çok olabilirlik', 'm.lognormal.mom': 'Momentler (ortalama ve varyans)',
-  'm.normal.rec': 'ortalama ve varyans (ya da Dq)', 'm.lognormal.rec': 'ortalama ve varyans (ya da Dq)', 'est.moments': 'momentler',
-  'mnote.normal.ml': 'Normalde en çok olabilirlik μ = ortalama, σ² = Σ(d − ortalama)²/n verir. Momentler yöntemi (ortalama ve n bölenli varyans) aynı denklemlerdir; bu yüzden tek sonuç gösterilir. n − 1 bölenli s² ikisi de değildir. Destek bütün gerçel sayılardır: negatif çap olasılığı Φ(−μ/σ) sonuçla birlikte verilir.',
-  'mnote.lognormal.ml': 'μ = ortalama(ln d), σ² = Σ(ln d − μ)²/n. ln L çap ölçeğinde hesaplanır (Jacobian −Σ ln d dahil); diğer dağılımlarla aynı ölçektedir.',
-  'opt.note.lognormal.mom': 'σ² = ln(1 + v/ortalama²), μ = ln(ortalama) − σ²/2; v varsayılan olarak n bölenli moment varyansıdır, n − 1 seçenektir.',
-  'fnote.lognormal': 'μ ve σ log ölçektedir: μ = E[ln D] (ln cm), cm cinsinden aritmetik ortalama değildir; ortalama çap exp(μ + σ²/2). Yalnızca d > 0 için tanımlı; kaydırılmış (üç parametreli) biçim yok.',
-  'mnote.normal.rec': 'μ = ortalama, σ = √v. Negatif çap olasılığı Φ(−μ/σ) verilir.', 'mnote.lognormal.rec': 'σ² = ln(1 + v/ortalama²), μ = ln(ortalama) − σ²/2 (log ölçek).',
-  'fam.trunc': 'Bu yöntemler kesilmemiş veri varsayar. Yalnızca belli bir çapın üstündeki ağaçlar ölçüldüyse yukarıdaki "Ölçüm eşiği" kartında bildirin.',
-  'unit.log': 'log ölçek', 'unit.logscale': 'log ölçekte', 'd.var1': 'Varyans s², n − 1 bölen (cm²)',
-  'dg.pBelowZero': p => `negatif çap olasılığı Φ(−μ/σ) = ${p.p}`,
-  'pr.d.nonpos': p => `${p.count} çap sıfır ya da negatif (ör. ${p.example}); bu dağılım yalnızca d > 0 için tanımlı`, 'w.var.n1s': 'varyans n − 1 bölenle (seçenek)',
-  'pr.sum.mean': 'ortalama çap pozitif bir sayı olmalı', 'pr.sum.none': 'varyans ya da Dq girin', 'pr.sum.both': 'varyans ve Dq\'dan yalnızca biri girilmeli',
-  'pr.sum.var': 'varyans pozitif bir sayı olmalı', 'pr.sum.nneed': 'n − 1 bölenli varyansı moment varyansına çevirmek için ağaç sayısı n gerekir',
-  'pr.sum.n': 'n en az 2 olan bir tam sayı olmalı', 'pr.sum.dq': 'Dq ortalama çaptan büyük olmalı (Dq² = ortalama² + varyans)', 'pr.sum.dqbad': 'Dq pozitif bir sayı olmalı',
-  'wf.label': 'İş akışı', 'wf.raw': 'Ölçülmüş çaplara fit etme', 'wf.summary': 'Özetlerden geri kazanım',
-  'wf.stand': 'Meşcere modeli', 'st.tabs': 'Meşcere modeli adımları', 'st.tab.train': 'Model geliştir', 'st.tab.predict': 'Modelle tahmin',
-  'st.h': 'Meşcere değişkenlerinden tahmin', 'st.sub': 'Çok sayıda örnek alandan bir model geliştirilir; model, ağaç sayısı N, meşcere boyu H ve yaştan çap dağılımını tahmin eder. Tahmin yalnızca burada geliştirilmiş ya da bir model dosyasından yüklenmiş bir modelle yapılır; bir makalenin katsayıları başka bir yöre için kullanılmaz.',
-  'st.n.form': 'Model biçimi (Poudel ve Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A) + ε, RS = √(10000/N)/H; hata özgün ölçekte toplamsal. Terimler seçilebilir.',
-  'st.n.ppm': 'PPM (parametre tahmini): her model geliştirme biriminde Weibull b ve c (en çok olabilirlik, a = 0) hesaplanır ve meşcere değişkenlerine bağlanır. PRM (parametre geri kazanımı): bir geri kazanım yönteminin hedefleri (momentler, yüzdelikler) bağlanır; tahminde parametreler bu hedeflerden geri kazanılır.',
-  'st.n.fit': 'NLS: her yanıt ayrı, orijinal ölçekte en küçük kareler. SUR: bütün yanıtlar birlikte; denklemler arası artık kovaryansı hesaba katılır (yinelemeli). log-OLS: ln y üzerinde en küçük kareler; bu farklı bir amaç fonksiyonudur (hata log ölçekte), ters dönüşümde medyan exp(Zβ) ya da ortalama exp(Zβ + s²/2) seçilir.',
-  'st.n.cv': 'Doğrulama örnek alan düzeyindedir: bir alanın bütün dönemleri aynı kattadır; her katta model yalnızca öteki katlarla geliştirilir ve dışarıda tutulan birimlerin ağaçları tahmin edilen dağılımla değerlendirilir (−ln L ve KS). Örnek alanlar doğal sırayla katlara dağıtılır (rastgelelik yok).',
-  'st.data.h': 'Model geliştirme verisi', 'st.data.src': p => `Tablo: ${p.f}. Her satır bir ağaç; meşcere değişkenleri (N, H, yaş) her ağaç satırında o alanın değeriyle tekrarlanır (ör. Örnek Alan ve Meşcere Hesaplayıcısı'nın "Ağaç verisi + meşcere parametreleri" çıktısı).`,
-  'st.col.ncol': 'Ağaç sayısı N (ağaç/ha)', 'st.col.hcol': 'Meşcere boyu H (m)', 'st.col.acol': 'Yaş A (yıl)',
-  'st.col.note': 'Poudel ve Cao\'nun H\'si hâkim ve ortak hâkim (Kraft 1–2) ağaçların ortalama boyudur; Örnek Alan aracının üst boyu H0 (hektardaki en büyük 100 ağaç) aynı tanım değildir. Hangi sütunu H olarak kullandığınız modele kaydedilir. Bir birimde meşcere değişkeni boş, okunamaz ya da ağaçtan ağaca farklıysa o birim nedeniyle dışarıda kalır.',
-  'st.sample': 'Örnek meşcere verisini yükle', 'st.sample.note': 'Benzetim: 36 örnek alan, bir kısmı iki dönemli; gerçek ölçüm değildir.',
-  'st.model.h': 'Model', 'st.set': 'Yaklaşım ve yanıtlar',
-  'st.set.ppm.weibull': 'PPM, Weibull: b ve c (a = 0)', 'st.set.prm.weibull.m2': 'PRM, Weibull M2: ortalama ve varyans', 'st.set.prm.weibull.m3': 'PRM, Weibull M3: Dq ve varyans', 'st.set.prm.weibull.m4': 'PRM, Weibull M4: Q31 ve Q63', 'st.set.prm.weibull.m5': 'PRM, Weibull M5: Q50 ve Q95',
-  'st.set.prm.weibull.m6': 'PRM, Weibull M6: Dq, Q25 ve Q95', 'st.set.prm.weibull.m7': 'PRM, Weibull M7: Dq, Q31 ve Q63', 'st.set.prm.weibull.m8': 'PRM, Weibull M8: ortalama ve Q95', 'st.set.prm.weibull.m9': 'PRM, Weibull M9: Dq ve Q95', 'st.set.prm.parresol': 'PRM, Johnson SB (Parresol): ortalama, medyan, Dq',
-  'st.loc.half-dmin': 'a = 0,5 × tahmin edilen Dmin (Dmin de bir yanıt olur; kaynağın kuralı)', 'st.loc.user': 'a\'yı kendim veriyorum',
-  'st.terms': 'Terimler:', 'st.term.RS': 'RS', 'st.term.lnN': 'ln N', 'st.term.lnH': 'ln H', 'st.term.invA': '1/A',
-  'st.fit': 'Regresyon yöntemi', 'st.fit.nls': 'NLS (her yanıt ayrı, orijinal ölçek)', 'st.fit.sur': 'SUR (yanıtlar birlikte, denklemler arası kovaryans)', 'st.fit.logols': 'log-OLS (ln y üzerinde; farklı amaç fonksiyonu)',
-  'st.back.median': 'Ters dönüşüm: medyan exp(Zβ)', 'st.back.mean': 'Ters dönüşüm: ortalama exp(Zβ + s²/2)', 'st.K': 'Doğrulama kat sayısı',
-  'st.train': 'Modeli geliştir ve doğrula', 'st.need.data': 'Önce bir ağaç tablosu yükleyin ("Ölçülmüş çaplara fit etme" adım 1) ya da örnek meşcere verisini yükleyin.', 'st.need.d': 'Çap sütununu seçin.', 'st.need.plot': 'Örnek alan sütunu gerekir (modeller çok sayıda örnek alandan geliştirilir).',
-  'st.need.terms': 'En az bir terim seçin.', 'st.need.col': p => `${p.k} sütununu seçin.`, 'st.need.xi': 'Johnson SB için ξ (alt sınır) girin.', 'st.need.a': 'Konum a için sıfır ya da pozitif bir değer girin.',
-  'st.var.N': 'N (ağaç/ha)', 'st.var.H': 'H (m)', 'st.var.A': 'A (yıl)',
-  'st.res.h': 'Geliştirilen model', 'st.res.scope': p => `${p.u} birim, ${p.p} örnek alan.`, 'st.res.left': p => `${p.n} birim model geliştirmeye girmedi.`, 'st.res.leftlist': 'Model geliştirmeye girmeyen birimler ve nedenleri',
-  'st.resp': 'Yanıt', 'st.bias': 'Yanlılık (y − ŷ)', 'st.res.hcol': p => `H olarak kullanılan sütun: ${p.c}.`,
-  'st.res.note.nls': 'Katsayılar ± asimptotik standart hata. RMSE ve yanlılık model geliştirme verisinde (orijinal ölçek); bağımsız verideki başarım için doğrulama sonucuna bakın.', 'st.res.note.sur': 'Katsayılar SUR ile birlikte kestirildi. RMSE ve yanlılık model geliştirme verisinde.', 'st.res.note.logols': 'log-OLS katsayıları (ln y ölçeğinde). RMSE ve yanlılık orijinal ölçekte, seçilen ters dönüşümle.',
-  'st.res.sur': p => `SUR ${p.r} turda yakınsadı; denklemler arası artık korelasyonları: ${p.c}.`,
-  'st.cv.h': p => `Örnek alan düzeyinde doğrulama (${p.k} kat)`, 'st.cv.sum': p => `${p.n} birimin ${p.ok} tanesi tahmin edildi, ${p.f} tanesi tahmin edilemedi; ağaç başına ortalama −ln L = ${p.nll}, ortalama KS D = ${p.ks}.`,
-  'st.cv.note': 'Tahmin edilemeyen birimler (tutarsız yanıtlar, geri kazanım çözümü yok, ya da tahmin edilen dağılımın desteği dışında kalan ağaçlar) sayılır, atlanmaz.', 'st.cv.units': 'Birim başına doğrulama', 'st.cv.fold': 'Kat',
-  'st.cv.st.ok': 'tamam', 'st.cv.st.outside': 'ağaçlar tahmin edilen desteğin dışında (ln L = −∞)', 'st.cv.st.nomodel': 'bu katta model geliştirilemedi', 'st.cv.st.invalid': 'tahmin tutarsız', 'st.cv.st.noconverge': 'geri kazanım yakınsamadı', 'st.cv.st.multiple': 'birden çok çözüm', 'st.cv.st.boundary': 'sınırda', 'st.cv.st.error': 'hata',
-  'st.dl': 'Modeli indir (JSON)', 'st.dlcv': 'Doğrulama tablosu (CSV)', 'st.topredict': 'Bu modelle tahmin et →',
-  'st.p.model': 'Model', 'st.p.trained': 'Bu oturumda geliştirilen model', 'st.p.imported': 'Model dosyasından (JSON)', 'st.p.file': 'Model dosyası seç',
-  'st.p.sum': p => `${p.s}; ${p.f}; ${p.u} birim, ${p.p} örnek alanla geliştirildi (${p.v}).`, 'st.p.none': 'Henüz model yok: önce "Model geliştir" sekmesinde bir model geliştirin ya da bir model dosyası yükleyin.',
-  'st.p.x': 'Meşcere değişkenleri', 'st.p.range': p => `Model geliştirme verisinin aralığı: ${p.r}.`, 'st.p.btn': 'Tahmin et', 'st.p.pred': 'Tahmin',
-  'st.p.outside': p => `${p.k} model geliştirme verisinin aralığı dışında: tahmin dışa değerlemedir.`, 'st.p.fail': 'Parametre verilmedi', 'st.p.chart': 'Tahmin edilen çap dağılımı',
-  'st.p.bad': p => `Model dosyası kullanılamadı (${p.p}).`, 'st.p.loaded': 'Model dosyası yüklendi.',
-  'st.k.b': 'b (ölçek, cm)', 'st.k.c': 'c (şekil)', 'st.k.mean': 'ortalama çap (cm)', 'st.k.variance': 'varyans (cm²)', 'st.k.dq': 'Dq (cm)', 'st.k.dmin': 'Dmin (cm)', 'st.k.median': 'medyan (cm)', 'st.k.q25': 'Q25 (cm)', 'st.k.q31': 'Q31 (cm)', 'st.k.q50': 'Q50 (cm)', 'st.k.q63': 'Q63 (cm)', 'st.k.q95': 'Q95 (cm)',
-  'st.pr.stand.var.missing': p => `${p.key} boş ya da okunamıyor`, 'st.pr.stand.var.varies': p => `${p.key} aynı birimde farklı değerler alıyor`, 'st.pr.stand.var.nonpos': p => `${p.key} sıfır ya da negatif`, 'st.pr.stand.x.missing': p => `meşcere değişkeni eksik${p.keys ? ': ' + p.keys : ''}`,
-  'st.pr.stand.target.none': 'hedefler hesaplanamadı (ör. çok az ağaç ya da eşit çaplar)', 'st.pr.stand.few': p => `Model geliştirilemedi: en az 2 örnek alan ve katsayı sayısından (${p.p}) fazla birim gerekir (${p.units} birim, ${p.plots} alan).`,
-  'st.pr.stand.xi': 'Johnson SB için ξ gerekir.', 'st.pr.stand.fit': 'Regresyon yakınsamadı.', 'st.pr.stand.order': p => `tahmin edilen ${p.hi}, ${p.lo}'dan büyük değil`, 'st.pr.stand.dq': 'tahmin edilen Dq ortalama çaptan büyük değil',
-  'st.pr.stand.dmin': 'tahmin edilen Dmin en küçük yüzdelikten küçük değil', 'st.pr.stand.cv.few': 'Doğrulama için en az 2 örnek alan gerekir.',
-  'st.fit.cdfr': 'CDFR (Poudel ve Cao: alanlar arası ortak katsayılar, birikimli dağılım uzaklığı)', 'st.fit.mcdfr': 'Değiştirilmiş CDFR (Poudel ve Cao: çap sınıflarıyla)', 'st.width': 'Sınıf genişliği (cm)',
-  'st.ppmloc.zero': 'Konum a = 0', 'st.ppmloc.half-dmin': 'Konum a = 0,5 × tahmin edilen Dmin (Dmin denklemi NLS ile, sabit)',
-  'st.need.width': 'Sınıf genişliği için pozitif bir değer girin.', 'st.need.cdfwb': 'CDFR ve değiştirilmiş CDFR yalnızca Weibull yolları içindir.', 'st.busy': 'Model geliştiriliyor ve doğrulanıyor…', 'st.cancelled': 'Model geliştirme iptal edildi.',
-  'st.res.cdf': p => `Amaç fonksiyonu NLS başlangıcında ${p.s}, sonda ${p.o} (${p.i} yineleme; geri kazanımı çözülemeyen ${p.r} adım reddedildi)${p.w}.`, 'st.res.width': p => `; sınıf genişliği ${p.w} cm, son sınıf yalnızca amaç fonksiyonundan çıkarıldı`,
-  'st.res.oneclass': p => `${p.n} birim tek sınıfa düştüğü için bu amaç fonksiyonuna girmedi.`, 'st.res.dminfixed': 'Dmin denklemi NLS ile kestirildi ve sabit tutuldu.',
-  'st.res.note.cdfr': 'Katsayılar bütün alanlar için ortaktır ve birikimli dağılımlar arasındaki uzaklığı en küçükleyecek biçimde kestirilir (alan başına 1/n ağırlığı, (j − 0,5)/n çizim konumları). Standart hata verilmez. RMSE ve yanlılık hedefler üzerinde, model geliştirme verisinde.',
-  'st.res.note.mcdfr': 'Katsayılar bütün alanlar için ortaktır ve sınıf üst sınırlarında birikimli oranlarla uzaklığı en küçükleyecek biçimde kestirilir (alan başına 1/(m − 1) ağırlığı). Standart hata verilmez. RMSE ve yanlılık hedefler üzerinde, model geliştirme verisinde.',
-  'st.pr.stand.cdf.startfail': p => `NLS başlangıcında geri kazanım bazı birimlerde çözülemedi (${Object.entries(p.fails || {}).map(([k, v]) => `${k}: ${v}`).join(', ')}); birden çok çözüm bir kuralla seçilmez, model geliştirilmedi.`,
-  'st.pr.stand.cdf.start': 'NLS başlangıcı bulunamadı.', 'st.pr.stand.cdf.family': 'CDFR yalnızca Weibull yolları içindir.', 'st.pr.stand.cdf.oneclass': 'tek sınıf',
-  'm.weibull.lmom': 'L-momentler', 'm.gamma.lmom': 'L-momentler', 'm.normal.qme': 'Genel yüzdelik eşleştirme (QME)', 'm.gamma.qme': 'Genel yüzdelik eşleştirme (QME)', 'm.beta.qme': 'Genel yüzdelik eşleştirme (QME)',
-  'm.normal.mge': 'En küçük uzaklık (MGE)', 'm.gamma.mge': 'En küçük uzaklık (MGE)', 'm.beta.mge': 'En küçük uzaklık (MGE)',
-  'mnote.weibull.lmom': 'y = d − a için örnek L-momentleri ℓ1, ℓ2 (olasılık ağırlıklı momentlerden, yansız); c = −ln 2 / ln(1 − ℓ2/ℓ1), b = ℓ1/Γ(1 + 1/c). Momentler ve en çok olabilirlikten ayrı bir yöntemdir.',
-  'mnote.gamma.lmom': 'ℓ2/ℓ1 = Γ(k + ½)/(√π Γ(k + 1)) denklemi k için kesin çözülür (tek kök), θ = ℓ1/k. lmomco\'nun kullandığı rasyonel yaklaştırma yerine kesin denklem kullanılır.',
-  'mnote.normal.qme': 'Seçtiğiniz olasılıklardaki örnek yüzdelikleri (tip 7) ile dağılımın yüzdelikleri arasındaki ağırlıklı kareler toplamı en küçüklenir (Nelder–Mead, başlangıç momentler).', 'mnote.gamma.qme': 'Seçtiğiniz olasılıklardaki örnek yüzdelikleri (tip 7) ile dağılımın yüzdelikleri arasındaki ağırlıklı kareler toplamı en küçüklenir (Nelder–Mead, başlangıç momentler).', 'mnote.beta.qme': 'Seçtiğiniz olasılıklardaki örnek yüzdelikleri (tip 7) ile dağılımın yüzdelikleri arasındaki ağırlıklı kareler toplamı en küçüklenir; L ve U sabit.',
-  'mnote.normal.mge': 'Seçtiğiniz uzaklık (KS, Cramér–von Mises ya da Anderson–Darling) en küçüklenir. Bu ölçütle karşılaştırma tablosunda iyi görünmesi yapı gereğidir; tabloda işaretlenir.', 'mnote.gamma.mge': 'Seçtiğiniz uzaklık (KS, Cramér–von Mises ya da Anderson–Darling) en küçüklenir. Bu ölçütle karşılaştırma tablosunda iyi görünmesi yapı gereğidir; tabloda işaretlenir.', 'mnote.beta.mge': 'Seçtiğiniz uzaklık en küçüklenir; L ve U sabit. Bu ölçütle karşılaştırma tablosunda iyi görünmesi yapı gereğidir; tabloda işaretlenir.',
-  'opt.probs': 'Olasılıklar', 'opt.weights': 'Ağırlıklar (boş = eşit)', 'opt.gof': 'Uzaklık', 'opt.gof.ks': 'KS D', 'opt.gof.cvm': 'Cramér–von Mises W²', 'opt.gof.ad': 'Anderson–Darling A²',
-  'opt.note.normal.qme': 'Olasılıklar 0 ile 1 arasında, artan sırada, en az iki tane; ağırlıklar pozitif ve olasılık sayısı kadar (boşluk ya da ; ile ayırın).', 'opt.note.gamma.qme': 'Olasılıklar 0 ile 1 arasında, artan sırada, en az iki tane; ağırlıklar pozitif ve olasılık sayısı kadar.', 'opt.note.beta.qme': 'Olasılıklar 0 ile 1 arasında, artan sırada, en az iki tane; ağırlıklar pozitif ve olasılık sayısı kadar.',
-  'opt.note.normal.mge': 'En küçüklenen ölçüt sonuç kaydına yazılır.', 'opt.note.gamma.mge': 'En küçüklenen ölçüt sonuç kaydına yazılır.', 'opt.note.beta.mge': 'En küçüklenen ölçüt sonuç kaydına yazılır.',
-  'est.lmom': 'L-momentler', 'est.qme': 'genel yüzdelik eşleştirme', 'est.mge': 'en küçük uzaklık',
-  'set.probs': p => `olasılıklar ${[].concat(p.v).join(', ')}`, 'set.weights': p => `ağırlıklar ${[].concat(p.v).join(', ')}`, 'set.gof': p => `${{ ks: 'KS', cvm: 'CvM', ad: 'AD' }[p.v] || p.v} ile`,
-  'pr.qme.probs': 'olasılıklar 0 ile 1 arasında olmalı', 'pr.qme.order': 'olasılıklar artan sırada olmalı', 'pr.qme.few': p => `en az ${p.k} olasılık gerekir (${p.m} verildi)`, 'pr.qme.weights': p => `${p.m} pozitif ağırlık gerekir`, 'pr.qme.ident': 'seçilen olasılıklardaki örnek yüzdelikleri iki parametreyi belirlemeye yetmiyor (eşit değerler)',
-  'pr.lmom.ratio': 'ℓ2/ℓ1 oranı 0 ile 1 arasında değil', 'pr.d.le.a': p => `${p.count} çap konum a = ${p.a} cm'den büyük değil (ör. ${p.example} cm)`, 'pr.start.none': 'momentlerden başlangıç değeri bulunamadı',
-  'w.lmom.overflow': 'L-moment çözümü sayısal olarak taştı; parametre verilmedi', 'w.lmom.kbound': 'şekil k arama aralığının (10⁻⁴–10⁸) dışında; parametre verilmedi',
-  'cmp.selfcrit': '† Bu satır bu ölçütü en küçükleyerek fit edildi; bu ölçütte iyi görünmesi yapı gereğidir.', 'list.bad': 'liste okunamadı',
-  'rg.tab.fns': 'Johnson SB (Fonseca, 4 parametre)', 'rg.in.fns': 'Ortalama, medyan, Dq ve göğüs yüzeyi ağırlıklı ortalama çap d̄_G', 'rg.out.fns': 'Johnson SB, Fonseca ve ark. (2009): ξ dahil dört parametre (sekme 4)',
-  'm.johnsonsb.fonseca': 'Fonseca ve ark. (2009): dört parametre', 'fns.h': 'Johnson SB: Fonseca, Marques ve Parresol (2009) dört parametre geri kazanımı',
-  'fns.sub': 'ξ, λ, γ ve δ medyan ve ilk üç ham momentten birlikte geri kazanılır. Parresol (2003) yönteminden ayrıdır: orada ξ sizden alınır, burada kestirilir.',
-  'fns.f.dg': 'Göğüs yüzeyi ağırlıklı ortalama çap d̄_G (cm)', 'fns.k.mean': 'ortalama', 'fns.k.median': 'medyan', 'fns.k.dq': 'Dq', 'fns.k.dg': 'd̄_G',
-  'fns.n.eq': 'Denklemler (kaynak, 6, 7, 9, 11): γ = δ ln(1/y₅₀ − 1); ξ + λμ′₁ = d̄; ξ² + 2ξλμ′₁ + λ²μ′₂ = Dq²; ξ³ + 3ξ²λμ′₁ + 3ξλ²μ′₂ + λ³μ′₃ = d̄_G·Dq². μ′ᵣ, Y = (D − ξ)/λ değişkeninin ham momentleridir.',
-  'fns.n.dg': 'd̄_G = Σgᵢdᵢ / Σgᵢ (gᵢ ağacın göğüs yüzeyi); üçüncü ham moment m₃ = d̄_G·Dq². m₃ ortalama ve varyanstan türetilmez: d̄_G girilmezse hesaplanmaz.',
-  'fns.n.solve': 'Kaynak üç boyutlu Levenberg–Marquardt ve ayrıntısı başka bir yayında verilen kısıtlar kullanır. Burada (araç kuralları): 0 ≤ ξ < medyan, λ > medyan − ξ, δ > 0; 48 başlangıçtan Newton; bütün farklı çözümler toplanır, Jacobian koşul sayısı denetlenir.',
-  'fns.n.sym': 'Simetrik dağılımda medyan = ortalama olur ve yöntem üç denkleme iner (kaynak); bu durumda ve zayıf belirlenen girdilerde tek çözüm verilmez.',
-  'fns.fill.h': 'Hedefleri yüklü ham veriden hesapla (d̄_G = Σd³/Σd²)', 'fns.cond': p => `koşul sayısı ${p.c}`,
-  'fns.used': p => `Kullanılan üçüncü ham moment: m₃ = d̄_G × Dq² = ${p.dg} × ${p.dq}² = ${p.m3}.`, 'fns.p.note': 'Parametreler, girilen medyan, ortalama, Dq ve d̄_G\'yi birlikte sağlar (geri hesaplanan değerler gösterilir). Birden çok çözüm ya da zayıf belirlenen bir çözüm parametre vermez.',
-  'fns.chart': 'Geri kazanılan Johnson SB yoğunluğu', 'pr.fns.m3': p => `d̄_G, Dq²/ortalama = ${p.min.toFixed(4).replace('.', ',')} cm değerinden büyük olmalı (pozitif bir değişkende m₃·m₁ > m₂²)`,
-  'pr.fns.symmetric': 'medyan ortalamaya eşit (simetrik): yöntem üç denkleme iner, dört parametre tek başına belirlenmez', 'pr.fns.weak': p => `çözüm zayıf belirlenmiş (Jacobian koşul sayısı ${p.cond.toExponential(1)} > 10⁸); tek bir sonuç verilmez`,
-  'rg.h': 'Elinizdeki özetlerle hangi yöntem?', 'rg.have': 'Elinizdeki özetler', 'rg.get': 'Kullanılabilecek yöntemler', 'rg.tabs': 'Yöntem grubu',
-  'rg.in.mom': 'Ortalama çap ve varyans ya da Dq', 'rg.out.mom': 'Normal, lognormal, gama (sekme 1); Weibull M2 (ortalama + varyans), M3 (Dq + varyans) (sekme 2)',
-  'rg.in.wb4': 'İki yüzdelik: Q31 ve Q63 ya da Q50 ve Q95', 'rg.out.wb4': 'Weibull M4, M5 (sekme 2)',
-  'rg.in.wbh': 'Dq ya da ortalama ile yüzdelikler (Q25, Q31, Q50, Q63, Q95); M10 için ayrıca Dmin ve n', 'rg.out.wbh': 'Weibull hibrit yöntemleri M6–M10 (sekme 2). Weibull konumu için en küçük çap Dmin ya da sabit bir a gerekir.',
-  'rg.in.prs': 'ξ (alt sınır), ortalama, medyan ve Dq ya da N/ha ile G', 'rg.out.prs': 'Johnson SB, Parresol (2003) (sekme 3)',
-  'rg.tab.mom': 'Normal · lognormal · gama', 'rg.tab.wb': 'Weibull (Poudel ve Cao)', 'rg.tab.prs': 'Johnson SB (Parresol)',
-  'rg.shared': 'Ortalama, varyans, Dq ve n bir sekmede girilince öteki sekmelere de yazılır.',
-  'rec.h': 'Özet değerler', 'rec.sub': 'Ölçülmüş çaplar yoksa dağılım parametreleri ortalama çap ile varyans ya da Dq\'dan geri kazanılır. Ham veri olmadığı için olabilirlik ve uyum ölçütleri hesaplanmaz; ham veriniz varsa doğrudan fit işlemini kullanın.',
-  'rec.mean': 'Ortalama çap (cm)', 'rec.byvar': 'Varyansla', 'rec.bydq': 'Dq ile', 'rec.var': 'Varyans (cm²)', 'rec.dq': 'Dq (cm)',
-  'rec.div.n': 'n (moment varyansı)', 'rec.div.n-1': 'n − 1 (örnek varyansı s²)', 'rec.nreq': 'Ağaç sayısı n (gerekli)', 'rec.nopt': 'Ağaç sayısı n (isteğe bağlı, kayda yazılır)',
-  'rec.note': 'Hesapta moment varyansı v kullanılır: s² verilirse v = s²(n − 1)/n, Dq verilirse v = Dq² − ortalama². Değerler ölçüm eşiği olmayan veriden gelmelidir.',
-  'rec.fam': 'Dağılımlar', 'rec.back.mean': 'Geri hesaplanan ortalama (cm)', 'rec.back.dq': 'Geri hesaplanan Dq (cm)', 'rec.back.var': 'Moment varyansı (cm²)', 'rec.pneg': 'P(D < 0)',
-  'rec.used': p => `Kullanılan değerler: ortalama ${p.m} cm, moment varyansı ${p.v} cm², Dq ${p.dq} cm (${p.src}).`,
-  'rec.src.variance': 'varyans girildi, n bölen', 'rec.src.variance1': 'varyans girildi, n − 1 bölen, n ile çevrildi', 'rec.src.dq': 'Dq girildi',
-  'rec.p.note': 'Geri hesaplanan ortalama ve Dq girilen değerlere eşit olmalıdır; bu, geri kazanımın denetimidir, uyum ölçütü değildir.', 'rec.chart': 'Geri kazanılan dağılımların yoğunlukları',
-  't.dist': 'Dağılım', 't.params': 'Parametreler',
-  'm.weibull.ml': 'En çok olabilirlik', 'm.weibull.mom': 'Momentler (ortalama ve varyans)', 'm.weibull.pct': 'İki yüzdelik',
-  'est.ml': 'en çok olabilirlik', 'est.mom': 'momentler', 'est.quantile': 'yüzdelik eşleştirme', 'est.logmom': 'log-momentler', 'est.recovery': 'geri kazanım',
-  'opt.varDivisor': 'Varyans böleni', 'opt.varDivisor.n': 'n (moment varyansı, varsayılan)', 'opt.varDivisor.n-1': 'n − 1 (örnek varyansı s²)',
-  'opt.p': 'Alt yüzdelik p', 'opt.r': 'Üst yüzdelik r',
-  'opt.note.weibull.mom': 'Varsayılan n bölen: v = Σ(d − ortalama)²/n, momentlerin kuramsal tanımıyla tutarlıdır (Dq² = ortalama² + v). n − 1 seçeneği aracın yalnızca Weibull içeren 1.0.0 sürümüyle hesaplanmış sonuçları birebir yeniden üretir; ikisinin farkı yalnızca varyanstaki (n − 1)/n faktörüdür.',
-  'opt.note.weibull.pct': 'c = ln(A_r/A_p) / ln[(Q_r − a)/(Q_p − a)], b = (Q_p − a)/A_p^(1/c), A_q = −ln(1 − q); kapalı biçim, yineleme yok. Örnek yüzdelikleri Hyndman ve Fan tip 7 ile (R varsayılanı). Varsayılan 0,24 ve 0,93: Dubey (1967), ölçek ve şeklin birlikte kestirimi için en verimli çift (yuvarlanmış). 0 < p < r < 1.',
-  'set.varDivisor': p => `varyans: ${p.v === 'n' ? 'n' : 'n − 1'} bölen`, 'set.p': p => `p = ${p.v}`, 'set.r': p => `r = ${p.v}`, 'sol.bisection': 'ikiye bölme (geometrik)', 'sol.closed form': 'kapalı biçim',
-  'loc.h': 'Sabit konum a (Weibull, üstel)', 'loc.sub': 'Konum kestirilmez; Weibull ve üstel dağılım aynı a ile hesaplanır. a = 0 (iki parametreli biçim) her zaman hesaplanır; bir değer yazarsanız o sabit konumla da hesaplanır. Sabit a bütün çaplardan küçük olmalıdır. Bu, ölçüm eşiğiyle aynı şey değildir.',
-  'loc.label': 'Sabit a (cm, isteğe bağlı)', 'loc.bad': 'Konum sıfır veya pozitif bir sayı olmalı.',
-  'acc': p => `${p.read} çap okundu.`, 'acc.bad': p => `${p.n} değer okunamadı veya boş, ${p.np} değer sıfırdan büyük değil; bunlar analize girmedi (kaynak satırları: ${p.rows}${p.more ? ', …' : ''}).`, 'acc.f': p => `${p.n} satır süzgeç dışında.`,
-  'tab.params': 'Sonuçlar', 'tab.charts': 'Grafikler',
-  'nav.list': 'Örnek alan listesi', 'nav.search': 'Örnek alan ara', 'nav.sort': 'Sırala', 'nav.sort.id': 'kimlik', 'nav.sort.n': 'ağaç sayısı', 'nav.sort.state': 'önce sorunlular',
-  'nav.bad': 'yalnızca sorunlu', 'nav.count': p => `${p.k} / ${p.n} örnek alan`, 'nav.none': 'Eşleşen örnek alan yok.', 'nav.prev': 'Önceki örnek alan', 'nav.next': 'Sonraki örnek alan',
-  'nav.keys': '← → tuşlarıyla da gezebilirsiniz', 'nav.outside': 'süzgeç dışında', 'nav.per': 'Dönem seçimi', 'nav.nper': p => `${p.k} dönem`,
-  'nav.st.ok': 'bütün fit işlemleri tamam', 'nav.st.warning': 'uyarı var ya da bazı fit işlemleri yapılamadı', 'nav.st.error': 'hiçbir fit işlemi yapılamadı',
-  'unit.plot': p => `Örnek alan ${p.p}`, 'unit.pool': 'Bütün ağaçlar (havuz)', 'per': 'Dönem', 'per.none': '–',
-  'd.n': 'n (gözlenen ağaç)', 'd.mean': 'Ortalama (cm)', 'd.dq': 'Dq (cm)', 'd.range': 'min–maks (cm)', 'd.var': 'Varyans, n bölen (cm²)',
-  't.method': 'Yöntem', 't.fixed': 'Sabit', 't.n': 'n', 't.ll': 'ln L', 't.aic': 'AIC', 't.bic': 'BIC', 't.ks': 'KS D', 't.ad': 'AD A²', 't.status': 'Durum', 't.solver': 'Çözücü',
-  'fixed.zero': p => `${p.k} = 0`, 'fixed.user': p => `${p.k} = ${p.v} (kullanıcı)`, 'fixed.none': '–',
-  'role.location': 'konum', 'role.scale': 'ölçek', 'role.shape': 'şekil',
-  'st.ok': 'tamam', 'st.boundary': 'arama aralığının sınırında', 'st.noconverge': 'yakınsamadı', 'st.invalid': 'hesaplanmadı', 'st.error': 'hata',
-  'pr.n.few': p => `en az 2 ağaç gerekir (n = ${p.n})`, 'pr.constant': p => `bütün çaplar eşit (${p.value} cm)`, 'pr.a.bad': 'konum sayı değil',
-  'pr.a.notbelow': p => `sabit konum a = ${p.a} en küçük çaptan (${p.min} cm) küçük değil`, 'pr.a.negative': 'konum negatif olamaz',
-  'w.few.unique': p => `yalnızca ${p.unique} farklı çap değeri var (n = ${p.n})`, 'w.looks.grouped': p => `çaplar sınıflara yuvarlanmış görünüyor (${p.unique} farklı değer, n = ${p.n}); sınıflı veri yöntemi henüz yok`,
-  'w.c.boundary': 'şekil çözümü arama aralığının (0,01–1000) sınırında kaldı; parametre verilmedi', 'w.c.noconverge': 'şekil denklemi yakınsamadı; parametre verilmedi',
-  'pr.pr.range': 'p ve r 0 ile 1 arasında bir sayı olmalı', 'pr.pr.order': 'p, r\'den küçük olmalı',
-  'pr.q.tied': p => `iki örnek yüzdeliği eşit (Q = ${p.q} cm); şekil hesaplanamaz, başka bir yüzdelik çifti deneyin`,
-  'w.var.n1': 'varyans n − 1 bölenle (seçenek)',
-  'e.support.outside': p => `${p.count} gözlem dağılımın desteği dışında (ör. ${p.example} cm)`, 'e.param.invalid': p => `geçersiz parametre ${p.key} = ${p.value}`, 'e.moment.undefined': 'moment tanımsız',
-  'p.note': 'AIC ve BIC yalnızca olabilirliği en büyükleyen yöntemlerde verilir (k = serbest parametre sayısı, n = gözlenen ağaç sayısı). KS ve AD için standart tablolardan p değeri verilmez: parametreler aynı veriden kestirildiğinde bu tablolar geçerli değildir; yeniden kestirimli parametrik bootstrap p değerleri Belirsizlik sekmesindedir.',
-  'p.json': 'Sonuç kayıtlarını indir (JSON)', 'p.nofit': 'Bu birim için tamamlanmış fit işlemi yok.',
-  'ch.fit': 'Gösterilen fit işlemleri', 'ch.hist': p => `Çap histogramı ve yoğunluklar, ${p.u}`, 'ch.cdf': p => `Birikimli dağılım, ${p.u}`, 'ch.d': 'Çap (cm)', 'ch.dens': 'Yoğunluk (1/cm)', 'ch.F': 'Birikimli oran',
-  'ch.ecdf': 'Ampirik', 'ch.bins': p => `Histogram sınıf genişliği ${p.w} cm (yalnızca gösterim; fit işlemini etkilemez).`, 'ch.svg': 'Grafiği indir (SVG)',
-  'nodata': 'Analize girecek çap yok: seçilen çap sütununda okunabilir, sıfırdan büyük bir değer bulunamadı. Çap sütununu, ondalık ayırıcıyı ve (varsa) süzgeci denetleyin.', 'nodata.cls': 'Analize girecek sınıf yok: alt sınır, üst sınır ve sıklık sütunlarında okunabilir satır bulunamadı. Sütunları ve ondalık ayırıcıyı denetleyin.',
-  'more': 'Ayrıntılar: formüller ve notlar', 'p.notes': 'Notlar ve uyarılar', 'p.all': 'Aile başına bütün sütunlarla parametre tabloları', 'cmp.all': 'Bütün ölçütler (BIC, AICc, CvM, sınıf hataları, EI, çözücü)', 'cmp.how': 'Tablolar nasıl okunur?', 'cmp.read': 'Bu tablo hakkında', 'calc.ready': p => `${p.k} yöntem seçili`,
-  'src.h': 'Yöntemler, birimler ve kaynaklar', 'src.est': 'kestirim ilkesi', 'src.solver': 'çözücü', 'src.units': 'parametreler', 'src.support': 'destek', 'src.obs': 'gözlem',
-  'src.doc': 'belge', 'src.refs': 'kaynaklar', 'src.link': 'bağlantı', 'src.st.B': 'okundu', 'src.st.D': 'künye; okunmadı, denklemler SciPy/mpmath ile bağımsız doğrulandı',
-  'src.thr.none': 'ham çaplar, eşiksiz (kesilmemiş veri varsayılır)', 'src.thr.trunc': p => `ölçüm eşiği ${p.L} ≤ d ≤ ${p.U} cm, koşullu dağılım`, 'src.thr.cls': 'sınıf sıklıkları; sınıf olasılığı F(üst) − F(alt)', 'src.thr.sum': 'özet değerler (ham veri yok)',
-  'src.boot': 'parametrik bootstrap (yeniden kestirimli) ve yüzdelik aralıklar; tohum sonuç kaydında.',
-  'src.note': 'Kaynak durumu: "okundu" kaynağın kendisi incelendi demektir; ötekiler künye olarak anılır ve formüller bağımsız sayısal referanslarla doğrulanmıştır. Ayrıntılar, formüller ve testler proje belgesi METHODS.md §12\'dedir.',
-  'sup.weibull': 'd > a; konum a sabit (0 ya da kullanıcının değeri), kestirilmez', 'sup.exponential': 'd > a; konum a sabit (0 ya da kullanıcının değeri), kestirilmez',
-  'sup.normal': 'bütün gerçel sayılar; negatif çap olasılığı raporlanır', 'sup.lognormal': 'd > 0', 'sup.gamma': 'd > 0', 'sup.loglogistic': 'd > 0',
-  'sup.beta': 'L < d < U; L ve U kullanıcıdan, veriden alınmaz', 'sup.johnsonsb': 'ξ < d < ξ + λ; ξ ve λ kullanıcıdan (Parresol geri kazanımında ξ kullanıcıdan, λ geri kazanılır)',
-  'p.states': p => `Bu birimde ${p.ok} sonuç hesaplandı${p.w ? ` (${p.w} tanesi uyarılı)` : ''}; ${p.bad ? `${p.bad} sonuç hesaplanamadı ya da desteklenmiyor: parametre gösterilmez, nedeni notlarda.` : 'hesaplanamayan sonuç yok.'}`,
-  'sheet.boot': 'Bootstrap', 'sheet.src': 'Kaynaklar', 'x.section': 'Belge bölümü', 'x.refs': 'Kaynaklar', 'x.cite': 'Künye', 'x.rstatus': 'Kaynak durumu', 'x.url': 'Bağlantı',
-  'bx.kind': 'İşlem', 'bx.gof': 'Uyum testi p değeri', 'bx.ci': 'Aralık', 'bx.done': 'Tamamlanan tekrar', 'bx.failed': 'Başarısız tekrarlar', 'bx.rate': 'Başarısızlık oranı', 'bx.step': 'Yuvarlama adımı (cm)', 'bx.scheme': 'Şema', 'bx.q': 'Büyüklük',
-};
 const en = {
   'dev': 'Version 2.0.0: the first multi-distribution version. Unlike the previous Weibull version, the moment variance uses divisor n by default (n − 1 is an option). Stand models (predicting the distribution of a stand from stand variables) are left to later versions.',
   'step.1': 'Data', 'step.2': 'Settings', 'step.3': 'Results',
@@ -4623,7 +4177,7 @@ const en = {
   'sheet.boot': 'Bootstrap', 'sheet.src': 'Sources', 'x.section': 'Documentation section', 'x.refs': 'References', 'x.cite': 'Citation', 'x.rstatus': 'Source status', 'x.url': 'Link',
   'bx.kind': 'Operation', 'bx.gof': 'Goodness-of-fit p-value', 'bx.ci': 'Interval', 'bx.done': 'Completed replicates', 'bx.failed': 'Failed replicates', 'bx.rate': 'Failure rate', 'bx.step': 'Rounding step (cm)', 'bx.scheme': 'Scheme', 'bx.q': 'Statistic / quantity',
 };
-const T = makeT({ tr, en });
+const T = makeT({ en });
 };
 
 // ---- assets/lab/dist/index.js
@@ -4795,17 +4349,16 @@ fb_solve <- function(F, starts, key) { sols <- list()
  * version }.
  */
 function buildRecoverR(card, summary, opts, results, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), out = [];
-  const titles = { mom: T('Momentlerden geri kazanım', 'Recovery from moments'), weibull: T('Weibull geri kazanımı (Poudel ve Cao 2013, M2–M10)', 'Weibull recovery (Poudel and Cao 2013, M2–M10)'),
-    parresol: T('Johnson SB geri kazanımı, ξ verilmiş (Parresol 2003)', 'Johnson SB recovery, ξ given (Parresol 2003)'), fonseca: T('Johnson SB, dört parametrenin geri kazanımı (Fonseca ve ark. 2009)', 'Johnson SB, recovery of all four parameters (Fonseca et al. 2009)') };
+  const T = (a, b) => (b), out = [];
+  const titles = { mom: 'Recovery from moments', weibull: 'Weibull recovery (Poudel and Cao 2013, M2–M10)',
+    parresol: 'Johnson SB recovery, ξ given (Parresol 2003)', fonseca: 'Johnson SB, recovery of all four parameters (Fonseca et al. 2009)' };
   const sb = card === 'parresol' || card === 'fonseca';
-  out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu, ', 'Diameter Distribution Lab: R code, ') + titles[card], tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: sb ? ['nleqslv'] : [],
-    notes: [T('Aşama 2: özet değerlerden geri kazanım. Ham veri yok: özetler (yazılan ya da yüklenen veriden hesaplanan) betikte tam duyarlıkla yazılıdır; olabilirlik ve uyum ölçütü yoktur, çözüm hedefler geri hesaplanarak denetlenir.',
-      'Stage 2: recovery from summary values. No raw data: the summaries (typed, or computed from the loaded data) are written into the script at full precision; there is no likelihood and no fit statistic, a solution is checked by back-calculating the targets.'),
-    ...(summary && summary.from ? [T('Bu özetler yüklenen veriden hesaplandı (ortalama ve varyans n bölenli, yüzdelikler tip 7); aynı hesap 1. aşama betiğindeki birimlerle yapılabilir.', 'These summaries were computed from the loaded data (mean and variance with divisor n, percentiles type 7); the same can be done with the units of the stage 1 script.')] : [])] }));
+  out.push(header({ title: 'Diameter Distribution Lab: R code, ' + titles[card], tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: sb ? ['nleqslv'] : [],
+    notes: ['Stage 2: recovery from summary values. No raw data: the summaries (typed, or computed from the loaded data) are written into the script at full precision; there is no likelihood and no fit statistic, a solution is checked by back-calculating the targets.',
+    ...(summary && summary.from ? ['These summaries were computed from the loaded data (mean and variance with divisor n, percentiles type 7); the same can be done with the units of the stage 1 script.'] : [])] }));
   out.push(FB_OUT, '', `res <- list()`);
   const okR = (results || []).filter(r => r.status === 'ok' || r.status === 'multiple');
-  for (const r of (results || []).filter(x => !okR.includes(x))) out.push(rComment(T(`${r.method}: araçta sonuç yok (${r.status}${r.problems && r.problems[0] ? ', ' + r.problems[0].code : ''}); R'da da hesaplanmaz.`, `${r.method}: no result in the tool (${r.status}${r.problems && r.problems[0] ? ', ' + r.problems[0].code : ''}); not computed in R either.`)));
+  for (const r of (results || []).filter(x => !okR.includes(x))) out.push(rComment(`${r.method}: no result in the tool (${r.status}${r.problems && r.problems[0] ? ', ' + r.problems[0].code : ''}); not computed in R either.`));
   out.push(...recoverBody(card, summary, opts, okR, T));
   out.push('', `fb_out(res)`, '');
   return out.join('\n');
@@ -4820,23 +4373,22 @@ function recoverBody(card, summary, opts, okR, T, sExpr = null) {
   const out = [], sb = card === 'parresol' || card === 'fonseca';
   if (card === 'mom') {
     const s = summary || {};
-    out.push(rComment(T('Özet: ortalama ve varyans (bölen n ya da n − 1, n − 1 ise n gerekir) ya da Dq; varyans moment varyansına çevrilir v = s²(n − 1)/n, Dq\'dan v = Dq² − m².', 'Summary: the mean and the variance (divisor n or n − 1, which needs n) or Dq; the variance becomes the moment variance v = s²(n − 1)/n, from Dq v = Dq² − m².')),
+    out.push(rComment('Summary: the mean and the variance (divisor n or n − 1, which needs n) or Dq; the variance becomes the moment variance v = s²(n − 1)/n, from Dq v = Dq² − m².'),
       `s <- ${rList({ mean: s.mean, variance: s.variance, varDivisor: s.variance != null ? (s.varDivisor || 'n') : null, n: s.n, dq: s.dq })}`,
       `m <- s$mean; v <- if (!is.null(s$variance)) { if (identical(s$varDivisor, "n-1")) s$variance * (s$n - 1) / s$n else s$variance } else (s$dq - m) * (s$dq + m)`,
       `cat("m =", m, " v =", v, " Dq =", sqrt(m^2 + v), "\\n")`);
     for (const r of okR) {
       if (r.method === 'normal.rec') out.push(`p <- c(mu = m, sigma = sqrt(v))   # normal`, `print(p); res[c("normal.mu", "normal.sigma")] <- as.list(unname(p))`);
       if (r.method === 'lognormal.rec') out.push(`s2 <- log1p(v / m^2); p <- c(mu = log(m) - s2 / 2, sigma = sqrt(s2))   # lognormal: E[D] = e^(μ + σ²/2), Var[D] = (e^σ² − 1)E[D]²`,
-        `print(p); res[c("lognormal.mu", "lognormal.sigma")] <- as.list(unname(p)); cat(${rStr(T('geri hesap', 'back-calculated'))}, exp(p[[1]] + p[[2]]^2 / 2), (exp(p[[2]]^2) - 1) * exp(2 * p[[1]] + p[[2]]^2), "\\n")`);
+        `print(p); res[c("lognormal.mu", "lognormal.sigma")] <- as.list(unname(p)); cat(${rStr('back-calculated')}, exp(p[[1]] + p[[2]]^2 / 2), (exp(p[[2]]^2) - 1) * exp(2 * p[[1]] + p[[2]]^2), "\\n")`);
       if (r.method === 'gamma.rec') out.push(`p <- c(k = m^2 / v, theta = v / m)   # gamma: E[D] = kθ, Var[D] = kθ²`, `print(p); res[c("gamma.k", "gamma.theta")] <- as.list(unname(p))`);
     }
   } else if (card === 'weibull') {
     const s = summary || {}, loc = opts && opts.loc === 'user' ? { loc: 'user', a: opts.a } : { loc: 'half-dmin' };
-    out.push(rComment(T('Hedefler (Poudel ve Cao 2013): ortalama, varyans (moment varyansı; n − 1 ile verildiyse çevrilir), Dq, yüzdelikler Q25…Q95, en küçük çap Dmin, ağaç sayısı n. G_r(c) = Γ(1 + r/c), A_p = −ln(1 − p).',
-      'Targets (Poudel and Cao 2013): mean, variance (moment variance; converted if given with n − 1), Dq, percentiles Q25…Q95, the smallest diameter Dmin, number of trees n. G_r(c) = Γ(1 + r/c), A_p = −ln(1 − p).')),
+    out.push(rComment('Targets (Poudel and Cao 2013): mean, variance (moment variance; converted if given with n − 1), Dq, percentiles Q25…Q95, the smallest diameter Dmin, number of trees n. G_r(c) = Γ(1 + r/c), A_p = −ln(1 − p).'),
       `s <- ${sExpr ?? rList({ mean: s.mean, variance: s.variance, varDivisor: s.variance != null ? (s.varDivisor || 'n') : null, n: s.n, dq: s.dq, q25: s.q25, q31: s.q31, q63: s.q63, q50: s.q50, q95: s.q95, dmin: s.dmin })}`,
       `if (!is.null(s$variance) && identical(s$varDivisor, "n-1")) s$variance <- s$variance * (s$n - 1) / s$n`,
-      `a <- ${loc.loc === 'user' ? rNum(loc.a) + `   # ${T('konum: kullanıcının değeri', 'location: the user\'s value')}` : `0.5 * s$dmin   # ${T('konum: kaynağın kuralı a = Dmin/2 (M2–M9)', 'location: the source\'s rule a = Dmin/2 (M2–M9)')}`}`,
+      `a <- ${loc.loc === 'user' ? rNum(loc.a) + `   # ${'location: the user\'s value'}` : `0.5 * s$dmin   # ${'location: the source\'s rule a = Dmin/2 (M2–M9)'}`}`,
       `G <- function(r, c) gamma(1 + r / c)
 Bq <- function(c, a, q) { g1 <- G(1, c); g2 <- G(2, c); (-a * g1 + sqrt(a^2 * g1^2 + g2 * (q^2 - a^2))) / g2 }   # scale with a + E[x] structure giving Dq
 pct <- function(qp, qr, p, r, a) { Ap <- -log1p(-p); Ar <- -log1p(-r); c <- log(Ar / Ap) / log((qr - a) / (qp - a)); c(b = (qp - a) / Ap^(1 / c), c = c) }
@@ -4861,29 +4413,27 @@ report <- function(id, a, cs, scale) { b <- sapply(cs, scale); ok <- b > 0; cs <
     }
   } else if (card === 'parresol') {
     const s = summary || {};
-    out.push(rComment(T('Girdiler: ξ (verilen alt sınır), ortalama m, medyan M, Dq (doğrudan ya da N ve G\'den: Dq² = G/(K·N), K = π/40000). Bilinmeyenler λ = (M − ξ) + e^s, δ = e^t; γ = δ ln[(ξ + λ − M)/(M − ξ)] (medyan tam tutar). Denklemler ölçekli: ortalama/m − 1, ikinci moment/Dq² − 1.',
-      'Inputs: ξ (the given lower bound), mean m, median M, Dq (given, or from N and G: Dq² = G/(K·N), K = π/40000). Unknowns λ = (M − ξ) + e^s, δ = e^t; γ = δ ln[(ξ + λ − M)/(M − ξ)] (the median is matched exactly). Scaled equations: mean/m − 1, second moment/Dq² − 1.')),
+    out.push(rComment('Inputs: ξ (the given lower bound), mean m, median M, Dq (given, or from N and G: Dq² = G/(K·N), K = π/40000). Unknowns λ = (M − ξ) + e^s, δ = e^t; γ = δ ln[(ξ + λ − M)/(M − ξ)] (the median is matched exactly). Scaled equations: mean/m − 1, second moment/Dq² − 1.'),
       `s <- ${sExpr ?? rList({ xi: s.xi, mean: s.mean, median: s.median, dq: s.dq, nha: s.nha, g: s.g })}`,
       `q <- if (!is.null(s$dq)) s$dq else sqrt(s$g / (pi / 40000 * s$nha))`, R_SB,
       `par_of <- function(x) { lambda <- (s$median - s$xi) + exp(x[1]); delta <- exp(x[2]); c(xi = s$xi, lambda = lambda, gamma = delta * log((s$xi + lambda - s$median) / (s$median - s$xi)), delta = delta) }`,
       `F <- function(x) { p <- par_of(x); u1 <- fb_sbY(p[["gamma"]], p[["delta"]], 1); u2 <- fb_sbY(p[["gamma"]], p[["delta"]], 2)
   c((p[["xi"]] + p[["lambda"]] * u1) / s$mean - 1, (p[["xi"]]^2 + 2 * p[["xi"]] * p[["lambda"]] * u1 + p[["lambda"]]^2 * u2) / q^2 - 1) }`,
-      `starts <- lapply(list(${PRS_STARTS.map(([l, d]) => `c(${l}, ${d})`).join(', ')}), function(v) c(log(v[1] * (s$median - s$xi)), log(v[2])))   # ${T('aracın başlangıç ızgarası', 'the tool\'s grid of starts')}`,
+      `starts <- lapply(list(${PRS_STARTS.map(([l, d]) => `c(${l}, ${d})`).join(', ')}), function(v) c(log(v[1] * (s$median - s$xi)), log(v[2])))   # ${'the tool\'s grid of starts'}`,
       `sols <- fb_solve(F, starts, par_of)`);
   } else if (card === 'fonseca') {
     const s = summary || {};
-    out.push(rComment(T('Girdiler: medyan d50, ortalama, Dq ve göğüs yüzeyi ağırlıklı ortalama çap d̄_G (m3 = d̄_G·Dq²). Bilinmeyenler ξ = d50·logistic(a), λ = (d50 − ξ)(1 + e^b), δ = e^c; γ = δ ln[(ξ + λ − d50)/(d50 − ξ)]. Denklemler ölçekli: m_r(model)/m_r − 1, r = 1, 2, 3.',
-      'Inputs: median d50, mean, Dq and the basal-area-weighted mean diameter d̄_G (m3 = d̄_G·Dq²). Unknowns ξ = d50·logistic(a), λ = (d50 − ξ)(1 + e^b), δ = e^c; γ = δ ln[(ξ + λ − d50)/(d50 − ξ)]. Scaled equations: m_r(model)/m_r − 1, r = 1, 2, 3.')),
+    out.push(rComment('Inputs: median d50, mean, Dq and the basal-area-weighted mean diameter d̄_G (m3 = d̄_G·Dq²). Unknowns ξ = d50·logistic(a), λ = (d50 − ξ)(1 + e^b), δ = e^c; γ = δ ln[(ξ + λ − d50)/(d50 − ξ)]. Scaled equations: m_r(model)/m_r − 1, r = 1, 2, 3.'),
       `s <- ${rList({ mean: s.mean, median: s.median, dq: s.dq, dg: s.dg })}`, `tm <- c(s$mean, s$dq^2, s$dg * s$dq^2)`, R_SB,
       `par_of <- function(x) { xi <- s$median * plogis(x[1]); lambda <- (s$median - xi) * (1 + exp(x[2])); delta <- exp(x[3]); c(xi = xi, lambda = lambda, gamma = delta * log((xi + lambda - s$median) / (s$median - xi)), delta = delta) }`,
       `F <- function(x) { p <- par_of(x); u <- sapply(1:3, function(r) fb_sbY(p[["gamma"]], p[["delta"]], r)); xi <- p[["xi"]]; l <- p[["lambda"]]
   c(xi + l * u[1], xi^2 + 2 * xi * l * u[1] + l^2 * u[2], xi^3 + 3 * xi^2 * l * u[1] + 3 * xi * l^2 * u[2] + l^3 * u[3]) / tm - 1 }`,
-      `starts <- list(${FNS_STARTS.map(x => rVec(x)).join(', ')})   # ${T('aracın başlangıç ızgarası (logit, log, log)', 'the tool\'s grid of starts (logit, log, log)')}`,
+      `starts <- list(${FNS_STARTS.map(x => rVec(x)).join(', ')})   # ${'the tool\'s grid of starts (logit, log, log)'}`,
       `sols <- fb_solve(F, starts, par_of)`);
   }
-  if (sb) out.push(`cat(length(sols), ${rStr(T(' çözüm\\n', ' solution(s)\\n'))}); for (p in sols) { print(p); print(fb_sb_back(p[["xi"]], p[["lambda"]], p[["gamma"]], p[["delta"]])) }`,
+  if (sb) out.push(`cat(length(sols), ${rStr(' solution(s)\\n')}); for (p in sols) { print(p); print(fb_sb_back(p[["xi"]], p[["lambda"]], p[["gamma"]], p[["delta"]])) }`,
     `res[["solutions"]] <- length(sols); if (length(sols) == 1) for (k in names(sols[[1]])) res[[k]] <- sols[[1]][[k]]`,
-    rComment(T('Birden çok çözüm: yöntem tek başına seçemez (araç da sonucu "birden çok" olarak verir).', 'Several solutions: the method alone cannot choose (the tool reports "multiple" too).')));
+    rComment('Several solutions: the method alone cannot choose (the tool reports "multiple" too).'));
   return out;
 }
 };
@@ -4980,12 +4530,12 @@ function rFunctions(model, T) {
   // targets
   if (approach === 'ppm') {
     const half = opt.ppmLoc === 'half-dmin';
-    out.push(rComment(T(`Hedefler (PPM): birim başına Weibull ML, konum ${half ? 'a = Dmin/2' : `a = ${opt.a}`} sabit; başlangıç momentlerden.`, `Targets (PPM): Weibull ML per unit, location ${half ? 'a = Dmin/2' : `a = ${opt.a}`} fixed; start from the moments.`)),
+    out.push(rComment(`Targets (PPM): Weibull ML per unit, location ${half ? 'a = Dmin/2' : `a = ${opt.a}`} fixed; start from the moments.`),
       `fb_target <- function(d) { a <- ${half ? '0.5 * min(d)' : rNum(opt.a)}; x <- d - a; m <- mean(x); v <- mean((x - m)^2)
   c0 <- uniroot(function(c) gamma(1 + 2 / c) / gamma(1 + 1 / c)^2 - 1 - v / m^2, c(0.05, 200))$root
   r <- tryCatch(fb_run(d, "weibull", "ml", fix = list(a = a), start = list(b = m / gamma(1 + 1 / c0), c = c0)), error = function(e) NULL)
   if (is.null(r)) NULL else c(b = r$est[["b"]], c = r$est[["c"]]${half ? ', dmin = min(d)' : ''}) }`);
-  } else out.push(rComment(T('Hedefler (PRM): ortalama, moment varyansı (n bölenli), Dq, Dmin, yüzdelikler (tip 7).', 'Targets (PRM): mean, moment variance (divisor n), Dq, Dmin, percentiles (type 7).')),
+  } else out.push(rComment('Targets (PRM): mean, moment variance (divisor n), Dq, Dmin, percentiles (type 7).'),
     `fb_target <- function(d) { s <- sort(d); m <- mean(d); v <- mean((d - m)^2)
   t <- c(${keys.map(k => `${k} = ${{ mean: 'm', variance: 'v', dq: 'sqrt(m^2 + v)', dmin: 's[1]', median: 'fb_q7(s, 0.5)', q25: 'fb_q7(s, 0.25)', q31: 'fb_q7(s, 0.31)', q50: 'fb_q7(s, 0.5)', q63: 'fb_q7(s, 0.63)', q95: 'fb_q7(s, 0.95)' }[k]}`).join(', ')})
   if (all(is.finite(t) & t > 0)) t else NULL }`);
@@ -5012,15 +4562,15 @@ function rFunctions(model, T) {
   back <- rep(1, length(keys)); rounds <- NA
   ${model.fit === 'sur' ? 'f <- fb_sur(Z, Y, iterate = TRUE); B <- f$B; rounds <- f$rounds'
     : model.fit === 'logols' ? `B <- sapply(seq_len(ncol(Y)), function(k) unname(lm.fit(Z, log(Y[, k]))$coefficients))${opt.back === 'mean' ? `
-  back <- exp(sapply(seq_len(ncol(Y)), function(k) sum((log(Y[, k]) - Z %*% B[, k])^2) / (nrow(Z) - ncol(Z))) / 2)   # ${T('ortalama: exp(Zβ + s²/2)', 'mean: exp(Zβ + s²/2)')}` : `   # ${T('medyan: exp(Zβ)', 'median: exp(Zβ)')}`}`
+  back <- exp(sapply(seq_len(ncol(Y)), function(k) sum((log(Y[, k]) - Z %*% B[, k])^2) / (nrow(Z) - ncol(Z))) / 2)   # mean: exp(Zβ + s²/2)` : `   # median: exp(Zβ)`}`
       : 'B <- sapply(seq_len(ncol(Y)), function(k) fb_nls_exp(Z, Y[, k]))'}
   model <- list(B = B, back = back, rows = rows, Z = Z, Y = Y, rounds = rounds)${model.fit === 'cdfr' || model.fit === 'mcdfr' ? '\n  model <- fb_cdf(model)' : ''}
   model }`);
   if (model.fit === 'cdfr' || model.fit === 'mcdfr') {
     const w = model.cdf && model.cdf.width != null ? model.cdf.width : 2;
     out.push(rComment(model.fit === 'cdfr'
-      ? T('CDFR (kaynak): Σᵢ (1/nᵢ) Σⱼ [(j − 0,5)/nᵢ − F(dᵢ₍ⱼ₎; θᵢ)]², θᵢ modelin birim için tahmin ettiği parametreler (PRM\'de geri kazanımla). Dmin denklemi NLS ile fit edilip sabit tutulur. Geri kazanımı başarısız ya da çok köklü β uygun değildir: adım reddedilir.', 'CDFR (source): Σᵢ (1/nᵢ) Σⱼ [(j − 0.5)/nᵢ − F(dᵢ₍ⱼ₎; θᵢ)]², θᵢ the parameters the model predicts for unit i (by recovery for PRM). The Dmin equation is fitted by NLS and held fixed. A β where a recovery fails or has several roots is infeasible: the step is rejected.')
-      : T(`Değiştirilmiş CDFR (kaynak): Σᵢ 1/(mᵢ − 1) Σ_{j<mᵢ} [Cᵢⱼ − F(uᵢⱼ; θᵢ)]², ${w} cm genişlikli sınıflar ⌊min/w⌋·w'den, uᵢⱼ sınıfın üst sınırı, Cᵢⱼ gözlenen birikimli oran; son sınıf yalnızca amaçtan çıkar; tek sınıflı birim dışarıda.`, `Modified CDFR (source): Σᵢ 1/(mᵢ − 1) Σ_{j<mᵢ} [Cᵢⱼ − F(uᵢⱼ; θᵢ)]², classes of width ${w} cm from ⌊min/w⌋·w, uᵢⱼ the class upper bound, Cᵢⱼ the observed cumulative proportion; the last class is left out of the objective only; a unit with one class is left out.`)),
+      ? 'CDFR (source): Σᵢ (1/nᵢ) Σⱼ [(j − 0.5)/nᵢ − F(dᵢ₍ⱼ₎; θᵢ)]², θᵢ the parameters the model predicts for unit i (by recovery for PRM). The Dmin equation is fitted by NLS and held fixed. A β where a recovery fails or has several roots is infeasible: the step is rejected.'
+      : `Modified CDFR (source): Σᵢ 1/(mᵢ − 1) Σ_{j<mᵢ} [Cᵢⱼ − F(uᵢⱼ; θᵢ)]², classes of width ${w} cm from ⌊min/w⌋·w, uᵢⱼ the class upper bound, Cᵢⱼ the observed cumulative proportion; the last class is left out of the objective only; a unit with one class is left out.`),
       `fb_cdf <- function(model) {
   rows <- model$rows; free <- which(keys != "dmin"); p <- nrow(model$B); w <- ${rNum(w)}
   obs <- do.call(rbind, lapply(seq_along(rows), function(i) { d <- sort(rows[[i]]$u$d); n <- length(d)
@@ -5044,27 +4594,26 @@ function rFunctions(model, T) {
  * pred = the tool's prediction for x or null, o = { lang, created, version, fileName }.
  */
 function buildStandR(s, cfg, model, x, pred, o, cv = null) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]), out = [];
+  const T = (a, b) => (b), hd = c => c == null ? '' : String(s.src.headers[c]), out = [];
   const set = model.set, approach = model.approach, keys = model.keys, terms = model.terms, sb = model.family === 'johnsonsb';
-  out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu (meşcere modeli)', 'Diameter Distribution Lab: R code (stand model)'), tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang,
+  out.push(header({ title: 'Diameter Distribution Lab: R code (stand model)', tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang,
     packages: ['fitdistrplus', ...(sb ? ['nleqslv'] : [])],
-    notes: [T(`Aşama 3b–3c: meşcere modelini geliştirme, örnek alan katlı çapraz doğrulama ve tahmin. Yanıt kümesi ${set}; terimler ${terms.join(', ')}; yöntem ${model.fit}. Model biçimi (Poudel ve Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; hata özgün ölçekte toplamsal (log-OLS'de çarpımsal).`,
-      `Stages 3b–3c: stand model training, plot-level cross-validation and prediction. Response set ${set}; terms ${terms.join(', ')}; method ${model.fit}. Model form (Poudel and Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; additive error on the original scale (multiplicative for log-OLS).`)] }));
+    notes: [`Stages 3b–3c: stand model training, plot-level cross-validation and prediction. Response set ${set}; terms ${terms.join(', ')}; method ${model.fit}. Model form (Poudel and Cao 2013): y = exp(β₁ + β₂·RS + β₃·ln N + β₄·ln H + β₅/A), RS = √(10000/N)/H; additive error on the original scale (multiplicative for log-OLS).`] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal), FB_NUM, '', FB_OUT, '');
   out.push(...dataBlock({ ...s, mode: 'each' }, null, T, hd, false, s.unit === 'mm' ? 0.1 : 1, false), R_FAMILIES, R_METHODS, R_STAND, `res <- list()`, '');
   const cols = Object.entries(s.cols || {}).filter(([, c]) => c != null);
-  out.push(rComment(T('Birimler: örnek alan × dönem; meşcere değişkeni birimin bütün satırlarında aynı tek pozitif sayı olmalı (yoksa birim dışarıda kalır).', 'Units: plot × period; a stand variable must be the same single positive number on every row of the unit (else the unit is left out).')),
+  out.push(rComment('Units: plot × period; a stand variable must be the same single positive number on every row of the unit (else the unit is left out).'),
     `stand_cols <- c(${cols.map(([k, c]) => `${k} = ${c + 1}`).join(', ')})   # ${cols.map(([k, c]) => `${k}: ${hd(c)}`).join(', ')}`,
     `ids <- unique(data.frame(plot = plot_all, period = per_all)[use, ])`,
     `units <- lapply(seq_len(nrow(ids)), function(i) { r <- use & in_unit(ids$plot[i], ids$period[i]); x <- list(); ok <- TRUE
   for (k in names(stand_cols)) { v <- fb_num(dat[[stand_cols[[k]]]][r], dec); u <- unique(v$value) ; if (any(v$status != "ok") || length(u) != 1 || !(u > 0)) ok <- FALSE else x[[k]] <- u }
   list(plot = ids$plot[i], period = ids$period[i], d = d_all[r], x = x, ok = ok) })`,
-    `units <- Filter(function(u) u$ok, units); cat(${rStr(T('Birim: ', 'Units: '))}, length(units), "\\n")`,
+    `units <- Filter(function(u) u$ok, units); cat(${rStr('Units: ')}, length(units), "\\n")`,
     `terms <- ${rVec(terms, rStr)}; keys <- ${rVec(keys, rStr)}; need <- ${rVec([...new Set(terms.flatMap(t => ({ RS: ['N', 'H'], lnN: ['N'], lnH: ['H'], invA: ['A'] })[t]))], rStr)}`, '');
   out.push(...rFunctions(model, T), '');
-  out.push(rComment(T('Model geliştirme: bütün birimler', 'Training: all units')),
+  out.push(rComment('Training: all units'),
     `model <- fb_train(units); B <- model$B; colnames(B) <- keys; print(B)`,
-    `cat(${rStr(T('Model geliştirme birimi: ', 'Training units: '))}, nrow(model$Y), ${rStr(T('; örnek alan: ', '; plots: '))}, length(unique(sapply(model$rows, function(r) r$u$plot))), "\\n")`,
+    `cat(${rStr('Training units: ')}, nrow(model$Y), ${rStr('; plots: ')}, length(unique(sapply(model$rows, function(r) r$u$plot))), "\\n")`,
     ...(model.fit === 'sur' ? ['cat("SUR rounds:", model$rounds, "\\n")'] : []),
     ...(model.fit === 'cdfr' || model.fit === 'mcdfr' ? ['print(model$cdf); res[["cdf.start"]] <- model$cdf[["start"]]; res[["cdf.objective"]] <- model$cdf[["objective"]]'] : []),
     `for (k in seq_len(ncol(B))) { pr <- exp(drop(model$Z %*% B[, k])) * model$back[k]; r <- model$Y[, k] - pr; key <- keys[k]`,
@@ -5073,8 +4622,7 @@ function buildStandR(s, cfg, model, x, pred, o, cv = null) {
   const plots = [...new Set((model.trainingUnits || []).map(u => u.plot))];
   const asg = cv && cv.assignment ? cv.assignment : null;
   if (asg) {
-    out.push(rComment(T(`Örnek alan katlı çapraz doğrulama (K = ${cv.K}): örnek alanlar doğal sırayla, j. örnek alan j mod K katına (aracın ataması; bir alanın bütün dönemleri aynı katta). Her katta model yalnızca öbür katlarla geliştirilir; dışarıdaki her birim için tahmin edilen dağılımda −ln L ve KS D. Başarısız tahminler sayılır.`,
-      `Plot-level cross-validation (K = ${cv.K}): plots in natural order, plot j to fold j mod K (the tool's assignment; all periods of a plot in one fold). In each fold the model is trained on the other folds only; for every held-out unit −ln L and KS D under the predicted distribution. Failed predictions are counted.`)),
+    out.push(rComment(`Plot-level cross-validation (K = ${cv.K}): plots in natural order, plot j to fold j mod K (the tool's assignment; all periods of a plot in one fold). In each fold the model is trained on the other folds only; for every held-out unit −ln L and KS D under the predicted distribution. Failed predictions are counted.`),
       `fold <- c(${Object.entries(asg).sort((a, b) => natural(a[0], b[0])).map(([pl, f]) => `${rStr(pl)} = ${f}`).join(', ')})`,
       `cvu <- list()`,
       `for (f in sort(unique(fold))) {
@@ -5084,19 +4632,19 @@ function buildStandR(s, cfg, model, x, pred, o, cv = null) {
     ${sb ? 'll <- dfb_johnsonsb(u$d, p[["xi"]], p[["lambda"]], p[["gamma"]], p[["delta"]], log = TRUE); pf <- function(q) pfb_johnsonsb(q, p[["xi"]], p[["lambda"]], p[["gamma"]], p[["delta"]])'
       : 'll <- dweibull(u$d - p[["a"]], shape = p[["c"]], scale = p[["b"]], log = TRUE); pf <- function(q) pweibull(q - p[["a"]], shape = p[["c"]], scale = p[["b"]])'}
     nll <- -sum(ll); cvu[[length(cvu) + 1]] <- list(ok = is.finite(nll), n = length(u$d), nll = nll, ks = fb_gof(u$d, pf)[["ks"]]) } }`,
-      `ok <- Filter(function(r) r$ok, cvu); cat(${rStr(T('Çapraz doğrulama: ', 'Cross-validation: '))}, length(ok), "/", length(cvu), ${rStr(T(' birim; −ln L/ağaç ', ' units; −ln L per tree '))}, mean(sapply(ok, function(r) r$nll / r$n)), " KS ", mean(sapply(ok, function(r) r$ks)), "\\n")`,
+      `ok <- Filter(function(r) r$ok, cvu); cat(${rStr('Cross-validation: ')}, length(ok), "/", length(cvu), ${rStr(' units; −ln L per tree ')}, mean(sapply(ok, function(r) r$nll / r$n)), " KS ", mean(sapply(ok, function(r) r$ks)), "\\n")`,
       `res[["cv.units"]] <- length(cvu); res[["cv.ok"]] <- length(ok); res[["cv.nll"]] <- sum(sapply(ok, function(r) r$nll)); res[["cv.nllPerTree"]] <- mean(sapply(ok, function(r) r$nll / r$n)); res[["cv.ks"]] <- mean(sapply(ok, function(r) r$ks))`, '');
   }
   void plots;
   // prediction
   if (x) {
-    out.push(rComment(T('Tahmin: tahmin sekmesindeki meşcere değişkenleri', 'Prediction: the stand variables of the prediction tab')),
+    out.push(rComment('Prediction: the stand variables of the prediction tab'),
       `x0 <- ${`list(${Object.entries(x).filter(([, v]) => Number.isFinite(v)).map(([k, v]) => `${k} = ${rNum(v)}`).join(', ')})`}`,
       `resp <- fb_resp(model, x0); print(resp); for (k in names(resp)) res[[paste0("pred.", k)]] <- resp[[k]]`);
     if (approach === 'ppm') out.push(`p <- c(a = ${model.options.ppmLoc === 'half-dmin' ? '0.5 * resp[["dmin"]]' : rNum(model.options.a)}, b = resp[["b"]], c = resp[["c"]]); print(p); for (k in names(p)) res[[paste0("pred.param.", k)]] <- p[[k]]`);
     else if (model.family === 'weibull') out.push(...recoverBody('weibull', null, model.options.loc === 'user' ? { loc: 'user', a: model.options.aUser } : { loc: 'half-dmin' }, [{ method: model.method }], T, 'as.list(resp)'));
     else out.push(...recoverBody('parresol', null, {}, [{ method: 'johnsonsb.parresol' }], T, `c(list(xi = ${rNum(model.options.xi)}), as.list(resp))`));
-    if (pred && pred.status !== 'ok') out.push(rComment(T(`Araçta tahmin geçersizdi (${pred.status}): yanıtlar tutarsız ya da geri kazanım çözümsüz; R aynı hesabı yapar, sonucu yorumlarken bunu göz önünde tutun.`, `In the tool the prediction was not valid (${pred.status}): inconsistent responses or no recovery; R does the same computation, keep that in mind when reading it.`)));
+    if (pred && pred.status !== 'ok') out.push(rComment(`In the tool the prediction was not valid (${pred.status}): inconsistent responses or no recovery; R does the same computation, keep that in mind when reading it.`));
   }
   out.push('', `fb_out(res)`, '');
   return out.join('\n');
@@ -5250,19 +4798,18 @@ const sig2 = v => Number(Number(v).toPrecision(2));
 /** The settings and data part of a script: the same rows, units and diameters (or classes) as the page. */
 function dataBlock(s, R, T, hd, pool, f, g) {
   const out = [];
-  out.push(rComment(T('Ayarlar (araçtaki gibi)', 'Settings (as in the tool)')),
-    `dec <- ${rStr(s.decimal)}; f_unit <- ${rNum(f)}   # ${T('ondalık ayırıcı; ', 'decimal separator; ')}${s.unit === 'mm' ? 'mm → cm' : 'cm'}`,
-    s.fcol != null && s.fval != null ? `keep <- dat[[${s.fcol + 1}]] == ${rStr(s.fval)}   # ${T('süzgeç', 'filter')}: ${hd(s.fcol)} = "${s.fval}"` : `keep <- rep(TRUE, nrow(dat))`,
-    `plot_all <- ${pool ? 'rep("", nrow(dat))' : `trimws(dat[[${s.pcol + 1}]])`}   # ${pool ? T('bütün örnek alanlar birlikte', 'all plots pooled') : T('örnek alan', 'plot') + ': ' + hd(s.pcol)}`,
-    `per_all <- ${s.percol != null ? `{ v <- trimws(dat[[${s.percol + 1}]]); v[v == ""] <- NA; v }` : 'rep(NA_character_, nrow(dat))'}   # ${s.percol != null ? T('dönem', 'period') + ': ' + hd(s.percol) : T('dönem yok', 'no period')}`,
+  out.push(rComment('Settings (as in the tool)'),
+    `dec <- ${rStr(s.decimal)}; f_unit <- ${rNum(f)}   # decimal separator; ${s.unit === 'mm' ? 'mm → cm' : 'cm'}`,
+    s.fcol != null && s.fval != null ? `keep <- dat[[${s.fcol + 1}]] == ${rStr(s.fval)}   # filter: ${hd(s.fcol)} = "${s.fval}"` : `keep <- rep(TRUE, nrow(dat))`,
+    `plot_all <- ${pool ? 'rep("", nrow(dat))' : `trimws(dat[[${s.pcol + 1}]])`}   # ${pool ? 'all plots pooled' : 'plot' + ': ' + hd(s.pcol)}`,
+    `per_all <- ${s.percol != null ? `{ v <- trimws(dat[[${s.percol + 1}]]); v[v == ""] <- NA; v }` : 'rep(NA_character_, nrow(dat))'}   # ${s.percol != null ? 'period' + ': ' + hd(s.percol) : 'no period'}`,
     `in_unit <- function(plot, period) keep & plot_all == plot & (if (is.na(period)) is.na(per_all) else per_all %in% period)`);
-  if (!g) out.push(rComment(T('Çaplar: okunamayan ve sıfır ya da negatif değerler sayılır ve dışarıda kalır (değiştirilmez).', 'Diameters: unreadable and zero or negative values are counted and left out (never altered).')),
+  if (!g) out.push(rComment('Diameters: unreadable and zero or negative values are counted and left out (never altered).'),
     `dn <- fb_num(dat[[${s.dcol + 1}]], dec); d_all <- dn$value * f_unit`,
     `use <- keep & dn$status == "ok" & d_all > 0`,
-    `cat(${rStr(T('Okunan çap: ', 'Diameters read: '))}, sum(use), ${rStr(T('; okunamayan: ', '; unreadable: '))}, sum(keep & dn$status != "ok"), ${rStr(T('; ≤ 0: ', '; ≤ 0: '))}, sum(keep & dn$status == "ok" & !(d_all > 0)), "\\n")`,
+    `cat(${rStr('Diameters read: ')}, sum(use), ${rStr('; unreadable: ')}, sum(keep & dn$status != "ok"), ${rStr('; ≤ 0: ')}, sum(keep & dn$status == "ok" & !(d_all > 0)), "\\n")`,
     `fb_unit <- function(plot, period) d_all[use & in_unit(plot, period)]`, '');
-  else out.push(rComment(T(`Sınıflar: alt sınır ${hd(s.lcol)}, üst sınır ${hd(s.ucol)} (boş = açık son sınıf), sıklık ${hd(s.ncol)}; aynı sınıflar toplanır. Sıklık türü: ${s.countType === 'perha' ? 'hektardaki ağaç (olabilirlik ve AIC yok)' : 'ağaç sayısı'}; sınıfların dışı: ${s.outside === 'unrecorded' ? 'kaydedilmedi (koşullu olabilirlik)' : 'ölçüldü, ağaç yok'}.`,
-      `Classes: lower bound ${hd(s.lcol)}, upper bound ${hd(s.ucol)} (empty = open last class), frequency ${hd(s.ncol)}; identical classes are added. Count type: ${s.countType === 'perha' ? 'trees per hectare (no likelihood, no AIC)' : 'numbers of trees'}; outside the classes: ${s.outside === 'unrecorded' ? 'not recorded (conditional likelihood)' : 'measured, no trees'}.`)),
+  else out.push(rComment(`Classes: lower bound ${hd(s.lcol)}, upper bound ${hd(s.ucol)} (empty = open last class), frequency ${hd(s.ncol)}; identical classes are added. Count type: ${s.countType === 'perha' ? 'trees per hectare (no likelihood, no AIC)' : 'numbers of trees'}; outside the classes: ${s.outside === 'unrecorded' ? 'not recorded (conditional likelihood)' : 'measured, no trees'}.`),
     `lo_n <- fb_num(dat[[${s.lcol + 1}]], dec); hi_raw <- trimws(dat[[${s.ucol + 1}]]); hi_n <- fb_num(hi_raw, dec); n_n <- fb_num(dat[[${s.ncol + 1}]], dec)`,
     `hi_v <- ifelse(hi_raw == "", Inf, hi_n$value * f_unit); ok_c <- lo_n$status == "ok" & (hi_raw == "" | hi_n$status == "ok") & n_n$status == "ok"`,
     `fb_cls <- function(plot, period) { i <- keep & ok_c & in_unit(plot, period)`,
@@ -5283,25 +4830,23 @@ function fitArgs(r) {
  * unit's id, o = { lang, created, version, fileName }.
  */
 function buildR(s, R, POOL, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]), g = !!R.grouped;
+  const T = (a, b) => (b), hd = c => c == null ? '' : String(s.src.headers[c]), g = !!R.grouped;
   const pool = s.mode === 'pool' || s.pcol == null, f = s.unit === 'mm' ? 0.1 : 1;
   const out = [];
-  out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu (fit etme)', 'Diameter Distribution Lab: R code (fitting)'), tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
-    notes: [T('Aşama 1: çaplardan ya da sınıflardan fit etme sekmesi. Dağılımlar R\'da aracın parametreleriyle yazılmıştır (fb_<aile>); ML, momentler (mme), iki yüzdelik (qme) ve en küçük uzaklık (mge) fitdistrplus ile; L-momentler, log-momentler, ağırlıklı yüzdelik eşleştirme ve sınıflandırılmış veri olabilirliği betikte açıkça.',
-      'Stage 1: the fitting tab, from diameters or classes. The distributions are written in R with the tool\'s parameters (fb_<family>); ML, moments (mme), two percentiles (qme) and minimum distance (mge) by fitdistrplus; L-moments, log-moments, weighted quantile matching and the grouped-data likelihood written out in the script.'),
-    T('R\'ın eniyileyicisi (Nelder–Mead) aracın sonucunun iki anlamlı basamağından başlar; optimumu kendisi bulur. Uyum ölçütleri KS D, A², W² aracın tanımlarıyla; p değeri yok (parametreler aynı veriden). AIC/BIC yalnızca olabilirliğin en büyüklendiği yöntemlerde. Sınıflandırılmış veride fitdistcens kullanılmaz: ağırlıkların pozitif tam sayı olmasını ister (hektardaki sayılar ve boş sınıflar olmaz).',
-      'R\'s optimiser (Nelder–Mead) starts from two significant digits of the tool\'s result and finds the optimum itself. Fit statistics KS D, A², W² with the tool\'s definitions; no p-values (parameters from the same data). AIC/BIC only for methods that maximise the likelihood. For classes fitdistcens is not used: it requires positive integer weights (no per-hectare counts, no empty classes).')] }));
+  out.push(header({ title: 'Diameter Distribution Lab: R code (fitting)', tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
+    notes: ['Stage 1: the fitting tab, from diameters or classes. The distributions are written in R with the tool\'s parameters (fb_<family>); ML, moments (mme), two percentiles (qme) and minimum distance (mge) by fitdistrplus; L-moments, log-moments, weighted quantile matching and the grouped-data likelihood written out in the script.',
+    'R\'s optimiser (Nelder–Mead) starts from two significant digits of the tool\'s result and finds the optimum itself. Fit statistics KS D, A², W² with the tool\'s definitions; no p-values (parameters from the same data). AIC/BIC only for methods that maximise the likelihood. For classes fitdistcens is not used: it requires positive integer weights (no per-hectare counts, no empty classes).'] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal));
   out.push(FB_NUM, '', FB_OUT, '');
   out.push(...dataBlock(s, R, T, hd, pool, f, g));
   out.push(R_FAMILIES, R_METHODS, `res <- list()`, '');
   R.units.forEach((u, k) => {
     const okR = (u.results || []).map((r, j) => ({ r, j })).filter(x => x.r.status === 'ok');
-    const name = `${u.plot === POOL ? T('bütün örnek alanlar', 'all plots') : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
-    out.push(rComment(`${T('Birim', 'Unit')} ${k + 1}: ${name}`),
+    const name = `${u.plot === POOL ? 'all plots' : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
+    out.push(rComment(`Unit ${k + 1}: ${name}`),
       `x <- ${g ? 'fb_cls' : 'fb_unit'}(${rStr(u.plot === POOL ? '' : u.plot)}, ${u.period == null ? 'NA' : rStr(u.period)}); cat("\\n", ${rStr(name)}, ":", ${g ? 'sum(x$n), "trees,", nrow(x), "classes"' : 'length(x), "trees"'}, "\\n")`);
     const bad = (u.results || []).filter(r => r.status !== 'ok');
-    if (bad.length) out.push(rComment(T(`Araçta sonuç vermeyenler (R'da da fit edilmez): ${bad.map(r => `${r.method} (${r.status})`).join(', ')}`, `No result in the tool (not fitted in R either): ${bad.map(r => `${r.method} (${r.status})`).join(', ')}`)));
+    if (bad.length) out.push(rComment(`No result in the tool (not fitted in R either): ${bad.map(r => `${r.method} (${r.status})`).join(', ')}`));
     for (const { r, j } of okR) {
       const { fam, how, fix, start, opt } = fitArgs(r);
       const key = `u${k + 1}.r${j + 1}`, aic = r.likelihoodMaximised && r.logLik != null;
@@ -5365,26 +4910,24 @@ fb_boot <- function(kind, x, fam, how, fix, par, opt, L, U, B, seed, step, schem
  * runs = [{ kind: 'gof'|'ci', B, seed, step (cm or null), scheme, level }] (the runs done on the page), o as buildR.
  */
 function buildBootR(s, R, POOL, k, r, runs, o) {
-  const tr = o.lang === 'tr', T = (a, b) => (tr ? a : b), hd = c => c == null ? '' : String(s.src.headers[c]), g = !!R.grouped;
+  const T = (a, b) => (b), hd = c => c == null ? '' : String(s.src.headers[c]), g = !!R.grouped;
   const pool = s.mode === 'pool' || s.pcol == null, f = s.unit === 'mm' ? 0.1 : 1, u = R.units[k], out = [];
-  const name = `${u.plot === POOL ? T('bütün örnek alanlar', 'all plots') : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
-  out.push(header({ title: T('Çap Dağılımı Laboratuvarı: R kodu (bootstrap)', 'Diameter Distribution Lab: R code (bootstrap)'), tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
-    notes: [T(`Aşama 3a: bir birimin (${name}) bir fit işleminin (${r.method}) bootstrap'ı. Üreteç aracınkidir (mulberry32, 32 bitlik aritmetik): aynı tohum aynı çekilişleri verir. Çekilişler aracın kestirimlerinden yapılır (aynı örnekler için); R'ın kendi kestirimi yanında yazdırılır.`,
-      `Stage 3a: the bootstrap of one fit (${r.method}) of one unit (${name}). The generator is the tool's (mulberry32, 32-bit arithmetic): the same seed gives the same draws. The draws come from the tool's estimates (for the same samples); R's own estimate is printed beside them.`),
-    T('Parametrik: her tekrar fit edilen gözlem modelinden (eşikli veride koşullu dağılım, sınıflarda sınıf sayıları), aynı ölçüm yuvarlamasıyla çekilir ve aynı yöntemle yeniden fit edilir; p = (1 + #{T_b ≥ T_0})/(B_ok + 1). Parametrik olmayan: ağaçlar birim içinde iadeli (yerine koyarak) çekilir. Aralıklar yüzdelik (tip 7). Yeniden fit edilemeyen tekrarlar sayılır ve dışarıda kalır.',
-      'Parametric: every replicate is drawn from the fitted observation model (the conditional distribution under thresholds, class counts for classes) with the same measurement rounding and refitted with the same method; p = (1 + #{T_b ≥ T_0})/(B_ok + 1). Non-parametric: trees resampled with replacement within the unit. Percentile intervals (type 7). Replicates whose refit fails are counted and left out.')] }));
+  const name = `${u.plot === POOL ? 'all plots' : u.plot}${u.period != null ? ' · ' + u.period : ''}`;
+  out.push(header({ title: 'Diameter Distribution Lab: R code (bootstrap)', tool: { id: 'cap-dagilimi', version: o.version }, created: o.created, lang: o.lang, packages: ['fitdistrplus'],
+    notes: [`Stage 3a: the bootstrap of one fit (${r.method}) of one unit (${name}). The generator is the tool's (mulberry32, 32-bit arithmetic): the same seed gives the same draws. The draws come from the tool's estimates (for the same samples); R's own estimate is printed beside them.`,
+    'Parametric: every replicate is drawn from the fitted observation model (the conditional distribution under thresholds, class counts for classes) with the same measurement rounding and refitted with the same method; p = (1 + #{T_b ≥ T_0})/(B_ok + 1). Non-parametric: trees resampled with replacement within the unit. Percentile intervals (type 7). Replicates whose refit fails are counted and left out.'] }));
   out.push(readBlock(s.imp, o.lang, o.fileName, s.decimal), FB_NUM, '', FB_OUT, '', ...dataBlock(s, R, T, hd, pool, f, g), R_FAMILIES, R_METHODS, R_BOOT, `res <- list()`, '');
   const { fam, how, fix, start, opt } = fitArgs(r), L = r.truncation ? r.truncation.lower : null, U = r.truncation ? r.truncation.upper : null;
-  out.push(rComment(`${T('Birim', 'Unit')}: ${name}; ${r.method}`),
+  out.push(rComment(`Unit: ${name}; ${r.method}`),
     `x <- ${g ? 'fb_cls' : 'fb_unit'}(${rStr(u.plot === POOL ? '' : u.plot)}, ${u.period == null ? 'NA' : rStr(u.period)})`,
-    `r0 <- fb_run(x, ${rStr(fam.id)}, ${rStr(how)}, fix = ${rList(fix)}, start = ${rList(start)}, opt = ${rList(opt)})   # ${T('R\'ın kendi kestirimi', 'R\'s own estimate')}`,
-    `par <- ${rList(Object.fromEntries(fam.params.map(q => [q.key, r.params[q.key]])))}   # ${T('aracın kestirimleri: çekilişler bunlardan', 'the tool\'s estimates: the draws come from these')}`,
+    `r0 <- fb_run(x, ${rStr(fam.id)}, ${rStr(how)}, fix = ${rList(fix)}, start = ${rList(start)}, opt = ${rList(opt)})   # R's own estimate`,
+    `par <- ${rList(Object.fromEntries(fam.params.map(q => [q.key, r.params[q.key]])))}   # the tool's estimates: the draws come from these`,
     `print(rbind(tool = unlist(par)[names(r0$est)], R = r0$est))`,
     `fix <- ${rList(fix)}; opt <- ${rList(opt)}; L <- ${L == null ? 'NA' : rNum(L)}; U <- ${U == null ? 'NA' : rNum(U)}`, '');
   for (const run of runs) {
     const tag = run.kind === 'gof' ? 'gof' : `ci.${run.scheme === 'nonparametric' ? 'np' : 'p'}`;
-    out.push(rComment(run.kind === 'gof' ? T(`Parametrik bootstrap p değerleri: B = ${run.B}, tohum ${run.seed}, yuvarlama ${run.step == null ? 'yok' : run.step + ' cm'}`, `Parametric bootstrap p-values: B = ${run.B}, seed ${run.seed}, rounding ${run.step == null ? 'none' : run.step + ' cm'}`)
-      : T(`Bootstrap yüzdelik aralıkları (${run.scheme === 'nonparametric' ? 'parametrik olmayan' : 'parametrik'}): B = ${run.B}, tohum ${run.seed}, düzey ${run.level}`, `Bootstrap percentile intervals (${run.scheme}): B = ${run.B}, seed ${run.seed}, level ${run.level}`)),
+    out.push(rComment(run.kind === 'gof' ? `Parametric bootstrap p-values: B = ${run.B}, seed ${run.seed}, rounding ${run.step == null ? 'none' : run.step + ' cm'}`
+      : `Bootstrap percentile intervals (${run.scheme}): B = ${run.B}, seed ${run.seed}, level ${run.level}`),
       `b <- fb_boot(${rStr(run.kind)}, x, ${rStr(fam.id)}, ${rStr(how)}, fix, par, opt, L, U, B = ${run.B}, seed = ${run.seed}, step = ${run.step == null ? 'NA' : rNum(run.step)}${run.kind === 'ci' ? `, scheme = ${rStr(run.scheme)}, level = ${rNum(run.level)}` : ''})`,
       `str(b); res[[${rStr(tag + '.completed')}]] <- b$completed`,
       run.kind === 'gof' ? `for (k in names(b$p)) { res[[paste0("gof.", k, ".ge")]] <- b$ge[[k]]; res[[paste0("gof.", k, ".p")]] <- b$p[[k]] }`
@@ -6702,7 +6245,7 @@ const { tableCsv, csvName } = __fb_r("core/rcode.js");
 
 const BASE = './', KEY = 'session:cap-dagilimi-2';
 const $ = id => document.getElementById(id);
-const LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const LOC = 'en-GB';
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).trim().replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
 const has = k => T(k) !== k;
@@ -6752,7 +6295,7 @@ function renderStep1() {
   renderImport($('impbox'), { imp: S.imp, src: S.src }, { base: BASE, title: T('imp.h'), sub: T('imp.sub'), onChange: setTable, onError: m => status(m, 'err') });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/dist/ornek/ornek-caplar.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-caplar.csv (benzetim)' : 'ornek-caplar.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-caplar.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
   });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -7020,7 +6563,7 @@ function notesOf(r) {
 }
 /* ---------------- exports (tables built in report.js; numbers at full precision, decimal point) ---------------- */
 const stamp = () => new Date().toISOString().slice(0, 10);
-const fname = (tr, en, ext) => `${lang === 'tr' ? tr : en}-${stamp()}.${ext}`;
+const fname = (name, ext) => `${name}-${stamp()}.${ext}`;
 const repH = () => ({ T, methodName, notes: notesOf, poolLabel: T('unit.pool') });
 function settingsInfo() {
   const H = S.src ? S.src.headers : [], col = c => c == null ? null : String(H[c]);
@@ -7053,9 +6596,9 @@ const chartMeta = (u, rs) => ({ tool: D.TOOL, created: new Date().toISOString(),
   fits: rs.map(r => ({ method: r.method, family: r.family, fixed: r.fixed, params: r.params, settings: r.settings, truncation: r.truncation })) });
 function exportRaw(kind) {
   const h = repH();
-  if (kind === 'fits') return downloadCSV(fname('cap-dagilimi-fit-islemleri', 'diameter-distribution-fits', 'csv'), REP.fitRows(R.units, h));
-  if (kind === 'params') return downloadCSV(fname('cap-dagilimi-parametreler', 'diameter-distribution-parameters', 'csv'), REP.paramRows(R.units, h));
-  return loadXLSX(BASE).then(XLSX => download(fname('cap-dagilimi', 'diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
+  if (kind === 'fits') return downloadCSV(fname('diameter-distribution-fits', 'csv'), REP.fitRows(R.units, h));
+  if (kind === 'params') return downloadCSV(fname('diameter-distribution-parameters', 'csv'), REP.paramRows(R.units, h));
+  return loadXLSX(BASE).then(XLSX => download(fname('diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
     { name: T('sheet.info'), rows: REP.infoRows(settingsInfo(), T), widths: [34, 110] }, { name: T('sheet.fits'), rows: REP.fitRows(R.units, h) },
     { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) },
     { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.ba'), rows: REP.basalRows(R.units, h, u => classesFor(u), perHaOf()) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) },
@@ -7063,12 +6606,12 @@ function exportRaw(kind) {
 }
 /** R script of a recovery card (stage 2): the card's summary, options and results. */
 function recR(card, summary, opts, results, base) {
-  download(fname(base[0], base[1], 'R'), buildRecoverR(card, summary, opts, results, { lang, created: new Date().toISOString(), version: D.TOOL.version }), 'text/plain;charset=utf-8');
+  download(fname(base[1], 'R'), buildRecoverR(card, summary, opts, results, { lang, created: new Date().toISOString(), version: D.TOOL.version }), 'text/plain;charset=utf-8');
 }
 function exportRec(kind, results, info, base) {
   const h = repH(), rows = REP.recoverRows(results, h);
-  if (kind === 'csv') return downloadCSV(fname(base[0], base[1], 'csv'), rows);
-  return loadXLSX(BASE).then(XLSX => download(fname(base[0], base[1], 'xlsx'), xlsxBlob(XLSX, [{ name: T('sheet.info'), rows: REP.infoRows(info, T), widths: [34, 110] }, { name: T('sheet.rec'), rows },
+  if (kind === 'csv') return downloadCSV(fname(base[1], 'csv'), rows);
+  return loadXLSX(BASE).then(XLSX => download(fname(base[1], 'xlsx'), xlsxBlob(XLSX, [{ name: T('sheet.info'), rows: REP.infoRows(info, T), widths: [34, 110] }, { name: T('sheet.rec'), rows },
     { name: T('sheet.src'), rows: REP.sourceRows(results.map(r => r.method), h), widths: [22, 34, 16, 14, 14, 12, 26] }])), () => status(T('ex.fail'), 'err'));
 }
 /** Methods, units, support and observation policy and sources of the given results (stage P15). */
@@ -7113,7 +6656,7 @@ function tabParams(p) {
   for (const k of ['xlsx', 'fits', 'params']) $('x-' + k).addEventListener('click', () => exportRaw(k));
   $('x-r').addEventListener('click', () => {
     const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
-    download(fname('cap-dagilimi', 'diameter-distribution', 'R'), buildR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
+    download(fname('diameter-distribution', 'R'), buildR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
       fcol: S.fcol, fval: S.fval, mode: S.mode, dtype: S.dtype, countType: R.countType, outside: S.outside }, R, D.POOL, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
     // a table that was not read from a file (approved package, pasted cells) goes along as CSV for the script to read
     if (!file) download(csvName(imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
@@ -7231,7 +6774,7 @@ function tabBoot(p) {
     const runs = ['gof', 'ci'].map(k => BOOT.get(`${u.id}|${b.fit}|${k}`)).filter(x => x && !x.unsupported).map(x => ({ kind: x.kind, B: x.B, seed: x.seed, step: x.step ?? null, scheme: x.scheme || 'parametric', level: x.level ?? 0.95 }));
     if (!runs.length) return;
     const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
-    download(fname('cap-dagilimi-bootstrap', 'diameter-distribution-bootstrap', 'R'), buildBootR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
+    download(fname('diameter-distribution-bootstrap', 'R'), buildBootR({ imp, src: S.src, decimal: S.decimal || '.', unit: S.unit, dcol: S.dcol, lcol: S.lcol, ucol: S.ucol, ncol: S.ncol, pcol: S.pcol, percol: S.percol,
       fcol: S.fcol, fval: S.fval, mode: S.mode, dtype: S.dtype, countType: R.countType, outside: S.outside }, R, D.POOL, R.units.indexOf(u), r, runs, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
     if (!file) download(csvName(imp), tableCsv(S.src, cellText, S.decimal || '.'), 'text/csv;charset=utf-8');
   });
@@ -7703,7 +7246,7 @@ function standTrain(el) {
   $('st-K').addEventListener('change', e => { q.K = e.target.value; re(); });
   $('st-sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/dist/ornek/ornek-mescere.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-mescere.csv (benzetim)' : 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     const keep = S.st; setTable({ imp, src: await readImport(imp, BASE) }); S.wf = 'stand'; S.st = { ...keep, ncol: null, hcol: null, acol: null, done: false, model: null, cv: null }; guessStandCols(); save(); render();
   });
   $('st-train-btn').addEventListener('click', () => {
@@ -7741,13 +7284,13 @@ function drawStandTrain() {
   h += `<div class="exports"><button type="button" class="btn" id="st-json">${T('st.dl')}</button><button type="button" class="btn ghost" id="st-cvcsv"${cv ? '' : ' disabled'}>${T('st.dlcv')}</button><button type="button" class="btn ghost" id="st-go">${T('st.topredict')}</button><button type="button" class="btn ghost" id="st-r">${T('ex.r')}</button></div><p class="muted small">${T('ex.r.stand')}</p>`;
   out.innerHTML = h;
   $('st-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-mescere-modeli-${stamp()}.json`, m));
-  $('st-cvcsv').addEventListener('click', () => downloadCSV(fname('cap-dagilimi-mescere-dogrulama', 'diameter-distribution-stand-validation', 'csv'),
+  $('st-cvcsv').addEventListener('click', () => downloadCSV(fname('diameter-distribution-stand-validation', 'csv'),
     [[T('x.plot'), T('x.period'), 'fold', 'n', 'neg_log_lik', 'neg_log_lik_per_tree', 'ks_d', 'status'], ...cv.units.map(u => [u.plot, u.period, u.fold + 1, u.n ?? null, u.status === 'ok' ? u.nll : null, u.status === 'ok' ? u.nllPerTree : null, u.status === 'ok' ? u.ks : null, u.status])]));
   $('st-go').addEventListener('click', () => { S.st.tab = 'predict'; S.st.src = 'trained'; save(); renderStand(); });
   $('st-r').addEventListener('click', () => {
     const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
     const x = Object.fromEntries(['N', 'H', 'A'].map(k => [k, num(q.x[k])])), withX = q.src === 'trained' && q.pdone && D.stand.needs(m.terms).every(k => x[k] > 0);
-    download(fname('cap-dagilimi-mescere-modeli', 'diameter-distribution-stand-model', 'R'), buildStandR({ imp, src: S.src, decimal: standDecimal(), unit: S.unit, dcol: S.dcol, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval,
+    download(fname('diameter-distribution-stand-model', 'R'), buildStandR({ imp, src: S.src, decimal: standDecimal(), unit: S.unit, dcol: S.dcol, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval,
       cols: { N: q.ncol, H: q.hcol, A: q.acol } }, standCfg(), m, withX ? x : null, withX ? D.stand.predict(m, x) : null, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }, q.cv && q.cv.status === 'ok' ? q.cv : null), 'text/plain;charset=utf-8');
     if (!file) download(csvName(imp), tableCsv(S.src, cellText, standDecimal()), 'text/csv;charset=utf-8');
   });

@@ -5,15 +5,15 @@ import { T } from './i18n.js';
 import { lang, esc, fmtNum } from '../core/i18n.js';
 import { downloadJSON } from '../core/export.js';
 
-const $ = id => document.getElementById(id), LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const $ = id => document.getElementById(id), LOC = 'en-GB';
 let list = [], active = null, open = new Set(), plan = null;
 const SUM = new Map();                                     // id → summary (packages do not change)
 const sumOf = p => { if (!SUM.has(p.id)) SUM.set(p.id, P.summarize(p.dataset)); return SUM.get(p.id); };
 const day = iso => { const d = new Date(iso); return isNaN(d) ? '–' : d.toLocaleDateString(LOC); };
 const perLabel = v => v == null ? T('s.noper') : v;
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
-const safe = s => String(s).toLocaleLowerCase('tr').replace(/[^a-z0-9ğüşöçı]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'paket';
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
+const safe = s => String(s).toLocaleLowerCase('tr').replace(/[^a-z0-9ğüşöçı]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'package';
 
 async function refresh() { list = await P.listProjects(); active = await P.activeId(); render(); }
 
@@ -97,7 +97,7 @@ function bind() {
     if (act === 'more') { if (open.has(id)) open.delete(id); else open.add(id); render(); }
     else if (act === 'activate') { await P.setActive(id); status(T('activated', { n: p.name }), 'ok'); await refresh(); }
     else if (act === 'copy') { const c = await P.saveProject(P.copyProject(p, T('copy'))); SUM.delete(c.id); status(T('copied'), 'ok'); await refresh(); }
-    else if (act === 'dl') downloadJSON(`${safe(p.name)}-${lang === 'tr' ? 'veri-paketi' : 'data-package'}.json`, p.dataset);
+    else if (act === 'dl') downloadJSON(`${safe(p.name)}-data-package.json`, p.dataset);
     else if (act === 'del' && confirm(T(id === active ? 'delqa' : 'delq'))) { await P.deleteProject(id); open.delete(id); SUM.delete(id); status(T('deleted'), 'ok'); await refresh(); }
   }));
   document.querySelectorAll('form.pmeta').forEach(f => f.addEventListener('submit', async e => {

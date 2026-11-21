@@ -5,32 +5,32 @@
 require_once __DIR__ . '/guide/cards.php';
 
 /** One-line caption (≤ 90 characters) of each tool's card, keyed by the tool's page. A new tool adds its line here. */
-function home_captions(bool $tr): array {
+function home_captions(): array {
     return [
-        'veri-denetcisi.php' => $tr ? 'Biçim hataları ve şüpheli ölçümler; gerekçeli düzeltme ve onay' : 'Format errors and suspect measurements; logged fixes and approval',
-        'katsayi-kutuphanesi.php' => $tr ? 'Bütün araçların katsayı setleri, kaynaklarıyla tek yerde' : 'Every tool\'s coefficient sets with their sources',
-        'kayit-dogrulayici.php' => $tr ? 'Çalışma kaydının mührü, sürümü ve girdi parmak izleri' : 'Seal, version and input fingerprints of a run record',
-        'veri-yoneticisi.php' => $tr ? 'Onaylanmış paketler, etkin paket, örnek alan × dönem özeti' : 'Approved packages, the active one, plot × period overview',
-        'pano.php' => $tr ? 'Süzgeçli paneller; çalışma kayıtlarından eğriler' : 'Filtered panels with curves from run records',
-        'rapor.php' => $tr ? 'Paket ve kayıtlardan yazdırılabilir rapor; PDF ve HTML' : 'Printable report from a package and records; PDF and HTML',
-        'ornek-alan.php' => $tr ? 'Hektarda N ve G, çap sınıfları, tasarıma dayalı kestirim' : 'N and G per hectare, diameter classes, design-based estimate',
-        'model-degerlendirme.php' => $tr ? 'Yanlılık, MAE, RMSE, tahmin R²; artık grafikleri' : 'Bias, MAE, RMSE, prediction R²; residual plots',
-        'cap-dagilimi.php' => $tr ? 'Weibull ve yedi dağılım daha; fit etme ve geri kazanım' : 'Weibull and seven more; fitting and recovery',
-        'boy-cap.php' => $tr ? 'Altı doğrusal olmayan model, çapraz doğrulama' : 'Six nonlinear models, cross-validation',
-        'ornekleme.php' => $tr ? 'Hedef hataya göre örnek alan sayısı' : 'Number of plots for a target error',
-        'nispi-siralama.php' => $tr ? 'Başarı ölçütlerinden genel sıra, radar grafiği' : 'Overall rank from fit criteria, radar chart',
-        'seksiyon-hacmi.php' => $tr ? 'Huber, Smalian, Newton, Hohenadl; ağaç ve hektar hacmi' : 'Huber, Smalian, Newton, Hohenadl; tree and per-hectare volume',
-        'bonitet.php' => $tr ? 'Fark denklemleri, kendi katsayılarınız, bonitet sınıfları' : 'Difference equations with your coefficients, site classes',
-        'mescere-yapisi.php' => $tr ? 'Çap yapısı, sıklık, mekânsal desen ve rekabet' : 'Diameter structure, density, spatial pattern, competition',
-        'govde-profili.php' => $tr ? 'Max–Burkhart ve Kozak; ticari hacim, boylama' : 'Max–Burkhart and Kozak; merchantable volume, bucking',
-        'hacim-denklemleri.php' => $tr ? 'Sabit şekil katsayısı, birleşik değişken, logaritmik ve yerel denklemler' : 'Constant form factor, combined variable, logarithmic and local equations',
-        'dogrusal-olmayan-regresyon.php' => $tr ? 'Hazır biçimler ya da serbest formül; ağırlık, aralıklar, AIC' : 'Ready-made forms or a free formula; weights, intervals, AIC',
-        'karma-modeller.php' => $tr ? 'Doğrusal ve doğrusal olmayan; ML/REML, yeni alan kalibrasyonu' : 'Linear and nonlinear; ML/REML, calibration of a new plot',
-        'denklem-sistemleri.php' => $tr ? 'Kendi formülleriniz; ortak katsayılar, OLS, SUR, yinelemeli SUR' : 'Your own formulas; shared coefficients, OLS, SUR, iterated SUR',
-        'tomruk-olcumu.php' => $tr ? 'Scribner, Doyle, International; Smalian, Huber, Newton' : 'Scribner, Doyle, International; Smalian, Huber, Newton',
-        'biyokutle-karbon.php' => $tr ? 'Bileşen biyokütlesi, karbon ve CO₂; kendi katsayılarınızla' : 'Component biomass, carbon and CO₂ with your coefficients',
-        'buyume-islevi.php' => $tr ? 'Altı büyüme fonksiyonu; artımlar ve doruk yaşı' : 'Six growth functions; increments and culmination',
-        'agac-olcumu.php' => $tr ? 'Eğim ölçerle boy, çap ve göğüs yüzeyi, kabuk, tepe, şekil katsayısı' : 'Height with a clinometer, diameter and basal area, bark, crown, form factor',
+        'veri-denetcisi.php' => 'Format errors and suspect measurements; logged fixes and approval',
+        'katsayi-kutuphanesi.php' => 'Every tool\'s coefficient sets with their sources',
+        'kayit-dogrulayici.php' => 'Seal, version and input fingerprints of a run record',
+        'veri-yoneticisi.php' => 'Approved packages, the active one, plot × period overview',
+        'pano.php' => 'Filtered panels with curves from run records',
+        'rapor.php' => 'Printable report from a package and records; PDF and HTML',
+        'ornek-alan.php' => 'N and G per hectare, diameter classes, design-based estimate',
+        'model-degerlendirme.php' => 'Bias, MAE, RMSE, prediction R²; residual plots',
+        'cap-dagilimi.php' => 'Weibull and seven more; fitting and recovery',
+        'boy-cap.php' => 'Six nonlinear models, cross-validation',
+        'ornekleme.php' => 'Number of plots for a target error',
+        'nispi-siralama.php' => 'Overall rank from fit criteria, radar chart',
+        'seksiyon-hacmi.php' => 'Huber, Smalian, Newton, Hohenadl; tree and per-hectare volume',
+        'bonitet.php' => 'Difference equations with your coefficients, site classes',
+        'mescere-yapisi.php' => 'Diameter structure, density, spatial pattern, competition',
+        'govde-profili.php' => 'Max–Burkhart and Kozak; merchantable volume, bucking',
+        'hacim-denklemleri.php' => 'Constant form factor, combined variable, logarithmic and local equations',
+        'dogrusal-olmayan-regresyon.php' => 'Ready-made forms or a free formula; weights, intervals, AIC',
+        'karma-modeller.php' => 'Linear and nonlinear; ML/REML, calibration of a new plot',
+        'denklem-sistemleri.php' => 'Your own formulas; shared coefficients, OLS, SUR, iterated SUR',
+        'tomruk-olcumu.php' => 'Scribner, Doyle, International; Smalian, Huber, Newton',
+        'biyokutle-karbon.php' => 'Component biomass, carbon and CO₂ with your coefficients',
+        'buyume-islevi.php' => 'Six growth functions; increments and culmination',
+        'agac-olcumu.php' => 'Height with a clinometer, diameter and basal area, bark, crown, form factor',
     ];
 }
 
@@ -45,20 +45,16 @@ function home_fold(string $s): string {
 
 /**
  * The directory: modules in display order, each with its tools (cards) and planned items (not links). A tool is
- * { file, title, short, icon, cap (one line), desc, ids (catalogue ids it covers), search (folded text in both
- * languages), mod }. A planned item is { id, name }. Modules without tools or planned items are left out.
+ * { file, title, short, icon, cap (one line), desc, ids (catalogue ids it covers), search (folded text), mod }. A planned item is { id, name }. Modules without tools or planned items are left out.
  */
-function home_directory(bool $tr): array {
-    $tools = site_tools(); $other = site_tools(!$tr); $cat = site_catalog(); $cap = home_captions($tr);
-    $byFile = []; foreach ($other as $t) $byFile[$t['file']] = $t;
+function home_directory(): array {
+    $tools = site_tools(); $cat = site_catalog(); $cap = home_captions();
     $out = [];
     foreach (site_modules() as $m) {
         $it = site_module_items($m['id'], $tools, $cat); $cards = [];
         foreach ($it['home'] as $t) {
             $cov = array_values(array_filter($cat, function ($c) use ($t) { return $c['page'] === $t['file'] && $c['status'] !== 'out'; }));
-            $o = $byFile[$t['file']] ?? null;
-            $text = implode(' ', array_merge([$t['title'], $t['short'], $t['desc'], $cap[$t['file']] ?? '', $m['title']], array_column($cov, 'name'), array_column($cov, 'id'),
-                $o ? [$o['title'], $o['short'], $o['desc']] : []));
+            $text = implode(' ', array_merge([$t['title'], $t['short'], $t['desc'], $cap[$t['file']] ?? '', $m['title']], array_column($cov, 'name'), array_column($cov, 'id')));
             $cards[] = ['file' => $t['file'], 'title' => $t['title'], 'short' => $t['short'], 'icon' => $t['icon'], 'cap' => $cap[$t['file']] ?? '', 'desc' => $t['desc'],
                 'ids' => array_column($cov, 'id'), 'search' => home_fold($text), 'mod' => $m['id']];
         }
@@ -81,12 +77,12 @@ function home_ids(array $ids): string {
 }
 
 /** Tasks of the guide's start page, with the tool files they lead to (only existing tools). */
-function home_tasks(bool $tr): array {
+function home_tasks(): array {
     $files = array_column(site_tools(), 'file');
     return array_values(array_filter(array_map(function ($c) use ($files) {
         $f = array_values(array_filter(array_map(function ($id) { return $id . '.php'; }, $c['ids']), function ($x) use ($files) { return in_array($x, $files, true); }));
         return $f ? ['id' => $c['id'], 'title' => $c['title'], 'text' => $c['text'], 'files' => $f] : null;
-    }, guide_cards($tr))));
+    }, guide_cards())));
 }
 
 /**
@@ -94,23 +90,17 @@ function home_tasks(bool $tr): array {
  * tasks. An editorial choice, not a ranking: there are no usage data. Names and pages come from site_tools(); only the
  * one-line scope (what it computes, from what input) is written here.
  */
-function home_picks(bool $tr): array {
+function home_picks(): array {
     $g = [
-        [$tr ? 'Meşcere ve dağılım' : 'Stands and distributions', [
-            'ornek-alan.php' => $tr ? 'Sabit alanlı örnek alanların ağaç listesinden hektarda ağaç sayısı ve göğüs yüzeyi, çap sınıfları, tasarıma dayalı kestirim.'
-                                    : 'From tree lists of fixed-area plots: stems and basal area per hectare, diameter classes, design-based estimate.',
-            'cap-dagilimi.php' => $tr ? 'Çap ölçümlerine Weibull ve yedi dağılım daha fit eder; parametre geri kazanımı ve meşcere modelleri.'
-                                      : 'Fits Weibull and seven more distributions to measured diameters; parameter recovery and stand models.']],
-        [$tr ? 'Hacim ve verim gücü' : 'Volume and site productivity', [
-            'seksiyon-hacmi.php' => $tr ? 'Ölçülmüş seksiyon çaplarından Huber, Smalian, Newton ve Hohenadl ile gövde hacmi; ağaç ve hektar toplamı.'
-                                        : 'Stem volume from measured section diameters by Huber, Smalian, Newton and Hohenadl; tree and per-hectare totals.',
-            'bonitet.php' => $tr ? 'Üst boy ve yaştan bonitet endeksi; kaynağıyla girdiğiniz katsayı setiyle ya da verinizden kestirilen katsayılarla.'
-                                 : 'Site index from top height and age, with a coefficient set you enter with its source or coefficients estimated from your data.']],
-        [$tr ? 'Modelleme ve değerlendirme' : 'Modelling and evaluation', [
-            'boy-cap.php' => $tr ? 'Ölçülmüş boy ve çaplara altı doğrusal olmayan modeli fit eder ve karşılaştırır; çapraz doğrulama, eksik boylar için tahmin.'
-                                 : 'Fits and compares six nonlinear models on measured heights and diameters; cross-validation, predictions for missing heights.',
-            'model-degerlendirme.php' => $tr ? 'Gözlenen ve tahmin edilen değerlerden yanlılık, MAE, RMSE ve tahmin R²; güven aralıkları ve artık grafikleri.'
-                                             : 'Bias, MAE, RMSE and prediction R² from observed and predicted values; intervals and residual plots.']],
+        ['Stands and distributions', [
+            'ornek-alan.php' => 'From tree lists of fixed-area plots: stems and basal area per hectare, diameter classes, design-based estimate.',
+            'cap-dagilimi.php' => 'Fits Weibull and seven more distributions to measured diameters; parameter recovery and stand models.']],
+        ['Volume and site productivity', [
+            'seksiyon-hacmi.php' => 'Stem volume from measured section diameters by Huber, Smalian, Newton and Hohenadl; tree and per-hectare totals.',
+            'bonitet.php' => 'Site index from top height and age, with a coefficient set you enter with its source or coefficients estimated from your data.']],
+        ['Modelling and evaluation', [
+            'boy-cap.php' => 'Fits and compares six nonlinear models on measured heights and diameters; cross-validation, predictions for missing heights.',
+            'model-degerlendirme.php' => 'Bias, MAE, RMSE and prediction R² from observed and predicted values; intervals and residual plots.']],
     ];
     $byFile = []; foreach (site_tools() as $t) $byFile[$t['file']] = $t;
     return array_map(function ($x) use ($byFile) {

@@ -17,7 +17,7 @@ import { cellText } from '../core/table.js';
 import { parseNumber, toInternal, detectDecimal, defaultDecimal } from '../core/num.js';
 import { tableToDataset, validateDataset } from '../stand/calc.js';
 
-const BASE = './', KEY = 'session:' + S.TOOL.id, $ = id => document.getElementById(id), LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + S.TOOL.id, $ = id => document.getElementById(id), LOC = 'en-GB';
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const t = String(v ?? '').trim().replace(',', '.'); if (t === '') return NaN; const x = Number(t); return Number.isFinite(x) ? x : NaN; };
 const perLabel = p => p == null ? T('per.none') : p;
@@ -100,7 +100,7 @@ function renderStep1() {
   $('useapp') && $('useapp').addEventListener('click', () => useDataset(approved, { kind: 'approved', name: approved.source && approved.source.trees && approved.source.trees.name }));
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/structure/ornek/ornek-mescere.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-mescere.csv (benzetim)' : 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-mescere.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
     st.tbl.spec.decimal = '.'; st.tbl.spec.decChosen = true; renderMap(); $('usetbl').click();
   });
@@ -284,7 +284,7 @@ function tabDetail(p) {
     const ci = u.ci.status === 'ok' ? u.ci.trees : null;
     h += `<details class="more"><summary>${T('d.trees')}</summary><div class="tscroll"><table class="grid" id="ttab"><thead><tr><th>${T('t.row')}</th><th>${T('t.tree')}</th><th>${T('t.sp')}</th><th>${T('t.dbh')}</th><th>${T('t.bal')}</th><th>${T('t.relD')}</th><th>${T('t.hegyi')}</th><th>${T('t.edge')}</th></tr></thead><tbody>
       ${u.st.trees.map((t, i) => `<tr><td>${t.row ?? '–'}</td><td>${esc(t.tree_id ?? '')}</td><td>${esc(t.species ?? '')}</td><td class="num">${f(t.dbh, 1)}</td><td class="num">${f(t.bal, 3)}</td><td class="num">${f(t.relD, 3)}</td><td class="num">${ci ? f(ci[i].hegyi, 3) : '–'}</td><td>${ci && ci[i].edge ? T('t.yes') : ''}</td></tr>`).join('')}</tbody></table></div></details>`;
-    h += `<details class="more"><summary>${T('d.defs')}</summary><ul class="small">${Object.values((lang === 'tr' && u.st.definitions_tr) || u.st.definitions).map(x => `<li>${esc(x)}</li>`).join('')}${u.sp.status === 'ok' ? `<li>${esc(T('geo.src'))}</li>` : ''}</ul></details>`;
+    h += `<details class="more"><summary>${T('d.defs')}</summary><ul class="small">${Object.values(u.st.definitions).map(x => `<li>${esc(x)}</li>`).join('')}${u.sp.status === 'ok' ? `<li>${esc(T('geo.src'))}</li>` : ''}</ul></details>`;
   } else h += `<p class="note warn">${esc(notesOf(u).join('; ') || T('st.' + u.st.status))}</p>`;
   p.innerHTML = h;
   if (R.units.length > 1) { nav.bindBar(); if ($('unav')) nav.renderAside($('unav')); }
@@ -292,7 +292,7 @@ function tabDetail(p) {
 }
 
 /* ---------------- downloads ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function unitRows() {
   return [['plot_id', 'period', 'state', 'n', 'N_ha', 'G_m2_ha', 'Dq_cm', 'H0_m', 'd_mean', 'd_sd', 'cv', 'skewness', 'kurtosis_excess', 'gini', 'shannon_d', 'species_n', 'shannon_species', 'simpson', 'simpson_dominance', 'sdi', 'curtis_rd', 'spacing_a_m', 'relative_spacing_pct',
     'clark_evans_R', 'clark_evans_R_donnelly', 'W', 'W_standard_angle_deg', 'M', 'T', 'T1', 'U', 'n_reference', 'n_edge', 'hegyi_mean', 'spatial_state', 'ccf_percent', 'ccf_fraction', 'ccf_state'],
@@ -317,7 +317,7 @@ function infoRows() {
   const s = settings();
   return [[T('x.k'), T('x.v')], [T('x.tool'), `${S.TOOL.id} ${S.TOOL.version}`], [T('x.date'), R.created], [T('x.src'), st.dsSrc ? st.dsSrc.name || st.dsSrc.kind : ''],
     [T('x.settings'), JSON.stringify(s.structure)], [T('x.ccf'), s.ccf ? JSON.stringify({ all: s.ccf.all ? { id: s.ccf.all.id, form: s.ccf.all.form, params: s.ccf.all.params, source: s.ccf.all.source.citation } : null, bySpecies: Object.fromEntries(Object.entries(s.ccf.bySpecies).map(([k, x]) => [k, { id: x.id, form: x.form, params: x.params, source: x.source.citation }])) }) : T('ccf.off')], [T('x.geom'), s.spatial ? JSON.stringify({ geometry: s.geometry, spatial: s.spatial, competition: s.competition }) : T('geo.noxy')],
-    ...(R.units.find(u => u.st.definitions) ? Object.entries((st => (lang === 'tr' && st.definitions_tr) || st.definitions)(R.units.find(u => u.st.definitions).st)).map(([k, v]) => [T('x.defs') + ': ' + k, v]) : []), [T('x.src2'), T('geo.src')]];
+    ...(R.units.find(u => u.st.definitions) ? Object.entries(R.units.find(u => u.st.definitions).st.definitions).map(([k, v]) => [T('x.defs') + ': ' + k, v]) : []), [T('x.src2'), T('geo.src')]];
 }
 function tabExport(p) {
   p.innerHTML = `<div class="exports"><button type="button" class="btn" id="x-xlsx">${T('ex.xlsx')}</button><button type="button" class="btn ghost" id="x-trees">${T('ex.trees')}</button>

@@ -8,24 +8,6 @@ let DEC = '.';
 const num = x => { const t = num0(x); return DEC === ',' && typeof x === 'number' ? String(t).replace('.', ',') : t; };
 
 const RT = {
-  tr: {
-    by: 'Hazırlayan', org: 'Kurum', date: 'Tarih', untitled: 'Envanter raporu', made: p => `Bu rapor, ${p.site} (${p.url}) Rapor Üretici aracının ${p.v} sürümüyle ${p.at} tarihinde üretildi. Hesaplar kullanıcının tarayıcısında yapıldı.`,
-    'h.package': 'Veri paketi', 'h.charts': 'Grafikler', 'h.records': 'Çalışma kayıtları', 'h.sources': 'Kaynaklar', 'h.repro': 'Ek: Tekrarlanabilirlik',
-    name: 'Ad', year: 'Envanter yılı', place: 'Yer', desc: 'Açıklama', plots: 'Örnek alan', empty: 'ağaçsız', periods: 'Dönemler', noper: 'dönemsiz', records: 'Kayıt', trees: 'Farklı ağaç sayısı',
-    species: 'Türler', nosp: 'tür yok', dbh: 'Çap aralığı (cm)', heights: 'Boy', hval: p => `${p.m} ölçülmüş, ${p.e} tahmini`, strata: 'Tabakalar', area: 'Örnek alan büyüklüğü (m²)',
-    warn: 'Uyarılar (açık)', excl: 'Dışlanan satır', approved: 'Onay zamanı', src: 'Kaynak dosya', plotper: 'Örnek alan × dönem kayıt sayıları', plot: 'Örnek alan', areaC: 'Alan (m²)', stratum: 'Tabaka',
-    filter: 'Süzgeç', all: 'hepsi', ecU: 'kaydı olmayan örnek alan × dönem ölçülmedi sayıldı', ecE: 'kaydı olmayan örnek alan × dönem boş (N = G = 0) sayıldı',
-    hist: 'Çap dağılımı', histNote: p => `${p.n} kayıt, sınıf genişliği ${p.w} cm; çubuklar yoğunluk (frekans / (n · genişlik)).`, curves: p => `Kayıtlardan yoğunluklar: ${p.list}.`, d: 'Göğüs çapı (cm)', dens: 'Yoğunluk',
-    sp: 'Tür katılımı', share: 'Pay (%)', byN: 'ağaç sayısı', byG: 'göğüs yüzeyi', N: 'Hektarda ağaç sayısı', G: 'Hektarda göğüs yüzeyi', Nha: 'N (ağaç/ha)', Gha: 'G (m²/ha)',
-    mean: p => `Ağırlıksız ortalama (${p.n} örnek alan × dönem): N = ${p.N} ağaç/ha, G = ${p.G} m²/ha. Tasarıma dayalı kestirim değildir.`, hd: 'Boy–çap', h: 'Boy (m)', hdNote: p => `${p.m} ölçülmüş boy.${p.list ? ` Kayıttan eğriler: ${p.list} (★ seçilen model).` : ''}`,
-    noRec: 'Rapora çalışma kaydı eklenmedi.', tool: 'Araç', ver: 'Sürüm', created: 'Oluşturma', seal: 'Mühür', sealOk: 'geçerli', sealBad: 'TUTMUYOR (kayıt değiştirilmiş)', sealNone: 'yok',
-    fromPkg: 'Veri', fromYes: 'bu rapordaki paketten', fromNo: 'BAŞKA bir paketten', fromUnk: 'dosyadan (pakete ait olup olmadığı bilinmiyor)', legacy: 'DI-07 öncesi kayıt (mühür ve parmak izi yok)',
-    settings: 'Ayarlar', rowsOf: p => `${p.total} satırın ilk ${p.shown} tanesi gösteriliyor.`, coef: 'Kullanıcı katsayı kaynakları',
-    platform: 'Platform', toolsCite: 'Kullanılan araçlar', lit: 'Kayıtlarda adı geçen kaynaklar', coefSrc: 'Kullanıcının girdiği katsayı setlerinin kaynakları', noLit: 'Kayıtlarda kaynak listesi yok; yöntem kaynakları için aracın kılavuz bölümüne ve METHODS.md\'ye bakın.',
-    status: { B: '[B] birincil kaynakta kontrol edildi', D: '[D] henüz doğrulanmadı', A: '[A] aktarılan (ikincil kaynaktan)', P: '[P] paket belgesinden doğrulandı', 'İ': '[İ] künye doğrulandı (ikincil kaynağın kaynakçasında)' },
-    pkgFp: 'Veri paketinin parmak izi (SHA-256, kanonik JSON)', commit: 'Kaynak kodu (commit)', none: 'yok (geliştirme ortamı)', inputs: 'Girdiler', role: 'Rol', kind: 'Girdi tipi', size: 'Boyut', fp: 'SHA-256',
-    reportCommit: 'Raporu üreten sitenin commit\'i', verify: 'Kayıtlar Kayıt Doğrulayıcı ile, girdi dosyaları parmak izleriyle denetlenebilir.',
-  },
   en: {
     by: 'Prepared by', org: 'Institution', date: 'Date', untitled: 'Inventory report', made: p => `This report was produced on ${p.at} with the Report Generator ${p.v} of ${p.site} (${p.url}). The calculations ran in the user's browser.`,
     'h.package': 'Data package', 'h.charts': 'Charts', 'h.records': 'Run records', 'h.sources': 'References', 'h.repro': 'Appendix: Reproducibility',
@@ -54,11 +36,11 @@ const COMMIT = c => typeof c === 'string' && /^[0-9a-f]{40}$/.test(c) ? c : null
 
 /**
  * model = { lang, meta: blankMeta(), sections: { package, charts, records, sources, repro: bool }, pkg: packagePart() | null,
- *   records: [recordSection()], cite: { author, year, base, site, doi }, tools: { file: { v, tr, en } }, generated: { at (ISO), commit, version } }
+ *   records: [recordSection()], cite: { author, year, base, site, doi }, tools: { file: { v, en } }, generated: { at (ISO), commit, version } }
  * → HTML of the report body (<article>).
  */
 export function renderReport(m) {
-  const L = m.lang === 'en' ? 'en' : 'tr'; DEC = L === 'tr' ? ',' : '.';
+  const L = 'en'; DEC = '.';
   const t = RT[L], T = (k, p) => typeof t[k] === 'function' ? t[k](p) : t[k], S = m.sections, M = m.meta;
   const day = m.generated.at.slice(0, 10);
   let h = `<article class="report" lang="${L}"><header class="r-head"><h1>${e(M.title || T('untitled'))}</h1>`;
@@ -158,5 +140,5 @@ ${['#0072b2', '#e69f00', '#009e73', '#cc79a7', '#56b4e9', '#d55e00'].map((c, i) 
 
 /** A standalone HTML file of the report (opens offline, prints the same). */
 export function standalone(body, title, lang) {
-  return `<!doctype html>\n<html lang="${lang === 'en' ? 'en' : 'tr'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${e(title)}</title><style>body{margin:0;background:#fff}${REPORT_CSS}</style></head><body>${body}</body></html>\n`;
+  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${e(title)}</title><style>body{margin:0;background:#fff}${REPORT_CSS}</style></head><body>${body}</body></html>\n`;
 }

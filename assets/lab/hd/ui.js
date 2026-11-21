@@ -12,7 +12,7 @@ import { tableCsv, csvName } from '../core/rcode.js';
 import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 
-const BASE = './', KEY = 'session:' + H.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + H.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -60,7 +60,7 @@ function renderStep1() {
   $('useds') && $('useds').addEventListener('click', () => { const src = datasetTable(approved); setTable({ imp: { kind: 'dataset', name: src.name, decimal: '.' }, src }); });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/hd/ornek/ornek-boy-cap.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-boy-cap.csv (benzetim)' : 'ornek-boy-cap.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-boy-cap.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
   });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -330,7 +330,7 @@ function updateNd() {
 }
 
 /* ---------------- exports ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function treeRows() {
   const sf = selFit(), prep = R.prep, tbl = R.tbl;
   const out = [[T('t.row'), T('t.plot'), T('t.sp'), T('t.dsrc'), T('t.d'), T('t.hsrc'), T('t.h'), T('t.state'), T('t.hhat'), T('t.model'), T('t.out'), T('t.fitv'), T('t.e')]];

@@ -19,7 +19,7 @@ import { download, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { renderImport, readImport } from '../core/importer.js';
 
-const BASE = './', KEY = 'session:' + TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 /** Typed numbers: point or comma as decimal separator, optional sign; '' → null; anything else → NaN (never 0). */
@@ -145,7 +145,7 @@ function bindDiameter() {
   renderImport($('dimp'), { imp: d.imp, src: d.src }, { base: BASE, title: T('d.list'), sub: T('d.list.sub'), onChange: onImp, onError: m => status(m, 'err') });
   $('d-sample') && $('d-sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/tree/ornek/ornek-capler.csv')).arrayBuffer();
-    d.imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-capler.csv (benzetim)' : 'ornek-capler.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    d.imp = { kind: 'csv', name: 'ornek-capler.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     d.src = await readImport(d.imp, BASE); d.col = null; d.ncol = null; d.decimalChosen = false; guessList(); re();
   });
   if (!d.src) return;
@@ -386,7 +386,7 @@ function render() {
   $('x-json').addEventListener('click', () => downloadRecord(fname('json'), payload(), TOOL, S.d.imp && S.d.src ? [['tree-list', S.d.imp]] : [], m => status(m, 'err')));
   $('x-xlsx').addEventListener('click', excel);
 }
-const fname = ext => `${lang === 'tr' ? 'agac-olcumu' : 'tree-measurement'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+const fname = ext => `tree-measurement-${new Date().toISOString().slice(0, 10)}.${ext}`;
 function payload() {
   const hr = heightResults(), st = stemResult(), L = listRead(), R = formResults(), strip = r => r && (({ problems, warnings, ...rest }) => ({ ...rest, problems, warnings }))(r);
   return { tool: TOOL, created: new Date().toISOString(),

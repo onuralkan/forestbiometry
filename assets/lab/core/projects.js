@@ -84,7 +84,7 @@ export const cleanMeta = m => ({ name: String(m.name ?? '').trim(), description:
 /** Default name: the tree file's name without extension, else 'veri paketi' / 'data package'. */
 export function defaultName(ds, lang = 'tr') {
   const n = ds && ds.source && ds.source.trees && ds.source.trees.name;
-  return n ? String(n).replace(/\.(csv|txt|tsv|xlsx|xlsm|json)$/i, '').trim() || n : lang === 'tr' ? 'veri paketi' : 'data package';
+  return n ? String(n).replace(/\.(csv|txt|tsv|xlsx|xlsm|json)$/i, '').trim() || n : 'data package';
 }
 export const newId = () => 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 

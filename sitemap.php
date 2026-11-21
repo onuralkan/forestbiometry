@@ -4,9 +4,9 @@
 require __DIR__ . '/inc/site.php';
 header('Content-Type: application/xml; charset=utf-8');
 $pages = ['', 'araclar.php'];
-foreach (site_tools(true) as $t) if (!empty($t['file'])) $pages[] = $t['file'];
+foreach (site_tools() as $t) if (!empty($t['file'])) $pages[] = $t['file'];
 $pages[] = 'kilavuz.php';
-foreach (array_merge(['genel', 'is-akisi', 'sorun-giderme'], array_map(function ($t) { return basename($t['file'], '.php'); }, site_tools(true))) as $id) if (is_file(__DIR__ . "/inc/guide/tr/$id.php")) $pages[] = 'kilavuz.php?k=' . $id;   // one guide page per section
+foreach (array_merge(['genel', 'is-akisi', 'sorun-giderme'], array_map(function ($t) { return basename($t['file'], '.php'); }, site_tools())) as $id) if (is_file(__DIR__ . "/inc/guide/en/$id.php")) $pages[] = 'kilavuz.php?k=' . $id;   // one guide page per section
 $pages[] = 'hakkinda.php';
 $pages[] = 'kaynakca.php';
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

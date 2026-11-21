@@ -323,7 +323,7 @@ export function ensureForm(text, vars, params) {
   let h = 0x811c9dc5; const s = text + '|' + vars.join(',') + '|' + params.join(',');
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   const id = 'mixed.' + h.toString(16).padStart(8, '0');
-  if (!coefForm(id)) { try { registerForm({ id, tool: 'mixed', params: params.map(key => ({ key })), inputs: Object.fromEntries(vars.map(v => [v, { unit: '-' }])), output: { name: 'y', unit: '-' }, formula: { tr: 'y = ' + text, en: 'y = ' + text }, transform: 'none' }); } catch (e) { /* registered meanwhile */ } }
+  if (!coefForm(id)) { try { registerForm({ id, tool: 'mixed', params: params.map(key => ({ key })), inputs: Object.fromEntries(vars.map(v => [v, { unit: '-' }])), output: { name: 'y', unit: '-' }, formula: { en: 'y = ' + text }, transform: 'none' }); } catch (e) { /* registered meanwhile */ } }
   return id;
 }
 /** Registers the forms of stored mixed-model sets (fit.expr, fit.vars) so the library can check them. */

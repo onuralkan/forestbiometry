@@ -13,7 +13,7 @@ import { saveCoef } from '../core/coef.js';
 import { buildR } from './rcode.js';
 import { tableCsv, csvName } from '../core/rcode.js';
 
-const BASE = './', KEY = 'session:' + G.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + G.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const t = String(v ?? '').trim(); if (!t) return null; const x = Number(t.replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -55,8 +55,8 @@ function renderStep1() {
   renderImport($('impbox'), { imp: S.imp, src: S.src }, { base: BASE, title: T('d.h'), onChange: setTable, onError: m => status(m, 'err') });
   $('sample') && $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/growth/ornek/ornek-buyume.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-buyume.csv (benzetim)' : 'ornek-buyume.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
-    S.variable = lang === 'tr' ? 'boy' : 'height'; S.unit = 'm'; setTable({ imp, src: await readImport(imp, BASE) });
+    const imp = { kind: 'csv', name: 'ornek-buyume.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    S.variable = 'height'; S.unit = 'm'; setTable({ imp, src: await readImport(imp, BASE) });
   });
   if (S.src) {
     for (const k of ['series', 't', 'y']) $('m-' + k).addEventListener('change', e => { S.map[k] = e.target.value === '' ? null : +e.target.value; R = null; save(); renderStep1(); renderSteps(); });
@@ -108,8 +108,8 @@ function renderStep3() {
     const F = G.FORMS[q.form], cv = G.curve(q.form, q.theta, tEnd, tEnd / 300), d = q.derived;
     const st = num(S.step3) > 0 ? num(S.step3) : 5, tab = G.curve(q.form, q.theta, tEnd, st);
     h += `<div class="card"><h2>${esc(F.name)}</h2><div class="lims"><label>${T('r.sel')} <select id="selform">${okFits.map(x => `<option value="${x.form}"${x.form === S.sel ? ' selected' : ''}>${esc(G.FORMS[x.form].name)}</option>`).join('')}</select></label></div>
-      <p class="small" id="derived">${esc(T('r.der', { a: f(d.asymptote, 2) + unitTxt(), i: d.inflection != null ? `${f(d.inflection, 1)} ${lang === 'tr' ? 'yaş' : 'years'}` : T('r.der.none'), m: d.maiCulmination != null ? `${f(d.maiCulmination, 1)} ${lang === 'tr' ? 'yaş' : 'years'} (MAI ${f(d.maiMax, 3)})` : T('r.der.none') }))}</p>
-      <figure class="chartbox" id="ch-inc">${plotChart({ title: T('r.inc'), xLabel: T('r.age'), yLabel: (S.variable || 'y') + unitTxt() + (lang === 'tr' ? '/yıl' : '/yr'), xmin: 0, xmax: tEnd,
+      <p class="small" id="derived">${esc(T('r.der', { a: f(d.asymptote, 2) + unitTxt(), i: d.inflection != null ? `${f(d.inflection, 1)} years` : T('r.der.none'), m: d.maiCulmination != null ? `${f(d.maiCulmination, 1)} years (MAI ${f(d.maiMax, 3)})` : T('r.der.none') }))}</p>
+      <figure class="chartbox" id="ch-inc">${plotChart({ title: T('r.inc'), xLabel: T('r.age'), yLabel: (S.variable || 'y') + unitTxt() + ('/yr'), xmin: 0, xmax: tEnd,
         ymax: 1.1 * Math.max(...cv.filter(c => c.t >= Math.min(...R.obs.map(o => o.t))).flatMap(c => [c.cai, c.mai]).filter(Number.isFinite)), lines: [{ name: T('r.cai'), pts: cv.map(c => [c.t, c.cai]), k: 0 }, { name: T('r.maiL'), pts: cv.map(c => [c.t, c.mai]), k: 1, dash: true }], fmt: v => fmtNum(v, 3), height: 320 })}<figcaption class="small">${T('r.inc')} <button type="button" class="btn ghost small" data-svg="ch-inc">${T('r.svg')}</button></figcaption></figure>
       <figure class="chartbox" id="ch-res">${scatterChart({ title: T('r.resid'), points: q.residuals.map(r => [r.t, r.res]), xLabel: T('r.age'), yLabel: T('r.bias'), hline: 0, fmt: v => fmtNum(v, 2), height: 300 })}<figcaption class="small">${T('r.resid')}</figcaption></figure>
       <details class="more"><summary>${T('r.tab')}</summary><div class="lims"><label>${T('r.step')} <input type="text" inputmode="decimal" size="4" id="tstep" value="${esc(S.step3)}"></label></div><div class="tscroll"><table class="grid" id="ttab"><thead><tr><th>${T('r.age')}</th><th>${esc(S.variable || 'y')}</th><th>CAI</th><th>MAI</th></tr></thead><tbody>${tab.map(c => `<tr><td class="num">${f(c.t, 1)}</td><td class="num">${f(c.y, 3)}</td><td class="num">${f(c.cai, 4)}</td><td class="num">${f(c.mai, 4)}</td></tr>`).join('')}</tbody></table></div></details>
@@ -128,7 +128,7 @@ function renderStep3() {
   });
   el.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.svg + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
   $('back2').addEventListener('click', () => go(2));
-  const name = ext => `${lang === 'tr' ? 'buyume-islevi' : 'growth'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `growth-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), cmpRows(), lang));
   $('x-r').addEventListener('click', () => {
     const file = S.imp && S.imp.kind !== 'dataset' && S.imp.kind !== 'paste' ? S.imp.name : null;

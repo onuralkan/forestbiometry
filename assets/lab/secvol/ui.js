@@ -13,7 +13,7 @@ import { plotChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { readStems, keyOf } from '../core/stems.js';
 
-const BASE = './', KEY = 'session:' + V.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + V.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const t = String(v ?? '').trim(); if (!t) return null; const x = Number(t.replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -62,7 +62,7 @@ function renderStep1() {
   $('dsdrop') && $('dsdrop').addEventListener('click', () => { S.useDs = false; if (S.areaMode === 'ds') S.areaMode = 'none'; R = null; save(); renderStep1(); });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/secvol/ornek/ornek-seksiyon.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-seksiyon.csv (benzetim)' : 'ornek-seksiyon.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-seksiyon.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
   });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -305,7 +305,7 @@ function qualityCard() {
 }
 
 /* ---------------- exports ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function settingsRecord() {
   return { layout: S.layout, methods: R.methods, reference: R.ref, top: S.layout === 'hohenadl' ? null : S.top, includeStump: S.includeStump, dTop: R.settings.dTop, combine: S.dmode === 'two' ? S.combine : null,
     barkDefault: S.barkDef, areaMode: S.areaMode, areaConst: S.areaMode === 'const' ? num(S.areaConst) : null, linkedApprovedData: !!(S.useDs && approved), thresholds: advVal(), decimal: S.decimal, units: S.u,

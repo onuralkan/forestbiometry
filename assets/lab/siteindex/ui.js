@@ -16,7 +16,7 @@ import { scatterChart } from '../core/chart.js';
 import { buildUnits, unitMetrics } from '../stand/calc.js';
 import { EXTRA } from './coef-extra.js';
 
-const BASE = './', KEY = 'session:' + S.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + S.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const t = String(v ?? '').trim(); if (!t) return null; const x = Number(t.replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -35,7 +35,7 @@ function status(m, k = '') { const s = $('status'); s.className = 'status ' + k;
 /* ---------------- model ---------------- */
 const curSet = () => sets.find(s => s.id === S0.setId) || null;
 const a0 = () => { const v = num(S0.a0); return v == null ? null : v > 0 ? v : NaN; };
-const formName = id => S.FORMS[id] ? S.FORMS[id].formula[lang] || S.FORMS[id].formula.tr : id;
+const formName = id => S.FORMS[id] ? S.FORMS[id].formula[lang] : id;
 const topText = set => set && set.meta ? T('x.topDef.' + set.meta.topDef) + (set.meta.topNote ? ` (${set.meta.topNote})` : '') : '–';
 function classDef() {
   const c = S0.cls;
@@ -112,7 +112,7 @@ function renderFit() {
   el.innerHTML = h;
   $('fsample') && $('fsample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/siteindex/ornek/ornek-yas-boy.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-yas-boy.csv (benzetim)' : 'ornek-yas-boy.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-yas-boy.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     const src = await readImport(imp, BASE); F.imp = imp; F.src = src; F.map = { series: 0, plot: null, A: 1, H: 2 }; F.decimal = '.'; F.decimalChosen = true; FR = null; save(); renderFit();
   });
   renderImport($('fitimp'), { imp: F.imp, src: F.src }, { base: BASE, title: T('fit.imp'), sub: T('fit.imp.sub'), onChange: st => {
@@ -290,7 +290,7 @@ function compute() {
   R = { set, m, classes, rows: ev, unc, created: new Date().toISOString() };
   save();
 }
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function resTable() {
   const head = [T('t.unit'), T('t.plot'), T('t.period'), T('t.A'), T('t.H'), T('t.Hsrc'), T('t.SI', { a0: fmtNum(R.m.baseAge, 2) }), ...(R.unc.method !== 'none' ? [T('t.cilo'), T('t.cihi')] : []), ...(R.classes.length ? [T('t.cls')] : []), T('t.note'), T('t.state')];
   const rows = R.rows.map(r => ({ ok: r.status === 'ok', cells: [r.unit, r.plot, r.period, r.A, r.H, T('src.' + r.Hsrc), r.si, ...(R.unc.method !== 'none' ? [r.ci ? r.ci.lo : null, r.ci ? r.ci.hi : null] : []), ...(R.classes.length ? [r.status === 'ok' ? r.cls ?? T('cls.out') : null] : []),

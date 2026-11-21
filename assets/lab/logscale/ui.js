@@ -9,7 +9,7 @@ import { parseNumber, detectDecimal, defaultDecimal } from '../core/num.js';
 import { download, downloadCSV, xlsxBlob, loadXLSX } from '../core/export.js';
 import { downloadRecord, recordOption } from '../core/record-ui.js';
 
-const BASE = './', KEY = 'session:' + LS.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
+const BASE = './', KEY = 'session:' + LS.TOOL.id, LOC = 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = t => { const s = String(t ?? '').trim(); if (s === '') return null; const r = parseNumber(s.replace(',', '.'), '.'); return r.status === 'ok' ? r.value : NaN; };
 let S = blank(), R = null;
@@ -57,7 +57,7 @@ function renderStep1() {
     renderMap();
     $('sample').addEventListener('click', async () => {
       const buf = await (await fetch(BASE + 'assets/lab/logscale/ornek/ornek-tomruk.csv')).arrayBuffer();
-      const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-tomruk.csv (benzetim)' : 'ornek-tomruk.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+      const imp = { kind: 'csv', name: 'ornek-tomruk.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
       setTable({ imp, src: await readImport(imp, BASE) }); S.tbl.decimal = ','; S.tbl.decChosen = true; useTable();
     });
   }
@@ -135,7 +135,7 @@ function renderStep3() {
     <div class="nav"><button type="button" class="btn ghost" id="back2">${T('back')}</button></div>`;
   el.innerHTML = h;
   $('back2').addEventListener('click', () => go(2));
-  const name = ext => `${lang === 'tr' ? 'tomruk-olcumu' : 'log-scaling'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `log-scaling-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), logRows(), lang));
   $('x-xlsx').addEventListener('click', async () => {
     let XLSX; try { XLSX = await loadXLSX(BASE); } catch (e) { status(T('x.fail'), 'err'); return; }

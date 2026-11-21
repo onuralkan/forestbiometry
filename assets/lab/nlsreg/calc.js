@@ -169,7 +169,7 @@ const fnv = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^=
 export function ensureForm(m, readyId = null) {
   const id = readyId ? 'nls.' + readyId : 'nls.expr.' + fnv(m.text + '|' + m.vars.join(',') + '|' + m.params.join(','));
   if (!formOf(id)) {
-    try { registerForm({ id, tool: 'nls', params: m.params.map(key => ({ key })), inputs: Object.fromEntries(m.vars.map(v => [v, { unit: '-' }])), output: { name: 'y', unit: '-' }, formula: { tr: 'y = ' + m.text, en: 'y = ' + m.text }, transform: 'none' }); }
+    try { registerForm({ id, tool: 'nls', params: m.params.map(key => ({ key })), inputs: Object.fromEntries(m.vars.map(v => [v, { unit: '-' }])), output: { name: 'y', unit: '-' }, formula: { en: 'y = ' + m.text }, transform: 'none' }); }
     catch (e) { /* registered meanwhile */ }
   }
   return id;

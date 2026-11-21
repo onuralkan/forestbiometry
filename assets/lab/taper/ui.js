@@ -16,7 +16,7 @@ import { saveCoef, listCoefs } from '../core/coef.js';
 import { readStems } from '../core/stems.js';
 import { EXTRA } from './coef-extra.js';
 
-const BASE = './', KEY = 'session:' + TP.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + TP.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 3) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 const num = v => { const t = String(v ?? '').trim(); if (!t) return null; const x = Number(t.replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -95,7 +95,7 @@ function renderFit() {
         <span class="radios"><span class="small">${T('fit.dec')}:</span> ${['.', ','].map(v => `<label class="small"><input type="radio" name="fdec" value="${v}"${F.decimal === v ? ' checked' : ''}> ${T(v === '.' ? 'fit.dec.dot' : 'fit.dec.comma')}</label>`).join('')}</span></div>
       <div class="lims"><label>${T('fit.form')} <select id="f-form">${Object.keys(TP.FORMS).map(k => `<option value="${k}"${F.form === k ? ' selected' : ''}>${esc(TP.FORMS[k].source)}</option>`).join('')}</select></label>
         <label>${T('fit.bark')} <select id="f-bark">${['ob', 'ib'].map(v => `<option value="${v}"${F.bark === v ? ' selected' : ''}>${T('fit.bark.' + v)}</option>`).join('')}</select></label></div>
-      <p class="small">${esc(TP.FORMS[F.form].formula[lang] || TP.FORMS[F.form].formula.tr)}</p>
+      <p class="small">${esc(TP.FORMS[F.form].formula[lang])}</p>
       <div class="radios col"><span class="small"><b>${T('fit.scale')}</b></span>${['d', 'source'].map(v => `<label><input type="radio" name="fscale" value="${v}"${F.scale === v ? ' checked' : ''}> ${T('fit.scale.' + v)}</label>`).join('')}</div>
       <div class="nav"><button type="button" class="btn" id="f-run"${need ? ' disabled' : ''}>${T('fit.run')}</button>${need ? `<span class="muted small">${T('fit.need')}</span>` : ''}</div><div id="fitout"></div>`;
   }
@@ -103,7 +103,7 @@ function renderFit() {
   renderImport($('fitimp'), { imp: F.imp, src: F.src }, { base: BASE, title: T('fit.imp'), onChange: st => { F.imp = st.imp; F.src = st.src; F.map = st.src ? { ...F.map, ...guess(st.src, FGUESS) } : Object.fromEntries(FKEYS.map(k => [k, null])); F.decimalChosen = false; FR = null; save(); renderFit(); }, onError: m => status(m, 'err') });
   $('fsample') && $('fsample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/secvol/ornek/ornek-seksiyon.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-seksiyon.csv (benzetim)' : 'ornek-seksiyon.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-seksiyon.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     F.imp = imp; F.src = await readImport(imp, BASE); F.map = { ...Object.fromEntries(FKEYS.map(k => [k, null])), ...guess(F.src, FGUESS) }; F.decimalChosen = false; FR = null; save(); renderFit();
   });
   if (!F.src) return;
@@ -214,7 +214,7 @@ function bindBuck(re) {
   document.querySelectorAll('#bprod input[data-k]').forEach(x => x.addEventListener('change', () => { b.rows[+x.dataset.row][x.dataset.k] = x.value; re(); }));
   document.querySelectorAll('[data-bdel]').forEach(x => x.addEventListener('click', () => { b.rows.splice(+x.dataset.bdel, 1); re(); }));
   $('b-add').addEventListener('click', () => { b.rows.push(blankRow(b.rows.length + 1)); re(); });
-  $('b-save').addEventListener('click', () => download(`${lang === 'tr' ? 'urunler' : 'products'}.json`, BK.productsToJSON(buckList()), 'application/json'));
+  $('b-save').addEventListener('click', () => download(`products.json`, BK.productsToJSON(buckList()), 'application/json'));
   $('b-load').addEventListener('change', async e => {
     const file = e.target.files && e.target.files[0]; if (!file) return;
     const r = BK.parseProducts(await file.text());
@@ -374,11 +374,11 @@ function renderStep3() {
   el.innerHTML = h;
   el.querySelectorAll('[data-sel]').forEach(b => b.addEventListener('click', () => { S.sel = +b.dataset.sel; save(); renderStep3(); }));
   $('svg-prof') && $('svg-prof').addEventListener('click', () => download('govde-profili.svg', svgForDownload($('ch-prof').querySelector('svg')), 'image/svg+xml'));
-  $('svg-buck') && $('svg-buck').addEventListener('click', () => download(lang === 'tr' ? 'urun-bolme.svg' : 'bucking.svg', svgForDownload($('ch-buck').querySelector('svg')), 'image/svg+xml'));
+  $('svg-buck') && $('svg-buck').addEventListener('click', () => download('bucking.svg', svgForDownload($('ch-buck').querySelector('svg')), 'image/svg+xml'));
   $('back2').addEventListener('click', () => go(2));
-  const name = ext => `${lang === 'tr' ? 'govde-profili' : 'taper'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `taper-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), treeTable(), lang));
-  $('x-csv-b') && $('x-csv-b').addEventListener('click', () => downloadCSV(name('csv').replace('.csv', lang === 'tr' ? '-parcalar.csv' : '-pieces.csv'), piecesTable(), lang));
+  $('x-csv-b') && $('x-csv-b').addEventListener('click', () => downloadCSV(name('csv').replace('.csv', '-pieces.csv'), piecesTable(), lang));
   $('x-json').addEventListener('click', () => downloadRecord(name('json'), { tool: TP.TOOL, created: R.created, settings: R.settings, sets: R.sets, trees: R.trees, bucking: R.buck,
     reading: S.trees.mode === 'table' && S.trees.src ? { columns: Object.fromEntries(Object.entries(S.trees.map).map(([k, i]) => [k, i == null ? null : S.trees.src.headers[i]])), decimal: S.trees.decimal } : { mode: S.trees.mode } },
     TP.TOOL, S.trees.mode === 'table' ? [['trees', S.trees.imp]] : [], m => status(m, 'err')));

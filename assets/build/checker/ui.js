@@ -381,121 +381,8 @@ const { makeT, fmtNum } = __fb_r("core/i18n.js");
 
 const n = (x, d = 3) => fmtNum(x, d);
 const rows = r => (r || []).join(', ');
-const rowsByTable = (list, l) => ['plots', 'trees'].map(t => { const r = list.filter(x => x.table === t).map(x => x.row); if (!r.length) return '';
-  return (l === 'tr' ? (t === 'plots' ? 'alan tablosu satır ' : 'ağaç tablosu satır ') : (t === 'plots' ? 'plot table row ' : 'tree table row ')) + r.join(', '); }).filter(Boolean).join('; ');
-
-const tr = {
-  // steps
-  'step.1': 'Veri', 'step.2': 'Sütunlar ve birimler', 'step.3': 'Kontrol ayarları', 'step.4': 'Sonuçlar',
-  'privacy': 'Dosyalarınız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Çalışma oturumu yalnızca bu tarayıcıda (IndexedDB) saklanır.',
-  // step 1
-  'trees.h': 'Ağaç / ölçüm tablosu', 'trees.sub': 'Zorunlu. Her satır bir ağacın bir dönemdeki ölçümü.',
-  'plots.h': 'Örnek alan tablosu', 'plots.sub': 'İsteğe bağlı. Ağacı olmayan (boş) örnek alanlar ve alan büyüklükleri burada tanımlanır.',
-  'file': 'Dosya seç (CSV, TXT, TSV, XLSX)', 'paste': 'ya da Excel\'den yapıştırın', 'paste.take': 'Yapıştırılanı al', 'clear': 'Kaldır',
-  'delim': 'Sütun ayırıcı', 'delim.auto': p => `algılanan: ${p.d}`, 'header': 'İlk satır başlık', 'enc': 'Karakter kodlaması', 'sheet': 'Çalışma sayfası',
-  'enc.warn': 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var. Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür; kodlamayı değiştirip önizlemeyi kontrol edin.',
-  'xlsx.note': 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca dosyada kayıtlı son değerler okunur.',
-  'xlsx.loading': 'Excel okuyucusu yükleniyor…', 'xlsx.fail': 'Excel okuyucusu yüklenemedi.', 'read.fail': 'Dosya okunamadı.',
-  'xlsx.only': 'Eski .xls biçimi desteklenmiyor; dosyayı .xlsx ya da CSV olarak kaydedin.',
-  'preview': p => `Önizleme: ilk ${p.k} kayıt / toplam ${p.n} kayıt, ${p.c} sütun`, 'rowno': 'Satır',
-  'sample': 'Örnek veriyi yükle', 'sample.note': 'Örnek dosyalar benzetimdir, gerçek ölçüm değildir; denetçinin kontrollerini göstermek için bilerek sorunlu hazırlanmıştır.',
-  'sample.dl': 'Örnek dosyaları indir',
-  'next': 'Devam', 'back': 'Geri', 'need.trees': 'Önce ağaç tablosunu yükleyin.',
-  'reset': 'Oturumu sıfırla', 'reset.q': 'Yüklenen tablolar, eşleme, düzeltmeler ve günlük silinsin mi? (Onaylanmış veri kaydı korunur.)',
-  'restored': p => `Önceki oturum geri yüklendi (${p.when}).`,
-  // step 2
-  'map.h': 'Sütun eşleme', 'map.sub': 'Her alanın hangi sütunda olduğunu seçin. Öneriler yalnızca birebir başlık eşleşmesinden gelir; kontrol edin.',
-  'map.none': '— yok —', 'req': 'zorunlu', 'opt': 'isteğe bağlı', 'map.values': 'İlk değerler',
-  'f.plot_id': 'Örnek alan kimliği', 'f.tree_id': 'Ağaç kimliği', 'f.species': 'Tür', 'f.dbh': 'Göğüs çapı (d1.30)', 'f.height': 'Boy',
-  'f.period': 'Dönem / yıl / tarih', 'f.stem_id': 'Gövde kimliği', 'f.plot_area': 'Örnek alan büyüklüğü (yatay)', 'f.stratum': 'Tabaka',
-  'f.status': 'Durum', 'f.x': 'X koordinatı', 'f.y': 'Y koordinatı', 'f.age': 'Ağaç yaşı (yıl)', 'u.yr': 'yıl',
-  'units.h': 'Birimler', 'units.sub': 'Birimi siz seçersiniz; değerlerin büyüklüğüne bakılarak birim kendiliğinden değiştirilmez. Seçiminize göre iç birime (cm, m, m²) çevrilmiş özet aşağıdadır.',
-  'u.dbh': 'Çap birimi', 'u.height': 'Boy birimi', 'u.area': 'Alan birimi', 'u.from': 'başlıktan önerildi',
-  'u.stats': p => `${p.k} değer: en küçük ${n(p.min)}, ortanca ${n(p.med)}, en büyük ${n(p.max)} ${p.u}`,
-  'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'Nokta (24.5)', 'dec.comma': 'Virgül (24,5)',
-  'dec.sub': 'Ondalık ayırıcı arayüz dilinden bağımsızdır. Binlik ayırıcı kabul edilmez; "1.234,5" gibi değerler hata olarak raporlanır.',
-  'dec.ev': p => `Metin hücrelerinde: noktalı ${p.dot}, virgüllü ${p.comma}, belirsiz ${p.ambiguous}${p.both ? `, ikisini birden içeren ${p.both}` : ''}.`,
-  'dec.v.dot': 'Dosyada ondalık nokta kullanılmış görünüyor.', 'dec.v.comma': 'Dosyada ondalık virgül kullanılmış görünüyor.',
-  'dec.v.none': 'Metin olarak yazılmış ondalıklı sayı yok (tam sayılar ya da Excel sayı hücreleri). Varsayılan nokta seçildi.',
-  'dec.v.ambiguous': p => `Belirsiz: ${p.ex} gibi değerler hem ondalık sayı (bir tam binde iki yüz otuz dört) hem de binlik ayırıcılı tam sayı (bin iki yüz otuz dört) olabilir. Varsayılan nokta seçildi (bir tam binde iki yüz otuz dört); veriniz virgül kullanıyorsa değiştirin.`,
-  'dec.v.conflict': p => `Çelişkili: bazı değerler noktalı (${p.d}), bazıları virgüllü (${p.c}). Varsayılan nokta seçildi; virgüllü değerler biçim hatası olarak listelenecek. Veriniz virgül kullanıyorsa değiştirin.`,
-  'dec.choose': 'Ondalık ayırıcıyı seçin.',
-  'mp.map.required': p => `${p.tableName}: "${p.fieldName}" için sütun seçilmedi.`,
-  'mp.map.twice': p => `${p.tableName}: aynı sütun hem "${p.fieldName}" hem "${p.otherName}" için seçilmiş.`,
-  'mp.map.noarea': 'Örnek alan büyüklüğü hiçbir yerde eşlenmedi. Ağaç tablosunda bir alan sütunu seçin ya da örnek alan tablosu yükleyin.',
-  't.trees': 'Ağaç tablosu', 't.plots': 'Örnek alan tablosu', 't.plot': 'Örnek alan',
-  // step 3
-  'lim.h': 'Çap–boy kontrol sınırları', 'lim.sub': 'Bunlar ayarlanabilir tarama eşikleridir, literatürden alınmış sınır değerler değildir. Dışında kalan değerler silinmez; "şüpheli" uyarısı olarak listelenir.',
-  'lim.dbh': 'Çap (cm)', 'lim.h2': 'Boy (m)', 'lim.sl': 'İncelik h/d (m/m)', 'lim.min': 'en az', 'lim.max': 'en çok', 'lim.default': 'Varsayılanlara dön',
-  'lim.bad': 'Sınırlar pozitif olmalı ve en az, en çoktan küçük olmalı.',
-  'run': 'Kontrolleri çalıştır', 'map.fix': 'Önce sütun eşlemesindeki sorunları giderin.',
-  // step 4
-  'tab.summary': 'Özet', 'tab.issues': 'Sorunlar', 'tab.data': 'Veri', 'tab.plots': 'Örnek alanlar', 'tab.log': 'Değişiklik günlüğü', 'tab.approve': 'Onay ve dışa aktarma',
-  'sum.records': 'Ağaç kaydı', 'sum.excluded': 'dışlanan', 'sum.plots': 'Örnek alan', 'sum.empty': 'boş', 'sum.periods': 'Dönem', 'sum.species': 'Tür kodu',
-  'sum.errors': 'Hata', 'sum.warnings': 'Uyarı', 'sum.open': 'açık', 'sum.infos': 'Bilgi',
-  'sum.ok': 'Hata yok. Veriyi onaylayabilirsiniz; açık uyarılar onaylanan veriyle birlikte kaydedilir.',
-  'sum.notok': p => `${p.e} hata giderilmeden veri onaylanamaz. Hatalar kesin biçim/tutarlılık sorunlarıdır; uyarılar ise kontrol edilmesi gereken şüpheli değerlerdir.`,
-  'sum.bycat': 'Kategoriye göre', 'sum.settings': 'Kullanılan ayarlar',
-  'sev.error': 'Hata', 'sev.warning': 'Uyarı', 'sev.info': 'Bilgi',
-  'kind.hard': 'Kesin hata', 'kind.suspect': 'Şüpheli', 'kind.note': 'Not',
-  'cat.format': 'Biçim', 'cat.missing': 'Eksik', 'cat.invalid': 'Geçersiz değer', 'cat.duplicate': 'Mükerrer', 'cat.conflict': 'Çelişki',
-  'cat.reference': 'Başvuru bütünlüğü', 'cat.biological': 'Biyolojik aykırılık', 'cat.consistency': 'Tutarlılık', 'cat.info': 'Bilgi',
-  'flt.all': 'Tümü', 'flt.open': 'Yalnızca açık olanlar', 'flt.sev': 'Önem', 'flt.cat': 'Kategori', 'flt.search': 'Satır, kimlik ya da değer ara',
-  'col.sev': 'Önem', 'col.cat': 'Kategori', 'col.where': 'Yer', 'col.col': 'Sütun', 'col.val': 'Değer', 'col.msg': 'Açıklama', 'col.act': 'İşlem', 'col.code': 'Kod',
-  'where.row': p => `${p.t}, satır ${p.r}`, 'where.plot': p => `Örnek alan ${p.p}`,
-  'no.issues': 'Bu süzgeçle sorun yok.', 'more': p => `${p.k} / ${p.n} gösteriliyor`, 'show.more': 'Daha fazla göster',
-  'act.edit': 'Düzelt', 'act.accept': 'Kabul et', 'act.unaccept': 'Kabulü geri al', 'act.exclude': 'Kaydı dışla', 'act.include': 'Geri al (dahil et)',
-  'act.suggest': p => `Öneriyi uygula: "${p.v}"`, 'act.choose': 'Değer seç', 'act.setarea': 'Alan gir', 'act.bulk': p => `Bu çeşit ${p.k} öneriyi birlikte uygula`,
-  'accepted': p => `Kabul edildi: ${p.r}`,
-  'dlg.edit': 'Değeri düzelt', 'dlg.old': 'Eski değer', 'dlg.new': 'Yeni değer', 'dlg.reason': 'Gerekçe (zorunlu, günlüğe yazılır)',
-  'dlg.accept': 'Uyarıyı kabul et', 'dlg.exclude': 'Kaydı dışla', 'dlg.include': 'Kaydı yeniden dahil et',
-  'dlg.choose': 'Örnek alan için tek değer seçin', 'dlg.choose.sub': 'Seçilen değer, farklı değer taşıyan bütün kayıtlara yazılır; her değişiklik ayrı günlük satırıdır.',
-  'dlg.area': 'Örnek alan büyüklüğünü girin', 'dlg.bulk': 'Önerileri birlikte uygula',
-  'dlg.ok': 'Uygula', 'dlg.cancel': 'Vazgeç', 'dlg.need': 'Gerekçe yazın.', 'dlg.same': 'Yeni değer eskisiyle aynı.',
-  'dlg.parsed': p => `Okunan değer: ${p.v}`, 'dlg.parsebad': 'Bu değer seçilen ayarlarla sayıya çevrilemiyor.',
-  'dlg.exclude.sub': 'Kayıt silinmez; onaylanan veriye alınmaz ve dışlananlar listesinde kalır. İstediğiniz zaman geri alabilirsiniz.',
-  'r.trim': 'Baştaki/sondaki boşluk temizlendi', 'r.unify': 'Tür kodu yazımı birleştirildi',
-  'data.sub': 'Ham değerler kaynakta olduğu gibi durur; burada sizin düzeltmeleriniz uygulanmış hâli görünür. Hücreye tıklayarak düzeltin. Renkli hücrelerde sorun var.',
-  'data.parsed': 'iç birimle', 'data.ex': 'dışlandı', 'data.only': 'Yalnızca sorunlu kayıtlar',
-  'plots.cols': ['Örnek alan', 'Alan (m²)', 'Kaynak', 'Tabaka', 'Kayıt sayısı', 'Alan tablosunda'],
-  'yes': 'evet', 'no': 'hayır',
-  'log.empty': 'Henüz değişiklik yok.', 'log.cols': ['#', 'Zaman', 'İşlem', 'Tablo', 'Satır', 'Alan', 'Eski', 'Yeni', 'Gerekçe', 'Sorun kodu'],
-  'a.edit': 'düzeltme', 'a.exclude': 'dışlama', 'a.include': 'yeniden dahil etme', 'a.accept': 'uyarı kabulü', 'a.unaccept': 'kabulü geri alma',
-  'ap.h': 'Veriyi onayla', 'ap.sub': 'Onaylanan veri iç birimlerle (cm, m, m²) kaydedilir. Türetilen değerler (göğüs yüzeyi, hektara çevirme katsayısı) ölçülen veriden ayrı bir bölümde tutulur.',
-  'ap.btn': 'Veriyi onayla ve kaydet', 'ap.blocked': p => `${p.e} hata var; onay için önce giderin.`,
-  'ap.done': p => `Onaylandı: ${p.n} kayıt, ${p.p} örnek alan (${p.when}). Bu tarayıcıda saklandı ve Envanter Verisi Yöneticisi'nde etkin paket yapıldı; veriyi okuyan araçlar bu paketi kullanır.`, 'to.manager': 'Envanter Verisi Yöneticisi',
-  'ap.stale': 'Onaydan sonra veride değişiklik yapıldı; kaydedilen sürüm eskidir. Yeniden onaylayın.',
-  'ex.h': 'İndir', 'ex.issues': 'Sorun tablosu', 'ex.log': 'Değişiklik günlüğü', 'ex.data': 'Onaylanmış veri', 'ex.all': 'Tam rapor (Excel, bütün sayfalar)', 'ex.json': 'Veri paketi (JSON)',
-  'ex.need': 'Onaylanmış veri ve veri paketi, onaydan sonra indirilebilir.',
-  'ex.csvnote': 'CSV: her iki dilde "," sütun ayırıcı ve ondalık nokta. Kimlikleri ("001") korumak için Excel dosyası daha güvenlidir; CSV\'yi Excel\'de açarken baştaki sıfırlar silinebilir.',
-  'to.tools': 'Araçlar dizinine dön', 'to.stand': 'Örnek Alan ve Meşcere Hesaplayıcısı\'na geç',
-  'sheet.summary': 'Ozet', 'sheet.issues': 'Sorunlar', 'sheet.data': 'Onaylanmis veri', 'sheet.plots': 'Ornek alanlar', 'sheet.derived': 'Turetilen', 'sheet.log': 'Gunluk', 'sheet.settings': 'Ayarlar',
-  'x.issueCols': ['Önem', 'Sorun türü', 'Kategori', 'Kod', 'Tablo', 'Satır', 'Örnek alan', 'Alan', 'Sütun', 'Değer', 'Açıklama', 'Öneri', 'Kabul gerekçesi'],
-  'x.derivedCols': ['Satır', 'Göğüs yüzeyi g (m²)'], 'x.derivedPlotCols': ['Örnek alan', 'Hektara çevirme katsayısı (1/ha)'],
-  'x.setCols': ['Ayar', 'Değer'], 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.lang': 'Dil',
-  'busy': 'Hesaplanıyor…',
-  // issue messages
-  'm.num.bad': p => ({ space: 'Sayı değil: boşluk içeriyor (binlik ayırıcı olabilir; tahmin yapılmadı).',
-    'other-separator': 'Sayı değil: seçilen ondalık ayırıcıyla uyuşmuyor ya da binlik ayırıcı içeriyor.',
-    'not-number': 'Sayıya çevrilemiyor.', 'no-decimal-setting': 'Ondalık ayırıcı seçilmedi.', 'cell-type': 'Excel hücresi sayı değil (mantıksal değer ya da hata).',
-    'not-finite': 'Sonlu bir sayı değil.' }[p.reason] || 'Sayıya çevrilemiyor.'),
-  'm.req.missing': 'Zorunlu alan boş.',
-  'm.num.nonpos': 'Sıfır ya da negatif olamaz.',
-  'm.text.space': 'Başında ya da sonunda boşluk var; "001 " ile "001" farklı kimlik sayılır.',
-  'm.dbh.range': p => `Çap ${n(p.value)} cm, kontrol aralığının (${n(p.min)}–${n(p.max)} cm) dışında.`,
-  'm.h.belowbh': p => `Boy ${n(p.value)} m, göğüs yüksekliğinin (1,3 m) altında ama çap ölçülmüş.`,
-  'm.h.range': p => `Boy ${n(p.value)} m, kontrol aralığının (${n(p.min)}–${n(p.max)} m) dışında.`,
-  'm.sl.range': p => `İncelik h/d = ${n(p.value, 1)} (h ${n(p.h)} m, d ${n(p.d)} cm), kontrol aralığının (${n(p.min)}–${n(p.max)}) dışında.`,
-  'm.key.dup': p => `Mükerrer ölçüm anahtarı (${p.keyFields.map(k => tr['f.' + k]).join(' + ')} = ${p.key.map(x => x ?? '∅').join(' / ')}); aynı anahtar satır ${rows(p.rows)} için de var.`,
-  'm.sp.variant': p => `Aynı tür kodu farklı yazılmış: ${p.variants.map(v => `"${v}"`).join(', ')}.`,
-  'm.sp.change': p => `Aynı ağacın türü dönemler arasında değişiyor (${p.values.join(', ')}; satır ${rows(p.rows)}).`,
-  'm.plot.dup': p => `Örnek alan tablosunda aynı kimlik birden fazla (satır ${rows(p.rows)}).`,
-  'm.plot.unknown': 'Bu örnek alan, örnek alan tablosunda yok.',
-  'm.area.conflict': p => `Örnek alan ${p.plot} için farklı büyüklükler: ${p.values.map(v => `${n(v.value)} m² (${rowsByTable(v.rows, 'tr')})`).join('; ')}.`,
-  'm.stratum.conflict': p => `Örnek alan ${p.plot} için farklı tabakalar: ${p.values.map(v => `"${v.value}"`).join(', ')}.`,
-  'm.area.none': p => `Örnek alan ${p.plot} için büyüklük yok.`,
-  'm.plot.empty': p => `Örnek alan ${p.plot} için ağaç kaydı yok (boş örnek alan). Hesaplarda hektarda 0 ağaç olarak kalır; silinmez.`,
-};
+const rowsByTable = list => ['plots', 'trees'].map(t => { const r = list.filter(x => x.table === t).map(x => x.row); if (!r.length) return '';
+  return (t === 'plots' ? 'plot table row ' : 'tree table row ') + r.join(', '); }).filter(Boolean).join('; ');
 
 const en = {
   'step.1': 'Data', 'step.2': 'Columns and units', 'step.3': 'Check settings', 'step.4': 'Results',
@@ -598,13 +485,13 @@ const en = {
   'm.sp.change': p => `The species of the same tree changes between periods (${p.values.join(', ')}; row ${rows(p.rows)}).`,
   'm.plot.dup': p => `The same ID appears more than once in the plot table (row ${rows(p.rows)}).`,
   'm.plot.unknown': 'This plot is not in the plot table.',
-  'm.area.conflict': p => `Plot ${p.plot} has different sizes: ${p.values.map(v => `${n(v.value)} m² (${rowsByTable(v.rows, 'en')})`).join('; ')}.`,
+  'm.area.conflict': p => `Plot ${p.plot} has different sizes: ${p.values.map(v => `${n(v.value)} m² (${rowsByTable(v.rows)})`).join('; ')}.`,
   'm.stratum.conflict': p => `Plot ${p.plot} has different strata: ${p.values.map(v => `"${v.value}"`).join(', ')}.`,
   'm.area.none': p => `Plot ${p.plot} has no size.`,
   'm.plot.empty': p => `Plot ${p.plot} has no tree records (empty plot). It stays in the data with 0 trees per hectare; it is not deleted.`,
 };
 
-const T = makeT({ tr, en });
+const T = makeT({ en });
 };
 
 // ---- assets/lab/checker/ui.js
@@ -632,7 +519,7 @@ const BASE = './', KEY = 'session:' + C.TOOL.id, PAGE = 200;
 const $ = id => document.getElementById(id);
 const UNIT_LABEL = { cm: 'cm', mm: 'mm', m: 'm', dm: 'dm', m2: 'm²', ha: 'ha' };
 const SEV_RANK = { info: 1, warning: 2, error: 3 };
-const DELIM_NAME = { ',': lang === 'tr' ? 'virgül' : 'comma', ';': lang === 'tr' ? 'noktalı virgül' : 'semicolon', '\t': lang === 'tr' ? 'sekme' : 'tab', '|': '|' };
+const DELIM_NAME = { ',': 'comma', ';': 'semicolon', '\t': 'tab', '|': '|' };
 
 let S = blank(), ev = null, approvedDs = null, view = { flt: { sev: 'all', cat: 'all', open: true, q: '' }, lim: PAGE, dlim: PAGE, dtable: 'trees', donly: false };
 function blank() {
@@ -690,7 +577,7 @@ async function onFile(table, file) {
   await setImport(table, { kind: ext === 'xlsx' || ext === 'xlsm' || isZip ? 'xlsx' : 'csv', name, buf, encoding: 'utf-8', delim: null, header: true, sheet: null });
 }
 async function loadSample() {
-  const tag = lang === 'tr' ? ' (örnek)' : ' (sample)';
+  const tag = ' (sample)';
   for (const [table, f] of [['trees', 'agaclar.csv'], ['plots', 'ornek-alanlar.csv']]) {
     const buf = await (await fetch(BASE + 'assets/lab/checker/ornek/' + f)).arrayBuffer();
     S.imports[table] = { kind: 'csv', name: f + tag, buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
@@ -739,7 +626,7 @@ function renderStep1() {
     const table = p.dataset.table, imp = S.imports[table];
     const q = a => p.querySelector(`[data-act="${a}"]`);
     q('file').addEventListener('change', e => onFile(table, e.target.files[0]));
-    q('paste').addEventListener('click', () => { const text = q('pastebox').value; if (text.trim()) setImport(table, { kind: 'paste', name: lang === 'tr' ? 'yapıştırılan tablo' : 'pasted table', text, delim: null, header: true }); });
+    q('paste').addEventListener('click', () => { const text = q('pastebox').value; if (text.trim()) setImport(table, { kind: 'paste', name: 'pasted table', text, delim: null, header: true }); });
     if (!imp || !S.sources[table]) return;
     q('header').addEventListener('change', e => { imp.header = e.target.checked; setImport(table, imp); });
     q('clear').addEventListener('click', () => { S.imports[table] = null; delete S.sources[table]; S.mapping[table] = {}; S.srcVer++; ev = null; save(); render(); });
@@ -1103,12 +990,12 @@ function tabLog(p) {
   const rows = logRows(false).slice().reverse();
   p.innerHTML = `<div class="filters"><span class="dl"><button type="button" class="btn ghost small" id="dllog"${rows.length ? '' : ' disabled'}>${T('ex.log')} CSV</button></span></div>` +
     (rows.length ? `<div class="tscroll"><table class="grid"><thead><tr>${T('log.cols').map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>
-    ${rows.map(r => `<tr>${r.map((c, k) => `<td${k === 1 ? ' class="nowrap small"' : ''}>${k === 6 || k === 7 ? `<code>${vis(c ?? '')}</code>` : esc(k === 1 ? new Date(c).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-GB') : c ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : `<p class="muted">${T('log.empty')}</p>`);
+    ${rows.map(r => `<tr>${r.map((c, k) => `<td${k === 1 ? ' class="nowrap small"' : ''}>${k === 6 || k === 7 ? `<code>${vis(c ?? '')}</code>` : esc(k === 1 ? new Date(c).toLocaleString('en-GB') : c ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : `<p class="muted">${T('log.empty')}</p>`);
   $('dllog').addEventListener('click', () => downloadCSV(fname('degisiklik-gunlugu', 'change-log') + '.csv', logRows(), lang));
 }
 
 /* ---------------- approval and exports ---------------- */
-function fname(trName, enName) { return `${lang === 'tr' ? trName : enName}-${new Date().toISOString().slice(0, 10)}`; }
+function fname(trName, enName) { return `${enName}-${new Date().toISOString().slice(0, 10)}`; }
 function issueRows() {
   return [T('x.issueCols'), ...ev.issues.map(i => [T('sev.' + i.severity), T('kind.' + i.kind), T('cat.' + i.category), i.code, T('t.' + i.table), i.row ?? '', i.plot ?? '',
     i.field ? T('f.' + i.field) : '', i.column || '', i.text ?? '', msg(i), i.suggestion ? i.suggestion.value : '', i.accepted ? i.accepted.reason : ''])];
@@ -1123,7 +1010,7 @@ function tabApprove(p) {
   const s = ev.summary, current = S.approved && S.approved.sig === sig();
   let h = `<div class="card"><h2>${T('ap.h')}</h2><p class="muted">${T('ap.sub')}</p>`;
   if (!s.approvable) h += `<p class="note err">${T('ap.blocked', { e: s.errors })}</p>`;
-  if (S.approved && approvedDs) h += `<p class="note ${current ? 'ok' : 'warn'}">${T('ap.done', { n: approvedDs.trees.length, p: approvedDs.plots.length, when: new Date(S.approved.created).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-GB') })}${current ? '' : ' ' + T('ap.stale')}</p>`;
+  if (S.approved && approvedDs) h += `<p class="note ${current ? 'ok' : 'warn'}">${T('ap.done', { n: approvedDs.trees.length, p: approvedDs.plots.length, when: new Date(S.approved.created).toLocaleString('en-GB') })}${current ? '' : ' ' + T('ap.stale')}</p>`;
   h += `<button type="button" class="btn" id="approve"${s.approvable ? '' : ' disabled'}>${T('ap.btn')}</button></div>
   <div class="card"><h2>${T('ex.h')}</h2><div class="exports">
     <button type="button" class="btn ghost" id="x-issues">${T('ex.issues')} (CSV)</button>
@@ -1184,7 +1071,7 @@ function render() {
     const saved = await get(KEY);
     if (saved && saved.v === 1) {
       S = { ...blank(), ...saved };
-      status(T('restored', { when: new Date(saved.saved).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-GB') }));
+      status(T('restored', { when: new Date(saved.saved).toLocaleString('en-GB') }));
       const ds = await get('dataset:approved');
       if (ds && S.approved && ds.created === S.approved.created) approvedDs = ds;
       if (S.work && S.workSrcVer === S.srcVer) reeval();
@@ -1198,19 +1085,16 @@ function render() {
 __fb_m["core/citation.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "FORMATS": () => FORMATS, "NAMES": () => NAMES, "cite": () => cite, "plain": () => plain });
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
-// Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// Input c = { author:{ family, given }, year, base (canonical URL with trailing '/'), site:{ en },
+//             tool: null | { file, v, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
 // doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
 const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MON_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const MLA_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const IEEE_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
 const VAN_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SHORT_TR = ['Oca.', 'Şub.', 'Mar.', 'Nis.', 'May.', 'Haz.', 'Tem.', 'Ağu.', 'Eyl.', 'Eki.', 'Kas.', 'Ara.'];
-const VAN_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
 const FORMATS = ['apa', 'mla', 'chicago', 'harvard', 'ieee', 'vancouver', 'bibtex', 'ris'];
 const NAMES = { apa: 'APA 7', mla: 'MLA 9', chicago: 'Chicago (author-date)', harvard: 'Harvard', ieee: 'IEEE', vancouver: 'Vancouver', bibtex: 'BibTeX', ris: 'RIS' };
@@ -1220,9 +1104,9 @@ const it = s => `<i>${esc(s)}</i>`;
 const plain = html => html.replace(/<\/?i>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 function parts(c) {
-  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1, tr = c.lang === 'tr';
-  const site = c.site[c.lang], tool = c.tool ? c.tool[c.lang] : null;
-  return { tr, y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
+  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1;
+  const site = c.site.en, tool = c.tool ? c.tool.en : null;
+  return { y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
     url: c.base + (c.tool ? c.tool.file : ''), fam: c.author.family, given: c.author.given, ini: c.author.given.charAt(0) + '.', year: c.year };
 }
 const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -1231,54 +1115,42 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 function cite(fmt, c) {
   const body = core(fmt, c);
   if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
-  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  const u = esc('https://doi.org/' + c.doi);
   switch (fmt) {
-    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'apa': return `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
     case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
     case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
     default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
   }
 }
 function core(fmt, c) {
-  const p = parts(c), tr = p.tr, v = p.v;
+  const p = parts(c), v = p.v;
   switch (fmt) {
     case 'apa':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Sürüm ${v})` : ''} [Web uygulaması].${p.container ? ` ${esc(p.container)}.` : ''} ${p.d} ${MON_TR[p.mi]} ${p.y} tarihinde ${esc(p.url)} adresinden erişildi.`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
     case 'mla':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Sürüm ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Erişim ${p.d} ${SHORT_TR[p.mi]} ${p.y}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
     case 'chicago':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Sürüm ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Erişim ${p.d} ${MON_TR[p.mi]} ${p.y}. ${esc(p.url)}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
     case 'harvard':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (sürüm ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Erişim adresi: ${esc(p.url)} (Erişim tarihi: ${p.d} ${MON_TR[p.mi]} ${p.y}).`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
     case 'ieee': {
-      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ${tr ? 'sür.' : 'ver.'} ${v}, ` : `${it(p.title)}, `;
-      return tr
-        ? `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Çevrimiçi]. Erişim: ${esc(p.url)} (erişim tarihi: ${p.d} ${SHORT_TR[p.mi]} ${p.y}).`
-        : `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
+      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ver. ${v}, ` : `${it(p.title)}, `;
+      return `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
     }
     case 'vancouver':
-      return tr
-        ? `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [İnternet]. ${v ? `Sürüm ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [erişim ${p.y} ${VAN_TR[p.mi]} ${p.d}]. Erişim adresi: ${esc(p.url)}`
-        : `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
+      return `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
     case 'bibtex': {
       const key = `${p.fam.toLowerCase()}${p.year}${c.tool ? c.tool.file.replace(/\.php$/, '').replace(/[^a-z0-9]/g, '') : 'forestbiometry'}`;
       const tt = p.title.replace(/–/g, '--');
-      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
+      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{Web application${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (`Version ${v}. `) : ''}Accessed ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `Version ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }
@@ -1296,11 +1168,8 @@ __fb_r("core/reset-all.js");
    // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
-const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
+const ui = 'en';
 const T = {
-  tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
-    copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
     note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
@@ -1413,12 +1282,13 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
-// Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
-// languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
-const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
+// Tiny i18n helper. The site is English only (20 Nov 2026; Turkish removed from the code 21 Nov 2026): `lang` is
+// always 'en' and every dictionary has a single `en` table. Numbers on screen use a decimal point and no thousands
+// separator; the interface never changes how data are parsed or stored.
+const lang = 'en';
 function makeT(dict) {
   return (key, p) => {
-    const s = (dict[lang] && dict[lang][key]) ?? dict.tr[key];
+    const s = dict.en[key];
     if (s == null) return key;
     return typeof s === 'function' ? s(p || {}) : s;
   };
@@ -1426,23 +1296,23 @@ function makeT(dict) {
 /**
  * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
  * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
- * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * point (English only). '−' is not used: negative numbers keep
  * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
  * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
 /** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
-const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+const SCREEN_DECIMAL = '.';
 /** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
-const LIST_SEP = lang === 'tr' ? '; ' : ', ';
+const LIST_SEP = ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
+  return s === '-0' ? '0' : s;
 }
-/** Decimal separator of CSV exports (both languages). */
+/** Decimal separator of CSV exports. */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -1613,7 +1483,7 @@ const cleanMeta = m => ({ name: String(m.name ?? '').trim(), description: String
 /** Default name: the tree file's name without extension, else 'veri paketi' / 'data package'. */
 function defaultName(ds, lang = 'tr') {
   const n = ds && ds.source && ds.source.trees && ds.source.trees.name;
-  return n ? String(n).replace(/\.(csv|txt|tsv|xlsx|xlsm|json)$/i, '').trim() || n : lang === 'tr' ? 'veri paketi' : 'data package';
+  return n ? String(n).replace(/\.(csv|txt|tsv|xlsx|xlsm|json)$/i, '').trim() || n : 'data package';
 }
 const newId = () => 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
@@ -1906,19 +1776,7 @@ const { get, del, keys } = __fb_r("core/store.js");
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
-const tr = document.documentElement.lang !== 'en';
-const T = tr ? {
-  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
-  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
-  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
-    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
-    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
-    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
-    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
-    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
-    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
-  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
-} : {
+const T = {
   label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
   none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
   ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
@@ -2224,7 +2082,7 @@ function cellText(c) {
   return c.w != null ? c.w : String(c.v);
 }
 function padTo(a, n) { const r = a.slice(); while (r.length < n) r.push(''); return r; }
-function colName(i) { return (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'Column ' : 'Sütun ') + (i + 1); }
+function colName(i) { return 'Column ' + (i + 1); }
 function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k = seen.get(x) || 0; seen.set(x, k + 1); return k ? `${x} (${k + 1})` : x; }); }
 };
 

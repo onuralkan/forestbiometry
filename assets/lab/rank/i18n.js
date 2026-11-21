@@ -1,41 +1,6 @@
 // Relative Ranking (Nispi Sıralama): TR/EN texts.
 import { makeT } from '../core/i18n.js';
 
-const tr = {
-  'step.1': 'Veri', 'step.2': 'Ölçütler', 'step.3': 'Sonuçlar',
-  'privacy': 'Dosyanız bu tarayıcıda okunur ve işlenir; sunucuya gönderilmez. Oturum yalnızca bu tarayıcıda (IndexedDB) saklanır.',
-  'imp.h': 'Başarı ölçütleri tablosu', 'imp.sub': 'Her satır bir model, her sütun bir başarı ölçütü (R², FI, RMSE, MAE, yanlılık (Bias), AIC, BIC…). Ölçüt sayısı serbest. Excel dosyasında ilk çalışma sayfası okunur; başka bir sayfa seçebilirsiniz.',
-  'sample': 'Örnek dosyayı yükle', 'sample.note': 'Örnek dosya benzetimdir, gerçek bir çalışmanın sonucu değildir. Bilerek tekrarlanan bir model adı, eksik bir değer, aynı sırayı veren iki ölçüt (R² ve FI) ve çok kötü bir model içerir.',
-  'next': 'Devam', 'back': 'Geri', 'calc': 'Sırala', 'reset': 'Oturumu sıfırla', 'need.data': 'Önce bir tablo yükleyin.',
-  'restored': p => `Önceki oturum geri yüklendi (${p.when}).`,
-  'hdr.h': 'Tablo düzeni', 'hdr.row': 'Başlık satırı', 'hdr.model': 'Model adı sütunu', 'hdr.guess': 'Başlık satırı kendiliğinden bulundu; doğru değilse değiştirin.',
-  'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'Nokta (0.25)', 'dec.comma': 'Virgül (0,25)', 'dec.choose': 'Ondalık ayırıcıyı seçin.', 'dec.xlsx': 'Excel sayı hücreleri ondalık ayarından etkilenmez; ayar yalnızca metin olarak yazılmış sayılar için.',
-  'dec.v.dot': 'Metin hücrelerinde ondalık nokta kullanılmış görünüyor.', 'dec.v.comma': 'Metin hücrelerinde ondalık virgül kullanılmış görünüyor.', 'dec.v.none': 'Metin olarak yazılmış ondalıklı sayı yok.',
-  'dec.v.ambiguous': p => `Belirsiz: ${p.ex} gibi değerler ondalık da binlik ayırıcılı tam sayı da olabilir; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.`, 'dec.v.conflict': 'Çelişkili: nokta ve virgül birlikte kullanılmış; varsayılan nokta seçildi, veriniz virgül kullanıyorsa değiştirin.',
-  'cr.h': 'Ölçütler ve yönleri', 'cr.sub': 'Sıralamaya girecek ölçütleri ve her birinde neyin iyi olduğunu seçin. Öneriler sütun adından gelir; tanınmayan adlar için yönü siz seçmelisiniz.',
-  'cr.use': 'Sıralamaya kat', 'cr.dir': 'İyi olan', 'dir.max': 'En büyük (R², FI)', 'dir.min': 'En küçük (RMSE, MAE, AIC, BIC…)', 'dir.abs': 'Sıfıra en yakın, |değer| (yanlılık (Bias), ME…)', 'dir.none': '— seçin —',
-  'cr.suggested': 'addan önerildi', 'cr.first': 'İlk değerler',
-  'need.dir': p => `Yönü seçilmemiş ölçüt: ${p.names.join(', ')}.`, 'need.crit': 'En az bir ölçüt seçin.', 'need.model': 'Model adı sütunu ölçüt olamaz.',
-  'tab.table': 'Sıralama', 'tab.radar': 'Radar grafiği', 'tab.export': 'İndir',
-  'method': 'Nispi sıra (Poudel ve Cao 2013, Denklem 10): Rᵢ = 1 + (m − 1)(Sᵢ − S_en iyi)/(S_en kötü − S_en iyi). Her ölçütte en iyi model 1, en kötü model m alır; aradakiler aralarındaki farkın büyüklüğünü yansıtan ondalıklı değerlerdir. Genel nispi sıra, ölçüt sıralarının eşit ağırlıklı toplamına aynı formülün uygulanmasıyla bulunur.',
-  'm.info': p => `${p.m} model sıralandı.`, 'dup': p => `Tekrarlanan model adı: ${p.list}. Ayırt etmek için satır numarası eklendi.`,
-  'incomplete': p => `Eksik ya da okunamayan değeri olan ${p.k} model sıralanmadı: ${p.list}. O ölçütü sıralamadan çıkarırsanız bu modeller geri gelir.`,
-  'same': p => `Şu ölçütler bütün modellerde aynı nispi sırayı veriyor: ${p.list}. Eşit ağırlıkla ikisi birlikte girerse aynı bilgi iki kez sayılır; birini çıkarmayı düşünün (ör. FI ile R² (1 − SSE/SST) aynıdır).`,
-  'constant': p => `Bütün modellerin eşit olduğu ölçüt: ${p.list}. Bu ölçütte herkes 1 aldı; sıralamayı değiştirmez.`,
-  'sens': 'Nispi sıra, en iyi ve en kötü değerlere göre ölçeklenir: çok kötü tek bir model ötekileri birbirine yaklaştırır. Gerekirse o modeli sıralamadan çıkarın; sıralar kalan modellerle yeniden hesaplanır (Poudel ve Cao 2013 de iki yöntemi bu nedenle çıkarmıştır).',
-  'aicnote': 'AIC ve BIC yalnızca aynı veriye fit edilmiş modeller arasında karşılaştırılabilir; araç bunu denetleyemez.',
-  'th.ord': 'Sıra', 'th.model': 'Model', 'th.row': 'Satır', 'th.sum': 'Toplam', 'th.overall': 'Genel nispi sıra', 'th.use': 'Dahil',
-  'show.vals': 'Ölçüt değerlerini de göster', 'excl.h': 'Sıralama dışı bırakılan modeller', 'excl.none': 'Dışarıda bırakılan model yok.', 'excl.back': 'Geri al',
-  'bestworst': p => `Ölçütte en iyi: ${p.best}, en kötü: ${p.worst}`,
-  'rd.best': 'En iyi', 'rd.worst': 'En kötü', 'rd.models': 'model', 'rd.extra': 'Ayrıca göster', 'rd.all': 'Hepsi', 'rd.clear': 'Seçimi temizle',
-  'rd.title': p => `Ölçütlere göre nispi sıralar (${p.k} / ${p.m} model)`, 'rd.note': p => `Merkez = 1 (en iyi), dış çember = ${p.m} (en kötü). Alanı küçük olan model daha iyidir.`,
-  'rd.none': 'Grafikte gösterilecek model seçilmedi.', 'rd.few': 'Radar grafiği için en az 3 ölçüt gerekir.', 'ch.svg': 'Grafiği indir (SVG)',
-  'ex.h': 'Sonuçları indir', 'ex.xlsx': 'Tam rapor (Excel)', 'ex.csv': 'Sıralama tablosu (CSV)', 'ex.note': 'CSV: her iki dilde "," sütun ayırıcı ve ondalık nokta. Başlıklar seçili dilde.',
-  'sheet.info': 'Bilgi', 'sheet.ranks': 'Nispi siralar', 'sheet.values': 'Olcut degerleri', 'sheet.crit': 'Olcutler',
-  'x.k': 'Ayar', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.src': 'Veri', 'x.m': 'Sıralanan model sayısı (m)', 'x.excl': 'Dışarıda bırakılan', 'x.inc': 'Eksik değerli (sıralanmadı)',
-  'x.crit': 'Ölçüt', 'x.dir': 'İyi olan', 'x.best': 'En iyi değer', 'x.worst': 'En kötü değer', 'x.const': 'Bütün modeller eşit', 'x.ref': 'Kaynak: Poudel, K.P., Cao, Q.V. 2013. Forest Science 59(2): 243–252.',
-  'yes': 'evet', 'no': 'hayır', 'R': 'R',
-};
 const en = {
   'step.1': 'Data', 'step.2': 'Criteria', 'step.3': 'Results',
   'privacy': 'Your file is read and processed in this browser and is not sent to the server. The session is kept only in this browser (IndexedDB).',
@@ -71,4 +36,4 @@ const en = {
   'x.crit': 'Criterion', 'x.dir': 'Better is', 'x.best': 'Best value', 'x.worst': 'Worst value', 'x.const': 'All models equal', 'x.ref': 'Source: Poudel, K.P., Cao, Q.V. 2013. Forest Science 59(2): 243–252.',
   'yes': 'yes', 'no': 'no', 'R': 'R',
 };
-export const T = makeT({ tr, en });
+export const T = makeT({ en });

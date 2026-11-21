@@ -11,7 +11,7 @@ import { scatterChart, svgForDownload } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { classesFromBreaks } from '../stand/calc.js';
 
-const BASE = './', KEY = 'session:' + E.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + E.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null ? '–' : fmtNum(x, d);
 const num = v => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : NaN; };
@@ -64,7 +64,7 @@ function renderStep1() {
   });
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/eval/ornek/ornek-tahminler.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-tahminler.csv (benzetim)' : 'ornek-tahminler.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-tahminler.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) });
     S.obs = S.src.headers.indexOf('h_obs');
     S.models = ['h_m1', 'h_m2'].map(h => ({ col: S.src.headers.indexOf(h), name: h, role: 'unknown' }));
@@ -293,7 +293,7 @@ function tabGroups(p) {
 }
 
 /* ---------------- exports (headers in the chosen language) ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 const undef = v => v == null ? T('undef') : v;
 function mHead(first) { return [first, T('m.n'), T('m.bias'), T('m.mae'), T('m.rmse'), T('m.r2'), ...(S.norm ? [T('m.rbias'), T('m.rmae'), T('m.rrmse'), T('m.den'), T('x.norm')] : []), T('m.mobs'), T('m.mpred')]; }
 function mVals(m) {

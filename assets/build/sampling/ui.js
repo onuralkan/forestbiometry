@@ -175,19 +175,16 @@ function radarChart(o) {
 __fb_m["core/citation.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "FORMATS": () => FORMATS, "NAMES": () => NAMES, "cite": () => cite, "plain": () => plain });
 // Citation strings for the platform and for each tool (no DOM). Tested in tests/site/test_cite.mjs.
-// Input c = { lang:'tr'|'en', author:{ family, given }, year, base (canonical URL with trailing '/'), site:{tr,en},
-//             tool: null | { file, v, tr, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
+// Input c = { author:{ family, given }, year, base (canonical URL with trailing '/'), site:{ en },
+//             tool: null | { file, v, en }, accessed: 'YYYY-MM-DD', doi?: '10.5281/…' }.
 // doi (optional): the concept DOI of the platform's Zenodo archive (all versions); added as the style's last element.
 // Formats follow the general patterns of the style guides for software / web applications; journals may differ.
 // HTML output only adds <i> for titles that the style sets in italics; plain text is the same without tags.
 
 const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MON_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const MLA_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 const IEEE_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
 const VAN_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const SHORT_TR = ['Oca.', 'Şub.', 'Mar.', 'Nis.', 'May.', 'Haz.', 'Tem.', 'Ağu.', 'Eyl.', 'Eki.', 'Kas.', 'Ara.'];
-const VAN_TR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
 const FORMATS = ['apa', 'mla', 'chicago', 'harvard', 'ieee', 'vancouver', 'bibtex', 'ris'];
 const NAMES = { apa: 'APA 7', mla: 'MLA 9', chicago: 'Chicago (author-date)', harvard: 'Harvard', ieee: 'IEEE', vancouver: 'Vancouver', bibtex: 'BibTeX', ris: 'RIS' };
@@ -197,9 +194,9 @@ const it = s => `<i>${esc(s)}</i>`;
 const plain = html => html.replace(/<\/?i>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 
 function parts(c) {
-  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1, tr = c.lang === 'tr';
-  const site = c.site[c.lang], tool = c.tool ? c.tool[c.lang] : null;
-  return { tr, y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
+  const [y, m, d] = c.accessed.split('-').map(Number), mi = m - 1;
+  const site = c.site.en, tool = c.tool ? c.tool.en : null;
+  return { y, m, d, mi, site, title: tool || site, container: tool ? site : null, v: c.tool ? c.tool.v : null,
     url: c.base + (c.tool ? c.tool.file : ''), fam: c.author.family, given: c.author.given, ini: c.author.given.charAt(0) + '.', year: c.year };
 }
 const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -208,54 +205,42 @@ const noScheme = u => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 function cite(fmt, c) {
   const body = core(fmt, c);
   if (!c.doi || fmt === 'bibtex' || fmt === 'ris') return body;
-  const u = esc('https://doi.org/' + c.doi), tr = c.lang === 'tr';
+  const u = esc('https://doi.org/' + c.doi);
   switch (fmt) {
-    case 'apa': return tr ? `${body} ${u}` : `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
+    case 'apa': return `${body}. ${u}`;          // EN ends with the retrieval URL, TR with a full stop
     case 'ieee': return `${body} doi: ${esc(c.doi)}.`;
     case 'vancouver': return `${body}. doi:${esc(c.doi)}`;
     default: return `${body} ${u}.`;                                   // MLA, Chicago, Harvard
   }
 }
 function core(fmt, c) {
-  const p = parts(c), tr = p.tr, v = p.v;
+  const p = parts(c), v = p.v;
   switch (fmt) {
     case 'apa':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Sürüm ${v})` : ''} [Web uygulaması].${p.container ? ` ${esc(p.container)}.` : ''} ${p.d} ${MON_TR[p.mi]} ${p.y} tarihinde ${esc(p.url)} adresinden erişildi.`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}). ${it(p.title)}${v ? ` (Version ${v})` : ''} [Web application].${p.container ? ` ${esc(p.container)}.` : ''} Retrieved ${MON_EN[p.mi]} ${p.d}, ${p.y}, from ${esc(p.url)}`;
     case 'mla':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Sürüm ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Erişim ${p.d} ${SHORT_TR[p.mi]} ${p.y}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${it(p.title)}. ${v ? `Version ${v}, ` : ''}${p.container ? `${esc(p.container)}, ` : ''}${p.year}, ${esc(noScheme(p.url))}. Accessed ${p.d} ${MLA_EN[p.mi]} ${p.y}.`;
     case 'chicago':
-      return tr
-        ? `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Sürüm ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Erişim ${p.d} ${MON_TR[p.mi]} ${p.y}. ${esc(p.url)}.`
-        : `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
+      return `${esc(p.fam)}, ${esc(p.given)}. ${p.year}. ${it(p.title)}. ${v ? `Version ${v}. ` : ''}${p.container ? `${esc(p.container)}. ` : ''}Accessed ${MON_EN[p.mi]} ${p.d}, ${p.y}. ${esc(p.url)}.`;
     case 'harvard':
-      return tr
-        ? `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (sürüm ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Erişim adresi: ${esc(p.url)} (Erişim tarihi: ${p.d} ${MON_TR[p.mi]} ${p.y}).`
-        : `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
+      return `${esc(p.fam)}, ${p.ini} (${p.year}) ${it(p.title)}${v ? ` (version ${v})` : ''}.${p.container ? ` ${esc(p.container)}.` : ''} Available at: ${esc(p.url)} (Accessed: ${p.d} ${MON_EN[p.mi]} ${p.y}).`;
     case 'ieee': {
-      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ${tr ? 'sür.' : 'ver.'} ${v}, ` : `${it(p.title)}, `;
-      return tr
-        ? `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Çevrimiçi]. Erişim: ${esc(p.url)} (erişim tarihi: ${p.d} ${SHORT_TR[p.mi]} ${p.y}).`
-        : `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
+      const head = p.container ? `“${esc(p.title)},” ${it(p.container)}, ver. ${v}, ` : `${it(p.title)}, `;
+      return `${p.ini} ${esc(p.fam)}, ${head}${p.year}. [Online]. Available: ${esc(p.url)} (accessed ${IEEE_EN[p.mi]} ${p.d}, ${p.y}).`;
     }
     case 'vancouver':
-      return tr
-        ? `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [İnternet]. ${v ? `Sürüm ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [erişim ${p.y} ${VAN_TR[p.mi]} ${p.d}]. Erişim adresi: ${esc(p.url)}`
-        : `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
+      return `${esc(p.fam)} ${p.given.charAt(0)}. ${esc(p.title)} [Internet]. ${v ? `Version ${v}. ` : ''}${esc(p.container || noScheme(c.base))}; ${p.year} [cited ${p.y} ${VAN_EN[p.mi]} ${p.d}]. Available from: ${esc(p.url)}`;
     case 'bibtex': {
       const key = `${p.fam.toLowerCase()}${p.year}${c.tool ? c.tool.file.replace(/\.php$/, '').replace(/[^a-z0-9]/g, '') : 'forestbiometry'}`;
       const tt = p.title.replace(/–/g, '--');
-      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{${tr ? 'Web uygulaması' : 'Web application'}${p.container ? `, ${p.container}` : ''}}`],
+      const rows = [['author', `{${p.fam}, ${p.given}}`], ['title', `{{${tt}}}`], ['howpublished', `{Web application${p.container ? `, ${p.container}` : ''}}`],
         ['year', `{${p.year}}`], ...(v ? [['version', `{${v}}`]] : []), ['url', `{${p.url}}`], ['urldate', `{${c.accessed}}`],
-        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (tr ? `Sürüm ${v}. ` : `Version ${v}. `) : ''}${tr ? 'Erişim' : 'Accessed'} ${c.accessed}}`]];
+        ...(c.doi ? [['doi', `{${c.doi}}`]] : []), ['note', `{${v ? (`Version ${v}. `) : ''}Accessed ${c.accessed}}`]];
       return esc(`@misc{${key},\n${rows.map(([k, x]) => `  ${k.padEnd(12)} = ${x}`).join(',\n')}\n}`);
     }
     case 'ris': {
       const L = [['TY', 'COMP'], ['AU', `${p.fam}, ${p.given}`], ['TI', p.title], ...(p.container ? [['T2', p.container]] : []), ['PY', String(p.year)],
-        ...(v ? [['N1', `${tr ? 'Sürüm' : 'Version'} ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', tr ? 'tr' : 'en'], ['ER', '']];
+        ...(v ? [['N1', `Version ${v}`]] : []), ['UR', p.url], ['Y2', c.accessed.replace(/-/g, '/')], ['PB', noScheme(c.base)], ...(c.doi ? [['DO', c.doi]] : []), ['LA', 'en'], ['ER', '']];
       return esc(L.map(([k, x]) => `${k}  - ${x}`).join('\r\n'));
     }
   }
@@ -273,11 +258,8 @@ __fb_r("core/reset-all.js");
    // tool pages: reset all tool sessions next to the tool's own reset (one script with the shell's dialog)
 
 const data = JSON.parse(document.getElementById('cite-data').textContent);
-const ui = document.documentElement.lang === 'en' ? 'en' : 'tr';
+const ui = 'en';
 const T = {
-  tr: { h: 'Kaynak gösterme', scope: 'Neyi kaynak göstereceksiniz?', tool: t => `Bu araç: ${t}`, platform: 'Platformun tamamı', lang: 'Atıf dili', date: 'Erişim tarihi',
-    copy: 'Kopyala', copied: 'Kopyalandı', dl: 'İndir', close: 'Kapat',
-    note: 'Biçimler, kılavuzların yazılım ve web uygulamaları için verdiği genel kalıba göre hazırlanmıştır; derginizin kurallarıyla karşılaştırın. Kullandığınız aracı ve sürümünü yazın; araçtaki yöntemlerin özgün kaynaklarını (ör. model denklemlerinin yazarları) ayrıca gösterin. Platformun kaynak kodu Zenodo\'da arşivlenir; biçimlerdeki DOI bütün sürümleri kapsayan kavram DOI\'sidir, belirli bir arşiv sürümü için Zenodo kaydındaki sürüm DOI\'sini kullanın.' },
   en: { h: 'How to cite', scope: 'What are you citing?', tool: t => `This tool: ${t}`, platform: 'The whole platform', lang: 'Citation language', date: 'Date accessed',
     copy: 'Copy', copied: 'Copied', dl: 'Download', close: 'Close',
     note: 'The formats follow the general pattern the style guides give for software and web applications; check them against your journal\'s rules. State the tool and its version; cite the original sources of the methods in the tool (e.g. the authors of the model equations) as well. The source code of the platform is archived on Zenodo; the DOI in the formats is the concept DOI covering all versions; for one archived version use its version DOI on the Zenodo record.' },
@@ -390,12 +372,13 @@ const XLSX_READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false, boo
 // ---- assets/lab/core/i18n.js
 __fb_m["core/i18n.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "DECIMAL": () => DECIMAL, "LIST_SEP": () => LIST_SEP, "SCREEN_DECIMAL": () => SCREEN_DECIMAL, "esc": () => esc, "fmtNum": () => fmtNum, "lang": () => lang, "makeT": () => makeT });
-// Tiny i18n helper. The UI language only changes words on screen. Numbers are shown the same way in both
-// languages (decimal point, no thousands separator); the language never changes how data are parsed or stored.
-const lang = (typeof document !== 'undefined' && document.documentElement.lang === 'en') ? 'en' : 'tr';
+// Tiny i18n helper. The site is English only (20 Nov 2026; Turkish removed from the code 21 Nov 2026): `lang` is
+// always 'en' and every dictionary has a single `en` table. Numbers on screen use a decimal point and no thousands
+// separator; the interface never changes how data are parsed or stored.
+const lang = 'en';
 function makeT(dict) {
   return (key, p) => {
-    const s = (dict[lang] && dict[lang][key]) ?? dict.tr[key];
+    const s = dict.en[key];
     if (s == null) return key;
     return typeof s === 'function' ? s(p || {}) : s;
   };
@@ -403,23 +386,23 @@ function makeT(dict) {
 /**
  * The one number formatter for screens, charts and texts: no thousands separator, at most maxDigits decimals
  * (trailing zeros dropped), the same rounding as before (Intl, half away from zero). Decimal separator by interface
- * language: comma in Turkish, point in English (19 Nov 2026, user decision). '−' is not used: negative numbers keep
+ * point (English only). '−' is not used: negative numbers keep
  * the ASCII minus so they can be copied. Data files are never formatted with this (exports write full precision,
  * CSV with a decimal point, R code with the decimal the user chose).
  */
 const NF = new Map();
 /** Decimal separator on screen (and in on-screen texts); exports keep their own rules. */
-const SCREEN_DECIMAL = lang === 'tr' ? ',' : '.';
+const SCREEN_DECIMAL = '.';
 /** Separator for lists of numbers in texts: '; ' in Turkish (the comma is the decimal separator), ', ' in English. */
-const LIST_SEP = lang === 'tr' ? '; ' : ', ';
+const LIST_SEP = ', ';
 function fmtNum(x, maxDigits = 3) {
   if (x == null || !Number.isFinite(x)) return '–';
   let nf = NF.get(maxDigits);
   if (!nf) { nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: maxDigits, useGrouping: false }); NF.set(maxDigits, nf); }
   const s = nf.format(x);
-  return s === '-0' ? '0' : SCREEN_DECIMAL === ',' ? s.replace('.', ',') : s;
+  return s === '-0' ? '0' : s;
 }
-/** Decimal separator of CSV exports (both languages). */
+/** Decimal separator of CSV exports. */
 const DECIMAL = '.';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 };
@@ -437,12 +420,6 @@ const { loadXLSX, XLSX_READ_OPTS } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { file: 'Dosya seç (CSV, TXT, TSV, XLSX)', paste: 'ya da Excel\'den yapıştırın', take: 'Yapıştırılanı al', clear: 'Kaldır', delim: 'Sütun ayırıcı',
-    auto: p => `algılanan: ${p.d}`, header: 'İlk satır başlık', enc: 'Karakter kodlaması', sheet: 'Çalışma sayfası', pasted: 'yapıştırılan tablo',
-    encwarn: 'Dosya UTF-8 olarak okunduğunda bozuk karakterler var; Türkçe Excel CSV\'leri çoğunlukla Windows-1254\'tür.',
-    xlsxnote: 'Excel dosyasındaki formüller ve makrolar çalıştırılmaz; yalnızca kayıtlı son değerler okunur.', xls: 'Eski .xls biçimi desteklenmiyor; .xlsx ya da CSV olarak kaydedin.',
-    fail: 'Dosya okunamadı.', preview: p => `Önizleme: ilk ${p.k} / ${p.n} kayıt, ${p.c} sütun`, row: 'Satır',
-    comma: 'virgül', semi: 'noktalı virgül', tab: 'sekme' },
   en: { file: 'Choose a file (CSV, TXT, TSV, XLSX)', paste: 'or paste from Excel', take: 'Use pasted table', clear: 'Remove', delim: 'Delimiter',
     auto: p => `detected: ${p.d}`, header: 'First row is a header', enc: 'Text encoding', sheet: 'Worksheet', pasted: 'pasted table',
     encwarn: 'Reading the file as UTF-8 produced broken characters; Turkish Excel CSV files are often Windows-1254.',
@@ -654,8 +631,6 @@ const { download } = __fb_r("core/export.js");
 
 
 const T = makeT({
-  tr: { embed: 'Girdi verisini kayda ekle', embedHelp: 'İşaretli değilse JSON kaydında girdi dosyalarının yalnızca SHA-256 parmak izi bulunur; işaretliyse verinin kendisi de girer ve kayıt tek başına yeniden üretilebilir. Kaydı paylaşırsanız veriyi de paylaşmış olursunuz.',
-    fail: 'Kayıt hazırlanamadı', btn: 'Çalışma kaydı (JSON)' },
   en: { embed: 'Include the input data in the record', embedHelp: 'Unchecked, the JSON record holds only the SHA-256 fingerprint of each input file; checked, the data itself goes in too and the record reproduces on its own. If you share the record, you share the data.',
     fail: 'The record could not be prepared', btn: 'Run record (JSON)' },
 });
@@ -907,19 +882,7 @@ const { get, del, keys } = __fb_r("core/store.js");
 // (globalThis.__fbSessionsHeld), then the page reloads into the tools' starting state.
 
 
-const tr = document.documentElement.lang !== 'en';
-const T = tr ? {
-  label: 'Tüm verileri sil ve siteyi sıfırla', title: 'Bu tarayıcıda sitenin sakladığı her şeyi siler: oturumlar, veri paketleri, katsayı setleri ve tercihler.',
-  none: 'Bu tarayıcıda silinecek bir şey yok.', unnamed: 'adsız paket',
-  ask: s => `Site bu tarayıcıda ilk açıldığı duruma dönecek. Şunlar SİLİNECEK:\n`
-    + `• bütün araçların oturumları (${s.sessions}): yüklenen tablolar, ayarlar, sonuçlar\n`
-    + `• Envanter Verisi Yöneticisi'ndeki veri paketleri (${s.packages})${s.pkg ? `, etkin paket "${s.pkg}" dahil` : ''}\n`
-    + `• Katsayı Kütüphanesi'ndeki katsayı setleri (${s.coefs})\n`
-    + `• tercihler: tema, kenar çubuğu, son kullanılan araçlar\n\n`
-    + `İndirdiğiniz dosyalar ve dil seçimi kalır. Paketleri ve katsayı setlerini saklamak istiyorsanız önce Envanter Verisi Yöneticisi'nden ve Katsayı Kütüphanesi'nden yedek indirin. Başka bir sekmede açık araç varsa önce onu kapatın; yoksa o araç kendi oturumunu yeniden kaydeder.\n\n`
-    + `Bu işlem geri alınamaz. Devam edilsin mi?`,
-  done: 'Site sıfırlandı: oturumlar, veri paketleri, katsayı setleri ve tercihler silindi. Araç başlangıç durumunda.',
-} : {
+const T = {
   label: 'Delete all data and reset the site', title: 'Deletes everything the site keeps in this browser: sessions, data packages, coefficient sets and preferences.',
   none: 'Nothing to delete in this browser.', unnamed: 'unnamed package',
   ask: s => `The site will return to the state of its first visit in this browser. To be DELETED:\n`
@@ -1574,7 +1537,7 @@ function cellText(c) {
   return c.w != null ? c.w : String(c.v);
 }
 function padTo(a, n) { const r = a.slice(); while (r.length < n) r.push(''); return r; }
-function colName(i) { return (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'Column ' : 'Sütun ') + (i + 1); }
+function colName(i) { return 'Column ' + (i + 1); }
 function dedupeHeaders(h) { const seen = new Map(); return h.map(x => { const k = seen.get(x) || 0; seen.set(x, k + 1); return k ? `${x} (${k + 1})` : x; }); }
 };
 
@@ -1938,70 +1901,6 @@ const { makeT } = __fb_r("core/i18n.js");
 // Inventory Sampling Planner: TR/EN texts.
 
 
-const tr = {
-  'privacy': 'Pilot dosyanız bu tarayıcıda okunur; sunucuya gönderilmez. Ayarlar yalnızca bu tarayıcıda (IndexedDB) saklanır.',
-  'scope': 'Bu sürüm tek bir soruyu yanıtlar: basit rastgele örneklemede, örnek alan düzeyindeki bir değişkenin (ör. hektarda hacim) ortalamasını hedeflenen bağıl hatayla kestirmek için yaklaşık kaç örnek alan gerekir? Bu bir hipotez testi için güç analizi değildir. Tabakalı, sistematik ve kümeli tasarımlar bu formülle çözülmez; bu araç onları kapsamaz.',
-  'restored': p => `Önceki oturum geri yüklendi (${p.when}).`, 'reset': 'Oturumu sıfırla',
-  'src.h': '1. Değişkenlik: değişim katsayısı (CV)', 'src.pilot': 'Pilot ölçümlerden hesapla (örnek alan düzeyinde değerler)', 'src.manual': 'CV\'yi kendim gireceğim',
-  'imp.h': 'Pilot örnek alanlar', 'imp.sub': 'Her satır bir örnek alan ve o örnek alanın değeri olmalı (ör. hacim m³/ha, göğüs yüzeyi m²/ha, ağaç sayısı/ha). Örnek Alan ve Meşcere Hesaplayıcısı\'nın "örnek alanlar" CSV\'si kullanılabilir. Ağaç düzeyindeki ölçümler (tek ağaç çapı, boyu) burada kullanılmaz: ağaçlar arasındaki çap değişkenliği, örnek alan düzeyindeki bir değişkenin değişkenliği değildir.',
-  'sample': 'Örnek pilot veriyi yükle', 'sample.note': 'Örnek veri sabit tohumla üretilmiş benzetimdir (gerçek ölçüm değildir): 14 örnek alanın hektardaki hacmi, biri boş.',
-  'col.v': 'Değer sütunu (örnek alan düzeyinde)', 'col.p': 'Örnek alan kimliği (isteğe bağlı, tekrar denetimi için)', 'col.f': 'Süzgeç sütunu (isteğe bağlı, ör. dönem)', 'col.fv': 'Süzgeç değeri', 'none': '— yok —',
-  'col.unit': 'Değerin birimi (raporda yazılır; hesabı etkilemez)',
-  'dec.h': 'Ondalık ayırıcı', 'dec.dot': 'Nokta (24.5)', 'dec.comma': 'Virgül (24,5)', 'dec.choose': 'Ondalık ayırıcıyı seçin.',
-  'confirm': 'Her satır bir örnek alanın değeridir; ağaç düzeyinde ölçüm değildir. Pilot örnek alanlar planlanan örnek alanlarla aynı büyüklükte ve aynı yöntemle ölçüldü.',
-  'confirm.need': 'Hesap için yukarıdaki beyanı onaylayın.',
-  'treelevel': p => `"${p.c}" sütunu ağaç düzeyinde bir ölçüm (çap, boy) gibi görünüyor. Ağaçlar arasındaki değişkenlik, örnek alan değerleri arasındaki değişkenliğin yerine kullanılamaz; örnek alan düzeyinde bir değişken seçin.`,
-  'dups': p => `Aynı örnek alan kimliği birden çok satırda (${p.list}). Bu, ağaç düzeyinde satırlar ya da birden çok ölçüm dönemi demektir; her örnek alan bir kez yer almalı. Süzgeçle tek dönem seçin.`,
-  'pl.acc': p => `Hesap dışı: ${p.empty} boş, ${p.bad} okunamayan${p.badRows ? ` (satır ${p.badRows})` : ''}, ${p.neg} negatif değer${p.negRows ? ` (satır ${p.negRows})` : ''}${p.filter ? `, süzgeç dışında ${p.filter}` : ''}. Örnek alan düzeyindeki toplamlar (hacim, göğüs yüzeyi, ağaç sayısı) negatif olamaz.`,
-  'pl.stats': p => `Pilot: n = ${p.n} örnek alan, ortalama ${p.mean}, standart sapma ${p.sd} (payda n − 1), CV = %${p.cv}.`,
-  'pl.few': p => `Pilot yalnızca ${p.n} örnek alana dayanıyor; CV kestirimi belirsizdir ve gerekli örnek sayısı da öyle.`,
-  'pr.n.zero': 'Geçerli pilot değeri yok.', 'pr.n.few': 'Standart sapma için en az 2 pilot örnek alan gerekir.',
-  'pr.mean.nonpos': p => `Pilot ortalaması ${p.mean}: ortalama sıfır ya da negatif olduğunda CV ve bağıl hata tanımsızdır; bu yaklaşım kullanılamaz.`,
-  'pr.sd.zero': 'Pilot değerlerinin hepsi aynı (CV = 0): değişkenlik kestirilemiyor; bu kadar az pilotla anlamlı bir örnek sayısı hesaplanamaz.',
-  'man.cv': 'CV (%)', 'man.src': 'CV\'nin kaynağı (raporda yazılır)', 'man.src.ph': 'ör. önceki envanter, aynı tür ve örnek alan büyüklüğü', 'man.n': 'Mevcut örnek alan sayısı (isteğe bağlı)',
-  'man.note': 'CV, planlanan örnek alan büyüklüğünde ve aynı değişken için örnek alan değerleri arasındaki değişim katsayısı olmalı (std. sapma / ortalama × 100).',
-  'tg.h': '2. Hedef', 'tg.e': 'Hedef bağıl hata E (%)', 'tg.level': 'Güven düzeyi', 'tg.other': 'diğer', 'tg.otherv': 'Güven düzeyi (%)',
-  'tg.note': 'E, ortalamanın yüzdesi olarak kabul edilen yarı genişliktir: "gerçek ortalama, kestirimin ± %E\'si içinde" ifadesinin seçilen güvenle sağlanması hedeflenir. CV ile aynı yüzde ölçeğinde girilir.',
-  'fr.h': '3. Örnekleme çerçevesi', 'fr.inf': 'Sonlu, listelenmiş bir çerçeve yok ya da bilinmiyor: sonlu popülasyon düzeltmesi uygulanmaz',
-  'fr.fin': 'Sonlu bir çerçeve var: örnek alanlar M birimlik bir listeden seçilecek', 'fr.M': 'Çerçevedeki birim sayısı M',
-  'fr.note': 'M yalnızca gerçekten sayılabilir bir çerçeveniz varsa girilir (ör. 412 bölmeden oluşan bir liste ya da önceden belirlenmiş sabit ızgara noktaları). Toplam orman alanını örnek alan büyüklüğüne bölmek bir çerçeve oluşturmaz; araç bunu M olarak kabul etmez. Çerçeve yoksa düzeltmesiz sonuç daha güvenlidir.',
-  'ex.h': '4. Mevcut örnek alanlar', 'ex.in': p => `Mevcut ${p.n} örnek alan bu tasarımın parçasıdır: aynı çerçeveden basit rastgele seçildi, aynı büyüklükte ve aynı yöntemle ölçüldü. Yalnızca ek gereken sayıyı göster.`,
-  'ex.note': 'Pilot örnek alanlar öznel olarak (ör. kolay ulaşılan yerlerden) seçildiyse ana örneğe katılamaz; o durumda gerekli sayının tamamı yeni örnek alanlardır.',
-  'res.h': 'Sonuç', 'res.need': 'Sonuç için eksik ya da geçersiz girdiler:',
-  'pr.cv.missing': 'CV yok (pilot veri ya da elle giriş).', 'pr.cv.nonpos': 'CV pozitif olmalı.', 'pr.e.missing': 'Hedef bağıl hata yok.', 'pr.e.range': 'Hedef bağıl hata 0 ile 100 arasında olmalı.',
-  'pr.level.range': 'Güven düzeyi 50 ile 100 arasında olmalı.', 'pr.M.missing': 'Sonlu çerçeve seçildi ama M girilmedi.', 'pr.M.int': 'M en az 2 olan bir tam sayı olmalı.',
-  'pr.M.pilot': 'M, mevcut örnek alan sayısından küçük olamaz.', 'pr.npilot.bad': 'Mevcut örnek alan sayısı 0 ya da pozitif tam sayı olmalı.',
-  't.n': 'Gerekli toplam örnek alan', 't.add': 'Mevcut örneğe ek', 't.n0': 'n₀ (düzeltmesiz)', 't.z': 'z',
-  't.n.sub': p => p.fpc ? `sonlu düzeltmeyle, M = ${p.M}` : 'sonlu düzeltme yok', 't.add.sub': p => `${p.have} mevcut`, 't.n0.sub': p => `= ${p.raw}`, 't.z.sub': p => `%${p.level} güven`,
-  'calc.line0': p => `n₀ = z² × (CV / E)² = ${p.z}² × (${p.cv} / ${p.e})² = ${p.raw} → yukarı yuvarlanır: ${p.n0}`,
-  'calc.line1': p => `n = n₀ / [1 + (n₀ − 1) / M] = ${p.raw} / [1 + (${p.raw} − 1) / ${p.M}] = ${p.nraw} → yukarı yuvarlanır: ${p.n}`,
-  'calc.nofpc': 'Sonlu popülasyon düzeltmesi uygulanmadı (çerçeve yok ya da bilinmiyor).',
-  'no.n.below2': 'Hesaplanan sayı 2\'nin altında: ortalamanın standart hatasını kestirmek için en az 2 örnek alan gerekir.',
-  'no.fpc.matters': 'n₀ çerçevenin %5\'inden büyük; sonlu düzeltme sonucu belirgin biçimde değiştiriyor.',
-  'grid.h': 'Farklı hata hedefleri', 'grid.e': 'E (%)', 'grid.n0': 'n₀ (yuvarlanmamış)', 'grid.n': 'Gerekli örnek alan', 'grid.add': 'Ek', 'grid.yours': 'sizin hedefiniz',
-  'grid.note': p => `Aynı CV (%${p.cv}), güven düzeyi (%${p.level}) ve çerçeve ayarıyla. E azaldıkça gerekli sayı E'nin karesiyle ters orantılı artar.`,
-  'ch.title': p => `Gerekli örnek alan sayısı ve hedef bağıl hata (CV = %${p.cv}, %${p.level} güven)`, 'ch.x': 'Hedef bağıl hata E (%)', 'ch.y': 'Örnek alan sayısı', 'ch.svg': 'Grafiği indir (SVG)',
-  'as.h': 'Yaklaşım ve varsayımlar',
-  'as.list': [
-    'Basit rastgele örnekleme: her örnek alan, örnekleme yapılan popülasyondan eşit olasılıkla ve birbirinden bağımsız seçilir.',
-    'Normal (z) yaklaşımı: örnek ortalamasının dağılımı yaklaşık normaldir. Küçük örneklerde Student t kullanılması gerekir ve gerçek sayı bu yaklaşımdan biraz büyüktür; sonuç "yaklaşık planlama"dır.',
-    'CV bilinen kabul edilir; oysa pilot verilerden kestirilmiştir ve kendisi belirsizdir. Küçük pilotlarda gerekli sayı da belirsizdir.',
-    'CV aynı değişken, aynı örnek alan büyüklüğü ve şekli, aynı popülasyon içindir; örnek alan büyüklüğü değişirse CV de değişir.',
-    'E ortalamaya göre bağıl hatadır; ortalama sıfır ya da negatifse tanımsızdır.',
-    'Sonlu popülasyon düzeltmesi yalnızca kullanıcı sonlu bir çerçeve (M birim) olduğunu belirttiğinde uygulanır.',
-    'Sonuç yukarı yuvarlanır. Ulaşılamayan, reddedilen ya da ölçülemeyen örnek alanlar için pay eklenmemiştir.',
-  ],
-  'as.not': 'Bu hesap şunlar değildir: hipotez testi için güç analizi; tabakalı örneklemede tabaka başına dağıtım; sistematik örneklemenin varyansı; kümeli ya da çok aşamalı örnekleme. Bunlar ayrı formüller gerektirir; bu araç onları kapsamaz.',
-  'x.h': 'İndir', 'x.txt': 'Varsayım özeti (TXT)', 'x.csv': 'Hata hedefleri tablosu (CSV)', 'x.xlsx': 'Tam rapor (Excel)',
-  'x.note': 'CSV: her iki dilde "," sütun ayırıcı ve ondalık nokta.',
-  's.title': 'Envanter Örnekleme Planlayıcısı: yaklaşık örnek alan sayısı', 's.tool': 'Araç', 's.date': 'Tarih', 's.design': 'Tasarım', 's.design.v': 'Basit rastgele örnekleme; ortalamanın hedeflenen bağıl hatayla kestirimi (z yaklaşımı)',
-  's.cvsrc': 'CV kaynağı', 's.cvsrc.pilot': p => `Pilot veri: ${p.file}, sütun "${p.col}"${p.unit ? ` (${p.unit})` : ''}${p.filter ? `, süzgeç ${p.filter}` : ''}`, 's.cvsrc.manual': p => `Elle girildi${p.note ? `: ${p.note}` : ''}`,
-  's.frame': 'Örnekleme çerçevesi', 's.frame.inf': 'Sonlu çerçeve belirtilmedi; düzeltme uygulanmadı', 's.frame.fin': p => `Sonlu çerçeve, M = ${p.M}; düzeltme uygulandı`,
-  's.result': 'Sonuç', 's.calc': 'Hesap', 's.assume': 'Varsayımlar', 's.not': 'Kapsam dışı', 's.existing': 'Mevcut örnek alanlar',
-  's.existing.in': p => `${p.n} mevcut örnek alan tasarımın parçası; ek gereken ${p.add}`, 's.existing.out': p => `${p.n} mevcut örnek alan tasarımın parçası olarak beyan edilmedi; gerekli sayının tamamı yeni örnek alandır`,
-  'sheet.info': 'Ozet', 'sheet.grid': 'Hata hedefleri', 'sheet.pilot': 'Pilot',
-  'k.setting': 'Ayar', 'k.value': 'Değer',
-};
 const en = {
   'privacy': 'Your pilot file is read in this browser; it is not sent to the server. Settings are kept only in this browser (IndexedDB).',
   'scope': 'This version answers one question: under simple random sampling, about how many plots are needed to estimate the mean of a plot-level variable (e.g. volume per hectare) with a target relative error? It is not a power analysis for a hypothesis test. Stratified, systematic and cluster designs are not solved by this formula; this tool does not cover them.',
@@ -2066,8 +1965,8 @@ const en = {
   'sheet.info': 'Summary', 'sheet.grid': 'Error targets', 'sheet.pilot': 'Pilot',
   'k.setting': 'Setting', 'k.value': 'Value',
 };
-const T = makeT({ tr, en });
-const KEYS = { tr: Object.keys(tr), en: Object.keys(en) };
+const T = makeT({ en });
+const KEYS = { en: Object.keys(en) };
 };
 
 // ---- assets/lab/sampling/ui.js
@@ -2095,7 +1994,7 @@ const { renderImport, readImport } = __fb_r("core/importer.js");
 
 
 
-const BASE = './', KEY = 'session:' + P.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:' + P.TOOL.id, LOC = 'en-GB';
 const $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 /** Numbers typed in the form: point or comma as decimal separator; anything else → NaN (never 0). */
@@ -2170,7 +2069,7 @@ function renderSrc() {
     renderImport($('impbox'), { imp: S.imp, src: S.tbl }, { base: BASE, title: T('imp.h'), sub: T('imp.sub'), onChange: setTable, onError: m => status(m, 'err') });
     $('sample').addEventListener('click', async () => {
       const buf = await (await fetch(BASE + 'assets/lab/sampling/ornek/ornek-pilot.csv')).arrayBuffer();
-      const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-pilot.csv (benzetim)' : 'ornek-pilot.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+      const imp = { kind: 'csv', name: 'ornek-pilot.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
       setTable({ imp, src: await readImport(imp, BASE) });
       S.unit = 'm³/ha'; changed(true);
     });
@@ -2283,7 +2182,7 @@ function renderResult() {
 }
 
 /* ---------------- exports ---------------- */
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 function gridRows(p, r) {
   const g = P.grid(p, [p.e]);
   return [[T('grid.e'), T('grid.n0'), T('grid.n'), ...(r.additional != null ? [T('grid.add')] : []), 'CV (%)', T('tg.level'), 'z', 'M'],

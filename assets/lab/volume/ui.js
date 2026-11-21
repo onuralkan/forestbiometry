@@ -16,7 +16,7 @@ import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { buildR } from './rcode.js';
 import { tableCsv, csvName } from '../core/rcode.js';
 
-const BASE = './', KEY = 'session:' + VOL.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
+const BASE = './', KEY = 'session:' + VOL.TOOL.id, LOC = 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 /** Eight significant digits (coefficients and errors span many orders of magnitude). */
 const sig = x => x == null || !Number.isFinite(x) ? '–' : x === 0 ? '0' : Math.abs(x) >= 1e-4 && Math.abs(x) < 1e6 ? fmtNum(Number(x.toPrecision(8)), 14) : x.toExponential(7);
@@ -88,7 +88,7 @@ function renderStep1() {
   $('svuse') && $('svuse').addEventListener('click', () => useDerived($('svside').value));
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/volume/ornek/ornek-hacim.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-hacim.csv (benzetim)' : 'ornek-hacim.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-hacim.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) }); S.tbl.decimal = '.'; S.tbl.decChosen = true; useTable();
   });
   $('reset').addEventListener('click', async () => { S = blank(); R = null; status(''); render(); await del(KEY); });
@@ -171,7 +171,7 @@ function renderStep3() {
     $('sv-save').addEventListener('click', saveSet);
     $('ev-send').addEventListener('click', sendToEval);
   }
-  const name = ext => `${lang === 'tr' ? 'hacim-denklemleri' : 'volume-equations'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `volume-equations-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), treeRows(), lang));
   $('x-r').addEventListener('click', downloadR);
   $('x-xlsx').addEventListener('click', async () => {
@@ -187,10 +187,10 @@ function downloadR() {
   const fromTable = S.src && S.src.kind === 'table' && S.tbl, imp = fromTable ? S.tbl.imp : null, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
   const n = v => v == null ? null : { t: 'n', v };
   const s = fromTable ? { imp, src: S.tbl.src, map: S.tbl.map, decimal: S.tbl.decimal || '.' }
-    : { imp: { kind: 'dataset', name: lang === 'tr' ? 'hacim-agaclari' : 'volume-trees' }, decimal: '.', map: { D: 2, H: 3, V: 4 },
+    : { imp: { kind: 'dataset', name: 'volume-trees' }, decimal: '.', map: { D: 2, H: 3, V: 4 },
       src: { headers: ['row', 'tree', 'D_cm', 'H_m', 'V_m3'], rows: S.trees.map(t => [n(t.row), { t: 's', v: t.id ?? '' }, n(t.D), n(t.H), n(t.V)]) },
       note: T('x.r.sv', { src: S.src ? S.src.name : '' }) };
-  const name = `${lang === 'tr' ? 'hacim-denklemleri' : 'volume-equations'}-${new Date().toISOString().slice(0, 10)}.R`;
+  const name = `volume-equations-${new Date().toISOString().slice(0, 10)}.R`;
   download(name, buildR(s, R, { lang, created: new Date().toISOString(), version: VOL.TOOL.version, fileName: file }), 'text/plain;charset=utf-8');
   if (!file) download(csvName(s.imp), tableCsv(s.src, cellText, s.decimal), 'text/csv;charset=utf-8');
 }
@@ -226,7 +226,7 @@ function infoRows() {
 /** Hand-off to Model Evaluation (store key 'handoff:model-degerlendirme', read once by that page). */
 async function sendToEval() {
   const rows = predTable(), text = rows.map(r => r.map(v => v == null ? '' : String(v)).join('\t')).join('\n');
-  await put('handoff:model-degerlendirme', { name: (lang === 'tr' ? 'hacim-denklemleri' : 'volume-equations') + '.tsv', text, obs: 'V_obs_m3', models: rows[0].slice(5), role: 'training', created: new Date().toISOString() });
+  await put('handoff:model-degerlendirme', { name: ('volume-equations') + '.tsv', text, obs: 'V_obs_m3', models: rows[0].slice(5), role: 'training', created: new Date().toISOString() });
   await flush(); location.href = 'model-degerlendirme.php';
 }
 

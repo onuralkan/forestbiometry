@@ -9,14 +9,14 @@ import { sha256JSON } from '../core/record.js';
 import { download, downloadCSV } from '../core/export.js';
 import { plotChart, barChart, scatterChart, svgForDownload } from '../core/chart.js';
 
-const BASE = './', KEY = 'session:pano', $ = id => document.getElementById(id), ALL = C.ALL, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB';
+const BASE = './', KEY = 'session:pano', $ = id => document.getElementById(id), ALL = C.ALL, LOC = 'en-GB';
 let S = blank(), projects = [], active = null, ds = null, pkgSha = null, recInfo = [];
 function blank() { return { v: 1, pid: null, sample: false, f: C.blankFilter(), ec: 'unmeasured', width: '', est: false, recs: [] }; }
 // Every change is a single choice (no typing), so it is written at once: a delayed write could be lost on reload.
 function save() { return put(KEY, { ...S, saved: new Date().toISOString() }); }
 function status(m, k = '') { const s = $('status'); s.className = 'status ' + k; s.textContent = m || ''; }
 const f2 = (x, d = 2) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
-const fname = (a, b) => `${lang === 'tr' ? a : b}-${new Date().toISOString().slice(0, 10)}`;
+const fname = (a, b) => `${b}-${new Date().toISOString().slice(0, 10)}`;
 const perLabel = v => v === '' || v == null ? T('f.noper') : v;
 const spLabel = v => v === '' ? T('f.nosp') : v;
 

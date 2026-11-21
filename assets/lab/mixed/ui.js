@@ -15,7 +15,7 @@ import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { buildR } from './rcode.js';
 import { tableCsv, csvName } from '../core/rcode.js';
 
-const BASE = './', KEY = 'session:' + MX.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
+const BASE = './', KEY = 'session:' + MX.TOOL.id, LOC = 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 function sig(x) { return x == null || !Number.isFinite(x) ? '–' : x === 0 ? '0' : Math.abs(x) >= 1e-4 && Math.abs(x) < 1e6 ? fmtNum(Number(x.toPrecision(7)), 14) : x.toExponential(6); }
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
@@ -59,7 +59,7 @@ function renderStep1() {
   el.querySelectorAll('input[name="tdec"]').forEach(x => x.addEventListener('change', () => { S.tbl.decimal = x.value; S.tbl.decChosen = true; R = null; save(); }));
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/mixed/ornek/ornek-karma.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-karma.csv (benzetim)' : 'ornek-karma.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-karma.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) }); S.tbl.decimal = ','; S.tbl.decChosen = true;
     const H = headers().map(x => x.toLowerCase()); S.g = H.indexOf('alan'); S.y = H.indexOf('h_m');
     const D = H.indexOf('d_cm');
@@ -271,7 +271,7 @@ function renderStep3() {
     $('sv-save').addEventListener('click', saveSet);
     renderUnits();
   }
-  const name = ext => `${lang === 'tr' ? 'karma-modeller' : 'mixed-models'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `mixed-models-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), obsTable(), lang));
   $('x-r').addEventListener('click', () => {
     const imp = S.tbl.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null, cq = R.fits[S.cal.idx];

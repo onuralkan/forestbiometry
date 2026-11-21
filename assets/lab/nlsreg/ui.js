@@ -15,7 +15,7 @@ import { downloadRecord, recordOption } from '../core/record-ui.js';
 import { buildR } from './rcode.js';
 import { tableCsv, csvName } from '../core/rcode.js';
 
-const BASE = './', KEY = 'session:' + NL.TOOL.id, LOC = lang === 'tr' ? 'tr-TR' : 'en-GB', $ = id => document.getElementById(id);
+const BASE = './', KEY = 'session:' + NL.TOOL.id, LOC = 'en-GB', $ = id => document.getElementById(id);
 const f = (x, d = 4) => x == null || !Number.isFinite(x) ? '–' : fmtNum(x, d);
 function sig(x) { return x == null || !Number.isFinite(x) ? '–' : x === 0 ? '0' : Math.abs(x) >= 1e-4 && Math.abs(x) < 1e6 ? fmtNum(Number(x.toPrecision(7)), 14) : x.toExponential(6); }
 const num = t => { const r = parseNumber(String(t ?? '').trim(), '.'); return r.status === 'ok' ? r.value : NaN; };
@@ -56,7 +56,7 @@ function renderStep1() {
   el.querySelectorAll('input[name="tdec"]').forEach(x => x.addEventListener('change', () => { S.tbl.decimal = x.value; S.tbl.decChosen = true; R = null; save(); }));
   $('sample').addEventListener('click', async () => {
     const buf = await (await fetch(BASE + 'assets/lab/nlsreg/ornek/ornek-nls.csv')).arrayBuffer();
-    const imp = { kind: 'csv', name: lang === 'tr' ? 'ornek-nls.csv (benzetim)' : 'ornek-nls.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
+    const imp = { kind: 'csv', name: 'ornek-nls.csv (simulated)', buf, encoding: 'utf-8', delim: null, header: true, sheet: null };
     setTable({ imp, src: await readImport(imp, BASE) }); S.tbl.decimal = ','; S.tbl.decChosen = true;
     const H = headers().map(x => x.toLowerCase()); S.y = H.indexOf('h_m') >= 0 ? H.indexOf('h_m') : null;
     S.models = [{ ...newModel(), ready: 'cr', map: { x: H.indexOf('d_cm') } }, { ...newModel(), kind: 'formula', expr: '1.3 + b0*(1-exp(-b1*D))^b2', map: { D: H.indexOf('d_cm') }, starts: { b0: '30', b1: '0.03', b2: '1' } }];
@@ -214,7 +214,7 @@ function renderStep3() {
     $('ev-send').addEventListener('click', sendToEval);
     renderUnits();
   }
-  const name = ext => `${lang === 'tr' ? 'dogrusal-olmayan-regresyon' : 'nonlinear-regression'}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+  const name = ext => `nonlinear-regression-${new Date().toISOString().slice(0, 10)}.${ext}`;
   $('x-csv').addEventListener('click', () => downloadCSV(name('csv'), predTable(), lang));
   $('x-r').addEventListener('click', () => {
     const imp = S.tbl.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
@@ -293,7 +293,7 @@ function infoRows() {
 /** Hand-off to Model Evaluation (store key 'handoff:model-degerlendirme', read once by that page). */
 async function sendToEval() {
   const rows = predTable(), text = rows.map(r => r.map(v => v == null ? '' : String(v)).join('\t')).join('\n');
-  await put('handoff:model-degerlendirme', { name: (lang === 'tr' ? 'dogrusal-olmayan-regresyon' : 'nonlinear-regression') + '.tsv', text, obs: 'y_obs', models: rows[0].slice(2), role: 'training', created: new Date().toISOString() });
+  await put('handoff:model-degerlendirme', { name: ('nonlinear-regression') + '.tsv', text, obs: 'y_obs', models: rows[0].slice(2), role: 'training', created: new Date().toISOString() });
   await flush(); location.href = 'model-degerlendirme.php';
 }
 

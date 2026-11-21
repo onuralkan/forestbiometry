@@ -2,26 +2,6 @@
 import { makeT } from '../core/i18n.js';
 
 export const T = makeT({
-  tr: {
-    privacy: 'Dosyanız yalnızca bu tarayıcıda işlenir ve saklanır (IndexedDB); sunucuya gönderilmez.',
-    'step.1': 'Veri', 'step.2': 'Modeller', 'step.3': 'Sonuçlar', next: 'Devam', back: 'Geri', reset: 'Oturumu sıfırla', none: '—', calc: 'Fit et',
-    restored: p => `Önceki oturum geri yüklendi (${p.when}).`,
-    'd.h': 'Yaş–büyüklük verisi', 'd.sub': 'Her satır bir gözlem: yaş (yıl) ve büyüklük (boy, çap, hacim…). Dizi sütunu isteğe bağlıdır (ör. gövde analizinde ağaç); bütün gözlemlere tek eğri fit edilir.',
-    'd.col.series': 'Dizi (isteğe bağlı)', 'd.col.t': 'Yaş (yıl)', 'd.col.y': 'Büyüklük', 'd.var': 'Değişkenin adı', 'd.unit': 'Birimi', 'd.dec': 'Ondalık ayırıcı', 'd.dec.dot': 'nokta', 'd.dec.comma': 'virgül',
-    'd.need': 'Yaş ve büyüklük sütunlarını seçin.', 'd.read': p => `${p.n} gözlem okundu${p.s ? `, ${p.s} dizi` : ''}.`, 'd.prob': p => `${p.n} satır okunamadı (satır ${p.rows}).`,
-    'd.sample': 'Örnek veriyi yükle', 'd.sample.note': 'Örnek veri benzetimdir (gerçek ölçüm değildir): üç gövde analizi dizisi, yaş ve boy.',
-    'm.h': 'Fit edilecek modeller', 'm.note': 'Bütün parametreler pozitif kalır (büyüyen, asimptotlu eğriler). Başlangıç değerleri küçük bir ızgaranın en iyisidir.', 'm.need': 'En az bir model seçin.',
-    'm.src.B': 'kaynak okundu [B]', 'm.src.A': 'ikincil kaynaktan aktarılan [A]', 'm.korf': 'Korf: kaynağı henüz okunmadığı için eklenmedi.',
-    'r.h': 'Model karşılaştırması', 'r.model': 'Model', 'r.status': 'Durum', 'r.params': 'Katsayılar (standart hata)', 'r.rmse': 'RMSE', 'r.bias': 'Yanlılık', 'r.rse': 'σ̂', 'r.aic': 'AIC', 'r.asym': 'Asimptot', 'r.infl': 'Dönüm noktası yaşı', 'r.mai': 'Ortalama yıllık artımın (MAI) doruk yaşı',
-    'r.status.ok': 'yakınsadı', 'r.status.noconverge': 'yakınsamadı', 'r.status.invalid': 'fit edilemedi',
-    'r.note': 'Yanlılık = gözlenen − tahmin. σ̂ = √(SSE/(n − p)). AIC yalnızca aynı veriye fit edilen modeller arasında karşılaştırılabilir. Standart hatalar bağımsız gözlem varsayımıyla hesaplanır; aynı dizinin ölçümleri bağımsız değildir, gerçek belirsizlik daha büyüktür.',
-    'r.curves': 'Gözlemler ve fit edilen eğriler', 'r.age': 'Yaş (yıl)', 'r.sel': 'Ayrıntı için model', 'r.inc': 'Cari yıllık artım (CAI) ve ortalama yıllık artım (MAI)', 'r.cai': 'CAI = dy/dt', 'r.maiL': 'MAI = y/t', 'r.resid': 'Artıklar (gözlenen − tahmin)',
-    'r.der': p => `Asimptot ${p.a}; dönüm noktası yaşı (en büyük cari yıllık artım) ${p.i}; ortalama yıllık artımın (MAI) doruk yaşı ${p.m}.`, 'r.der.none': 'yok',
-    'r.cit': 'Kaynak (zorunlu; ör. "kendi gövde analizim, 2025, yayımlanmamış")', 'r.save': 'Katsayı kütüphanesine kaydet', 'r.saved': 'Fit edilen eğri kütüphaneye kaydedildi.', 'r.cit.need': 'Kaydetmek için kaynak yazın.',
-    'r.rcode': 'R kodu (.R)', 'r.rcode.note': 'R kodu bu çalıştırmayı temel R ile (nls) aynı ayarlarla yeniden yapar: aynı gözlemler, fonksiyonlar ve başlangıç değerleri; artımlar ve doruk yaşları R\'ın deriv fonksiyonuyla; seçilen fonksiyonun tablosu. Veri koda gömülmez; betiğin başındaki dosya adını kendi dosyanızın yoluyla değiştirin (onaylanmış paket ya da yapıştırılan tablo betikle birlikte CSV olarak iner). Sitenin testleri her yayında bu kodun aracın sayılarını verdiğini R\'da denetler.',
-    'r.excel': 'Excel', 'r.csv': 'CSV', 'r.json': 'JSON', 'r.svg': 'SVG', 'r.tab': 'Eğri tablosu', 'r.step': 'Adım (yıl)',
-    'x.info': 'Bilgi', 'x.cmp': 'Karşılaştırma', 'x.pred': 'Tahminler', 'x.curve': 'Eğriler', 'x.k': 'Alan', 'x.v': 'Değer', 'x.tool': 'Araç', 'x.date': 'Tarih', 'x.lang': 'Dil', 'x.data': 'Veri', 'x.var': 'Değişken', 'x.forms': 'Biçimler',
-  },
   en: {
     privacy: 'Your file is processed and stored only in this browser (IndexedDB); nothing is sent to the server.',
     'step.1': 'Data', 'step.2': 'Models', 'step.3': 'Results', next: 'Continue', back: 'Back', reset: 'Reset session', none: '—', calc: 'Fit',
