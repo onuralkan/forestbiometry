@@ -1228,7 +1228,7 @@ const { getState, keyOf } = __fb_r("core/account.js");
 const T = makeT({
   en: { embed: 'Include the input data in the record', embedHelp: 'Unchecked, the JSON record holds only the SHA-256 fingerprint of each input file; checked, the data itself goes in too and the record reproduces on its own. If you share the record, you share the data.',
     fail: 'The record could not be prepared', btn: 'Run record (JSON)',
-    save: 'Save to my account', saveHelp: 'Keeps this result (settings and result tables, no input data) in your account on this site: Account → Saved results.',
+    save: 'Save to my account', saveHelp: 'Keeps this result (settings and result tables, no input data; tree-level result tables can repeat measured values of each tree) in your account on this site: Account → Saved results.',
     saving: 'Saving…', saved: 'Saved to your account.', open: 'Open', notReady: 'Compute a result first.',
     'raw-data': 'Not saved: the record holds input data, which the server never keeps.', 'storage-full': 'Not saved: your account\'s storage is full; delete saved results first.',
     'too-large': 'Not saved: this result is larger than 2 MB.', rate: 'Too many saves in a minute; wait a moment.', signin: 'Your session has ended; sign in again.',
