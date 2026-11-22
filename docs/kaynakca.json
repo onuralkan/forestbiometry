@@ -39,11 +39,11 @@
     "doi": "10.1109/TAC.1974.1100705",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §2"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
   },
   {
     "key": "anderson1954",
@@ -63,12 +63,12 @@
     "doi": "10.1080/01621459.1954.10501232",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §8 (legacy Weibull)",
       "METHODS §12 (AD A²)"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
   },
   {
     "key": "assmann1970",
@@ -187,11 +187,11 @@
     "doi": "10.1093/forestscience/20.2.155",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §15 SI01"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). via Hernández-Cuevas et al. 2018"
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). via Hernández-Cuevas et al. 2018"
   },
   {
     "key": "baskerville1972",
@@ -358,11 +358,11 @@
     "doi": "10.1093/forestscience/30.2.329",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §2 (Dq–moment relation)"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: no title or pages given"
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: no title or pages given"
   },
   {
     "key": "carus2017",
@@ -1388,11 +1388,11 @@
     "doi": "10.1080/00031305.1996.10473566",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P05, P06, P08 (type 7 quantiles)"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). definition verified numerically against numpy"
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). definition verified numerically against numpy"
   },
   {
     "key": "ipcc2006",
@@ -1458,11 +1458,11 @@
     "doi": "10.1093/biomet/36.1-2.149",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §2 (Johnson SB)"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
   },
   {
     "key": "kangas2000",
@@ -1539,11 +1539,11 @@
     "doi": "10.2307/2532509",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P08 (johnsonsb.kb, 50/95 percentile pair)"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
   },
   {
     "key": "kozak2004",
@@ -1752,11 +1752,11 @@
     "doi": "10.1080/01621459.1951.10500769",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §2"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
   },
   {
     "key": "max1976",
@@ -2788,13 +2788,13 @@
     "doi": "10.1139/x91-101",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §13",
       "METHODS §22 BC-01",
       "METHODS §23 TM-03"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). METHODS gives only 'Snowdon (1991)'; full details from TOOLS_SPEC §9 (written from memory, [D])"
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). METHODS gives only 'Snowdon (1991)'; full details from TOOLS_SPEC §9 (written from memory, [D])"
   },
   {
     "key": "spatstat_clarkevans",
@@ -2834,12 +2834,12 @@
     "doi": "10.2307/1937343",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §13 (log10 SEE·ln 10)",
       "METHODS §22 (not applied)"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
   },
   {
     "key": "stoffels1953",
