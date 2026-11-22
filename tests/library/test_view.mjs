@@ -1,6 +1,7 @@
 // Saved-result views (22 Nov 2026): the generic view of any tool's run record and the Model Evaluation view.
 // Usage: node tests/library/test_view.mjs
 import { genericView, viewOf, inputsView, cell, label, num } from '../../assets/lab/library/view.js';
+import * as D from '../../assets/lab/dist/index.js';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const count = (h, re) => (h.match(re) || []).length;
@@ -48,5 +49,29 @@ ok(v.html.includes('observed–predicted and residual plots need the rows'), 'sa
 ok(viewOf({ ...ev, models: [] }).kind === 'generic', 'a record without models falls back to the generic view');
 const bad = viewOf({ ...ev, models: [{ name: 'x', overall: null, groups: 5 }] });
 ok(bad.html.length > 0, 'a malformed record does not break the page');
+
+// Diameter Distribution view: fits from the engine itself, curves from the saved parameters, bootstrap left to the generic part
+const dA = [12.5, 15, 18.2, 22, 25.5, 31, 9.4, 14, 27, 20.1, 16.6, 23.3], dB = [30, 34.5, 28, 41, 37.2, 33, 29.5, 45, 38, 36];
+const fits = [['A', dA], ['B', dB]].flatMap(([plot, d]) => ['weibull.ml', 'normal.ml', 'exponential.ml'].map(id => { const r = D.runMethod(id, { d, plot }); const { gof, ...x } = r; return { ...x, fit: { ks: D.gof.ks(D.family(r.family), r.params, d), aic: 2 } }; }));
+const dr = { format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.1' }, source: 'sim.csv', settings: { unit: 'cm', dataType: 'raw', methods: { 'weibull.ml': null, 'normal.ml': null } }, results: fits,
+  bootstrap: [{ unit: 'A', fit: 'weibull.ml', B: 99, seed: 1, p: 0.4 }], sources: { methods: { 'weibull.ml': { refs: ['R6'] } } } };
+const dv = viewOf(dr);
+ok(dv.kind === 'tool' && count(dv.html, /class="rv-unit"/g) === 2 && dv.html.includes('Plot A') && dv.html.includes('Plot B'), 'distribution: one section per plot');
+ok(count(dv.html, /class="chart"/g) === 4 && dv.html.includes('Fitted densities') && dv.html.includes('Fitted cumulative'), 'distribution: density and cumulative curves per plot from the saved parameters');
+ok(dv.html.includes('Weibull · Maximum likelihood') && dv.html.includes('rv-keys'), 'distribution: fits named as in the tool, with a legend');
+ok(dv.html.includes('class="rv-rest"') && dv.html.includes('Bootstrap, Sources'), 'distribution: bootstrap runs and sources folded below, from the generic view');
+ok(dv.html.includes('Q–Q and P–P plots need the diameters'), 'distribution: says which plots need the data');
+const failed = viewOf({ ...dr, results: [{ ...fits[0], status: 'error', params: null, error: { code: 'fit.failed' } }] });
+ok(failed.kind === 'tool' && !failed.html.includes('class="chart"') && failed.html.includes('fit.failed'), 'distribution: a failed fit is listed with its error, no curve');
+
+// Relative Ranking view
+const rr = { format: 'run-record/1', tool: { id: 'nispi-siralama', version: '1.2.0' }, settings: { excluded: [{ row: 9, label: 'M9' }] }, m: 4, incomplete: ['M6'], sameRanks: [['R²', 'FI']],
+  criteria: ['R²', 'FI', 'RMSE'].map((name, j) => ({ name, dir: j < 2 ? 'max' : 'min', weight: 1, best: 0.9, worst: 0.4, constant: false })),
+  ranks: ['M1', 'M2', 'M3', 'M4'].map((label, i) => ({ ordinal: i + 1, label, row: i + 2, values: [0.9 - i / 10, 0.9 - i / 10, 1 + i], R: [1 + i, 1 + i, 1 + i], sum: 3 + 3 * i, overall: 1 + i })) };
+const rv = viewOf(rr);
+ok(rv.kind === 'tool' && rv.html.includes('id="rv-ranks"') && count(rv.html, /<tr><td class="num">\d<\/td><th>M\d/g) === 4, 'ranking: the ranking table with every model');
+ok(rv.html.includes('id="rv-crit"') && rv.html.includes('M6') && rv.html.includes('R² = FI') && rv.html.includes('Left out of the ranking: M9'), 'ranking: criteria, incomplete models, equal criteria and left-out models');
+ok(count(rv.html, /class="chart"/g) === 2 && rv.html.includes('Relative ranks by criterion'), 'ranking: overall-rank bars and the radar chart');
+ok(!viewOf({ ...rr, criteria: rr.criteria.slice(0, 2) }).html.includes('Relative ranks by criterion'), 'ranking: no radar with fewer than 3 criteria');
 console.log(`library view: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

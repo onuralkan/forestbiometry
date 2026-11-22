@@ -4,8 +4,10 @@
 // tests/library/test_view.mjs). Nothing is computed: values are shown as the record holds them.
 import { esc } from '../core/i18n.js';
 import { viewRecord as evalView } from '../eval/view.js';
+import { viewRecord as distView } from '../dist/view.js';
+import { viewRecord as rankView } from '../rank/view.js';
 
-export const VIEWS = { 'model-degerlendirme': evalView };
+export const VIEWS = { 'model-degerlendirme': evalView, 'cap-dagilimi': distView, 'nispi-siralama': rankView };
 const ENVELOPE = ['format', 'tool', 'build', 'created', 'lang', 'inputs', 'integrity'];
 const MAX_ROWS = 200, MAX_COLS = 16, MAX_DEPTH = 4;
 
@@ -89,6 +91,9 @@ export function inputsView(rec) {
 /** → { html, kind: 'tool' | 'generic' }; a tool view that fails or has nothing to show falls back to the generic view. */
 export function viewOf(rec) {
   const v = VIEWS[rec && rec.tool && rec.tool.id];
-  if (v) { try { const h = v(rec); if (h) return { html: h, kind: 'tool' }; } catch (e) { console.error('record view', e); } }
+  // a tool view returns HTML, or { html, rest: [keys] } to leave parts of the record to the generic view
+  if (v) { try { const h = v(rec); if (h) { if (typeof h === 'string') return { html: h, kind: 'tool' };
+    const part = Object.fromEntries((h.rest || []).filter(k => rec[k] != null && !(Array.isArray(rec[k]) && !rec[k].length)).map(k => [k, rec[k]]));
+    return { html: h.html + (Object.keys(part).length ? `<details class="rv-rest"><summary>${esc(Object.keys(part).map(label).join(', '))}</summary>${genericView(part)}</details>` : ''), kind: 'tool' }; } } catch (e) { console.error('record view', e); } }
   return { html: genericView(rec || {}), kind: 'generic' };
 }
