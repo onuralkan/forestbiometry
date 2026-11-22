@@ -1,12 +1,14 @@
-// Browser test of the AI interpretation service (21 Nov 2026): ORCID sign-in (mock), approval by the administrator,
-// monthly quota, the interpretation card in Model Evaluation (Claude mocked), form tokens, deleting an account, and the
-// site without the service. Starts its own PHP server with a throw-away private folder (FB_PRIVATE): the mock settings
+// Browser test of the accounts (21–22 Nov 2026): ORCID sign-in (mock), approval by the administrator, monthly quota,
+// the interpretation card in Model Evaluation (Claude mocked), the account's library (interpretations saved
+// automatically, "Save to my account", raw data refused, owner only, storage limit, export), the top-bar menu, the
+// backup script, form tokens, deleting an account, and the site without the service. Starts its own PHP server with a throw-away private folder (FB_PRIVATE): the mock settings
 // never exist on a real server. The BASE argument (the suite's server, without the service) is used for the last check.
 // Usage: node tests/account/e2e.mjs http://127.0.0.1:8092
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { mkdtemp, writeFile } from 'node:fs/promises';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { readdirSync } from 'node:fs';
 import os from 'node:os';
 import net from 'node:net';
 import path from 'node:path';
@@ -20,7 +22,7 @@ const errors = [];
 
 const ADMIN = '0000-0001-5798-3421', USER = '0000-0002-1825-0097';
 const priv = await mkdtemp(path.join(os.tmpdir(), 'fb-private-'));
-await writeFile(path.join(priv, 'config.php'), `<?php return ['anthropic_mock' => true, 'orcid_mock' => true, 'admin_orcid' => '${ADMIN}', 'monthly_quota' => 2, 'per_minute' => 10];\n`);
+await writeFile(path.join(priv, 'config.php'), `<?php return ['anthropic_mock' => true, 'orcid_mock' => true, 'admin_orcid' => '${ADMIN}', 'monthly_quota' => 2, 'per_minute' => 10, 'max_results' => 3];\n`);
 const port = await new Promise(r => { const srv = net.createServer(); srv.listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => r(p)); }); }), BASE = `http://127.0.0.1:${port}`;
 const php = spawn('php', ['-S', `127.0.0.1:${port}`], { cwd: root, env: { ...process.env, FB_PRIVATE: priv }, stdio: 'ignore' });
 for (let i = 0; i < 50; i++) { try { await fetch(BASE + '/hesap.php'); break; } catch (e) { await new Promise(r => setTimeout(r, 100)); } }
@@ -66,7 +68,9 @@ try {
 
   // 3. the administrator approves the account
   await signIn(ADMIN, 'Site Author');
-  ok((await page.textContent('#acc-status')).includes('administrator') && await page.isVisible('#acc-list'), 'administrator: approved at once, sees the account list');
+  ok((await page.textContent('#acc-status')).includes('administrator'), 'administrator: approved at once');
+  await page.click('#tab-accounts');
+  ok(await page.isVisible('#acc-list') && await page.isVisible('#acc-backup'), 'administrator: the Accounts tab lists the accounts and the backup');
   const row = page.locator(`#acc-list tr[data-orcid="${USER}"]`);
   ok((await row.textContent()).includes('Waiting for approval'), 'the new account is listed as waiting');
   await row.locator('[data-act="approved"]').click(); await page.waitForURL(/hesap\.php/);
@@ -96,13 +100,63 @@ try {
   await page.goto(BASE + '/hesap.php');
   ok((await page.textContent('#acc-used')).includes('2 of 2'), 'Account page: 2 of 2 used');
 
-  // 5. deleting the account removes it; signing in again starts as pending
+  // 5. the library: interpretations saved automatically, results saved from the tool, owner only, limits, export
+  await page.click('#tab-interpretations');
+  ok(await page.locator('#int-list li').count() === 2, 'both interpretations are kept in the account');
+  await page.locator('#int-list li a').first().click();
+  ok((await page.textContent('#int-text')).includes('Mock interpretation') && await page.locator('#int-result').count() === 0, 'an interpretation opens with its text (no saved result yet)');
+  await runEval(); await page.click('#tab-export');
+  ok(await page.isVisible('.rec-save'), 'approved account: "Save to my account" next to the JSON button');
+  await page.check('[data-rec-embed]');   // even with "include the input data" checked, the saved record carries none
+  const saved = page.waitForResponse(r => r.url().endsWith('api/library.php') && r.request().method() === 'POST');
+  await page.click('.rec-save'); const sr = await (await saved).json();
+  await page.waitForSelector('.rec-save-msg.ok');
+  ok(sr.id && sr.storage.results === 1, 'the result is saved to the account');
+  await page.uncheck('[data-rec-embed]');
+  const lib = await page.evaluate(async id => (await fetch('api/library.php?result=' + id)).json(), sr.id);
+  ok(lib.record.format === 'run-record/1' && lib.record.inputs.every(i => !('data' in i)) && lib.interpretations.length === 2, 'saved record: no input data, linked to the two interpretations of the same result');
+  const tok = (await page.evaluate(async () => (await fetch('api/interpret.php')).json())).csrf;
+  const post = (b, t = tok) => page.evaluate(async ([b, t]) => { const r = await fetch('api/library.php', { method: 'POST', headers: { 'X-CSRF': t, 'Content-Type': 'application/json' }, body: JSON.stringify(b) }); return [r.status, await r.json()]; }, [b, t]);
+  const raw = await post({ act: 'save', record: { ...lib.record, inputs: [{ role: 'data', sha256: 'x', data: 'obs\n1' }] } });
+  ok(raw[0] === 422 && raw[1].error === 'raw-data', 'a record with input data is refused (422 raw-data)');
+  ok((await post({ act: 'save', record: lib.record }, 'bad'))[0] === 403, 'saving without the form token: 403');
+  ok((await post({ act: 'save', record: { format: 'other' } }))[0] === 400, 'not a run record: 400');
+  await post({ act: 'save', record: lib.record }); await post({ act: 'save', record: lib.record });
+  const full = await post({ act: 'save', record: lib.record });
+  ok(full[0] === 409 && full[1].error === 'storage-full', 'storage limit (3 results in this test): 409 storage-full');
+  await page.goto(BASE + '/hesap.php?tab=results');
+  ok(await page.locator('#res-list tbody tr').count() === 3, 'Saved results tab lists 3 results');
+  await page.goto(`${BASE}/hesap.php?tab=results&id=${sr.id}`);
+  await page.fill('#res-title', 'Pilot evaluation'); await page.fill('#res-note', 'first test'); await page.click('#res-save');
+  await page.waitForSelector('#h-res');
+  ok((await page.textContent('#h-res')).includes('Pilot evaluation') && await page.locator('#res-ints li').count() === 2 && (await page.textContent('#res-body')).includes('run-record/1'), 'result page: title and note edited, interpretations and the record shown');
+  const dl = page.waitForEvent('download'); await page.click('#res-download'); ok((await dl).suggestedFilename().startsWith('model-degerlendirme-'), 'the saved record downloads as JSON');
+  const ex = await page.evaluate(async () => (await fetch('api/library.php?export=1')).json());
+  ok(ex.format === 'forest-biometry-account-export/1' && ex.results.length === 3 && ex.interpretations.length === 2 && ex.account.orcid === USER, 'export: everything the account keeps');
+  // the top-bar menu
+  await page.click('#acctlink');
+  ok(await page.isVisible('#acctmenu') && (await page.getAttribute('#acctlink', 'aria-expanded')) === 'true' && (await page.textContent('#acctquota')).includes('2 of 2'), 'top-bar menu opens with name and use');
+  await page.keyboard.press('Escape');
+  ok(!(await page.isVisible('#acctmenu')) && (await page.getAttribute('#acctlink', 'aria-expanded')) === 'false', 'Escape closes the menu');
+  await page.click('#acctlink'); await page.click('#acctmenu a[href="hesap.php?tab=interpretations"]'); await page.waitForSelector('#int-list');
+  ok(page.url().includes('tab=interpretations'), 'menu link opens My interpretations');
+  // owner only: the administrator cannot open another account's item through the library
+  await signOut(); await signIn(ADMIN, 'Site Author');
+  ok((await page.evaluate(async id => (await fetch('api/library.php?result=' + id)).status, sr.id)) === 404, 'another account cannot open the result (404)');
+  await page.goto(`${BASE}/hesap.php?tab=results&id=${sr.id}`); ok(await page.isVisible('#res-none'), 'nor through the Account page');
+  // the backup script (cron)
+  const bk = spawnSync('php', ['inc/backup.php'], { cwd: root, env: { ...process.env, FB_PRIVATE: priv }, encoding: 'utf8' });
+  ok(bk.status === 0 && readdirSync(path.join(priv, 'backups')).some(f => /^fb-\d{4}-\d{2}-\d{2}\.sqlite\.gz$/.test(f)), 'backup script writes a compressed copy: ' + bk.stdout + bk.stderr);
+  await signOut(); await signIn(USER, 'Test Researcher');
+
+  // 6. deleting the account removes it; signing in again starts as pending
   await page.click('#acc-delete'); await page.waitForSelector('#acc-deleted');
   ok(await page.isVisible('#acc-signin'), 'account deleted and signed out');
   await signIn(USER, 'Test Researcher');
-  ok((await page.textContent('#acc-status')).includes('Waiting for approval') && (await page.textContent('#acc-used')).includes('0 of 2'), 'after deletion the account starts again, pending, with no usage');
+  ok((await page.textContent('#acc-status')).includes('Waiting for approval') && (await page.textContent('#acc-used')).includes('0 of 2') && (await page.textContent('#acc-storage')).startsWith('0 of 3'), 'after deletion the account starts again, pending, with no usage and nothing saved');
+  ok((await page.evaluate(async () => (await fetch('api/library.php?list=results')).status)) === 403, 'library for a pending account: 403');
 
-  // 6. the suite's server has no private settings: no account link, no card, the API says not configured
+  // 7. the suite's server has no private settings: no account link, no card, the API says not configured
   const p0 = await ctx.newPage(); p0.on('pageerror', e => errors.push(e.message));
   await p0.goto(BASE0 + '/hesap.php');
   ok(await p0.locator('#acctlink').count() === 0 && await p0.isVisible('#acc-off'), 'without the service: no account link, the Account page says so');

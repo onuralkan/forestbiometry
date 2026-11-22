@@ -635,3 +635,28 @@ a.hm-tool:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
 .ai-text { border-left: 3px solid var(--acc); padding: 2px 0 2px 14px; margin: 10px 0; max-width: 80ch; }
 .ai-text h4 { font: 600 14px var(--ui); margin: 12px 0 4px; } .ai-text p { margin: 0 0 8px; line-height: 1.55; }
 .ai-slot[hidden] { display: none; }
+/* account menu of the top bar and the Account page (22 Nov 2026) */
+.b-acctwrap { position: relative; }
+button.b-acct { font: 600 13px var(--ui); border: 1px solid var(--line); border-radius: var(--r); padding: 7px 12px; color: var(--ink); background: var(--sunk); cursor: pointer; }
+button.b-acct:hover, button.b-acct[aria-expanded="true"] { background: var(--line2); }
+.b-acctmenu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 250px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 8px 24px rgba(0,0,0,.16); padding: 6px; }
+.b-acctmenu[hidden] { display: none; }
+.b-accthead { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px 8px; border-bottom: 1px solid var(--line); margin-bottom: 4px; overflow-wrap: anywhere; }
+.b-tools .b-acctmenu a, .b-acctmenu button[type="submit"] { border: 0; background: none; border-radius: 6px; padding: 8px 10px; font: 500 14px var(--ui); color: var(--ink); text-align: left; cursor: pointer; width: 100%; }
+.b-tools .b-acctmenu a:hover, .b-acctmenu button[type="submit"]:hover, .b-tools .b-acctmenu a:focus-visible { background: var(--acc-soft); }
+.b-acctmenu form { margin: 4px 0 0; border-top: 1px solid var(--line); padding-top: 4px; }
+.acc-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.acc-tabs a { padding: 7px 12px; border: 1px solid var(--line); border-radius: var(--r); text-decoration: none; font-weight: 600; font-size: 14px; color: var(--ink); background: var(--surface); }
+.acc-tabs a[aria-current] { background: var(--acc-fill); border-color: var(--acc-fill); color: var(--acc-ink); }
+.inline-form { display: inline; margin: 0; }
+.acc-danger { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+.acc-list { list-style: none; padding: 0; margin: 0; } .acc-list li { padding: 10px 0; border-bottom: 1px solid var(--line); } .acc-list li p { margin: 4px 0 0; }
+.acc-edit { display: grid; gap: 8px; max-width: 640px; margin: 12px 0; } .acc-edit label { display: grid; gap: 4px; font-weight: 600; font-size: 13.5px; }
+.acc-edit input, .acc-edit textarea { font: 14px var(--ui); padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); color: var(--ink); }
+.acc-edit button { justify-self: start; }
+pre.json { max-height: 60vh; overflow: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; font-size: 12.5px; white-space: pre; }
+dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; } dl.kv dt { font-weight: 600; } dl.kv dd { margin: 0; overflow-wrap: anywhere; }
+.rec-save-msg { margin-left: 8px; }
+.rec-save, .rec-save-msg { display: none; }
+body[data-acct="approved"] .rec-save { display: inline-flex; } body[data-acct="approved"] .rec-save-msg { display: inline; }
+.rec-save-msg.ok { color: var(--ok); } .rec-save-msg.err { color: var(--err, #d1242f); }

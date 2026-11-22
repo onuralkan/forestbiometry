@@ -2,7 +2,7 @@
 // AI interpretation of a tool's results (21 Nov 2026, user decision). The browser sends the summary of one run (the
 // same object the tool writes into its JSON run record: settings and result tables, no row data); this endpoint checks
 // the account (signed in with ORCID, approved), the monthly quota and the per-minute limit, asks Claude for a short
-// interpretation and returns the text. Nothing of the request or the answer is stored on the server.
+// interpretation and returns the text. The answer is kept in the account with its summary (22 Nov 2026, user decision).
 //   GET  → the account state (signed in, status, used / quota, form token)
 //   POST {tool, version, summary} with header X-CSRF → {text, model, used, quota} or {error}
 // Calls the Messages API over HTTPS with curl (the site has no package manager, so no SDK).
@@ -35,6 +35,20 @@ Rules:
 - If the object is empty, inconsistent or not a result of the named tool, say so briefly instead of interpreting.
 TXT;
 
+/**
+ * Answers with the text; the interpretation is saved to the account automatically (22 Nov 2026, user decision) with the
+ * summary it was written from, linked to a saved result of the same summary (key from the page). Saving never blocks the
+ * answer: if the account's storage is full, the text is returned with saved = false.
+ */
+function fb_finish(array $u, array $in, string $text, string $model, bool $truncated): void {
+    $c = fb_config(); $sum = json_encode($in['summary'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $s = fb_storage($u['orcid']); $id = null;
+    if ($s['bytes'] + strlen($sum) + strlen($text) <= $s['maxBytes'])
+        $id = fb_save_interpretation($u['orcid'], (string)$in['tool'], substr((string)($in['version'] ?? ''), 0, 40), $model, substr((string)($in['key'] ?? ''), 0, 80), $text, $sum);
+    fb_json(['text' => $text, 'model' => $model, 'truncated' => $truncated, 'id' => $id, 'saved' => $id !== null,
+        'used' => fb_used($u['orcid']), 'quota' => (int)$c['monthly_quota']]);
+}
+
 $c = fb_config();
 if ($_SERVER['REQUEST_METHOD'] === 'GET') fb_json(fb_state());   // {configured:false} without the service
 if (!$c) fb_json(['error' => 'not-configured'], 503);
@@ -59,7 +73,7 @@ $user = "Tool: " . $tool['name'] . " " . substr((string)($in['version'] ?? ''), 
 
 if (!empty($c['anthropic_mock'])) {   // test servers: no call, a fixed text that shows what was sent
     $text = "Summary\nMock interpretation of " . $tool['name'] . " (" . strlen($user) . " characters sent).\n\nComparison\n-\n\nUncertainty\n-\n\nLimits\n-";
-    fb_json(['text' => $text, 'model' => 'mock', 'used' => fb_used($u['orcid']), 'quota' => (int)$c['monthly_quota']]);
+    fb_finish($u, $in, $text, 'mock', false);
 }
 
 $req = ['model' => $c['anthropic_model'], 'max_tokens' => (int)$c['max_output_tokens'], 'system' => FB_SYSTEM,
@@ -91,5 +105,4 @@ if (($r['stop_reason'] ?? '') === 'refusal') { fb_give_back($u['orcid']); fb_jso
 $text = '';
 foreach ($r['content'] ?? [] as $b) if (($b['type'] ?? '') === 'text') $text .= $b['text'];
 if (trim($text) === '') { fb_give_back($u['orcid']); fb_json(['error' => 'empty'], 502); }
-fb_json(['text' => $text, 'model' => (string)($r['model'] ?? $c['anthropic_model']), 'truncated' => ($r['stop_reason'] ?? '') === 'max_tokens',
-    'used' => fb_used($u['orcid']), 'quota' => (int)$c['monthly_quota']]);
+fb_finish($u, $in, $text, (string)($r['model'] ?? $c['anthropic_model']), ($r['stop_reason'] ?? '') === 'max_tokens');

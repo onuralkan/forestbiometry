@@ -26,7 +26,7 @@ const shot = async (n, p = page) => { if (SHOTS) await p.screenshot({ path: path
 await page.goto(BASE + '/');
 ok((await page.locator('h1').textContent()).trim() === 'Calculation and modelling for your forest measurements.' && (await page.title()) === 'Forest Biometry | Forest Biometrics Tools', 'home page: short intro heading, title "Forest Biometry | <subtitle>"');
 ok(await page.locator('#side').isVisible() && (await page.locator('#side .b-live a').count()) === N_TOOLS && (await page.locator('.b-resetall, #hm-sessions, .hm-reset').count()) === 0, 'home: the sidebar as on the other pages; no bulk reset box or button');
-ok((await page.textContent('.hp-data')).includes('Your data are not sent to a server.') && (await page.locator('text=/No built-in coefficients/i').count()) === 0, 'home: the data note; "no built-in coefficients" is not a headline');
+ok((await page.textContent('.hp-data')).includes('Your raw data are not sent to a server.') && (await page.locator('text=/No built-in coefficients/i').count()) === 0, 'home: the data note; "no built-in coefficients" is not a headline');
 { const res = () => page.$$eval('.hp-res .hm-item:not([hidden]) a', a => a.map(x => x.getAttribute('href')));
   ok((await page.locator('label[for="tool-q"]').textContent()).trim() === 'Find a tool or method' && (await page.getAttribute('#tool-q', 'placeholder')) === 'E.g. Weibull, site index, RMSE' && await page.isHidden('#hp-results'), 'home search: visible label, placeholder, no results before typing');
   ok((await page.locator('.hp-res .hm-item').count()) === N_TOOLS, `home search covers all ${N_TOOLS} tools, not only the six direct links`);

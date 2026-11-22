@@ -35,6 +35,6 @@ site_top([
   </section>
   <section class="card about" aria-labelledby="h-data">
     <h2 id="h-data" class="b-h2"><?= 'Your data' ?></h2>
-    <p><?= 'The tools run in your browser. Tables you load are not sent to the server; sessions are kept only in this browser\'s local storage (IndexedDB) and can be removed with the delete buttons in the tools. The site has no user accounts, no database and no tracking code; only your language and theme choice are stored in your browser.' ?></p>
+    <p><?= 'The tools run in your browser. Tables you load are not sent to the server; sessions are kept only in this browser\'s local storage (IndexedDB) and can be removed with the delete buttons in the tools. The site has no tracking code. Optional accounts (sign in with ORCID) can ask for an AI interpretation of a result and keep results without input data on the server; raw data are never sent (see the <a href="gizlilik.php">privacy notice</a>). Only your theme and sidebar choices are stored in your browser.' ?></p>
   </section>
 <?php site_bottom();

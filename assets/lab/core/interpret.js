@@ -2,21 +2,14 @@
 // A tool puts interpretSlot() where the card should go and calls mountInterpret(slot, tool, getSummary) after drawing.
 // getSummary() returns the same object the tool writes into its JSON run record (settings and result tables, no row
 // data); it is sent only when the user presses the button. Without the service on the server the card stays hidden.
+// The server keeps every interpretation in the account (hesap.php → Interpretations; 22 Nov 2026, user decision), with
+// the key of its summary, so that a result saved with "Save to my account" (core/record-ui.js) links to it.
 import { esc } from './i18n.js';
 
-const API = 'api/interpret.php';
-let state = null;                    // account state from the server, fetched once per page
-const done = new Map();              // summary key → { text, model, at }: survives redraws of the tool
+import { getState, keyOf, state } from './account.js';
 
-async function getState(force = false) {
-  if (state && !force) return state;
-  if (!document.body.dataset.ai) return state = { configured: false };   // inc/site.php marks pages of a server with the service
-  try { const r = await fetch(API, { credentials: 'same-origin', headers: { Accept: 'application/json' } }); state = r.ok ? await r.json() : { configured: false }; }
-  catch (e) { state = { configured: false }; }
-  return state;
-}
-// the record's own time stamp changes on every call: it is not part of what identifies a result
-const keyOf = o => { const s = JSON.stringify({ ...o, created: undefined }); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return s.length + ':' + h; };
+const API = 'api/interpret.php';
+const done = new Map();              // summary key → { text, model, at }: survives redraws of the tool
 
 /** The model's plain text as HTML: headings on their own line become h4, the rest paragraphs; everything escaped. */
 export function textToHtml(t) {
@@ -55,7 +48,7 @@ export async function mountInterpret(el, tool, getSummary) {
   const out = slot.querySelector('#ai-out');
   const show = r => {
     out.innerHTML = `<div class="ai-text">${textToHtml(r.text)}</div><p class="muted small">${esc(r.model)} · ${esc(new Date(r.at).toLocaleString('en-GB'))}${r.truncated ? ' · cut short at the length limit' : ''}
-      · <button type="button" class="linkbtn" id="ai-copy">Copy text</button></p>`;
+      · ${r.saved ? `<a href="hesap.php?tab=interpretations&amp;id=${esc(r.id)}" id="ai-saved">saved to My interpretations</a> · ` : r.saved === false ? '<span id="ai-saved">not saved: your account\'s storage is full</span> · ' : ''}<button type="button" class="linkbtn" id="ai-copy">Copy text</button></p>`;
     out.querySelector('#ai-copy').addEventListener('click', () => navigator.clipboard && navigator.clipboard.writeText(r.text));
   };
   if (prev) show(prev);
@@ -65,13 +58,13 @@ export async function mountInterpret(el, tool, getSummary) {
     let r, j;
     try {
       r = await fetch(API, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF': st.csrf },
-        body: JSON.stringify({ tool: tool.id, version: tool.version, summary }) });
+        body: JSON.stringify({ tool: tool.id, version: tool.version, summary, key: keyOf(summary) }) });
       j = await r.json();
     } catch (e) { j = { error: 'network' }; }
     if (j && j.text) {
-      const res = { text: j.text, model: j.model, truncated: !!j.truncated, at: Date.now() };
+      const res = { text: j.text, model: j.model, truncated: !!j.truncated, at: Date.now(), saved: j.saved, id: j.id };
       done.set(key, res); show(res);
-      state.used = j.used; const l = Math.max(0, j.quota - j.used);
+      state().used = j.used; const l = Math.max(0, j.quota - j.used);
       slot.querySelector('#ai-left').textContent = `${l} of ${j.quota} interpretations left this month`;
       go.textContent = 'Interpret again'; go.disabled = !l;
       return;

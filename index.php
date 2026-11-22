@@ -21,7 +21,7 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
   <section class="hp-intro" aria-labelledby="hp-h">
     <h1 id="hp-h"><?= 'Calculation and modelling for your forest measurements.' ?></h1>
     <p class="hp-lede"><?= 'Analyse your tree and stand data in the browser. See each tool\'s methods, assumptions and sources.' ?></p>
-    <p class="hp-data"><?= 'Your data are not sent to a server.' ?> <a href="gizlilik.php"><?= 'Details' ?></a></p>
+    <p class="hp-data"><?= 'Your raw data are not sent to a server.' ?> <a href="gizlilik.php"><?= 'Details' ?></a></p>
   </section>
 
   <section class="hp-find" role="search" aria-labelledby="hp-q-l">

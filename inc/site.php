@@ -1,6 +1,6 @@
 <?php
 // Shared shell of forestbiometry.online: language, header, footer, tool list, author details.
-// Not web-accessible (see inc/.htaccess). No database, no sessions, no server-side user data.
+// Not web-accessible (see inc/.htaccess). Accounts (sessions, database) only through inc/account.php, when configured.
 // Usage: site_top(['title' => ..., 'desc' => ..., 'kicker' => ..., 'lede' => ...]); ...; site_bottom('<script ...>');
 declare(strict_types=1);
 
@@ -196,7 +196,7 @@ function site_top(array $o = []): void {
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png?v=<?= site_ver('assets/brand/apple-touch-icon.png') ?>">
 <script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; if (localStorage.getItem('side') === 'narrow') document.documentElement.classList.add('side-narrow'); } catch (e) {}</script>
 </head>
-<body class="bench"<?= $cur ? ' data-tool="' . h(basename($cur['file'], '.php')) . '"' : '' ?><?= fb_config() ? ' data-ai="1"' : '' ?>>
+<body class="bench"<?= $cur ? ' data-tool="' . h(basename($cur['file'], '.php')) . '"' : '' ?><?= fb_config() ? ' data-ai="1"' : '' ?><?= $acct ? ' data-acct="' . h($acct['status']) . '"' : '' ?>>
 <a class="skip" href="#main"><?= 'Skip to content' ?></a>
 <header class="b-top">
   <button type="button" class="b-iconbtn b-menu" id="navopen" aria-controls="side" aria-expanded="false" aria-label="<?= 'Open the tools menu' ?>"><?= site_icon('menu') ?></button>
@@ -210,7 +210,20 @@ function site_top(array $o = []): void {
   <span class="b-tools">
     <button type="button" class="b-citebtn" id="citebtn" data-cite-open aria-haspopup="dialog"><?= site_icon('cite') ?><span><?= 'Cite' ?></span></button>
     <button type="button" id="theme" class="b-iconbtn" aria-label="<?= 'Dark / light theme' ?>"><?= site_icon('theme') ?></button>
-    <?php if (fb_config()): ?><a id="acctlink" class="b-acct" href="hesap.php"<?= $here === 'hesap.php' ? ' aria-current="page"' : '' ?> title="<?= $acct ? h($acct['name']) . ' (ORCID ' . h($acct['orcid']) . ')' : 'Sign in with ORCID for the AI interpretation' ?>"><?= $acct ? 'Account' : 'Sign in' ?></a><?php endif; ?>
+    <?php if (fb_config() && !$acct): ?><a id="acctlink" class="b-acct" href="hesap.php"<?= $here === 'hesap.php' ? ' aria-current="page"' : '' ?> title="Sign in with ORCID for the AI interpretation and saved results">Sign in</a>
+    <?php elseif ($acct): $quota = (int)fb_config()['monthly_quota']; $used = fb_used($acct['orcid']); ?>
+    <span class="b-acctwrap"><button type="button" id="acctlink" class="b-acct" aria-haspopup="true" aria-expanded="false" aria-controls="acctmenu" title="<?= h($acct['name']) ?> (ORCID <?= h($acct['orcid']) ?>)">Account</button>
+      <span class="b-acctmenu" id="acctmenu" hidden>
+        <span class="b-accthead"><b><?= h($acct['name']) ?></b><span class="muted small"><?= h($acct['orcid']) ?></span>
+          <span class="small" id="acctquota"><?= $acct['status'] === 'approved' ? $used . ' of ' . $quota . ' interpretations used this month' : ($acct['status'] === 'pending' ? 'Waiting for approval' : 'Blocked') ?></span></span>
+        <a href="hesap.php?tab=interpretations">My interpretations</a>
+        <a href="hesap.php?tab=results">Saved results</a>
+        <a href="hesap.php?tab=profile">Account settings</a>
+        <?php if ($acct['admin']): ?><a href="hesap.php?tab=accounts">Accounts (administrator)</a><?php endif; ?>
+        <a href="gizlilik.php">Privacy</a>
+        <form method="post" action="auth/logout.php"><input type="hidden" name="csrf" value="<?= h(fb_csrf()) ?>"><button type="submit" id="acctout">Sign out</button></form>
+      </span></span>
+    <?php endif; ?>
   </span>
 </header>
 <div class="b-shell">
@@ -360,6 +373,14 @@ function site_bottom(string $script = ''): void {
   $('navclose').addEventListener('click', function () { close(true); });
   scrim.addEventListener('click', function () { close(true); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && root.classList.contains('side-open')) close(true); });
+  // account menu of the top bar (signed-in visitors): a button with a list of links; Escape or a click outside closes it
+  var ab = $('acctlink'), am = $('acctmenu');
+  if (ab && am) {
+    var shut = function (back) { am.hidden = true; ab.setAttribute('aria-expanded', 'false'); if (back) ab.focus(); };
+    ab.addEventListener('click', function (e) { e.stopPropagation(); var o = am.hidden; am.hidden = !o; ab.setAttribute('aria-expanded', o ? 'true' : 'false'); if (o) { var f = am.querySelector('a'); if (f) f.focus(); } });
+    document.addEventListener('click', function (e) { if (!am.hidden && !am.contains(e.target)) shut(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !am.hidden) shut(true); });
+  }
 })();
 </script>
 <?php
