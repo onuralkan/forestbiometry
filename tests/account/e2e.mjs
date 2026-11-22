@@ -1,7 +1,8 @@
 // Browser test of the accounts (21–22 Nov 2026): ORCID sign-in (mock), approval by the administrator, monthly quota,
 // the interpretation card in Model Evaluation (Claude mocked), the account's library (interpretations saved
 // automatically, "Save to my account", raw data refused, owner only, storage limit, export), the top-bar menu, the
-// backup script, form tokens, deleting an account, and the site without the service. Starts its own PHP server with a throw-away private folder (FB_PRIVATE): the mock settings
+// backup script, form tokens, deleting an account, the administration panel (yonetim.php: limits, reset, temporary block,
+// pause, announcement, sign-up modes, deletion, audit log), and the site without the service. Starts its own PHP server with a throw-away private folder (FB_PRIVATE): the mock settings
 // never exist on a real server. The BASE argument (the suite's server, without the service) is used for the last check.
 // Usage: node tests/account/e2e.mjs http://127.0.0.1:8092
 import { createRequire } from 'node:module';
@@ -69,12 +70,14 @@ try {
   // 3. the administrator approves the account
   await signIn(ADMIN, 'Site Author');
   ok((await page.textContent('#acc-status')).includes('administrator'), 'administrator: approved at once');
-  await page.click('#tab-accounts');
-  ok(await page.isVisible('#acc-list') && await page.isVisible('#acc-backup'), 'administrator: the Accounts tab lists the accounts and the backup');
-  const row = page.locator(`#acc-list tr[data-orcid="${USER}"]`);
-  ok((await row.textContent()).includes('Waiting for approval'), 'the new account is listed as waiting');
-  await row.locator('[data-act="approved"]').click(); await page.waitForURL(/hesap\.php/);
-  ok((await page.locator(`#acc-list tr[data-orcid="${USER}"]`).textContent()).includes('Approved'), 'approved by the administrator');
+  await page.click('#tab-admin'); await page.waitForURL(/yonetim\.php/);
+  ok(await page.isVisible('#adm-stats') && await page.isVisible('#adm-backup'), 'administrator: the panel overview shows the counts and the backup');
+  const row = page.locator(`#adm-wait tr[data-orcid="${USER}"]`);
+  ok((await row.count()) === 1 && (await page.textContent('#adm-tab-accounts')).includes('1 waiting'), 'the new account is listed as waiting');
+  await row.locator('[data-quick="approved"]').click(); await page.waitForSelector('#adm-done');
+  ok(await page.isVisible('#adm-nowait'), 'approved from the overview; nobody waits');
+  await page.goto(BASE + '/yonetim.php?view=accounts');
+  ok((await page.locator(`#adm-list tr[data-orcid="${USER}"]`).textContent()).includes('Approved'), 'approved by the administrator');
   await signOut();
 
   // 4. approved: interpretation (Claude mocked), quota of 2, then used up
@@ -165,7 +168,79 @@ try {
     const env = { ...process.env }; delete env.FB_PRIVATE;
     const r = spawnSync('php', [path.join(web, 'inc/backup.php')], { env, encoding: 'utf8' });
     ok(r.status === 0 && readdirSync(path.join(pv, 'backups')).length === 1, 'backup by cron without FB_PRIVATE finds the private folder next to the site: ' + r.stdout + r.stderr); }
-  await signOut(); await signIn(USER, 'Test Researcher');
+  await signOut();
+
+  // 5b. administration panel (22 Nov 2026): limits, reset, temporary block, service off, announcement, sign-up modes, delete, audit
+  { const OTHER = '0000-0003-1415-9269', NEWCOMER = '0000-0002-9079-593X';
+    const api = () => page.evaluate(async () => (await fetch('api/interpret.php')).json());
+    const ask = () => page.evaluate(async () => { const s = await (await fetch('api/interpret.php')).json(); const r = await fetch('api/interpret.php', { method: 'POST', headers: { 'X-CSRF': s.csrf, 'Content-Type': 'application/json' }, body: JSON.stringify({ tool: 'model-degerlendirme', summary: { a: 1 } }) }); return [r.status, await r.json()]; });
+    const acct = async o => { await page.goto(`${BASE}/yonetim.php?view=account&orcid=${o}`); await page.waitForSelector('#adm-acc'); };
+    const sql = q => spawnSync('php', ['-r', `$d = new PDO('sqlite:' . getenv('FB_PRIVATE') . '/fb.sqlite'); $d->exec(${JSON.stringify(q)});`], { env: { ...process.env, FB_PRIVATE: priv } });
+    // a user cannot open the panel
+    await signIn(USER, 'Test Researcher');
+    ok((await page.goto(BASE + '/yonetim.php')).status() === 403, 'the panel answers 403 to a user who is not the administrator');
+    await signOut();
+    await signIn(ADMIN, 'Site Author'); await acct(USER);
+    ok((await page.textContent('#adm-accuse')).includes('2 of 2 this month'), 'account page: use this month');
+    await page.fill('#adm-limits [name="extra"]', '1'); await page.fill('#adm-limits [name="q_day"]', '1'); await page.fill('#adm-limits [name="reason"]', 'conference week');
+    await page.click('#adm-limits button'); await page.waitForSelector('#adm-done');
+    ok((await page.textContent('#adm-accuse')).includes('2 of 3 this month (including 1 extra)') && (await page.textContent('#adm-acclog')).includes('extra this month 0 → 1'), 'limits saved: one extra this month, 1 a day; in the audit log');
+    await signOut(); await signIn(USER, 'Test Researcher');
+    let s = await api(), r = await ask();
+    ok(s.quota === 3 && s.quotaDay === 1 && s.usedDay === 2 && r[0] === 429 && r[1].error === 'daily', 'user: 3 a month, 1 a day; today\'s 2 already used → 429 daily');
+    await signOut(); await signIn(ADMIN, 'Site Author'); await acct(USER);
+    await page.click('[data-reset="day"]'); await page.waitForSelector('#adm-done');
+    await signOut(); await signIn(USER, 'Test Researcher');
+    r = await ask(); s = await api();
+    ok(r[0] === 200 && s.used === 3 && s.usedDay === 1, "after the reset of today's use one more interpretation (3 of 3)");
+    await signOut(); await signIn(ADMIN, 'Site Author'); await acct(USER);
+    const until = new Date(Date.now() + 5 * 864e5).toISOString().slice(0, 10);
+    await page.check('#adm-status [value="blocked"]'); await page.fill('#adm-status [name="until"]', until); await page.fill('#adm-status [name="reason"]', 'Unusual use, please write to the author');
+    await page.click('#adm-status button'); await page.waitForSelector('#adm-done');
+    ok((await page.textContent('#adm-state')).includes('Blocked until ' + until), 'temporary block saved');
+    await signOut(); await signIn(USER, 'Test Researcher');
+    ok((await page.textContent('#acc-status')).includes('Blocked until ' + until) && (await page.textContent('#acc-reason')).includes('Unusual use'), 'user sees the block, its end and the reason');
+    r = await ask(); ok(r[0] === 403 && r[1].error === 'blocked' && r[1].reason.startsWith('Unusual'), 'API for a blocked account: 403 blocked with the reason');
+    sql(`UPDATE users SET until = '2020-01-01T00:00:00+00:00' WHERE orcid = '${USER}'`);
+    await page.goto(BASE + '/hesap.php');
+    ok((await page.textContent('#acc-status')).startsWith('Approved'), 'a temporary block ends by itself when its date has passed');
+    await signOut(); await signIn(ADMIN, 'Site Author');
+    await page.goto(BASE + '/yonetim.php?view=settings');
+    await page.uncheck('#adm-settings [name="ai_enabled"]'); await page.fill('#adm-settings [name="ai_off_message"]', 'maintenance until Monday');
+    await page.fill('#adm-settings [name="announcement"]', 'New: daily limits.'); await page.check('#adm-settings [value="closed"]');
+    await page.click('#adm-settings button[type="submit"]'); await page.waitForSelector('#adm-done');
+    ok((await page.inputValue('#adm-settings [name="ai_off_message"]')) === 'maintenance until Monday', 'settings saved');
+    await signOut();
+    await page.goto(`${BASE}/auth/orcid.php?mock=${NEWCOMER}&name=Newcomer`); await page.waitForURL(/signin=closed/);
+    ok(await page.isVisible('#acc-closed') && await page.isVisible('#acc-signin'), 'sign-up closed: a new ORCID iD gets no account');
+    await signIn(USER, 'Test Researcher');
+    ok((await page.textContent('#acc-announce')).includes('New: daily limits.') && (await page.textContent('#acc-paused')).includes('maintenance until Monday'), 'existing users still sign in; they see the announcement and the pause');
+    await sql(`UPDATE usage SET n = 0 WHERE orcid = '${USER}'`); await sql(`DELETE FROM usage_day WHERE orcid = '${USER}'`);
+    await runEval();
+    ok(await page.isVisible('#ai-off') && (await page.textContent('#ai-announce')).includes('New: daily limits.'), 'the card says the service is paused and shows the announcement');
+    r = await ask(); ok(r[0] === 503 && r[1].error === 'off' && r[1].message === 'maintenance until Monday', 'API while paused: 503 off with the message');
+    await signOut(); await signIn(ADMIN, 'Site Author');
+    await page.goto(BASE + '/yonetim.php?view=settings');
+    await page.check('#adm-settings [name="ai_enabled"]'); await page.fill('#adm-settings [name="announcement"]', ''); await page.check('#adm-settings [value="auto"]');
+    await page.click('#adm-settings button[type="submit"]'); await page.waitForSelector('#adm-done');
+    await signOut(); await signIn(OTHER, 'Auto Approved');
+    ok((await page.textContent('#acc-status')).startsWith('Approved'), 'sign-up "auto": a new account is approved at once');
+    await signOut(); await signIn(ADMIN, 'Site Author');
+    await page.goto(BASE + '/yonetim.php?view=settings'); await page.check('#adm-settings [value="approval"]'); await page.click('#adm-settings button[type="submit"]'); await page.waitForSelector('#adm-done');
+    await acct(OTHER);
+    await page.fill('#adm-delete [name="confirm"]', 'wrong'); await page.click('#adm-delete button'); await page.waitForSelector('#adm-done');
+    ok((await page.textContent('#adm-done')).includes('Type the ORCID iD') && await page.isVisible('#adm-acc'), 'deletion refused without the ORCID iD typed');
+    await page.fill('#adm-delete [name="confirm"]', OTHER); await page.fill('#adm-delete [name="reason"]', 'test account'); await page.click('#adm-delete button'); await page.waitForSelector('#adm-list');
+    ok((await page.locator(`#adm-list tr[data-orcid="${OTHER}"]`).count()) === 0, 'the administrator deleted the account');
+    await page.goto(BASE + '/yonetim.php?view=audit');
+    const audit = await page.textContent('#adm-audit');
+    ok(['status', 'limits', 'reset', 'settings', 'delete', 'unblock'].every(a => audit.includes(a)) && audit.includes('(deleted)') && audit.includes('automatic approval'), 'audit log: every change, the automatic ones, the deleted account marked');
+    const csv = await page.evaluate(async () => (await fetch('yonetim.php?view=audit&csv=1')).text());
+    ok(csv.split('\n')[0].includes('"time (UTC)",by,action,account,detail'), 'audit log downloads as CSV');
+    await page.goto(BASE + '/hesap.php');
+    ok(!(await page.isVisible('#acc-paused')) && (await page.locator('#acc-announce').count()) === 0, 'service on again, no announcement');
+    await signOut(); }
+  await signIn(USER, 'Test Researcher');
 
   // 6. deleting the account removes it; signing in again starts as pending
   await page.click('#acc-delete'); await page.waitForSelector('#acc-deleted');

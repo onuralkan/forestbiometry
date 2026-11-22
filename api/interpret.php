@@ -46,7 +46,7 @@ function fb_finish(array $u, array $in, string $text, string $model, bool $trunc
     if ($s['bytes'] + strlen($sum) + strlen($text) <= $s['maxBytes'])
         $id = fb_save_interpretation($u['orcid'], (string)$in['tool'], substr((string)($in['version'] ?? ''), 0, 40), $model, substr((string)($in['key'] ?? ''), 0, 80), $text, $sum);
     fb_json(['text' => $text, 'model' => $model, 'truncated' => $truncated, 'id' => $id, 'saved' => $id !== null,
-        'used' => fb_used($u['orcid']), 'quota' => (int)$c['monthly_quota']]);
+        'used' => fb_used($u['orcid']), 'quota' => fb_limits(fb_account($u['orcid']))['month'], 'usedDay' => fb_used_day($u['orcid']), 'quotaDay' => fb_limits(fb_account($u['orcid']))['day']]);
 }
 
 $c = fb_config();
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') fb_json(['error' => 'method'], 405);
 $u = fb_user();
 if (!$u) fb_json(['error' => 'signin'], 401);
 if (!fb_csrf_ok($_SERVER['HTTP_X_CSRF'] ?? null)) fb_json(['error' => 'token'], 403);
-if ($u['status'] !== 'approved') fb_json(['error' => $u['status'] === 'blocked' ? 'blocked' : 'pending'], 403);
+if ($u['status'] !== 'approved') fb_json(['error' => in_array($u['status'], ['blocked', 'rejected'], true) ? $u['status'] : 'pending', 'reason' => $u['reason'] ?? null, 'until' => $u['until'] ?? null], 403);
 
 $raw = file_get_contents('php://input', false, null, 0, (int)$c['max_request_bytes'] + 1);
 if ($raw === false || strlen($raw) > (int)$c['max_request_bytes']) fb_json(['error' => 'too-large'], 413);
@@ -66,7 +66,9 @@ if (!is_array($in) || !isset($in['tool'], $in['summary']) || !is_array($in['summ
 $tool = FB_TOOLS[$in['tool']];
 
 $err = fb_take($u['orcid']);
-if ($err !== '') fb_json(['error' => $err, 'used' => fb_used($u['orcid']), 'quota' => (int)$c['monthly_quota']], 429);
+if ($err === 'off') fb_json(['error' => 'off', 'message' => fb_settings()['ai_off_message']], 503);
+if ($err !== '') { $l = fb_limits(fb_account($u['orcid']));
+    fb_json(['error' => $err, 'used' => fb_used($u['orcid']), 'quota' => $l['month'], 'usedDay' => fb_used_day($u['orcid']), 'quotaDay' => $l['day']], 429); }
 
 $user = "Tool: " . $tool['name'] . " " . substr((string)($in['version'] ?? ''), 0, 40) . "\n\nWhat the tool's result object holds:\n" . $tool['guide']
     . "\n\nResult object (JSON):\n" . json_encode($in['summary'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

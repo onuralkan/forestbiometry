@@ -219,7 +219,7 @@ function site_top(array $o = []): void {
         <a href="hesap.php?tab=interpretations">My interpretations</a>
         <a href="hesap.php?tab=results">Saved results</a>
         <a href="hesap.php?tab=profile">Account settings</a>
-        <?php if ($acct['admin']): ?><a href="hesap.php?tab=accounts">Accounts (administrator)</a><?php endif; ?>
+        <?php if ($acct['admin']): ?><a href="yonetim.php">Administration</a><?php endif; ?>
         <a href="gizlilik.php">Privacy</a>
         <form method="post" action="auth/logout.php"><input type="hidden" name="csrf" value="<?= h(fb_csrf()) ?>"><button type="submit" id="acctout">Sign out</button></form>
       </span></span>

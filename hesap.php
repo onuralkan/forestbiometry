@@ -1,7 +1,8 @@
 <?php
 // Account pages (21–22 Nov 2026, user decisions): sign in with ORCID; tabs Profile (state, use, storage, export, delete),
 // Interpretations and Saved results (the account's library, api/library.php keeps the same rules), and for the
-// administrator Accounts (approve / block, storage per account, database backup). Server-rendered forms, no script needed.
+// for the administrator a link to the administration panel (yonetim.php: accounts, limits, settings, audit log, backup).
+// Server-rendered forms, no script needed.
 declare(strict_types=1);
 require __DIR__ . '/inc/account.php';
 
@@ -49,20 +50,16 @@ if ($c && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([mb_substr($t, 0, 160), mb_substr(trim((string)($_POST['note'] ?? '')), 0, 2000), $id, $me]);
         header('Location: hesap.php?tab=results&id=' . $id . '&done=saved'); exit;
     }
-    if ($u['admin'] && in_array($act, ['approved', 'blocked', 'pending'], true) && preg_match('~^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$~', (string)($_POST['orcid'] ?? ''))
-        && $_POST['orcid'] !== $me) {
-        $db->prepare('UPDATE users SET status = ?, decided = ? WHERE orcid = ?')->execute([$act, gmdate('c'), $_POST['orcid']]);
-        header('Location: hesap.php?tab=accounts'); exit;
-    }
     header('Location: hesap.php'); exit;
 }
 
 require __DIR__ . '/inc/site.php';
 $u = $c ? fb_user() : null;
 $tab = $u ? (string)($_GET['tab'] ?? 'profile') : 'profile';
-if (!in_array($tab, ['profile', 'interpretations', 'results', 'accounts'], true) || ($tab === 'accounts' && !$u['admin'])) $tab = 'profile';
+if ($tab === 'accounts' && $u && $u['admin']) { header('Location: yonetim.php'); exit; }   // moved to the administration panel (22 Nov 2026)
+if (!in_array($tab, ['profile', 'interpretations', 'results'], true)) $tab = 'profile';
 site_top(['title' => 'Account', 'desc' => 'Sign in with ORCID for the AI interpretation of results and to keep results in your account. Calculations stay in your browser; raw data are never sent.', 'robots' => 'noindex']);
-$status = ['pending' => 'Waiting for approval', 'approved' => 'Approved', 'blocked' => 'Blocked'];
+$status = ['pending' => 'Waiting for approval', 'approved' => 'Approved', 'rejected' => 'Not approved', 'blocked' => 'Blocked'];
 $toolName = []; foreach (site_tools() as $t) $toolName[basename($t['file'], '.php')] = $t['title'];
 $tn = function ($id) use ($toolName) { return $toolName[$id] ?? $id; };
 $when = function ($iso) { return h(str_replace('T', ' ', substr((string)$iso, 0, 16))) . ' UTC'; };
@@ -91,14 +88,16 @@ $form = function ($act, $label, $extra = '', $cls = 'btn ghost small', $confirm 
     <h2 id="h-acc" class="b-h2">Account</h2>
     <?php if (isset($_GET['deleted'])): ?><p class="note ok" id="acc-deleted">Your account was deleted.</p><?php endif; ?>
     <?php if (($_GET['signin'] ?? '') === 'cancelled'): ?><p class="note warn">The sign-in was cancelled.</p><?php endif; ?>
+    <?php if (($_GET['signin'] ?? '') === 'closed'): ?><p class="note warn" id="acc-closed">New accounts cannot be opened at the moment. Please try again later.</p><?php endif; ?>
     <p>An account lets you ask for an AI interpretation of results (Anthropic's Claude) and keep analysis results and interpretations on this site to open them again later. Calculations stay in your browser, and raw data (your tables and files) are never sent or stored. Sign in with ORCID; accounts are approved by the site's author. See the <a href="gizlilik.php">privacy notice</a>.</p>
     <p class="b-actions"><a class="btn" id="acc-signin" href="auth/orcid.php">Sign in with ORCID</a></p>
   </section>
-<?php else: $used = fb_used($u['orcid']); $st = fb_storage($u['orcid']); ?>
+<?php else: $used = fb_used($u['orcid']); $st = fb_storage($u['orcid']); $lim = fb_limits(fb_account($u['orcid'])); $set = fb_settings(); ?>
   <nav class="tabs acc-tabs" aria-label="Account">
-    <?php foreach (['profile' => 'Profile', 'interpretations' => 'Interpretations (' . $st['interpretations'] . ')', 'results' => 'Saved results (' . $st['results'] . ')'] + ($u['admin'] ? ['accounts' => 'Accounts'] : []) as $k => $l): ?>
+    <?php foreach (['profile' => 'Profile', 'interpretations' => 'Interpretations (' . $st['interpretations'] . ')', 'results' => 'Saved results (' . $st['results'] . ')'] as $k => $l): ?>
     <a href="hesap.php?tab=<?= $k ?>" id="tab-<?= $k ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><?= h($l) ?></a>
     <?php endforeach; ?>
+    <?php if ($u['admin']): ?><a href="yonetim.php" id="tab-admin">Administration</a><?php endif; ?>
   </nav>
 <?php if ($tab === 'profile'): ?>
   <section class="card about" aria-labelledby="h-acc">
@@ -107,10 +106,11 @@ $form = function ($act, $label, $extra = '', $cls = 'btn ghost small', $confirm 
     <dl class="kv" id="acc-info">
       <dt>Name</dt><dd><?= h($u['name']) ?></dd>
       <dt>ORCID</dt><dd><a href="https://orcid.org/<?= h($u['orcid']) ?>">https://orcid.org/<?= h($u['orcid']) ?></a></dd>
-      <dt>State</dt><dd id="acc-status"><?= h($status[$u['status']] ?? $u['status']) ?><?= $u['admin'] ? ' (administrator)' : '' ?></dd>
-      <dt>Interpretations</dt><dd id="acc-used"><?= $used ?> of <?= (int)$c['monthly_quota'] ?> interpretations used this month</dd>
+      <dt>State</dt><dd id="acc-status"><?= h($status[$u['status']] ?? $u['status']) ?><?= $u['admin'] ? ' (administrator)' : '' ?><?= $u['until'] ? ' until ' . h(substr((string)$u['until'], 0, 10)) : '' ?><?= $u['reason'] ? '<br><span class="small" id="acc-reason">Reason: ' . h($u['reason']) . '</span>' : '' ?></dd>
+      <dt>Interpretations</dt><dd id="acc-used"><?= $used ?> of <?= $lim['month'] ?> interpretations used this month<?= $lim['extra'] ? ' (including ' . $lim['extra'] . ' extra)' : '' ?><?= $lim['day'] > 0 ? '; ' . fb_used_day($u['orcid']) . ' of ' . $lim['day'] . ' today' : '' ?><?= $set['ai_enabled'] ? '' : '<br><span class="small" id="acc-paused">The interpretation service is paused' . ($set['ai_off_message'] !== '' ? ': ' . h($set['ai_off_message']) : '.') . '</span>' ?></dd>
       <dt>Storage</dt><dd id="acc-storage"><?= $st['results'] ?> of <?= $st['maxResults'] ?> saved results, <?= $st['interpretations'] ?> interpretations; <?= $mb($st['bytes']) ?> of <?= $mb($st['maxBytes']) ?></dd>
     </dl>
+    <?php if ($set['announcement'] !== ''): ?><p class="note" id="acc-announce"><?= h($set['announcement']) ?></p><?php endif; ?>
     <?php if ($u['status'] === 'pending'): ?><p class="note" id="acc-pending">Your account is waiting for approval. You can use every tool meanwhile; interpretations and saving results work once the account is approved.</p><?php endif; ?>
     <p class="muted small">Saved results and interpretations stay until you delete them. An account not signed in for 24 months is deleted with everything it keeps.</p>
     <div class="b-actions">
@@ -184,25 +184,6 @@ $form = function ($act, $label, $extra = '', $cls = 'btn ghost small', $confirm 
     </tbody></table></div>
     <?php endif; ?>
   <?php endif; ?>
-  </section>
-<?php elseif ($tab === 'accounts'):
-  $rows = fb_db()->query("SELECT u.orcid, u.name, u.status, u.created, u.last_seen, COALESCE(g.n, 0) AS used,
-      (SELECT COUNT(*) FROM results r WHERE r.orcid = u.orcid) AS nres, (SELECT COALESCE(SUM(size), 0) FROM results r WHERE r.orcid = u.orcid) + (SELECT COALESCE(SUM(size), 0) FROM interpretations i WHERE i.orcid = u.orcid) AS bytes
-      FROM users u LEFT JOIN usage g ON g.orcid = u.orcid AND g.month = '" . fb_month() . "' ORDER BY CASE u.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END, u.created DESC")->fetchAll();
-  $bk = glob(fb_private_dir() . '/backups/fb-*.sqlite.gz') ?: []; rsort($bk); ?>
-  <section class="card about" aria-labelledby="accounts">
-    <h2 id="accounts" class="b-h2">Accounts</h2>
-    <div class="tscroll"><table class="grid" id="acc-list"><thead><tr><th>Name</th><th>ORCID</th><th>Signed up</th><th>Last seen</th><th>State</th><th>This month</th><th>Saved</th><th></th></tr></thead><tbody>
-    <?php foreach ($rows as $r): ?>
-      <tr data-orcid="<?= h($r['orcid']) ?>"><td><?= h($r['name']) ?></td><td><a href="https://orcid.org/<?= h($r['orcid']) ?>"><?= h($r['orcid']) ?></a></td><td class="small"><?= h(substr($r['created'], 0, 10)) ?></td><td class="small"><?= h(substr((string)$r['last_seen'], 0, 10)) ?></td>
-        <td><?= h($status[$r['status']] ?? $r['status']) ?></td><td class="num"><?= (int)$r['used'] ?></td><td class="num"><?= (int)$r['nres'] ?> · <?= $mb((int)$r['bytes']) ?></td>
-        <td><?php if ($r['orcid'] !== $u['orcid']): foreach (['approved' => 'Approve', 'blocked' => 'Block', 'pending' => 'Set pending'] as $a => $l): if ($a === $r['status']) continue;
-          echo $form($a, $l, '<input type="hidden" name="orcid" value="' . h($r['orcid']) . '">'); endforeach; endif; ?></td></tr>
-    <?php endforeach; ?>
-    </tbody></table></div>
-    <h3>Backup</h3>
-    <p class="small" id="acc-backup">The database is copied every night by the server's cron job (<code>inc/backup.php</code>; the last 30 copies are kept next to the database). <?= $bk ? 'Newest copy: ' . h(basename($bk[0])) . '.' : 'No copy yet: set up the cron job (see PROJECT.md §3).' ?> Download a copy now and then to keep one off the server.</p>
-    <p class="b-actions"><a class="btn ghost" href="hesap.php?backup=1" id="acc-bkdl">Download the newest backup</a></p>
   </section>
 <?php endif; ?>
 <?php endif; ?>

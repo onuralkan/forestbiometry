@@ -16,7 +16,7 @@ $self = ($https ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? 'forestbio
 if (!empty($c['orcid_mock']) && isset($_GET['mock'])) {
     $id = (string)$_GET['mock'];
     if (!preg_match('~^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$~', $id)) { http_response_code(400); exit('Bad iD'); }
-    fb_sign_in($id, substr((string)($_GET['name'] ?? 'Test user'), 0, 120));
+    if (!fb_sign_in($id, substr((string)($_GET['name'] ?? 'Test user'), 0, 120))) { header('Location: ../hesap.php?signin=closed'); exit; }
     header('Location: ../' . $back); exit;
 }
 
@@ -46,5 +46,5 @@ $t = is_string($body) ? json_decode($body, true) : null;
 if ($code !== 200 || !is_array($t) || empty($t['orcid']) || !preg_match('~^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$~', (string)$t['orcid'])) {
     http_response_code(502); exit('ORCID did not confirm the sign-in. Please try again later.');
 }
-fb_sign_in((string)$t['orcid'], substr(trim((string)($t['name'] ?? '')) ?: (string)$t['orcid'], 0, 120));
+if (!fb_sign_in((string)$t['orcid'], substr(trim((string)($t['name'] ?? '')) ?: (string)$t['orcid'], 0, 120))) { header('Location: ../hesap.php?signin=closed'); exit; }
 header('Location: ../' . $back);

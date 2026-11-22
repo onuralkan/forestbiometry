@@ -33,17 +33,21 @@ export async function mountInterpret(el, tool, getSummary) {
   if (!st.configured || !slot.isConnected) return;
   const back = location.pathname.split('/').pop() || 'index.php';
   const summary = getSummary(), key = tool.id + '|' + keyOf(summary), prev = done.get(key);
-  const left = st.signedIn ? Math.max(0, st.quota - st.used) : 0;
+  const leftOf = j => Math.max(0, Math.min(j.quota - j.used, j.quotaDay > 0 ? j.quotaDay - j.usedDay : Infinity));
+  const leftText = j => `${Math.max(0, j.quota - j.used)} of ${j.quota} interpretations left this month${j.quotaDay > 0 ? `; ${Math.max(0, j.quotaDay - j.usedDay)} of ${j.quotaDay} today` : ''}`;
+  const left = st.signedIn ? leftOf(st) : 0;
+  const note = st.signedIn && st.announcement ? `<p class="note" id="ai-announce">${esc(st.announcement)}</p>` : '';
   let body;
   if (!st.signedIn) body = `<p>Sign in with ORCID to ask for an AI interpretation of these results (accounts are approved by the site's author).</p>
     <p class="b-actions"><a class="btn ghost" href="auth/orcid.php?back=${encodeURIComponent(back)}" id="ai-signin">Sign in with ORCID</a></p>`;
   else if (st.status === 'pending') body = '<p id="ai-pending">Your account is waiting for approval; the interpretation works once it is approved. <a href="hesap.php">Account</a></p>';
-  else if (st.status !== 'approved') body = '<p>Your account cannot use the interpretation service. <a href="hesap.php">Account</a></p>';
+  else if (st.status !== 'approved') body = `<p id="ai-blocked">Your account cannot use the interpretation service${st.reason ? `: ${esc(st.reason)}` : '.'}${st.until ? ` (until ${esc(st.until.slice(0, 10))})` : ''} <a href="hesap.php">Account</a></p>`;
+  else if (!st.service) body = `<p class="note warn" id="ai-off">The interpretation service is paused${st.serviceMessage ? `: ${esc(st.serviceMessage)}` : '.'}</p>`;
   else body = `<p class="b-actions"><button type="button" class="btn" id="ai-go"${left ? '' : ' disabled'}>${prev ? 'Interpret again' : 'Interpret these results'}</button>
-      <span class="muted small" id="ai-left">${left} of ${st.quota} interpretations left this month</span></p>`;
+      <span class="muted small" id="ai-left">${leftText(st)}</span></p>`;
   slot.innerHTML = `<section class="card ai-card" aria-labelledby="ai-h"><h3 id="ai-h">AI interpretation</h3>
     <p class="muted small">Written by Anthropic's Claude from the summary of these results (settings and result tables, no row data), sent only when you press the button. A language model can be wrong: check the text against the numbers. <a href="gizlilik.php">Privacy</a></p>
-    ${body}<div id="ai-out" aria-live="polite"></div></section>`;
+    ${note}${body}<div id="ai-out" aria-live="polite"></div></section>`;
   slot.hidden = false;
   const out = slot.querySelector('#ai-out');
   const show = r => {
@@ -64,15 +68,16 @@ export async function mountInterpret(el, tool, getSummary) {
     if (j && j.text) {
       const res = { text: j.text, model: j.model, truncated: !!j.truncated, at: Date.now(), saved: j.saved, id: j.id };
       done.set(key, res); show(res);
-      state().used = j.used; const l = Math.max(0, j.quota - j.used);
-      slot.querySelector('#ai-left').textContent = `${l} of ${j.quota} interpretations left this month`;
+      Object.assign(state(), { used: j.used, quota: j.quota, usedDay: j.usedDay, quotaDay: j.quotaDay }); const l = leftOf(j);
+      slot.querySelector('#ai-left').textContent = leftText(j);
       go.textContent = 'Interpret again'; go.disabled = !l;
       return;
     }
-    const msg = { quota: 'This month\'s interpretations are used up.', rate: 'Too many requests in a minute; wait a moment and try again.', signin: 'Your session has ended; sign in again.',
+    const msg = { quota: 'This month\'s interpretations are used up.', daily: 'Today\'s interpretations are used up; try again tomorrow (UTC).',
+      off: 'The interpretation service is paused' + (j && j.message ? ': ' + j.message : '.'), rejected: 'Your account was not approved.', rate: 'Too many requests in a minute; wait a moment and try again.', signin: 'Your session has ended; sign in again.',
       pending: 'Your account is waiting for approval.', blocked: 'Your account cannot use the service.', token: 'The page is out of date; reload it.', 'too-large': 'These results are too large to send for an interpretation.',
       refusal: 'The model declined to interpret these results.', upstream: 'The interpretation service did not answer; you were not charged. Try again later.', network: 'No connection to the server.' }[j && j.error] || 'The interpretation failed.';
     out.innerHTML = `<p class="note err" id="ai-err">${esc(msg)}${j && j.detail ? `<br><span class="small">Details: ${esc(j.detail)}</span>` : ''}</p>`;
-    go.disabled = (j && (j.error === 'quota' || j.error === 'blocked'));
+    go.disabled = !!(j && ['quota', 'daily', 'blocked', 'rejected', 'off'].includes(j.error));
   });
 }

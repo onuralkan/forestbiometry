@@ -62,7 +62,53 @@ function fb_db(): PDO {
     $db->exec('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)');
     $cols = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');
     if (!in_array('last_seen', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN last_seen TEXT');
+    // administration panel (yonetim.php, 22 Nov 2026): reason shown to the user, end of a temporary block, private
+    // administrator note, personal monthly / daily quota (NULL = site default), extra interpretations for one month
+    foreach (['reason TEXT', 'until TEXT', 'note TEXT', 'q_month INTEGER', 'q_day INTEGER', 'extra INTEGER', 'extra_month TEXT'] as $col)
+        if (!in_array(strtok($col, ' '), $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN ' . $col);
+    $db->exec('CREATE TABLE IF NOT EXISTS usage_day (orcid TEXT NOT NULL, day TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (orcid, day))');
+    $db->exec('CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT NOT NULL)');
+    $db->exec('CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, admin TEXT NOT NULL, action TEXT NOT NULL, orcid TEXT, detail TEXT NOT NULL)');
+    $db->exec('CREATE INDEX IF NOT EXISTS audit_orcid ON audit (orcid, at)');
     return $db;
+}
+
+/* ---------------- site settings (administration panel) ---------------- */
+/** Site settings the administrator can change in yonetim.php; config.php gives the defaults. */
+const FB_SETTINGS = ['monthly_quota', 'daily_quota', 'per_minute', 'signup', 'ai_enabled', 'ai_off_message', 'announcement'];
+function fb_settings(): array {
+    static $s = null;
+    if ($s !== null) return $s;
+    $c = fb_config();
+    $s = ['monthly_quota' => (int)$c['monthly_quota'], 'daily_quota' => (int)($c['daily_quota'] ?? 0), 'per_minute' => (int)$c['per_minute'],
+        'signup' => 'approval', 'ai_enabled' => 1, 'ai_off_message' => '', 'announcement' => ''];
+    foreach (fb_db()->query('SELECT k, v FROM settings')->fetchAll() as $r)
+        if (array_key_exists($r['k'], $s)) $s[$r['k']] = is_int($s[$r['k']]) ? (int)$r['v'] : (string)$r['v'];
+    return $s;
+}
+function fb_set_setting(string $k, $v): void {
+    if (!in_array($k, FB_SETTINGS, true)) throw new InvalidArgumentException('unknown setting ' . $k);
+    fb_db()->prepare('INSERT OR REPLACE INTO settings (k, v) VALUES (?, ?)')->execute([$k, (string)$v]);
+}
+
+/** One line of the administrator's audit log. detail: what changed (before → after) and the reason. */
+function fb_audit(string $admin, string $action, ?string $orcid, string $detail): void {
+    fb_db()->prepare('INSERT INTO audit (at, admin, action, orcid, detail) VALUES (?, ?, ?, ?, ?)')->execute([gmdate('c'), $admin, $action, $orcid, mb_substr($detail, 0, 2000)]);
+}
+
+/** A user row with everything the limits need. */
+function fb_account(string $orcid): ?array {
+    $st = fb_db()->prepare('SELECT * FROM users WHERE orcid = ?'); $st->execute([$orcid]);
+    return $st->fetch() ?: null;
+}
+/** Effective limits of an account: personal values where set, else the site defaults; extra interpretations of this month. */
+function fb_limits(?array $row): array {
+    $s = fb_settings();
+    $extra = $row && ($row['extra_month'] ?? '') === fb_month() ? (int)$row['extra'] : 0;
+    $m = $row && $row['q_month'] !== null && $row['q_month'] !== '' ? (int)$row['q_month'] : $s['monthly_quota'];
+    $d = $row && $row['q_day'] !== null && $row['q_day'] !== '' ? (int)$row['q_day'] : $s['daily_quota'];
+    return ['month' => $m + $extra, 'monthBase' => $m, 'extra' => $extra, 'day' => $d, 'perMinute' => $s['per_minute'],
+        'personalMonth' => $row && $row['q_month'] !== null && $row['q_month'] !== '', 'personalDay' => $row && $row['q_day'] !== null && $row['q_day'] !== ''];
 }
 
 /** Starts the session only when needed (signing in) or when the visitor already has one: no cookie for anonymous visitors. */
@@ -78,13 +124,18 @@ function fb_session(bool $create = false): bool {
     return true;
 }
 
-/** The signed-in account { orcid, name, status, admin } or null. Status: pending | approved | blocked. */
+/** The signed-in account { orcid, name, status, reason, until, admin } or null. Status: pending | approved | rejected | blocked. */
 function fb_user(): ?array {
     if (!fb_config() || !fb_session() || empty($_SESSION['orcid'])) return null;
-    $st = fb_db()->prepare('SELECT orcid, name, status FROM users WHERE orcid = ?');
+    $st = fb_db()->prepare('SELECT orcid, name, status, reason, until FROM users WHERE orcid = ?');
     $st->execute([$_SESSION['orcid']]);
     $u = $st->fetch();
     if (!$u) return null;
+    if ($u['status'] === 'blocked' && $u['until'] && $u['until'] <= gmdate('c')) {   // a temporary block has ended
+        fb_db()->prepare("UPDATE users SET status = 'approved', reason = NULL, until = NULL, decided = ? WHERE orcid = ?")->execute([gmdate('c'), $u['orcid']]);
+        fb_audit('system', 'unblock', $u['orcid'], 'temporary block ended (' . $u['until'] . '): blocked → approved');
+        $u['status'] = 'approved'; $u['reason'] = null; $u['until'] = null;
+    }
     $u['admin'] = $u['orcid'] === fb_config()['admin_orcid'];
     if ($u['admin']) $u['status'] = 'approved';
     fb_touch($u['orcid']);
@@ -113,6 +164,8 @@ function fb_purge(bool $force = false): int {
     if (!$force && $st->fetchColumn() === $day) return 0;
     $db->prepare("INSERT OR REPLACE INTO meta (k, v) VALUES ('purged', ?)")->execute([$day]);
     $cut = gmdate('c', strtotime('-24 months'));
+    $db->prepare('DELETE FROM audit WHERE at < ?')->execute([$cut]);           // the audit log is kept 24 months
+    $db->prepare('DELETE FROM usage_day WHERE day < ?')->execute([gmdate('Y-m-d', strtotime('-400 days'))]);
     $st = $db->prepare('SELECT orcid FROM users WHERE COALESCE(last_seen, created) < ? AND orcid <> ?');
     $st->execute([$cut, (string)fb_config()['admin_orcid']]);
     $old = $st->fetchAll(PDO::FETCH_COLUMN);
@@ -123,7 +176,7 @@ function fb_purge(bool $force = false): int {
 /** Removes an account and everything it saved. */
 function fb_delete_account(string $orcid): void {
     $db = fb_db();
-    foreach (['results', 'interpretations', 'usage', 'recent', 'users'] as $t) $db->prepare("DELETE FROM $t WHERE orcid = ?")->execute([$orcid]);
+    foreach (['results', 'interpretations', 'usage', 'usage_day', 'recent', 'users'] as $t) $db->prepare("DELETE FROM $t WHERE orcid = ?")->execute([$orcid]);
 }
 
 /** Random, unguessable id of a saved item. */
@@ -161,17 +214,25 @@ function fb_has_raw_data(array $rec): bool {
 function fb_csrf(): string { fb_session(true); return $_SESSION['csrf']; }
 function fb_csrf_ok(?string $t): bool { return fb_session() && is_string($t) && hash_equals($_SESSION['csrf'] ?? '', $t); }
 
-/** Signs an ORCID account in, creating it as pending on its first visit (the administrator is approved at once). */
-function fb_sign_in(string $orcid, string $name): void {
+/**
+ * Signs an ORCID account in, creating it on its first visit by the site's sign-up mode (yonetim.php): 'approval' →
+ * pending, 'auto' → approved, 'closed' → no new account (→ false). The administrator is approved at once, always.
+ */
+function fb_sign_in(string $orcid, string $name): bool {
     $db = fb_db();
     $now = gmdate('c');
     $admin = $orcid === fb_config()['admin_orcid'];
+    $mode = fb_settings()['signup'];
+    if (!$admin && $mode === 'closed' && !fb_account($orcid)) return false;
+    $auto = $admin || $mode === 'auto';
     $st = $db->prepare('INSERT OR IGNORE INTO users (orcid, name, status, created, decided) VALUES (?, ?, ?, ?, ?)');
-    $st->execute([$orcid, $name, $admin ? 'approved' : 'pending', $now, $admin ? $now : null]);
+    $st->execute([$orcid, $name, $auto ? 'approved' : 'pending', $now, $auto ? $now : null]);
+    if ($st->rowCount() && $auto && !$admin) fb_audit('system', 'approve', $orcid, 'automatic approval (sign-up mode "auto")');
     $db->prepare('UPDATE users SET name = ? WHERE orcid = ?')->execute([$name, $orcid]);
     fb_session(true);
     session_regenerate_id(true);
     $_SESSION['orcid'] = $orcid;
+    return true;
 }
 
 function fb_sign_out(): void {
@@ -189,6 +250,12 @@ function fb_used(string $orcid): int {
     $st->execute([$orcid, fb_month()]);
     return (int)($st->fetchColumn() ?: 0);
 }
+function fb_day(): string { return gmdate('Y-m-d'); }
+function fb_used_day(string $orcid): int {
+    $st = fb_db()->prepare('SELECT n FROM usage_day WHERE orcid = ? AND day = ?');
+    $st->execute([$orcid, fb_day()]);
+    return (int)($st->fetchColumn() ?: 0);
+}
 
 /** Usage state shown to the browser: no data beyond the account's own. */
 function fb_state(): array {
@@ -196,23 +263,34 @@ function fb_state(): array {
     if (!$c) return ['configured' => false];
     $u = fb_user();
     if (!$u) return ['configured' => true, 'signedIn' => false];
+    $s = fb_settings(); $l = fb_limits(fb_account($u['orcid']));
     return ['configured' => true, 'signedIn' => true, 'name' => $u['name'], 'orcid' => $u['orcid'], 'status' => $u['status'], 'admin' => $u['admin'],
-        'used' => fb_used($u['orcid']), 'quota' => (int)$c['monthly_quota'], 'csrf' => fb_csrf()];
+        'used' => fb_used($u['orcid']), 'quota' => $l['month'], 'usedDay' => fb_used_day($u['orcid']), 'quotaDay' => $l['day'],
+        'reason' => $u['reason'] ?? null, 'until' => $u['until'] ?? null,
+        'service' => (bool)$s['ai_enabled'], 'serviceMessage' => $s['ai_off_message'], 'announcement' => $s['announcement'], 'csrf' => fb_csrf()];
 }
 
-/** Takes one interpretation from the account's monthly quota and the per-minute limit, atomically. → '' or an error code. */
+/**
+ * Takes one interpretation from the account's limits, atomically: service on, per-minute limit, daily quota (0 = none),
+ * monthly quota (personal or site default, plus this month's extra). → '' or an error code (off, rate, daily, quota).
+ */
 function fb_take(string $orcid): string {
-    $c = fb_config(); $db = fb_db(); $now = time();
+    $db = fb_db(); $now = time(); $s = fb_settings();
+    if (!$s['ai_enabled']) return 'off';
+    $l = fb_limits(fb_account($orcid));
     $db->exec('BEGIN IMMEDIATE');
     try {
         $db->prepare('DELETE FROM recent WHERE at < ?')->execute([$now - 60]);
         $st = $db->prepare('SELECT COUNT(*) FROM recent WHERE orcid = ?'); $st->execute([$orcid]);
-        if ((int)$st->fetchColumn() >= (int)$c['per_minute']) { $db->exec('ROLLBACK'); return 'rate'; }
-        if (fb_used($orcid) >= (int)$c['monthly_quota']) { $db->exec('ROLLBACK'); return 'quota'; }
+        if ((int)$st->fetchColumn() >= $l['perMinute']) { $db->exec('ROLLBACK'); return 'rate'; }
+        if ($l['day'] > 0 && fb_used_day($orcid) >= $l['day']) { $db->exec('ROLLBACK'); return 'daily'; }
+        if (fb_used($orcid) >= $l['month']) { $db->exec('ROLLBACK'); return 'quota'; }
         $db->prepare('INSERT INTO recent (orcid, at) VALUES (?, ?)')->execute([$orcid, $now]);
         // (no UPSERT: older SQLite builds on shared hosts lack it)
         $db->prepare('INSERT OR IGNORE INTO usage (orcid, month, n) VALUES (?, ?, 0)')->execute([$orcid, fb_month()]);
         $db->prepare('UPDATE usage SET n = n + 1 WHERE orcid = ? AND month = ?')->execute([$orcid, fb_month()]);
+        $db->prepare('INSERT OR IGNORE INTO usage_day (orcid, day, n) VALUES (?, ?, 0)')->execute([$orcid, fb_day()]);
+        $db->prepare('UPDATE usage_day SET n = n + 1 WHERE orcid = ? AND day = ?')->execute([$orcid, fb_day()]);
         $db->exec('COMMIT');
         return '';
     } catch (Throwable $e) { $db->exec('ROLLBACK'); throw $e; }
@@ -221,6 +299,7 @@ function fb_take(string $orcid): string {
 /** Gives the interpretation back when the model call failed (the user is not charged for an error). */
 function fb_give_back(string $orcid): void {
     fb_db()->prepare('UPDATE usage SET n = MAX(n - 1, 0) WHERE orcid = ? AND month = ?')->execute([$orcid, fb_month()]);
+    fb_db()->prepare('UPDATE usage_day SET n = MAX(n - 1, 0) WHERE orcid = ? AND day = ?')->execute([$orcid, fb_day()]);
 }
 
 function fb_json($v, int $code = 200): void {
