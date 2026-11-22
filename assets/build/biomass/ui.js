@@ -22,7 +22,8 @@ const { buildUnits } = __fb_r("stand/calc.js");
 //    decision; METHODS §22). Log forms are kept on their own scale: ln and log10 are separate forms, never converted
 //    silently. Back-transformation correction: none, Snowdon ratio or a user factor as given in the source, or the
 //    Baskerville factor exp(SEE²/2) on the ln scale (Baskerville 1972, cited via Chave et al. 2014 and Baia et al.
-//    2025 [A]); for log10 equations the factor waits for its own source (Sprugel 1983) and is not applied.
+//    2025 [A]); for log10 equations the SEE is first converted to the ln scale, SEE·ln 10 (Sprugel 1983 [B], read on
+//    22 Nov 2026; enabled in 1.0.0-beta.6, user decision).
 // B. Conversion from volume (IPCC 2006, Vol. 4, Ch. 2, Eq. 2.8b [B]): AGB = V · D · BEF (or V · BCEF), total
 //    = AGB · (1 + R), R = below-ground / above-ground biomass. The bark side of the volume must match the side the
 //    factors were defined for; otherwise nothing is computed.
@@ -31,10 +32,10 @@ const { buildUnits } = __fb_r("stand/calc.js");
 
 
 
-const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.5' };
+const TOOL = { id: 'biyokutle-karbon', version: '1.0.0-beta.6' };
 const CO2_PER_C = 44 / 12;
-/** Scales on which the Baskerville correction is applied: ln ([A], METHODS §22); log10 waits for its source. */
-const BASKERVILLE_SCALES = ['log'];
+/** Scales on which the Baskerville correction is applied: ln ([A]) and log10 via SEE·ln 10 (Sprugel 1983 [B]; METHODS §22). */
+const BASKERVILLE_SCALES = ['log', 'log10'];
 
 /** Registered forms. f(p, D, H) gives B on the form's own scale (linear, ln B or log10 B). */
 const FORMS = {

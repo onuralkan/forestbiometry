@@ -2,6 +2,7 @@
  "note": "random test numbers, not species coefficients",
  "co2_per_c": 3.6666666666666665,
  "baskerville_see_0.2": 1.0202013400267558,
+ "baskerville_log10_see_0.1": 1.0268639927219596,
  "cases": [
   {
    "form": "pow.d",

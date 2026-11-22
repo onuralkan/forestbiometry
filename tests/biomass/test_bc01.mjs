@@ -35,7 +35,7 @@ ok(Math.abs(correctionFactor({ transform: { kind: 'log', correction: 'baskervill
 const bask = B.treeBiomass(mk('log.d', { a: -2, b: 2.4 }, { kind: 'log', correction: 'baskerville', value: 0.2 }), { D: 30 });
 ok(bask.status === 'ok' && rel(bask.value, Math.exp(-2 + 2.4 * Math.log(30)) * REF['baskerville_see_0.2']) < 1e-12 && rel(bask.cf, 1.020201340027) < 1e-12, 'Baskerville on the ln scale: exp(a + b·ln D) · exp(SEE²/2), SEE = 0.2 → factor 1.020201340027');
 const bask10 = B.treeBiomass(mk('log10.d', { a: -1, b: 2.4 }, { kind: 'log10', correction: 'baskerville', value: 0.1 }), { D: 30 });
-ok(bask10.status === 'unsupported' && bask10.problems[0].code === 'correction.baskerville.log10.source' && bask10.value === null, 'Baskerville on a log10 equation waits for its source: not computed, reason given');
+ok(bask10.status === 'ok' && rel(bask10.cf, REF['baskerville_log10_see_0.1']) < 1e-12 && Math.abs(REF['baskerville_log10_see_0.1'] - 1.026863993) < 1e-9 && rel(bask10.value, 10 ** (-1 + 2.4 * Math.log10(30)) * REF['baskerville_log10_see_0.1']) < 1e-12, 'Baskerville on a log10 equation (Sprugel 1983): SEE·ln 10 = 0.2303 → factor exp(0.2303²/2) = 1.026863993');
 
 // states
 const dh = mk('pow.dh', { a: 0.05, b: 2, c: 0.7 });

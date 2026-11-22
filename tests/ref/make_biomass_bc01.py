@@ -72,6 +72,8 @@ for pl in plots:
         stand.append({"plot_id": pl["plot_id"], "period": per, "n": n, "Mg_ha": s * 10000.0 / pl["plot_area"] / 1000.0})
 
 out = {"note": "random test numbers, not species coefficients", "co2_per_c": 44.0 / 12.0, "baskerville_see_0.2": math.exp(0.2 ** 2 / 2),
+       "baskerville_log10_see_0.1": math.exp((0.1 * math.log(10)) ** 2 / 2),  # Sprugel 1983: SEE(log10) · ln 10
+      
        "cases": cases, "volume": vol, "carbon": carb, "stand": {"plots": plots, "trees": trees, "totals": stand}}
 p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "biomass_bc01.json")
 with open(p, "w") as f:
