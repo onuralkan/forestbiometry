@@ -30,7 +30,7 @@ const keyOf = o => { const s = JSON.stringify({ ...o, created: undefined }); let
 
 // ---- assets/lab/core/chart.js
 __fb_m["core/chart.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "barChart": () => barChart, "niceTicks": () => niceTicks, "plotChart": () => plotChart, "radarChart": () => radarChart, "scatterChart": () => scatterChart, "svgForDownload": () => svgForDownload });
+__fb_x(__fb_e, { "barChart": () => barChart, "intervalChart": () => intervalChart, "niceTicks": () => niceTicks, "plotChart": () => plotChart, "radarChart": () => radarChart, "scatterChart": () => scatterChart, "svgForDownload": () => svgForDownload });
 const { esc } = __fb_r("core/i18n.js");
 // Small SVG chart helpers shared by the tools (no library). Colours come from CSS variables
 // (--c1…--c6 in lab.css), so charts follow the theme; svgForDownload() inlines them.
@@ -187,6 +187,31 @@ function radarChart(o) {
     s += `<line class="ch-line ch-l${i % 6}${dash(i)}" x1="${x}" x2="${x + 26}" y1="${y}" y2="${y}"/><text class="ch-tick" x="${x + 32}" y="${y + 4}">${esc(se.name)}</text>`;
   });
   if (o.note) s += `<text class="ch-tick" x="${cx}" y="${top - 14}" text-anchor="middle">${esc(o.note)}</text>`;
+  return s + '</svg>';
+}
+
+/**
+ * Point estimates with intervals, one row per item (22 Nov 2026; the account's saved-result views).
+ * o = { title, items:[{ label, est, lo?, hi? }], xLabel, fmt, ref?: number (vertical reference line, e.g. 0), width? }
+ * Items without lo/hi are drawn as points only; values may be negative.
+ */
+function intervalChart(o) {
+  const W = o.width || 680, row = 34, L = Math.min(220, 24 + Math.max(4, ...o.items.map(i => String(i.label).length)) * 7.2), R = 20, T = 14, B = 48;
+  const H = T + B + row * Math.max(1, o.items.length), pw = W - L - R, ph = H - T - B, fmt = o.fmt || (v => String(v));
+  const vals = o.items.flatMap(i => [i.est, i.lo, i.hi]).concat(o.ref == null ? [] : [o.ref]).filter(v => v != null && Number.isFinite(v));
+  let a = Math.min(...vals), b = Math.max(...vals); if (!(b > a)) { a -= 1; b += 1; } const pad = (b - a) * 0.06; a -= pad; b += pad;
+  const sx = v => L + (v - a) / (b - a) * pw;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title>`;
+  for (const t of linTicks(a, b, 6)) s += `<line class="ch-grid" x1="${sx(t)}" x2="${sx(t)}" y1="${T}" y2="${T + ph}"/><text class="ch-tick" x="${sx(t)}" y="${T + ph + 16}" text-anchor="middle">${esc(fmt(t))}</text>`;
+  if (o.ref != null) s += `<line class="ch-ref" x1="${sx(o.ref)}" x2="${sx(o.ref)}" y1="${T}" y2="${T + ph}"/>`;
+  o.items.forEach((it, i) => {
+    const y = T + row * i + row / 2, k = i % 6;
+    s += `<text class="ch-tick" x="${L - 8}" y="${y + 4}" text-anchor="end">${esc(it.label)}</text>`;
+    if (it.lo != null && it.hi != null && Number.isFinite(it.lo) && Number.isFinite(it.hi)) s += `<line class="ch-line ch-l${k}" x1="${sx(it.lo)}" x2="${sx(it.hi)}" y1="${y}" y2="${y}"/><line class="ch-line ch-l${k}" x1="${sx(it.lo)}" x2="${sx(it.lo)}" y1="${y - 6}" y2="${y + 6}"/><line class="ch-line ch-l${k}" x1="${sx(it.hi)}" x2="${sx(it.hi)}" y1="${y - 6}" y2="${y + 6}"/>`;
+    if (it.est != null && Number.isFinite(it.est)) s += `<circle class="ch-s${k}" cx="${sx(it.est)}" cy="${y}" r="5"><title>${esc(it.label)}: ${esc(fmt(it.est))}${it.lo != null ? ` [${esc(fmt(it.lo))}, ${esc(fmt(it.hi))}]` : ''}</title></circle>`;
+  });
+  s += `<rect class="ch-frame" x="${L}" y="${T}" width="${pw}" height="${ph}"/>`;
+  if (o.xLabel) s += `<text class="ch-lab" x="${L + pw / 2}" y="${H - 8}" text-anchor="middle">${esc(o.xLabel)}</text>`;
   return s + '</svg>';
 }
 };
@@ -1254,7 +1279,7 @@ async function saveRecord(rec, payload, to) {
   try {
     const st = await getState(true);
     const r = await fetch('api/library.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF': st.csrf || '' },
-      body: JSON.stringify({ act: 'save', record: rec, key: keyOf(payload) }) });
+      body: JSON.stringify({ act: 'save', record: JSON.stringify(rec), key: keyOf(payload) }) });   // as text: kept byte for byte, the seal holds
     j = await r.json();
   } catch (e) { j = { error: 'network' }; }
   to.b.disabled = false;

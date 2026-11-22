@@ -127,10 +127,22 @@ try {
   await page.goto(BASE + '/hesap.php?tab=results');
   ok(await page.locator('#res-list tbody tr').count() === 3, 'Saved results tab lists 3 results');
   await page.goto(`${BASE}/hesap.php?tab=results&id=${sr.id}`);
+  await page.waitForSelector('#res-view[data-kind]');
+  ok((await page.getAttribute('#res-view', 'data-kind')) === 'tool' && await page.isVisible('#rv-measures') && await page.locator('#res-view figure.chartbox svg').count() >= 2, 'saved result shown as in the tool: measures table and charts');
+  await page.waitForFunction(() => document.getElementById('rv-seal').textContent !== '');
+  ok((await page.textContent('#rv-measures')).includes('m1') && (await page.textContent('#rv-seal')).includes('Seal holds'), 'the view shows the saved numbers; the seal holds');
+  ok(!(await page.isVisible('#res-body')), 'the JSON is folded away');
+  const svgDl = page.waitForEvent('download'); await page.locator('#res-view figure.chartbox button').first().click(); ok((await svgDl).suggestedFilename().endsWith('.svg'), 'charts download as SVG');
+  await page.click('#res-editbox summary');
   await page.fill('#res-title', 'Pilot evaluation'); await page.fill('#res-note', 'first test'); await page.click('#res-save');
   await page.waitForSelector('#h-res');
-  ok((await page.textContent('#h-res')).includes('Pilot evaluation') && await page.locator('#res-ints li').count() === 2 && (await page.textContent('#res-body')).includes('run-record/1'), 'result page: title and note edited, interpretations and the record shown');
-  const dl = page.waitForEvent('download'); await page.click('#res-download'); ok((await dl).suggestedFilename().startsWith('model-degerlendirme-'), 'the saved record downloads as JSON');
+  ok((await page.textContent('#h-res')).includes('Pilot evaluation') && (await page.textContent('#res-notetext')).includes('first test') && await page.locator('#res-ints a').count() === 2 && (await page.textContent('#res-body')).includes('run-record/1'), 'result page: title and note edited, interpretations and the record shown');
+  // a tool without its own view: the generic view of its tables
+  const gen = await post({ act: 'delete', kind: 'result', id: (await page.evaluate(async () => (await fetch('api/library.php?list=results')).json())).items.find(x => x.title !== 'Pilot evaluation').id });
+  const g2 = await post({ act: 'save', record: { format: 'run-record/1', tool: { id: 'boy-cap', version: '1.1.1' }, created: '2026-11-22T10:00:00Z', inputs: [], settings: { response: 'h' }, fits: [{ id: 'naslund', status: 'ok', rmse: 1.2 }] } });
+  await page.goto(`${BASE}/hesap.php?tab=results&id=${g2[1].id}`); await page.waitForSelector('#res-view[data-kind]');
+  ok(gen[0] === 200 && (await page.getAttribute('#res-view', 'data-kind')) === 'generic' && (await page.textContent('#res-view')).includes('naslund') && (await page.textContent('#rv-seal')) === '', 'other tools: the generic view lists the record\'s tables (an unsealed record shows no seal line)');
+  const dl = page.waitForEvent('download'); await page.click('#res-download'); ok((await dl).suggestedFilename().startsWith('boy-cap-'), 'the saved record downloads as JSON');
   const ex = await page.evaluate(async () => (await fetch('api/library.php?export=1')).json());
   ok(ex.format === 'forest-biometry-account-export/1' && ex.results.length === 3 && ex.interpretations.length === 2 && ex.account.orcid === USER, 'export: everything the account keeps');
   // the top-bar menu

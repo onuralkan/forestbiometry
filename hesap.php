@@ -23,7 +23,7 @@ if ($c && isset($_GET['download']) && preg_match($ID, (string)$_GET['download'])
     $st = fb_db()->prepare('SELECT tool, created, body FROM results WHERE id = ? AND orcid = ?'); $st->execute([$_GET['download'], $u['orcid']]);
     $r = $st->fetch(); if (!$r) { http_response_code(404); exit; }
     header('Content-Type: application/json; charset=utf-8'); header('Content-Disposition: attachment; filename="' . $r['tool'] . '-' . substr($r['created'], 0, 10) . '.json"');
-    echo json_encode(json_decode($r['body'], true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit;
+    echo $r['body']; exit;   // as saved: the seal holds
 }
 if ($c && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $u = fb_user();
@@ -153,18 +153,22 @@ $form = function ($act, $label, $extra = '', $cls = 'btn ghost small', $confirm 
   $id = (string)($_GET['id'] ?? '');
   if (preg_match($ID, $id)) { $q = fb_db()->prepare('SELECT * FROM results WHERE id = ? AND orcid = ?'); $q->execute([$id, $u['orcid']]); $it = $q->fetch(); } else $it = null; ?>
   <section class="card about" aria-labelledby="h-res">
-  <?php if ($it): $rec = json_decode($it['body'], true);
+  <?php if ($it): $rec = json_decode($it['body'], true); $viewer = true;
     $q = fb_db()->prepare('SELECT id, created, model FROM interpretations WHERE result_id = ? AND orcid = ? ORDER BY created DESC'); $q->execute([$it['id'], $u['orcid']]); $ints = $q->fetchAll(); ?>
     <p class="small"><a href="hesap.php?tab=results">← All saved results</a></p>
     <h2 id="h-res" class="b-h2"><?= h($it['title']) ?></h2>
     <?php if (($_GET['done'] ?? '') === 'saved'): ?><p class="note ok">Saved.</p><?php endif; ?>
     <p class="muted small"><?= h($tn($it['tool'])) ?> <?= h($it['version']) ?> · saved <?= $when($it['created']) ?> · <?= $mb((int)$it['size']) ?><?php if (!empty($rec['created'])): ?> · computed <?= $when($rec['created']) ?><?php endif; ?></p>
+    <?php if ($it['note'] !== ''): ?><p class="res-note" id="res-notetext"><?= nl2br(h($it['note'])) ?></p><?php endif; ?>
+    <?php if ($ints): ?><p class="small" id="res-ints">Interpretations of this result: <?php foreach ($ints as $k => $x): ?><?= $k ? ', ' : '' ?><a href="hesap.php?tab=interpretations&amp;id=<?= h($x['id']) ?>"><?= $when($x['created']) ?></a><?php endforeach; ?></p><?php endif; ?>
+    <div id="res-view" class="res-view"><p class="muted">Drawing the result…</p></div>
+    <script type="application/json" id="res-data"><?= str_replace('</', '<\/', $it['body']) ?></script>
+    <details id="res-editbox"><summary>Edit title and note</summary>
     <form method="post" action="hesap.php" class="acc-edit"><input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="act" value="edit-result"><input type="hidden" name="id" value="<?= h($it['id']) ?>">
       <label>Title <input type="text" name="title" maxlength="160" value="<?= h($it['title']) ?>" required id="res-title"></label>
       <label>Note <textarea name="note" rows="3" maxlength="2000" id="res-note"><?= h($it['note']) ?></textarea></label>
-      <button type="submit" class="btn ghost small" id="res-save">Save title and note</button></form>
-    <?php if ($ints): ?><h3>Interpretations of this result</h3><ul id="res-ints"><?php foreach ($ints as $x): ?><li><a href="hesap.php?tab=interpretations&amp;id=<?= h($x['id']) ?>"><?= $when($x['created']) ?></a> <span class="muted small"><?= h($x['model']) ?></span></li><?php endforeach; ?></ul><?php endif; ?>
-    <details open><summary>Result (run record)</summary><pre class="json" id="res-body"><?= h(json_encode($rec, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre></details>
+      <button type="submit" class="btn ghost small" id="res-save">Save title and note</button></form></details>
+    <details><summary>Run record (JSON)</summary><pre class="json" id="res-body"><?= h(json_encode(json_decode($it['body']), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre></details>
     <p class="muted small">Inputs are listed by their fingerprints (SHA-256) only: the record can be checked in the <a href="kayit-dogrulayici.php">Record Verifier</a> against your own files.</p>
     <div class="b-actions"><a class="btn ghost" href="hesap.php?download=<?= h($it['id']) ?>" id="res-download">Download the run record (JSON)</a>
       <?= $form('del-result', 'Delete this result', '<input type="hidden" name="id" value="' . h($it['id']) . '">', 'btn ghost', 'Delete this saved result? Its interpretations stay, unlinked.') ?></div>
@@ -202,4 +206,4 @@ $form = function ($act, $label, $extra = '', $cls = 'btn ghost small', $confirm 
   </section>
 <?php endif; ?>
 <?php endif; ?>
-<?php site_bottom();
+<?php site_bottom(!empty($viewer) ? '<script type="module" src="assets/lab/library/ui.js"></script>' : '');

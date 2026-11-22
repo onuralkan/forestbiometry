@@ -660,3 +660,9 @@ dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; } 
 .rec-save, .rec-save-msg { display: none; }
 body[data-acct="approved"] .rec-save { display: inline-flex; } body[data-acct="approved"] .rec-save-msg { display: inline; }
 .rec-save-msg.ok { color: var(--ok); } .rec-save-msg.err { color: var(--err, #d1242f); }
+/* saved result shown again (Account → Saved results; 22 Nov 2026) */
+.res-view { margin: 14px 0; } .rv-sec { margin: 18px 0 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.rv-sec h3 { margin: 0 0 8px; } .rv-sec h4 { margin: 14px 0 6px; } .rv-sec .chartbox { margin: 10px 0; }
+.res-note { white-space: normal; border-left: 3px solid var(--line); padding-left: 10px; }
+#res-editbox, .res-view + details { margin: 10px 0; }
+.res-view .chartbox svg { max-width: 720px; } .res-view .charts2 .chartbox svg { max-width: 100%; } .rv-figt { margin: 0 0 4px; }

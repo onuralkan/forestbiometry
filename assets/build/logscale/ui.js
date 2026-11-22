@@ -498,7 +498,7 @@ async function saveRecord(rec, payload, to) {
   try {
     const st = await getState(true);
     const r = await fetch('api/library.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF': st.csrf || '' },
-      body: JSON.stringify({ act: 'save', record: rec, key: keyOf(payload) }) });
+      body: JSON.stringify({ act: 'save', record: JSON.stringify(rec), key: keyOf(payload) }) });   // as text: kept byte for byte, the seal holds
     j = await r.json();
   } catch (e) { j = { error: 'network' }; }
   to.b.disabled = false;

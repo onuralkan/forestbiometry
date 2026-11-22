@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['result'])) {
         $st = $db->prepare('SELECT id, tool, version, title, note, created, size, body FROM results WHERE id = ? AND orcid = ?'); $st->execute([(string)$_GET['result'], $me]);
         $r = $st->fetch(); if (!$r) fb_json(['error' => 'not-found'], 404);
-        $r['record'] = json_decode($r['body'], true); unset($r['body']);
+        $r['record'] = json_decode($r['body']); unset($r['body']);   // objects, so {} stays {}
         $st = $db->prepare('SELECT id, model, created FROM interpretations WHERE result_id = ? AND orcid = ? ORDER BY created DESC'); $st->execute([$r['id'], $me]);
         $r['interpretations'] = $st->fetchAll(); fb_json($r);
     }
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $i = $db->prepare('SELECT id, tool, version, model, result_id, created, text, summary FROM interpretations WHERE orcid = ? ORDER BY created'); $i->execute([$me]);
         $g = $db->prepare('SELECT month, n FROM usage WHERE orcid = ? ORDER BY month'); $g->execute([$me]);
         $out = ['format' => 'forest-biometry-account-export/1', 'exported' => gmdate('c'), 'account' => $a->fetch(), 'usage' => $g->fetchAll(),
-            'results' => array_map(function ($x) { $x['record'] = json_decode($x['body'], true); unset($x['body']); return $x; }, $r->fetchAll()),
+            'results' => array_map(function ($x) { $x['record'] = json_decode($x['body']); unset($x['body']); return $x; }, $r->fetchAll()),
             'interpretations' => array_map(function ($x) { $x['summary'] = json_decode($x['summary'], true); return $x; }, $i->fetchAll())];
         header('Content-Disposition: attachment; filename="forest-biometry-account-' . gmdate('Y-m-d') . '.json"');
         fb_json($out);
@@ -65,10 +65,12 @@ if (!is_array($in)) fb_json(['error' => 'bad-request'], 400);
 $act = (string)($in['act'] ?? '');
 
 if ($act === 'save') {
-    $rec = $in['record'] ?? null;
+    // the record is kept byte for byte as the browser wrote it (a string), so its seal still holds: decoding and
+    // re-encoding in PHP would turn empty objects into arrays. An object is accepted too (re-encoded, structure kept).
+    if (is_string($in['record'] ?? null)) { $body = $in['record']; $rec = json_decode($body, true); }
+    else { $rec = $in['record'] ?? null; $body = is_array($rec) ? json_encode(json_decode((string)json_encode($rec)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : ''; }
     if (!is_array($rec) || ($rec['format'] ?? '') !== 'run-record/1' || !isset($rec['tool']['id']) || !is_string($rec['tool']['id'])) fb_json(['error' => 'not-a-record'], 400);
     if (fb_has_raw_data($rec)) fb_json(['error' => 'raw-data'], 422);
-    $body = json_encode($rec, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $s = fb_storage($me);
     if (strlen($body) > $s['maxRecord']) fb_json(['error' => 'too-large', 'storage' => $s], 413);
     if ($s['results'] >= $s['maxResults'] || $s['bytes'] + strlen($body) > $s['maxBytes']) fb_json(['error' => 'storage-full', 'storage' => $s], 409);
