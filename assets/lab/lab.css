@@ -573,6 +573,26 @@ a.hm-tool:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
 }
 /* Home page (20 Nov 2026): short intro, search over every tool, recent tools, six direct links, first steps, basis */
 .hp-intro { padding: 2px 0 6px; max-width: 760px; }
+/* home hero (22 Nov 2026): title, search and recently used in one light-blue box with the brand mark on the right */
+.hp-hero { display: grid; grid-template-columns: minmax(0, 760px) clamp(150px, 28%, 300px); justify-content: space-between; gap: 24px; align-items: stretch; padding: 22px 26px 18px;
+  border: 1px solid color-mix(in srgb, var(--acc) 22%, transparent); border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--acc) 11%, transparent), color-mix(in srgb, var(--acc) 4%, transparent)); }
+.hp-hero .hp-find { margin-bottom: 0; }
+.hp-hero-mark { position: relative; min-height: 120px; }
+.hp-mark { position: absolute; top: 50%; left: 0; transform: translateY(-50%); width: 100%; height: 88%; color: var(--acc); }
+.hp-mark path { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.hp-mark .hm-frame { stroke-width: 3.2; opacity: .55; } .hp-mark .hm-stem { stroke-width: 3; } .hp-mark .hm-crown { fill: currentColor; }
+@media (prefers-reduced-motion: no-preference) {
+  .hp-mark .hm-frame, .hp-mark .hm-stem { stroke-dasharray: 1; stroke-dashoffset: 1; animation: hm-draw .7s cubic-bezier(.3, .6, .3, 1) forwards; }
+  .hp-mark .hm-f2 { animation-delay: .1s; }
+  .hp-mark .hm-stem.hm-t1 { animation-delay: .35s; } .hp-mark .hm-stem.hm-t2 { animation-delay: .5s; } .hp-mark .hm-stem.hm-t3 { animation-delay: .65s; }
+  .hp-mark .hm-crown { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: hm-grow .55s cubic-bezier(.34, 1.56, .64, 1) forwards; }
+  .hp-mark .hm-crown.hm-t1 { animation-delay: .85s; } .hp-mark .hm-crown.hm-t2 { animation-delay: 1s; } .hp-mark .hm-crown.hm-t3 { animation-delay: 1.15s; }
+}
+@keyframes hm-draw { to { stroke-dashoffset: 0; } }
+@keyframes hm-grow { to { transform: scale(1); } }
+.hp-hero + .hp-picks { border-top: 0; padding-top: 4px; }
+@media (max-width: 760px) { .hp-hero { grid-template-columns: 1fr; padding: 16px 14px 14px; } .hp-hero-mark { display: none; } }
 .hp-intro h1 { font: 600 clamp(23px, 3.2vw, 30px)/1.2 var(--head); letter-spacing: -.01em; margin: 0 0 8px; }
 .hp-lede { font-size: 16px; line-height: 1.5; margin: 0 0 6px; }
 .hp-data { margin: 0; font-size: 13.5px; color: var(--muted); } .hp-data::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); margin: 0 7px 1px 1px; }

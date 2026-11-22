@@ -49,6 +49,9 @@ ok((await page.textContent('.hp-data')).includes('Your raw data are not sent to 
 { // recently used: only real history, at most four, next to the search
   const c = await browser.newContext(), r = await c.newPage(); await r.goto(BASE + '/');
   ok(await r.isHidden('#hm-recent'), 'recently used: hidden without history (no placeholders)');
+  { // hero box (22 Nov 2026): title, search and recently used in one box, the brand mark beside them (decorative)
+    const box = await r.$eval('.hp-hero', e => { const m = e.querySelector('.hp-mark').getBoundingClientRect(), b = e.getBoundingClientRect(); return { h1: !!e.querySelector('#hp-h'), q: !!e.querySelector('#tool-q'), rec: !!e.querySelector('#hm-recent'), hid: e.querySelector('.hp-hero-mark').getAttribute('aria-hidden'), mh: m.height, bh: b.height, inside: m.right <= b.right && m.top >= b.top && m.bottom <= b.bottom }; });
+    ok(box.h1 && box.q && box.rec && box.hid === 'true' && box.inside && box.mh > 0.6 * box.bh && box.mh < box.bh, `hero box holds the title, the search and recently used; mark inside the box, a little lower than it (${Math.round(box.mh)} of ${Math.round(box.bh)} px)`); }
   for (const t of ['bonitet', 'boy-cap', 'pano', 'rapor', 'ornekleme']) await r.goto(BASE + '/' + t + '.php');
   await r.goto(BASE + '/'); const rec = await r.$$eval('#hm-recent-list a', a => a.map(x => x.getAttribute('href')));
   ok(await r.isVisible('#hm-recent') && rec.join() === 'ornekleme.php,rapor.php,pano.php,boy-cap.php' && !(await r.textContent('#hm-recent')).match(/devam|continue/i), 'recently used: the last four tools, plain links: ' + rec.join(', '));
