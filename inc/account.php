@@ -22,7 +22,9 @@ if (!function_exists('mb_substr')) {   // hosts without mbstring: cut by UTF-8 c
 function fb_private_dir(): string {
     $env = getenv('FB_PRIVATE');
     if ($env !== false && $env !== '') return rtrim($env, '/');
-    $root = rtrim((string)($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__)), '/');
+    // on the command line (cron: inc/backup.php) DOCUMENT_ROOT is an empty string, not missing: use the site folder
+    $doc = (string)($_SERVER['DOCUMENT_ROOT'] ?? '');
+    $root = rtrim($doc !== '' ? $doc : dirname(__DIR__), '/');
     return dirname($root) . '/forestbiometry-private';
 }
 

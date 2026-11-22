@@ -6,7 +6,7 @@
 // Usage: node tests/account/e2e.mjs http://127.0.0.1:8092
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, writeFile, cp } from 'node:fs/promises';
 import { spawn, spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 import os from 'node:os';
@@ -159,6 +159,12 @@ try {
   // the backup script (cron)
   const bk = spawnSync('php', ['inc/backup.php'], { cwd: root, env: { ...process.env, FB_PRIVATE: priv }, encoding: 'utf8' });
   ok(bk.status === 0 && readdirSync(path.join(priv, 'backups')).some(f => /^fb-\d{4}-\d{2}-\d{2}\.sqlite\.gz$/.test(f)), 'backup script writes a compressed copy: ' + bk.stdout + bk.stderr);
+  // as cron runs it on the host: no FB_PRIVATE, the private folder next to the site folder (DOCUMENT_ROOT is '' on the CLI)
+  { const lay = await mkdtemp(path.join(os.tmpdir(), 'fb-host-')), web = path.join(lay, 'public_html'), pv = path.join(lay, 'forestbiometry-private');
+    await cp(path.join(root, 'inc'), path.join(web, 'inc'), { recursive: true }); await cp(path.join(priv, 'config.php'), path.join(pv, 'config.php'));
+    const env = { ...process.env }; delete env.FB_PRIVATE;
+    const r = spawnSync('php', [path.join(web, 'inc/backup.php')], { env, encoding: 'utf8' });
+    ok(r.status === 0 && readdirSync(path.join(pv, 'backups')).length === 1, 'backup by cron without FB_PRIVATE finds the private folder next to the site: ' + r.stdout + r.stderr); }
   await signOut(); await signIn(USER, 'Test Researcher');
 
   // 6. deleting the account removes it; signing in again starts as pending
