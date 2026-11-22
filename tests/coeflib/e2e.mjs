@@ -42,7 +42,7 @@ const seed = async sets => page.evaluate(async ([sets, bad]) => {
 const count = () => page.locator('#libtab tbody tr[data-id]').count();
 
 await page.goto(URL); await page.waitForSelector('#sumcard');
-ok((await page.locator('.b-ids').textContent()).trim() === 'DI-02' && (await page.locator('.b-ver').textContent()).includes(L.TOOL.version), 'tool id DI-02 and version');
+ok((await page.locator('.b-head').getAttribute('data-ids')) === 'DI-02' && (await page.locator('.b-ver').textContent()).includes(L.TOOL.version), 'tool id DI-02 and version');
 ok(await page.locator('#sumnone').count() === 1 && await page.isDisabled('#b-backup'), 'empty library: explained, nothing to back up');
 
 // a set entered through the editor (growth, no extra fields)

@@ -230,7 +230,10 @@ for (const l of ['en']) {
 await page.goto(BASE + '/kilavuz.php?k=nope'); ok(await page.locator('#guide-unknown').count() === 1 && await page.locator('.gcard').count() >= 5, 'unknown section: a note and the start page');
 await page.goto(BASE + '/kilavuz.php'); await page.fill('#guide-find', 'STEM'); ok(await page.locator('.guide-toc li:not([hidden]) a').count() >= 1 && (await page.locator('.guide-toc li:not([hidden]) a').allTextContents()).every(t => /stem/i.test(t)), 'section search ignores case');
 ok((await page.locator('.b-nav a[href="kilavuz.php"]').count()) === 1 && (await page.locator('.b-side-foot a[href="kilavuz.php"]').count()) === 1, 'guide in the top menu and the sidebar');
-await page.goto(BASE + '/boy-cap.php'); await page.click('.b-head .b-guide'); await page.waitForURL(/kilavuz\.php\?k=boy-cap$/);
+await page.goto(BASE + '/boy-cap.php');
+{ const hd = await page.$eval('.b-head', e => ({ box: e.classList.contains('b-toolhead'), meta: e.querySelector('.b-meta').textContent.trim(), kick: !!e.querySelector('.b-kicker'), ids: e.getAttribute('data-ids'), text: e.textContent }));
+  ok(hd.box && /^version \S+\s*Guide$/.test(hd.meta) && !hd.kick && hd.ids && !hd.text.includes(hd.ids) && !hd.text.includes('Modelling and evaluation'), 'tool head: box with title, "version … · Guide" and the description; no tool ids, module or kicker shown: ' + hd.meta); }
+await page.click('.b-head .b-guide'); await page.waitForURL(/kilavuz\.php\?k=boy-cap$/);
 ok(await page.locator('h2#boy-cap').count() === 1 && await page.locator('.guide-toc a[aria-current="page"]').getAttribute('href') === 'kilavuz.php?k=boy-cap', 'tool header link opens the tool\'s guide page, marked in the tree');
 await page.goto(BASE + '/kilavuz.php#ornekleme'); await page.waitForURL(/k=ornekleme/); ok(await page.locator('h2#ornekleme').count() === 1, 'an old link kilavuz.php#id is sent on to its page');
 await page.click('.guide-sec a.guide-open[href="ornekleme.php"]'); ok(page.url().includes('/ornekleme.php'), 'the guide links back to each tool');
@@ -255,7 +258,7 @@ await page.goto(BASE + '/kilavuz.php?k=genel'); await page.click('.guide-pager a
 { const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   for (const scheme of ['light', 'dark']) { const p = await c.newPage(); await p.emulateMedia({ colorScheme: scheme });
     const bad = [];
-    for (const [u, sel] of [['/', '.hp-all, .hp-data, .hp-group p, .hp-group h3, .hp-group a, .hp-sci li p, .hp-tasks a, .hp-qlabel, .hp-keep'], ['/boy-cap.php', '#reset, .b-resetall, .b-nav a, .b-kicker']]) {
+    for (const [u, sel] of [['/', '.hp-all, .hp-data, .hp-group p, .hp-group h3, .hp-group a, .hp-sci li p, .hp-tasks a, .hp-qlabel, .hp-keep'], ['/boy-cap.php', '#reset, .b-resetall, .b-nav a, .b-meta .b-ver, .b-meta .b-guide, .b-toolhead .b-lede']]) {
       await p.goto(BASE + u); await p.waitForSelector(sel.split(',')[0]);
       await p.evaluate(() => { const b = document.querySelector('.b-resetall'); if (b) b.disabled = false; });
       bad.push(...await p.evaluate(sel => {
@@ -313,6 +316,7 @@ await page.goto(BASE + '/kilavuz.php?k=genel'); await page.click('.guide-pager a
   // every tool page of the catalogue: exactly one bulk button; next to "Reset session" where the tool has one, else at the end of the page
   const where = [];
   for (const id of TOOL_IDS) { await h.goto(`${BASE}/${id}.php`); await h.waitForSelector('.b-resetall', { timeout: 10000 }).catch(() => {});
+    await h.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});   // tools that draw #reset after loading (Diameter Distribution) under a loaded test run
     where.push([id, await h.evaluate(() => { const r = document.getElementById('reset'), a = document.querySelectorAll('.b-resetall');
       return a.length !== 1 ? 'missing' : r ? (r.nextElementSibling === a[0] ? 'next' : 'apart') : a[0].parentElement.classList.contains('b-resetrow') ? 'end' : 'other'; })]); }
   ok(where.every(([, w]) => w === 'next' || w === 'end') && where.filter(([, w]) => w === 'next').length >= 19, 'every tool page has the bulk reset: ' + where.map(w => w.join(' ')).join(', '));

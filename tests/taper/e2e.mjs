@@ -37,7 +37,7 @@ const E = FIT.fitTaper(st, { form: 'mb76', bark: 'ib', scale: 'd' });
 
 await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps button');
 const VER = TP.TOOL.version;
-ok((await page.locator('h1').textContent()).includes('Stem Taper') && (await page.locator('.b-ids').textContent()).trim() === 'SV-02 · SV-03 · SV-06' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SV-02 · SV-06, version ${VER}`);
+ok((await page.locator('h1').textContent()).includes('Stem Taper') && (await page.locator('.b-head').getAttribute('data-ids')) === 'SV-02 · SV-03 · SV-06' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SV-02 · SV-06, version ${VER}`);
 ok(await page.isDisabled('#to2'), 'no profile set: cannot continue');
 await page.waitForSelector('#cf-form');
 { const o = await page.locator('#cf-form option').allTextContents();

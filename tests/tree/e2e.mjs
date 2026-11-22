@@ -31,7 +31,7 @@ page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if 
 const type = async (sel, v) => { await page.fill(sel, v); await page.press(sel, 'Tab'); };
 
 await page.goto(URL + '?lang=en'); await page.waitForSelector('#htab');
-ok((await page.locator('.b-ids').textContent()).trim() === 'TM-01 · TM-02 · TM-03 · TM-04 · TM-05 · TM-06' && (await page.locator('.b-ver').textContent()).includes(TOOL.version), 'tool ids TM-01 to TM-06 and version');
+ok((await page.locator('.b-head').getAttribute('data-ids')) === 'TM-01 · TM-02 · TM-03 · TM-04 · TM-05 · TM-06' && (await page.locator('.b-ver').textContent()).includes(TOOL.version), 'tool ids TM-01 to TM-06 and version');
 
 // height: tangent, two readings, one with a decimal comma; percent; ground slope; rangefinder; similar triangles
 await type('[data-hrow="0"][data-k="D"]', '25'); await type('[data-hrow="0"][data-k="top"]', '40'); await type('[data-hrow="0"][data-k="base"]', '-5');

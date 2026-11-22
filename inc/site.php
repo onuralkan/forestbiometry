@@ -260,14 +260,25 @@ function site_top(array $o = []): void {
 <div class="b-scrim" id="scrim" hidden></div>
 <main id="main" class="b-main">
 <?php if (!empty($o['kicker']) || !empty($o['title'])): ?>
-  <header class="b-head<?= $cur ? ' has-ico' : '' ?>">
-    <?php if ($cur): ?><span class="b-headico" aria-hidden="true"><?= site_icon($cur['icon']) ?></span><?php endif; ?>
+<?php if ($cur): // tool pages (22 Nov 2026, user request): icon, title, version and guide link, description, in a light-blue box
+    $ids = array_column(array_filter(site_catalog(), function ($c) use ($cur) { return $c['page'] === $cur['file']; }), 'id'); ?>
+  <header class="b-head has-ico b-toolhead" data-ids="<?= h(implode(' · ', $ids)) ?>">
+    <span class="b-headico" aria-hidden="true"><?= site_icon($cur['icon']) ?></span>
     <div>
-    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?php if ($cur): $ids = array_column(array_filter(site_catalog(), function ($c) use ($cur) { return $c['page'] === $cur['file']; }), 'id'); $mt = array_column(site_modules(), 'title', 'id'); if ($ids): ?><span class="b-ids" title="<?= 'Tool ids (docs/PLATFORM_PLAN.md)' ?>"><?= h(implode(' · ', $ids)) ?></span> · <?php endif; ?><?= h($mt[$cur['cat']] ?? '') ?> · <?php endif; ?><?= h($o['kicker']) ?><?php if ($cur): ?> · <span class="b-ver"><?= 'version' ?> <?= h($cur['v']) ?></span> · <a class="b-guide" href="kilavuz.php?k=<?= h(basename($cur['file'], '.php')) ?>"><?= 'Guide' ?></a><?php endif; ?></p><?php endif; ?>
+    <h1><?= h($o['title'] ?? $c['site']) ?></h1>
+    <p class="b-meta"><span class="b-ver"><?= 'version' ?> <?= h($cur['v']) ?></span><a class="b-guide" href="kilavuz.php?k=<?= h(basename($cur['file'], '.php')) ?>"><?= site_icon('guide') ?><?= 'Guide' ?></a></p>
+    <?php if (!empty($o['lede'])): ?><p class="b-lede"><?= h($o['lede']) ?></p><?php endif; ?>
+    </div>
+  </header>
+<?php else: ?>
+  <header class="b-head">
+    <div>
+    <?php if (!empty($o['kicker'])): ?><p class="b-kicker"><?= h($o['kicker']) ?></p><?php endif; ?>
     <h1><?= h($o['title'] ?? $c['site']) ?></h1>
     <?php if (!empty($o['lede'])): ?><p class="b-lede"><?= h($o['lede']) ?></p><?php endif; ?>
     </div>
   </header>
+<?php endif; ?>
 <?php endif;
 }
 

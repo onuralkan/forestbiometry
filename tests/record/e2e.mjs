@@ -76,7 +76,7 @@ ok(st.obj.tool.version === '1.3.0' && st.obj.units.length > 0 && st.obj.inputs[0
 
 // 3. Record Verifier
 await page.goto(BASE + '/kayit-dogrulayici.php');
-ok((await page.locator('.b-ids').textContent()).includes('DI-07') && await page.locator('.b-side a[href="kayit-dogrulayici.php"]').count() === 1, 'verifier: DI-07 page in the sidebar');
+ok((await page.locator('.b-head').getAttribute('data-ids')).includes('DI-07') && await page.locator('.b-side a[href="kayit-dogrulayici.php"]').count() === 1, 'verifier: DI-07 page in the sidebar');
 ok(await page.locator('#nonote').count() === 1, 'verifier: empty state');
 await page.setInputFiles('#recfile', g1.p);
 await page.waitForSelector('#seal');

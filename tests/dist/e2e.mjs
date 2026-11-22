@@ -35,7 +35,7 @@ await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
 ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=en');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
-ok((await page.locator('#devnote').count()) === 0 && (await page.locator('.b-kicker .b-ver').textContent()).trim() === 'version ' + E0.TOOL.version, 'version in the page header, no release-notes banner');
+ok((await page.locator('#devnote').count()) === 0 && (await page.locator('.b-meta .b-ver').textContent()).trim() === 'version ' + E0.TOOL.version, 'version in the page header, no release-notes banner');
 ok((await page.locator('script[src*="assets/lab/weibull"]').count()) === 0, 'old Weibull interface not loaded');
 
 // 1. two plots × two periods; one unreadable and one negative value; comma data read only with the comma setting

@@ -26,7 +26,7 @@ const { obs } = G.readSeries(tbl, { series: 0, t: 1, y: 2 }, '.', parseNumber, c
 const E = Object.fromEntries(G.FORM_IDS.map(id => [id, G.fitGrowth(obs, id)]));
 
 await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps button');
-ok((await page.locator('.b-ids').textContent()).trim() === 'SQ-03' && (await page.locator('.b-ver').textContent()).includes(G.TOOL.version), 'tool id SQ-03 and version');
+ok((await page.locator('.b-head').getAttribute('data-ids')) === 'SQ-03' && (await page.locator('.b-ver').textContent()).includes(G.TOOL.version), 'tool id SQ-03 and version');
 ok(await page.isDisabled('#to2'), 'no data: cannot continue');
 await page.click('#sample'); await page.waitForSelector('#dread');
 ok((await page.textContent('#dread')).includes(`${obs.length} observations read, 3 series`) && await page.inputValue('#d-var') === 'height' && await page.inputValue('#d-unit') === 'm', 'sample read: observations, series, variable and unit');

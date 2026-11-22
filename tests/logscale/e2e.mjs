@@ -24,7 +24,7 @@ const csv = (await readFile(path.join(ROOT, 'assets/lab/logscale/ornek/ornek-tom
 const logs = csv.map(l => { const [id, ds, db, dm, L] = l.split(';').map(x => Number(x.replace(',', '.'))); return { id: String(id), ds, db, dm, Lm: L }; });
 
 await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
-ok((await page.locator('h1').textContent()).includes('Log Scaling') && (await page.locator('.b-ids').textContent()).trim() === 'SV-05' && (await page.locator('.b-ver').textContent()).includes(LS.TOOL.version), 'title, catalogue id SV-05, version');
+ok((await page.locator('h1').textContent()).includes('Log Scaling') && (await page.locator('.b-head').getAttribute('data-ids')) === 'SV-05' && (await page.locator('.b-ver').textContent()).includes(LS.TOOL.version), 'title, catalogue id SV-05, version');
 // one log: 20 in. (50.8 cm), 16 ft (4.8768 m): Doyle (20 − 4)² = 256 bf (the book's rule of thumb)
 for (const [k, v] of [['ds', '50.8'], ['L', '4.8768']]) { await page.fill('#in-' + k, v); await page.locator('#in-' + k).dispatchEvent('change'); await page.waitForSelector('#in-ds'); }
 await page.click('#to2'); await page.waitForSelector('[data-rule]'); await page.click('#calc'); await page.waitForSelector('#ltab');

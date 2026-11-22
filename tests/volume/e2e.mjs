@@ -28,7 +28,7 @@ const csv = (await readFile(path.join(ROOT, 'assets/lab/volume/ornek/ornek-hacim
 const trees = csv.map((l, i) => { const [id, D, H, V] = l.split(',').map(Number); return { row: i + 2, id: String(id), D, H, V }; });
 
 await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
-ok((await page.locator('h1').textContent()).includes('Volume Equations') && (await page.locator('.b-ids').textContent()).trim() === 'SV-04' && (await page.locator('.b-ver').textContent()).includes(VOL.TOOL.version), 'title, catalogue id SV-04, version');
+ok((await page.locator('h1').textContent()).includes('Volume Equations') && (await page.locator('.b-head').getAttribute('data-ids')) === 'SV-04' && (await page.locator('.b-ver').textContent()).includes(VOL.TOOL.version), 'title, catalogue id SV-04, version');
 ok(await page.locator('#side a[href="hacim-denklemleri.php"]').count() === 1, 'listed in the sidebar');
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
 ok((await page.textContent('#dsinfo')).includes(`${trees.length} trees`), `sample: ${trees.length} trees`);

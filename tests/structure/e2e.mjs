@@ -39,7 +39,7 @@ const E = RUN.analyse(ds, { structure: {}, spatial: { k: 4, edge: 'none', buffer
 await page.goto(BASE + '/');
 ok((await page.locator('#side a[href="mescere-yapisi.php"]').count()) === 1 && (await page.locator('#side .b-group[data-mod="SS"] a[href="mescere-yapisi.php"]').count()) === 1, 'sidebar: Stand Structure under its module (SS)');
 await page.goto(URL + '?lang=en');
-ok((await page.locator('h1').textContent()).includes('Stand Structure') && (await page.locator('.b-ids').textContent()).trim() === 'SS-02 · SS-04 · SS-05 · SS-06 · SS-07' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SS-02, SS-04…SS-07, version ${VER}`);
+ok((await page.locator('h1').textContent()).includes('Stand Structure') && (await page.locator('.b-head').getAttribute('data-ids')) === 'SS-02 · SS-04 · SS-05 · SS-06 · SS-07' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SS-02, SS-04…SS-07, version ${VER}`);
 
 // 1. sample data
 await page.click('#sample'); await page.waitForSelector('#dsinfo');

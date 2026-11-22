@@ -128,6 +128,18 @@ code { font: 13px var(--mono); background: var(--sunk); border: 1px solid var(--
 .b-kicker { margin: 0; color: var(--acc); font-weight: 600; font-size: 13.5px; }
 .b-head h1 { font: 600 clamp(26px, 4vw, 32px)/1.25 var(--head); margin: 4px 0 8px; }
 .b-lede { margin: 0; font-size: 16.5px; color: var(--muted); }
+/* tool page head (22 Nov 2026): the same light-blue box as the home page hero, no animation; version and guide link
+   as a small line under the title (no tool ids, module or kicker) */
+.b-toolhead { max-width: none; padding: 18px 22px 18px; border: 1px solid color-mix(in srgb, var(--acc) 22%, transparent); border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--acc) 11%, transparent), color-mix(in srgb, var(--acc) 4%, transparent)); }
+.b-toolhead .b-headico { background: var(--surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--acc) 18%, transparent); margin-top: 2px; }
+.b-toolhead h1 { margin: 2px 0 4px; }
+.b-toolhead .b-lede { max-width: 900px; margin-top: 8px; }
+.b-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; font-size: 13px; }
+.b-meta .b-ver { display: inline-block; padding: 2px 9px; border-radius: 999px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--acc) 22%, transparent); color: var(--muted); font-weight: 500; opacity: 1; }
+.b-meta .b-guide { display: inline-flex; align-items: center; gap: 4px; color: var(--acc); font-weight: 600; text-decoration: none; }
+.b-meta .b-guide:hover { text-decoration: underline; } .b-meta .b-guide .ico { width: 15px; height: 15px; fill: currentColor; }
+@media (max-width: 520px) { .b-toolhead { padding: 14px 14px; } }
 .b-h2 { font: 600 20px/1.25 var(--head); margin: 28px 0 10px; }
 .b-foot { padding: 16px 24px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 13px; color: var(--muted); }
 
@@ -407,7 +419,6 @@ table.ptab tbody th { min-width: 150px; }
 /* interface revision, stage 1 (2.0.1): compact header after the first step, version in the kicker,
    method grid with formulas behind a disclosure, sticky action bar */
 .b-ver { font-weight: 500; opacity: .8; }
-body.compact-head .b-lede { display: none; }
 body.compact-head .b-head h1 { font-size: clamp(22px, 3vw, 30px); }
 body.compact-head .b-head { margin-bottom: 10px; }
 .famgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 12px; align-items: start; }
