@@ -668,3 +668,4 @@ body[data-acct="approved"] .rec-save { display: inline-flex; } body[data-acct="a
 .res-view .chartbox svg { max-width: 720px; } .res-view .charts2 .chartbox svg { max-width: 100%; } .rv-figt { margin: 0 0 4px; }
 .rv-keys { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 2px 0 8px; } .rv-keys span { display: inline-flex; align-items: center; gap: 6px; }
 .rv-unit { margin: 10px 0; } .rv-unit > summary, .rv-rest > summary { cursor: pointer; padding: 6px 0; } .rv-rest { margin: 14px 0; }
+.res-view td code { white-space: normal; overflow-wrap: anywhere; }

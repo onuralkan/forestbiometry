@@ -14,7 +14,7 @@ ok(label('rankBootstrap') === 'Rank bootstrap' && label('d_mean') === 'D mean', 
 ok(cell(null) === '–' && cell(true) === 'yes' && cell([1, 2.5]) === '1; 2.5' && cell('<b>') === '&lt;b&gt;', 'cell: null, boolean, list, escaped text');
 
 // generic view: settings list, top-level values, tables with nested columns, nested tables per row
-const rec = { format: 'run-record/1', tool: { id: 'buyume-islevi', version: '1.0.0' }, created: '2026-11-22T10:00:00Z', inputs: [{ role: 'trees', kind: 'file', name: 'a.csv', rows: 3, sha256: 'ab'.repeat(32) }],
+const rec = { format: 'run-record/1', tool: { id: 'example-tool', version: '1.0.0' }, created: '2026-11-22T10:00:00Z', inputs: [{ role: 'trees', kind: 'file', name: 'a.csv', rows: 3, sha256: 'ab'.repeat(32) }],
   settings: { response: 'h', weights: null, models: ['naslund', 'curtis'] }, n: 120, note: '<script>x</script>',
   fits: [{ id: 'naslund', status: 'ok', theta: [1.2, 0.3], stats: { rmse: 1.234567, aic: 200 }, residualsByClass: [{ cls: '10–20', n: 5, bias: -0.1 }] },
          { id: 'curtis', status: 'ok', theta: [2, 0.1], stats: { rmse: 1.3, aic: 210 }, residualsByClass: [] }] };
@@ -90,5 +90,19 @@ ok(hv.kind === 'tool' && hv.html.includes('id="rv-fits"') && count(hv.html, /<tr
 ok(hv.html.includes('Fitted height–diameter curves') && hv.html.includes('id="rv-cv"') && hv.html.includes('Model selection in each fold'), 'hd: curves and cross-validation');
 ok(count(hv.html, /class="chart"/g) === 2, 'hd: curve chart and RMSE fit vs cross-validation');
 ok(!/NaN/.test(hv.html) && !/NaN/.test(sv.html), 'no NaN in the views');
+
+// Growth Function, Site Index and Stem Taper views (records written by the tools from their simulated sample data)
+const rd = n => JSON.parse(readFileSync(new URL(`rec-${n}.json`, here)));
+const gr = rd('growth'), gv = viewOf(gr);
+ok(gv.kind === 'tool' && gv.html.includes('id="rv-fits"') && gv.html.includes('Chapman–Richards') && gv.html.includes('★'), 'growth: the forms with parameters, the smallest AIC marked');
+ok(count(gv.html, /class="chart"/g) === 4 && gv.html.includes('Current annual increment') && gv.html.includes('Mean annual increment'), 'growth: curve, CAI, MAI and RMSE charts from the saved parameters');
+ok(gv.html.includes(fmtNum(gr.fits[0].derived.asymptote, 3)), 'growth: derived values as saved');
+const si = rd('siteindex'), siv = viewOf(si);
+ok(siv.kind === 'tool' && siv.html.includes('id="rv-si"') && siv.html.includes(fmtNum(si.results[0].si, 2)) && siv.html.includes('>III<'), 'site index: the unit with its site index and class');
+ok(siv.html.includes('Site index curves') && siv.html.includes('SI = 10 m') && siv.html.includes('Test, not a real equation'), 'site index: guide curves of the class limits; the source of the equation');
+const tp = rd('taper'), tv = viewOf(tp);
+ok(tv.kind === 'tool' && tv.html.includes('id="rv-sets"') && tv.html.includes('Max &amp; Burkhart') && tv.html.includes(fmtNum(tp.trees[0].by[0].total, 4)), 'taper: the profile set and the tree volume as saved');
+ok(tv.html.includes('Stem profiles from the saved equations') && count(tv.html, /class="chart"/g) === 1, 'taper: the stem profile drawn from the saved set');
+ok(![gv, siv, tv].some(v => /NaN|undefined/.test(v.html.replace(/data-[a-z]+="[^"]*"/g, ''))), 'no NaN or undefined in the three views');
 console.log(`library view: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

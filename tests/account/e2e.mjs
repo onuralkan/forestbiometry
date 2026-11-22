@@ -139,10 +139,10 @@ try {
   ok((await page.textContent('#h-res')).includes('Pilot evaluation') && (await page.textContent('#res-notetext')).includes('first test') && await page.locator('#res-ints a').count() === 2 && (await page.textContent('#res-body')).includes('run-record/1'), 'result page: title and note edited, interpretations and the record shown');
   // a tool without its own view: the generic view of its tables
   const gen = await post({ act: 'delete', kind: 'result', id: (await page.evaluate(async () => (await fetch('api/library.php?list=results')).json())).items.find(x => x.title !== 'Pilot evaluation').id });
-  const g2 = await post({ act: 'save', record: { format: 'run-record/1', tool: { id: 'buyume-islevi', version: '1.0.0' }, created: '2026-11-22T10:00:00Z', inputs: [], settings: { response: 'h' }, fits: [{ id: 'naslund', status: 'ok', rmse: 1.2 }] } });
+  const g2 = await post({ act: 'save', record: { format: 'run-record/1', tool: { id: 'example-tool', version: '1.0.0' }, created: '2026-11-22T10:00:00Z', inputs: [], settings: { response: 'h' }, fits: [{ id: 'naslund', status: 'ok', rmse: 1.2 }] } });
   await page.goto(`${BASE}/hesap.php?tab=results&id=${g2[1].id}`); await page.waitForSelector('#res-view[data-kind]');
   ok(gen[0] === 200 && (await page.getAttribute('#res-view', 'data-kind')) === 'generic' && (await page.textContent('#res-view')).includes('naslund') && (await page.textContent('#rv-seal')) === '', 'other tools: the generic view lists the record\'s tables (an unsealed record shows no seal line)');
-  const dl = page.waitForEvent('download'); await page.click('#res-download'); ok((await dl).suggestedFilename().startsWith('buyume-islevi-'), 'the saved record downloads as JSON');
+  const dl = page.waitForEvent('download'); await page.click('#res-download'); ok((await dl).suggestedFilename().startsWith('example-tool-'), 'the saved record downloads as JSON');
   const ex = await page.evaluate(async () => (await fetch('api/library.php?export=1')).json());
   ok(ex.format === 'forest-biometry-account-export/1' && ex.results.length === 3 && ex.interpretations.length === 2 && ex.account.orcid === USER, 'export: everything the account keeps');
   // the top-bar menu

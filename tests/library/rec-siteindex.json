@@ -1,0 +1,128 @@
+{
+ "format": "run-record/1",
+ "tool": {
+  "id": "bonitet",
+  "version": "1.0.0-beta.4",
+  "ids": [
+   "SQ-01",
+   "SQ-02"
+  ],
+  "page": "bonitet.php"
+ },
+ "build": {
+  "commit": null,
+  "site": "https://forestbiometry.online/"
+ },
+ "created": "2026-11-22T15:21:15.455Z",
+ "lang": "en",
+ "inputs": [],
+ "model": {
+  "form": "cr.ada.b0",
+  "params": {
+   "b1": 0.03,
+   "b2": 1.4
+  },
+  "ageType": "total",
+  "baseAge": 50
+ },
+ "set": {
+  "schema": "model-coef/1",
+  "id": "cmwrzid3d79mdk5",
+  "tool": "siteindex",
+  "form": "si.cr.ada.b0",
+  "params": {
+   "b1": 0.03,
+   "b2": 1.4
+  },
+  "inputs": {
+   "A": {
+    "unit": "yr"
+   },
+   "H": {
+    "unit": "m"
+   }
+  },
+  "output": {
+   "name": "H",
+   "unit": "m"
+  },
+  "valid": {
+   "A": [
+    10,
+    80
+   ]
+  },
+  "species": null,
+  "region": null,
+  "component": null,
+  "transform": null,
+  "source": {
+   "citation": "Test, not a real equation"
+  },
+  "origin": "user-entered",
+  "created": "2026-11-22T15:21:15.073Z",
+  "modified": "2026-11-22T15:21:15.073Z",
+  "meta": {
+   "ageType": "total",
+   "topDef": "h0dbh"
+  }
+ },
+ "classes": [
+  {
+   "lo": 10,
+   "hi": 14,
+   "name": "V"
+  },
+  {
+   "lo": 14,
+   "hi": 18,
+   "name": "IV"
+  },
+  {
+   "lo": 18,
+   "hi": 22,
+   "name": "III"
+  },
+  {
+   "lo": 22,
+   "hi": 26,
+   "name": "II"
+  },
+  {
+   "lo": 26,
+   "hi": 30,
+   "name": "I"
+  }
+ ],
+ "input": "single",
+ "results": [
+  {
+   "key": "single",
+   "unit": "Point",
+   "plot": null,
+   "period": null,
+   "A": 30,
+   "H": 15,
+   "Hsrc": "given",
+   "status": "ok",
+   "si": 21.87062426597317,
+   "cls": "III",
+   "problems": [],
+   "warnings": [],
+   "settings": {
+    "form": "cr.ada.b0",
+    "baseAge": 50,
+    "ageType": "total"
+   }
+  }
+ ],
+ "uncertainty": {
+  "method": "none"
+ },
+ "reading": null,
+ "integrity": {
+  "algorithm": "SHA-256",
+  "canonicalization": "RFC 8785 (JCS)",
+  "value": "db454ff1a5ee02d521726286554e155a20c5f5c305bf15f0eaed86c9a3e46c40"
+ }
+}

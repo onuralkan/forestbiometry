@@ -1,0 +1,75 @@
+{
+ "format": "run-record/1",
+ "tool": {
+  "id": "govde-profili",
+  "version": "1.0.0-beta.3",
+  "ids": [
+   "SV-02",
+   "SV-03",
+   "SV-06"
+  ],
+  "page": "govde-profili.php"
+ },
+ "build": {
+  "commit": null,
+  "site": "https://forestbiometry.online/"
+ },
+ "created": "2026-11-22T15:21:16.404Z",
+ "lang": "en",
+ "inputs": [],
+ "settings": {
+  "stump": 0.3,
+  "dTop": 7,
+  "step": 1,
+  "logs": null
+ },
+ "sets": [
+  {
+   "id": "cmwrzie2lkxo2j4",
+   "form": "taper.mb76",
+   "bark": "ib",
+   "params": {
+    "b1": -2.202229265812146,
+    "b2": 0.9809622997156286,
+    "b3": -0.4714502669551541,
+    "b4": -3657.2331286171943,
+    "a1": 0.7162404958239385,
+    "a2": 0.013920679114532887
+   },
+   "source": "simulated example",
+   "origin": "fitted"
+  }
+ ],
+ "trees": [
+  {
+   "row": null,
+   "plot_id": null,
+   "tree_id": "1",
+   "D": 30,
+   "H": 24,
+   "by": [
+    {
+     "bark": "ib",
+     "status": "ok",
+     "total": 0.6400245689692835,
+     "hTop": 20.567024192229,
+     "merch": 0.6342305010704566,
+     "note": null,
+     "d13": 28.43204604969395,
+     "logs": null,
+     "warnings": [],
+     "problems": []
+    }
+   ]
+  }
+ ],
+ "bucking": null,
+ "reading": {
+  "mode": "single"
+ },
+ "integrity": {
+  "algorithm": "SHA-256",
+  "canonicalization": "RFC 8785 (JCS)",
+  "value": "3b3f80411e035ec310635342a6978cbe6f03b878322e3967cea48803d3eb1c46"
+ }
+}
