@@ -1993,11 +1993,11 @@
     "doi": "10.6028/NIST.FIPS.180-4",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §20 DI-07"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: FIPS PUB 180-4; standard"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: FIPS PUB 180-4; standard"
   },
   {
     "key": "nist_normal",
@@ -2016,12 +2016,12 @@
     "doi": null,
     "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P02",
       "DIST_SPEC [R10]"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
   },
   {
     "key": "nist_lognormal",
@@ -2040,12 +2040,12 @@
     "doi": null,
     "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P02",
       "DIST_SPEC [R11]"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
   },
   {
     "key": "nist_gamma",
@@ -2064,12 +2064,12 @@
     "doi": null,
     "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P03",
       "DIST_SPEC [R12]"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
   },
   {
     "key": "nist_beta",
@@ -2088,12 +2088,12 @@
     "doi": null,
     "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366h.htm",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P04",
       "DIST_SPEC [R14]"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
   },
   {
     "key": "nist_exponential",
@@ -2112,12 +2112,12 @@
     "doi": null,
     "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3667.htm",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P10",
       "DIST_SPEC [R15]"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
   },
   {
     "key": "nist_gumbel",
@@ -2136,12 +2136,12 @@
     "doi": null,
     "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P20",
       "DIST_SPEC [R19]"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026; METHODS names it 'NIST/SEMATECH e-Handbook, Extreme Value Type I (Gumbel)'"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026; METHODS names it 'NIST/SEMATECH e-Handbook, Extreme Value Type I (Gumbel)'"
   },
   {
     "key": "nlme",
@@ -2213,7 +2213,7 @@
     "tools": [
       "METHODS §5 (colour palette)"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: J*Fly web page; no URL given"
+    "note": "Page read on 22 Nov 2026: palette only as an image; hex codes not checkable from the text, status stays [D]. Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: J*Fly web page; no URL given"
   },
   {
     "key": "parresol1999",
@@ -2626,11 +2626,11 @@
     "doi": null,
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §20 DI-07"
     ],
-    "note": "RFC 8785; standard"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). RFC 8785; standard"
   },
   {
     "key": "schreuder1993",
@@ -2696,12 +2696,12 @@
     "doi": null,
     "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P10",
       "DIST_SPEC [R16]"
     ],
-    "note": "NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): SciPy community. (n.d.). scipy.stats.fisk. In SciPy manual (Version 1.18.0) [Software documentation]. Retrieved November 21, 2026, from https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html | Earlier note: official documentation; log-logistic parameterization"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): SciPy community. (n.d.). scipy.stats.fisk. In SciPy manual (Version 1.18.0) [Software documentation]. Retrieved November 21, 2026, from https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html | Earlier note: official documentation; log-logistic parameterization"
   },
   {
     "key": "scipy_gengamma",
@@ -2718,12 +2718,12 @@
     "doi": null,
     "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gengamma.html",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P20",
       "DIST_SPEC [R18]"
     ],
-    "note": "NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): SciPy community. (n.d.). scipy.stats.gengamma. In SciPy manual (Version 1.18.0) [Software documentation]. Retrieved November 21, 2026, from https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gengamma.html | Earlier note: official documentation"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): SciPy community. (n.d.). scipy.stats.gengamma. In SciPy manual (Version 1.18.0) [Software documentation]. Retrieved November 21, 2026, from https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gengamma.html | Earlier note: official documentation"
   },
   {
     "key": "scipy_goodness_of_fit",
@@ -2740,13 +2740,13 @@
     "doi": null,
     "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html",
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §12 P14 (bootstrap)",
       "METHODS §12 P15",
       "DIST_SPEC [R9]"
     ],
-    "note": "NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): SciPy community. (n.d.). scipy.stats.goodness_of_fit. In SciPy manual (Version 1.18.0) [Software documentation]. Retrieved November 21, 2026, from https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html | Earlier note: official documentation"
+    "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): SciPy community. (n.d.). scipy.stats.goodness_of_fit. In SciPy manual (Version 1.18.0) [Software documentation]. Retrieved November 21, 2026, from https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html | Earlier note: official documentation"
   },
   {
     "key": "siplab_kernel",

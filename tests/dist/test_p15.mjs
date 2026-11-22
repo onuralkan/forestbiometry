@@ -35,7 +35,7 @@ for (const [k, x] of Object.entries(SRC.REFS)) {
   if (x.url) ok(SPEC.includes(x.url), `${k}: link copied from DIST_SPEC.md`);
   if (/^R\d+$/.test(k)) ok(SPEC.includes(`**[${k}]`), `${k}: in the DIST_SPEC reference list`);
 }
-ok(Object.entries(SRC.REFS).filter(([, x]) => x.status === 'B').map(([k]) => k).sort().join() === 'DUBEY,R1,R17,R2', 'read ([B]) only where METHODS.md says so: Poudel and Cao, Parresol, Dubey, Fonseca et al.');
+ok(Object.entries(SRC.REFS).filter(([, x]) => x.status === 'B').map(([k]) => k).sort().join() === 'DUBEY,R1,R10,R11,R12,R14,R15,R16,R17,R18,R19,R2,R9', 'read ([B]) only where METHODS.md says so: Poudel and Cao, Parresol, Dubey, Fonseca et al.; NIST and SciPy pages read on 22 Nov 2026');
 ok(/Dubey, S\.D\. 1967[^\n]*\*\*\[B\]\*\*/.test(METH) && /Knoebel[^\n]*\*\*\[D\]\*\*/.test(METH) && /Hyndman[^\n]*\*\*\[D\]\*\*/.test(METH), 'statuses agree with the marks in METHODS.md');
 ok(SRC.refsOf(['weibull.ml', 'weibull.m2'], ['R9']).join() === 'R1,R6,R9', 'reference list: distinct, in a fixed order');
 
