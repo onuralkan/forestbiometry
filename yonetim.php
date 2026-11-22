@@ -1,7 +1,8 @@
 <?php
 // Administration panel (22 Nov 2026, user request; plan in docs/ADMIN_PLAN.md): the administrator of the private config
-// (admin_orcid) manages the accounts and the interpretation service. Views: Overview, Accounts, one account, Settings,
-// Audit log. Privacy (gizlilik.php): the panel shows counts, sizes, dates and states, never the content of a user's saved
+// (admin_orcid) manages the accounts and the interpretation service. Views: Overview, Accounts, one account, Usage
+// (call log: outcomes, tokens, estimated cost from the administrator's prices, failures, top accounts, retention),
+// Settings, Audit log. Privacy (gizlilik.php): the panel shows counts, sizes, dates and states, never the content of a user's saved
 // results or interpretations. Every change is written to the audit log; destructive actions ask for confirmation.
 // Server-rendered forms with the form token, no script needed. (admin.php is not used: the old site's admin.php must
 // keep answering 404.)
@@ -26,6 +27,13 @@ if (($_GET['view'] ?? '') === 'audit' && isset($_GET['csv'])) {
     foreach ($db->query('SELECT at, admin, action, orcid, detail FROM audit ORDER BY id DESC') as $r) fputcsv($o, [$r['at'], $r['admin'], $r['action'], $r['orcid'], $r['detail']]);
     exit;
 }
+if (($_GET['view'] ?? '') === 'usage' && isset($_GET['csv'])) {
+    header('Content-Type: text/csv; charset=utf-8'); header('Content-Disposition: attachment; filename="calls-' . gmdate('Y-m-d') . '.csv"'); header('Cache-Control: no-store');
+    $o = fopen('php://output', 'w'); fwrite($o, "\xEF\xBB\xBF");
+    fputcsv($o, ['time (UTC)', 'account', 'tool', 'outcome', 'input tokens', 'output tokens', 'ms', 'model', 'detail']);
+    foreach ($db->query('SELECT at, orcid, tool, outcome, tok_in, tok_out, ms, model, detail FROM calls ORDER BY id DESC') as $r) fputcsv($o, array_values($r));
+    exit;
+}
 if (($_GET['view'] ?? '') === 'accounts' && isset($_GET['csv'])) {
     header('Content-Type: text/csv; charset=utf-8'); header('Content-Disposition: attachment; filename="accounts-' . gmdate('Y-m-d') . '.csv"'); header('Cache-Control: no-store');
     $o = fopen('php://output', 'w'); fwrite($o, "\xEF\xBB\xBF");
@@ -44,7 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $from = (string)($_POST['from'] ?? ''); $ret = $from === 'overview' ? '' : 'view=account&orcid=' . rawurlencode($o);
     if ($act === 'settings') {
         $s = fb_settings(); $new = [];
-        foreach (['monthly_quota', 'daily_quota', 'per_minute'] as $k) { $v = $int($_POST[$k] ?? ''); if ($v === false || $v === null || ($k === 'per_minute' && $v < 1)) $back('view=settings', 'bad-number'); $new[$k] = $v; }
+        foreach (['monthly_quota', 'daily_quota', 'per_minute', 'site_cap'] as $k) { $v = $int($_POST[$k] ?? ''); if ($v === false || $v === null || ($k === 'per_minute' && $v < 1)) $back('view=settings', 'bad-number'); $new[$k] = $v; }
+        $tk = trim((string)($_POST['site_cap_tokens'] ?? '')); if (!preg_match('~^\d{1,12}$~', $tk)) $back('view=settings', 'bad-number'); $new['site_cap_tokens'] = (int)$tk;
+        foreach (['price_in', 'price_out'] as $k) { $v = str_replace(',', '.', trim((string)($_POST[$k] ?? ''))); if ($v !== '' && !preg_match('~^\d{1,6}(\.\d{1,6})?$~', $v)) $back('view=settings', 'bad-price'); $new[$k] = $v; }
         $new['signup'] = in_array($_POST['signup'] ?? '', ['approval', 'auto', 'closed'], true) ? $_POST['signup'] : 'approval';
         $new['ai_enabled'] = !empty($_POST['ai_enabled']) ? 1 : 0;
         $new['ai_off_message'] = trim(mb_substr((string)($_POST['ai_off_message'] ?? ''), 0, 300));
@@ -53,6 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($new as $k => $v) if ((string)$s[$k] !== (string)$v) { fb_set_setting($k, $v); $ch[] = "$k: " . json_encode($s[$k], JSON_UNESCAPED_UNICODE) . ' → ' . json_encode($v, JSON_UNESCAPED_UNICODE); }
         if ($ch) fb_audit($me, 'settings', null, implode('; ', $ch));
         $back('view=settings', 'saved');
+    }
+    if ($act === 'purge') {
+        $n = fb_purge(true);
+        fb_audit($me, 'retention', null, "retention rule run by hand: $n account(s) not signed in for 24 months deleted");
+        $back('view=usage', 'purged-' . $n);
     }
     if (!preg_match($ORCID, $o) || !($r = fb_account($o))) $back('view=accounts', 'unknown');
     if ($o === $me && in_array($act, ['status', 'delete'], true)) $back($ret, 'self');
@@ -106,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* ---------------- pages ---------------- */
 require __DIR__ . '/inc/site.php';
 $view = (string)($_GET['view'] ?? 'overview');
-if (!in_array($view, ['overview', 'accounts', 'account', 'settings', 'audit'], true)) $view = 'overview';
+if (!in_array($view, ['overview', 'accounts', 'account', 'usage', 'settings', 'audit'], true)) $view = 'overview';
 site_top(['title' => 'Administration', 'desc' => 'Administration of accounts and the interpretation service.', 'robots' => 'noindex']);
 $csrf = fb_csrf();
 $tok = '<input type="hidden" name="csrf" value="' . h($csrf) . '">';
@@ -115,12 +130,18 @@ $mb = function ($b) { return $b <= 0 ? '0 kB' : ($b >= 1e6 ? number_format($b / 
 $set = fb_settings();
 $done = ['saved' => ['ok', 'Saved.'], 'deleted' => ['ok', 'The account was deleted.'], 'self' => ['err', 'You cannot change the state of your own account or delete it here.'],
     'bad-number' => ['err', 'Enter whole numbers (0 or more; per minute at least 1).'], 'bad-date' => ['err', 'The end of a temporary block must be a date after today.'],
-    'confirm' => ['err', 'Type the ORCID iD of the account to confirm the deletion.'], 'unknown' => ['err', 'No such account.'], 'bad-state' => ['err', 'Unknown state.']][$_GET['done'] ?? ''] ?? null;
+    'confirm' => ['err', 'Type the ORCID iD of the account to confirm the deletion.'], 'bad-price' => ['err', 'Prices: a number such as 3 or 15.5 (USD per million tokens), or empty.'], 'unknown' => ['err', 'No such account.'], 'bad-state' => ['err', 'Unknown state.']][$_GET['done'] ?? ''] ?? null;
+if (!$done && preg_match('~^purged-(\d+)$~', (string)($_GET['done'] ?? ''), $mm)) $done = ['ok', 'Retention rule run: ' . $mm[1] . ' account(s) deleted.'];
+$usd = function (?float $v) { return $v === null ? '–' : '$' . number_format($v, $v < 10 ? 2 : 0); };
+$ktok = function (int $n) { return $n >= 1e6 ? number_format($n / 1e6, 2) . ' M' : ($n >= 1e3 ? number_format($n / 1e3, 1) . ' k' : (string)$n); };
+$FAIL = ['upstream', 'refusal', 'empty'];
+$toolName = []; foreach (site_tools() as $t) $toolName[basename($t['file'], '.php')] = $t['title'];
+$tn = function ($id) use ($toolName) { return h($toolName[$id] ?? $id); };
 $link = function ($v, $l) use ($view) { return '<a href="yonetim.php' . ($v === 'overview' ? '' : '?view=' . $v) . '" id="adm-tab-' . $v . '"' . ($view === $v || ($view === 'account' && $v === 'accounts') ? ' aria-current="page"' : '') . '>' . h($l) . '</a>'; };
 $pending = (int)$db->query("SELECT COUNT(*) FROM users WHERE status = 'pending'")->fetchColumn();
 ?>
   <nav class="tabs acc-tabs" aria-label="Administration">
-    <?= $link('overview', 'Overview') ?><?= $link('accounts', 'Accounts' . ($pending ? " ($pending waiting)" : '')) ?><?= $link('settings', 'Settings') ?><?= $link('audit', 'Audit log') ?>
+    <?= $link('overview', 'Overview') ?><?= $link('accounts', 'Accounts' . ($pending ? " ($pending waiting)" : '')) ?><?= $link('usage', 'Usage') ?><?= $link('settings', 'Settings') ?><?= $link('audit', 'Audit log') ?>
     <a href="hesap.php">My account</a>
   </nav>
   <?php if ($done): ?><p class="note <?= $done[0] ?>" id="adm-done"><?= h($done[1]) ?></p><?php endif; ?>
@@ -132,13 +153,16 @@ $pending = (int)$db->query("SELECT COUNT(*) FROM users WHERE status = 'pending'"
   $bk = glob(fb_private_dir() . '/backups/fb-*.sqlite.gz') ?: []; rsort($bk);
   $bkAge = $bk ? (int)floor((time() - filemtime($bk[0])) / 86400) : null;
   $soon = $db->prepare('SELECT COUNT(*) FROM users WHERE COALESCE(last_seen, created) < ? AND orcid <> ?'); $soon->execute([gmdate('c', strtotime('-23 months')), $me]);
-  $waiting = $db->query("SELECT orcid, name, created FROM users WHERE status = 'pending' ORDER BY created LIMIT 50")->fetchAll(); ?>
+  $waiting = $db->query("SELECT orcid, name, created FROM users WHERE status = 'pending' ORDER BY created LIMIT 50")->fetchAll();
+  $sm = fb_site_month();
+  $fails = (int)$db->query("SELECT COUNT(*) FROM calls WHERE outcome IN ('upstream', 'refusal', 'empty') AND at >= '" . fb_day() . "'")->fetchColumn(); ?>
   <section class="card about" aria-labelledby="adm-h">
     <h2 id="adm-h" class="b-h2">Overview</h2>
     <?php if (!$set['ai_enabled']): ?><p class="note warn" id="adm-paused">The interpretation service is paused for everyone (Settings).</p><?php endif; ?>
     <dl class="kv" id="adm-stats">
       <dt>Accounts</dt><dd><?= array_sum($by) ?>: <?php $p = []; foreach ($STATES as $k => $l) $p[] = h($l) . ' ' . ($by[$k] ?? 0); echo implode(' · ', $p); ?></dd>
-      <dt>Interpretations</dt><dd id="adm-use"><?= $today ?> today, <?= $month ?> this month (UTC)</dd>
+      <dt>Interpretations</dt><dd id="adm-use"><?= $today ?> today, <?= $month ?> this month (UTC)<?= $set['site_cap'] > 0 ? ' of a site-wide cap of ' . $set['site_cap'] : '' ?><?= $fails ? ' · <a class="bad" href="yonetim.php?view=usage">' . $fails . ' failed call(s) today</a>' : '' ?></dd>
+      <dt>Tokens this month</dt><dd id="adm-tok"><?= $ktok($sm['in']) ?> in, <?= $ktok($sm['out']) ?> out<?= $set['site_cap_tokens'] > 0 ? ' (cap ' . $ktok($set['site_cap_tokens']) . ')' : '' ?> · estimated cost <?= $usd(fb_cost($sm['in'], $sm['out'])) ?><?= fb_cost(0, 0) === null ? ' <span class="muted small">(enter prices in Settings)</span>' : '' ?></dd>
       <dt>Storage</dt><dd><?= (int)$store['r'] ?> saved results, <?= (int)$store['i'] ?> interpretations, <?= $mb((int)$store['b']) ?></dd>
       <dt>Sign-up</dt><dd><?= h(['approval' => 'new accounts wait for approval', 'auto' => 'new accounts are approved automatically', 'closed' => 'closed to new accounts'][$set['signup']] ?? $set['signup']) ?></dd>
       <dt>Default limits</dt><dd><?= $set['monthly_quota'] ?> a month, <?= $set['daily_quota'] > 0 ? $set['daily_quota'] . ' a day' : 'no daily limit' ?>, <?= $set['per_minute'] ?> a minute</dd>
@@ -187,6 +211,7 @@ $pending = (int)$db->query("SELECT COUNT(*) FROM users WHERE status = 'pending'"
   $months = $db->prepare('SELECT month, n FROM usage WHERE orcid = ? ORDER BY month DESC LIMIT 12'); $months->execute([$o]); $months = $months->fetchAll();
   $days = $db->prepare('SELECT day, n FROM usage_day WHERE orcid = ? AND day >= ? ORDER BY day DESC'); $days->execute([$o, gmdate('Y-m-d', strtotime('-29 days'))]); $days = $days->fetchAll();
   $log = $db->prepare('SELECT at, admin, action, detail FROM audit WHERE orcid = ? ORDER BY id DESC LIMIT 50'); $log->execute([$o]); $log = $log->fetchAll();
+  $cm = $db->prepare("SELECT COUNT(*) AS n, SUM(outcome = 'ok') AS ok, COALESCE(SUM(tok_in), 0) AS i, COALESCE(SUM(tok_out), 0) AS t FROM calls WHERE orcid = ? AND at >= ?"); $cm->execute([$o, fb_month() . '-01']); $cm = $cm->fetch();
   $hidden = $tok . '<input type="hidden" name="orcid" value="' . h($o) . '">'; ?>
   <section class="card about" aria-labelledby="adm-h">
     <p class="small"><a href="yonetim.php?view=accounts">← All accounts</a></p>
@@ -196,6 +221,7 @@ $pending = (int)$db->query("SELECT COUNT(*) FROM users WHERE status = 'pending'"
       <dt>State</dt><dd id="adm-state"><?= h($STATES[$r['status']] ?? $r['status']) ?><?= $r['until'] ? ' until ' . h(substr($r['until'], 0, 10)) : '' ?><?= $r['reason'] ? ' · reason shown to the user: “' . h($r['reason']) . '”' : '' ?><?= $self ? ' (administrator)' : '' ?></dd>
       <dt>Signed up</dt><dd><?= $when($r['created']) ?> UTC · decided <?= $when($r['decided']) ?> · last seen <?= $when($r['last_seen']) ?></dd>
       <dt>Use</dt><dd id="adm-accuse"><?= fb_used($o) ?> of <?= $l['month'] ?> this month<?= $l['extra'] ? ' (including ' . $l['extra'] . ' extra)' : '' ?>; <?= fb_used_day($o) ?><?= $l['day'] > 0 ? ' of ' . $l['day'] : '' ?> today</dd>
+      <dt>Calls this month</dt><dd id="adm-acccalls"><?= (int)$cm['n'] ?> request(s), <?= (int)$cm['ok'] ?> answered; <?= $ktok((int)$cm['i']) ?> tokens in, <?= $ktok((int)$cm['t']) ?> out · estimated <?= $usd(fb_cost((int)$cm['i'], (int)$cm['t'])) ?></dd>
       <dt>Storage</dt><dd><?= $s['results'] ?> saved results, <?= $s['interpretations'] ?> interpretations, <?= $mb($s['bytes']) ?> (contents are private to the account)</dd>
     </dl>
   </section>
@@ -248,6 +274,51 @@ $pending = (int)$db->query("SELECT COUNT(*) FROM users WHERE status = 'pending'"
       <button type="submit" class="btn danger small">Delete the account</button></form>
   </section>
   <?php endif; endif; ?>
+<?php elseif ($view === 'usage'):
+  $from = gmdate('Y-m-d', strtotime('-29 days'));
+  $days = $db->prepare("SELECT substr(at, 1, 10) AS d, SUM(outcome = 'ok') AS ok, SUM(outcome IN ('upstream', 'refusal', 'empty')) AS bad,
+      SUM(outcome IN ('off', 'cap', 'rate', 'daily', 'quota')) AS lim, COALESCE(SUM(tok_in), 0) AS i, COALESCE(SUM(tok_out), 0) AS o, AVG(CASE WHEN outcome = 'ok' THEN ms END) AS ms
+      FROM calls WHERE at >= ? GROUP BY d ORDER BY d DESC"); $days->execute([$from]); $days = $days->fetchAll();
+  $mon = fb_month() . '-01';
+  $outc = $db->prepare('SELECT outcome, COUNT(*) AS n FROM calls WHERE at >= ? GROUP BY outcome ORDER BY n DESC'); $outc->execute([$mon]); $outc = $outc->fetchAll();
+  $top = $db->prepare("SELECT c.orcid, u.name, SUM(c.outcome = 'ok') AS ok, COUNT(*) AS n, COALESCE(SUM(c.tok_in), 0) AS i, COALESCE(SUM(c.tok_out), 0) AS o FROM calls c LEFT JOIN users u ON u.orcid = c.orcid
+      WHERE c.at >= ? GROUP BY c.orcid ORDER BY ok DESC, o DESC LIMIT 20"); $top->execute([$mon]); $top = $top->fetchAll();
+  $tools = $db->prepare("SELECT tool, SUM(outcome = 'ok') AS ok, COALESCE(SUM(tok_in), 0) AS i, COALESCE(SUM(tok_out), 0) AS o FROM calls WHERE at >= ? GROUP BY tool ORDER BY ok DESC"); $tools->execute([$mon]); $tools = $tools->fetchAll();
+  $probs = $db->query("SELECT c.at, c.orcid, u.name, c.tool, c.outcome, c.detail FROM calls c LEFT JOIN users u ON u.orcid = c.orcid WHERE c.outcome <> 'ok' ORDER BY c.id DESC LIMIT 50")->fetchAll();
+  $old = $db->prepare('SELECT orcid, name, COALESCE(last_seen, created) AS seen FROM users WHERE COALESCE(last_seen, created) < ? AND orcid <> ? ORDER BY seen LIMIT 100'); $old->execute([gmdate('c', strtotime('-23 months')), $me]); $old = $old->fetchAll();
+  $sm = fb_site_month();
+  $who = function ($o, $n) { return $n !== null ? '<a href="yonetim.php?view=account&amp;orcid=' . h($o) . '">' . h($n) . '</a>' : h($o) . ' <span class="muted small">(deleted)</span>'; }; ?>
+  <section class="card about" aria-labelledby="adm-h">
+    <h2 id="adm-h" class="b-h2">Usage</h2>
+    <p class="muted small">Every interpretation request is logged (time, account, tool, outcome, tokens reported by the API, duration; never the summary or the text), kept 13 months. Costs are estimates from the prices entered in Settings; the Anthropic Console shows the real bill. <a href="yonetim.php?view=usage&amp;csv=1" id="adm-callscsv">Download the call log (CSV)</a></p>
+    <dl class="kv" id="adm-month">
+      <dt>This month</dt><dd><?= $sm['n'] ?> interpretation(s)<?= $set['site_cap'] > 0 ? ' of ' . $set['site_cap'] . ' (site-wide cap)' : '' ?>; <?= $ktok($sm['in']) ?> tokens in, <?= $ktok($sm['out']) ?> out<?= $set['site_cap_tokens'] > 0 ? ' of ' . $ktok($set['site_cap_tokens']) : '' ?>; estimated <?= $usd(fb_cost($sm['in'], $sm['out'])) ?></dd>
+      <dt>Outcomes</dt><dd id="adm-outcomes"><?= $outc ? implode(' · ', array_map(function ($x) { return h($x['outcome']) . ' ' . (int)$x['n']; }, $outc)) : 'none' ?></dd>
+    </dl>
+    <p class="muted small">Outcomes: ok = answered; upstream / refusal / empty = the model call failed (not charged to the user); off / cap / rate / daily / quota = refused by a limit before any call.</p>
+    <h3>Last 30 days</h3>
+    <div class="tscroll"><table class="grid small" id="adm-days"><thead><tr><th>Day</th><th>Answered</th><th>Failed</th><th>Refused by a limit</th><th>Tokens in</th><th>Tokens out</th><th>Estimated cost</th><th>Mean time</th></tr></thead><tbody>
+      <?php foreach ($days as $d): ?><tr><td><?= h($d['d']) ?></td><td class="num"><?= (int)$d['ok'] ?></td><td class="num<?= $d['bad'] ? ' bad' : '' ?>"><?= (int)$d['bad'] ?></td><td class="num"><?= (int)$d['lim'] ?></td><td class="num"><?= $ktok((int)$d['i']) ?></td><td class="num"><?= $ktok((int)$d['o']) ?></td><td class="num"><?= $usd(fb_cost((int)$d['i'], (int)$d['o'])) ?></td><td class="num"><?= $d['ms'] !== null ? number_format((float)$d['ms'] / 1000, 1) . ' s' : '–' ?></td></tr><?php endforeach; ?>
+      <?= $days ? '' : '<tr><td colspan="8" class="muted">No requests.</td></tr>' ?></tbody></table></div>
+    <h3>Accounts this month</h3>
+    <div class="tscroll"><table class="grid small" id="adm-top"><thead><tr><th>Account</th><th>Answered</th><th>Requests</th><th>Tokens in</th><th>Tokens out</th><th>Estimated cost</th></tr></thead><tbody>
+      <?php foreach ($top as $t): ?><tr data-orcid="<?= h($t['orcid']) ?>"><td><?= $who($t['orcid'], $t['name']) ?></td><td class="num"><?= (int)$t['ok'] ?></td><td class="num"><?= (int)$t['n'] ?></td><td class="num"><?= $ktok((int)$t['i']) ?></td><td class="num"><?= $ktok((int)$t['o']) ?></td><td class="num"><?= $usd(fb_cost((int)$t['i'], (int)$t['o'])) ?></td></tr><?php endforeach; ?>
+      <?= $top ? '' : '<tr><td colspan="6" class="muted">No requests this month.</td></tr>' ?></tbody></table></div>
+    <h3>Tools this month</h3>
+    <div class="tscroll"><table class="grid small" id="adm-tools"><thead><tr><th>Tool</th><th>Answered</th><th>Tokens in</th><th>Tokens out</th></tr></thead><tbody>
+      <?php foreach ($tools as $t): ?><tr><td><?= $tn($t['tool']) ?></td><td class="num"><?= (int)$t['ok'] ?></td><td class="num"><?= $ktok((int)$t['i']) ?></td><td class="num"><?= $ktok((int)$t['o']) ?></td></tr><?php endforeach; ?>
+      <?= $tools ? '' : '<tr><td colspan="4" class="muted">None.</td></tr>' ?></tbody></table></div>
+    <h3>Recent problems and refusals</h3>
+    <?php if (!$probs): ?><p class="muted" id="adm-noprob">None.</p><?php else: ?>
+    <div class="tscroll"><table class="grid small" id="adm-probs"><thead><tr><th>Time (UTC)</th><th>Account</th><th>Tool</th><th>Outcome</th><th>Detail</th></tr></thead><tbody>
+      <?php foreach ($probs as $p): ?><tr><td class="nowrap"><?= $when($p['at']) ?></td><td><?= $who($p['orcid'], $p['name']) ?></td><td><?= $tn($p['tool']) ?></td><td<?= in_array($p['outcome'], $FAIL, true) ? ' class="bad"' : '' ?>><?= h($p['outcome']) ?></td><td><?= h((string)$p['detail']) ?></td></tr><?php endforeach; ?></tbody></table></div><?php endif; ?>
+  </section>
+  <section class="card about" aria-labelledby="adm-hr">
+    <h3 id="adm-hr">Retention</h3>
+    <p class="small">Accounts not signed in for 24 months are deleted with everything they keep (checked once a day). Not signed in for 23 months or more:</p>
+    <?php if (!$old): ?><p class="muted" id="adm-noold">None.</p><?php else: ?><ul class="small" id="adm-old"><?php foreach ($old as $x): ?><li><?= $who($x['orcid'], $x['name']) ?>: last seen <?= h(substr($x['seen'], 0, 10)) ?></li><?php endforeach; ?></ul><?php endif; ?>
+    <form method="post" action="yonetim.php" onsubmit="return confirm('Delete every account not signed in for 24 months now?');"><?= $tok ?><input type="hidden" name="act" value="purge"><button type="submit" class="btn ghost small" id="adm-purge">Run the retention rule now</button></form>
+  </section>
 <?php elseif ($view === 'settings'): ?>
   <section class="card about" aria-labelledby="adm-h">
     <h2 id="adm-h" class="b-h2">Settings</h2>
@@ -258,6 +329,14 @@ $pending = (int)$db->query("SELECT COUNT(*) FROM users WHERE status = 'pending'"
       <label class="field inline"><span>Per day (0 = no daily limit)</span><input type="number" min="0" name="daily_quota" value="<?= $set['daily_quota'] ?>" required></label>
       <label class="field inline"><span>Per minute (at least 1)</span><input type="number" min="1" name="per_minute" value="<?= $set['per_minute'] ?>" required></label>
       <p class="muted small">An account's own limits (account page) take precedence. Months and days are counted in UTC.</p>
+      <h3>Site-wide monthly caps</h3>
+      <label class="field inline"><span>Interpretations per month for the whole site (0 = no cap)</span><input type="number" min="0" name="site_cap" value="<?= $set['site_cap'] ?>" required></label>
+      <label class="field inline"><span>Tokens per month, input and output together (0 = no cap)</span><input type="number" min="0" name="site_cap_tokens" value="<?= $set['site_cap_tokens'] ?>" required></label>
+      <p class="muted small">When a cap is reached, nobody can ask for an interpretation until the next month (UTC). Keep the spend limit of the API workspace in the Anthropic Console as the last safeguard.</p>
+      <h3>Prices for the cost estimate</h3>
+      <label class="field inline"><span>USD per million input tokens</span><input type="text" inputmode="decimal" name="price_in" value="<?= h($set['price_in']) ?>" placeholder="e.g. from the Anthropic price list"></label>
+      <label class="field inline"><span>USD per million output tokens</span><input type="text" inputmode="decimal" name="price_out" value="<?= h($set['price_out']) ?>"></label>
+      <p class="muted small">No prices are built in: enter those of the model in use (config: <?= h((string)$c['anthropic_model']) ?>). Empty = no estimate.</p>
       <h3>Sign-up</h3>
       <div class="radios"><?php foreach (['approval' => 'New accounts wait for approval', 'auto' => 'New accounts are approved automatically', 'closed' => 'Closed to new accounts (existing accounts can still sign in)'] as $k => $lab): ?><label><input type="radio" name="signup" value="<?= $k ?>"<?= $set['signup'] === $k ? ' checked' : '' ?>> <?= h($lab) ?></label><?php endforeach; ?></div>
       <h3>Interpretation service</h3>

@@ -239,6 +239,29 @@ try {
     ok(csv.split('\n')[0].includes('"time (UTC)",by,action,account,detail'), 'audit log downloads as CSV');
     await page.goto(BASE + '/hesap.php');
     ok(!(await page.isVisible('#acc-paused')) && (await page.locator('#acc-announce').count()) === 0, 'service on again, no announcement');
+    // 5c. stage 2: call log, tokens, prices, site-wide cap, retention by hand
+    await page.goto(BASE + '/yonetim.php?view=usage');
+    const oc = await page.textContent('#adm-outcomes');
+    ok(/ok 3\b/.test(oc) && ['quota', 'daily', 'off'].every(x => oc.includes(x)), 'usage: outcomes of this month (3 answered; refusals by quota, daily limit and pause) ' + oc);
+    ok((await page.locator('#adm-days tbody tr').first().textContent()).includes('3') && !(await page.textContent('#adm-month')).includes(' 0 tokens in'), 'usage: today\'s row and the token totals');
+    ok((await page.locator(`#adm-top tr[data-orcid="${USER}"]`).count()) === 1 && (await page.locator('#adm-probs tbody tr').count()) >= 3, 'usage: accounts this month and the recent refusals');
+    const ccsv = await page.evaluate(async () => (await fetch('yonetim.php?view=usage&csv=1')).text());
+    ok(ccsv.split('\n')[0].includes('account,tool,outcome,"input tokens","output tokens"') && !ccsv.includes('Mock interpretation'), 'call log CSV: no summaries or texts');
+    await page.goto(BASE + '/yonetim.php?view=settings');
+    await page.fill('#adm-settings [name="price_in"]', 'x'); await page.click('#adm-settings button[type="submit"]'); await page.waitForSelector('#adm-done');
+    ok((await page.textContent('#adm-done')).includes('Prices'), 'a price that is not a number is refused');
+    await page.fill('#adm-settings [name="price_in"]', '3'); await page.fill('#adm-settings [name="price_out"]', '15'); await page.fill('#adm-settings [name="site_cap"]', '3');
+    await page.click('#adm-settings button[type="submit"]'); await page.waitForSelector('#adm-done');
+    await page.goto(BASE + '/yonetim.php');
+    ok(/estimated cost \$\d/.test(await page.textContent('#adm-tok')) && (await page.textContent('#adm-use')).includes('site-wide cap of 3'), 'overview: estimated cost from the entered prices; the cap');
+    await signOut(); await signIn(USER, 'Test Researcher');
+    sql(`UPDATE usage SET n = 0 WHERE orcid = '${USER}'`); sql(`DELETE FROM usage_day WHERE orcid = '${USER}'`);
+    r = await ask(); ok(r[0] === 503 && r[1].error === 'cap', 'site-wide cap reached (3 answered this month): 503 cap for everyone');
+    await signOut(); await signIn(ADMIN, 'Site Author');
+    await page.goto(BASE + '/yonetim.php?view=settings'); await page.fill('#adm-settings [name="site_cap"]', '0'); await page.click('#adm-settings button[type="submit"]'); await page.waitForSelector('#adm-done');
+    await acct(USER); ok((await page.textContent('#adm-acccalls')).includes('3 answered') && (await page.textContent('#adm-acccalls')).includes('$'), 'account page: calls this month with the estimate');
+    await page.goto(BASE + '/yonetim.php?view=usage'); await page.click('#adm-purge'); await page.waitForSelector('#adm-done');
+    ok((await page.textContent('#adm-done')).includes('Retention rule run: 0'), 'retention rule run by hand (nothing old to delete)');
     await signOut(); }
   await signIn(USER, 'Test Researcher');
 

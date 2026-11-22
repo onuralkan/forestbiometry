@@ -65,8 +65,11 @@ $in = json_decode($raw, true);
 if (!is_array($in) || !isset($in['tool'], $in['summary']) || !is_array($in['summary']) || !isset(FB_TOOLS[$in['tool']])) fb_json(['error' => 'bad-request'], 400);
 $tool = FB_TOOLS[$in['tool']];
 
+$t0 = microtime(true); $ms = function () use ($t0) { return (int)round((microtime(true) - $t0) * 1000); };
 $err = fb_take($u['orcid']);
+if ($err !== '') fb_log_call($u['orcid'], (string)$in['tool'], $err);
 if ($err === 'off') fb_json(['error' => 'off', 'message' => fb_settings()['ai_off_message']], 503);
+if ($err === 'cap') fb_json(['error' => 'cap'], 503);
 if ($err !== '') { $l = fb_limits(fb_account($u['orcid']));
     fb_json(['error' => $err, 'used' => fb_used($u['orcid']), 'quota' => $l['month'], 'usedDay' => fb_used_day($u['orcid']), 'quotaDay' => $l['day']], 429); }
 
@@ -75,6 +78,8 @@ $user = "Tool: " . $tool['name'] . " " . substr((string)($in['version'] ?? ''), 
 
 if (!empty($c['anthropic_mock'])) {   // test servers: no call, a fixed text that shows what was sent
     $text = "Summary\nMock interpretation of " . $tool['name'] . " (" . strlen($user) . " characters sent).\n\nComparison\n-\n\nUncertainty\n-\n\nLimits\n-";
+    // test servers: token counts are the character counts (no real tokens exist without a call)
+    fb_log_call($u['orcid'], (string)$in['tool'], 'ok', strlen($user), strlen($text), $ms(), 'mock');
     fb_finish($u, $in, $text, 'mock', false);
 }
 
@@ -101,10 +106,15 @@ if ($code !== 200 || !is_array($r)) {
     $type = is_array($r) && isset($r['error']['type']) ? (string)$r['error']['type'] : ($code ? 'http-' . $code : 'connection');
     $why = is_array($r) && isset($r['error']['message']) ? (string)$r['error']['message'] : $cerr;   // never contains the key
     error_log('interpret: Claude API error ' . $type . ': ' . $why);
+    fb_log_call($u['orcid'], (string)$in['tool'], 'upstream', 0, 0, $ms(), (string)$c['anthropic_model'], $type);
     fb_json(['error' => 'upstream', 'detail' => substr($type . ($why !== '' ? ': ' . $why : ''), 0, 300)], 502);
 }
-if (($r['stop_reason'] ?? '') === 'refusal') { fb_give_back($u['orcid']); fb_json(['error' => 'refusal'], 422); }
+$us = (array)($r['usage'] ?? []);
+$tin = (int)($us['input_tokens'] ?? 0) + (int)($us['cache_creation_input_tokens'] ?? 0) + (int)($us['cache_read_input_tokens'] ?? 0); $tout = (int)($us['output_tokens'] ?? 0);
+$mod = (string)($r['model'] ?? $c['anthropic_model']);
+if (($r['stop_reason'] ?? '') === 'refusal') { fb_give_back($u['orcid']); fb_log_call($u['orcid'], (string)$in['tool'], 'refusal', $tin, $tout, $ms(), $mod); fb_json(['error' => 'refusal'], 422); }
 $text = '';
 foreach ($r['content'] ?? [] as $b) if (($b['type'] ?? '') === 'text') $text .= $b['text'];
-if (trim($text) === '') { fb_give_back($u['orcid']); fb_json(['error' => 'empty'], 502); }
+if (trim($text) === '') { fb_give_back($u['orcid']); fb_log_call($u['orcid'], (string)$in['tool'], 'empty', $tin, $tout, $ms(), $mod); fb_json(['error' => 'empty'], 502); }
+fb_log_call($u['orcid'], (string)$in['tool'], 'ok', $tin, $tout, $ms(), $mod, ($r['stop_reason'] ?? '') === 'max_tokens' ? 'cut at max_tokens' : null);
 fb_finish($u, $in, $text, (string)($r['model'] ?? $c['anthropic_model']), ($r['stop_reason'] ?? '') === 'max_tokens');

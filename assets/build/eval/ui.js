@@ -638,11 +638,11 @@ async function mountInterpret(el, tool, getSummary) {
       return;
     }
     const msg = { quota: 'This month\'s interpretations are used up.', daily: 'Today\'s interpretations are used up; try again tomorrow (UTC).',
-      off: 'The interpretation service is paused' + (j && j.message ? ': ' + j.message : '.'), rejected: 'Your account was not approved.', rate: 'Too many requests in a minute; wait a moment and try again.', signin: 'Your session has ended; sign in again.',
+      off: 'The interpretation service is paused' + (j && j.message ? ': ' + j.message : '.'), rejected: 'Your account was not approved.', cap: 'The site\'s interpretations for this month are used up; the service opens again next month.', rate: 'Too many requests in a minute; wait a moment and try again.', signin: 'Your session has ended; sign in again.',
       pending: 'Your account is waiting for approval.', blocked: 'Your account cannot use the service.', token: 'The page is out of date; reload it.', 'too-large': 'These results are too large to send for an interpretation.',
       refusal: 'The model declined to interpret these results.', upstream: 'The interpretation service did not answer; you were not charged. Try again later.', network: 'No connection to the server.' }[j && j.error] || 'The interpretation failed.';
     out.innerHTML = `<p class="note err" id="ai-err">${esc(msg)}${j && j.detail ? `<br><span class="small">Details: ${esc(j.detail)}</span>` : ''}</p>`;
-    go.disabled = !!(j && ['quota', 'daily', 'blocked', 'rejected', 'off'].includes(j.error));
+    go.disabled = !!(j && ['quota', 'daily', 'blocked', 'rejected', 'off', 'cap'].includes(j.error));
   });
 }
 };

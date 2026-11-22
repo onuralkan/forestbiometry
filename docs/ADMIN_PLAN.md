@@ -31,7 +31,7 @@ site's `admin.php` must keep answering 404).
    temporary block, the announcement; the service-off message in the card.
 7. Privacy notice updated (what the server now also keeps: daily use counts, reasons, administrator notes, audit log).
 
-## Stage 2: monitoring and cost control
+## Stage 2: monitoring and cost control — done 22 Nov 2026 (Usage view, caps and prices in Settings; tests §5c)
 - Each interpretation call logged (time, account, outcome: ok / upstream error / refusal / rate / quota, input and
   output tokens from the API's usage field, duration); failures are visible in the panel.
 - Token totals per day and month; an estimated cost only from prices the administrator enters (none built in).

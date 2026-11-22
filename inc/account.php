@@ -70,18 +70,25 @@ function fb_db(): PDO {
     $db->exec('CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT NOT NULL)');
     $db->exec('CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, admin TEXT NOT NULL, action TEXT NOT NULL, orcid TEXT, detail TEXT NOT NULL)');
     $db->exec('CREATE INDEX IF NOT EXISTS audit_orcid ON audit (orcid, at)');
+    // stage 2 (22 Nov 2026): one line per interpretation request: outcome, tokens from the API's usage field, duration
+    $db->exec('CREATE TABLE IF NOT EXISTS calls (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, orcid TEXT NOT NULL, tool TEXT NOT NULL, outcome TEXT NOT NULL, tok_in INTEGER NOT NULL DEFAULT 0, tok_out INTEGER NOT NULL DEFAULT 0, ms INTEGER NOT NULL DEFAULT 0, model TEXT, detail TEXT)');
+    $db->exec('CREATE INDEX IF NOT EXISTS calls_at ON calls (at)');
+    $db->exec('CREATE INDEX IF NOT EXISTS calls_orcid ON calls (orcid, at)');
     return $db;
 }
 
 /* ---------------- site settings (administration panel) ---------------- */
 /** Site settings the administrator can change in yonetim.php; config.php gives the defaults. */
-const FB_SETTINGS = ['monthly_quota', 'daily_quota', 'per_minute', 'signup', 'ai_enabled', 'ai_off_message', 'announcement'];
+const FB_SETTINGS = ['monthly_quota', 'daily_quota', 'per_minute', 'signup', 'ai_enabled', 'ai_off_message', 'announcement',
+    'site_cap', 'site_cap_tokens', 'price_in', 'price_out'];
 function fb_settings(): array {
     static $s = null;
     if ($s !== null) return $s;
     $c = fb_config();
     $s = ['monthly_quota' => (int)$c['monthly_quota'], 'daily_quota' => (int)($c['daily_quota'] ?? 0), 'per_minute' => (int)$c['per_minute'],
-        'signup' => 'approval', 'ai_enabled' => 1, 'ai_off_message' => '', 'announcement' => ''];
+        'signup' => 'approval', 'ai_enabled' => 1, 'ai_off_message' => '', 'announcement' => '',
+        // site-wide monthly caps (0 = none) and the administrator's prices per million tokens (USD; '' = no estimate; none built in)
+        'site_cap' => 0, 'site_cap_tokens' => 0, 'price_in' => '', 'price_out' => ''];
     foreach (fb_db()->query('SELECT k, v FROM settings')->fetchAll() as $r)
         if (array_key_exists($r['k'], $s)) $s[$r['k']] = is_int($s[$r['k']]) ? (int)$r['v'] : (string)$r['v'];
     return $s;
@@ -89,6 +96,26 @@ function fb_settings(): array {
 function fb_set_setting(string $k, $v): void {
     if (!in_array($k, FB_SETTINGS, true)) throw new InvalidArgumentException('unknown setting ' . $k);
     fb_db()->prepare('INSERT OR REPLACE INTO settings (k, v) VALUES (?, ?)')->execute([$k, (string)$v]);
+}
+
+/** One line of the call log (yonetim.php → Usage). outcome: ok | upstream | refusal | empty | off | cap | rate | daily | quota. */
+function fb_log_call(string $orcid, string $tool, string $outcome, int $in = 0, int $out = 0, int $ms = 0, ?string $model = null, ?string $detail = null): void {
+    fb_db()->prepare('INSERT INTO calls (at, orcid, tool, outcome, tok_in, tok_out, ms, model, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        ->execute([gmdate('c'), $orcid, $tool, $outcome, $in, $out, $ms, $model, $detail === null ? null : mb_substr($detail, 0, 300)]);
+}
+/**
+ * This month's site-wide totals from the call log: answered interpretations and tokens. (Not from the use counts: those
+ * the administrator can reset and an account's deletion removes, while the caps and costs must count every call.)
+ */
+function fb_site_month(): array {
+    $t = fb_db()->query("SELECT COALESCE(SUM(outcome = 'ok'), 0) AS n, COALESCE(SUM(tok_in), 0) AS i, COALESCE(SUM(tok_out), 0) AS o FROM calls WHERE at >= '" . fb_month() . "-01'")->fetch();
+    return ['n' => (int)$t['n'], 'in' => (int)$t['i'], 'out' => (int)$t['o']];
+}
+/** Estimated cost in USD from the administrator's prices, or null without prices. */
+function fb_cost(int $in, int $out): ?float {
+    $s = fb_settings();
+    if (!is_numeric($s['price_in']) || !is_numeric($s['price_out'])) return null;
+    return ($in * (float)$s['price_in'] + $out * (float)$s['price_out']) / 1e6;
 }
 
 /** One line of the administrator's audit log. detail: what changed (before → after) and the reason. */
@@ -166,6 +193,7 @@ function fb_purge(bool $force = false): int {
     $cut = gmdate('c', strtotime('-24 months'));
     $db->prepare('DELETE FROM audit WHERE at < ?')->execute([$cut]);           // the audit log is kept 24 months
     $db->prepare('DELETE FROM usage_day WHERE day < ?')->execute([gmdate('Y-m-d', strtotime('-400 days'))]);
+    $db->prepare('DELETE FROM calls WHERE at < ?')->execute([gmdate('c', strtotime('-13 months'))]);   // the call log is kept 13 months
     $st = $db->prepare('SELECT orcid FROM users WHERE COALESCE(last_seen, created) < ? AND orcid <> ?');
     $st->execute([$cut, (string)fb_config()['admin_orcid']]);
     $old = $st->fetchAll(PDO::FETCH_COLUMN);
@@ -177,6 +205,8 @@ function fb_purge(bool $force = false): int {
 function fb_delete_account(string $orcid): void {
     $db = fb_db();
     foreach (['results', 'interpretations', 'usage', 'usage_day', 'recent', 'users'] as $t) $db->prepare("DELETE FROM $t WHERE orcid = ?")->execute([$orcid]);
+    // the call log keeps the site's totals (caps, costs) but not who made the calls
+    $db->prepare("UPDATE calls SET orcid = 'deleted' WHERE orcid = ?")->execute([$orcid]);
 }
 
 /** Random, unguessable id of a saved item. */
@@ -272,11 +302,16 @@ function fb_state(): array {
 
 /**
  * Takes one interpretation from the account's limits, atomically: service on, per-minute limit, daily quota (0 = none),
- * monthly quota (personal or site default, plus this month's extra). → '' or an error code (off, rate, daily, quota).
+ * monthly quota (personal or site default, plus this month's extra), site-wide monthly caps. → '' or an error code
+ * (off, cap, rate, daily, quota).
  */
 function fb_take(string $orcid): string {
     $db = fb_db(); $now = time(); $s = fb_settings();
     if (!$s['ai_enabled']) return 'off';
+    if ($s['site_cap'] > 0 || $s['site_cap_tokens'] > 0) {   // site-wide monthly caps
+        $m = fb_site_month();
+        if (($s['site_cap'] > 0 && $m['n'] >= $s['site_cap']) || ($s['site_cap_tokens'] > 0 && $m['in'] + $m['out'] >= $s['site_cap_tokens'])) return 'cap';
+    }
     $l = fb_limits(fb_account($orcid));
     $db->exec('BEGIN IMMEDIATE');
     try {
