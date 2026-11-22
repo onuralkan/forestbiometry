@@ -1,0 +1,279 @@
+{
+ "format": "run-record/1",
+ "tool": {
+  "id": "boy-cap",
+  "version": "1.1.1",
+  "ids": [
+   "SM-01"
+  ],
+  "page": "boy-cap.php"
+ },
+ "build": {
+  "commit": null,
+  "site": "https://forestbiometry.online/"
+ },
+ "created": "2026-11-22T14:43:08.434Z",
+ "lang": "en",
+ "inputs": [
+  {
+   "role": "trees",
+   "kind": "file",
+   "name": "ornek-boy-cap.csv (simulated)",
+   "format": "csv",
+   "bytes": 5414,
+   "sha256": "1df434d22da1dbb76320fe414b94e8c19645bb82b129240d36ee60fb990e7ded",
+   "encoding": "utf-8",
+   "delimiter": ",",
+   "header": true
+  }
+ ],
+ "settings": {
+  "columns": {
+   "d": "cap_cm",
+   "h": "boy_m",
+   "plot": "ornek_alan",
+   "species": "tur",
+   "filter": null
+  },
+  "species": null,
+  "filterValue": null,
+  "units": {
+   "d": "cm",
+   "h": "m"
+  },
+  "decimal": ".",
+  "breastHeight": 1.3,
+  "cv": "plot",
+  "model": null
+ },
+ "data": {
+  "fitted": 222,
+  "dmin": 5.6,
+  "dmax": 62,
+  "plots": 8,
+  "excluded": {
+   "rows": 273,
+   "species": 0,
+   "dEmpty": 1,
+   "dBad": 0,
+   "dNonpos": 0,
+   "hBad": 1,
+   "hLeBh": 1,
+   "missing": 48,
+   "fit": 222,
+   "filter": 0
+  }
+ },
+ "inference": false,
+ "fits": [
+  {
+   "id": "naslund",
+   "formula": "h = bh + d² / (a + b·d)²",
+   "status": "ok",
+   "names": [
+    "a",
+    "b"
+   ],
+   "theta": [
+    1.6330023868520724,
+    0.17338974395216972
+   ],
+   "se": null,
+   "ci": null,
+   "n": 222,
+   "rmse": 1.7950509127708298,
+   "mae": 1.5171110561272552,
+   "bias": 0.011258624693529513,
+   "sigma": 1.8031917750018416,
+   "aic": null,
+   "bic": null,
+   "iter": 17
+  },
+  {
+   "id": "michailoff",
+   "formula": "h = bh + a·exp(−b / d)",
+   "status": "ok",
+   "names": [
+    "a",
+    "b"
+   ],
+   "theta": [
+    29.12685535238792,
+    12.362066674660483
+   ],
+   "se": null,
+   "ci": null,
+   "n": 222,
+   "rmse": 1.8672260520451374,
+   "mae": 1.5955715671638853,
+   "bias": 0.042782483551836864,
+   "sigma": 1.8756942408500954,
+   "aic": null,
+   "bic": null,
+   "iter": 9
+  },
+  {
+   "id": "curtis",
+   "formula": "h = bh + a·(d / (1 + d))^b",
+   "status": "ok",
+   "names": [
+    "a",
+    "b"
+   ],
+   "theta": [
+    29.629163350076496,
+    13.083397671503027
+   ],
+   "se": null,
+   "ci": null,
+   "n": 222,
+   "rmse": 1.8492571621063187,
+   "mae": 1.5788606938932044,
+   "bias": 0.03630558185084307,
+   "sigma": 1.8576438589288515,
+   "aic": null,
+   "bic": null,
+   "iter": 8
+  },
+  {
+   "id": "power",
+   "formula": "h = bh + a·d^b",
+   "status": "ok",
+   "names": [
+    "a",
+    "b"
+   ],
+   "theta": [
+    2.5496098888753904,
+    0.5867753600495972
+   ],
+   "se": null,
+   "ci": null,
+   "n": 222,
+   "rmse": 1.9521128872799334,
+   "mae": 1.6231733664396608,
+   "bias": -0.037510915171289176,
+   "sigma": 1.960966052369384,
+   "aic": null,
+   "bic": null,
+   "iter": 16
+  },
+  {
+   "id": "richards",
+   "formula": "h = bh + a·(1 − exp(−b·d))^c",
+   "status": "ok",
+   "names": [
+    "a",
+    "b",
+    "c"
+   ],
+   "theta": [
+    25.906107449960537,
+    0.049557667338786714,
+    1.1367680642981461
+   ],
+   "se": null,
+   "ci": null,
+   "n": 222,
+   "rmse": 1.7850770409514105,
+   "mae": 1.503636769962335,
+   "bias": 0.001793035663133895,
+   "sigma": 1.7972620086232554,
+   "aic": null,
+   "bic": null,
+   "iter": 39
+  },
+  {
+   "id": "weibull",
+   "formula": "h = bh + a·(1 − exp(−b·d^c))",
+   "status": "ok",
+   "names": [
+    "a",
+    "b",
+    "c"
+   ],
+   "theta": [
+    25.56189326771636,
+    0.03469173814049308,
+    1.0910460165879765
+   ],
+   "se": null,
+   "ci": null,
+   "n": 222,
+   "rmse": 1.7846365806829712,
+   "mae": 1.5037294081823316,
+   "bias": 0.002160545191848587,
+   "sigma": 1.7968185417651796,
+   "aic": null,
+   "bic": null,
+   "iter": 22
+  }
+ ],
+ "crossValidation": {
+  "mode": "plot",
+  "k": 8,
+  "lopo": true,
+  "models": [
+   {
+    "id": "naslund",
+    "n": 222,
+    "bias": -0.013588403760317962,
+    "mae": 1.6981714293519206,
+    "rmse": 1.9900341901033702,
+    "chosen": 4
+   },
+   {
+    "id": "michailoff",
+    "n": 222,
+    "bias": 0.018340705158026223,
+    "mae": 1.7759333173047451,
+    "rmse": 2.064246539226747,
+    "chosen": 0
+   },
+   {
+    "id": "curtis",
+    "n": 222,
+    "bias": 0.011890532415181653,
+    "mae": 1.7585450367713336,
+    "rmse": 2.046506373619891,
+    "chosen": 0
+   },
+   {
+    "id": "power",
+    "n": 222,
+    "bias": -0.06364033895043927,
+    "mae": 1.7870064750927215,
+    "rmse": 2.1239851282149025,
+    "chosen": 0
+   },
+   {
+    "id": "richards",
+    "n": 222,
+    "bias": -0.026455159689294305,
+    "mae": 1.6850792283955258,
+    "rmse": 1.9838186601893066,
+    "chosen": 0
+   },
+   {
+    "id": "weibull",
+    "n": 222,
+    "bias": -0.02686783053824666,
+    "mae": 1.6860658339906136,
+    "rmse": 1.984851575809834,
+    "chosen": 4
+   }
+  ],
+  "selection": {
+   "n": 222,
+   "bias": -0.02674875331351854,
+   "mae": 1.702590387089197,
+   "rmse": 1.9980412739092932
+  }
+ },
+ "newDiameters": null,
+ "integrity": {
+  "algorithm": "SHA-256",
+  "canonicalization": "RFC 8785 (JCS)",
+  "value": "5188f948e1594a01d716cb468649a3d705750d2fff587eee5e38d3c6b9947435"
+ }
+}

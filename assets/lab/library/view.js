@@ -6,8 +6,10 @@ import { esc } from '../core/i18n.js';
 import { viewRecord as evalView } from '../eval/view.js';
 import { viewRecord as distView } from '../dist/view.js';
 import { viewRecord as rankView } from '../rank/view.js';
+import { viewRecord as standView } from '../stand/view.js';
+import { viewRecord as hdView } from '../hd/view.js';
 
-export const VIEWS = { 'model-degerlendirme': evalView, 'cap-dagilimi': distView, 'nispi-siralama': rankView };
+export const VIEWS = { 'model-degerlendirme': evalView, 'cap-dagilimi': distView, 'nispi-siralama': rankView, 'ornek-alan-mescere': standView, 'boy-cap': hdView };
 const ENVELOPE = ['format', 'tool', 'build', 'created', 'lang', 'inputs', 'integrity'];
 const MAX_ROWS = 200, MAX_COLS = 16, MAX_DEPTH = 4;
 

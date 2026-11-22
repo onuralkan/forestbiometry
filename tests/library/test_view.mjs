@@ -2,6 +2,8 @@
 // Usage: node tests/library/test_view.mjs
 import { genericView, viewOf, inputsView, cell, label, num } from '../../assets/lab/library/view.js';
 import * as D from '../../assets/lab/dist/index.js';
+import { fmtNum } from '../../assets/lab/core/i18n.js';
+const fmt2 = x => fmtNum(x, 2);
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const count = (h, re) => (h.match(re) || []).length;
@@ -12,7 +14,7 @@ ok(label('rankBootstrap') === 'Rank bootstrap' && label('d_mean') === 'D mean', 
 ok(cell(null) === '–' && cell(true) === 'yes' && cell([1, 2.5]) === '1; 2.5' && cell('<b>') === '&lt;b&gt;', 'cell: null, boolean, list, escaped text');
 
 // generic view: settings list, top-level values, tables with nested columns, nested tables per row
-const rec = { format: 'run-record/1', tool: { id: 'boy-cap', version: '1.1.1' }, created: '2026-11-22T10:00:00Z', inputs: [{ role: 'trees', kind: 'file', name: 'a.csv', rows: 3, sha256: 'ab'.repeat(32) }],
+const rec = { format: 'run-record/1', tool: { id: 'buyume-islevi', version: '1.0.0' }, created: '2026-11-22T10:00:00Z', inputs: [{ role: 'trees', kind: 'file', name: 'a.csv', rows: 3, sha256: 'ab'.repeat(32) }],
   settings: { response: 'h', weights: null, models: ['naslund', 'curtis'] }, n: 120, note: '<script>x</script>',
   fits: [{ id: 'naslund', status: 'ok', theta: [1.2, 0.3], stats: { rmse: 1.234567, aic: 200 }, residualsByClass: [{ cls: '10–20', n: 5, bias: -0.1 }] },
          { id: 'curtis', status: 'ok', theta: [2, 0.1], stats: { rmse: 1.3, aic: 210 }, residualsByClass: [] }] };
@@ -73,5 +75,20 @@ ok(rv.kind === 'tool' && rv.html.includes('id="rv-ranks"') && count(rv.html, /<t
 ok(rv.html.includes('id="rv-crit"') && rv.html.includes('M6') && rv.html.includes('R² = FI') && rv.html.includes('Left out of the ranking: M9'), 'ranking: criteria, incomplete models, equal criteria and left-out models');
 ok(count(rv.html, /class="chart"/g) === 2 && rv.html.includes('Relative ranks by criterion'), 'ranking: overall-rank bars and the radar chart');
 ok(!viewOf({ ...rr, criteria: rr.criteria.slice(0, 2) }).html.includes('Relative ranks by criterion'), 'ranking: no radar with fewer than 3 criteria');
+
+// Plot & Stand Metrics and Height–Diameter views, on records the tools wrote from their sample data (tests/library/rec-*.json)
+import { readFileSync } from 'node:fs';
+const here = new URL('.', import.meta.url);
+const sr = JSON.parse(readFileSync(new URL('rec-stand.json', here))), sv = viewOf(sr);
+ok(sv.kind === 'tool' && sv.html.includes('Period 2019') && sv.html.includes('Period 2024') && sv.html.includes('id="rv-units-0"'), 'stand: one section per period with the plot table');
+ok(count(sv.html, /class="chart"/g) >= 6 && sv.html.includes('N/ha by diameter class') && sv.html.includes('id="rv-forest-0"'), 'stand: N and G by plot, classes, forest estimate');
+ok(sv.html.includes('Between plots') && sv.html.includes('not a design-based estimate') && sv.html.includes('Species (share of basal area'), 'stand: between-plot summary and species shares');
+const u0 = sr.units.find(u => u.state === 'measured');
+ok(sv.html.includes(fmt2(u0.Gha)), 'stand: the saved G/ha of a plot is shown as saved');
+const hr = JSON.parse(readFileSync(new URL('rec-hd.json', here))), hv = viewOf(hr);
+ok(hv.kind === 'tool' && hv.html.includes('id="rv-fits"') && count(hv.html, /<tr[^>]*><th>(Näslund|[A-Z])/g) >= 6, 'hd: the model table');
+ok(hv.html.includes('Fitted height–diameter curves') && hv.html.includes('id="rv-cv"') && hv.html.includes('Model selection in each fold'), 'hd: curves and cross-validation');
+ok(count(hv.html, /class="chart"/g) === 2, 'hd: curve chart and RMSE fit vs cross-validation');
+ok(!/NaN/.test(hv.html) && !/NaN/.test(sv.html), 'no NaN in the views');
 console.log(`library view: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
