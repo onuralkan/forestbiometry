@@ -697,9 +697,9 @@
     "version": null,
     "status": "D",
     "tools": [
-      "METHODS §16 SS02 (Donnelly edge correction, temporary exception)"
+      "METHODS §16 SS02 (Donnelly edge correction)"
     ],
-    "note": "NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Donnelly, K. P. (1978). Simulations to determine the variance and edge effect of total nearest-neighbour distance. In I. Hodder (Ed.), Simulation studies in archaeology (pp. 91–95). Cambridge University Press. | Earlier note: ed. Hodder, I.; details from TOOLS_SPEC §9 / SOURCE_LIST; METHODS gives only 'Donnelly (1978)', constants 0.0514 and 0.041"
+    "note": "Original not obtainable (exception, 22 Nov 2026, user decision; METHODS legend): the computation rests on the source actually read. NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Donnelly, K. P. (1978). Simulations to determine the variance and edge effect of total nearest-neighbour distance. In I. Hodder (Ed.), Simulation studies in archaeology (pp. 91–95). Cambridge University Press. | Earlier note: ed. Hodder, I.; details from TOOLS_SPEC §9 / SOURCE_LIST; METHODS gives only 'Donnelly (1978)', constants 0.0514 and 0.041"
   },
   {
     "key": "draper1981",
@@ -1008,7 +1008,7 @@
       "METHODS §12 P19 (m₃ via basal-area-weighted mean diameter)",
       "DIST_SPEC P23 note"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: cited by Fonseca et al. 2009 (and by Kangas & Maltamo 2000 per DIST_SPEC); not read; no marker in METHODS, DIST_SPEC says 'okunmadı'"
+    "note": "Original not obtainable (exception, 22 Nov 2026, user decision; METHODS legend): the computation rests on the source actually read. Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: cited by Fonseca et al. 2009 (and by Kangas & Maltamo 2000 per DIST_SPEC); not read; no marker in METHODS, DIST_SPEC says 'okunmadı'"
   },
   {
     "key": "graves1906",
@@ -1340,11 +1340,11 @@
     "doi": "10.1007/BF02832980",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
-      "METHODS §16 SS02 (U, temporary exception)"
+      "METHODS §16 SS02 (U)"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: 'Hui ve ark. 1998' (et al.); source not in hand"
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: 'Hui ve ark. 1998' (et al.); source not in hand"
   },
   {
     "key": "huigadow",
@@ -1368,7 +1368,7 @@
     "tools": [
       "METHODS §16 SS02 (W option 360°/(k+1))"
     ],
-    "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: 'Hui ve Gadow' later definition; no year, not read"
+    "note": "Original not obtainable (exception, 22 Nov 2026, user decision; METHODS legend): the computation rests on the source actually read. Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: 'Hui ve Gadow' later definition; no year, not read"
   },
   {
     "key": "hyndman1996",
@@ -1729,11 +1729,11 @@
     "doi": "10.1137/0111030",
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §10 (Levenberg–Marquardt)"
     ],
-    "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
   },
   {
     "key": "massey1951",
@@ -1970,11 +1970,11 @@
     "doi": null,
     "url": null,
     "version": null,
-    "status": "D",
+    "status": "B",
     "tools": [
       "METHODS §10 (LM damping update)"
     ],
-    "note": "report IMM-REP-1999-05"
+    "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). report IMM-REP-1999-05"
   },
   {
     "key": "fips1804",
@@ -2358,7 +2358,7 @@
     "tools": [
       "METHODS §19 SV-06"
     ],
-    "note": "No DOI found in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026) (this does not mean there is none). not read; cited via Grondin 1998 and Bennemann et al. 2025"
+    "note": "Original not obtainable (exception, 22 Nov 2026, user decision; METHODS legend): the computation rests on the source actually read. No DOI found in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026) (this does not mean there is none). not read; cited via Grondin 1998 and Bennemann et al. 2025"
   },
   {
     "key": "pommerening2002",
@@ -2679,7 +2679,7 @@
       "METHODS §15 SI01",
       "METHODS §18 SQ-03"
     ],
-    "note": "No DOI found in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026) (this does not mean there is none). via Hernández-Cuevas et al. 2018"
+    "note": "Original not obtainable (exception, 22 Nov 2026, user decision; METHODS legend): the computation rests on the source actually read. No DOI found in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026) (this does not mean there is none). via Hernández-Cuevas et al. 2018"
   },
   {
     "key": "scipy_fisk",
@@ -3178,7 +3178,7 @@
     "tools": [
       "METHODS §7 (paired t-test for equivalence, cited through Robinson and Froese 2004)"
     ],
-    "note": "not read; the test is applied as given by Robinson and Froese (2004)"
+    "note": "Original not obtainable (exception, 22 Nov 2026, user decision; METHODS legend): the computation rests on the source actually read. not read; the test is applied as given by Robinson and Froese (2004)"
   },
   {
     "key": "diciccio1988",

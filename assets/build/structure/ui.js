@@ -2798,7 +2798,7 @@ const en = {
   'geo.note': 'Coordinates must be in the same frame in every plot (e.g. measured from each plot centre). Trees outside the plot or without coordinates are reported with their rows and that plot is not computed.',
   'geo.k': 'Number of neighbours k', 'geo.edge': 'Edge effect', 'geo.edge.none': 'no correction (edge trees flagged)', 'geo.edge.buffer': 'buffer', 'geo.edge.toroidal': 'toroidal translation (rectangles only)', 'geo.buffer': 'Buffer width (m)',
   'geo.ci': 'Hegyi competitors', 'geo.ci.knn': 'k nearest trees', 'geo.ci.radius': 'within a radius', 'geo.radius': 'Radius R (m)',
-  'geo.src': 'Source status: Clark–Evans R (Clark and Evans 1954) and W, M, T, T1 (Pommerening 2002) read [B]; Hegyi (1974) in the form cited by secondary sources [A] (Contreras et al. 2011; siplab R package documentation); the original Hegyi index is reported to add 1 ft (0.3048 m) to the distance, this tool uses the form without it. U (Hui et al. 1998) and the Donnelly (1978) correction are verified against package documentation and output [P] (forestSAS dominance; spatstat clarkevans, Donnelly constant 0.0412); their original sources have not been read.',
+  'geo.src': 'Source status: Clark–Evans R (Clark and Evans 1954) and W, M, T, T1 (Pommerening 2002) read [B]; Hegyi (1974) in the form cited by secondary sources [A] (Contreras et al. 2011; siplab R package documentation); the original Hegyi index is reported to add 1 ft (0.3048 m) to the distance, this tool uses the form without it. U (Hui et al. 1998) read [B] (equal diameters count as larger, as in the paper). The Donnelly (1978) correction is verified against package documentation and output [P] (spatstat clarkevans, constant 0.0412); its original could not be obtained.',
   'geo.wangle': 'W standard angle', 'geo.wangle.k': '360°/k (Pommerening 2002; 90° for k = 4)', 'geo.wangle.k1': '360°/(k + 1) (72° for k = 4; source not read)',
   'res.units': 'Plots', 'res.detail': 'Details', 'res.export': 'Download', 'res.skipped': p => `${p.n} plot–period combination(s) have no tree records; treated as not measured and not computed.`,
   'c.unit': 'Plot', 'c.period': 'Period', 'c.n': 'n', 'c.Nha': 'N/ha', 'c.Gha': 'G (m²/ha)', 'c.Dq': 'Dq (cm)', 'c.H0': 'H0 (m)', 'c.cv': 'CV', 'c.skew': 'Skewness', 'c.kurt': 'Kurtosis (excess)',
@@ -2897,9 +2897,9 @@ __fb_m["structure/spatial.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "SPATIAL_DEFAULTS": () => SPATIAL_DEFAULTS, "boundaryDist": () => boundaryDist, "checkGeom": () => checkGeom, "clarkEvans": () => clarkEvans, "geomArea": () => geomArea, "geomPerimeter": () => geomPerimeter, "knn": () => knn, "spatialUnit": () => spatialUnit, "standardAngle": () => standardAngle, "uniformAngle": () => uniformAngle });
 // Stand Structure, stage SS02: spatial structure (no DOM). TOOLS_SPEC §4.1; formulas and their reading status in
 // METHODS §16 (SS02). Read (16 Nov 2026): Clark and Evans (1954) [B] for R; Pommerening (2002) [B] for W, M and T
-// (standard angle 360°/k, T per neighbour pair, T1 with the nearest neighbour). Still a provisional exception (user
-// decision, 12 and 16 Nov 2026): U (Hui et al. 1998) and Donnelly's (1978) edge-corrected expectation, sources not in
-// hand; checked numerically against R packages by tests/ref/ss02_check.R when the user runs it.
+// (standard angle 360°/k, T per neighbour pair, T1 with the nearest neighbour). Read 22 Nov 2026: Hui et al. (1998) [B]
+// for U. Donnelly's (1978) edge-corrected expectation: original not obtainable (exception, 22 Nov 2026), [P] through
+// spatstat; both checked numerically against R packages by tests/ref/ss02_check.R.
 //
 // Plot geometry (user given): { shape: 'circle', cx, cy, r } or { shape: 'rect', x0, y0, x1, y1 } (axis-parallel), m.
 // Every tree needs x, y inside the plot; a tree without coordinates or outside the plot is a problem with its row, and

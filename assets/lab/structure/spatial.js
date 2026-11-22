@@ -1,8 +1,8 @@
 // Stand Structure, stage SS02: spatial structure (no DOM). TOOLS_SPEC §4.1; formulas and their reading status in
 // METHODS §16 (SS02). Read (16 Nov 2026): Clark and Evans (1954) [B] for R; Pommerening (2002) [B] for W, M and T
-// (standard angle 360°/k, T per neighbour pair, T1 with the nearest neighbour). Still a provisional exception (user
-// decision, 12 and 16 Nov 2026): U (Hui et al. 1998) and Donnelly's (1978) edge-corrected expectation, sources not in
-// hand; checked numerically against R packages by tests/ref/ss02_check.R when the user runs it.
+// (standard angle 360°/k, T per neighbour pair, T1 with the nearest neighbour). Read 22 Nov 2026: Hui et al. (1998) [B]
+// for U. Donnelly's (1978) edge-corrected expectation: original not obtainable (exception, 22 Nov 2026), [P] through
+// spatstat; both checked numerically against R packages by tests/ref/ss02_check.R.
 //
 // Plot geometry (user given): { shape: 'circle', cx, cy, r } or { shape: 'rect', x0, y0, x1, y1 } (axis-parallel), m.
 // Every tree needs x, y inside the plot; a tree without coordinates or outside the plot is a problem with its row, and

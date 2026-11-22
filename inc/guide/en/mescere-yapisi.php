@@ -16,7 +16,7 @@
 <li><b>Details</b>: diameter class histogram, Lorenz curve, stem map (colour: Hegyi value), notes and the tree table (BAL, d/Dq, Hegyi, edge).</li>
 </ul>
 <p>CCF = Σ (trees per hectare × MCA as a per cent of the hectare) (Krajicek et al. 1961, cited by Kershaw et al. 2016); 100 means that crowns of open-grown size would just cover the ground; it is not a measure of crown closure. van Laar and Akça's fraction (CCF/100) is exported too. If a species has no set or a tree's MCA cannot be computed, that plot's CCF is not given and the notes say why; a partial sum would understate the density.</p>
-<p>Clark–Evans R and W, M, T and T1 have been read in their original sources; the Hegyi index is the form cited by two secondary sources (the original index is reported to add 1 ft to the distance; this tool does not). U and the Donnelly correction are verified against the documentation and output of R packages (forestSAS and spatstat; Donnelly's constant 0.0412 as in spatstat); their original sources have not been read.</p>
+<p>Clark–Evans R and W, M, T and T1 have been read in their original sources; the Hegyi index is the form cited by two secondary sources (the original index is reported to add 1 ft to the distance; this tool does not). U has been read in its original source (Hui et al. 1998). The Donnelly correction is verified against the documentation and output of the R package spatstat (constant 0.0412 as in spatstat); its original could not be obtained.</p>
 <h3>Downloads</h3>
 <p><b>Excel report</b> (Info, Plots, Trees, Classes, Species), your tree table with the competition columns (and the MCA when CCF is computed) appended (Excel), the plots as CSV and the result records as JSON.</p>
 </section>
