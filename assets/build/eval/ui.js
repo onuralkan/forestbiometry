@@ -89,10 +89,16 @@ function svgForDownload(svgEl, meta = null) {
 
 /**
  * Scatter plot. o = { title, points:[[x,y]], xLabel, yLabel, fmt, line11?:bool (y = x), hline?:number (y = c),
- *   equal?:bool (same range on both axes), width?, height? }
+ *   equal?:bool (same range on both axes), width?, height?,
+ *   groups?: { of:[label per point], order:[label], names?: { label: shown text } } }. With groups each label gets its
+ *   own colour (--c1…--c6) and, after six, its own marker (circle, square, triangle), with a legend above the plot.
  */
 function scatterChart(o) {
-  const W = o.width || 560, H = o.height || 460, L = 64, R = 16, T = 14, B = 52;
+  const G = o.groups && o.groups.order && o.groups.order.length ? o.groups : null;
+  const W = o.width || 560, lw = G ? G.order.map(g => 26 + 7 * String((G.names && G.names[g]) ?? g).length) : [];
+  let rows = 1; if (G) { let x = 64; for (const w of lw) { if (x + w > W - 16 && x > 64) { rows++; x = 64; } x += w; } }
+  const legendH = G ? rows * 18 + 8 : 0;
+  const H = (o.height || 460) + legendH, L = 64, R = 16, T = 14 + legendH, B = 52;
   const pw = W - L - R, ph = H - T - B, pts = o.points, fmt = o.fmt || (v => String(v));
   if (!pts.length) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title></svg>`;
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -110,7 +116,16 @@ function scatterChart(o) {
   if (o.line11) { const a = Math.max(x0, y0), b = Math.min(x1, y1); if (b > a) s += `<line class="ch-ref" x1="${sx(a)}" y1="${sy(a)}" x2="${sx(b)}" y2="${sy(b)}"/>`; }
   if (o.hline != null) s += `<line class="ch-ref" x1="${L}" x2="${W - R}" y1="${sy(o.hline)}" y2="${sy(o.hline)}"/>`;
   const r = pts.length > 2000 ? 1.6 : pts.length > 300 ? 2.4 : 3.4;
-  s += '<g class="ch-s0 ch-pts">' + pts.map(p => `<circle cx="${sx(p[0]).toFixed(1)}" cy="${sy(p[1]).toFixed(1)}" r="${r}"/>`).join('') + '</g>';
+  const mark = (k, x, y) => { const m = Math.floor(k / 6) % 3, a = r * 1.15;
+    return m === 0 ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>` : m === 1 ? `<rect x="${(x - a).toFixed(1)}" y="${(y - a).toFixed(1)}" width="${(2 * a).toFixed(1)}" height="${(2 * a).toFixed(1)}"/>`
+      : `<path d="M${x.toFixed(1)} ${(y - a * 1.2).toFixed(1)}L${(x + a * 1.1).toFixed(1)} ${(y + a * 0.8).toFixed(1)}L${(x - a * 1.1).toFixed(1)} ${(y + a * 0.8).toFixed(1)}Z"/>`; };
+  if (!G) s += '<g class="ch-s0 ch-pts">' + pts.map(p => `<circle cx="${sx(p[0]).toFixed(1)}" cy="${sy(p[1]).toFixed(1)}" r="${r}"/>`).join('') + '</g>';
+  else {
+    G.order.forEach((g, k) => { s += `<g class="ch-s${k % 6} ch-pts">` + pts.map((p, i) => G.of[i] === g ? mark(k, sx(p[0]), sy(p[1])) : '').join('') + '</g>'; });
+    let lx = L, ly = 10;
+    G.order.forEach((g, k) => { if (lx + lw[k] > W - R && lx > L) { lx = L; ly += 18; }
+      s += `<g class="ch-s${k % 6}">${mark(k, lx + 6, ly + 6)}</g><text class="ch-tick" x="${lx + 15}" y="${ly + 10}">${esc(String((G.names && G.names[g]) ?? g))}</text>`; lx += lw[k]; });
+  }
   if (o.xLabel) s += `<text class="ch-lab" x="${L + pw / 2}" y="${H - 8}" text-anchor="middle">${esc(o.xLabel)}</text>`;
   if (o.yLabel) s += `<text class="ch-lab" transform="translate(14,${T + ph / 2}) rotate(-90)" text-anchor="middle">${esc(o.yLabel)}</text>`;
   return s + '</svg>';
@@ -2026,7 +2041,8 @@ function evaluate(table, spec) {
     const ci = []; for (let i = 0; i < N; i++) if (common[i]) ci.push(i);
     rankBoot = bootstrapRanks(ci.map(i => obs[i].value), preds.map(p => ci.map(i => p[i].value)), { ...spec.infer.boot, level: spec.infer.level || 0.95 });
   }
-  return { N, nCommon, rowSet: spec.rowSet, weighted: !!wt, models, overlap, sameSample, rankBoot, rowNumbers: table.rowNumbers };
+  const rowGroups = Object.fromEntries(Object.entries(g).filter(([k]) => k !== 'dclassOrder'));   // group label of every row (charts, residual table)
+  return { N, nCommon, rowSet: spec.rowSet, weighted: !!wt, models, overlap, sameSample, rankBoot, rowNumbers: table.rowNumbers, rowGroups };
 }
 function natural(a, b) {
   const na = /^-?\d+(\.\d+)?$/.test(a), nb = /^-?\d+(\.\d+)?$/.test(b);
@@ -2082,7 +2098,10 @@ const en = {
   'role.note': p => `Stated source: ${p.list}.`, 'role.warn.training': 'Performance on the training data is usually optimistic compared with performance on new data.',
   'role.warn.unknown': 'Predictions of unstated origin should not be read as external validation.',
   'ch.pick': 'Model', 'ch.op': p => `${p.m}: observed vs predicted (dashed line 1:1)`, 'ch.rp': p => `${p.m}: residual e = observed − predicted vs predicted`,
-  'ch.obs': 'Observed', 'ch.pred': 'Predicted', 'ch.res': 'e = observed − predicted', 'ch.svg': 'Download chart (SVG)', 'ch.n': p => `${p.n} points`,
+  'ch.obs': 'Observed', 'ch.pred': 'Predicted', 'ch.res': 'e = observed − predicted', 'ch.svg': 'Download chart (SVG)', 'ch.colour': 'Colour points by', 'ch.nocolour': '(no colouring)',
+  'ch.toomany': p => `${p.n} groups: too many to colour (at most ${p.max}); the points are shown in one colour, the Groups tab has the measures per group.`,
+  'rt.h': p => `Residuals of ${p.m}`, 'rt.order': 'Order', 'rt.byrow': 'by row', 'rt.byabs': 'largest |e| first',
+  'rt.all': p => `${p.n} rows used by this model.`, 'rt.cut': p => `The first ${p.n} of ${p.all} rows are shown; all rows are in the Download tab (Excel/CSV).`, 'ch.n': p => `${p.n} points`,
   'g.pick': 'Grouping', 'g.none': 'No group column chosen (you can choose one in the columns and settings step).', 'g.label': 'Group', 'g.blank': '(blank)',
   'ex.h': 'Download results', 'ex.xlsx': 'Full report (Excel)', 'ex.metrics': 'Measures table (CSV)', 'ex.groups': 'Group table (CSV)', 'ex.rows': 'Residuals by row (CSV)',
   'ex.note': 'CSV: "," column separator and decimal point in both languages. Headers are written in the chosen language.',
@@ -2169,7 +2188,7 @@ const num = v => { const x = parseFloat(String(v).replace(',', '.')); return Num
 let S = blank(), R = null, approved = null;
 function blank() {
   return { v: 1, step: 1, tab: 'summary', imp: null, src: null, obs: null, models: [], groups: { plot: null, species: null, fold: null, dcol: null, breaks: '', openTop: true },
-    decimal: null, decimalChosen: false, rowSet: 'common', norm: null, chartModel: 0, groupKey: null,
+    decimal: null, decimalChosen: false, rowSet: 'common', norm: null, chartModel: 0, groupKey: null, chartGroup: '', resOrder: 'row',
     weight: null, level: 0.95, alpha: 0.05, mtype: null, mvalue: '', boot: false, bootB: 2000, seed: '1' };
 }
 const AS = autosave(KEY, () => ({ ...S, saved: new Date().toISOString() }));
@@ -2437,14 +2456,40 @@ function rankBootRows() {
   rb.models.forEach((x, i) => out.push([R.models[i].name, x.overall, x.ordinal, rb.level, x.lo, x.hi, x.meanOrdinal, x.pBest, rb.B, rb.seed, rb.Bok, rb.n, x.edge ? T('bt.edgeshort') : '']));
   return out;
 }
+const MAX_COLOUR_GROUPS = 18, MAX_RES_ROWS = 1000;
+/** Colouring of the chart points by a group column: { of, order, names } for scatterChart, or { tooMany: n } / null. */
+function chartGroups(m) {
+  const key = S.chartGroup; if (!key || !R.rowGroups[key]) return null;
+  const of = m.idx.map(i => R.rowGroups[key][i]), order = m.groups[key].map(g => g.label);
+  if (order.length > MAX_COLOUR_GROUPS) return { tooMany: order.length };
+  return { of, order, names: Object.fromEntries(order.map(l => [l, l === '' ? T('g.blank') : l])) };
+}
+/** Residual table of one model on screen: row, group labels, observed, predicted, e (and weight); by row or by |e|. */
+function residualTable(m) {
+  const keys = groupKeys(), rows = m.idx.map((i, k) => ({ i, k, e: m.obs[k] - m.pred[k] }));
+  if (S.resOrder === 'abs') rows.sort((a, b) => Math.abs(b.e) - Math.abs(a.e) || a.i - b.i);
+  const shown = rows.slice(0, MAX_RES_ROWS), f = v => fmtNum(v, 4);
+  return `<h3>${T('rt.h', { m: m.name })}</h3>
+    <label class="field inline"><span>${T('rt.order')}</span><select id="rord"><option value="row"${S.resOrder !== 'abs' ? ' selected' : ''}>${T('rt.byrow')}</option><option value="abs"${S.resOrder === 'abs' ? ' selected' : ''}>${T('rt.byabs')}</option></select></label>
+    <p class="muted small">${rows.length > MAX_RES_ROWS ? T('rt.cut', { n: fmtNum(MAX_RES_ROWS, 0), all: fmtNum(rows.length, 0) }) : T('rt.all', { n: fmtNum(rows.length, 0) })}</p>
+    <div class="tscroll tall"><table class="grid" id="restab"><thead><tr><th>${T('x.row')}</th>${keys.map(k => `<th>${T('grp.' + k)}</th>`).join('')}<th>${T('x.obsv')}</th><th>${T('x.pred')}</th><th>${T('x.e')}</th>${R.weighted ? `<th>${T('x.w')}</th>` : ''}</tr></thead><tbody>
+    ${shown.map(r => `<tr><td class="num">${R.rowNumbers[r.i]}</td>${keys.map(k => `<td>${R.rowGroups[k][r.i] === '' ? T('g.blank') : esc(R.rowGroups[k][r.i])}</td>`).join('')}<td class="num">${f(m.obs[r.k])}</td><td class="num">${f(m.pred[r.k])}</td><td class="num">${f(r.e)}</td>${R.weighted ? `<td class="num">${f(m.w[r.k])}</td>` : ''}</tr>`).join('')}
+    </tbody></table></div>`;
+}
 function tabCharts(p) {
   const m = R.models[S.chartModel], pts = m.obs.map((o, i) => [o, m.pred[i]]), res = m.pred.map((q, i) => [q, m.obs[i] - q]);
-  const fmt = v => fmtNum(v, 3), nm = m.name.replace(/[^\p{L}\p{N}_-]+/gu, '_');
+  const fmt = v => fmtNum(v, 3), nm = m.name.replace(/[^\p{L}\p{N}_-]+/gu, '_'), keys = groupKeys();
+  if (S.chartGroup && !keys.includes(S.chartGroup)) S.chartGroup = '';
+  const cg = chartGroups(m), groups = cg && !cg.tooMany ? cg : null;
   p.innerHTML = `<label class="field inline"><span>${T('ch.pick')}</span><select id="cm">${R.models.map((x, i) => `<option value="${i}"${i === S.chartModel ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
-    <p class="muted small">${T('ch.n', { n: fmtNum(pts.length, 0) })} · ${T('sign')}</p><div class="charts2">
-    <figure class="chartbox" id="ch-op">${scatterChart({ title: T('ch.op', { m: m.name }), points: pts, xLabel: T('ch.obs'), yLabel: T('ch.pred'), line11: true, equal: true, fmt })}<figcaption><button type="button" class="btn ghost small" data-svg="ch-op" data-name="gozlenen-tahmin-${nm}">${T('ch.svg')}</button></figcaption></figure>
-    <figure class="chartbox" id="ch-rp">${scatterChart({ title: T('ch.rp', { m: m.name }), points: res, xLabel: T('ch.pred'), yLabel: T('ch.res'), hline: 0, fmt })}<figcaption><button type="button" class="btn ghost small" data-svg="ch-rp" data-name="artik-tahmin-${nm}">${T('ch.svg')}</button></figcaption></figure></div>`;
+    ${keys.length ? `<label class="field inline"><span>${T('ch.colour')}</span><select id="cgk"><option value="">${T('ch.nocolour')}</option>${keys.map(k => `<option value="${k}"${k === S.chartGroup ? ' selected' : ''}>${T('grp.' + k)}</option>`).join('')}</select></label>` : ''}
+    <p class="muted small">${T('ch.n', { n: fmtNum(pts.length, 0) })} · ${T('sign')}</p>${cg && cg.tooMany ? `<p class="note warn" id="cg-many">${T('ch.toomany', { n: cg.tooMany, max: MAX_COLOUR_GROUPS })}</p>` : ''}<div class="charts2">
+    <figure class="chartbox" id="ch-op">${scatterChart({ title: T('ch.op', { m: m.name }), points: pts, xLabel: T('ch.obs'), yLabel: T('ch.pred'), line11: true, equal: true, fmt, groups })}<figcaption><button type="button" class="btn ghost small" data-svg="ch-op" data-name="gozlenen-tahmin-${nm}">${T('ch.svg')}</button></figcaption></figure>
+    <figure class="chartbox" id="ch-rp">${scatterChart({ title: T('ch.rp', { m: m.name }), points: res, xLabel: T('ch.pred'), yLabel: T('ch.res'), hline: 0, fmt, groups })}<figcaption><button type="button" class="btn ghost small" data-svg="ch-rp" data-name="artik-tahmin-${nm}">${T('ch.svg')}</button></figcaption></figure></div>
+    ${residualTable(m)}`;
   $('cm').addEventListener('change', e => { S.chartModel = +e.target.value; save(); tabCharts(p); });
+  if ($('cgk')) $('cgk').addEventListener('change', e => { S.chartGroup = e.target.value; save(); tabCharts(p); });
+  $('rord').addEventListener('change', e => { S.resOrder = e.target.value; save(); tabCharts(p); });
   p.querySelectorAll('[data-svg]').forEach(b => b.addEventListener('click', () => download(b.dataset.name + '.svg', svgForDownload($(b.dataset.svg).querySelector('svg')), 'image/svg+xml')));
 }
 function tabGroups(p) {

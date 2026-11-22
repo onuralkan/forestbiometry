@@ -89,10 +89,16 @@ function svgForDownload(svgEl, meta = null) {
 
 /**
  * Scatter plot. o = { title, points:[[x,y]], xLabel, yLabel, fmt, line11?:bool (y = x), hline?:number (y = c),
- *   equal?:bool (same range on both axes), width?, height? }
+ *   equal?:bool (same range on both axes), width?, height?,
+ *   groups?: { of:[label per point], order:[label], names?: { label: shown text } } }. With groups each label gets its
+ *   own colour (--c1…--c6) and, after six, its own marker (circle, square, triangle), with a legend above the plot.
  */
 function scatterChart(o) {
-  const W = o.width || 560, H = o.height || 460, L = 64, R = 16, T = 14, B = 52;
+  const G = o.groups && o.groups.order && o.groups.order.length ? o.groups : null;
+  const W = o.width || 560, lw = G ? G.order.map(g => 26 + 7 * String((G.names && G.names[g]) ?? g).length) : [];
+  let rows = 1; if (G) { let x = 64; for (const w of lw) { if (x + w > W - 16 && x > 64) { rows++; x = 64; } x += w; } }
+  const legendH = G ? rows * 18 + 8 : 0;
+  const H = (o.height || 460) + legendH, L = 64, R = 16, T = 14 + legendH, B = 52;
   const pw = W - L - R, ph = H - T - B, pts = o.points, fmt = o.fmt || (v => String(v));
   if (!pts.length) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title></svg>`;
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -110,7 +116,16 @@ function scatterChart(o) {
   if (o.line11) { const a = Math.max(x0, y0), b = Math.min(x1, y1); if (b > a) s += `<line class="ch-ref" x1="${sx(a)}" y1="${sy(a)}" x2="${sx(b)}" y2="${sy(b)}"/>`; }
   if (o.hline != null) s += `<line class="ch-ref" x1="${L}" x2="${W - R}" y1="${sy(o.hline)}" y2="${sy(o.hline)}"/>`;
   const r = pts.length > 2000 ? 1.6 : pts.length > 300 ? 2.4 : 3.4;
-  s += '<g class="ch-s0 ch-pts">' + pts.map(p => `<circle cx="${sx(p[0]).toFixed(1)}" cy="${sy(p[1]).toFixed(1)}" r="${r}"/>`).join('') + '</g>';
+  const mark = (k, x, y) => { const m = Math.floor(k / 6) % 3, a = r * 1.15;
+    return m === 0 ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"/>` : m === 1 ? `<rect x="${(x - a).toFixed(1)}" y="${(y - a).toFixed(1)}" width="${(2 * a).toFixed(1)}" height="${(2 * a).toFixed(1)}"/>`
+      : `<path d="M${x.toFixed(1)} ${(y - a * 1.2).toFixed(1)}L${(x + a * 1.1).toFixed(1)} ${(y + a * 0.8).toFixed(1)}L${(x - a * 1.1).toFixed(1)} ${(y + a * 0.8).toFixed(1)}Z"/>`; };
+  if (!G) s += '<g class="ch-s0 ch-pts">' + pts.map(p => `<circle cx="${sx(p[0]).toFixed(1)}" cy="${sy(p[1]).toFixed(1)}" r="${r}"/>`).join('') + '</g>';
+  else {
+    G.order.forEach((g, k) => { s += `<g class="ch-s${k % 6} ch-pts">` + pts.map((p, i) => G.of[i] === g ? mark(k, sx(p[0]), sy(p[1])) : '').join('') + '</g>'; });
+    let lx = L, ly = 10;
+    G.order.forEach((g, k) => { if (lx + lw[k] > W - R && lx > L) { lx = L; ly += 18; }
+      s += `<g class="ch-s${k % 6}">${mark(k, lx + 6, ly + 6)}</g><text class="ch-tick" x="${lx + 15}" y="${ly + 10}">${esc(String((G.names && G.names[g]) ?? g))}</text>`; lx += lw[k]; });
+  }
   if (o.xLabel) s += `<text class="ch-lab" x="${L + pw / 2}" y="${H - 8}" text-anchor="middle">${esc(o.xLabel)}</text>`;
   if (o.yLabel) s += `<text class="ch-lab" transform="translate(14,${T + ph / 2}) rotate(-90)" text-anchor="middle">${esc(o.yLabel)}</text>`;
   return s + '</svg>';
@@ -1941,7 +1956,8 @@ function evaluate(table, spec) {
     const ci = []; for (let i = 0; i < N; i++) if (common[i]) ci.push(i);
     rankBoot = bootstrapRanks(ci.map(i => obs[i].value), preds.map(p => ci.map(i => p[i].value)), { ...spec.infer.boot, level: spec.infer.level || 0.95 });
   }
-  return { N, nCommon, rowSet: spec.rowSet, weighted: !!wt, models, overlap, sameSample, rankBoot, rowNumbers: table.rowNumbers };
+  const rowGroups = Object.fromEntries(Object.entries(g).filter(([k]) => k !== 'dclassOrder'));   // group label of every row (charts, residual table)
+  return { N, nCommon, rowSet: spec.rowSet, weighted: !!wt, models, overlap, sameSample, rankBoot, rowNumbers: table.rowNumbers, rowGroups };
 }
 function natural(a, b) {
   const na = /^-?\d+(\.\d+)?$/.test(a), nb = /^-?\d+(\.\d+)?$/.test(b);

@@ -285,7 +285,7 @@ The limitation carries over to every tool that uses these functions: the expansi
 
 **Not computed:** From the observed/predicted columns alone no AIC, parameter confidence interval, model significance, adjusted R² or criteria based on the number of parameters are produced (the number of parameters and the residual structure are unknown).
 
-**Charts:** Observed (x) – predicted (y), equal axis ranges and a dashed 1:1 line; residual e (y) – predicted (x), dashed e = 0 line. Downloadable as SVG.
+**Charts:** Observed (x) – predicted (y), equal axis ranges and a dashed 1:1 line; residual e (y) – predicted (x), dashed e = 0 line. Downloadable as SVG. Optionally the points are coloured by a chosen group column (plot, species, diameter class or fold; up to 18 groups: six colours, then square and triangle markers; more groups are not coloured and a note says so; 22 Nov 2026). Below the charts, the residual table of the chosen model on screen: row, group labels, observed, predicted, e (and weight), in row order or largest |e| first; at most 1000 rows on screen, all rows in the downloads. Display only: no measure changes.
 
 **Acceptance example:** y = [10, 20, 30], ŷ = [12, 18, 33] → e = y − ŷ = [−2, 2, −3]; ē = −1; MAE = 7/3 ≈ 2,3333333333; RMSE = √(17/3) ≈ 2,3804761428; SSE = 17, SST = 200, R² = 0,915 (the Pearson r² of the same data is ≈ 0,9423; not to be confused with R²).
 

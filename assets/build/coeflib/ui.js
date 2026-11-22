@@ -2760,7 +2760,8 @@ function evaluate(table, spec) {
     const ci = []; for (let i = 0; i < N; i++) if (common[i]) ci.push(i);
     rankBoot = bootstrapRanks(ci.map(i => obs[i].value), preds.map(p => ci.map(i => p[i].value)), { ...spec.infer.boot, level: spec.infer.level || 0.95 });
   }
-  return { N, nCommon, rowSet: spec.rowSet, weighted: !!wt, models, overlap, sameSample, rankBoot, rowNumbers: table.rowNumbers };
+  const rowGroups = Object.fromEntries(Object.entries(g).filter(([k]) => k !== 'dclassOrder'));   // group label of every row (charts, residual table)
+  return { N, nCommon, rowSet: spec.rowSet, weighted: !!wt, models, overlap, sameSample, rankBoot, rowNumbers: table.rowNumbers, rowGroups };
 }
 function natural(a, b) {
   const na = /^-?\d+(\.\d+)?$/.test(a), nb = /^-?\d+(\.\d+)?$/.test(b);

@@ -90,6 +90,22 @@ await shot('ev-3-ozet');
 await page.click('#tab-charts');
 ok((await page.locator('#ch-op .ch-ref').count()) === 1 && (await page.locator('#ch-op circle').count()) === 53, 'observed–predicted plot with 1:1 line, 53 points');
 ok((await page.locator('#ch-rp .ch-ref').count()) === 1, 'residual plot with zero line');
+{ // residual table on screen (row order, then largest |e| first) and colouring the points by a group column
+  const tab = () => page.evaluate(() => [...document.querySelectorAll('#restab tbody tr')].map(tr => [...tr.children].map(td => td.textContent.trim())));
+  const num = t => +t.replace('−', '-').replace(',', '.');
+  let t = await tab(); const ne = t[0].length - 1;
+  ok(t.length === 53 && t.every((r, i) => !i || +r[0] > +t[i - 1][0]), 'residual table: 53 rows in row order');
+  ok(t.every(r => Math.abs(num(r[ne]) - (num(r[ne - 2]) - num(r[ne - 1]))) < 2e-4), 'residual table: e = observed − predicted on every row');
+  await page.selectOption('#rord', 'abs'); t = await tab();
+  ok(t.length === 53 && t.every((r, i) => !i || Math.abs(num(r[ne])) <= Math.abs(num(t[i - 1][ne])) + 1e-9), 'residual table: largest |e| first');
+  const keys = await page.locator('#cgk option').evaluateAll(o => o.map(x => x.value));
+  ok(keys[0] === '' && keys.includes('dclass'), 'colour options: none and the chosen group columns ' + keys.join());
+  await page.selectOption('#cgk', 'dclass');
+  const ng = await page.locator('#ch-op g.ch-pts').count(), marks = await page.locator('#ch-op g.ch-pts > *').count();
+  ok(ng > 1 && marks === 53 && (await page.locator('#ch-op text', { hasText: '[8, 20)' }).count()) === 1, `points coloured by diameter class: ${ng} groups, 53 points, legend`);
+  await page.selectOption('#cgk', ''); await page.selectOption('#rord', 'row');
+  ok((await page.locator('#ch-op g.ch-pts').count()) === 1, 'colouring off again');
+}
 await shot('ev-4-grafik');
 const [d3] = await Promise.all([page.waitForEvent('download'), page.click('[data-svg="ch-op"]')]);
 ok((await readFile(await d3.path(), 'utf8')).includes('<svg'), 'chart downloads as SVG');

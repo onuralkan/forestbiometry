@@ -63,6 +63,11 @@ const spec = rowSet => ({ obs: col('h_obs'), decimal: ',', rowSet, norm: 'mean',
   const r = E.evaluate(tb, spec('common'));
   ok(r.N === 60 && r.nCommon === ref.n_common, `common rows ${r.nCommon} = ${ref.n_common}`);
   const [a, b] = r.models;
+  { // row-level group labels (charts, residual table): one label per row; per-group n agrees with the group measures
+    const RG = r.rowGroups, ks = Object.keys(RG).sort().join();
+    ok(ks === 'dclass,fold,plot,species' && Object.values(RG).every(v => v.length === 60), 'rowGroups: a label for every row and group column');
+    ok(['plot', 'species', 'dclass', 'fold'].every(k => a.groups[k].every(g => a.idx.filter(i => RG[k][i] === g.label).length === g.n)), 'rowGroups agree with the per-group n of M1');
+  }
   eq([a.acc.obsEmpty, a.acc.predEmpty, a.acc.predBad, a.acc.ownValid, a.acc.used, a.acc.dropped], [2, 1, 0, 57, 53, 7], 'M1 accounting');
   eq([b.acc.obsEmpty, b.acc.predEmpty, b.acc.predBad, b.acc.ownValid, b.acc.used, b.acc.dropped], [2, 3, 1, 54, 53, 7], 'M2 accounting (unreadable counted apart)');
   ok(r.sameSample, 'common: same sample');
