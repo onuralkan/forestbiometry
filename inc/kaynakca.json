@@ -41,7 +41,7 @@
   "version": null,
   "status": "B",
   "tools": [
-   "METHODS §2"
+   "METHODS §10, §12 (AIC)"
   ],
   "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
  },
@@ -65,8 +65,7 @@
   "version": null,
   "status": "B",
   "tools": [
-   "METHODS §8 (legacy Weibull)",
-   "METHODS §12 (AD A²)"
+   "METHODS §12 (AD A², CvM)"
   ],
   "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
  },
@@ -122,31 +121,6 @@
   "note": "marked '[okundu]' (read) as secondary source for Baskerville 1972; pages field holds article number"
  },
  {
-  "key": "bailey1973",
-  "type": "article",
-  "authors": [
-   "Bailey, R. L.",
-   "Dell, T. R."
-  ],
-  "year": "1973",
-  "title": "Quantifying diameter distributions with the Weibull function",
-  "container": "Forest Science",
-  "edition": null,
-  "volume": "19",
-  "issue": null,
-  "pages": "97–104",
-  "publisher": null,
-  "doi": "10.1093/forestscience/19.2.97",
-  "url": null,
-  "version": null,
-  "status": "İ",
-  "tools": [
-   "METHODS §2 (archived)",
-   "METHODS §8 (legacy Weibull)"
-  ],
-  "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
- },
- {
   "key": "bailey1974",
   "type": "article",
   "authors": [
@@ -199,26 +173,26 @@
  },
  {
   "key": "becking1953",
-  "type": "other",
+  "type": "article",
   "authors": [
-   "Becking"
+   "Becking, J. H."
   ],
   "year": "1953",
-  "title": null,
-  "container": null,
+  "title": "Thinning research in forestry",
+  "container": "Netherlands Journal of Agricultural Science",
   "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
+  "volume": "1",
+  "issue": "2",
+  "pages": "122–129",
   "publisher": null,
-  "doi": null,
+  "doi": "10.18174/njas.v1i2.17877",
   "url": null,
   "version": null,
   "status": "D",
   "tools": [
    "METHODS §16 SS01 (relative spacing, definition exception)"
   ],
-  "note": "NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Becking, J. H. (1953). Thinning research in forestry. Netherlands Journal of Agricultural Science, 1(2), 122–129. | Earlier note: incomplete: 'Becking (1953)'; could not be read"
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Becking, J. H. (1953). Thinning research in forestry. Netherlands Journal of Agricultural Science, 1(2), 122–129. | Earlier note: incomplete: 'Becking (1953)'; could not be read"
  },
  {
   "key": "bennemann2025",
@@ -337,7 +311,7 @@
   "version": null,
   "status": "B",
   "tools": [
-   "METHODS §2 (Dq–moment relation)"
+   "METHODS §12 P07 (Dq² relation, weibull.m9)"
   ],
   "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: no title or pages given"
  },
@@ -469,15 +443,15 @@
  },
  {
   "key": "clark1906",
-  "type": "other",
+  "type": "article",
   "authors": [
-   "Clark"
+   "Clark, J. F."
   ],
   "year": "1906",
-  "title": null,
-  "container": null,
+  "title": "The measurement of saw logs",
+  "container": "Forestry Quarterly",
   "edition": null,
-  "volume": null,
+  "volume": "4",
   "issue": null,
   "pages": null,
   "publisher": null,
@@ -488,7 +462,7 @@
   "tools": [
    "METHODS §25 SV-05 (International ⅛-inch, Eq. 7.7–7.10)"
   ],
-  "note": "NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Clark, J. F. (1906). The measurement of sawlogs. Forestry Quarterly, 4, 79–93. | Earlier note: incomplete: via Kershaw et al. 2016 §7.3; no marker"
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Clark, J. F. (1906). The measurement of sawlogs. Forestry Quarterly, 4, 79–93. | Earlier note: incomplete: via Kershaw et al. 2016 §7.3; no marker"
  },
  {
   "key": "clark1954",
@@ -562,29 +536,6 @@
   "note": "Checked in the PDF provided by the user (21 Nov 2026): §2.4–2.8 (pp. 21–28) and §5.4 (pp. 95–96); ISBN 0-471-16240-X"
  },
  {
-  "key": "cohen1965",
-  "type": "article",
-  "authors": [
-   "Cohen, A. C."
-  ],
-  "year": "1965",
-  "title": "Maximum likelihood estimation in the Weibull distribution based on complete and on censored samples",
-  "container": "Technometrics",
-  "edition": null,
-  "volume": "7",
-  "issue": null,
-  "pages": "579–588",
-  "publisher": null,
-  "doi": "10.1080/00401706.1965.10490300",
-  "url": null,
-  "version": null,
-  "status": "D",
-  "tools": [
-   "METHODS §8 (legacy Weibull)"
-  ],
-  "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
- },
- {
   "key": "contreras2011",
   "type": "article",
   "authors": [
@@ -656,6 +607,54 @@
   "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). USDA Treesearch 7202"
  },
  {
+  "key": "diciccio1988",
+  "type": "article",
+  "authors": [
+   "DiCiccio, T. J.",
+   "Romano, J. P."
+  ],
+  "year": "1988",
+  "title": "A review of bootstrap confidence intervals",
+  "container": "Journal of the Royal Statistical Society: Series B (Methodological)",
+  "edition": null,
+  "volume": "50",
+  "issue": "3",
+  "pages": "338–354",
+  "publisher": null,
+  "doi": "10.1111/j.2517-6161.1988.tb01732.x",
+  "url": null,
+  "version": null,
+  "status": "B",
+  "tools": [
+   "METHODS §7 (bootstrap percentile and BCa intervals)"
+  ],
+  "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+ },
+ {
+  "key": "diciccio1996",
+  "type": "article",
+  "authors": [
+   "DiCiccio, T. J.",
+   "Efron, B."
+  ],
+  "year": "1996",
+  "title": "Bootstrap confidence intervals",
+  "container": "Statistical Science",
+  "edition": null,
+  "volume": "11",
+  "issue": "3",
+  "pages": "189–228",
+  "publisher": null,
+  "doi": "10.1214/ss/1032280214",
+  "url": null,
+  "version": null,
+  "status": "B",
+  "tools": [
+   "METHODS §7 (bootstrap percentile and BCa intervals)"
+  ],
+  "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+ },
+ {
   "key": "donnelly1978",
   "type": "chapter",
   "authors": [
@@ -721,7 +720,6 @@
   "version": null,
   "status": "B",
   "tools": [
-   "METHODS §2",
    "METHODS §12 P05 (weibull.pct default pair 0.24/0.93)"
   ],
   "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
@@ -750,30 +748,28 @@
   "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: 'Dykstra 1984 denk. 10.6', cited via Bennemann et al. 2025; no marker"
  },
  {
-  "key": "fao_rapid",
-  "type": "report",
+  "key": "efron1993",
+  "type": "book",
   "authors": [
-   "Musa, S.",
-   "Kassim, A. R.",
-   "Muhammad Yusoff, S.",
-   "Ibrahim, S."
+   "Efron, B.",
+   "Tibshirani, R. J."
   ],
-  "year": "2003",
-  "title": "Assessing the status of logged-over production forests: The development of a rapid appraisal technique",
+  "year": "1993",
+  "title": "An Introduction to the Bootstrap",
   "container": null,
   "edition": null,
   "volume": null,
   "issue": null,
   "pages": null,
-  "publisher": "Food and Agriculture Organization of the United Nations",
+  "publisher": "Chapman & Hall",
   "doi": null,
-  "url": "https://www.fao.org/4/AC838E/AC838E00.htm",
+  "url": null,
   "version": null,
-  "status": "B",
+  "status": "D",
   "tools": [
-   "METHODS §11"
+   "METHODS §7 (background; the bootstrap intervals follow DiCiccio and Efron 1996)"
   ],
-  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: no year given; URL as given in METHODS (no scheme)"
+  "note": "only chapter 17 (cross-validation and other estimates of prediction error, pp. 237–257) was in the file read on 19 Nov 2026; the percentile interval (chapter 13) was not"
  },
  {
   "key": "fekedulegn1999",
@@ -938,6 +934,29 @@
   "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: 'Gallant ve Fuller 1973', cited via Max & Burkhart 1976; no marker"
  },
  {
+  "key": "siplab_kernel",
+  "type": "software",
+  "authors": [
+   "García, O."
+  ],
+  "year": "2022",
+  "title": "siplab: Spatial individual-plant modelling",
+  "container": null,
+  "edition": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": null,
+  "doi": "10.32614/CRAN.package.siplab",
+  "url": null,
+  "version": "1.6",
+  "status": "P",
+  "tools": [
+   "METHODS §16 SS-07/a1 (Hegyi, second source; pairwise in tests/ref/ss02_check.R)"
+  ],
+  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: R package documentation; SOURCE_LIST names García, O. 2014 as the package publication"
+ },
+ {
   "key": "gorgoso2024",
   "type": "article",
   "authors": [
@@ -1081,29 +1100,6 @@
   "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: 'Grosenbaugh 1952a', via Kershaw et al. 2016 §7.3; no marker; not identifiable with SOURCE_LIST's 'Grosenbaugh 1952 Plotless timber estimates'"
  },
  {
-  "key": "growthmodels",
-  "type": "software",
-  "authors": [
-   "Rodriguez, D."
-  ],
-  "year": "2023",
-  "title": "growthmodels: Nonlinear growth models",
-  "container": null,
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": null,
-  "doi": "10.32614/CRAN.package.growthmodels",
-  "url": null,
-  "version": "1.3.1",
-  "status": null,
-  "tools": [
-   "METHODS §18 SQ-03 (second source for [A] forms)"
-  ],
-  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: R package documentation; no [P] marker given; Gompertz page writes exp(−k^t) (probable typo)"
- },
- {
   "key": "hafley1977",
   "type": "article",
   "authors": [
@@ -1243,6 +1239,30 @@
    "METHODS §28 SM-04"
   ],
   "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: read as the open-access CRAN vignette of systemfit 1.1-30"
+ },
+ {
+  "key": "systemfit",
+  "type": "software",
+  "authors": [
+   "Henningsen, A.",
+   "Hamann, J. D."
+  ],
+  "year": "2023",
+  "title": "systemfit: Estimating systems of simultaneous equations",
+  "container": null,
+  "edition": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": null,
+  "doi": "10.32614/CRAN.package.systemfit",
+  "url": null,
+  "version": "1.1-30",
+  "status": "P",
+  "tools": [
+   "METHODS §28 SM-04 (tests/ref/sm04_systems.R)"
+  ],
+  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: R package (R 4.5.2), run by the user 17 Nov 2026"
  },
  {
   "key": "hernandezcuevas2018",
@@ -1437,9 +1457,36 @@
   "version": null,
   "status": "B",
   "tools": [
-   "METHODS §2 (Johnson SB)"
+   "METHODS §12 P08 (Johnson SB)"
   ],
   "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
+ },
+ {
+  "key": "orientalbeech",
+  "type": "article",
+  "authors": [
+   "Kalbi, S.",
+   "Fallah, A.",
+   "Bettinger, P.",
+   "Shataee, S.",
+   "Yousefpour, R."
+  ],
+  "year": "2018",
+  "title": "Mixed-effects modeling for tree height prediction models of Oriental beech in the Hyrcanian forests",
+  "container": "Journal of Forestry Research",
+  "edition": null,
+  "volume": "29",
+  "issue": "5",
+  "pages": "1195–1204",
+  "publisher": null,
+  "doi": "10.1007/s11676-017-0551-z",
+  "url": null,
+  "version": null,
+  "status": null,
+  "tools": [
+   "METHODS §10"
+  ],
+  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: no authors or year given; secondary source whose reference list was used to verify the [İ] citations in §10; no status marker"
  },
  {
   "key": "kangas2000",
@@ -1575,19 +1622,19 @@
  },
  {
   "key": "krenn1944",
-  "type": "other",
+  "type": "book",
   "authors": [
-   "Krenn",
-   "Prodan"
+   "Krenn, K.",
+   "Prodan, M."
   ],
   "year": "1944",
-  "title": null,
+  "title": "Die Bestandesmassenermittlung mit Hilfe stehender Probestämme. Mit einem Anhang über die Bestimmung der echten Schaftholzformzahl und Ausbauchungsreihe aus dem echten Formquotienten",
   "container": null,
   "edition": null,
   "volume": null,
   "issue": null,
   "pages": null,
-  "publisher": null,
+  "publisher": "Sauerländer",
   "doi": null,
   "url": null,
   "version": null,
@@ -1595,7 +1642,7 @@
   "tools": [
    "METHODS §14 SV01 (Hohenadl, via Heger 1965)"
   ],
-  "note": "NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Krenn, K., & Prodan, M. (1944). Die Bestimmung der echten Schaftholzformzahl und Ausbauchungsreihe aus dem echten Formquotienten. J. D. Sauerländer. [Aday eser; yayın türü ve sınırları kesinleştirilmeli.] | Earlier note: incomplete: 'Krenn ve Prodan 1944', cited by Heger 1965; no marker"
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Krenn, K., & Prodan, M. (1944). Die Bestimmung der echten Schaftholzformzahl und Ausbauchungsreihe aus dem echten Formquotienten. J. D. Sauerländer. [Aday eser; yayın türü ve sınırları kesinleştirilmeli.] | Earlier note: incomplete: 'Krenn ve Prodan 1944', cited by Heger 1965; no marker"
  },
  {
   "key": "lanczos1964",
@@ -1667,6 +1714,31 @@
   "note": "NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Asquith, W. H. (n.d.). Estimate the parameters of the gamma distribution (pargam). In lmomco (Version 2.5.1) [R documentation]. Retrieved November 21, 2026, from https://search.r-project.org/CRAN/refmans/lmomco/html/pargam.html | Earlier note: official package documentation; not read and not used in P18 (exact equation used instead)"
  },
  {
+  "key": "zohrer1973",
+  "type": "book",
+  "authors": [
+   "Loetsch, F.",
+   "Zöhrer, F.",
+   "Haller, K. E."
+  ],
+  "year": "1973",
+  "title": "Forest inventory (Vol. 2; K. F. Panzer, Trans.)",
+  "container": null,
+  "edition": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": "BLV Verlagsgesellschaft",
+  "doi": null,
+  "url": null,
+  "version": null,
+  "status": null,
+  "tools": [
+   "METHODS §23 TM-03 (1/k)"
+  ],
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Loetsch, F., Zöhrer, F., & Haller, K. E. (1973). Forest inventory (Vol. 2). BLV Verlagsgesellschaft. | Earlier note: incomplete: 'Zöhrer ve ark. (1973)' (et al.); via van Laar & Akça 2007; no marker"
+ },
+ {
   "key": "machler2012",
   "type": "report",
   "authors": [
@@ -1731,7 +1803,7 @@
   "version": null,
   "status": "B",
   "tools": [
-   "METHODS §2"
+   "METHODS §12 (KS D)"
   ],
   "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
  },
@@ -1811,18 +1883,18 @@
  },
  {
   "key": "meyer1942",
-  "type": "other",
+  "type": "report",
   "authors": [
-   "Meyer"
+   "Meyer, H. A."
   ],
   "year": "1942",
-  "title": null,
+  "title": "Methods of forest growth determination (Bulletin No. 435)",
   "container": null,
   "edition": null,
   "volume": null,
   "issue": null,
   "pages": null,
-  "publisher": null,
+  "publisher": "Pennsylvania State College, School of Agriculture and Experiment Station",
   "doi": null,
   "url": null,
   "version": null,
@@ -1830,7 +1902,7 @@
   "tools": [
    "METHODS §23 TM-03 (bark ratio k)"
   ],
-  "note": "NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Meyer, H. A. (1942). Methods of forest growth determination (Bulletin No. 435). Pennsylvania State College, School of Agriculture and Agricultural Experiment Station. | Earlier note: incomplete: read via van Laar & Akça 2007; original not read; no marker"
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Meyer, H. A. (1942). Methods of forest growth determination (Bulletin No. 435). Pennsylvania State College, School of Agriculture and Agricultural Experiment Station. | Earlier note: incomplete: read via van Laar & Akça 2007; original not read; no marker"
  },
  {
   "key": "michailoff1943",
@@ -1879,31 +1951,30 @@
   "note": "NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Minka, T. P. (2002). Estimating a gamma distribution [Technical report]. https://www.microsoft.com/en-us/research/publication/estimating-gamma-distribution/ | Earlier note: technical note"
  },
  {
-  "key": "orientalbeech",
-  "type": "article",
+  "key": "fao_rapid",
+  "type": "report",
   "authors": [
-   "Kalbi, S.",
-   "Fallah, A.",
-   "Bettinger, P.",
-   "Shataee, S.",
-   "Yousefpour, R."
+   "Musa, S.",
+   "Kassim, A. R.",
+   "Muhammad Yusoff, S.",
+   "Ibrahim, S."
   ],
-  "year": "2018",
-  "title": "Mixed-effects modeling for tree height prediction models of Oriental beech in the Hyrcanian forests",
-  "container": "Journal of Forestry Research",
+  "year": "2003",
+  "title": "Assessing the status of logged-over production forests: The development of a rapid appraisal technique",
+  "container": null,
   "edition": null,
-  "volume": "29",
-  "issue": "5",
-  "pages": "1195–1204",
-  "publisher": null,
-  "doi": "10.1007/s11676-017-0551-z",
-  "url": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": "Food and Agriculture Organization of the United Nations",
+  "doi": null,
+  "url": "https://www.fao.org/4/AC838E/AC838E00.htm",
   "version": null,
-  "status": null,
+  "status": "B",
   "tools": [
-   "METHODS §10"
+   "METHODS §11"
   ],
-  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: incomplete: no authors or year given; secondary source whose reference list was used to verify the [İ] citations in §10; no status marker"
+  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: no year given; URL as given in METHODS (no scheme)"
  },
  {
   "key": "naslund1936",
@@ -1924,34 +1995,10 @@
   "version": null,
   "status": "İ",
   "tools": [
-   "METHODS §1 (archived)",
    "METHODS §10 (height–diameter)",
    "METHODS §21 DI-04"
   ],
   "note": "No DOI found in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026) (this does not mean there is none). §1 marks [D] without pages; §10 [İ] with pages 1–169"
- },
- {
-  "key": "nielsen1999",
-  "type": "report",
-  "authors": [
-   "Nielsen, H. B."
-  ],
-  "year": "1999",
-  "title": "Damping parameter in Marquardt's method",
-  "container": null,
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": "DTU",
-  "doi": null,
-  "url": null,
-  "version": null,
-  "status": "B",
-  "tools": [
-   "METHODS §10 (LM damping update)"
-  ],
-  "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). report IMM-REP-1999-05"
  },
  {
   "key": "fips1804",
@@ -1975,78 +2022,6 @@
    "METHODS §20 DI-07"
   ],
   "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: FIPS PUB 180-4; standard"
- },
- {
-  "key": "nist_normal",
-  "type": "web",
-  "authors": [
-   "National Institute of Standards and Technology"
-  ],
-  "year": "n.d.",
-  "title": "Normal distribution",
-  "container": "NIST/SEMATECH e-Handbook of statistical methods",
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": null,
-  "doi": null,
-  "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm",
-  "version": null,
-  "status": "B",
-  "tools": [
-   "METHODS §12 P02",
-   "DIST_SPEC [R10]"
-  ],
-  "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
- },
- {
-  "key": "nist_lognormal",
-  "type": "web",
-  "authors": [
-   "National Institute of Standards and Technology"
-  ],
-  "year": "n.d.",
-  "title": "Lognormal distribution",
-  "container": "NIST/SEMATECH e-Handbook of statistical methods",
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": null,
-  "doi": null,
-  "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm",
-  "version": null,
-  "status": "B",
-  "tools": [
-   "METHODS §12 P02",
-   "DIST_SPEC [R11]"
-  ],
-  "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
- },
- {
-  "key": "nist_gamma",
-  "type": "web",
-  "authors": [
-   "National Institute of Standards and Technology"
-  ],
-  "year": "n.d.",
-  "title": "Gamma distribution",
-  "container": "NIST/SEMATECH e-Handbook of statistical methods",
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": null,
-  "doi": null,
-  "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm",
-  "version": null,
-  "status": "B",
-  "tools": [
-   "METHODS §12 P03",
-   "DIST_SPEC [R12]"
-  ],
-  "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
  },
  {
   "key": "nist_beta",
@@ -2121,52 +2096,99 @@
   "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026; METHODS names it 'NIST/SEMATECH e-Handbook, Extreme Value Type I (Gumbel)'"
  },
  {
-  "key": "nlme",
-  "type": "software",
+  "key": "nist_gamma",
+  "type": "web",
   "authors": [
-   "Pinheiro, J.",
-   "Bates, D.",
-   "R Core Team"
+   "National Institute of Standards and Technology"
   ],
-  "year": "2025",
-  "title": "nlme: Linear and nonlinear mixed effects models",
-  "container": null,
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": null,
-  "doi": "10.32614/CRAN.package.nlme",
-  "url": null,
-  "version": "3.1-168",
-  "status": "P",
-  "tools": [
-   "METHODS §27 SM-03 (tests/ref/sm03_mixed.R)"
-  ],
-  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: R package (R 4.5.2), run by the user 17 Nov 2026"
- },
- {
-  "key": "oestlin1963",
-  "type": "other",
-  "authors": [
-   "Oestlin"
-  ],
-  "year": "1963",
-  "title": null,
-  "container": null,
+  "year": "n.d.",
+  "title": "Gamma distribution",
+  "container": "NIST/SEMATECH e-Handbook of statistical methods",
   "edition": null,
   "volume": null,
   "issue": null,
   "pages": null,
   "publisher": null,
   "doi": null,
+  "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm",
+  "version": null,
+  "status": "B",
+  "tools": [
+   "METHODS §12 P03",
+   "DIST_SPEC [R12]"
+  ],
+  "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+ },
+ {
+  "key": "nist_lognormal",
+  "type": "web",
+  "authors": [
+   "National Institute of Standards and Technology"
+  ],
+  "year": "n.d.",
+  "title": "Lognormal distribution",
+  "container": "NIST/SEMATECH e-Handbook of statistical methods",
+  "edition": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": null,
+  "doi": null,
+  "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm",
+  "version": null,
+  "status": "B",
+  "tools": [
+   "METHODS §12 P02",
+   "DIST_SPEC [R11]"
+  ],
+  "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+ },
+ {
+  "key": "nist_normal",
+  "type": "web",
+  "authors": [
+   "National Institute of Standards and Technology"
+  ],
+  "year": "n.d.",
+  "title": "Normal distribution",
+  "container": "NIST/SEMATECH e-Handbook of statistical methods",
+  "edition": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": null,
+  "doi": null,
+  "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm",
+  "version": null,
+  "status": "B",
+  "tools": [
+   "METHODS §12 P02",
+   "DIST_SPEC [R10]"
+  ],
+  "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified, no date on the page (n.d. kept; retrieved 21 Nov 2026). Earlier note: DIST_SPEC: technical handbook page, accessed 10 Nov 2026"
+ },
+ {
+  "key": "nielsen1999",
+  "type": "report",
+  "authors": [
+   "Nielsen, H. B."
+  ],
+  "year": "1999",
+  "title": "Damping parameter in Marquardt's method",
+  "container": null,
+  "edition": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": "DTU",
+  "doi": null,
   "url": null,
   "version": null,
-  "status": null,
+  "status": "B",
   "tools": [
-   "METHODS §23 TM-03 (ln bark form)"
+   "METHODS §10 (LM damping update)"
   ],
-  "note": "NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Östlin, E. (1963). Barkuppgifter för tall, gran, björk m.fl. [Part 1 veya Part 2; seçilmesi gerekiyor]. Skogshögskolan, Institutionen för skogstaxering. | Earlier note: incomplete: via van Laar & Akça 2007; original not read; no marker"
+  "note": "[B] PDF provided by the user, read on 22 Nov 2026; compared with METHODS (see there). report IMM-REP-1999-05"
  },
  {
   "key": "okabe2008",
@@ -2191,6 +2213,29 @@
    "METHODS §5 (colour palette)"
   ],
   "note": "Page read on 22 Nov 2026: palette only as an image; hex codes not checkable from the text, status stays [D]. Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: J*Fly web page; no URL given"
+ },
+ {
+  "key": "oestlin1963",
+  "type": "report",
+  "authors": [
+   "Östlin, E."
+  ],
+  "year": "1963",
+  "title": "Barkuppgifter för tall, gran, björk m.fl.",
+  "container": null,
+  "edition": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": "Skogshögskolan, Institutionen för skogstaxering",
+  "doi": null,
+  "url": null,
+  "version": null,
+  "status": null,
+  "tools": [
+   "METHODS §23 TM-03 (ln bark form)"
+  ],
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Östlin, E. (1963). Barkuppgifter för tall, gran, björk m.fl. [Part 1 veya Part 2; seçilmesi gerekiyor]. Skogshögskolan, Institutionen för skogstaxering. | Earlier note: incomplete: via van Laar & Akça 2007; original not read; no marker"
  },
  {
   "key": "parresol1999",
@@ -2267,27 +2312,29 @@
   "note": "Research Paper SRS–31"
  },
  {
-  "key": "parresol2009",
-  "type": "other",
+  "key": "nlme",
+  "type": "software",
   "authors": [
-   "Parresol"
+   "Pinheiro, J.",
+   "Bates, D.",
+   "R Core Team"
   ],
-  "year": "2009",
-  "title": null,
+  "year": "2025",
+  "title": "nlme: Linear and nonlinear mixed effects models",
   "container": null,
   "edition": null,
   "volume": null,
   "issue": null,
   "pages": null,
   "publisher": null,
-  "doi": null,
+  "doi": "10.32614/CRAN.package.nlme",
   "url": null,
-  "version": null,
-  "status": "D",
+  "version": "3.1-168",
+  "status": "P",
   "tools": [
-   "METHODS §12 P19"
+   "METHODS §27 SM-03 (tests/ref/sm03_mixed.R)"
   ],
-  "note": "NOT applied (undecided (several works possible)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Kesin künye atanmadı. Parresol (2009) biçimindeki tek yazarlı kayıt, sağlanan bağlamla tek bir esere bağlanamıyor. | Earlier note: incomplete: 'Parresol ve ark. (2009, SAS programs and constraint design)', cited by Fonseca et al. 2009; not read"
+  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: R package (R 4.5.2), run by the user 17 Nov 2026"
  },
  {
   "key": "pinheiro2000",
@@ -2412,18 +2459,18 @@
  },
  {
   "key": "prodan_vol",
-  "type": "other",
+  "type": "book",
   "authors": [
-   "Prodan"
+   "Prodan, M."
   ],
-  "year": "n.d.",
-  "title": null,
+  "year": "1968",
+  "title": "Forest biometrics (S. H. Gardiner, Trans.)",
   "container": null,
   "edition": null,
   "volume": null,
   "issue": null,
   "pages": null,
-  "publisher": null,
+  "publisher": "Pergamon Press",
   "doi": null,
   "url": null,
   "version": null,
@@ -2431,7 +2478,7 @@
   "tools": [
    "METHODS §24 SV-04 (local function V = b₀ + b₁D²)"
   ],
-  "note": "NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Prodan, M. (1968). Forest biometrics (S. H. Gardiner, Trans.). Pergamon Press. | Earlier note: incomplete: cited via Kershaw et al. 2016 §6.2.2; no year, no marker"
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Prodan, M. (1968). Forest biometrics (S. H. Gardiner, Trans.). Pergamon Press. | Earlier note: incomplete: cited via Kershaw et al. 2016 §6.2.2; no year, no marker"
  },
  {
   "key": "raptis2021",
@@ -2478,7 +2525,6 @@
   "version": null,
   "status": "B",
   "tools": [
-   "METHODS §1 (archived)",
    "METHODS §16 SS01 (SDI)"
   ],
   "note": "No DOI found in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026) (this does not mean there is none). §1 marks [İ], §16 [B] (USDA Treesearch 60134); issue 7 given only in §16"
@@ -2511,31 +2557,6 @@
   "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). title from SOURCE_LIST"
  },
  {
-  "key": "reynolds1988",
-  "type": "article",
-  "authors": [
-   "Reynolds, M. R., Jr.",
-   "Burk, T. E.",
-   "Huang, W.-C."
-  ],
-  "year": "1988",
-  "title": "Goodness-of-fit tests and model selection procedures for diameter distribution models",
-  "container": "Forest Science",
-  "edition": null,
-  "volume": "34",
-  "issue": null,
-  "pages": "373–399",
-  "publisher": null,
-  "doi": "10.1093/forestscience/34.2.373",
-  "url": null,
-  "version": null,
-  "status": "İ",
-  "tools": [
-   "METHODS §2 (error index)"
-  ],
-  "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
- },
- {
   "key": "richards1959",
   "type": "article",
   "authors": [
@@ -2562,18 +2583,66 @@
   "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). §4 and §15 mark [D] ('J. Exp. Bot.'); §10 and §18 [İ]; §15 cites it via Hernández-Cuevas et al. 2018"
  },
  {
-  "key": "rohle1985",
-  "type": "other",
+  "key": "robinson2004",
+  "type": "article",
   "authors": [
-   "Röhle"
+   "Robinson, A. P.",
+   "Froese, R. E."
   ],
-  "year": "1985",
-  "title": null,
+  "year": "2004",
+  "title": "Model validation using equivalence tests",
+  "container": "Ecological Modelling",
+  "edition": null,
+  "volume": "176",
+  "issue": null,
+  "pages": "349–358",
+  "publisher": null,
+  "doi": "10.1016/j.ecolmodel.2004.01.013",
+  "url": null,
+  "version": null,
+  "status": "B",
+  "tools": [
+   "METHODS §7 (equivalence tests)"
+  ],
+  "note": null
+ },
+ {
+  "key": "growthmodels",
+  "type": "software",
+  "authors": [
+   "Rodriguez, D."
+  ],
+  "year": "2023",
+  "title": "growthmodels: Nonlinear growth models",
   "container": null,
   "edition": null,
   "volume": null,
   "issue": null,
   "pages": null,
+  "publisher": null,
+  "doi": "10.32614/CRAN.package.growthmodels",
+  "url": null,
+  "version": "1.3.1",
+  "status": null,
+  "tools": [
+   "METHODS §18 SQ-03 (second source for [A] forms)"
+  ],
+  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: R package documentation; no [P] marker given; Gompertz page writes exp(−k^t) (probable typo)"
+ },
+ {
+  "key": "rohle1985",
+  "type": "article",
+  "authors": [
+   "Röhle, H.",
+   "Huber, W."
+  ],
+  "year": "1985",
+  "title": "Untersuchungen zur Methode der Ablotung von Kronenradien und der Berechnung von Kronengrundflächen",
+  "container": "Forstarchiv",
+  "edition": null,
+  "volume": "56",
+  "issue": null,
+  "pages": "238–243",
   "publisher": null,
   "doi": null,
   "url": null,
@@ -2582,7 +2651,7 @@
   "tools": [
    "METHODS §23 TM-04 (number of radii)"
   ],
-  "note": "NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Röhle, H., & Huber, W. (1985). Untersuchungen zur Methode der Ablotung von Kronenradien und der Berechnung von Kronengrundflächen. Forstarchiv, 56, 238–243. | Earlier note: incomplete: 'Röhle ve ark. (1985)' (et al.); via van Laar & Akça 2007; no marker"
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Röhle, H., & Huber, W. (1985). Untersuchungen zur Methode der Ablotung von Kronenradien und der Berechnung von Kronengrundflächen. Forstarchiv, 56, 238–243. | Earlier note: incomplete: 'Röhle ve ark. (1985)' (et al.); via van Laar & Akça 2007; no marker"
  },
  {
   "key": "rfc8785",
@@ -2726,29 +2795,6 @@
   "note": "[B] read on 22 Nov 2026: page/standard read and compared with METHODS (see there). NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): SciPy community. (n.d.). scipy.stats.goodness_of_fit. In SciPy manual (Version 1.18.0) [Software documentation]. Retrieved November 21, 2026, from https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html | Earlier note: official documentation"
  },
  {
-  "key": "siplab_kernel",
-  "type": "software",
-  "authors": [
-   "García, O."
-  ],
-  "year": "2022",
-  "title": "siplab: Spatial individual-plant modelling",
-  "container": null,
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": null,
-  "doi": "10.32614/CRAN.package.siplab",
-  "url": null,
-  "version": "1.6",
-  "status": "P",
-  "tools": [
-   "METHODS §16 SS-07/a1 (Hegyi, second source; pairwise in tests/ref/ss02_check.R)"
-  ],
-  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: R package documentation; SOURCE_LIST names García, O. 2014 as the package publication"
- },
- {
   "key": "snowdon1991",
   "type": "article",
   "authors": [
@@ -2843,30 +2889,6 @@
   "note": "Original title from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026) (Wageningen publication list); no DOI found."
  },
  {
-  "key": "systemfit",
-  "type": "software",
-  "authors": [
-   "Henningsen, A.",
-   "Hamann, J. D."
-  ],
-  "year": "2023",
-  "title": "systemfit: Estimating systems of simultaneous equations",
-  "container": null,
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": null,
-  "doi": "10.32614/CRAN.package.systemfit",
-  "url": null,
-  "version": "1.1-30",
-  "status": "P",
-  "tools": [
-   "METHODS §28 SM-04 (tests/ref/sm04_systems.R)"
-  ],
-  "note": "Completed from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): verified (publisher, original or catalogue). Earlier note: R package (R 4.5.2), run by the user 17 Nov 2026"
- },
- {
   "key": "vanlaar2007",
   "type": "book",
   "authors": [
@@ -2886,7 +2908,6 @@
   "version": null,
   "status": "B",
   "tools": [
-   "METHODS §1",
    "METHODS §16 SS-02 (CCF)",
    "METHODS §23 TM-03",
    "METHODS §23 TM-04",
@@ -2896,19 +2917,19 @@
  },
  {
   "key": "vonesh1997",
-  "type": "other",
+  "type": "book",
   "authors": [
-   "Vonesh",
-   "Chinchilli"
+   "Vonesh, E. F.",
+   "Chinchilli, V. M."
   ],
   "year": "1997",
-  "title": null,
+  "title": "Linear and nonlinear models for the analysis of repeated measurements",
   "container": null,
   "edition": null,
   "volume": null,
   "issue": null,
   "pages": null,
-  "publisher": null,
+  "publisher": "Marcel Dekker",
   "doi": null,
   "url": null,
   "version": null,
@@ -2916,7 +2937,30 @@
   "tools": [
    "METHODS §27 SM-03 (calibration)"
   ],
-  "note": "NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Vonesh, E. F., & Chinchilli, V. M. (1997). Linear and nonlinear models for the analysis of repeated measurements. Marcel Dekker. | Earlier note: incomplete: approximate Bayes estimator; via Raptis et al. 2021 and Ciceu et al. 2020"
+  "note": "Record completed: full record found on the web on 22 Nov 2026 (library catalogues / publisher pages). NOT applied (partly verified) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Vonesh, E. F., & Chinchilli, V. M. (1997). Linear and nonlinear models for the analysis of repeated measurements. Marcel Dekker. | Earlier note: incomplete: approximate Bayes estimator; via Raptis et al. 2021 and Ciceu et al. 2020"
+ },
+ {
+  "key": "wellek2003",
+  "type": "book",
+  "authors": [
+   "Wellek, S."
+  ],
+  "year": "2003",
+  "title": "Testing Statistical Hypotheses of Equivalence",
+  "container": null,
+  "edition": null,
+  "volume": null,
+  "issue": null,
+  "pages": null,
+  "publisher": "Chapman & Hall",
+  "doi": null,
+  "url": null,
+  "version": null,
+  "status": "D",
+  "tools": [
+   "METHODS §7 (paired t-test for equivalence, cited through Robinson and Froese 2004)"
+  ],
+  "note": "Original not obtainable (exception, 22 Nov 2026, user decision; METHODS legend): the computation rests on the source actually read. not read; the test is applied as given by Robinson and Froese (2004)"
  },
  {
   "key": "west2009",
@@ -2991,30 +3035,6 @@
   "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
  },
  {
-  "key": "zarnoch1985",
-  "type": "article",
-  "authors": [
-   "Zarnoch, S. J.",
-   "Dell, T. R."
-  ],
-  "year": "1985",
-  "title": "An evaluation of percentile and maximum likelihood estimators of Weibull parameters",
-  "container": "Forest Science",
-  "edition": null,
-  "volume": "31",
-  "issue": "1",
-  "pages": "260–268",
-  "publisher": null,
-  "doi": "10.1093/forestscience/31.1.260",
-  "url": null,
-  "version": null,
-  "status": "B",
-  "tools": [
-   "METHODS §2"
-  ],
-  "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). [B] for the abstract only ('özet')"
- },
- {
   "key": "zeide1993",
   "type": "article",
   "authors": [
@@ -3062,147 +3082,5 @@
    "METHODS §10 (Table 2)"
   ],
   "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026). pages field holds the article number 683691"
- },
- {
-  "key": "zohrer1973",
-  "type": "other",
-  "authors": [
-   "Zöhrer"
-  ],
-  "year": "1973",
-  "title": null,
-  "container": null,
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": null,
-  "doi": null,
-  "url": null,
-  "version": null,
-  "status": null,
-  "tools": [
-   "METHODS §23 TM-03 (1/k)"
-  ],
-  "note": "NOT applied (candidate (work not identified with certainty)) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Loetsch, F., Zöhrer, F., & Haller, K. E. (1973). Forest inventory (Vol. 2). BLV Verlagsgesellschaft. | Earlier note: incomplete: 'Zöhrer ve ark. (1973)' (et al.); via van Laar & Akça 2007; no marker"
- },
- {
-  "key": "efron1993",
-  "type": "book",
-  "authors": [
-   "Efron, B.",
-   "Tibshirani, R. J."
-  ],
-  "year": "1993",
-  "title": "An Introduction to the Bootstrap",
-  "container": null,
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": "Chapman & Hall",
-  "doi": null,
-  "url": null,
-  "version": null,
-  "status": "D",
-  "tools": [
-   "METHODS §7 (background; the bootstrap intervals follow DiCiccio and Efron 1996)"
-  ],
-  "note": "only chapter 17 (cross-validation and other estimates of prediction error, pp. 237–257) was in the file read on 19 Nov 2026; the percentile interval (chapter 13) was not"
- },
- {
-  "key": "robinson2004",
-  "type": "article",
-  "authors": [
-   "Robinson, A. P.",
-   "Froese, R. E."
-  ],
-  "year": "2004",
-  "title": "Model validation using equivalence tests",
-  "container": "Ecological Modelling",
-  "edition": null,
-  "volume": "176",
-  "issue": null,
-  "pages": "349–358",
-  "publisher": null,
-  "doi": "10.1016/j.ecolmodel.2004.01.013",
-  "url": null,
-  "version": null,
-  "status": "B",
-  "tools": [
-   "METHODS §7 (equivalence tests)"
-  ],
-  "note": null
- },
- {
-  "key": "wellek2003",
-  "type": "book",
-  "authors": [
-   "Wellek, S."
-  ],
-  "year": "2003",
-  "title": "Testing Statistical Hypotheses of Equivalence",
-  "container": null,
-  "edition": null,
-  "volume": null,
-  "issue": null,
-  "pages": null,
-  "publisher": "Chapman & Hall",
-  "doi": null,
-  "url": null,
-  "version": null,
-  "status": "D",
-  "tools": [
-   "METHODS §7 (paired t-test for equivalence, cited through Robinson and Froese 2004)"
-  ],
-  "note": "Original not obtainable (exception, 22 Nov 2026, user decision; METHODS legend): the computation rests on the source actually read. not read; the test is applied as given by Robinson and Froese (2004)"
- },
- {
-  "key": "diciccio1988",
-  "type": "article",
-  "authors": [
-   "DiCiccio, T. J.",
-   "Romano, J. P."
-  ],
-  "year": "1988",
-  "title": "A review of bootstrap confidence intervals",
-  "container": "Journal of the Royal Statistical Society: Series B (Methodological)",
-  "edition": null,
-  "volume": "50",
-  "issue": "3",
-  "pages": "338–354",
-  "publisher": null,
-  "doi": "10.1111/j.2517-6161.1988.tb01732.x",
-  "url": null,
-  "version": null,
-  "status": "B",
-  "tools": [
-   "METHODS §7 (bootstrap percentile and BCa intervals)"
-  ],
-  "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
- },
- {
-  "key": "diciccio1996",
-  "type": "article",
-  "authors": [
-   "DiCiccio, T. J.",
-   "Efron, B."
-  ],
-  "year": "1996",
-  "title": "Bootstrap confidence intervals",
-  "container": "Statistical Science",
-  "edition": null,
-  "volume": "11",
-  "issue": "3",
-  "pages": "189–228",
-  "publisher": null,
-  "doi": "10.1214/ss/1032280214",
-  "url": null,
-  "version": null,
-  "status": "B",
-  "tools": [
-   "METHODS §7 (bootstrap percentile and BCa intervals)"
-  ],
-  "note": "DOI from the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026)."
  }
 ]

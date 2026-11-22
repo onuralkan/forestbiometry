@@ -1,7 +1,8 @@
 // Builds inc/kaynakca.json (read by kaynakca.php) from the master copy docs/kaynakca.json (21 Nov 2026, user decision:
 // the two files are no longer edited by hand). The site file is the master without the sources that only archived
 // (removed) pages used: a reference is left out when every entry of its "tools" list says "archived". Order, fields
-// and values are copied unchanged.
+// and values are copied unchanged; the list is sorted alphabetically by first author (or title), then year and title
+// (22 Nov 2026, user decision: a plain alphabetical reference list).
 //   node scripts/kaynakca.mjs           write inc/kaynakca.json
 //   node scripts/kaynakca.mjs --check   exit 1 if inc/kaynakca.json is not up to date (CI)
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -20,7 +21,10 @@ for (const r of refs) {
   keys.add(r.key);
 }
 const archivedOnly = r => Array.isArray(r.tools) && r.tools.length > 0 && r.tools.every(t => /archived/i.test(String(t)));
-const site = refs.filter(r => !archivedOnly(r));
+const fold = s => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const sortKey = r => [fold((r.authors && r.authors[0]) || r.title), String(r.year || ''), fold(r.title)];
+const cmp = (a, b) => { const x = sortKey(a), y = sortKey(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return 0; };
+const site = refs.filter(r => !archivedOnly(r)).sort(cmp);
 const text = JSON.stringify(site, null, 1);
 
 if (process.argv.includes('--check')) {

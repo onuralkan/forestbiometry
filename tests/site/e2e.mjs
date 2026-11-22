@@ -95,7 +95,9 @@ await shot('site-2-hakkinda');
 // 2b. References page (APA 7), linked next to About
 await page.click('.b-nav a[href="kaynakca.php"]');
 { const n = await page.locator('ol.refs > li').count(), first = await page.locator('ol.refs > li').first().textContent();
-  ok(n >= 100 && (await page.locator('.b-nav a[aria-current]').textContent()) === 'References' && /\(\d{4}|n\.d\.\)/.test(first) && (await page.locator('#refs-n').textContent()).startsWith(String(n)), `References: ${n} sources in APA style, nav item current`);
+  ok(n >= 100 && (await page.locator('.b-nav a[aria-current]').textContent()) === 'References' && /\(\d{4}|n\.d\.\)/.test(first) && (await page.locator('#refs-n').count()) === 0 && !(await page.locator('ol.refs').textContent()).includes('METHODS §'), `References: ${n} sources in APA style, no usage or status notes, nav item current`);
+  { const t = await page.locator('ol.refs > li').allTextContents(), k = t.map(x => x.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
+    ok(k.every((x, i) => !i || k[i - 1].localeCompare(x, 'en') <= 0 || k[i - 1].slice(0, 12) === x.slice(0, 12)), 'References: in alphabetical order'); }
   ok((await page.locator('ol.refs a[href^="https://doi.org/"]').count()) > 0 && (await page.locator('#side a[href="kaynakca.php"]').count()) === 1 && (await page.locator('footer a[href="kaynakca.php"]').count()) === 1, 'References: DOI links; linked from the side menu and the footer'); }
 await page.click('.b-nav a[href="hakkinda.php"]');
 

@@ -41,10 +41,10 @@ function apa(array $r): string {
         if (!empty($r['container'])) $o .= ('In ') . '<i>' . h($r['container']) . '</i>' . '' . (!empty($r['pages']) ? ' (' . 'pp. ' . h($r['pages']) . ')' : '') . '. ';
         if (!empty($r['publisher'])) $o .= h(apa_end($r['publisher']));
     } elseif ($type === 'software') {
-        $o .= '<i>' . h($title) . '</i>' . (!empty($r['version']) ? ' (' . 'Version ' . h($r['version']) . ')' : '') . ' [' . 'Computer software' . ']. ';
+        $o .= '<i>' . h($title) . '</i>' . (!empty($r['version']) ? ' (' . 'Version ' . h($r['version']) . ')' : '') . ' [' . 'Computer software' . ']. ' . ($au === '' ? '(' . h($y) . '). ' : '');
         if (!empty($r['publisher'])) $o .= h(apa_end($r['publisher']));
     } else {
-        $o .= '<i>' . h($title) . '</i>' . $ed . '. ';
+        $o .= '<i>' . h($title) . '</i>' . $ed . ($ed === '' && preg_match('/[.?!]$/u', $title) ? ' ' : '. ');
         if (!empty($r['container'])) $o .= h(apa_end($r['container'])) . ' ';
         if (!empty($r['publisher'])) $o .= h(apa_end($r['publisher']));
     }
@@ -52,18 +52,12 @@ function apa(array $r): string {
     elseif (!empty($r['url'])) $o .= ' <a href="' . h($r['url']) . '" rel="noopener">' . h($r['url']) . '</a>';
     return trim($o);
 }
-// status labels as defined in docs/METHODS.md (lines 4–8); assets/lab/report/render.js uses the same wording
-$label = ['B' => 'checked in the primary source', 'A' => 'quoted via a secondary source', 'P' => 'verified from the package documentation', 'İ' => 'citation verified (in a secondary source\'s reference list)', 'D' => 'not yet verified'];
 ?>
   <section class="card about" aria-labelledby="h-refs">
     <h2 id="h-refs" class="b-h2"><?= 'References' ?></h2>
-    <p><?= 'Every source used in the tools\' methods, coefficient-free equation forms and numerical tests, in APA 7 style. Next to each source: where it is used and its reading status. The site contains no species or regional coefficients; these sources are for the methods.' ?></p>
-    <p class="muted small"><?= 'Status: ' ?><?= h(implode(' · ', array_map(function ($k, $v) { return "$k: $v"; }, array_keys($label), $label))) ?>. <?= 'Details: docs/METHODS.md in the project repository.' ?></p>
-    <p class="small" id="refs-n"><?= count($refs) . ' sources.' ?></p>
     <ol class="refs" id="refs">
       <?php foreach ($refs as $r): ?>
-      <li id="ref-<?= h($r['key'] ?? '') ?>"><?= apa($r) ?>
-        <span class="muted small"> — <?= h(implode('; ', array_unique(array_map(function ($t) { return trim(preg_replace('/\s*(\((?:[^()]++|(?1))*\))/u', '', $t)); }, $r['tools'] ?? [])))) ?><?= !empty($r['status']) ? ' · ' . h($r['status']) . ' (' . h($label[$r['status']] ?? $r['status']) . ')' : '' ?><?= !empty($r['note']) && stripos($r['note'], 'incomplete') === 0 ? ' · ' . 'citation incomplete in the source documents' : '' ?></span></li>
+      <li id="ref-<?= h($r['key'] ?? '') ?>"><?= apa($r) ?></li>
       <?php endforeach; ?>
     </ol>
   </section>
