@@ -396,8 +396,8 @@ function srcBlock(rs, boot = false) {
   const obs = r => r.truncation ? T('src.thr.trunc', { L: r.truncation.lower ?? '–', U: r.truncation.upper ?? '∞' }) : r.data.type === 'classes' ? T('src.thr.cls') : r.data.type === 'summary' ? T('src.thr.sum') : T('src.thr.none');
   const li = [...seen.values()].map(r => { const m = D.method(r.method), fam = D.family(r.family), s = SRC.methodSources(r.method);
     return `<li data-src="${r.method}"><b>${esc(methodName(r))}</b> · ${esc(T('fam.' + r.family))}: ${T('src.est')}: ${esc(T('est.' + m.estimator))}; ${T('src.solver')}: ${esc(T('sol.' + m.solver))}; ${T('src.units')}: ${esc(fam.params.map(parHead).join(', '))};
-      ${T('src.support')}: ${esc(T('sup.' + r.family))}; ${T('src.obs')}: ${esc(obs(r))}. ${T('src.doc')}: METHODS.md §12 ${s.section}. ${T('src.refs')}: ${s.refs.map(k => `[${num(k)}]`).join(', ')}.</li>`; });
-  if (boot) li.push(`<li data-src="bootstrap"><b>${T('tab.boot')}</b>: ${T('src.boot')} ${T('src.doc')}: METHODS.md §12 P14. ${T('src.refs')}: [${num('R9')}].</li>`);
+      ${T('src.support')}: ${esc(T('sup.' + r.family))}; ${T('src.obs')}: ${esc(obs(r))}. ${T('src.refs')}: ${s.refs.map(k => `[${num(k)}]`).join(', ')}.</li>`; });
+  if (boot) li.push(`<li data-src="bootstrap"><b>${T('tab.boot')}</b>: ${T('src.boot')} ${T('src.refs')}: [${num('R9')}].</li>`);
   return `<details class="srcs card"><summary>${T('src.h')}</summary><ul class="small">${li.join('')}</ul>
     <ol class="small refs">${refs.map(k => { const x = SRC.REFS[k]; return `<li data-ref="${k}">${esc(x.cite)}${x.url ? ` <a href="${esc(x.url)}" rel="noopener" target="_blank">${T('src.link')}</a>` : ''} <span class="muted">(${T('src.st.' + x.status)})</span></li>`; }).join('')}</ol>
     <p class="muted small">${T('src.note')}</p></details>`;

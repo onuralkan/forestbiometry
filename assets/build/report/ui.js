@@ -5714,7 +5714,7 @@ const RT = {
     noRec: 'No run records were added to the report.', tool: 'Tool', ver: 'Version', created: 'Created', seal: 'Seal', sealOk: 'holds', sealBad: 'DOES NOT HOLD (record changed)', sealNone: 'none',
     fromPkg: 'Data', fromYes: 'the package in this report', fromNo: 'ANOTHER package', fromUnk: 'a file (whether it is this package cannot be told)', legacy: 'record written before DI-07 (no seal or fingerprints)',
     settings: 'Settings', rowsOf: p => `First ${p.shown} of ${p.total} rows shown.`, coef: 'Sources of user coefficients',
-    platform: 'Platform', toolsCite: 'Tools used', lit: 'References named in the records', coefSrc: 'Sources of the coefficient sets entered by the user', noLit: 'The records carry no reference list; see the tool\'s guide section and METHODS.md for the method sources.',
+    platform: 'Platform', toolsCite: 'Tools used', lit: 'References named in the records', coefSrc: 'Sources of the coefficient sets entered by the user', noLit: 'The records carry no reference list; see the tool\'s guide section and the site\'s References page for the method sources.',
     status: { B: '[B] checked in the primary source', D: '[D] not yet verified', A: '[A] quoted via a secondary source', P: '[P] verified from the package documentation', 'İ': '[İ] citation verified (in a secondary source\'s reference list)' },
     pkgFp: 'Fingerprint of the data package (SHA-256, canonical JSON)', commit: 'Source code (commit)', none: 'none (development setup)', inputs: 'Inputs', role: 'Role', kind: 'Kind', size: 'Size', fp: 'SHA-256',
     reportCommit: 'Commit of the site that produced the report', verify: 'The records can be checked with the Record Verifier, the input files with their fingerprints.',

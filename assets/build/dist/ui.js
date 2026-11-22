@@ -4267,15 +4267,15 @@ const en = {
   'nodata': 'No diameters to analyse: no readable value greater than zero was found in the chosen diameter column. Check the diameter column, the decimal separator and the filter (if any).', 'nodata.cls': 'No classes to analyse: no readable row was found in the lower bound, upper bound and frequency columns. Check the columns and the decimal separator.',
   'more': 'Details: formulas and notes', 'p.notes': 'Notes and warnings', 'p.all': 'Parameter tables per family, all columns', 'cmp.all': 'All criteria (BIC, AICc, CvM, class errors, EI, solver)', 'cmp.how': 'How to read the tables', 'cmp.read': 'About this table', 'calc.ready': p => `${p.k} methods selected`,
   'src.h': 'Methods, units and sources', 'src.est': 'estimation principle', 'src.solver': 'solver', 'src.units': 'parameters', 'src.support': 'support', 'src.obs': 'observation',
-  'src.doc': 'documentation', 'src.refs': 'references', 'src.link': 'link', 'src.st.B': 'read', 'src.st.D': 'cited; not read, equations verified independently with SciPy/mpmath',
+  'src.refs': 'references', 'src.link': 'link', 'src.st.B': 'read', 'src.st.D': 'cited; not read, equations verified independently with SciPy/mpmath',
   'src.thr.none': 'raw diameters, no threshold (untruncated data assumed)', 'src.thr.trunc': p => `measurement threshold ${p.L} ≤ d ≤ ${p.U} cm, conditional distribution`, 'src.thr.cls': 'class frequencies; class probability F(upper) − F(lower)', 'src.thr.sum': 'summary values (no raw data)',
   'src.boot': 'parametric bootstrap (with re-estimation) and percentile intervals; the seed is in the result record.',
-  'src.note': 'Source status: "read" means the source itself was examined; the others are cited and the formulas are verified against independent numerical references. Details, formulas and tests are in the project document METHODS.md §12.',
+  'src.note': 'Source status: "read" means the source itself was examined; the others are cited and the formulas are verified against independent numerical references. Formulas and assumptions are in the tool\'s guide section; the full entries of the sources are in the <a href="kaynakca.php">References</a>.',
   'sup.weibull': 'd > a; location a fixed (0 or the user\'s value), not estimated', 'sup.exponential': 'd > a; location a fixed (0 or the user\'s value), not estimated',
   'sup.normal': 'all real numbers; the probability of negative diameters is reported', 'sup.lognormal': 'd > 0', 'sup.gamma': 'd > 0', 'sup.loglogistic': 'd > 0',
   'sup.beta': 'L < d < U; L and U from the user, never from the data', 'sup.johnsonsb': 'ξ < d < ξ + λ; ξ and λ from the user (Parresol recovery: ξ from the user, λ recovered)',
   'p.states': p => `${p.ok} results computed for this unit${p.w ? ` (${p.w} with warnings)` : ''}; ${p.bad ? `${p.bad} results could not be computed or are not supported: no parameters shown, the reason is in the notes.` : 'no result failed.'}`,
-  'sheet.boot': 'Bootstrap', 'sheet.src': 'Sources', 'x.section': 'Documentation section', 'x.refs': 'References', 'x.cite': 'Citation', 'x.rstatus': 'Source status', 'x.url': 'Link',
+  'sheet.boot': 'Bootstrap', 'sheet.src': 'Sources', 'x.refs': 'References', 'x.cite': 'Citation', 'x.rstatus': 'Source status', 'x.url': 'Link',
   'bx.kind': 'Operation', 'bx.gof': 'Goodness-of-fit p-value', 'bx.ci': 'Interval', 'bx.done': 'Completed replicates', 'bx.failed': 'Failed replicates', 'bx.rate': 'Failure rate', 'bx.step': 'Rounding step (cm)', 'bx.scheme': 'Scheme', 'bx.q': 'Statistic / quantity',
 };
 const T = makeT({ en });
@@ -4770,7 +4770,7 @@ const { header, readBlock, FB_NUM, FB_OUT, rStr, rNum, rVec, rComment } = __fb_r
 
 
 /** Families in R: density (with log), distribution function, quantile, raw moments of order 1 and 2 (for mme). */
-const R_FAMILIES = String.raw`# ---- families with the tool's parameters (docs/METHODS.md §12); an invalid parameter gives density 0 ----
+const R_FAMILIES = String.raw`# ---- families with the tool's parameters (see the tool's guide; sources on the site's References page); an invalid parameter gives density 0 ----
 fb_bad <- function(x, log) rep(if (log) -Inf else 0, length(x))
 dfb_weibull <- function(x, a, b, c, log = FALSE) if (isTRUE(b > 0 && c > 0)) dweibull(x - a, shape = c, scale = b, log = log) else fb_bad(x, log)
 pfb_weibull <- function(q, a, b, c) pweibull(q - a, shape = c, scale = b)
@@ -5764,13 +5764,13 @@ function bootRows(recs, h) {
   }
   return out;
 }
-/** Methods and references (stage P15): every method used, its documentation section and references; then the reference list. */
+/** Methods and references (stage P15): every method used and its references; then the reference list. */
 function sourceRows(ids, h, extra = []) {
   const { T } = h, uniq = [...new Set(ids)];
-  const out = [['method_id', T('x.method'), T('x.family'), T('x.estimator'), T('x.solver'), T('x.section'), T('x.refs')]];
+  const out = [['method_id', T('x.method'), T('x.family'), T('x.estimator'), T('x.solver'), T('x.refs')]];
   for (const id of uniq) { const m = D.method(id), s = SRC.methodSources(id);
-    out.push([id, T('m.' + id), T('fam.' + m.family), T('est.' + m.estimator), T('sol.' + m.solver), 'METHODS.md §12 ' + s.section, s.refs.join(', ')]); }
-  if (extra.includes('R9')) out.push(['bootstrap', T('tab.boot'), null, null, null, 'METHODS.md §12 P14', 'R9']);
+    out.push([id, T('m.' + id), T('fam.' + m.family), T('est.' + m.estimator), T('sol.' + m.solver), s.refs.join(', ')]); }
+  if (extra.includes('R9')) out.push(['bootstrap', T('tab.boot'), null, null, null, 'R9']);
   out.push([], [T('x.refs'), T('x.cite'), T('x.rstatus'), T('x.url')]);
   for (const k of SRC.refsOf(uniq, extra)) { const x = SRC.REFS[k]; out.push([k, x.cite, T('src.st.' + x.status), x.url || null]); }
   return out;
@@ -6722,8 +6722,8 @@ function srcBlock(rs, boot = false) {
   const obs = r => r.truncation ? T('src.thr.trunc', { L: r.truncation.lower ?? '–', U: r.truncation.upper ?? '∞' }) : r.data.type === 'classes' ? T('src.thr.cls') : r.data.type === 'summary' ? T('src.thr.sum') : T('src.thr.none');
   const li = [...seen.values()].map(r => { const m = D.method(r.method), fam = D.family(r.family), s = SRC.methodSources(r.method);
     return `<li data-src="${r.method}"><b>${esc(methodName(r))}</b> · ${esc(T('fam.' + r.family))}: ${T('src.est')}: ${esc(T('est.' + m.estimator))}; ${T('src.solver')}: ${esc(T('sol.' + m.solver))}; ${T('src.units')}: ${esc(fam.params.map(parHead).join(', '))};
-      ${T('src.support')}: ${esc(T('sup.' + r.family))}; ${T('src.obs')}: ${esc(obs(r))}. ${T('src.doc')}: METHODS.md §12 ${s.section}. ${T('src.refs')}: ${s.refs.map(k => `[${num(k)}]`).join(', ')}.</li>`; });
-  if (boot) li.push(`<li data-src="bootstrap"><b>${T('tab.boot')}</b>: ${T('src.boot')} ${T('src.doc')}: METHODS.md §12 P14. ${T('src.refs')}: [${num('R9')}].</li>`);
+      ${T('src.support')}: ${esc(T('sup.' + r.family))}; ${T('src.obs')}: ${esc(obs(r))}. ${T('src.refs')}: ${s.refs.map(k => `[${num(k)}]`).join(', ')}.</li>`; });
+  if (boot) li.push(`<li data-src="bootstrap"><b>${T('tab.boot')}</b>: ${T('src.boot')} ${T('src.refs')}: [${num('R9')}].</li>`);
   return `<details class="srcs card"><summary>${T('src.h')}</summary><ul class="small">${li.join('')}</ul>
     <ol class="small refs">${refs.map(k => { const x = SRC.REFS[k]; return `<li data-ref="${k}">${esc(x.cite)}${x.url ? ` <a href="${esc(x.url)}" rel="noopener" target="_blank">${T('src.link')}</a>` : ''} <span class="muted">(${T('src.st.' + x.status)})</span></li>`; }).join('')}</ol>
     <p class="muted small">${T('src.note')}</p></details>`;

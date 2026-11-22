@@ -2519,7 +2519,7 @@ const en = {
   'm.naslund': 'Näslund', 'm.michailoff': 'Michailoff', 'm.curtis': 'Curtis', 'm.power': 'Power (Stoffels & van Soest)', 'm.richards': 'Chapman–Richards', 'm.weibull': 'Weibull (Yang et al.)',
   'm.short.power': 'Power', 'm.short.weibull': 'Weibull',
   'src.naslund': 'Näslund (1936)', 'src.michailoff': 'Michailoff (1943)', 'src.curtis': 'Curtis (1967)', 'src.power': 'Stoffels & van Soest (1953)', 'src.richards': 'Richards (1959)', 'src.weibull': 'Yang, Kozak & Smith (1978)',
-  'src.note': 'The parametrisations are those of Mehtätalo\'s lmfor R package (HDmodels); full references in METHODS.md §10. Parameters are for d in cm and h in m; they cannot be mixed with coefficients fitted in other units.',
+  'src.note': 'The parametrisations are those of Mehtätalo\'s lmfor R package (HDmodels); full references on the References page of the site (kaynakca.php). Parameters are for d in cm and h in m; they cannot be mixed with coefficients fitted in other units.',
   'p.model': 'Model', 'p.formula': 'Form', 'p.status': 'Status', 'p.param': 'Parameter', 'p.est': 'Estimate', 'p.se': 'Std. error', 'p.ci': '95% confidence interval (parameter)', 'p.iter': 'Iterations',
   'p.asym': 'Asymptote bh + a (m)', 'p.n': 'n', 'p.p': 'p', 'p.src': 'Source',
   's.ok': 'converged', 's.toofew': 'too few data', 's.nostart': 'no starting value', 's.noconverge': 'did not converge', 's.diverged': 'diverged', 's.invalid': 'undefined at start',

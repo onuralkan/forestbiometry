@@ -11,7 +11,7 @@ import { family as famOf } from './registry.js';
 import { header, readBlock, FB_NUM, FB_OUT, rStr, rNum, rVec, rComment } from '../core/rcode.js';
 
 /** Families in R: density (with log), distribution function, quantile, raw moments of order 1 and 2 (for mme). */
-export const R_FAMILIES = String.raw`# ---- families with the tool's parameters (docs/METHODS.md §12); an invalid parameter gives density 0 ----
+export const R_FAMILIES = String.raw`# ---- families with the tool's parameters (see the tool's guide; sources on the site's References page); an invalid parameter gives density 0 ----
 fb_bad <- function(x, log) rep(if (log) -Inf else 0, length(x))
 dfb_weibull <- function(x, a, b, c, log = FALSE) if (isTRUE(b > 0 && c > 0)) dweibull(x - a, shape = c, scale = b, log = log) else fb_bad(x, log)
 pfb_weibull <- function(q, a, b, c) pweibull(q - a, shape = c, scale = b)

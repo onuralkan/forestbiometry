@@ -131,13 +131,13 @@ export function bootRows(recs, h) {
   }
   return out;
 }
-/** Methods and references (stage P15): every method used, its documentation section and references; then the reference list. */
+/** Methods and references (stage P15): every method used and its references; then the reference list. */
 export function sourceRows(ids, h, extra = []) {
   const { T } = h, uniq = [...new Set(ids)];
-  const out = [['method_id', T('x.method'), T('x.family'), T('x.estimator'), T('x.solver'), T('x.section'), T('x.refs')]];
+  const out = [['method_id', T('x.method'), T('x.family'), T('x.estimator'), T('x.solver'), T('x.refs')]];
   for (const id of uniq) { const m = D.method(id), s = SRC.methodSources(id);
-    out.push([id, T('m.' + id), T('fam.' + m.family), T('est.' + m.estimator), T('sol.' + m.solver), 'METHODS.md §12 ' + s.section, s.refs.join(', ')]); }
-  if (extra.includes('R9')) out.push(['bootstrap', T('tab.boot'), null, null, null, 'METHODS.md §12 P14', 'R9']);
+    out.push([id, T('m.' + id), T('fam.' + m.family), T('est.' + m.estimator), T('sol.' + m.solver), s.refs.join(', ')]); }
+  if (extra.includes('R9')) out.push(['bootstrap', T('tab.boot'), null, null, null, 'R9']);
   out.push([], [T('x.refs'), T('x.cite'), T('x.rstatus'), T('x.url')]);
   for (const k of SRC.refsOf(uniq, extra)) { const x = SRC.REFS[k]; out.push([k, x.cite, T('src.st.' + x.status), x.url || null]); }
   return out;

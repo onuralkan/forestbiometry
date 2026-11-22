@@ -42,7 +42,7 @@ ok(SRC.refsOf(['weibull.ml', 'weibull.m2'], ['R9']).join() === 'R1,R6,R9', 'refe
 /* 3. export rows */
 const T = (k, p) => k + (p ? JSON.stringify(p) : ''), h = { T, methodName: r => 'M:' + r.method, notes: () => [], poolLabel: 'POOL' };
 { const rows = REP.sourceRows(['weibull.ml', 'weibull.ml', 'johnsonsb.parresol'], h, ['R9']);
-  ok(rows[1][0] === 'weibull.ml' && rows[2][0] === 'johnsonsb.parresol' && rows[3][0] === 'bootstrap' && rows[1][5] === 'METHODS.md §12 P05' && rows[2][6] === 'R2', 'source sheet: one row per method, section and references');
+  ok(rows[1][0] === 'weibull.ml' && rows[2][0] === 'johnsonsb.parresol' && rows[3][0] === 'bootstrap' && rows[0].length === 6 && String(rows[1][5]).includes('R6') && rows[2][5] === 'R2' && !JSON.stringify(rows).includes('METHODS'), 'source sheet: one row per method with its references (no methods-document sections)');
   const refRows = rows.slice(rows.findIndex(r => r.length === 0) + 2);
   ok(refRows.map(r => r[0]).join() === 'R2,R6,R9' && refRows[0][1] === SRC.REFS.R2.cite && refRows[0][2] === 'src.st.B' && refRows[1][3] === SRC.REFS.R6.url, 'source sheet: reference list with citation, status and link'); }
 { const d = [12.3, 15.1, 18.2, 22.0, 25.5, 31.4, 9.4, 14.0, 27.1, 20.1, 16.6, 23.3, 19.9, 21.7, 17.5, 24.8, 13.2, 28.6, 11.9, 26.4];

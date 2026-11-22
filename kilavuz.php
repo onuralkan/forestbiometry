@@ -17,7 +17,7 @@ $unknown = $k !== '' && !$ok;
 if (!$ok) $k = '';
 site_top([
     'title' => $k ? $titleOf($k) . ' · User guide' : 'User guide',
-    'lede'  => $k ? '' : 'What each tool does, which data it expects and how to read the results. Start from what you want to do, or choose a tool from the list on the left. Formulas and sources are in each tool\'s "Details" disclosures and in the methods document.',
+    'lede'  => $k ? '' : 'What each tool does, which data it expects and how to read the results. Start from what you want to do, or choose a tool from the list on the left. Formulas and sources are in each tool\'s "Details" disclosures; the full entries of the sources are in the References.',
     'desc'  => $k ? 'User guide: ' . $titleOf($k)
                   : 'User guide of Forest Biometry: data checking, tree and stand measures, models, coefficients, reproducibility.',
     'query' => $k ? 'k=' . $k : '',
