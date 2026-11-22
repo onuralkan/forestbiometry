@@ -150,7 +150,7 @@ try {
   ok(ex.format === 'forest-biometry-account-export/1' && ex.results.length === 3 && ex.interpretations.length === 2 && ex.account.orcid === USER, 'export: everything the account keeps');
   // the top-bar menu
   await page.click('#acctlink');
-  ok(await page.isVisible('#acctmenu') && (await page.getAttribute('#acctlink', 'aria-expanded')) === 'true' && (await page.textContent('#acctquota')).includes('2 of 2'), 'top-bar menu opens with name and use');
+  ok(await page.isVisible('#acctmenu') && (await page.getAttribute('#acctlink', 'aria-expanded')) === 'true' && (await page.locator('#acctmenu', { hasText: 'interpretations used' }).count()) === 0 && (await page.locator('#acctstate').count()) === 0, 'top-bar menu opens with the name, without use counts');
   await page.keyboard.press('Escape');
   ok(!(await page.isVisible('#acctmenu')) && (await page.getAttribute('#acctlink', 'aria-expanded')) === 'false', 'Escape closes the menu');
   await page.click('#acctlink'); await page.click('#acctmenu a[href="hesap.php?tab=interpretations"]'); await page.waitForSelector('#int-list');

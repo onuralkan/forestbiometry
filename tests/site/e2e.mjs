@@ -43,9 +43,9 @@ ok((await page.textContent('.hp-data')).includes('Your raw data are not sent to 
   const tasks = await page.$$eval('.hp-tasks a', a => a.map(x => x.getAttribute('href')));
   ok(tasks.length >= 5 && tasks.every(h => /^araclar\.php\?task=[a-z]+$/.test(h)) && (await page.textContent('.hp-start')).includes('You can load your table straight into a tool.'), 'home: "which tool suits my data" leads to the task filters; the Data Checker is not a required first step');
   const sci = await page.$$eval('.hp-sci li > a', a => a.map(x => x.getAttribute('href')));
-  ok(sci.join() === 'kilavuz.php,hakkinda.php#h-tests,hakkinda.php#h-cite', 'home: scientific basis links: guide, how tests are done, how to cite');
+  ok(sci.join() === 'kilavuz.php,kaynakca.php,hakkinda.php#h-cite', 'home: scientific basis links: guide, sources, how to cite');
   for (const h of sci.filter(x => x.includes('#'))) { await page.goto(BASE + '/' + h); ok(await page.locator('#' + h.split('#')[1]).count() === 1, h + ' exists'); }
-  ok((await page.locator('section', { has: page.locator('#h-tests') }).textContent()).includes('it does not show that the method suits your data'), 'About: tests are told apart from the method suiting the data'); }
+  ok((await page.locator('#h-tests').count()) === 0, 'About: no section on how the calculations are tested (removed 22 Nov 2026)'); }
 { // recently used: only real history, at most four, next to the search
   const c = await browser.newContext(), r = await c.newPage(); await r.goto(BASE + '/');
   ok(await r.isHidden('#hm-recent'), 'recently used: hidden without history (no placeholders)');
@@ -106,7 +106,7 @@ await page.click('.b-nav a[href="hakkinda.php"]');
 
 // 3. no language switch any more (English-only site, 20 Nov 2026); footer names the author
 ok((await page.locator('#langlink').count()) === 0, 'no language link in the top bar');
-ok((await page.locator('h1').textContent()).trim() === 'About' && (await page.locator('.b-foot', { hasText: 'Author and responsible person' }).count()) === 1, 'About with author in footer');
+ok((await page.locator('h1').textContent()).trim() === 'About' && (await page.locator('.b-foot', { hasText: 'Developer:' }).count()) === 1 && (await page.locator('body', { hasText: 'Author and responsible person' }).count()) === 0, 'About with author in footer');
 
 // 4. removed pages of the old personal site are gone
 for (const f of ['admin.php', 'bulmaca.php', 'mescere.php', 'weibull.php', 'check.php', 'araclar/veri-denetcisi.php']) {

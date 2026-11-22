@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 date_default_timezone_set('Europe/Istanbul');
 
-/** Author and responsible person, shown on the About page and in the footer. Empty values are not shown. */
+/** The developer (22 Nov 2026: "Developer" on the site), shown on the About page and in the footer. Empty values are not shown. */
 /** For citations: canonical address and the year the platform was first published. */
 const SITE_BASE = 'https://forestbiometry.online/';
 const SITE_YEAR = 2026;
@@ -211,11 +211,11 @@ function site_top(array $o = []): void {
     <button type="button" class="b-citebtn" id="citebtn" data-cite-open aria-haspopup="dialog"><?= site_icon('cite') ?><span><?= 'Cite' ?></span></button>
     <button type="button" id="theme" class="b-iconbtn" aria-label="<?= 'Dark / light theme' ?>"><?= site_icon('theme') ?></button>
     <?php if (fb_config() && !$acct): ?><a id="acctlink" class="b-acct" href="hesap.php"<?= $here === 'hesap.php' ? ' aria-current="page"' : '' ?> title="Sign in with ORCID for the AI interpretation and saved results">Sign in</a>
-    <?php elseif ($acct): $quota = (int)fb_config()['monthly_quota']; $used = fb_used($acct['orcid']); ?>
+    <?php elseif ($acct): ?>
     <span class="b-acctwrap"><button type="button" id="acctlink" class="b-acct" aria-haspopup="true" aria-expanded="false" aria-controls="acctmenu" title="<?= h($acct['name']) ?> (ORCID <?= h($acct['orcid']) ?>)">Account</button>
       <span class="b-acctmenu" id="acctmenu" hidden>
         <span class="b-accthead"><b><?= h($acct['name']) ?></b><span class="muted small"><?= h($acct['orcid']) ?></span>
-          <span class="small" id="acctquota"><?= $acct['status'] === 'approved' ? $used . ' of ' . $quota . ' interpretations used this month' : ($acct['status'] === 'pending' ? 'Waiting for approval' : 'Blocked') ?></span></span>
+          <?php if ($acct['status'] !== 'approved'): // no use counts in the menu (22 Nov 2026, user decision); the Account page shows them ?><span class="small" id="acctstate"><?= $acct['status'] === 'pending' ? 'Waiting for approval' : ($acct['status'] === 'rejected' ? 'Not approved' : 'Blocked') ?></span><?php endif; ?></span>
         <a href="hesap.php?tab=interpretations">My interpretations</a>
         <a href="hesap.php?tab=results">Saved results</a>
         <a href="hesap.php?tab=profile">Account settings</a>
@@ -352,7 +352,7 @@ function site_bottom(string $script = ''): void {
 </main>
 </div>
 <footer class="b-foot">
-  <span><?= h($c['site']) ?> · forestbiometry.online · © <?= date('Y') ?> · <?= 'Author and responsible person' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
+  <span><?= h($c['site']) ?> · forestbiometry.online · © <?= date('Y') ?> · <?= 'Developer' ?>: <a href="hakkinda.php"><?= h(SITE_AUTHOR['name']) ?></a></span>
   <span><a href="araclar.php"><?= 'Tools index' ?></a> · <a href="kilavuz.php"><?= 'Guide' ?></a> · <a href="hakkinda.php"><?= 'About' ?></a> · <a href="kaynakca.php"><?= 'References' ?></a> · <a href="gizlilik.php"><?= 'Privacy' ?></a></span>
 </footer>
 <script>

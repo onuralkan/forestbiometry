@@ -95,9 +95,9 @@ $magnifier = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M
       <h2 id="hp-sci-h"><?= 'Scientific basis' ?></h2>
       <ul>
         <li><a href="kilavuz.php"><?= 'Review the method' ?></a>
-          <p><?= 'Each tool\'s guide section explains its inputs, units, settings, scope and what it does not do; formulas and their sources are in the methods document, the sources in the <a href="kaynakca.php">References</a>.' ?></p></li>
-        <li><a href="hakkinda.php#h-tests"><?= 'See how the calculations are tested' ?></a>
-          <p><?= 'The calculations are tested against independent references. That does not show a method suits your data; its assumptions are in the guide.' ?></p></li>
+          <p><?= 'Each tool\'s guide section explains its inputs, units and settings, the assumptions of its methods and what it does not do.' ?></p></li>
+        <li><a href="kaynakca.php"><?= 'Check the sources' ?></a>
+          <p><?= 'Every method follows a published source: forest mensuration textbooks, journal articles and the documentation of R packages. The site contains no species or regional coefficients; you enter your own, with their source.' ?></p></li>
         <li><a href="hakkinda.php#h-cite"><?= 'Cite it in your work' ?></a>
           <p><?= 'State the tool and its version; the DOI makes the version traceable. Cite the method\'s original source too.' ?></p></li>
       </ul>
