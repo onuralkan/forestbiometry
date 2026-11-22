@@ -230,5 +230,36 @@ const plotsTxt = readFileSync(path.join(root, 'assets/lab/checker/ornek/ornek-al
   ok(ds.trees.every(t => t.species === 'Pn' || t.species.trim() === 'Pb'), 'the species codes in the records are not changed');
   ok(!('species_names' in C.approve(r.sources, r.work, r.mapping, r.settings, ev)), 'no table: no species_names field (package unchanged)'); }
 
+/* 1.4.0 (22 Nov 2026): coordinates and undo of an edit */
+{ // rows 2..7: tree 3 has only x; trees 1 and 2 share a point in plot A; tree 4 repeats tree 1's point in plot B (other plot);
+  // tree 5 in period 2 at the same point as tree 1 in period 1 is not a duplicate; same tree in two periods is not either
+  const r = run('plot;tree;dbh;x;y;period\nA;1;20;1,5;2;1\nA;2;21;1,5;2;1\nA;3;22;4;;1\nB;4;23;1,5;2;1\nA;5;24;1,5;2;2\nA;1;25;1,5;2;2\n', null, S());
+  const ev = r.ev(), half = codes(ev, 'xy.half'), dup = codes(ev, 'xy.dup');
+  eq(half.map(i => [i.row, i.field, i.severity]), [[4, 'y', 'warning']], 'xy.half: only one coordinate (row 4, y missing)');
+  eq(dup.map(i => i.row).sort(), [2, 3, 6, 7], 'xy.dup: two trees at one point of plot A, period 1 (rows 2, 3) and period 2 (rows 6, 7); plot B and period 1 vs 2 not mixed');
+  eq(dup.find(i => i.row === 2).params.rows, [3], 'xy.dup names the other row');
+  ok(dup.every(i => i.severity === 'warning' && i.category === 'consistency'), 'xy.dup is a warning (no distance threshold assumed)');
+  const r2 = run('plot;tree;dbh;x\nA;1;20;1\nA;2;21;1\n', null, S());
+  ok(!codes(r2.ev(), 'xy.dup').length && !codes(r2.ev(), 'xy.half').length, 'x without a y column: no coordinate checks');
+}
+{
+  const r = run('plot;tree;dbh\nA;1;20\nA;2;21\n', null, S());
+  const e1 = C.editField(r.sources, r.work, 'trees', 0, 'dbh', '22', 'field sheet');
+  ok(C.canUndo(r.sources, r.work, e1), 'a fresh edit can be undone');
+  const e2 = C.editField(r.sources, r.work, 'trees', 0, 'dbh', '23', 'second look');
+  ok(!C.canUndo(r.sources, r.work, e1) && C.canUndo(r.sources, r.work, e2), 'only the last edit of a field can be undone');
+  ok((() => { try { C.undoEdit(r.sources, r.work, e1.seq, 'x'); return false; } catch (e) { return e.message === 'not-undoable'; } })(), 'undoing an older edit is refused');
+  ok((() => { try { C.undoEdit(r.sources, r.work, e2.seq, ' '); return false; } catch (e) { return e.message === 'reason-required'; } })(), 'undo needs a reason');
+  const u2 = C.undoEdit(r.sources, r.work, e2.seq, 'typo');
+  eq([u2.action, u2.old, u2.new, u2.undoes], ['undo', '23', '22', e2.seq], 'undo entry: 23 back to 22, refers to the entry it undoes');
+  eq(C.currentText(r.sources, r.work, 'trees', r.work.trees[0], 'dbh'), '22', 'value after undo = the earlier edit');
+  ok(!C.canUndo(r.sources, r.work, e2) && C.canUndo(r.sources, r.work, e1), 'after the undo the earlier edit becomes undoable');
+  C.undoEdit(r.sources, r.work, e1.seq, 'back to source');
+  ok(!Object.keys(r.work.edits).length && C.currentText(r.sources, r.work, 'trees', r.work.trees[0], 'dbh') === '20', 'undoing back to the source value drops the edit (source 20)');
+  eq(r.work.changelog.map(e => e.action), ['edit', 'edit', 'undo', 'undo'], 'nothing is removed from the log');
+  ok(!C.canUndo(r.sources, r.work, r.work.changelog[2]), 'an undo entry itself is not undoable');
+  near(r.ev().vals.trees[0].dbh.value, 20, 'evaluation reads the restored value');
+}
+
 console.log(`checker: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

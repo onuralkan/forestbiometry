@@ -10,7 +10,7 @@ function __fb_x(x, g) { for (const k of Object.keys(g).sort()) Object.defineProp
 
 // ---- assets/lab/checker/calc.js
 __fb_m["checker/calc.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "DEFAULT_LIMITS": () => DEFAULT_LIMITS, "DEFAULT_UNITS": () => DEFAULT_UNITS, "FIELDS": () => FIELDS, "PLOT_FIELDS": () => PLOT_FIELDS, "SCHEMA": () => SCHEMA, "TOOL": () => TOOL, "TREE_FIELDS": () => TREE_FIELDS, "acceptIssue": () => acceptIssue, "applyChoice": () => applyChoice, "approve": () => approve, "buildWork": () => buildWork, "currentText": () => currentText, "decimalEvidence": () => decimalEvidence, "editField": () => editField, "evaluate": () => evaluate, "internalToText": () => internalToText, "mappingProblems": () => mappingProblems, "normHeader": () => normHeader, "parseSpeciesNames": () => parseSpeciesNames, "setExcluded": () => setExcluded, "speciesSummary": () => speciesSummary, "suggestMapping": () => suggestMapping, "unacceptIssue": () => unacceptIssue });
+__fb_x(__fb_e, { "DEFAULT_LIMITS": () => DEFAULT_LIMITS, "DEFAULT_UNITS": () => DEFAULT_UNITS, "FIELDS": () => FIELDS, "PLOT_FIELDS": () => PLOT_FIELDS, "SCHEMA": () => SCHEMA, "TOOL": () => TOOL, "TREE_FIELDS": () => TREE_FIELDS, "acceptIssue": () => acceptIssue, "applyChoice": () => applyChoice, "approve": () => approve, "buildWork": () => buildWork, "canUndo": () => canUndo, "currentText": () => currentText, "decimalEvidence": () => decimalEvidence, "editField": () => editField, "evaluate": () => evaluate, "internalToText": () => internalToText, "mappingProblems": () => mappingProblems, "normHeader": () => normHeader, "parseSpeciesNames": () => parseSpeciesNames, "setExcluded": () => setExcluded, "speciesSummary": () => speciesSummary, "suggestMapping": () => suggestMapping, "unacceptIssue": () => unacceptIssue, "undoEdit": () => undoEdit });
 const { parseNumber, toInternal, detectDecimal, UNITS } = __fb_r("core/num.js");
 const { cellText } = __fb_r("core/table.js");
 // Forest Data Checker: pure logic (no DOM). Methods: docs/METHODS.md §5.
@@ -19,7 +19,7 @@ const { cellText } = __fb_r("core/table.js");
 
 
 
-const TOOL = { id: 'veri-denetcisi', version: '1.3.0' };
+const TOOL = { id: 'veri-denetcisi', version: '1.4.0' };
 const SCHEMA = 'forest-dataset/1';
 
 const TREE_FIELDS = [
@@ -215,6 +215,24 @@ function evaluate(sources, work, settings) {
     if (g.length < 2) return;
     for (const rec of g) add({ ...base('trees', rec, 'tree_id'), code: 'key.dup', severity: 'error', category: 'duplicate', params: { keyFields, key: keyFields.map(k => txt('trees', rec, k)), rows: g.filter(r => r !== rec).map(r => r.row) } });
   });
+  // coordinates (22 Nov 2026): only one of x, y given; two different trees of the same plot and period at the same point.
+  // No distance threshold is assumed (the site invents none); an exactly repeated point is reported, nothing else.
+  if (work.trees[0] && work.trees[0].f.x && work.trees[0].f.y) {
+    const at = new Map();
+    for (const rec of T) {
+      const x = txt('trees', rec, 'x'), y = txt('trees', rec, 'y');
+      if ((x == null) !== (y == null)) { add({ ...base('trees', rec, x == null ? 'x' : 'y'), code: 'xy.half', severity: 'warning', category: 'missing' }); continue; }
+      if (x == null || txt('trees', rec, 'plot_id') == null) continue;
+      const k = JSON.stringify([txt('trees', rec, 'plot_id'), work.trees[0].f.period ? txt('trees', rec, 'period') : null, x, y]);
+      if (!at.has(k)) at.set(k, []); at.get(k).push(rec);
+    }
+    at.forEach(g => {
+      const trees = new Set(g.map(r => JSON.stringify(['tree_id', 'stem_id'].map(f => txt('trees', r, f)))));
+      if (g.length < 2 || trees.size < 2) return;
+      for (const rec of g) add({ ...base('trees', rec, 'x'), id: `xy.dup|trees|${rec.i}|`, code: 'xy.dup', severity: 'warning', category: 'consistency',
+        params: { x: txt('trees', rec, 'x'), y: txt('trees', rec, 'y'), rows: g.filter(r => r !== rec).map(r => r.row) } });
+    });
+  }
   // species: case/space variants of the same code, and species changing between periods of one tree
   if (work.trees[0] && work.trees[0].f.species) {
     const variants = new Map();
@@ -302,6 +320,30 @@ function editField(sources, work, table, i, field, newText, reason, issueCode = 
   if (old === newText) return null;
   work.edits[ek(table, i, field)] = String(newText);
   return log(work, { action: 'edit', table, row: rec.row, field, column: sources[table].headers[rec.f[field].col], old, new: String(newText), reason: String(reason).trim(), issue: issueCode });
+}
+/**
+ * Undo one edit of the change log (22 Nov 2026): allowed while that edit is the last edit of its field not yet undone and
+ * the field still holds its new value (so several edits can be undone one after another, newest first). The old value is written back (as an edit, or by dropping the edit when the old value is
+ * the source's); the undo is itself a log entry ("undo", with the number of the entry it undoes). Nothing is deleted
+ * from the log.
+ */
+function canUndo(sources, work, entry) {
+  if (!entry || entry.action !== 'edit') return false;
+  const undone = new Set(work.changelog.filter(e => e.action === 'undo').map(e => e.undoes));
+  if (undone.has(entry.seq)) return false;
+  const same = e => e.table === entry.table && e.row === entry.row && e.field === entry.field && e.action === 'edit' && !undone.has(e.seq);
+  if (work.changelog.some(e => e.seq > entry.seq && same(e))) return false;
+  const rec = work[entry.table] && work[entry.table].find(r => r.row === entry.row);
+  return !!rec && !!rec.f[entry.field] && currentText(sources, work, entry.table, rec, entry.field) === entry.new;
+}
+function undoEdit(sources, work, seq, reason) {
+  const entry = work.changelog.find(e => e.seq === seq);
+  if (!canUndo(sources, work, entry)) throw new Error('not-undoable');
+  if (!reason || !String(reason).trim()) throw new Error('reason-required');
+  const rec = work[entry.table].find(r => r.row === entry.row), key = ek(entry.table, rec.i, entry.field);
+  const original = cellText(sources[entry.table].rows[rec.i][rec.f[entry.field].col]);
+  if (entry.old === original) delete work.edits[key]; else work.edits[key] = entry.old;
+  return log(work, { action: 'undo', table: entry.table, row: entry.row, field: entry.field, column: entry.column, old: entry.new, new: entry.old, reason: String(reason).trim(), issue: entry.issue, undoes: seq });
 }
 function setExcluded(work, table, i, excluded, reason) {
   const rec = work[table][i]; if (!rec) throw new Error('no-record');
@@ -510,7 +552,7 @@ const en = {
   'plots.cols': ['Plot', 'Area (m²)', 'Source', 'Stratum', 'Records', 'In plot table'],
   'yes': 'yes', 'no': 'no',
   'log.empty': 'No changes yet.', 'log.cols': ['#', 'Time', 'Action', 'Table', 'Row', 'Field', 'Old', 'New', 'Reason', 'Issue code'],
-  'a.edit': 'edit', 'a.exclude': 'exclude', 'a.include': 'include', 'a.accept': 'accept warning', 'a.unaccept': 'undo accept',
+  'a.edit': 'edit', 'a.undo': 'undo edit', 'act.undo': 'Undo', 'undo.title': p => `Undo log entry #${p.seq}`, 'undo.sub': p => `${p.field}, row ${p.row}: <code>${p.new}</code> goes back to <code>${p.old}</code>.`, 'undo.reason': p => `Undo of entry #${p.seq}`, 'a.exclude': 'exclude', 'a.include': 'include', 'a.accept': 'accept warning', 'a.unaccept': 'undo accept',
   'ap.h': 'Approve the data', 'ap.sub': 'The approved data are stored in internal units (cm, m, m²). Derived values (basal area, per-hectare expansion factor) are kept in a separate section from the measured data.',
   'ap.btn': 'Approve and save', 'ap.blocked': p => `There are ${p.e} error(s); fix them before approving.`,
   'ap.done': p => `Approved: ${p.n} records, ${p.p} plots (${p.when}). Stored in this browser and made the active package in the Inventory Data Manager; the tools that read approved data use it.`, 'to.manager': 'Inventory Data Manager',
@@ -540,6 +582,8 @@ const en = {
   'm.sp.change': p => `The species of the same tree changes between periods (${p.values.join(', ')}; row ${rows(p.rows)}).`,
   'm.plot.dup': p => `The same ID appears more than once in the plot table (row ${rows(p.rows)}).`,
   'm.plot.unknown': 'This plot is not in the plot table.',
+  'm.xy.half': 'Only one of the two coordinates (x, y) is given.',
+  'm.xy.dup': p => `Another tree of the same plot and period is at the same point (x ${n(p.x)}, y ${n(p.y)} m; row ${rows(p.rows)}).`,
   'm.area.conflict': p => `Plot ${p.plot} has different sizes: ${p.values.map(v => `${n(v.value)} m² (${rowsByTable(v.rows)})`).join('; ')}.`,
   'm.stratum.conflict': p => `Plot ${p.plot} has different strata: ${p.values.map(v => `"${v.value}"`).join(', ')}.`,
   'm.area.none': p => `Plot ${p.plot} has no size.`,
@@ -1063,11 +1107,17 @@ function logRows(withHead = true) {
   return withHead ? [T('log.cols'), ...rows] : rows;
 }
 function tabLog(p) {
-  const rows = logRows(false).slice().reverse();
+  const rows = logRows(false).slice().reverse(), bySeq = new Map(S.work.changelog.map(e => [e.seq, e]));
   p.innerHTML = `<div class="filters"><span class="dl"><button type="button" class="btn ghost small" id="dllog"${rows.length ? '' : ' disabled'}>${T('ex.log')} CSV</button></span></div>` +
-    (rows.length ? `<div class="tscroll"><table class="grid"><thead><tr>${T('log.cols').map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>
-    ${rows.map(r => `<tr>${r.map((c, k) => `<td${k === 1 ? ' class="nowrap small"' : ''}>${k === 6 || k === 7 ? `<code>${vis(c ?? '')}</code>` : esc(k === 1 ? new Date(c).toLocaleString('en-GB') : c ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : `<p class="muted">${T('log.empty')}</p>`);
+    (rows.length ? `<div class="tscroll"><table class="grid"><thead><tr>${T('log.cols').map(c => `<th>${c}</th>`).join('')}<th></th></tr></thead><tbody>
+    ${rows.map(r => `<tr>${r.map((c, k) => `<td${k === 1 ? ' class="nowrap small"' : ''}>${k === 6 || k === 7 ? `<code>${vis(c ?? '')}</code>` : esc(k === 1 ? new Date(c).toLocaleString('en-GB') : c ?? '')}</td>`).join('')}
+      <td>${C.canUndo(S.sources, S.work, bySeq.get(r[0])) ? `<button type="button" class="btn ghost small" data-undo="${r[0]}">${T('act.undo')}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : `<p class="muted">${T('log.empty')}</p>`);
   $('dllog').addEventListener('click', () => downloadCSV(fname('degisiklik-gunlugu', 'change-log') + '.csv', logRows(), lang));
+  p.querySelectorAll('[data-undo]').forEach(b => b.addEventListener('click', () => {
+    const e = bySeq.get(+b.dataset.undo);
+    dialog({ title: T('undo.title', { seq: e.seq }), sub: T('undo.sub', { field: T('f.' + e.field), row: e.row, new: vis(e.new ?? ''), old: vis(e.old ?? '') || '∅' }), reason: T('undo.reason', { seq: e.seq }),
+      onOk: r => { C.undoEdit(S.sources, S.work, e.seq, r); } });
+  }));
 }
 
 /* ---------------- approval and exports ---------------- */

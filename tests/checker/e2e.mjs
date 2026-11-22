@@ -63,6 +63,18 @@ await act('outside the check range (1–200 cm)', 'Accept', 'Monumental tree, me
 await page.click('#tab-log');
 ok((await page.locator('#panel tbody tr').count()) === 5, 'change log has 5 entries (edit, exclude, choice → row 16, suggestion, accept)');
 ok((await page.locator('#panel tbody tr', { hasText: '27,x' }).count()) === 1, 'old value kept in log');
+{ // undo the fix from the log (1.4.0): the error comes back, the log grows by one; then fix it again
+  ok((await page.locator('#panel [data-undo]').count()) === 3, 'undo offered for the three edits (fix, plot-size choice, suggestion), not for exclude or accept');
+  await page.locator('#panel tbody tr', { hasText: '27,x' }).getByRole('button', { name: 'Undo' }).click();
+  ok((await page.inputValue('#dreason')).startsWith('Undo of entry #'), 'undo dialog: reason prefilled');
+  await page.click('#dok'); await page.waitForSelector('#dlg', { state: 'hidden' });
+  ok((await page.locator('#panel tbody tr').count()) === 6 && (await page.locator('#panel tbody tr').first().textContent()).includes('undo edit'), 'undo is its own log entry');
+  await page.click('#tab-summary');
+  ok(await tileVal('Errors') === '1', 'after the undo the unreadable diameter is an error again');
+  await page.click('#tab-issues');
+  await act('27,x', 'Fix', 'Checked against the field sheet', () => page.fill('#dnew', '27,4'));
+  await page.click('#tab-log');
+}
 await shot('5-gunluk');
 await page.click('#tab-data');
 ok((await page.locator('tr.ex').count()) === 1, 'excluded record still visible, struck through');

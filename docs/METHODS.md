@@ -142,13 +142,15 @@ The checker performs no scientific computation; it **reads, converts and scans**
 | `text.space` | Warning | Format | Leading or trailing space in id/code (trimming is suggested, not done automatically) |
 | `sp.variant` | Warning | Consistency | Different spellings of the same species code apart from case and spaces; the most frequent spelling is suggested |
 | `sp.change` | Warning | Consistency | The species of the same tree changes between periods |
+| `xy.half` | Warning | Missing | Only one of x, y given (1.4.0, 22 Nov 2026; both columns mapped) |
+| `xy.dup` | Warning | Consistency | Two different trees (tree/stem id) of the same plot and period at exactly the same point; no distance threshold is assumed (1.4.0) |
 | `dbh.range` | Warning | Biological | Diameter outside [dbhMin, dbhMax]; default 1–200 cm |
 | `h.belowbh` | Warning | Biological | Diameter measured but height < 1,3 m |
 | `h.range` | Warning | Biological | Height outside [hMin, hMax]; default 2–60 m |
 | `sl.range` | Warning | Biological | Slenderness h/d (m/m) = h / (d/100) outside [slMin, slMax]; default 15–200 |
 | `plot.empty` | Info | – | Plot in the plot table without tree records; stays in the data with n = 0 |
 
-Errors block confirmation; warnings can be accepted with a justification and are saved with the confirmed data. No record is deleted or changed automatically; correction, exclusion, acceptance and applying a suggestion require a justification and are written to the change log with old/new value. Corrections are stored as text in the source unit and decimal format and are re-read at every evaluation.
+Errors block confirmation; warnings can be accepted with a justification and are saved with the confirmed data. No record is deleted or changed automatically; correction, exclusion, acceptance and applying a suggestion require a justification and are written to the change log with old/new value. Corrections are stored as text in the source unit and decimal format and are re-read at every evaluation. **Undo (1.4.0, 22 Nov 2026):** an edit (fix, suggestion, plot value choice) can be undone from the change log while it is the last edit of its field not yet undone and the field still holds its new value; the old value is written back (the edit is dropped when the old value is the source's) and the undo is its own log entry with a reason and the number of the entry it undoes; nothing is removed from the log.
 
 ### Derived values (the `derived` section of the confirmed data)
 - Basal area: g = π/4 · (d/100)² [m²], d cm.

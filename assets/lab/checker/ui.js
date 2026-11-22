@@ -501,11 +501,17 @@ function logRows(withHead = true) {
   return withHead ? [T('log.cols'), ...rows] : rows;
 }
 function tabLog(p) {
-  const rows = logRows(false).slice().reverse();
+  const rows = logRows(false).slice().reverse(), bySeq = new Map(S.work.changelog.map(e => [e.seq, e]));
   p.innerHTML = `<div class="filters"><span class="dl"><button type="button" class="btn ghost small" id="dllog"${rows.length ? '' : ' disabled'}>${T('ex.log')} CSV</button></span></div>` +
-    (rows.length ? `<div class="tscroll"><table class="grid"><thead><tr>${T('log.cols').map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>
-    ${rows.map(r => `<tr>${r.map((c, k) => `<td${k === 1 ? ' class="nowrap small"' : ''}>${k === 6 || k === 7 ? `<code>${vis(c ?? '')}</code>` : esc(k === 1 ? new Date(c).toLocaleString('en-GB') : c ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : `<p class="muted">${T('log.empty')}</p>`);
+    (rows.length ? `<div class="tscroll"><table class="grid"><thead><tr>${T('log.cols').map(c => `<th>${c}</th>`).join('')}<th></th></tr></thead><tbody>
+    ${rows.map(r => `<tr>${r.map((c, k) => `<td${k === 1 ? ' class="nowrap small"' : ''}>${k === 6 || k === 7 ? `<code>${vis(c ?? '')}</code>` : esc(k === 1 ? new Date(c).toLocaleString('en-GB') : c ?? '')}</td>`).join('')}
+      <td>${C.canUndo(S.sources, S.work, bySeq.get(r[0])) ? `<button type="button" class="btn ghost small" data-undo="${r[0]}">${T('act.undo')}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : `<p class="muted">${T('log.empty')}</p>`);
   $('dllog').addEventListener('click', () => downloadCSV(fname('degisiklik-gunlugu', 'change-log') + '.csv', logRows(), lang));
+  p.querySelectorAll('[data-undo]').forEach(b => b.addEventListener('click', () => {
+    const e = bySeq.get(+b.dataset.undo);
+    dialog({ title: T('undo.title', { seq: e.seq }), sub: T('undo.sub', { field: T('f.' + e.field), row: e.row, new: vis(e.new ?? ''), old: vis(e.old ?? '') || '∅' }), reason: T('undo.reason', { seq: e.seq }),
+      onOk: r => { C.undoEdit(S.sources, S.work, e.seq, r); } });
+  }));
 }
 
 /* ---------------- approval and exports ---------------- */

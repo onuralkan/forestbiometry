@@ -4,7 +4,7 @@
 import { parseNumber, toInternal, detectDecimal, UNITS } from '../core/num.js';
 import { cellText } from '../core/table.js';
 
-export const TOOL = { id: 'veri-denetcisi', version: '1.3.0' };
+export const TOOL = { id: 'veri-denetcisi', version: '1.4.0' };
 export const SCHEMA = 'forest-dataset/1';
 
 export const TREE_FIELDS = [
@@ -200,6 +200,24 @@ export function evaluate(sources, work, settings) {
     if (g.length < 2) return;
     for (const rec of g) add({ ...base('trees', rec, 'tree_id'), code: 'key.dup', severity: 'error', category: 'duplicate', params: { keyFields, key: keyFields.map(k => txt('trees', rec, k)), rows: g.filter(r => r !== rec).map(r => r.row) } });
   });
+  // coordinates (22 Nov 2026): only one of x, y given; two different trees of the same plot and period at the same point.
+  // No distance threshold is assumed (the site invents none); an exactly repeated point is reported, nothing else.
+  if (work.trees[0] && work.trees[0].f.x && work.trees[0].f.y) {
+    const at = new Map();
+    for (const rec of T) {
+      const x = txt('trees', rec, 'x'), y = txt('trees', rec, 'y');
+      if ((x == null) !== (y == null)) { add({ ...base('trees', rec, x == null ? 'x' : 'y'), code: 'xy.half', severity: 'warning', category: 'missing' }); continue; }
+      if (x == null || txt('trees', rec, 'plot_id') == null) continue;
+      const k = JSON.stringify([txt('trees', rec, 'plot_id'), work.trees[0].f.period ? txt('trees', rec, 'period') : null, x, y]);
+      if (!at.has(k)) at.set(k, []); at.get(k).push(rec);
+    }
+    at.forEach(g => {
+      const trees = new Set(g.map(r => JSON.stringify(['tree_id', 'stem_id'].map(f => txt('trees', r, f)))));
+      if (g.length < 2 || trees.size < 2) return;
+      for (const rec of g) add({ ...base('trees', rec, 'x'), id: `xy.dup|trees|${rec.i}|`, code: 'xy.dup', severity: 'warning', category: 'consistency',
+        params: { x: txt('trees', rec, 'x'), y: txt('trees', rec, 'y'), rows: g.filter(r => r !== rec).map(r => r.row) } });
+    });
+  }
   // species: case/space variants of the same code, and species changing between periods of one tree
   if (work.trees[0] && work.trees[0].f.species) {
     const variants = new Map();
@@ -287,6 +305,30 @@ export function editField(sources, work, table, i, field, newText, reason, issue
   if (old === newText) return null;
   work.edits[ek(table, i, field)] = String(newText);
   return log(work, { action: 'edit', table, row: rec.row, field, column: sources[table].headers[rec.f[field].col], old, new: String(newText), reason: String(reason).trim(), issue: issueCode });
+}
+/**
+ * Undo one edit of the change log (22 Nov 2026): allowed while that edit is the last edit of its field not yet undone and
+ * the field still holds its new value (so several edits can be undone one after another, newest first). The old value is written back (as an edit, or by dropping the edit when the old value is
+ * the source's); the undo is itself a log entry ("undo", with the number of the entry it undoes). Nothing is deleted
+ * from the log.
+ */
+export function canUndo(sources, work, entry) {
+  if (!entry || entry.action !== 'edit') return false;
+  const undone = new Set(work.changelog.filter(e => e.action === 'undo').map(e => e.undoes));
+  if (undone.has(entry.seq)) return false;
+  const same = e => e.table === entry.table && e.row === entry.row && e.field === entry.field && e.action === 'edit' && !undone.has(e.seq);
+  if (work.changelog.some(e => e.seq > entry.seq && same(e))) return false;
+  const rec = work[entry.table] && work[entry.table].find(r => r.row === entry.row);
+  return !!rec && !!rec.f[entry.field] && currentText(sources, work, entry.table, rec, entry.field) === entry.new;
+}
+export function undoEdit(sources, work, seq, reason) {
+  const entry = work.changelog.find(e => e.seq === seq);
+  if (!canUndo(sources, work, entry)) throw new Error('not-undoable');
+  if (!reason || !String(reason).trim()) throw new Error('reason-required');
+  const rec = work[entry.table].find(r => r.row === entry.row), key = ek(entry.table, rec.i, entry.field);
+  const original = cellText(sources[entry.table].rows[rec.i][rec.f[entry.field].col]);
+  if (entry.old === original) delete work.edits[key]; else work.edits[key] = entry.old;
+  return log(work, { action: 'undo', table: entry.table, row: entry.row, field: entry.field, column: entry.column, old: entry.new, new: entry.old, reason: String(reason).trim(), issue: entry.issue, undoes: seq });
 }
 export function setExcluded(work, table, i, excluded, reason) {
   const rec = work[table][i]; if (!rec) throw new Error('no-record');
