@@ -11,8 +11,11 @@ import { viewRecord as hdView } from '../hd/view.js';
 import { viewRecord as growthView } from '../growth/view.js';
 import { viewRecord as siView } from '../siteindex/view.js';
 import { viewRecord as taperView } from '../taper/view.js';
+import { viewRecord as volumeView } from '../volume/view.js';
+import { viewRecord as biomassView } from '../biomass/view.js';
+import { viewRecord as structureView } from '../structure/view.js';
 
-export const VIEWS = { 'model-degerlendirme': evalView, 'cap-dagilimi': distView, 'nispi-siralama': rankView, 'ornek-alan-mescere': standView, 'boy-cap': hdView, 'buyume-islevi': growthView, 'bonitet': siView, 'govde-profili': taperView };
+export const VIEWS = { 'model-degerlendirme': evalView, 'cap-dagilimi': distView, 'nispi-siralama': rankView, 'ornek-alan-mescere': standView, 'boy-cap': hdView, 'buyume-islevi': growthView, 'bonitet': siView, 'govde-profili': taperView, 'hacim-denklemleri': volumeView, 'biyokutle-karbon': biomassView, 'mescere-yapisi': structureView };
 const ENVELOPE = ['format', 'tool', 'build', 'created', 'lang', 'inputs', 'integrity'];
 const MAX_ROWS = 200, MAX_COLS = 16, MAX_DEPTH = 4;
 

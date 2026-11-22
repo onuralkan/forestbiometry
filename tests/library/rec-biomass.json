@@ -1,0 +1,149 @@
+{
+ "format": "run-record/1",
+ "tool": {
+  "id": "biyokutle-karbon",
+  "version": "1.0.0-beta.5",
+  "ids": [
+   "BC-01",
+   "BC-02",
+   "BC-03",
+   "BC-04",
+   "BC-06"
+  ],
+  "page": "biyokutle-karbon.php"
+ },
+ "build": {
+  "commit": null,
+  "site": "https://forestbiometry.online/"
+ },
+ "created": "2026-11-22T15:28:30.471Z",
+ "lang": "en",
+ "inputs": [
+  {
+   "role": "trees",
+   "kind": "file",
+   "name": "agaclar.csv",
+   "format": "csv",
+   "bytes": 210,
+   "sha256": "f71821365361cf7cd5530b1222f8026c6f5eea5857f59d644b4b5bb70791ab04",
+   "encoding": "utf-8",
+   "delimiter": ",",
+   "header": true
+  }
+ ],
+ "settings": {
+  "approach": "allometric",
+  "components": [
+   {
+    "key": "c1",
+    "label": "above-ground",
+    "CF": 0.5
+   }
+  ],
+  "map": {
+   "A": {
+    "c1": "sA1"
+   },
+   "B": {
+    "c1": "sB1"
+   }
+  },
+  "total": {},
+  "emptyCombos": "unmeasured"
+ },
+ "sets": [
+  {
+   "id": "sA1",
+   "form": "biomass.pow.d",
+   "params": {
+    "a": 0.11,
+    "b": 2.37
+   },
+   "transform": null,
+   "valid": null,
+   "species": null,
+   "component": null,
+   "source": {
+    "citation": "simulated test values sA1"
+   }
+  },
+  {
+   "id": "sB1",
+   "form": "biomass.pow.dh",
+   "params": {
+    "a": 0.03,
+    "b": 1.95,
+    "c": 0.8
+   },
+   "transform": null,
+   "valid": null,
+   "species": null,
+   "component": null,
+   "source": {
+    "citation": "simulated test values sB1"
+   }
+  }
+ ],
+ "counts": {
+  "c1": {
+   "n": 7,
+   "ok": 6,
+   "noheight": 0,
+   "invalid": 0,
+   "unsupported": 0,
+   "outside": 0,
+   "estimatedHeight": 0,
+   "unmapped": 1
+  }
+ },
+ "unmapped": [
+  {
+   "species": "C",
+   "component": "c1",
+   "rows": [
+    5
+   ]
+  }
+ ],
+ "noheight": [],
+ "missing": null,
+ "units": [
+  {
+   "plot_id": "1",
+   "period": null,
+   "state": "measured",
+   "area": 400,
+   "n": 4,
+   "comps": {
+    "c1": {
+     "perHa": null,
+     "nMissing": 1
+    }
+   },
+   "B": null,
+   "C": null,
+   "CO2": null
+  },
+  {
+   "plot_id": "2",
+   "period": null,
+   "state": "measured",
+   "area": 500,
+   "n": 3,
+   "comps": {
+    "c1": {
+     "perHa": 13.87117741869332,
+     "nMissing": 0
+    }
+   },
+   "B": 13.87117741869332,
+   "C": 6.93558870934666,
+   "CO2": 25.430491934271085
+  }
+ ],
+ "integrity": {
+  "algorithm": "SHA-256",
+  "canonicalization": "RFC 8785 (JCS)",
+  "value": "4f3026a3acbbacac7441459f07aea320c8d8109543e2579bd37ade359ba4af26"
+ }
+}

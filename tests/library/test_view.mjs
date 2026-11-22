@@ -104,5 +104,17 @@ const tp = rd('taper'), tv = viewOf(tp);
 ok(tv.kind === 'tool' && tv.html.includes('id="rv-sets"') && tv.html.includes('Max &amp; Burkhart') && tv.html.includes(fmtNum(tp.trees[0].by[0].total, 4)), 'taper: the profile set and the tree volume as saved');
 ok(tv.html.includes('Stem profiles from the saved equations') && count(tv.html, /class="chart"/g) === 1, 'taper: the stem profile drawn from the saved set');
 ok(![gv, siv, tv].some(v => /NaN|undefined/.test(v.html.replace(/data-[a-z]+="[^"]*"/g, ''))), 'no NaN or undefined in the three views');
+
+// Volume Equations, Biomass & Carbon and Stand Structure views
+const vr = rd('volume'), vv = viewOf(vr);
+ok(vv.kind === 'tool' && vv.html.includes('id="rv-fits"') && vv.html.includes('Combined variable') && vv.html.includes(fmtNum(vr.fits[0].metrics.rmse, 4)), 'volume: the forms with coefficients and errors as saved');
+ok(count(vv.html, /class="chart"/g) === 2 && vv.html.includes('Bias with the smallest and largest error'), 'volume: error charts');
+const br = rd('biomass'), bv = viewOf(br);
+ok(bv.kind === 'tool' && bv.html.includes('id="rv-sets"') && bv.html.includes('simulated test values sA1') && bv.html.includes('No coefficient set for: C'), 'biomass: sets with sources, missing mapping reported');
+ok(bv.html.includes(fmtNum(br.units[1].CO2, 2)) && count(bv.html, /class="chart"/g) === 1, 'biomass: CO₂ per hectare as saved, biomass and carbon chart');
+const sr2 = rd('structure'), stv = viewOf(sr2);
+ok(stv.kind === 'tool' && stv.html.includes('id="rv-measures"') && stv.html.includes('id="rv-spatial"') && stv.html.includes(fmtNum(sr2.units[0].sp.ce.R, 3)), 'structure: measures and spatial indices as saved');
+ok(count(stv.html, /class="chart"/g) === 3 && stv.html.includes('Lorenz curves') && !stv.html.includes('null'), 'structure: diameter distribution, Lorenz curves, index chart; open class labelled');
+ok(![vv, bv, stv].some(v => /NaN|undefined/.test(v.html)), 'no NaN or undefined in the three views');
 console.log(`library view: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
