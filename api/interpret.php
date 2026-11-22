@@ -9,19 +9,7 @@
 declare(strict_types=1);
 require __DIR__ . '/../inc/account.php';
 
-/** Tools that may ask for an interpretation, with what the model has to know about each one's result object. */
-const FB_TOOLS = [
-    'model-degerlendirme' => [
-        'name' => 'Model Evaluation (Forest Biometry)',
-        'guide' => "The object compares the predictions of one or more models (or columns of predicted values) with observed values. "
-            . "Errors are e = y − ŷ (observed − predicted): positive bias means the model under-predicts on average. "
-            . "Measures per model: bias (mean error), MAE, RMSE, relative versions, prediction R² (1 − SSE/SST, can be negative), "
-            . "optional groups (plot, species, fold, diameter class), optional inference (t interval for the bias, equivalence tests "
-            . "against a margin, bootstrap percentile/BCa intervals), and optionally a bootstrap of the overall rank (Poudel and Cao 2013, Eq. 10). "
-            . "rows.sameSample tells whether all models were evaluated on the same rows; settings.models[].role says whether a column comes "
-            . "from training data, test data or cross-validation (a training-data evaluation is optimistic).",
-    ],
-];
+require __DIR__ . '/../inc/ai-tools.php';   // FB_TOOLS: the tools that may ask for an interpretation
 
 const FB_SYSTEM = <<<'TXT'
 You write a short interpretation of the results of a forest biometrics calculation for a researcher. The results are in the JSON object the user sends; it was produced by the tool named there.
@@ -66,10 +54,10 @@ if (!is_array($in) || !isset($in['tool'], $in['summary']) || !is_array($in['summ
 $tool = FB_TOOLS[$in['tool']];
 
 $t0 = microtime(true); $ms = function () use ($t0) { return (int)round((microtime(true) - $t0) * 1000); };
-$err = fb_take($u['orcid']);
+$err = fb_take($u['orcid'], (string)$in['tool']);
 if ($err !== '') fb_log_call($u['orcid'], (string)$in['tool'], $err);
 if ($err === 'off') fb_json(['error' => 'off', 'message' => fb_settings()['ai_off_message']], 503);
-if ($err === 'cap') fb_json(['error' => 'cap'], 503);
+if ($err === 'cap' || $err === 'tool-off') fb_json(['error' => $err, 'message' => fb_settings()['ai_off_message']], 503);
 if ($err !== '') { $l = fb_limits(fb_account($u['orcid']));
     fb_json(['error' => $err, 'used' => fb_used($u['orcid']), 'quota' => $l['month'], 'usedDay' => fb_used_day($u['orcid']), 'quotaDay' => $l['day']], 429); }
 

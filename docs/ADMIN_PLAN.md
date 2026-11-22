@@ -38,8 +38,10 @@ site's `admin.php` must keep answering 404).
 - **Site-wide monthly cap** of interpretations (or tokens): the service stops for everyone when reached.
 - Top users this month; accounts approaching the 24-month deletion; manual run of the retention rule.
 
-## Stage 3: convenience
+## Stage 3: convenience — done 22 Nov 2026 except additional administrators (waiting for the user's decision)
 - Bulk actions on the list (approve / reject selected).
+- Added at the user's request (22 Nov 2026): an on/off switch of the interpretation per tool and for the whole service
+  on the Overview, for example when the API balance runs out.
 - CSV export of accounts and of use.
 - Additional administrators (roles in the database) — only if the user wants it; for now the single administrator of
   `config.php`.

@@ -42,7 +42,7 @@ export async function mountInterpret(el, tool, getSummary) {
     <p class="b-actions"><a class="btn ghost" href="auth/orcid.php?back=${encodeURIComponent(back)}" id="ai-signin">Sign in with ORCID</a></p>`;
   else if (st.status === 'pending') body = '<p id="ai-pending">Your account is waiting for approval; the interpretation works once it is approved. <a href="hesap.php">Account</a></p>';
   else if (st.status !== 'approved') body = `<p id="ai-blocked">Your account cannot use the interpretation service${st.reason ? `: ${esc(st.reason)}` : '.'}${st.until ? ` (until ${esc(st.until.slice(0, 10))})` : ''} <a href="hesap.php">Account</a></p>`;
-  else if (!st.service) body = `<p class="note warn" id="ai-off">The interpretation service is paused${st.serviceMessage ? `: ${esc(st.serviceMessage)}` : '.'}</p>`;
+  else if (!st.service || (st.toolsOff || []).includes(tool.id)) body = `<p class="note warn" id="ai-off">The interpretation service is paused${st.serviceMessage ? `: ${esc(st.serviceMessage)}` : '.'}</p>`;
   else body = `<p class="b-actions"><button type="button" class="btn" id="ai-go"${left ? '' : ' disabled'}>${prev ? 'Interpret again' : 'Interpret these results'}</button>
       <span class="muted small" id="ai-left">${leftText(st)}</span></p>`;
   slot.innerHTML = `<section class="card ai-card" aria-labelledby="ai-h"><h3 id="ai-h">AI interpretation</h3>
@@ -74,10 +74,10 @@ export async function mountInterpret(el, tool, getSummary) {
       return;
     }
     const msg = { quota: 'This month\'s interpretations are used up.', daily: 'Today\'s interpretations are used up; try again tomorrow (UTC).',
-      off: 'The interpretation service is paused' + (j && j.message ? ': ' + j.message : '.'), rejected: 'Your account was not approved.', cap: 'The site\'s interpretations for this month are used up; the service opens again next month.', rate: 'Too many requests in a minute; wait a moment and try again.', signin: 'Your session has ended; sign in again.',
+      off: 'The interpretation service is paused' + (j && j.message ? ': ' + j.message : '.'), rejected: 'Your account was not approved.', cap: 'The site\'s interpretations for this month are used up; the service opens again next month.', 'tool-off': 'The interpretation is paused for this tool' + (j && j.message ? ': ' + j.message : '.'), rate: 'Too many requests in a minute; wait a moment and try again.', signin: 'Your session has ended; sign in again.',
       pending: 'Your account is waiting for approval.', blocked: 'Your account cannot use the service.', token: 'The page is out of date; reload it.', 'too-large': 'These results are too large to send for an interpretation.',
       refusal: 'The model declined to interpret these results.', upstream: 'The interpretation service did not answer; you were not charged. Try again later.', network: 'No connection to the server.' }[j && j.error] || 'The interpretation failed.';
     out.innerHTML = `<p class="note err" id="ai-err">${esc(msg)}${j && j.detail ? `<br><span class="small">Details: ${esc(j.detail)}</span>` : ''}</p>`;
-    go.disabled = !!(j && ['quota', 'daily', 'blocked', 'rejected', 'off', 'cap'].includes(j.error));
+    go.disabled = !!(j && ['quota', 'daily', 'blocked', 'rejected', 'off', 'cap', 'tool-off'].includes(j.error));
   });
 }

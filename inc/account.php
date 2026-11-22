@@ -80,7 +80,7 @@ function fb_db(): PDO {
 /* ---------------- site settings (administration panel) ---------------- */
 /** Site settings the administrator can change in yonetim.php; config.php gives the defaults. */
 const FB_SETTINGS = ['monthly_quota', 'daily_quota', 'per_minute', 'signup', 'ai_enabled', 'ai_off_message', 'announcement',
-    'site_cap', 'site_cap_tokens', 'price_in', 'price_out'];
+    'site_cap', 'site_cap_tokens', 'price_in', 'price_out', 'tools_off'];
 function fb_settings(): array {
     static $s = null;
     if ($s !== null) return $s;
@@ -88,7 +88,9 @@ function fb_settings(): array {
     $s = ['monthly_quota' => (int)$c['monthly_quota'], 'daily_quota' => (int)($c['daily_quota'] ?? 0), 'per_minute' => (int)$c['per_minute'],
         'signup' => 'approval', 'ai_enabled' => 1, 'ai_off_message' => '', 'announcement' => '',
         // site-wide monthly caps (0 = none) and the administrator's prices per million tokens (USD; '' = no estimate; none built in)
-        'site_cap' => 0, 'site_cap_tokens' => 0, 'price_in' => '', 'price_out' => ''];
+        'site_cap' => 0, 'site_cap_tokens' => 0, 'price_in' => '', 'price_out' => '',
+        // tools whose interpretation is switched off (comma-separated tool ids; yonetim.php → Settings)
+        'tools_off' => ''];
     foreach (fb_db()->query('SELECT k, v FROM settings')->fetchAll() as $r)
         if (array_key_exists($r['k'], $s)) $s[$r['k']] = is_int($s[$r['k']]) ? (int)$r['v'] : (string)$r['v'];
     return $s;
@@ -97,6 +99,9 @@ function fb_set_setting(string $k, $v): void {
     if (!in_array($k, FB_SETTINGS, true)) throw new InvalidArgumentException('unknown setting ' . $k);
     fb_db()->prepare('INSERT OR REPLACE INTO settings (k, v) VALUES (?, ?)')->execute([$k, (string)$v]);
 }
+
+/** Tool ids whose interpretation the administrator switched off. */
+function fb_tools_off(): array { return array_values(array_filter(explode(',', fb_settings()['tools_off']), 'strlen')); }
 
 /** One line of the call log (yonetim.php → Usage). outcome: ok | upstream | refusal | empty | off | cap | rate | daily | quota. */
 function fb_log_call(string $orcid, string $tool, string $outcome, int $in = 0, int $out = 0, int $ms = 0, ?string $model = null, ?string $detail = null): void {
@@ -297,17 +302,18 @@ function fb_state(): array {
     return ['configured' => true, 'signedIn' => true, 'name' => $u['name'], 'orcid' => $u['orcid'], 'status' => $u['status'], 'admin' => $u['admin'],
         'used' => fb_used($u['orcid']), 'quota' => $l['month'], 'usedDay' => fb_used_day($u['orcid']), 'quotaDay' => $l['day'],
         'reason' => $u['reason'] ?? null, 'until' => $u['until'] ?? null,
-        'service' => (bool)$s['ai_enabled'], 'serviceMessage' => $s['ai_off_message'], 'announcement' => $s['announcement'], 'csrf' => fb_csrf()];
+        'service' => (bool)$s['ai_enabled'], 'serviceMessage' => $s['ai_off_message'], 'toolsOff' => fb_tools_off(), 'announcement' => $s['announcement'], 'csrf' => fb_csrf()];
 }
 
 /**
  * Takes one interpretation from the account's limits, atomically: service on, per-minute limit, daily quota (0 = none),
  * monthly quota (personal or site default, plus this month's extra), site-wide monthly caps. → '' or an error code
- * (off, cap, rate, daily, quota).
+ * (off, tool-off, cap, rate, daily, quota).
  */
-function fb_take(string $orcid): string {
+function fb_take(string $orcid, string $tool = ''): string {
     $db = fb_db(); $now = time(); $s = fb_settings();
     if (!$s['ai_enabled']) return 'off';
+    if ($tool !== '' && in_array($tool, fb_tools_off(), true)) return 'tool-off';
     if ($s['site_cap'] > 0 || $s['site_cap_tokens'] > 0) {   // site-wide monthly caps
         $m = fb_site_month();
         if (($s['site_cap'] > 0 && $m['n'] >= $s['site_cap']) || ($s['site_cap_tokens'] > 0 && $m['in'] + $m['out'] >= $s['site_cap_tokens'])) return 'cap';

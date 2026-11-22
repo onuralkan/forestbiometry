@@ -2,12 +2,14 @@
 // Administration panel (22 Nov 2026, user request; plan in docs/ADMIN_PLAN.md): the administrator of the private config
 // (admin_orcid) manages the accounts and the interpretation service. Views: Overview, Accounts, one account, Usage
 // (call log: outcomes, tokens, estimated cost from the administrator's prices, failures, top accounts, retention),
-// Settings, Audit log. Privacy (gizlilik.php): the panel shows counts, sizes, dates and states, never the content of a user's saved
+// Settings, Audit log. Stage 3: switches of the interpretation service on the Overview (whole service and each tool of
+// inc/ai-tools.php) and a state for several accounts at once on the Accounts list. Privacy (gizlilik.php): the panel shows counts, sizes, dates and states, never the content of a user's saved
 // results or interpretations. Every change is written to the audit log; destructive actions ask for confirmation.
 // Server-rendered forms with the form token, no script needed. (admin.php is not used: the old site's admin.php must
 // keep answering 404.)
 declare(strict_types=1);
 require __DIR__ . '/inc/account.php';
+require __DIR__ . '/inc/ai-tools.php';   // FB_TOOLS: the tools with the interpretation (one switch each)
 
 $c = fb_config();
 $u = $c ? fb_user() : null;
@@ -63,6 +65,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($new as $k => $v) if ((string)$s[$k] !== (string)$v) { fb_set_setting($k, $v); $ch[] = "$k: " . json_encode($s[$k], JSON_UNESCAPED_UNICODE) . ' → ' . json_encode($v, JSON_UNESCAPED_UNICODE); }
         if ($ch) fb_audit($me, 'settings', null, implode('; ', $ch));
         $back('view=settings', 'saved');
+    }
+    if ($act === 'service') {   // quick switches (Overview): the whole service, or one tool
+        $s = fb_settings(); $tool = (string)($_POST['tool'] ?? ''); $on = ($_POST['on'] ?? '') === '1';
+        if ($tool === '') {
+            if ((bool)$s['ai_enabled'] !== $on) { fb_set_setting('ai_enabled', $on ? 1 : 0); fb_audit($me, 'service', null, 'interpretation service ' . ($on ? 'switched on' : 'switched off') . ($why !== '' ? '; reason: ' . $why : '')); }
+        } elseif (isset(FB_TOOLS[$tool])) {
+            $off = fb_tools_off(); $was = !in_array($tool, $off, true);
+            if ($was !== $on) {
+                $off = $on ? array_values(array_diff($off, [$tool])) : array_merge($off, [$tool]);
+                fb_set_setting('tools_off', implode(',', array_unique($off)));
+                fb_audit($me, 'service', null, 'interpretation in ' . $tool . ' ' . ($on ? 'switched on' : 'switched off') . ($why !== '' ? '; reason: ' . $why : ''));
+            }
+        }
+        $back('', 'saved');
+    }
+    if ($act === 'bulk') {   // stage 3: one state for the selected accounts (never the administrator's own)
+        $to = (string)($_POST['status'] ?? ''); $list = array_values(array_filter((array)($_POST['orcids'] ?? []), function ($x) use ($ORCID, $me) { return is_string($x) && preg_match($ORCID, $x) && $x !== $me; }));
+        if (!isset($STATES[$to])) $back('view=accounts', 'bad-state');
+        if (!$list) $back('view=accounts', 'none-selected');
+        $n = 0;
+        foreach ($list as $x) {
+            $r = fb_account($x); if (!$r || $r['status'] === $to) continue;
+            $reason = in_array($to, ['blocked', 'rejected'], true) && $why !== '' ? $why : null;
+            $db->prepare('UPDATE users SET status = ?, reason = ?, until = NULL, decided = ? WHERE orcid = ?')->execute([$to, $reason, gmdate('c'), $x]);
+            fb_audit($me, 'status', $x, $r['status'] . ' → ' . $to . ' (bulk)' . ($why !== '' ? '; reason: ' . $why : '')); $n++;
+        }
+        $back('view=accounts', 'bulk-' . $n);
     }
     if ($act === 'purge') {
         $n = fb_purge(true);
@@ -132,6 +161,8 @@ $done = ['saved' => ['ok', 'Saved.'], 'deleted' => ['ok', 'The account was delet
     'bad-number' => ['err', 'Enter whole numbers (0 or more; per minute at least 1).'], 'bad-date' => ['err', 'The end of a temporary block must be a date after today.'],
     'confirm' => ['err', 'Type the ORCID iD of the account to confirm the deletion.'], 'bad-price' => ['err', 'Prices: a number such as 3 or 15.5 (USD per million tokens), or empty.'], 'unknown' => ['err', 'No such account.'], 'bad-state' => ['err', 'Unknown state.']][$_GET['done'] ?? ''] ?? null;
 if (!$done && preg_match('~^purged-(\d+)$~', (string)($_GET['done'] ?? ''), $mm)) $done = ['ok', 'Retention rule run: ' . $mm[1] . ' account(s) deleted.'];
+if (!$done && preg_match('~^bulk-(\d+)$~', (string)($_GET['done'] ?? ''), $mm)) $done = ['ok', 'State changed for ' . $mm[1] . ' account(s).'];
+if (($_GET['done'] ?? '') === 'none-selected') $done = ['err', 'Select at least one account (tick its box).'];
 $usd = function (?float $v) { return $v === null ? '–' : '$' . number_format($v, $v < 10 ? 2 : 0); };
 $ktok = function (int $n) { return $n >= 1e6 ? number_format($n / 1e6, 2) . ' M' : ($n >= 1e3 ? number_format($n / 1e3, 1) . ' k' : (string)$n); };
 $FAIL = ['upstream', 'refusal', 'empty'];
@@ -169,6 +200,13 @@ $pending = (int)$db->query("SELECT COUNT(*) FROM users WHERE status = 'pending'"
       <dt>Backup</dt><dd id="adm-backup"><?php if ($bk): ?><?= h(basename($bk[0])) ?> (<?= $bkAge === 0 ? 'today' : $bkAge . ' day' . ($bkAge === 1 ? '' : 's') . ' old' ?>)<?= $bkAge > 2 ? ' <span class="bad">· the nightly cron job may have stopped</span>' : '' ?><?php else: ?><span class="bad">no copy yet: set up the cron job (PROJECT.md §3)</span><?php endif; ?> · <a href="hesap.php?backup=1" id="adm-bkdl">download the newest copy</a></dd>
       <dt>Retention</dt><dd><?= (int)$soon->fetchColumn() ?> account(s) not signed in for 23 months (deleted at 24 months)</dd>
     </dl>
+    <h3>Interpretation service</h3>
+    <p class="small muted">Switch the AI interpretation off for every tool (for example when the API balance runs out) or for one tool. Users then see that it is paused, with the message from Settings; saved items stay available. Each switch is written to the audit log.</p>
+    <div class="tscroll"><table class="grid" id="adm-service"><thead><tr><th>Where</th><th>State</th><th></th></tr></thead><tbody>
+      <?php $off = fb_tools_off(); $sw = function ($tool, $on, $label) use ($tok) { return '<form method="post" action="yonetim.php" class="inline-form"' . ($on ? '' : ' onsubmit="return confirm(' . h(json_encode('Switch the interpretation off: ' . $label . '?')) . ');"') . '>' . $tok . '<input type="hidden" name="act" value="service"><input type="hidden" name="tool" value="' . h($tool) . '"><input type="hidden" name="on" value="' . ($on ? '1' : '0') . '"><button type="submit" class="btn ' . ($on ? '' : 'danger ') . 'small" data-switch="' . h($tool === '' ? 'all' : $tool) . '">' . ($on ? 'Switch on' : 'Switch off') . '</button></form>'; }; ?>
+      <tr data-tool="all"><td><b>Whole service</b> (every tool)</td><td><?= $set['ai_enabled'] ? '<span class="ok">on</span>' : '<span class="bad">off</span>' ?></td><td><?= $sw('', !$set['ai_enabled'], 'every tool') ?></td></tr>
+      <?php foreach (FB_TOOLS as $id => $t): $on = !in_array($id, $off, true); ?><tr data-tool="<?= h($id) ?>"><td><?= h(preg_replace('/\s*\(Forest Biometry\)$/', '', $t['name'])) ?></td><td><?= $on ? ($set['ai_enabled'] ? '<span class="ok">on</span>' : '<span class="muted">on (service off)</span>') : '<span class="bad">off</span>' ?></td><td><?= $sw($id, !$on, $t['name']) ?></td></tr><?php endforeach; ?>
+    </tbody></table></div>
     <h3>Waiting for approval</h3>
     <?php if (!$waiting): ?><p class="muted" id="adm-nowait">No account is waiting.</p><?php else: ?>
     <div class="tscroll"><table class="grid" id="adm-wait"><thead><tr><th>Name</th><th>ORCID</th><th>Signed up</th><th></th></tr></thead><tbody>
@@ -195,14 +233,18 @@ $pending = (int)$db->query("SELECT COUNT(*) FROM users WHERE status = 'pending'"
       <button type="submit" class="btn ghost small">Show</button> <a class="btn ghost small" href="yonetim.php?view=accounts&amp;csv=1" id="adm-csv">Download all (CSV)</a>
     </form>
     <p class="muted small"><?= count($rows) ?> account(s)<?= count($rows) === 500 ? ' (first 500)' : '' ?>.</p>
-    <div class="tscroll"><table class="grid" id="adm-list"><thead><tr><th>Name</th><th>ORCID</th><th>State</th><th>Signed up</th><th>Last seen</th><th>This month</th><th>Limits</th><th>Saved</th></tr></thead><tbody>
+    <form method="post" action="yonetim.php" id="adm-bulk"><?= $tok ?><input type="hidden" name="act" value="bulk">
+    <div class="adm-bulkbar"><label class="field inline"><span>Selected accounts</span><select name="status"><?php foreach ($STATES as $k => $l): ?><option value="<?= $k ?>"><?= h('Set: ' . $l) ?></option><?php endforeach; ?></select></label>
+      <label class="field inline"><span>Reason (shown to the user when not approved or blocked)</span><input type="text" name="reason" maxlength="500"></label>
+      <button type="submit" class="btn small" onclick="return confirm('Change the state of the selected accounts?');">Apply to selected</button></div>
+    <div class="tscroll"><table class="grid" id="adm-list"><thead><tr><th><input type="checkbox" id="adm-all" aria-label="Select all" onclick="document.querySelectorAll('#adm-list [name=\'orcids[]\']').forEach(function (b) { b.checked = this.checked; }, this)"></th><th>Name</th><th>ORCID</th><th>State</th><th>Signed up</th><th>Last seen</th><th>This month</th><th>Limits</th><th>Saved</th></tr></thead><tbody>
     <?php foreach ($rows as $r): $l = fb_limits($r); ?>
-      <tr data-orcid="<?= h($r['orcid']) ?>"><td><a href="yonetim.php?view=account&amp;orcid=<?= h($r['orcid']) ?>"><?= h($r['name']) ?></a><?= $r['orcid'] === $me ? ' <span class="muted small">(you)</span>' : '' ?><?= $r['note'] ? ' <span class="muted small" title="' . h($r['note']) . '">✎</span>' : '' ?></td>
+      <tr data-orcid="<?= h($r['orcid']) ?>"><td><?= $r['orcid'] === $me ? '' : '<input type="checkbox" name="orcids[]" value="' . h($r['orcid']) . '" aria-label="Select ' . h($r['name']) . '">' ?></td><td><a href="yonetim.php?view=account&amp;orcid=<?= h($r['orcid']) ?>"><?= h($r['name']) ?></a><?= $r['orcid'] === $me ? ' <span class="muted small">(you)</span>' : '' ?><?= $r['note'] ? ' <span class="muted small" title="' . h($r['note']) . '">✎</span>' : '' ?></td>
         <td class="small"><?= h($r['orcid']) ?></td><td><?= h($STATES[$r['status']] ?? $r['status']) ?><?= $r['until'] ? '<br><span class="small">until ' . h(substr($r['until'], 0, 10)) . '</span>' : '' ?></td>
         <td class="small"><?= h(substr($r['created'], 0, 10)) ?></td><td class="small"><?= h(substr((string)$r['last_seen'], 0, 10)) ?></td>
         <td class="num"><?= (int)$r['used'] ?> / <?= $l['month'] ?></td><td class="small"><?= $l['personalMonth'] ? 'own monthly' : 'default' ?><?= $l['day'] > 0 ? ', ' . $l['day'] . '/day' : '' ?><?= $l['extra'] ? ', +' . $l['extra'] : '' ?></td>
         <td class="num"><?= (int)$r['nres'] ?> · <?= $mb((int)$r['bytes']) ?></td></tr>
-    <?php endforeach; ?></tbody></table></div>
+    <?php endforeach; ?></tbody></table></div></form>
   </section>
 <?php elseif ($view === 'account'):
   $o = (string)($_GET['orcid'] ?? ''); $r = preg_match($ORCID, $o) ? fb_account($o) : null;

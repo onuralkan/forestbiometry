@@ -262,6 +262,30 @@ try {
     await acct(USER); ok((await page.textContent('#adm-acccalls')).includes('3 answered') && (await page.textContent('#adm-acccalls')).includes('$'), 'account page: calls this month with the estimate');
     await page.goto(BASE + '/yonetim.php?view=usage'); await page.click('#adm-purge'); await page.waitForSelector('#adm-done');
     ok((await page.textContent('#adm-done')).includes('Retention rule run: 0'), 'retention rule run by hand (nothing old to delete)');
+    // 5d. stage 3: switches of the service per tool and for all, bulk state change
+    await page.goto(BASE + '/yonetim.php');
+    ok((await page.locator('#adm-service tr[data-tool="model-degerlendirme"]').textContent()).includes('on'), 'overview: one switch per tool with the interpretation (Model Evaluation on)');
+    await page.click('#adm-service [data-switch="model-degerlendirme"]'); await page.waitForSelector('#adm-done');
+    ok((await page.locator('#adm-service tr[data-tool="model-degerlendirme"]').textContent()).includes('off'), 'Model Evaluation switched off');
+    await signOut(); await signIn(USER, 'Test Researcher');
+    await runEval(); ok(await page.isVisible('#ai-off') && !(await page.isVisible('#ai-go')), 'the card of the switched-off tool says it is paused');
+    r = await ask(); ok(r[0] === 503 && r[1].error === 'tool-off', 'API for the switched-off tool: 503 tool-off');
+    await signOut(); await signIn(ADMIN, 'Site Author'); await page.goto(BASE + '/yonetim.php');
+    await page.click('#adm-service [data-switch="model-degerlendirme"]'); await page.waitForSelector('#adm-done');
+    await page.click('#adm-service [data-switch="all"]'); await page.waitForSelector('#adm-done');
+    ok(await page.isVisible('#adm-paused') && (await page.locator('#adm-service tr[data-tool="all"]').textContent()).includes('off'), 'whole service switched off from the overview');
+    await page.click('#adm-service [data-switch="all"]'); await page.waitForSelector('#adm-done');
+    ok(!(await page.isVisible('#adm-paused')), 'and on again');
+    await signOut();
+    for (const [id, n] of [['0000-0001-2345-6789', 'Bulk One'], ['0000-0002-3456-7890', 'Bulk Two']]) { await signIn(id, n); await signOut(); }
+    await signIn(ADMIN, 'Site Author'); await page.goto(BASE + '/yonetim.php?view=accounts&state=pending');
+    await page.check('#adm-all'); await page.selectOption('#adm-bulk [name="status"]', 'approved'); await page.click('#adm-bulk button[type="submit"]'); await page.waitForSelector('#adm-done');
+    ok((await page.textContent('#adm-done')).includes('State changed for 2 account(s)') && (await page.locator('#adm-list tr', { hasText: 'Bulk One' }).textContent()).includes('Approved'), 'bulk: both waiting accounts approved at once');
+    await page.goto(BASE + '/yonetim.php?view=audit');
+    const au2 = await page.textContent('#adm-audit');
+    ok(au2.includes('interpretation in model-degerlendirme switched off') && au2.includes('interpretation service switched off') && au2.includes('(bulk)'), 'audit log: the switches and the bulk change');
+    await page.goto(BASE + '/yonetim.php?view=accounts'); await page.click('#adm-bulk button[type="submit"]'); await page.waitForSelector('#adm-done');
+    ok((await page.textContent('#adm-done')).includes('Select at least one'), 'bulk without a selection: nothing changes');
     await signOut(); }
   await signIn(USER, 'Test Researcher');
 
