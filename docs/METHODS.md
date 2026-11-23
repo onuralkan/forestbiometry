@@ -882,6 +882,14 @@ Source: Kangas, A., Maltamo, M. 2000. Percentile based basal area diameter distr
 
 **End of the revision (12 Nov 2026, user decision):** P21 (Burr XII, Dagum) and P22 (two-component mixtures) were left out of scope; the diameter distribution revision was completed with P23 as **2.2.0**.
 
+### P24: Weibull three-parameter maximum likelihood, location estimated (23 Nov 2026; 2.3.0-beta.1)
+Source: ForestFit, `fitWeibull` help page (R package by M. Teimouri, version 2.4.3, read 23 Nov 2026) ([R6]) **[P]**: the two- and three-parameter Weibull with location θ (here a), scale β (b) and shape α (c), f(x) = (c/b)((x − a)/b)^(c−1) exp{−((x − a)/b)^c}, x > a; `location = TRUE` with the ML method (the help page names it "mle", the code of 2.4.3 accepts "ml"; −ℓ minimised by `optim` Nelder–Mead from the starts). Test reference = the package's output (`tests/ref/dist_p24_ml3.R`, best of nine starts).
+- **Method `weibull.ml3`** (unchecked by default): profile likelihood ℓp(a) = max over b, c of ℓ(a, b, c), each ℓp(a) from the fixed-location ML of P05 (the score equation for c, b = (mean xᶜ)^(1/c), x = d − a), maximised over **0 ≤ a < Dmin** (tool constraint: a negative location has no meaning for diameters; ForestFit allows any real a). Solver: a grid of 48 points in a, denser next to Dmin (a = top·(1 − (1 − u)²), top = Dmin·(1 − 10⁻⁶)), then golden-section search in the bracket of the best grid point (|Δa| ≤ 10⁻¹²). k = 3 in AIC/BIC.
+- **Boundary diagnostics** (DIST_SPEC §3.5: with free a the likelihood can be unbounded as a → Dmin, where c < 1 makes the density infinite at the smallest diameter): best grid point next to Dmin → status `boundary`, no parameters (`ml3.edge`); best location with c ≤ 1 → `boundary` (`ml3.cle1`); best at a = 0 → the two-parameter ML with a warning (`ml3.atzero`); more than one local maximum of ℓp on the grid → warning (`ml3.multimodal`). At least 4 trees (tool rule).
+- **R code:** the method is written like the other ML fits (fitdistrplus `mle` with a, b, c free, starting from two significant digits of the tool's result); it is not yet among the cases of `scripts/rcode-check.sh`.
+- **Validation:** `tests/dist/test_p24.mjs` (18) against ForestFit 2.4.3: two simulated samples (a = 5 and 10) and a sample with true a = 0: ℓ not below the package's, a within 0.01 cm, b and c within 10⁻³ (relative; the package stops at Nelder–Mead's default tolerance), a profile maximum inside (0, Dmin) with c > 1; the tool's sample data, where the package's optimum is a = −1.33: a = 0 and the two-parameter result; a sample with c < 1, where the package stops at a = Dmin: `boundary`.
+
+
 ## 13. Shared infrastructure of the new tools (TOOLS_SPEC T01, 12 Nov 2026)
 Shared parts of the section volume, site index, stand structure, biomass and taper tools (`docs/TOOLS_SPEC.md`). Contains no scientific computation; the data rules are tested with hand-built cases.
 

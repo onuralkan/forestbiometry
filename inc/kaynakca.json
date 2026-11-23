@@ -882,11 +882,12 @@
   "doi": null,
   "url": "https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html",
   "version": null,
-  "status": null,
+  "status": "P",
   "tools": [
-   "DIST_SPEC [R6] (§3.5 Weibull method inventory)"
+   "DIST_SPEC [R6] (§3.5 Weibull method inventory)",
+   "METHODS §12 P24 (three-parameter ML, test reference tests/ref/dist_p24_ml3.R)"
   ],
-  "note": "NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Teimouri, M. (n.d.). Estimating parameters of the Weibull distribution through classical methods (fitWeibull). In ForestFit (Version 2.2.3) [R documentation]. Retrieved November 21, 2026, from https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html | Earlier note: official package documentation; not cited in METHODS; no status marker"
+  "note": "[P] help page read 23 Nov 2026 (ForestFit 2.4.3); the three-parameter ML is checked against the package output. NOT applied (version to be confirmed) — suggestion in the user's verification report (REFERENCES_VERIFIED.md, 21 Nov 2026): Teimouri, M. (n.d.). Estimating parameters of the Weibull distribution through classical methods (fitWeibull). In ForestFit (Version 2.2.3) [R documentation]. Retrieved November 21, 2026, from https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html | Earlier note: official package documentation; not cited in METHODS; no status marker"
  },
  {
   "key": "forestsas_dominance",

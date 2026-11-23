@@ -2,7 +2,7 @@
 // for the interface (docs/DIST_SPEC.md §0, rule 8).
 import { registerFamily, registerMethod } from './registry.js';
 import { weibull } from './families/weibull.js';
-import { weibullML, weibullMoments, weibullPercentiles } from './fit/weibull.js';
+import { weibullML, weibullML3, weibullMoments, weibullPercentiles } from './fit/weibull.js';
 import { normal } from './families/normal.js';
 import { lognormal } from './families/lognormal.js';
 import { normalML, lognormalML, lognormalMoments } from './fit/normal.js';
@@ -32,6 +32,7 @@ registerFamily(weibull);
 registerMethod(weibullML);
 registerMethod(weibullMoments);
 registerMethod(weibullPercentiles);
+registerMethod(weibullML3);
 registerFamily(normal);
 registerFamily(lognormal);
 registerMethod(normalML);

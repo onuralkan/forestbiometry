@@ -1,6 +1,7 @@
 // Weibull direct estimation from measured diameters (docs/DIST_SPEC.md §3.5, stage P05). No DOM.
 // Parameters: a = location (cm), b > 0 = scale (cm), c > 0 = shape;  F(d) = 1 − exp(−((d − a)/b)^c), d > a.
-// The location is NEVER estimated: it is 0 (two-parameter form) or a value the user fixes. No free-location method.
+// The location is 0 (two-parameter form) or a value the user fixes, except in weibull.ml3 (23 Nov 2026), the one method
+// that estimates it: three-parameter maximum likelihood with 0 ≤ a < Dmin and boundary diagnostics (DIST_SPEC §3.5).
 // Method (estimation principle) and solver (numerical algorithm) are separate: the solver is reported, never chosen.
 //
 //   weibull.ml    maximum likelihood, location fixed          solver: geometric bisection on the profile score
@@ -8,6 +9,8 @@
 //                 variance divisor n by default (DIST_SPEC §0, decision 2); n − 1 is an option and reproduces the
 //                 published 1.0.0 tool exactly
 //   weibull.pct   two sample percentiles p < r, location fixed  closed form (DIST_SPEC §3.6 C_{p,r}(a) and b)
+//   weibull.ml3   maximum likelihood, location estimated      solver: profile likelihood in a (grid + golden section),
+//                 weibull.ml at each a; ForestFit fitWeibull(location = TRUE, method "ml") [P], METHODS §12 P24
 //
 // The ML and moment equations and their solver are those of the published tool (legacy/weibull/calc.js), ported
 // here so that the engine does not depend on it (that file moves to legacy/ at 2.0.0).
@@ -62,6 +65,51 @@ export function fitML(d, opts = {}) {
   if (r.status !== 'ok') return shapeFailure(r, base);
   const c = r.root, b = mx * (y.reduce((p, q) => p + q ** c, 0) / y.length) ** (1 / c), ll = logLik(d, a, b, c);
   return { ...base, status: 'ok', params: { a, b, c }, logLik: ll, objective: { name: 'logLik', value: ll }, convergence: { ...shapeConv(r), score: g(c) } };
+}
+
+/* ---------------- maximum likelihood, location estimated (stage P24) ---------------- */
+export const ML3_GRID = 48;                        // grid points of the profile in a (tool rule; finer next to Dmin)
+export const ML3_MIN_N = 4;                       // more observations than parameters (tool rule)
+export const ML3_EDGE = 1e-6;                      // a is searched in [0, Dmin·(1 − ML3_EDGE)] (tool rule)
+/**
+ * Three-parameter ML: maximise the profile log-likelihood ℓp(a) = max over b, c of ℓ(a, b, c), each ℓp(a) from fitML
+ * with that fixed a, over 0 ≤ a < Dmin (tool constraint: a negative location has no meaning for diameters; ForestFit
+ * allows any real a). Several starts: a grid in a, denser next to Dmin (u², u on [0, 1]), then golden-section search
+ * in the bracket of the best grid point. Boundary diagnostics (DIST_SPEC §3.5: with free a the likelihood can be
+ * unbounded as a → Dmin, where c < 1 makes the density infinite at the smallest diameter): if the best point is the
+ * last one before Dmin, or its shape is c ≤ 1, no estimate is given (status 'boundary'). Best at a = 0: the result is
+ * the two-parameter fit, with a warning. Several local maxima of ℓp are reported.
+ */
+export function fitML3(d, opts = {}) {
+  const s = checkSample(d, 0), base = { fixed: {}, free: ['a', 'b', 'c'], settings: { aRange: '0 ≤ a < Dmin', grid: ML3_GRID }, warnings: s.notices };
+  if (s.n && s.n < ML3_MIN_N) s.problems.push({ code: 'ml3.n', n: s.n, min: ML3_MIN_N });
+  if (s.problems.length) return { ...base, status: 'invalid', problems: s.problems };
+  const dmin = s.min, top = dmin * (1 - ML3_EDGE);
+  const prof = a => { const r = fitML(d, { a }); return r.status === 'ok' ? { a, ll: r.logLik, b: r.params.b, c: r.params.c } : { a, ll: -Infinity }; };
+  const grid = []; for (let i = 0; i < ML3_GRID; i++) { const u = i / (ML3_GRID - 1); grid.push(prof(top * (1 - (1 - u) ** 2))); }
+  const finite = grid.filter(g => Number.isFinite(g.ll));
+  if (!finite.length) return { ...base, status: 'noconverge', warnings: [...base.warnings, { code: 'ml3.noprofile' }] };
+  let k = 0; grid.forEach((g, i) => { if (g.ll > grid[k].ll) k = i; });
+  const peaks = grid.filter((g, i) => Number.isFinite(g.ll) && (i === 0 || g.ll >= grid[i - 1].ll) && (i === grid.length - 1 || g.ll > grid[i + 1].ll)).length;
+  const warnings = [...base.warnings];
+  if (k === grid.length - 1) return { ...base, status: 'boundary', warnings: [...warnings, { code: 'ml3.edge', dmin, c: grid[k].c }], diagnostics: { profileMax: 'Dmin' } };
+  // golden section on [a_{k−1}, a_{k+1}] (ℓp is evaluated by an exact inner ML, so the result is a profile maximum)
+  let lo = grid[Math.max(0, k - 1)].a, hi = grid[Math.min(grid.length - 1, k + 1)].a, iter = 0;
+  const gr = (Math.sqrt(5) - 1) / 2;
+  let x1 = hi - gr * (hi - lo), x2 = lo + gr * (hi - lo), f1 = prof(x1), f2 = prof(x2);
+  while (hi - lo > 1e-12 * Math.max(1, dmin) && iter < 200) {
+    iter++;
+    if (f1.ll >= f2.ll) { hi = x2; x2 = x1; f2 = f1; x1 = hi - gr * (hi - lo); f1 = prof(x1); }
+    else { lo = x1; x1 = x2; f1 = f2; x2 = lo + gr * (hi - lo); f2 = prof(x2); }
+  }
+  let best = f1.ll >= f2.ll ? f1 : f2;
+  if (grid[k].ll > best.ll) best = grid[k];
+  if (k === 0 && grid[0].ll >= best.ll) best = grid[0];
+  if (!(best.c > 1)) return { ...base, status: 'boundary', warnings: [...warnings, { code: 'ml3.cle1', c: best.c, a: best.a }], diagnostics: { profileMax: best.a } };
+  if (best.a === 0) warnings.push({ code: 'ml3.atzero' });
+  if (peaks > 1) warnings.push({ code: 'ml3.multimodal', count: peaks });
+  return { ...base, status: 'ok', params: { a: best.a, b: best.b, c: best.c }, logLik: best.ll, warnings,
+    objective: { name: 'logLik', value: best.ll }, convergence: { iter, grid: ML3_GRID, tol: 1e-12, tolKind: 'absolute (a)' }, diagnostics: { dmin, localMaxima: peaks } };
 }
 
 /* ---------------- moments (mean and variance), location fixed ---------------- */
@@ -120,6 +168,10 @@ const LOC = { key: 'a', type: 'fixed-param', param: 'a', policies: ['zero', 'use
 export const weibullML = {
   id: 'weibull.ml', family: 'weibull', kind: 'fit', estimator: 'ml', solver: 'bisection', dataTypes: ['raw'], likelihoodMaximised: true,
   options: [LOC], source: 'weibull.ml', run: (input, opts = {}) => fitML(input.d, opts),
+};
+export const weibullML3 = {
+  id: 'weibull.ml3', family: 'weibull', kind: 'fit', estimator: 'ml', solver: 'profile', dataTypes: ['raw'], likelihoodMaximised: true, optional: true,
+  options: [], source: 'weibull.ml3', run: (input) => fitML3(input.d),
 };
 export const weibullMoments = {
   id: 'weibull.mom', family: 'weibull', kind: 'fit', estimator: 'mom', solver: 'bisection', dataTypes: ['raw'], likelihoodMaximised: false,

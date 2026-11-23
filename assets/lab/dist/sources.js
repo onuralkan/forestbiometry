@@ -8,7 +8,7 @@ import * as D from './index.js';
 export const REFS = {
   R1: { cite: 'Poudel, K.P., Cao, Q.V. 2013. Evaluation of methods to predict Weibull parameters for characterizing diameter distributions. Forest Science 59(2): 243–252. DOI: 10.5849/forsci.12-001', status: 'B' },
   R2: { cite: 'Parresol, B.R. 2003. Recovering parameters of Johnson\'s SB distribution. USDA Forest Service, Southern Research Station, Research Paper SRS-31.', status: 'B', url: 'https://www.srs.fs.usda.gov/pubs/rp/rp_srs031.pdf' },
-  R6: { cite: 'ForestFit, fitWeibull (R package documentation).', status: 'D', url: 'https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html' },
+  R6: { cite: 'ForestFit, fitWeibull (R package documentation).', status: 'P', url: 'https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html' },
   R7: { cite: 'ForestFit, fitJSB (R package documentation).', status: 'D', url: 'https://search.r-project.org/CRAN/refmans/ForestFit/html/fitJSB.html' },
   R8: { cite: 'fitdistrplus, Overview of the fitdistrplus package (vignette).', status: 'D', url: 'https://lbbe-software.github.io/fitdistrplus/articles/fitdistrplus_vignette.html' },
   R9: { cite: 'SciPy, scipy.stats.goodness_of_fit (documentation).', status: 'B', url: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html' },
@@ -27,11 +27,13 @@ export const REFS = {
 };
 const FAMILY_REFS = { weibull: ['R6'], normal: ['R10'], lognormal: ['R11'], gamma: ['R12'], beta: ['R14'], johnsonsb: ['R7'], exponential: ['R15'], loglogistic: ['R16'], gengamma: ['R18'], gumbel: ['R19'] };
 const FAMILY_SECTION = { weibull: 'P05', normal: 'P02', lognormal: 'P02', gamma: 'P03', beta: 'P04', johnsonsb: 'P08', exponential: 'P10', loglogistic: 'P10', gengamma: 'P20', gumbel: 'P20' };
+const ML3 = { 'weibull.ml3': { refs: ['R6'], section: 'P24' } };   // three-parameter ML (ForestFit fitWeibull, [P])
 const QUANTILE_REFS = { 'weibull.pct': ['DUBEY', 'HF96'], 'johnsonsb.kb': ['KB91', 'HF96'], 'johnsonsb.pct': ['HF96'], 'loglogistic.pct': ['HF96'] };
 
 /** { refs: [id], section: 'P05' …, stage } for a registered method id. */
 export function methodSources(id) {
   const m = D.method(id), fam = m.family;
+  if (ML3[id]) return ML3[id];
   if (m.source === 'parresol2003') return { refs: ['R2'], section: 'P09' };
   if (m.source === 'fonseca2009') return { refs: ['R17'], section: 'P19' };
   if (String(m.source).startsWith('poudel2013.')) return { refs: ['R1'], section: m.hybrid ? 'P07' : 'P06' };

@@ -3692,7 +3692,7 @@ function fitTML(famId, baseId, d, opts = {}) {
 
 // ---- assets/lab/dist/fit/weibull.js
 __fb_m["dist/fit/weibull.js"] = function (__fb_e) {
-__fb_x(__fb_e, { "C_RANGE": () => C_RANGE, "C_RTOL": () => C_RTOL, "DUBEY": () => DUBEY, "checkPercentiles": () => checkPercentiles, "checkSample": () => checkSample, "fitML": () => fitML, "fitMoments": () => fitMoments, "fitPercentiles": () => fitPercentiles, "percentileParams": () => percentileParams, "weibullML": () => weibullML, "weibullMoments": () => weibullMoments, "weibullPercentiles": () => weibullPercentiles, "FEW_UNIQUE": () => __fb_r("dist/fit/common.js")["FEW_UNIQUE"] });
+__fb_x(__fb_e, { "C_RANGE": () => C_RANGE, "C_RTOL": () => C_RTOL, "DUBEY": () => DUBEY, "ML3_EDGE": () => ML3_EDGE, "ML3_GRID": () => ML3_GRID, "ML3_MIN_N": () => ML3_MIN_N, "checkPercentiles": () => checkPercentiles, "checkSample": () => checkSample, "fitML": () => fitML, "fitML3": () => fitML3, "fitMoments": () => fitMoments, "fitPercentiles": () => fitPercentiles, "percentileParams": () => percentileParams, "weibullML": () => weibullML, "weibullML3": () => weibullML3, "weibullMoments": () => weibullMoments, "weibullPercentiles": () => weibullPercentiles, "FEW_UNIQUE": () => __fb_r("dist/fit/common.js")["FEW_UNIQUE"] });
 const { lnGamma } = __fb_r("core/special.js");
 const { bisectMonotone } = __fb_r("core/roots.js");
 const { quantile7 } = __fb_r("dist/data.js");
@@ -3700,7 +3700,8 @@ const { checkBasic, VAR_DIVISOR } = __fb_r("dist/fit/common.js");
 __fb_r("dist/fit/common.js");
 // Weibull direct estimation from measured diameters (docs/DIST_SPEC.md §3.5, stage P05). No DOM.
 // Parameters: a = location (cm), b > 0 = scale (cm), c > 0 = shape;  F(d) = 1 − exp(−((d − a)/b)^c), d > a.
-// The location is NEVER estimated: it is 0 (two-parameter form) or a value the user fixes. No free-location method.
+// The location is 0 (two-parameter form) or a value the user fixes, except in weibull.ml3 (23 Nov 2026), the one method
+// that estimates it: three-parameter maximum likelihood with 0 ≤ a < Dmin and boundary diagnostics (DIST_SPEC §3.5).
 // Method (estimation principle) and solver (numerical algorithm) are separate: the solver is reported, never chosen.
 //
 //   weibull.ml    maximum likelihood, location fixed          solver: geometric bisection on the profile score
@@ -3708,6 +3709,8 @@ __fb_r("dist/fit/common.js");
 //                 variance divisor n by default (DIST_SPEC §0, decision 2); n − 1 is an option and reproduces the
 //                 published 1.0.0 tool exactly
 //   weibull.pct   two sample percentiles p < r, location fixed  closed form (DIST_SPEC §3.6 C_{p,r}(a) and b)
+//   weibull.ml3   maximum likelihood, location estimated      solver: profile likelihood in a (grid + golden section),
+//                 weibull.ml at each a; ForestFit fitWeibull(location = TRUE, method "ml") [P], METHODS §12 P24
 //
 // The ML and moment equations and their solver are those of the published tool (legacy/weibull/calc.js), ported
 // here so that the engine does not depend on it (that file moves to legacy/ at 2.0.0).
@@ -3762,6 +3765,51 @@ function fitML(d, opts = {}) {
   if (r.status !== 'ok') return shapeFailure(r, base);
   const c = r.root, b = mx * (y.reduce((p, q) => p + q ** c, 0) / y.length) ** (1 / c), ll = logLik(d, a, b, c);
   return { ...base, status: 'ok', params: { a, b, c }, logLik: ll, objective: { name: 'logLik', value: ll }, convergence: { ...shapeConv(r), score: g(c) } };
+}
+
+/* ---------------- maximum likelihood, location estimated (stage P24) ---------------- */
+const ML3_GRID = 48;                        // grid points of the profile in a (tool rule; finer next to Dmin)
+const ML3_MIN_N = 4;                       // more observations than parameters (tool rule)
+const ML3_EDGE = 1e-6;                      // a is searched in [0, Dmin·(1 − ML3_EDGE)] (tool rule)
+/**
+ * Three-parameter ML: maximise the profile log-likelihood ℓp(a) = max over b, c of ℓ(a, b, c), each ℓp(a) from fitML
+ * with that fixed a, over 0 ≤ a < Dmin (tool constraint: a negative location has no meaning for diameters; ForestFit
+ * allows any real a). Several starts: a grid in a, denser next to Dmin (u², u on [0, 1]), then golden-section search
+ * in the bracket of the best grid point. Boundary diagnostics (DIST_SPEC §3.5: with free a the likelihood can be
+ * unbounded as a → Dmin, where c < 1 makes the density infinite at the smallest diameter): if the best point is the
+ * last one before Dmin, or its shape is c ≤ 1, no estimate is given (status 'boundary'). Best at a = 0: the result is
+ * the two-parameter fit, with a warning. Several local maxima of ℓp are reported.
+ */
+function fitML3(d, opts = {}) {
+  const s = checkSample(d, 0), base = { fixed: {}, free: ['a', 'b', 'c'], settings: { aRange: '0 ≤ a < Dmin', grid: ML3_GRID }, warnings: s.notices };
+  if (s.n && s.n < ML3_MIN_N) s.problems.push({ code: 'ml3.n', n: s.n, min: ML3_MIN_N });
+  if (s.problems.length) return { ...base, status: 'invalid', problems: s.problems };
+  const dmin = s.min, top = dmin * (1 - ML3_EDGE);
+  const prof = a => { const r = fitML(d, { a }); return r.status === 'ok' ? { a, ll: r.logLik, b: r.params.b, c: r.params.c } : { a, ll: -Infinity }; };
+  const grid = []; for (let i = 0; i < ML3_GRID; i++) { const u = i / (ML3_GRID - 1); grid.push(prof(top * (1 - (1 - u) ** 2))); }
+  const finite = grid.filter(g => Number.isFinite(g.ll));
+  if (!finite.length) return { ...base, status: 'noconverge', warnings: [...base.warnings, { code: 'ml3.noprofile' }] };
+  let k = 0; grid.forEach((g, i) => { if (g.ll > grid[k].ll) k = i; });
+  const peaks = grid.filter((g, i) => Number.isFinite(g.ll) && (i === 0 || g.ll >= grid[i - 1].ll) && (i === grid.length - 1 || g.ll > grid[i + 1].ll)).length;
+  const warnings = [...base.warnings];
+  if (k === grid.length - 1) return { ...base, status: 'boundary', warnings: [...warnings, { code: 'ml3.edge', dmin, c: grid[k].c }], diagnostics: { profileMax: 'Dmin' } };
+  // golden section on [a_{k−1}, a_{k+1}] (ℓp is evaluated by an exact inner ML, so the result is a profile maximum)
+  let lo = grid[Math.max(0, k - 1)].a, hi = grid[Math.min(grid.length - 1, k + 1)].a, iter = 0;
+  const gr = (Math.sqrt(5) - 1) / 2;
+  let x1 = hi - gr * (hi - lo), x2 = lo + gr * (hi - lo), f1 = prof(x1), f2 = prof(x2);
+  while (hi - lo > 1e-12 * Math.max(1, dmin) && iter < 200) {
+    iter++;
+    if (f1.ll >= f2.ll) { hi = x2; x2 = x1; f2 = f1; x1 = hi - gr * (hi - lo); f1 = prof(x1); }
+    else { lo = x1; x1 = x2; f1 = f2; x2 = lo + gr * (hi - lo); f2 = prof(x2); }
+  }
+  let best = f1.ll >= f2.ll ? f1 : f2;
+  if (grid[k].ll > best.ll) best = grid[k];
+  if (k === 0 && grid[0].ll >= best.ll) best = grid[0];
+  if (!(best.c > 1)) return { ...base, status: 'boundary', warnings: [...warnings, { code: 'ml3.cle1', c: best.c, a: best.a }], diagnostics: { profileMax: best.a } };
+  if (best.a === 0) warnings.push({ code: 'ml3.atzero' });
+  if (peaks > 1) warnings.push({ code: 'ml3.multimodal', count: peaks });
+  return { ...base, status: 'ok', params: { a: best.a, b: best.b, c: best.c }, logLik: best.ll, warnings,
+    objective: { name: 'logLik', value: best.ll }, convergence: { iter, grid: ML3_GRID, tol: 1e-12, tolKind: 'absolute (a)' }, diagnostics: { dmin, localMaxima: peaks } };
 }
 
 /* ---------------- moments (mean and variance), location fixed ---------------- */
@@ -3820,6 +3868,10 @@ const LOC = { key: 'a', type: 'fixed-param', param: 'a', policies: ['zero', 'use
 const weibullML = {
   id: 'weibull.ml', family: 'weibull', kind: 'fit', estimator: 'ml', solver: 'bisection', dataTypes: ['raw'], likelihoodMaximised: true,
   options: [LOC], source: 'weibull.ml', run: (input, opts = {}) => fitML(input.d, opts),
+};
+const weibullML3 = {
+  id: 'weibull.ml3', family: 'weibull', kind: 'fit', estimator: 'ml', solver: 'profile', dataTypes: ['raw'], likelihoodMaximised: true, optional: true,
+  options: [], source: 'weibull.ml3', run: (input) => fitML3(input.d),
 };
 const weibullMoments = {
   id: 'weibull.mom', family: 'weibull', kind: 'fit', estimator: 'mom', solver: 'bisection', dataTypes: ['raw'], likelihoodMaximised: false,
@@ -4074,6 +4126,10 @@ const en = {
   'm.gengamma.tml': 'Conditional maximum likelihood (measurement threshold)', 'mnote.gengamma.tml': 'Σ ln f(d) − n ln[F(U) − F(L)] is maximised: with the knowledge that only trees inside the threshold were measured. Start: the untruncated maximum likelihood estimate; solver Nelder–Mead.',
   'm.gengamma.gml': 'Maximum likelihood (grouped data)', 'mnote.gengamma.gml': 'Σ n_j ln p_j is maximised, p_j = F(upper) − F(lower). Class mid-points give only a starting value.',
   'w.gg.cedge': p => p.side === 'low' ? `the likelihood is largest at the lower edge of the range of c (c = ${p.c}): it keeps rising as c → 0, towards the lognormal limit; no parameters are given` : `the likelihood is largest at the upper edge of the range of c (c = ${p.c}); no parameters are given`,
+  'w.ml3.edge': p => `the likelihood keeps rising as the location approaches the smallest diameter (${p.dmin} cm): no maximum inside the range, so no estimate is given; use a fixed location or another family`,
+  'w.ml3.cle1': p => `the best location gives a shape c = ${p.c} ≤ 1, where the likelihood is unbounded next to the smallest diameter; no estimate is given`,
+  'w.ml3.atzero': 'the likelihood is largest at a = 0 within the allowed range (0 ≤ a < Dmin): the result is the two-parameter fit', 'w.ml3.noprofile': 'the profile likelihood could not be computed at any location; no parameters are given',
+  'w.ml3.multimodal': p => `the profile likelihood in a has ${p.count} local maxima; the largest is given, the location may be weakly determined`,
   'w.gg.ashape': 'the shape a is outside the numerical range; no parameters are given', 'w.gg.noconverge': 'the score equation for c could not be solved; no parameters are given',
   'w.gg.multimodal': p => `the profile likelihood has ${p.count} local maxima; the largest is given, the model may be weakly determined`, 'pr.gg.few': p => `only ${p.unique} distinct diameters; three parameters need at least three`,
   'cmp.kdiff': 'Models with different numbers of free parameters (k) are in this table. An extra parameter never lowers ln L in nested models; AIC and BIC add a penalty for it. A more flexible family is not by itself a better biological model: interpretability, stability of the parameters and validation at the plot level matter too.',
@@ -4231,13 +4287,14 @@ const en = {
   'rec.src.variance': 'variance given, divisor n', 'rec.src.variance1': 'variance given, divisor n − 1, converted with n', 'rec.src.dq': 'Dq given',
   'rec.p.note': 'The back-calculated mean and Dq must equal the values entered; this checks the recovery, it is not a goodness-of-fit measure.', 'rec.chart': 'Densities of the recovered distributions',
   't.dist': 'Distribution', 't.params': 'Parameters',
-  'm.weibull.ml': 'Maximum likelihood', 'm.weibull.mom': 'Moments (mean and variance)', 'm.weibull.pct': 'Two percentiles',
+  'm.weibull.ml': 'Maximum likelihood', 'm.weibull.ml3': 'Maximum likelihood, location estimated (three-parameter)', 'm.weibull.mom': 'Moments (mean and variance)', 'm.weibull.pct': 'Two percentiles',
   'est.ml': 'maximum likelihood', 'est.mom': 'moments', 'est.quantile': 'percentile matching', 'est.logmom': 'log moments', 'est.recovery': 'recovery',
   'opt.varDivisor': 'Variance divisor', 'opt.varDivisor.n': 'n (moment variance, default)', 'opt.varDivisor.n-1': 'n − 1 (sample variance s²)',
+  'opt.note.weibull.ml3': 'Estimates the location a together with b and c: the profile likelihood is maximised over 0 ≤ a < Dmin (a grid in a, denser next to Dmin, then golden-section search), with the fixed-location maximum likelihood at each a. A negative location is not allowed. If the likelihood keeps rising towards Dmin (shape c ≤ 1: the density is infinite at the smallest diameter), no estimate is given. Starts unchecked; checked against the R package ForestFit (fitWeibull, location = TRUE).',
   'opt.p': 'Lower percentile p', 'opt.r': 'Upper percentile r',
   'opt.note.weibull.mom': 'Default divisor n: v = Σ(d − mean)²/n, consistent with the theoretical moments (Dq² = mean² + v). The n − 1 option reproduces exactly the results of the tool\'s Weibull-only version 1.0.0; the two differ only by the factor (n − 1)/n on the variance.',
   'opt.note.weibull.pct': 'c = ln(A_r/A_p) / ln[(Q_r − a)/(Q_p − a)], b = (Q_p − a)/A_p^(1/c), A_q = −ln(1 − q); closed form, no iteration. Sample percentiles by Hyndman and Fan type 7 (R default). Default 0.24 and 0.93: Dubey (1967), the most efficient pair for estimating scale and shape together (rounded). 0 < p < r < 1.',
-  'set.varDivisor': p => `variance: divisor ${p.v === 'n' ? 'n' : 'n − 1'}`, 'set.p': p => `p = ${p.v}`, 'set.r': p => `r = ${p.v}`, 'sol.bisection': 'bisection (geometric)', 'sol.closed form': 'closed form',
+  'set.varDivisor': p => `variance: divisor ${p.v === 'n' ? 'n' : 'n − 1'}`, 'set.p': p => `p = ${p.v}`, 'set.r': p => `r = ${p.v}`, 'sol.bisection': 'bisection (geometric)', 'sol.closed form': 'closed form', 'sol.profile': 'profile likelihood (grid and golden section)',
   'loc.h': 'Fixed location a (Weibull, exponential)', 'loc.sub': 'The location is not estimated; the Weibull and the exponential use the same a. a = 0 (two-parameter form) is always computed; if you enter a value, that fixed location is computed as well. A fixed a must be below every diameter. This is not the same as a measurement threshold.',
   'loc.label': 'Fixed a (cm, optional)', 'loc.bad': 'The location must be zero or a positive number.',
   'acc': p => `${p.read} diameters read.`, 'acc.bad': p => `${p.n} values unreadable or empty, ${p.np} values not above zero; they were left out (source rows: ${p.rows}${p.more ? ', …' : ''}).`, 'acc.f': p => `${p.n} rows outside the filter.`,
@@ -4253,7 +4310,7 @@ const en = {
   'role.location': 'location', 'role.scale': 'scale', 'role.shape': 'shape',
   'st.ok': 'ok', 'st.boundary': 'at the edge of the search interval', 'st.noconverge': 'did not converge', 'st.invalid': 'not computed', 'st.error': 'error',
   'pr.n.few': p => `at least 2 trees are needed (n = ${p.n})`, 'pr.constant': p => `all diameters are equal (${p.value} cm)`, 'pr.a.bad': 'the location is not a number',
-  'pr.a.notbelow': p => `the fixed location a = ${p.a} is not below the smallest diameter (${p.min} cm)`, 'pr.a.negative': 'the location cannot be negative',
+  'pr.a.notbelow': p => `the fixed location a = ${p.a} is not below the smallest diameter (${p.min} cm)`, 'pr.a.negative': 'the location cannot be negative', 'pr.ml3.n': p => `the three-parameter fit needs at least ${p.min} trees (n = ${p.n})`,
   'w.few.unique': p => `only ${p.unique} distinct diameter values (n = ${p.n})`, 'w.looks.grouped': p => `the diameters look rounded to classes (${p.unique} distinct values, n = ${p.n}); a grouped-data method is not available yet`,
   'w.c.boundary': 'the shape solution stayed at the edge of the search interval (0.01–1000); no parameters are given', 'w.c.noconverge': 'the shape equation did not converge; no parameters are given',
   'pr.pr.range': 'p and r must be numbers between 0 and 1', 'pr.pr.order': 'p must be smaller than r',
@@ -4267,7 +4324,7 @@ const en = {
   'nodata': 'No diameters to analyse: no readable value greater than zero was found in the chosen diameter column. Check the diameter column, the decimal separator and the filter (if any).', 'nodata.cls': 'No classes to analyse: no readable row was found in the lower bound, upper bound and frequency columns. Check the columns and the decimal separator.',
   'more': 'Details: formulas and notes', 'p.notes': 'Notes and warnings', 'p.all': 'Parameter tables per family, all columns', 'cmp.all': 'All criteria (BIC, AICc, CvM, class errors, EI, solver)', 'cmp.how': 'How to read the tables', 'cmp.read': 'About this table', 'calc.ready': p => `${p.k} methods selected`,
   'src.h': 'Methods, units and sources', 'src.est': 'estimation principle', 'src.solver': 'solver', 'src.units': 'parameters', 'src.support': 'support', 'src.obs': 'observation',
-  'src.refs': 'references', 'src.link': 'link', 'src.st.B': 'read', 'src.st.D': 'cited; not read, equations verified independently with SciPy/mpmath',
+  'src.refs': 'references', 'src.link': 'link', 'src.st.B': 'read', 'src.st.D': 'cited; not read, equations verified independently with SciPy/mpmath', 'src.st.P': 'package documentation; results checked against the package\'s output',
   'src.thr.none': 'raw diameters, no threshold (untruncated data assumed)', 'src.thr.trunc': p => `measurement threshold ${p.L} ≤ d ≤ ${p.U} cm, conditional distribution`, 'src.thr.cls': 'class frequencies; class probability F(upper) − F(lower)', 'src.thr.sum': 'summary values (no raw data)',
   'src.boot': 'parametric bootstrap (with re-estimation) and percentile intervals; the seed is in the result record.',
   'src.note': 'Source status: "read" means the source itself was examined; the others are cited and the formulas are verified against independent numerical references. Formulas and assumptions are in the tool\'s guide section; the full entries of the sources are in the <a href="references.php">References</a>.',
@@ -4286,7 +4343,7 @@ __fb_m["dist/index.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "CONTRACT": () => __fb_r("dist/registry.js")["CONTRACT"], "DistError": () => __fb_r("dist/registry.js")["DistError"], "POOL": () => __fb_r("dist/data.js")["POOL"], "TOOL": () => __fb_r("dist/registry.js")["TOOL"], "checkParams": () => __fb_r("dist/registry.js")["checkParams"], "checkSupport": () => __fb_r("dist/registry.js")["checkSupport"], "describe": () => __fb_r("dist/data.js")["describe"], "describeClasses": () => __fb_r("dist/data.js")["describeClasses"], "extractClassUnits": () => __fb_r("dist/data.js")["extractClassUnits"], "extractUnits": () => __fb_r("dist/data.js")["extractUnits"], "families": () => __fb_r("dist/registry.js")["families"], "family": () => __fb_r("dist/registry.js")["family"], "makeResult": () => __fb_r("dist/registry.js")["makeResult"], "method": () => __fb_r("dist/registry.js")["method"], "methodsFor": () => __fb_r("dist/registry.js")["methodsFor"], "natural": () => __fb_r("dist/data.js")["natural"], "quantile7": () => __fb_r("dist/data.js")["quantile7"], "registerFamily": () => __fb_r("dist/registry.js")["registerFamily"], "registerMethod": () => __fb_r("dist/registry.js")["registerMethod"], "runMethod": () => __fb_r("dist/registry.js")["runMethod"], "gof": () => __fb_r("dist/gof.js"), "trunc": () => __fb_r("dist/truncate.js"), "classes": () => __fb_r("dist/classes.js"), "basal": () => __fb_r("dist/basal.js"), "compare": () => __fb_r("dist/compare.js"), "boot": () => __fb_r("dist/bootstrap.js"), "stand": () => __fb_r("dist/stand.js"), "weibullSummary": () => __fb_r("dist/recover/weibull.js")["weibullSummary"], "fonsecaFromRaw": () => __fb_r("dist/recover/fonseca.js")["fonsecaFromRaw"], "groupedLogLik": () => __fb_r("dist/fit/grouped.js")["groupedLogLik"], "checkGrouped": () => __fb_r("dist/fit/grouped.js")["checkGrouped"] });
 const { registerFamily, registerMethod } = __fb_r("dist/registry.js");
 const { weibull } = __fb_r("dist/families/weibull.js");
-const { weibullML, weibullMoments, weibullPercentiles } = __fb_r("dist/fit/weibull.js");
+const { weibullML, weibullML3, weibullMoments, weibullPercentiles } = __fb_r("dist/fit/weibull.js");
 const { normal } = __fb_r("dist/families/normal.js");
 const { lognormal } = __fb_r("dist/families/lognormal.js");
 const { normalML, lognormalML, lognormalMoments } = __fb_r("dist/fit/normal.js");
@@ -4357,6 +4414,7 @@ registerFamily(weibull);
 registerMethod(weibullML);
 registerMethod(weibullMoments);
 registerMethod(weibullPercentiles);
+registerMethod(weibullML3);
 registerFamily(normal);
 registerFamily(lognormal);
 registerMethod(normalML);
@@ -5516,7 +5574,7 @@ __fb_x(__fb_e, { "CONTRACT": () => CONTRACT, "DistError": () => DistError, "TOOL
 //              kind 'recover' parameters from summaries (mean, Dq, percentiles)
 //              kind 'stand'   prediction from stand variables
 //   solver     the numerical algorithm a method uses (bisection, Brent, …); reported, never a choice of "method"
-const TOOL = { id: 'cap-dagilimi', version: '2.2.1' };
+const TOOL = { id: 'cap-dagilimi', version: '2.3.0-beta.1' };
 const CONTRACT = 'dist-result/1';
 
 /** Structured error: code + detail (never a number that looks like a result). */
@@ -5811,7 +5869,7 @@ const D = __fb_r("dist/index.js");
 const REFS = {
   R1: { cite: 'Poudel, K.P., Cao, Q.V. 2013. Evaluation of methods to predict Weibull parameters for characterizing diameter distributions. Forest Science 59(2): 243–252. DOI: 10.5849/forsci.12-001', status: 'B' },
   R2: { cite: 'Parresol, B.R. 2003. Recovering parameters of Johnson\'s SB distribution. USDA Forest Service, Southern Research Station, Research Paper SRS-31.', status: 'B', url: 'https://www.srs.fs.usda.gov/pubs/rp/rp_srs031.pdf' },
-  R6: { cite: 'ForestFit, fitWeibull (R package documentation).', status: 'D', url: 'https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html' },
+  R6: { cite: 'ForestFit, fitWeibull (R package documentation).', status: 'P', url: 'https://search.r-project.org/CRAN/refmans/ForestFit/html/fitWeibull.html' },
   R7: { cite: 'ForestFit, fitJSB (R package documentation).', status: 'D', url: 'https://search.r-project.org/CRAN/refmans/ForestFit/html/fitJSB.html' },
   R8: { cite: 'fitdistrplus, Overview of the fitdistrplus package (vignette).', status: 'D', url: 'https://lbbe-software.github.io/fitdistrplus/articles/fitdistrplus_vignette.html' },
   R9: { cite: 'SciPy, scipy.stats.goodness_of_fit (documentation).', status: 'B', url: 'https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.goodness_of_fit.html' },
@@ -5830,11 +5888,13 @@ const REFS = {
 };
 const FAMILY_REFS = { weibull: ['R6'], normal: ['R10'], lognormal: ['R11'], gamma: ['R12'], beta: ['R14'], johnsonsb: ['R7'], exponential: ['R15'], loglogistic: ['R16'], gengamma: ['R18'], gumbel: ['R19'] };
 const FAMILY_SECTION = { weibull: 'P05', normal: 'P02', lognormal: 'P02', gamma: 'P03', beta: 'P04', johnsonsb: 'P08', exponential: 'P10', loglogistic: 'P10', gengamma: 'P20', gumbel: 'P20' };
+const ML3 = { 'weibull.ml3': { refs: ['R6'], section: 'P24' } };   // three-parameter ML (ForestFit fitWeibull, [P])
 const QUANTILE_REFS = { 'weibull.pct': ['DUBEY', 'HF96'], 'johnsonsb.kb': ['KB91', 'HF96'], 'johnsonsb.pct': ['HF96'], 'loglogistic.pct': ['HF96'] };
 
 /** { refs: [id], section: 'P05' …, stage } for a registered method id. */
 function methodSources(id) {
   const m = D.method(id), fam = m.family;
+  if (ML3[id]) return ML3[id];
   if (m.source === 'parresol2003') return { refs: ['R2'], section: 'P09' };
   if (m.source === 'fonseca2009') return { refs: ['R17'], section: 'P19' };
   if (String(m.source).startsWith('poudel2013.')) return { refs: ['R1'], section: m.hybrid ? 'P07' : 'P06' };
