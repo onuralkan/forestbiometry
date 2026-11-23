@@ -17,6 +17,7 @@ import { buildR, buildBootR } from './rcode.js';
 import { buildRecoverR } from './rcode-rec.js';
 import { buildStandR } from './rcode-stand.js';
 import { tableCsv, csvName } from '../core/rcode.js';
+import { interpretSlot, mountInterpret } from '../core/interpret.js';
 
 const BASE = './', KEY = 'session:cap-dagilimi-2';
 const $ = id => document.getElementById(id);
@@ -403,6 +404,23 @@ function srcBlock(rs, boot = false) {
     <p class="muted small">${T('src.note')}</p></details>`;
 }
 const exportButtons = (pre, kinds) => `<div class="exports">${kinds.map(([k, lab, main]) => `<button type="button" class="btn${main ? '' : ' ghost'}" id="${pre}-${k}">${T(lab)}</button>`).join('')}${kinds.some(x => x[0] === 'json') ? recordOption() : ''}</div><p class="muted small">${T('ex.note')}</p>`;
+/**
+ * What the AI interpretation receives (23 Nov 2026, user request): the unit on screen, its descriptive statistics and
+ * the fits with their parameters and fit statistics as in the comparison table (no diameters, no diagnostics arrays).
+ */
+function interpretSummary(u) {
+  const rnd = v => typeof v === 'number' && Number.isFinite(v) ? +v.toPrecision(6) : v ?? null, obj = o => o ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, typeof v === 'object' && v ? (v.value ?? null) : rnd(v)])) : null;
+  const row = x => ({ family: x.r.family, method: x.r.method, estimator: x.r.estimator, params: obj(x.r.params), fixed: obj(x.r.fixed), n: x.n, k: x.k,
+    logLik: rnd(x.logLik), aic: rnd(x.aic), dAIC: rnd(x.dAIC), bic: rnd(x.bic), dBIC: rnd(x.dBIC), aicc: rnd(x.aicc), ks: rnd(x.ks), ad: rnd(x.ad), cvm: rnd(x.cvm), l1: rnd(x.l1), ei: rnd(x.ei),
+    warnings: (x.r.warnings || []).map(w => w.code || w).slice(0, 8) });
+  const groups = D.compare.compareUnit(u.results, r => classErr(u, r));
+  return { tool: D.TOOL, created: new Date().toISOString(),
+    settings: { ...jsonSettings(), units: { d: S.unit } },
+    unit: { plot: u.plot ?? null, period: u.period ?? null, of: R.units.length, descriptive: obj(u.desc) },
+    comparison: groups.map(g => ({ process: g.process, likelihoodFits: g.ml.map(row), descriptiveFits: g.desc.map(row),
+      failed: g.failed.map(x => ({ family: x.r.family, method: x.r.method, status: x.status, problems: (x.r.problems || []).map(q => q.code || q).slice(0, 5) })) })),
+    sources: srcJSON(u.results.map(r => r.method)) };
+}
 function tabParams(p) {
   const u = curUnit(); if (!u) { p.innerHTML = ''; return; }
   const s = u.desc, tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
@@ -426,7 +444,8 @@ function tabParams(p) {
   const nOk = u.results.filter(r => r.status === 'ok').length, nW = u.results.filter(r => r.status === 'ok' && r.warnings.some(w => w.code !== 'var.n1')).length;
   h = h.replace('<div class="tiles">', `<p class="small pstates" data-ok="${nOk}" data-bad="${u.results.length - nOk}">${T('p.states', { ok: nOk, w: nW, bad: u.results.length - nOk })}</p><div class="tiles">`);
   h += srcBlock(u.results) + `<h3>${T('ex.h')}</h3>` + exportButtons('x', [['xlsx', 'ex.xlsx', true], ['fits', 'ex.fits'], ['params', 'ex.params'], ['json', 'p.json'], ['r', 'ex.r']]) + `<p class="muted small">${T('ex.r.note')}</p>`;
-  p.innerHTML = h; bindBar(); bindCompare(p);
+  p.innerHTML = h + interpretSlot(); bindBar(); bindCompare(p);
+  mountInterpret(p, D.TOOL, () => interpretSummary(u));   // AI interpretation of the unit shown (core/interpret.js); hidden without the service
   p.querySelector('details.ptabs').addEventListener('toggle', e => { S.ptabsOpen = e.target.open; save(); });
   for (const k of ['xlsx', 'fits', 'params']) $('x-' + k).addEventListener('click', () => exportRaw(k));
   $('x-r').addEventListener('click', () => {

@@ -310,6 +310,17 @@ try {
     await page.goto(BASE + '/stem-taper.php'); await page.click('#fb-lit > summary'); await page.waitForSelector('#fb-lit .lit-list');
     ok((await page.textContent('#fb-lit .lit-out')).includes('taper equation'), 'each tool has its own query');
     await page.goto(BASE + '/administration.php?view=audit'); ok((await page.textContent('#adm-audit')).includes('literature-query'), 'query changes in the audit log');
+    // the AI interpretation in Diameter Distribution (23 Nov 2026): the card under the parameters of the unit shown
+    await page.goto(BASE + '/administration.php'); ok(await page.locator('#adm-service tr[data-tool="cap-dagilimi"]').count() === 1, 'overview: a switch for the Diameter Distribution interpretation');
+    await page.goto(BASE + '/diameter-distribution.php'); await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
+    await page.click('#calc'); await page.waitForSelector('table.ptab', { state: 'attached' }); await page.waitForSelector('.ai-card #ai-go');
+    let sentD = null;
+    await page.route('**/api/interpret.php', async (rt, rq) => { if (rq.method() !== 'POST') return rt.continue(); sentD = JSON.parse(rq.postData());
+      await rt.fulfill({ contentType: 'application/json', body: JSON.stringify({ text: 'Summary\nRouted.', model: 'mock', used: 1, quota: 2, usedDay: 0, quotaDay: 0, saved: false }) }); });
+    await page.click('#ai-go'); await page.waitForSelector('.ai-text'); await page.unroute('**/api/interpret.php');
+    const lf = sentD && sentD.summary.comparison.flatMap(g => g.likelihoodFits);
+    ok(sentD && sentD.tool === 'cap-dagilimi' && lf.length > 0 && lf.every(x => x.params && x.aic != null) && sentD.summary.unit.descriptive.n > 0 && !/"d":\[/.test(JSON.stringify(sentD)) && JSON.stringify(sentD).length < 60000,
+      'Diameter Distribution sends the unit\'s fits and statistics, no diameters, under the size limit (' + (sentD ? JSON.stringify(sentD).length : 0) + ' bytes)');
     await signOut(); }
   await signIn(USER, 'Test Researcher');
 
