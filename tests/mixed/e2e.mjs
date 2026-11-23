@@ -22,7 +22,7 @@ const REF = JSON.parse(await readFile(path.join(ROOT, 'tests/ref/mixed_sm03.json
 const nums = async sel => (await page.locator(sel).allTextContents()).map(s => +s.replace(/\s/g, '').replace('−', '-'));
 const close = (a, b, r) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= r * Math.abs(b[i]));
 
-await page.goto(BASE + '/karma-modeller.php'); await page.waitForSelector('#sample');
+await page.goto(BASE + '/mixed-models.php'); await page.waitForSelector('#sample');
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
 ok((await page.textContent('#dsinfo')).includes('441 rows'), 'sample read: 441 rows');
 await page.click('#to2'); await page.waitForSelector('#gsel');
@@ -61,10 +61,10 @@ for (const [k, v] of [['c2', 'cm'], ['c3', 'm']]) await page.fill(`[data-unit="$
 await page.click('#sv-save'); await page.waitForSelector('#sv-ok');
 const stored = await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js'); return (await C.listCoefs('mixed')).map(s => ({ form: s.form, params: s.params, expr: s.fit.expr, D: s.fit.D, sigma: s.meta.sigma })); });
 ok(stored.length === 1 && /^mixed\./.test(stored[0].form) && stored[0].expr === '1.3+a*(1-exp(-b*D_cm))^c' && Math.abs(stored[0].params.a / REF.nlme.N1.fixef[0] - 1) < 1e-6 && Math.abs(stored[0].D[0][0] / REF.nlme.N1.ranefCov.D[0][0] - 1) < 1e-3, 'mixed-model set saved: formula, fixed effects, D');
-await page.goto(BASE + '/katsayi-kutuphanesi.php'); await page.waitForFunction(() => document.body.textContent.includes('1.3+a*(1-exp(-b*D_cm))^c'));
+await page.goto(BASE + '/coefficient-library.php'); await page.waitForFunction(() => document.body.textContent.includes('1.3+a*(1-exp(-b*D_cm))^c'));
 const lib = await page.textContent('main');
 ok(lib.includes('Mixed-Effects Models') && !/form\.unknown/.test(lib), 'the coefficient library shows the set, no unknown-form problem');
-await page.goto(BASE + '/karma-modeller.php'); await page.waitForSelector('#cmptab', { timeout: 60000 });
+await page.goto(BASE + '/mixed-models.php'); await page.waitForSelector('#cmptab', { timeout: 60000 });
 ok((await page.textContent('main')).includes('Calibrate a new group') && (await page.textContent('#cmptab')).includes('converged'), 'results restored on reload');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();

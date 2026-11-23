@@ -106,7 +106,7 @@ function renderStep1() {
   const el = $('step1');
   let h = `<p class="muted">${T('src.sub')}</p><div id="tblbox"></div><div id="mapbox"></div><div class="card"><h2>${T('src.h')}</h2>`;
   if (approved) h += `<div class="srcbox"><b>${T('src.approved')}</b><p class="small">${dsInfo(approved)}</p><button type="button" class="btn" id="useapp">${T('src.use')}</button></div>`;
-  else h += `<p class="note">${T('src.none')} <a href="veri-denetcisi.php">${T('src.checker')}</a></p>`;
+  else h += `<p class="note">${T('src.none')} <a href="data-checker.php">${T('src.checker')}</a></p>`;
   h += `<div class="srcrow"><label class="filebtn small"><input type="file" accept=".json,application/json" id="dsfile"><span>${T('src.filebtn')}</span></label>
     <button type="button" class="btn ghost" id="sample">${T('src.sample')}</button></div><p class="muted small">${T('src.sample.note')}</p>`;
   if (S.ds) {

@@ -93,7 +93,7 @@ function renderStep1() {
   const el = $('step1');
   let h = `<div id="tblbox"></div><div id="mapbox"></div><div class="card"><h2>${T('src.h')}</h2>`;
   h += approved ? `<div class="srcbox"><b>${T('src.approved')}</b><p class="small">${dsInfo(approved)}</p><button type="button" class="btn" id="useapp">${T('src.use')}</button></div>`
-    : `<p class="note">${T('src.none')} <a href="veri-denetcisi.php">${T('src.checker')}</a></p>`;
+    : `<p class="note">${T('src.none')} <a href="data-checker.php">${T('src.checker')}</a></p>`;
   h += `<p><button type="button" class="btn ghost" id="sample">${T('src.sample')}</button></p><p class="muted small">${T('src.sample.note')}</p>`;
   if (S.ds) h += `<p class="note ok" id="dsinfo"><b>${T('src.current')}:</b> ${dsInfo(S.ds, S.dsSrc && S.dsSrc.name)}</p>`;
   h += `</div><div class="nav"><button type="button" class="btn ghost" id="reset">${T('reset')}</button><button type="button" class="btn" id="to2"${S.ds ? '' : ' disabled'}>${T('next')}</button>${S.ds ? '' : `<span class="muted small">${T('need.ds')}</span>`}</div>`;
@@ -199,7 +199,7 @@ function renderStep2() {
 }
 /** What the browser holds from the Stem Section Volume tool for this package. */
 function dvHTML() {
-  if (!dv || dv.problems.includes('derived.none')) return `<p class="note warn small" id="dvnone">${T('dv.none')} <a href="seksiyon-hacmi.php">${T('dv.link')}</a></p>`;
+  if (!dv || dv.problems.includes('derived.none')) return `<p class="note warn small" id="dvnone">${T('dv.none')} <a href="section-volume.php">${T('dv.link')}</a></p>`;
   if (!dv.ok) return `<p class="note err small" id="dvbad">${T('dv.bad', { codes: dv.problems.join(', ') })}</p>`;
   const r = dv.record, sides = ['ob', 'ib'].filter(s => r.trees.some(t => t['v_' + s] != null)).map(s => T(s)).join(', ') || '–';
   return `<p class="note ok small" id="dvinfo">${esc(T('dv.info', { tool: `${r.tool.id} ${r.tool.version}`, when: new Date(r.created).toLocaleString(LOC), m: r.settings && r.settings.method || '–', n: r.trees.length, ok: r.trees.filter(t => t.status === 'ok').length, sides }))}</p>`;

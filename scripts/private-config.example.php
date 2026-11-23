@@ -14,7 +14,7 @@ return [
     'orcid_base'          => 'https://orcid.org',        // https://sandbox.orcid.org while testing with a sandbox client
     // The administrator's ORCID iD: approved at once, sees the approval list on the Account page.
     'admin_orcid'       => '0000-0001-5798-3421',
-    // Defaults of the limits; the administration panel (yonetim.php → Settings) overrides them in the database.
+    // Defaults of the limits; the administration panel (administration.php → Settings) overrides them in the database.
     'monthly_quota'     => 30,      // interpretations per account per calendar month (UTC)
     'daily_quota'       => 0,       // per account per day (UTC); 0 = no daily limit
     'per_minute'        => 3,       // at most this many requests per account per minute

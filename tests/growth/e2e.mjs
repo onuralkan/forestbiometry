@@ -1,4 +1,4 @@
-// Browser test for the Growth Function Fitter page (buyume-islevi.php; SQ-03).
+// Browser test for the Growth Function Fitter page (growth-functions.php; SQ-03).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/growth/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 // Values on screen are compared with the engine (assets/lab/growth/calc.js) run in Node on the same sample.
 import { createRequire } from 'node:module';
@@ -12,7 +12,7 @@ const XLSX = require(path.join(ROOT, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const { tableFromText, cellText } = await import('../../assets/lab/core/table.js');
 const { parseNumber } = await import('../../assets/lab/core/num.js');
 const G = await import('../../assets/lab/growth/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/buyume-islevi.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/growth-functions.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];

@@ -1,6 +1,6 @@
 // Browser test for the Stem Section Volume → Biomass & Carbon hand-off (TOOLS_SPEC BC03). An approved package holding the
 // trees of the Stem Section Volume sample is put in the page's browser store; the volumes are computed and sent in
-// seksiyon-hacmi.php, read in biyokutle-karbon.php, and compared bit for bit with Stem Section Volume's own JSON export.
+// section-volume.php, read in biomass-carbon.php, and compared bit for bit with Stem Section Volume's own JSON export.
 // Coefficients and factors are arbitrary test numbers (no species' values).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/biomass/e2e_bc03.mjs http://127.0.0.1:8092 [shots-dir]
 import { createRequire } from 'node:module';
@@ -39,9 +39,9 @@ const DS = { schema: 'forest-dataset/1', created: '2026-11-17T00:00:00Z', tool: 
 const SET = { ...blankSet('biomass.pow.d'), id: 'e2eS', params: { a: 0.11, b: 2.37 }, transform: null, source: { citation: 'e2e test values S' }, origin: 'user-entered', created: '2026-11-17T00:00:00Z', modified: '2026-11-17T00:00:00Z' };
 
 // 1. Stem Section Volume without the approved data: the hand-off asks for it
-await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps');
+await page.goto(BASE + '/biomass-carbon.php?lang=en'); await page.waitForSelector('#steps');
 await page.evaluate(async ({ ds, set }) => { const S = await import('/assets/lab/core/store.js'), C = await import('/assets/lab/core/coef.js'); await import('/assets/lab/biomass/calc.js'); await S.put('dataset:approved', ds); const r = await C.saveCoef(set, set.modified); if (!r.ok) throw new Error(JSON.stringify(r.problems)); }, { ds: DS, set: SET });
-await page.goto(BASE + '/seksiyon-hacmi.php?lang=en'); await page.waitForSelector('#sample');
+await page.goto(BASE + '/section-volume.php?lang=en'); await page.waitForSelector('#sample');
 await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2'); await page.click('#calc'); await page.waitForSelector('#ttab');
 ok(await page.locator('#ho-need').count() === 1 && await page.locator('#ho-send').count() === 0, 'without the linked package the volumes cannot be sent');
 
@@ -61,7 +61,7 @@ let bits = 0, nb = 0; svRes.forEach(r => { const t = stored.rec.trees.find(x => 
 ok(bits === 0 && nb > 3, `stored volumes equal Stem Section Volume's own JSON export bit for bit (${nb} trees)`);
 
 // 3. Biomass: both approaches on the package; volumes from the hand-off
-await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#useapp');
+await page.goto(BASE + '/biomass-carbon.php?lang=en'); await page.waitForSelector('#useapp');
 await page.click('#useapp'); await page.waitForSelector('#dsinfo'); await page.click('#to2'); await page.waitForSelector('input[name="appr"]');
 await page.check('input[name="appr"][value="both"]'); await page.waitForSelector('input[name="vfrom"]');
 await page.check('input[name="vfrom"][value="secvol"]'); await page.waitForSelector('#dvinfo');
@@ -93,14 +93,14 @@ ok(bRec.settings.approach === 'both' && bRec.settings.volume.volumeFrom.kind ===
 
 // 4. another package: the old volumes are not used
 await page.evaluate(async ds => { const S = await import('/assets/lab/core/store.js'); await S.put('dataset:approved', { ...ds, created: '2026-11-18T00:00:00Z' }); }, DS);
-await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps');
+await page.goto(BASE + '/biomass-carbon.php?lang=en'); await page.waitForSelector('#steps');
 await page.click('[data-go="1"]'); await page.click('#useapp'); await page.waitForSelector('#dsinfo'); await page.click('#to2'); await page.waitForSelector('#dvnone');
 ok(await page.isDisabled('#calc') && (await page.textContent('#s2prob')).includes('No volumes sent'), 'a different package (other fingerprint): the earlier volumes are not used');
 
 // 5. English
-await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('input[name="appr"]');
+await page.goto(BASE + '/biomass-carbon.php?lang=en'); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('input[name="appr"]');
 ok((await page.locator('input[name="appr"][value="both"]').locator('..').textContent()).includes('Both'), 'English: the both-approaches option');
-await page.goto(BASE + '/seksiyon-hacmi.php?lang=en'); await page.waitForSelector('#steps');
+await page.goto(BASE + '/section-volume.php?lang=en'); await page.waitForSelector('#steps');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();
 console.log(`BC03 e2e: ${pass} passed, ${fail} failed`);

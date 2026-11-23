@@ -17,16 +17,16 @@ import '../structure/ccf.js';
 export const TOOL = { id: 'katsayi-kutuphanesi', version: '1.0.0-beta.1' };
 /** Tools that keep sets in the library: catalogue id, page, names. Order = display order. */
 export const TOOLS = [
-  { tool: 'siteindex', id: 'SQ-01', page: 'bonitet.php', name: { en: 'Site Index' } },
-  { tool: 'growth', id: 'SQ-03', page: 'buyume-islevi.php', name: { en: 'Growth Functions' } },
-  { tool: 'taper', id: 'SV-02', page: 'govde-profili.php', name: { en: 'Stem Taper' } },
-  { tool: 'biomass', id: 'BC-01', page: 'biyokutle-karbon.php', name: { en: 'Biomass and Carbon' } },
-  { tool: 'volume', id: 'SV-04', page: 'hacim-denklemleri.php', name: { en: 'Volume Equations' } },
-  { tool: 'nls', id: 'SM-02', page: 'dogrusal-olmayan-regresyon.php', name: { en: 'Nonlinear Regression' } },
-  { tool: 'mixed', id: 'SM-03', page: 'karma-modeller.php', name: { en: 'Mixed-Effects Models' } },
-  { tool: 'eqsys', id: 'SM-04', page: 'denklem-sistemleri.php', name: { en: 'Systems of Equations' } },
-  { tool: 'ccf', id: 'SS-02', page: 'mescere-yapisi.php', name: { en: 'Stand Structure: CCF' } },
-  { tool: 'bark', id: 'TM-03', page: 'agac-olcumu.php', name: { en: 'Tree Measurement: bark' } },
+  { tool: 'siteindex', id: 'SQ-01', page: 'site-index.php', name: { en: 'Site Index' } },
+  { tool: 'growth', id: 'SQ-03', page: 'growth-functions.php', name: { en: 'Growth Functions' } },
+  { tool: 'taper', id: 'SV-02', page: 'stem-taper.php', name: { en: 'Stem Taper' } },
+  { tool: 'biomass', id: 'BC-01', page: 'biomass-carbon.php', name: { en: 'Biomass and Carbon' } },
+  { tool: 'volume', id: 'SV-04', page: 'volume-equations.php', name: { en: 'Volume Equations' } },
+  { tool: 'nls', id: 'SM-02', page: 'nonlinear-regression.php', name: { en: 'Nonlinear Regression' } },
+  { tool: 'mixed', id: 'SM-03', page: 'mixed-models.php', name: { en: 'Mixed-Effects Models' } },
+  { tool: 'eqsys', id: 'SM-04', page: 'equation-systems.php', name: { en: 'Systems of Equations' } },
+  { tool: 'ccf', id: 'SS-02', page: 'stand-structure.php', name: { en: 'Stand Structure: CCF' } },
+  { tool: 'bark', id: 'TM-03', page: 'tree-measurement.php', name: { en: 'Tree Measurement: bark' } },
 ];
 export const toolInfo = t => TOOLS.find(x => x.tool === t) || null;
 

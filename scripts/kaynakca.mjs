@@ -1,4 +1,4 @@
-// Builds inc/kaynakca.json (read by kaynakca.php) from the master copy docs/kaynakca.json (21 Nov 2026, user decision:
+// Builds inc/kaynakca.json (read by references.php) from the master copy docs/kaynakca.json (21 Nov 2026, user decision:
 // the two files are no longer edited by hand). The site file is the master without the sources that only archived
 // (removed) pages used: a reference is left out when every entry of its "tools" list says "archived". Order, fields
 // and values are copied unchanged; the list is sorted alphabetically by first author (or title), then year and title

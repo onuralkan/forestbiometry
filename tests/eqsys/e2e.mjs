@@ -20,7 +20,7 @@ const shot = async n => { if (SHOTS) await page.screenshot({ path: path.join(SHO
 const NL = JSON.parse(await readFile(path.join(ROOT, 'tests/ref/eqsys_sm04_nl.json'), 'utf8')), REF = JSON.parse(await readFile(path.join(ROOT, 'tests/ref/eqsys_sm04.json'), 'utf8'));
 const nums = async sel => (await page.locator(sel).allTextContents()).map(s => +s.replace(/\s/g, '').replace('−', '-').replace(',', '.'));
 
-await page.goto(BASE + '/denklem-sistemleri.php?lang=en'); await page.waitForSelector('#sample');
+await page.goto(BASE + '/equation-systems.php?lang=en'); await page.waitForSelector('#sample');
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
 ok((await page.textContent('#dsinfo')).includes('80 rows'), 'sample read: 80 rows');
 await page.click('#to2'); await page.waitForSelector('#ntab');
@@ -52,9 +52,9 @@ for (const [k, v] of [['c1', 'cm'], ['c2', 'm'], ['c3', 'm3']]) await page.fill(
 await page.click('#sv-save'); await page.waitForSelector('#sv-ok');
 const stored = await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js'); return (await C.listCoefs('eqsys')).map(s => ({ form: s.form, expr: s.fit.expr, system: s.fit.system, out: s.output })); });
 ok(stored.length === 2 && stored.every(s => /^eqsys\./.test(s.form)) && stored[0].system === stored[1].system && stored.some(s => s.out.name === 'V_m3' && s.out.unit === 'm3'), 'two sets saved with the same system id and units');
-await page.goto(BASE + '/katsayi-kutuphanesi.php?lang=en'); await page.waitForFunction(() => document.body.textContent.includes('exp(h0)*D_cm^h1'));
+await page.goto(BASE + '/coefficient-library.php?lang=en'); await page.waitForFunction(() => document.body.textContent.includes('exp(h0)*D_cm^h1'));
 ok((await page.textContent('main')).includes('Systems of Equations') && !/form\.unknown/.test(await page.textContent('main')), 'the coefficient library shows the sets, no unknown-form problem');
-await page.goto(BASE + '/denklem-sistemleri.php?lang=en'); await page.waitForSelector('#coeftab');
+await page.goto(BASE + '/equation-systems.php?lang=en'); await page.waitForSelector('#coeftab');
 ok((await page.textContent('main')).includes('Method comparison'), 'results restored');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();

@@ -876,7 +876,7 @@ async function refresh() { list = await P.listProjects(); active = await P.activ
 function activeHTML() {
   const p = list.find(x => x.id === active);
   let h = `<div class="card" id="actcard"><h2>${T('act.h')}</h2>`;
-  if (!p) return h + `<p class="small" id="actnone">${T('act.none')}</p><p><a class="btn ghost" href="veri-denetcisi.php">${T('act.checker')}</a></p></div>`;
+  if (!p) return h + `<p class="small" id="actnone">${T('act.none')}</p><p><a class="btn ghost" href="data-checker.php">${T('act.checker')}</a></p></div>`;
   const s = sumOf(p);
   h += `<p id="actname"><b>${esc(p.name)}</b>${p.year ? ` · ${p.year}` : ''}${p.location ? ` · ${esc(p.location)}` : ''}</p>
     <p class="small" id="actline">${esc(`${T('s.plots')}: ${s.plots} · ${T('s.periods')}: ${s.periods.map(perLabel).join(', ')} · ${T('s.records')}: ${s.records}`)}</p>

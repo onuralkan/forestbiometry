@@ -2,11 +2,11 @@
 
 User request (22 Nov 2026): a comprehensive administration panel to manage ordinary users: approval/rejection, blocking,
 daily and monthly interpretation quotas, and whatever else such a panel needs. Builds on the account service
-(`inc/account.php`, PROJECT.md §3). Page: `yonetim.php` (administrator only; `admin.php` stays unused because the old
+(`inc/account.php`, PROJECT.md §3). Page: `administration.php` (administrator only; `admin.php` stays unused because the old
 site's `admin.php` must keep answering 404).
 
 ## Fixed principles
-- **Privacy stays as promised** (`gizlilik.php`): the administrator sees counts, sizes, dates and states, never the
+- **Privacy stays as promised** (`privacy.php`): the administrator sees counts, sizes, dates and states, never the
   content of a user's saved results or interpretations. The panel has no "view as user".
 - Every administrator action asks for confirmation where it destroys something and is written to an **audit log**
   (time, action, account, before → after, reason).
@@ -14,7 +14,7 @@ site's `admin.php` must keep answering 404).
   (API key, ORCID client secret) stay only in `config.php`.
 - Server-rendered forms with the form token (CSRF), as on the Account page; works without JavaScript.
 
-## Stage 1: account management and limits — done 22 Nov 2026 (`yonetim.php`, tests/account/e2e.mjs §5b)
+## Stage 1: account management and limits — done 22 Nov 2026 (`administration.php`, tests/account/e2e.mjs §5b)
 1. **Overview**: accounts by state, waiting accounts with quick approve / reject, interpretations today and this month,
    storage in use, newest backup and its age.
 2. **Account list**: search (name, ORCID), filter by state, sort (sign-up, last seen, use); links to the account page.

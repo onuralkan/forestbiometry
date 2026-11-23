@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const XLSX = require(path.join(root, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null;
-const URL = BASE + '/veri-denetcisi.php';
+const URL = BASE + '/data-checker.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -89,7 +89,7 @@ ok(ds && ds.schema === 'forest-dataset/1' && ds.trees.length === 17, 'approved d
 ok(ds.trees.find(t => t.row === 2).plot_id === '001' && ds.trees.find(t => t.row === 13).dbh === 27.4, 'approved values');
 const proj = await page.evaluate(async () => { const P = await import('/assets/lab/core/projects.js'); return { list: await P.listProjects(), active: await P.activeId() }; });
 ok(proj.list.length === 1 && proj.list[0].origin === 'checker' && proj.active === proj.list[0].id && proj.list[0].dataset.created === ds.created, 'approval kept in the Inventory Data Manager and made active (DI-03)');
-ok(await page.locator('#panel a[href="veri-yoneticisi.php"]').count() === 1, 'link to the Inventory Data Manager after approval');
+ok(await page.locator('#panel a[href="data-manager.php"]').count() === 1, 'link to the Inventory Data Manager after approval');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]);
 const wb = XLSX.read(await (await import('node:fs/promises')).readFile(await dl.path()));
 ok(wb.SheetNames.length === 7 && wb.SheetNames.includes('Species'), 'XLSX report with 7 sheets (Species added 21 Nov 2026): ' + wb.SheetNames.join(','));

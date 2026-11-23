@@ -17,7 +17,7 @@ This document has the same format as `docs/DIST_SPEC.md`: first the common rules
 | No | Decision | Decision text | Rationale |
 |---|---|---|---|
 | K1 | Built-in coefficients | **No tool has built-in species/region coefficients.** Site index curves, biomass equations, carbon fraction, wood density, bark model and taper coefficients are entered by the user or fitted from the user's own data. A coefficient set is kept in a "coefficient registry" with a mandatory source field (T01). | PROJECT.md §5 rule 4; zero risk of fabricated coefficients. If a built-in set is requested, it is added as a **separate stage** after its source has been read and marked [B]. |
-| K2 | Page and folder names | `seksiyon-hacmi.php` → `assets/lab/secvol/`; `bonitet.php` → `assets/lab/siteindex/`; `mescere-yapisi.php` → `assets/lab/structure/`; `biyokutle-karbon.php` → `assets/lab/biomass/`; `govde-profili.php` → `assets/lab/taper/` | Same as the existing naming (Turkish page name, English code folder). |
+| K2 | Page and folder names | `section-volume.php` → `assets/lab/secvol/`; `site-index.php` → `assets/lab/siteindex/`; `stand-structure.php` → `assets/lab/structure/`; `biomass-carbon.php` → `assets/lab/biomass/`; `stem-taper.php` → `assets/lab/taper/` | Same as the existing naming (Turkish page name, English code folder). |
 | K3 | Sidebar categories | New category **"Tree and stem"**: section volume, taper, biomass and carbon. New category for site index and stand structure: **"Stand and site"**. | The existing four categories do not fit these tools. |
 | K4 | Version | Each tool starts at `1.0.0-beta.1`. The beta number increases with every release in which the set of computed methods changes (diameter distribution rule). The first full version becomes `1.0.0` with the acceptance of the tool's last stage. | The citation version must show what the tool does. |
 | K5 | Order | T00 → T01 → SV01 → SV02 → SV03 → SI01 → SI02 → SI03 → SI04 → SS01 → SS02 → SS03 → SS04 → BC01 → BC02 → BC03 → TP01 → TP02 → TP03 → TP04. Optional: SV04, BC04, TP05. | The user's tool order is kept. The shared infrastructure (T01) comes first, because four tools share the coefficient registry and two tools share the stem measurement contract. |
@@ -132,7 +132,7 @@ Acceptance: the paraboloid, cone and neiloid values in Section 8.1 must pass wit
 ### SV02 — Interface, tree and plot level
 
 ~~~text
-Add the page (seksiyon-hacmi.php) and interface of the section volume tool. Steps: data (stem measurement table and optional tree table; import panel; column mapping; choice of data layout), settings (method, top section solid, whether the stump is included, diameter combining rule, merchantable top diameter), results.
+Add the page (section-volume.php) and interface of the section volume tool. Steps: data (stem measurement table and optional tree table; import panel; column mapping; choice of data layout), settings (method, top section solid, whether the stump is included, diameter combining rule, merchantable top diameter), results.
 
 Result screen: a single table per tree (tree, method, over-bark and under-bark volume, form factor, status); the section breakdown of the selected tree and the taper drawing (height–diameter, measurement points and section boundaries) in the details expandable section. If more than one method is selected, the methods are shown side by side for the same tree and the difference between them as a percentage. If a merchantable top diameter is given, merchantable volume and the height of that diameter (linear interpolation, rule written).
 
@@ -213,7 +213,7 @@ Acceptance: for every form, consistency, base-age invariance and path invariance
 ### SI02 — Site index computation with the coefficient registry, and interface
 
 ~~~text
-Add the page of the site index tool (bonitet.php). The user selects a set from the T01 coefficient registry or enters a new set (form, coefficients, age type, base age, top height definition, validity range, source mandatory).
+Add the page of the site index tool (site-index.php). The user selects a set from the T01 coefficient registry or enters a new set (form, coefficients, age type, base age, top height definition, validity range, source mandatory).
 
 Input: manual for a single tree/plot (age, top height) or a table (plot, period, age, top height). If top height is to be computed from the tree table, the H0 definition of the Plot and Stand tool is used exactly (the code is shared, not rewritten) and the definition is written in the result.
 
@@ -295,7 +295,7 @@ Acceptance: Hegyi is the same as a brute-force double loop; with the buffer opti
 ### SS04 — Interface and charts
 
 ~~~text
-Add the page of the stand structure tool (mescere-yapisi.php): data (tree table or confirmed data; coordinates optional), settings (measure groups, plot geometry, edge effect, k and radius), results (general table per unit; in the details a diameter class histogram, Lorenz curve and, if coordinates are available, a stem map coloured by competition index). Navigator (core/unitnav.js), Excel/CSV/JSON, guide, site_tools row.
+Add the page of the stand structure tool (stand-structure.php): data (tree table or confirmed data; coordinates optional), settings (measure groups, plot geometry, edge effect, k and radius), results (general table per unit; in the details a diameter class histogram, Lorenz curve and, if coordinates are available, a stem map coloured by competition index). Navigator (core/unitnav.js), Excel/CSV/JSON, guide, site_tools row.
 
 Acceptance: in e2e the values are the same as the engine's; for data without coordinates the spatial measures are shown with the "no coordinates" status, not empty or zero; phone and dark theme check.
 ~~~
@@ -338,7 +338,7 @@ Acceptance: hand-verifiable values for each form (Section 8.4); the Baskerville 
 ### BC02 — Interface
 
 ~~~text
-Add the page of the biomass and carbon tool (biyokutle-karbon.php). Data: tree table or confirmed data; species mapping (data species code → coefficient set; unmapped species are reported, not silently computed with another species' equation). Settings: approach, components, coefficient sets (from the T01 registry), carbon fractions. Result: component biomass, carbon, CO2 (Mg/ha) per plot × period; export appended to the tree table; which coefficient set each number comes from.
+Add the page of the biomass and carbon tool (biomass-carbon.php). Data: tree table or confirmed data; species mapping (data species code → coefficient set; unmapped species are reported, not silently computed with another species' equation). Settings: approach, components, coefficient sets (from the T01 registry), carbon fractions. Result: component biomass, carbon, CO2 (Mg/ha) per plot × period; export appended to the tree table; which coefficient set each number comes from.
 
 Acceptance: in e2e the values are the same as the engine's; unmapped species and missing height cases with row numbers; the source field on the Excel "Info" sheet.
 ~~~
@@ -411,7 +411,7 @@ Acceptance: on small examples (≤ 8 m stem, 0.5 m step) dynamic programming fin
 ### TP04 — Interface
 
 ~~~text
-Add the page of the taper tool (govde-profili.php): choice of a coefficient set or fitting; single tree (D, H) or tree table input; taper chart (over bark and under bark), piece drawing (products coloured and patterned; not relying on colour alone), product summary table, Excel/CSV/JSON, guide, site_tools row.
+Add the page of the taper tool (stem-taper.php): choice of a coefficient set or fitting; single tree (D, H) or tree table input; taper chart (over bark and under bark), piece drawing (products coloured and patterned; not relying on colour alone), product summary table, Excel/CSV/JSON, guide, site_tools row.
 
 Acceptance: in e2e the values are the same as the engine's; when the product definition changes, the breakdown changes; phone and dark theme check.
 ~~~

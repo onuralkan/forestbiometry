@@ -64,7 +64,7 @@ async function saveRecord(rec, payload, to) {
     j = await r.json();
   } catch (e) { j = { error: 'network' }; }
   to.b.disabled = false;
-  if (j && j.id) say(`${esc(T('saved'))} <a href="hesap.php?tab=results&amp;id=${esc(j.id)}">${esc(T('open'))}</a>`, 'ok');
+  if (j && j.id) say(`${esc(T('saved'))} <a href="account.php?tab=results&amp;id=${esc(j.id)}">${esc(T('open'))}</a>`, 'ok');
   else say(esc(T(j && T(j.error) !== j.error ? j.error : 'other')), 'err');
   return j;
 }

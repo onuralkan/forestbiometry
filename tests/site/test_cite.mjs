@@ -9,20 +9,20 @@ let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const eq = (a, b, m) => ok(a === b, `${m}\n   got: ${a}\n  want: ${b}`);
 const base = { author: { family: 'Alkan', given: 'Onur' }, year: 2026, base: 'https://forestbiometry.online/', site: { en: 'Forest Biometrics Tools' }, accessed: '2026-11-10' };
-const tool = { file: 'boy-cap.php', v: '1.0.0', en: 'Height–Diameter Modelling' };
+const tool = { file: 'height-diameter.php', v: '1.0.0', en: 'Height–Diameter Modelling' };
 const en = { ...base, tool }, pl = { ...base, tool: null };
 
 // expected strings (patterns of the style guides for software / web applications)
-eq(plain(cite('apa', en)), 'Alkan, O. (2026). Height–Diameter Modelling (Version 1.0.0) [Web application]. Forest Biometrics Tools. Retrieved November 10, 2026, from https://forestbiometry.online/boy-cap.php', 'APA, tool, EN');
+eq(plain(cite('apa', en)), 'Alkan, O. (2026). Height–Diameter Modelling (Version 1.0.0) [Web application]. Forest Biometrics Tools. Retrieved November 10, 2026, from https://forestbiometry.online/height-diameter.php', 'APA, tool, EN');
 eq(cite('apa', en).match(/<i>(.*?)<\/i>/)[1], 'Height–Diameter Modelling', 'APA: title in italics');
 eq(plain(cite('apa', pl)), 'Alkan, O. (2026). Forest Biometrics Tools [Web application]. Retrieved November 10, 2026, from https://forestbiometry.online/', 'APA, platform: no version, no container');
-eq(plain(cite('mla', en)), 'Alkan, Onur. Height–Diameter Modelling. Version 1.0.0, Forest Biometrics Tools, 2026, forestbiometry.online/boy-cap.php. Accessed 10 Nov. 2026.', 'MLA');
-eq(plain(cite('chicago', en)), 'Alkan, Onur. 2026. Height–Diameter Modelling. Version 1.0.0. Forest Biometrics Tools. Accessed November 10, 2026. https://forestbiometry.online/boy-cap.php.', 'Chicago');
-eq(plain(cite('harvard', en)), 'Alkan, O. (2026) Height–Diameter Modelling (version 1.0.0). Forest Biometrics Tools. Available at: https://forestbiometry.online/boy-cap.php (Accessed: 10 November 2026).', 'Harvard');
-eq(plain(cite('ieee', en)), 'O. Alkan, “Height–Diameter Modelling,” Forest Biometrics Tools, ver. 1.0.0, 2026. [Online]. Available: https://forestbiometry.online/boy-cap.php (accessed Nov. 10, 2026).', 'IEEE');
-eq(plain(cite('vancouver', en)), 'Alkan O. Height–Diameter Modelling [Internet]. Version 1.0.0. Forest Biometrics Tools; 2026 [cited 2026 Nov 10]. Available from: https://forestbiometry.online/boy-cap.php', 'Vancouver');
+eq(plain(cite('mla', en)), 'Alkan, Onur. Height–Diameter Modelling. Version 1.0.0, Forest Biometrics Tools, 2026, forestbiometry.online/height-diameter.php. Accessed 10 Nov. 2026.', 'MLA');
+eq(plain(cite('chicago', en)), 'Alkan, Onur. 2026. Height–Diameter Modelling. Version 1.0.0. Forest Biometrics Tools. Accessed November 10, 2026. https://forestbiometry.online/height-diameter.php.', 'Chicago');
+eq(plain(cite('harvard', en)), 'Alkan, O. (2026) Height–Diameter Modelling (version 1.0.0). Forest Biometrics Tools. Available at: https://forestbiometry.online/height-diameter.php (Accessed: 10 November 2026).', 'Harvard');
+eq(plain(cite('ieee', en)), 'O. Alkan, “Height–Diameter Modelling,” Forest Biometrics Tools, ver. 1.0.0, 2026. [Online]. Available: https://forestbiometry.online/height-diameter.php (accessed Nov. 10, 2026).', 'IEEE');
+eq(plain(cite('vancouver', en)), 'Alkan O. Height–Diameter Modelling [Internet]. Version 1.0.0. Forest Biometrics Tools; 2026 [cited 2026 Nov 10]. Available from: https://forestbiometry.online/height-diameter.php', 'Vancouver');
 const bib = plain(cite('bibtex', en));
-ok(bib.startsWith('@misc{alkan2026boycap,') && bib.includes('title        = {{Height--Diameter Modelling}}') && bib.includes('urldate      = {2026-11-10}') && bib.trim().endsWith('}'), 'BibTeX entry');
+ok(bib.startsWith('@misc{alkan2026heightdiameter,') && bib.includes('title        = {{Height--Diameter Modelling}}') && bib.includes('urldate      = {2026-11-10}') && bib.trim().endsWith('}'), 'BibTeX entry');
 ok(plain(cite('bibtex', pl)).startsWith('@misc{alkan2026forestbiometry,') && !plain(cite('bibtex', pl)).includes('version'), 'BibTeX, platform without version');
 const ris = plain(cite('ris', en)).split('\r\n');
 ok(ris[0] === 'TY  - COMP' && ris.includes('AU  - Alkan, Onur') && ris.includes('Y2  - 2026/11/10') && ris.includes('N1  - Version 1.0.0') && ris.at(-1) === 'ER  - ', 'RIS record');

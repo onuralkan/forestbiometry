@@ -1,4 +1,4 @@
-// Browser test for Data Visualization (pano.php; DI-04). Packages: the sample package of Plot & Stand
+// Browser test for Data Visualization (data-visualization.php; DI-04). Packages: the sample package of Plot & Stand
 // Metrics (made up). Records: a Diameter Distribution record made in Node with the distribution engine on that
 // package, and a Height–Diameter record with arbitrary test coefficients.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/dashboard/e2e.mjs http://127.0.0.1:8092 [shots-dir]
@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
 const D = await import('../../assets/lab/dist/index.js');
 const { seal, sha256JSON } = await import('../../assets/lab/core/record.js');
 const C = await import('../../assets/lab/dashboard/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/pano.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/data-visualization.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -29,8 +29,8 @@ const sample = JSON.parse(await readFile(path.join(ROOT, 'assets/lab/stand/ornek
 // records
 const d24 = sample.trees.filter(t => t.period === '2024').map(t => t.dbh);
 const res = [D.runMethod('weibull.ml', { d: d24, plot: D.POOL, period: '2024' }), D.runMethod('lognormal.ml', { d: d24, plot: D.POOL, period: '2024' })];
-const distRec = await seal({ format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.0', ids: ['SS-03'], page: 'cap-dagilimi.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:00:00Z', lang: 'en', inputs: [{ role: 'data', kind: 'file', name: 'agaclar.csv', sha256: '00' }], results: res });
-const hdRec = await seal({ format: 'run-record/1', tool: { id: 'boy-cap', version: '1.1.0', ids: ['SM-01'], page: 'boy-cap.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:05:00Z', lang: 'en',
+const distRec = await seal({ format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.0', ids: ['SS-03'], page: 'diameter-distribution.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:00:00Z', lang: 'en', inputs: [{ role: 'data', kind: 'file', name: 'agaclar.csv', sha256: '00' }], results: res });
+const hdRec = await seal({ format: 'run-record/1', tool: { id: 'boy-cap', version: '1.1.0', ids: ['SM-01'], page: 'height-diameter.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:05:00Z', lang: 'en',
   inputs: [{ role: 'dataset', kind: 'dataset', sha256: sha }], settings: { breastHeight: 1.3, model: 'naslund' }, fits: [{ id: 'naslund', status: 'ok', theta: [1.9, 0.2] }, { id: 'michailoff', status: 'ok', theta: [30, 12] }] });
 const other = { format: 'run-record/1', tool: { id: 'bonitet', version: '1.0.0-beta.3' }, created: '2026-11-16T12:10:00Z', inputs: [] };
 const files = [['dist.json', distRec], ['hd.json', hdRec], ['bonitet.json', other], ['bozuk.json', null]];

@@ -25,7 +25,7 @@ const nums = async sel => (await page.locator(sel).allTextContents()).map(s => +
 const fit = async () => { await page.click('#calc'); await page.waitForSelector('#cmptab'); };
 const s2 = async () => { await page.click('[data-go="2"]'); await page.waitForSelector('#ysel'); };
 
-await page.goto(BASE + '/dogrusal-olmayan-regresyon.php'); await page.waitForSelector('#sample');
+await page.goto(BASE + '/nonlinear-regression.php'); await page.waitForSelector('#sample');
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
 ok((await page.textContent('#dsinfo')).includes('60 rows, 4 columns'), 'sample read: 60 rows, 4 columns');
 await page.click('#to2'); await page.waitForSelector('#ysel');
@@ -78,15 +78,15 @@ await page.click('#sv-save'); await page.waitForSelector('#sv-ok');
 const stored = await page.evaluate(async () => { const C = await import('/assets/lab/core/coef.js'); return (await C.listCoefs('nls')).map(s => ({ form: s.form, params: s.params, inputs: s.inputs, output: s.output, expr: s.fit.expr, vars: s.fit.vars, valid: s.valid })); });
 ok(stored.length === 1 && /^nls\.expr\./.test(stored[0].form) && stored[0].expr === 'a*D_cm^b*H_m^c' && stored[0].inputs.D_cm.unit === 'cm' && stored[0].output.unit === 'm3' && Math.abs(stored[0].params.b / U.theta[1] - 1) < 1e-6, 'formula set saved with formula, units and coefficients');
 await shot('nl-2');
-await page.goto(BASE + '/katsayi-kutuphanesi.php'); await page.waitForSelector('#steps, main');
+await page.goto(BASE + '/coefficient-library.php'); await page.waitForSelector('#steps, main');
 await page.waitForFunction(() => document.body.textContent.includes('a*D_cm^b*H_m^c'));
 const libText = await page.textContent('main');
 ok(libText.includes('Nonlinear Regression') && libText.includes('a*D_cm^b*H_m^c') && !/form\.unknown/.test(libText), 'the coefficient library shows the formula set, no unknown-form problem');
 // hand-off to Model Evaluation
-await page.goto(BASE + '/dogrusal-olmayan-regresyon.php'); await page.waitForSelector('#ev-send');
-await page.click('#ev-send'); await page.waitForURL(/model-degerlendirme\.php/); await page.waitForTimeout(800);
+await page.goto(BASE + '/nonlinear-regression.php'); await page.waitForSelector('#ev-send');
+await page.click('#ev-send'); await page.waitForURL(/model-evaluation\.php/); await page.waitForTimeout(800);
 ok((await page.textContent('main')).includes('nonlinear-regression.tsv'), 'Model Evaluation opened with the handed-off table');
-await page.goto(BASE + '/dogrusal-olmayan-regresyon.php'); await page.waitForSelector('#cmptab');
+await page.goto(BASE + '/nonlinear-regression.php'); await page.waitForSelector('#cmptab');
 ok((await page.textContent('#cmptab')).includes('estimated') && (await page.textContent('main')).includes('Save the set'), 'English labels, results restored on reload');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();

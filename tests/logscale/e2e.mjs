@@ -1,4 +1,4 @@
-// Browser test for Log Scaling (tomruk-olcumu.php; SV-05): one log against the book (Doyle, 20 in., 16 ft = 256 bf),
+// Browser test for Log Scaling (log-scaling.php; SV-05): one log against the book (Doyle, 20 in., 16 ft = 256 bf),
 // the simulated table against calc.js in Node, splitting, downloads, English only, phone.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/logscale/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 import { createRequire } from 'node:module';
@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const XLSX = require(path.join(ROOT, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const LS = await import('../../assets/lab/logscale/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/tomruk-olcumu.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/log-scaling.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];

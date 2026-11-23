@@ -46,7 +46,7 @@
 - **Expected behaviour / acceptance criteria:**
   - The page title, the menu and the tool card, if any, should show the same name in the selected language.
   - The current page address, links, charts and calculations must be kept.
-- **Verification / result:** Displayed name TR "Veri Görselleştirme", EN "Data Visualization": page title and top line (`pano.php`), side menu and index card (`inc/site.php`), catalogue (`inc/catalog.php`, DI-04), guide (Data Visualization, Workflow, Inventory Data Manager, Report Generator sections), the Inventory Data Manager note and the Report Generator's "Take the records from Data Visualization" button. The address (`pano.php`, `kilavuz.php?k=pano`), session key, downloaded file names (`pano-…`, `dashboard-…`) and calculations unchanged. Tests: DI-04, DI-05, DI-03 and site e2e (normal and `FB_BUNDLE=1`), guide test.
+- **Verification / result:** Displayed name TR "Veri Görselleştirme", EN "Data Visualization": page title and top line (`data-visualization.php`), side menu and index card (`inc/site.php`), catalogue (`inc/catalog.php`, DI-04), guide (Data Visualization, Workflow, Inventory Data Manager, Report Generator sections), the Inventory Data Manager note and the Report Generator's "Take the records from Data Visualization" button. The address (`data-visualization.php`, `guide.php?k=pano`), session key, downloaded file names (`pano-…`, `dashboard-…`) and calculations unchanged. Tests: DI-04, DI-05, DI-03 and site e2e (normal and `FB_BUNDLE=1`), guide test.
 
 ---
 

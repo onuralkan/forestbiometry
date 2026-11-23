@@ -7,7 +7,7 @@ const BASE = process.argv[2] || 'http://127.0.0.1:8092';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const browser = await chromium.launch();
-const PAGES = ['veri-denetcisi.php', 'seksiyon-hacmi.php', 'cap-dagilimi.php', 'mescere-yapisi.php', 'ornekleme.php'];
+const PAGES = ['data-checker.php', 'section-volume.php', 'diameter-distribution.php', 'stand-structure.php', 'sampling-planner.php'];
 const box = '#steps > *, #app > *';
 
 // 1. IndexedDB.open never answers: the tool still draws (memory fallback after the open time limit)
@@ -27,7 +27,7 @@ for (const f of PAGES) {
   const ctx = await browser.newContext();
   await ctx.addInitScript(() => { const T = IDBDatabase.prototype.transaction; IDBDatabase.prototype.transaction = function (...a) { const t = T.apply(this, a); Object.defineProperty(t, 'oncomplete', { set() {}, get() { return null; } }); return t; }; });
   const p = await ctx.newPage();
-  await p.goto(`${BASE}/seksiyon-hacmi.php`);
+  await p.goto(`${BASE}/section-volume.php`);
   ok(await p.waitForSelector(box, { timeout: 10000 }).then(() => true, () => false), 'hung transaction: draws');
   await ctx.close();
 }
@@ -35,7 +35,7 @@ for (const f of PAGES) {
 {
   const ctx = await browser.newContext(); const p = await ctx.newPage();
   await p.route('**/secvol/ui.js*', () => {}); // never answered
-  await p.goto(`${BASE}/seksiyon-hacmi.php`, { waitUntil: 'commit' });
+  await p.goto(`${BASE}/section-volume.php`, { waitUntil: 'commit' });
   const w = await p.waitForSelector('#bootwarn', { timeout: 13000 }).then(() => true, () => false);
   ok(w, 'hung module: warning shown');
   ok(w && /The tool did not load/.test(await p.textContent('#bootwarn')) && (await p.textContent('#bootwarn button')) === 'Reload', 'warning text and button label');
@@ -46,14 +46,14 @@ for (const f of PAGES) {
 {
   const ctx = await browser.newContext(); const p = await ctx.newPage();
   await p.route('**/secvol/ui.js*', r => r.fulfill({ status: 404, body: '' }));
-  await p.goto(`${BASE}/seksiyon-hacmi.php`);
+  await p.goto(`${BASE}/section-volume.php`);
   ok(await p.waitForSelector('#bootwarn', { timeout: 4000 }).then(() => true, () => false), 'failed module: warning at once');
   await ctx.close();
 }
 // 5. a normal load shows no warning, even after the time limit
 {
   const ctx = await browser.newContext(); const p = await ctx.newPage();
-  await p.goto(`${BASE}/seksiyon-hacmi.php`); await p.waitForSelector(box); await p.waitForTimeout(10500);
+  await p.goto(`${BASE}/section-volume.php`); await p.waitForSelector(box); await p.waitForTimeout(10500);
   ok(!(await p.$('#bootwarn')), 'normal load: no warning');
   await ctx.close();
 }

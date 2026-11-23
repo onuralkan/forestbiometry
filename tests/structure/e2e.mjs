@@ -1,4 +1,4 @@
-// Browser test for the Stand Structure tool (mescere-yapisi.php). Playwright, Chromium.
+// Browser test for the Stand Structure tool (stand-structure.php). Playwright, Chromium.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/structure/e2e.mjs http://127.0.0.1:8092 [screenshot-dir]
 // Every number on screen is checked against the engine (run.js), itself checked against SciPy and brute force in
 // tests/structure/test_ss01.mjs, test_ss02.mjs, test_ss07.mjs and test_ss04.mjs.
@@ -17,7 +17,7 @@ const RUN = await import('../../assets/lab/structure/run.js');
 const VER = (await import('../../assets/lab/structure/calc.js')).TOOL.version;
 const CF = await import('../../assets/lab/structure/ccf.js');
 const { blankSet } = await import('../../assets/lab/core/coef.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/mescere-yapisi.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/stand-structure.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -37,7 +37,7 @@ const E = RUN.analyse(ds, { structure: {}, spatial: { k: 4, edge: 'none', buffer
 
 // 0. listed in the sidebar and the index under its module; the catalogue ids it covers in the header
 await page.goto(BASE + '/');
-ok((await page.locator('#side a[href="mescere-yapisi.php"]').count()) === 1 && (await page.locator('#side .b-group[data-mod="SS"] a[href="mescere-yapisi.php"]').count()) === 1, 'sidebar: Stand Structure under its module (SS)');
+ok((await page.locator('#side a[href="stand-structure.php"]').count()) === 1 && (await page.locator('#side .b-group[data-mod="SS"] a[href="stand-structure.php"]').count()) === 1, 'sidebar: Stand Structure under its module (SS)');
 await page.goto(URL + '?lang=en');
 ok((await page.locator('h1').textContent()).includes('Stand Structure') && (await page.locator('.b-head').getAttribute('data-ids')) === 'SS-02 · SS-04 · SS-05 · SS-06 · SS-07' && (await page.locator('.b-ver').textContent()).includes(VER), `page title, tool ids SS-02, SS-04…SS-07, version ${VER}`);
 

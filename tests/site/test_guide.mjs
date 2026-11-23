@@ -1,6 +1,6 @@
-// User guide (kilavuz.php, inc/guide/en/<id>.php): structure and agreement with the tools.
+// User guide (guide.php, inc/guide/en/<id>.php): structure and agreement with the tools.
 //   node tests/site/test_guide.mjs
-// One file per section and language; the sections in kilavuz.php's order (general, workflow, then site_tools()) are read
+// One file per section and language; the sections in guide.php's order (general, workflow, then site_tools()) are read
 // and joined, so the checks below see the whole guide. Every tool has a section in both languages (same ids, same
 // number of subsections); every section opens and closes once; interface labels the guide names (buttons, tabs,
 // options) are present in the tools' own interface strings, so a renamed label breaks the test instead of leaving the
@@ -17,7 +17,7 @@ const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } }
 const site = await rd('inc/site.php');
 const tools = [...site.matchAll(/'file' => '([a-z-]+)\.php', 'v' =>/g)].map(m => m[1]);
 ok(tools.length >= 7 && tools.length === (site.match(/'file' => '[a-z0-9-]+\.php'/g) || []).length, `tools read from site_tools(): ${tools.length}`);
-const order = ['genel', 'is-akisi', 'sorun-giderme', ...tools];
+const order = ['general', 'workflow', 'troubleshooting', ...tools];
 const files = { en: (await readdir(path.join(root, 'inc/guide/en'))).sort() };
 ok(!existsSync(path.join(root, 'inc/guide/tr')), 'no Turkish guide (English only)');
 ok(order.every(id => files.en.includes(id + '.php')) && files.en.every(f => order.includes(f.replace(/\.php$/, ''))), 'a file for the general part, the workflow and every tool, and no other: ' + files.en.filter(f => !order.includes(f.replace(/\.php$/, ''))));
@@ -34,7 +34,7 @@ const subs = s => s.split(/<section /).slice(1).map(x => (x.match(/<h3>/g) || []
 for (const [k, g] of Object.entries(G)) { const parts = g.split('<section ').slice(1); ok(parts.every(x => (x.match(/<\/section>/g) || []).length === 1), `${k}: every section closes before the next one opens (sections are not nested)`); }
 const doi = (site.match(/const SITE_DOI = '([^']+)'/) || [])[1];
 ok(doi && G.en.includes(doi), 'the DOI in the guide is the site\'s');
-ok(/href="kilavuz\.php\?k=<\?= h\(basename\(\$cur\['file'\], '\.php'\)\) \?>"/.test(site), 'every tool header links to its own guide page');
+ok(/href="guide\.php\?k=<\?= h\(basename\(\$cur\['file'\], '\.php'\)\) \?>"/.test(site), 'every tool header links to its own guide page');
 const cards = await rd('inc/guide/cards.php'), onCards = new Set([...cards.matchAll(/'ids' => \[([^\]]*)\]/g)].flatMap(m => [...m[1].matchAll(/'([a-z-]+)'/g)].map(x => x[1])));
 ok(tools.every(t => onCards.has(t)), 'every tool is on at least one task card: missing ' + tools.filter(t => !onCards.has(t)));
 ok([...onCards].every(id => order.includes(id)), 'task cards name only guide sections that exist');

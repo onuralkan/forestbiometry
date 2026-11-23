@@ -814,7 +814,7 @@ async function saveRecord(rec, payload, to) {
     j = await r.json();
   } catch (e) { j = { error: 'network' }; }
   to.b.disabled = false;
-  if (j && j.id) say(`${esc(T('saved'))} <a href="hesap.php?tab=results&amp;id=${esc(j.id)}">${esc(T('open'))}</a>`, 'ok');
+  if (j && j.id) say(`${esc(T('saved'))} <a href="account.php?tab=results&amp;id=${esc(j.id)}">${esc(T('open'))}</a>`, 'ok');
   else say(esc(T(j && T(j.error) !== j.error ? j.error : 'other')), 'err');
   return j;
 }
@@ -1631,7 +1631,7 @@ function barkList(method, trees) {
 // ---- assets/lab/tree/calc.js
 __fb_m["tree/calc.js"] = function (__fb_e) {
 __fb_x(__fb_e, { "TOOL": () => TOOL });
-// Tree measurement page (agac-olcumu.php): tool id and version (TOOLS_SPEC K4: starts at 1.0.0-beta.1); the engines
+// Tree measurement page (tree-measurement.php): tool id and version (TOOLS_SPEC K4: starts at 1.0.0-beta.1); the engines
 // live in height.js (TM-01), diameter.js (TM-02), bark.js (TM-03), crown.js (TM-04), age.js (TM-05) and form.js (TM-06).
 const TOOL = { id: 'agac-olcumu', version: '1.0.0-beta.4' };
 };
@@ -2133,7 +2133,7 @@ const { parseNumber, detectDecimal, defaultDecimal } = __fb_r("core/num.js");
 const { download, xlsxBlob, loadXLSX } = __fb_r("core/export.js");
 const { downloadRecord, recordOption } = __fb_r("core/record-ui.js");
 const { renderImport, readImport } = __fb_r("core/importer.js");
-// Tree measurement page (agac-olcumu.php; TM-01 height, TM-02 diameter and basal area, TM-03 bark, TM-04 crown, TM-05
+// Tree measurement page (tree-measurement.php; TM-01 height, TM-02 diameter and basal area, TM-03 bark, TM-04 crown, TM-05
 // age and increment, TM-06 form factors). All arithmetic lives in height.js, diameter.js, bark.js, crown.js, form.js and
 // age.js; results update as the fields change.
 

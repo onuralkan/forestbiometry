@@ -15,7 +15,7 @@ const XLSX = require(path.join(ROOT, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const Bm = await import('../../assets/lab/biomass/calc.js');
 const M = await import('../../assets/lab/biomass/mc.js');
 const { blankSet } = await import('../../assets/lab/core/coef.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=en';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biomass-carbon.php?lang=en';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -88,7 +88,7 @@ ok((await page.textContent('#mcbad')).includes('not symmetric') && (await page.t
 // volume approach: no information
 await page.click('#back2'); await page.check('input[name="appr"][value="volume"]'); await page.waitForSelector('#vcol');
 // English
-await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps');
+await page.goto(BASE + '/biomass-carbon.php?lang=en'); await page.waitForSelector('#steps');
 const phone = await ctx.newPage(); await phone.setViewportSize({ width: 390, height: 800 }); await phone.goto(URL); await phone.waitForSelector('#steps');
 { const w = await phone.evaluate(() => { const W = innerWidth; return [document.documentElement.scrollWidth, W, [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > W + 1).slice(0, 6).map(e => e.tagName + '#' + e.id + '.' + e.className).join(' ')]; }); ok(w[0] <= w[1] + 1, 'phone: no horizontal page scroll ' + JSON.stringify(w)); }
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));

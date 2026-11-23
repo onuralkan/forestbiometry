@@ -5793,7 +5793,7 @@ function renderReport(m) {
     h += `<section class="r-sec" id="r-sources">${H('sources')}${note('sources')}`;
     const base = { lang: L, author: m.cite.author, year: m.cite.year, base: m.cite.base, site: m.cite.site, accessed: day, doi: m.cite.doi || undefined };
     h += `<h3>${e(T('platform'))}</h3><p class="r-cite">${cite('apa', { ...base, tool: null })}</p>`;
-    const used = [...new Set([...m.records.map(r => r.tool && r.tool.page).filter(p => m.tools[p]), 'rapor.php'])];
+    const used = [...new Set([...m.records.map(r => r.tool && r.tool.page).filter(p => m.tools[p]), 'report-generator.php'])];
     h += `<h3>${e(T('toolsCite'))}</h3><ul class="r-cites">${used.map(p => `<li>${cite('apa', { ...base, tool: { file: p, ...m.tools[p], v: (m.records.find(r => r.tool && r.tool.page === p) || {}).tool?.version || m.tools[p].v } })}</li>`).join('')}</ul>`;
     const lit = new Map(); for (const r of m.records) for (const x of r.refs) lit.set(x.cite, x);
     h += `<h3>${e(T('lit'))}</h3>` + (lit.size ? `<ul class="r-cites">${[...lit.values()].map(x => `<li>${e(x.cite)}${x.status ? ` <span class="r-small">${e(t.status[x.status] || '[' + x.status + ']')}</span>` : ''}</li>`).join('')}</ul>` : `<p class="r-small">${e(T('noLit'))}</p>`);

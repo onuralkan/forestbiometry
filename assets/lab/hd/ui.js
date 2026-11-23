@@ -1,4 +1,5 @@
 // Height–Diameter Modelling: user interface. All arithmetic lives in calc.js (and core/nls.js, core/stats.js).
+import { currentPage } from '../core/renamed.js';
 import * as H from './calc.js';
 import { T } from './i18n.js';
 import { lang, fmtNum, esc } from '../core/i18n.js';
@@ -409,7 +410,7 @@ function handoffTable() {
 async function handoff(page) {
   await put('handoff:' + page, { schema: 'hd-handoff/1', name: 'height-diameter.tsv', text: handoffTable(), y: 'h_m', d: 'd_cm', group: R.prep.hasPlot ? 'plot' : null,
     units: { d_cm: 'cm', h_m: 'm' }, bh: R.prep.bh, tool: { id: H.TOOL.id, version: H.TOOL.version }, created: new Date().toISOString() });
-  await flush(); location.href = page + '.php';
+  await flush(); location.href = currentPage(page + '.php');   // the hand-off keys keep the tool ids; the pages have English names
 }
 function tabExport(p) {
   const nd = ndExport();

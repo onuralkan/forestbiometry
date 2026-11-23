@@ -1171,7 +1171,7 @@ function tabApprove(p) {
     <button type="button" class="btn ghost" id="x-json"${approvedDs ? '' : ' disabled'}>${T('ex.json')}</button>
     <button type="button" class="btn ghost" id="x-print">${T('ex.print')}</button></div><p class="muted small">${T('ex.print.note')}</p>
     ${approvedDs ? '' : `<p class="muted small">${T('ex.need')}</p>`}<p class="muted small">${T('ex.csvnote')}</p>
-    <p>${approvedDs ? `<a class="btn" href="ornek-alan.php">${T('to.stand')}</a> <a class="btn ghost" href="veri-yoneticisi.php">${T('to.manager')}</a> ` : ''}<a href="./">${T('to.tools')}</a></p></div>`;
+    <p>${approvedDs ? `<a class="btn" href="plot-stand-metrics.php">${T('to.stand')}</a> <a class="btn ghost" href="data-manager.php">${T('to.manager')}</a> ` : ''}<a href="./">${T('to.tools')}</a></p></div>`;
   p.innerHTML = h;
   $('approve').addEventListener('click', async () => {
     const ds = C.approve(S.sources, S.work, S.mapping, S.settings, ev, { lang });

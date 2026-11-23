@@ -1,4 +1,4 @@
-// Browser test for Biomass and Carbon (biyokutle-karbon.php; TOOLS_SPEC BC02). A small tree table written here (one
+// Browser test for Biomass and Carbon (biomass-carbon.php; TOOLS_SPEC BC02). A small tree table written here (one
 // tree without height, one without volume, a species left without a set); coefficient sets with arbitrary test
 // numbers (no species' values) stored in the page's browser storage. Values on screen are compared with the engine
 // run in Node on the same table (tests/biomass/test_bc02.mjs checks the engine against Python).
@@ -17,7 +17,7 @@ const { blankSet } = await import('../../assets/lab/core/coef.js');
 const { tableFromText } = await import('../../assets/lab/core/table.js');
 const { tableToDataset } = await import('../../assets/lab/stand/calc.js');
 const { parseNumber, toInternal } = await import('../../assets/lab/core/num.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=en';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biomass-carbon.php?lang=en';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -106,9 +106,9 @@ ok((await page.locator('#utab tr[data-u="2|"] [data-k="B"]').textContent()) === 
 // 5. sample button, the coefficient library lists biomass sets, English, phone
 await page.click('[data-go="1"]'); await page.click('#sample'); await page.waitForFunction(() => (document.getElementById('dsinfo') || {}).textContent?.includes('ornek-mescere'));
 ok((await page.textContent('#dsinfo')).includes('simulated'), 'simulated sample table loads');
-await page.goto(BASE + '/katsayi-kutuphanesi.php?lang=en'); await page.waitForSelector('#libtab');
+await page.goto(BASE + '/coefficient-library.php?lang=en'); await page.waitForSelector('#libtab');
 ok(await page.locator('#libtab tbody tr', { hasText: 'e2e test values sB1' }).count() === 1, 'the Coefficient Library lists the biomass sets');
-await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps');
+await page.goto(BASE + '/biomass-carbon.php?lang=en'); await page.waitForSelector('#steps');
 ok((await page.textContent('h1')).includes('Biomass and Carbon'), 'English');
 const phone = await ctx.newPage(); await phone.setViewportSize({ width: 390, height: 800 }); await phone.goto(URL); await phone.waitForSelector('#steps');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no horizontal page scroll');

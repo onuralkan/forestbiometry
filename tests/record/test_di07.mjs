@@ -49,7 +49,7 @@ ok(Buffer.from(R.toBase64(big), 'base64').equals(Buffer.from(big)) && Buffer.fro
 
 // record, seal, verification
 const payload = { tool: { id: 'x', version: '0' }, created: '2026-11-16T12:00:00.000Z', settings: { method: 'ml', n1: true }, results: [{ a: 1 / 3, b: NaN }] };
-const rec = await R.makeRecord(payload, { tool: { id: 'boy-cap', version: '1.1.0' }, ids: ['SM-01'], page: 'boy-cap.php', commit: 'abc123', site: 'https://forestbiometry.online/', lang: 'tr', inputs: [fi, null, fe, pi, di] });
+const rec = await R.makeRecord(payload, { tool: { id: 'boy-cap', version: '1.1.0' }, ids: ['SM-01'], page: 'height-diameter.php', commit: 'abc123', site: 'https://forestbiometry.online/', lang: 'tr', inputs: [fi, null, fe, pi, di] });
 ok(rec.format === 'run-record/1' && rec.tool.id === 'boy-cap' && rec.tool.version === '1.1.0' && rec.tool.ids[0] === 'SM-01' && rec.created === payload.created && rec.inputs.length === 4, 'envelope: tool from the page, payload time kept, null inputs dropped');
 ok(rec.settings.method === 'ml' && rec.results[0].b === null && rec.results[0].a === 1 / 3, 'payload keys kept at the top level (old readers unaffected), full precision');
 const { integrity, ...body } = rec;

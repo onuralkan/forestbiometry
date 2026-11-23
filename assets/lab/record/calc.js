@@ -1,4 +1,5 @@
 // Record Verifier (DI-07): page logic without DOM. Checking itself lives in core/record.js (shared with the tools).
+import { currentPage } from '../core/renamed.js';
 export const TOOL = { id: 'kayit-dogrulayici', version: '1.0.0-beta.1' };
 export const REPO = 'https://github.com/onuralkan/forestbiometry';
 
@@ -8,7 +9,7 @@ export const REPO = 'https://github.com/onuralkan/forestbiometry';
  * { tool: entry | null, state: 'same' | 'changed' | 'unknown', recorded, current }
  */
 export function toolStatus(rec, tools) {
-  const t = rec && rec.tool || {}, page = t.page || (t.id ? t.id + '.php' : null);
+  const t = rec && rec.tool || {}, page = currentPage(t.page || (t.id ? t.id + '.php' : '')) || null;   // pages renamed on 23 Nov 2026
   const cur = tools.find(x => x.file === page) || null;
   if (!cur) return { tool: null, state: 'unknown', recorded: t.version || null, current: null };
   return { tool: cur, state: cur.v === t.version ? 'same' : 'changed', recorded: t.version || null, current: cur.v };

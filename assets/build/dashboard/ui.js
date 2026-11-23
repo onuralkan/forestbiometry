@@ -2025,7 +2025,7 @@ async function loadPackage() {
 function sourceHTML() {
   let h = `<div class="card" id="srccard"><h2>${T('src.h')}</h2>`;
   if (projects.length) h += `<div class="lims"><label>${T('src.pick')} <select id="pkg">${projects.map(p => `<option value="${esc(p.id)}"${!S.sample && p.id === S.pid ? ' selected' : ''}>${esc(p.name)}${p.year ? ' · ' + p.year : ''}${p.id === active ? ` (${T('src.active')})` : ''}</option>`).join('')}${S.sample ? '<option selected value="">–</option>' : ''}</select></label></div>`;
-  else if (!S.sample) h += `<p class="small" id="srcnone">${T('src.none')}</p><p><a class="btn ghost" href="veri-denetcisi.php">${T('src.checker')}</a> <a class="btn ghost" href="veri-yoneticisi.php">${T('src.manager')}</a></p>`;
+  else if (!S.sample) h += `<p class="small" id="srcnone">${T('src.none')}</p><p><a class="btn ghost" href="data-checker.php">${T('src.checker')}</a> <a class="btn ghost" href="data-manager.php">${T('src.manager')}</a></p>`;
   if (S.sample) h += `<p class="note warn small" id="samplenote">${T('src.samplenote')}</p>`;
   else h += `<p><button type="button" class="btn ghost small" id="sample">${T('src.sample')}</button></p>`;
   return h + `</div>`;

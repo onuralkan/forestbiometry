@@ -1,6 +1,6 @@
 # P15 report: first usable release (Diameter Distribution Lab 2.0.0)
 
-11 Nov 2026. Specification `docs/DIST_SPEC.md` P15. Code `assets/lab/dist/`, page `cap-dagilimi.php`.
+11 Nov 2026. Specification `docs/DIST_SPEC.md` P15. Code `assets/lab/dist/`, page `diameter-distribution.php`.
 
 ## 1. Completed scope (P00–P15)
 

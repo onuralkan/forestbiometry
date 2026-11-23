@@ -1,4 +1,4 @@
-// Browser test for the Inventory Data Manager (veri-yoneticisi.php; DI-03) and its links to the Data Checker, the tools
+// Browser test for the Inventory Data Manager (data-manager.php; DI-03) and its links to the Data Checker, the tools
 // index and the tools that read approved data. Packages: the sample package of Plot & Stand Metrics and a small one
 // made here (values are arbitrary test numbers).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/projects/e2e.mjs http://127.0.0.1:8092 [shots-dir]
@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const P = await import('../../assets/lab/core/projects.js');
 const { sha256JSON } = await import('../../assets/lab/core/record.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/veri-yoneticisi.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/data-manager.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -59,7 +59,7 @@ const sName = P.defaultName(sample, 'en');
 await rowOf(sName).locator('[data-act="activate"]').click(); await page.waitForSelector(`#ptab tr[data-active="1"]:has-text("${sName}")`);
 ok((await rowOf(sName).getAttribute('data-active')) === '1' && (await idb('dataset:approved')).source.trees.name === sample.source.trees.name, 'activated: its package is handed to the tools');
 ok(await sha256JSON(await idb('dataset:approved')) === await sha256JSON(sample), 'the package handed over is unchanged');
-await page.goto(BASE + '/ornek-alan.php'); await page.waitForSelector('#useapp');
+await page.goto(BASE + '/plot-stand-metrics.php'); await page.waitForSelector('#useapp');
 ok((await page.textContent('#step1')).includes(sample.source.trees.name), 'Plot & Stand Metrics offers the active package');
 await page.goto(BASE + '/'); await page.waitForSelector('#handoff:not([hidden])');
 ok((await page.textContent('#handoff-text')).includes(sName), 'tools index names the active project');

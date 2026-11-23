@@ -61,7 +61,7 @@ ok(C.positions(C.filterTrees(ds, f())).length === 1, 'positions only where x and
 const d = [10, 12, 15, 18, 20, 22, 25, 28, 30, 35, 40];
 const rml = D.runMethod('weibull.ml', { d, plot: D.POOL, period: '2024' }), rt = D.runMethod('weibull.tml', { d, plot: 'P1', period: '2024' }, { trunc: { lower: 8 } });
 const pkgSha = await sha256JSON(ds);
-const distRec = JSON.parse(JSON.stringify(await seal({ format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.0', ids: ['SS-03'], page: 'cap-dagilimi.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:00:00Z', lang: 'tr',
+const distRec = JSON.parse(JSON.stringify(await seal({ format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.0', ids: ['SS-03'], page: 'diameter-distribution.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:00:00Z', lang: 'tr',
   inputs: [{ role: 'data', kind: 'file', name: 'x.csv', sha256: 'ab' }], results: [rml, rt, { ...rml, status: 'error', params: null }] })));
 const rr = await C.readRecord(distRec, pkgSha);
 ok(rr.ok && rr.kind === 'dist' && rr.seal === true && rr.fromPackage === null, 'distribution record read: sealed, made from a file (cannot tell whether from this package)');

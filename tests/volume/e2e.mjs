@@ -1,4 +1,4 @@
-// Browser test for Volume Equations (hacim-denklemleri.php; SV-04). The simulated sample table of the page; values on
+// Browser test for Volume Equations (volume-equations.php; SV-04). The simulated sample table of the page; values on
 // screen are compared with calc.js run in Node on the same rows (tests/volume/test_sv04.mjs checks calc.js against
 // Python). Also: saving a set, the hand-off to Model Evaluation, the volumes sent by Stem Section Volume, English, phone.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/volume/e2e.mjs http://127.0.0.1:8092 [shots-dir]
@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const XLSX = require(path.join(ROOT, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const VOL = await import('../../assets/lab/volume/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/hacim-denklemleri.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/volume-equations.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -29,7 +29,7 @@ const trees = csv.map((l, i) => { const [id, D, H, V] = l.split(',').map(Number)
 
 await page.goto(URL + '?lang=en'); await page.waitForSelector('#steps');
 ok((await page.locator('h1').textContent()).includes('Volume Equations') && (await page.locator('.b-head').getAttribute('data-ids')) === 'SV-04' && (await page.locator('.b-ver').textContent()).includes(VOL.TOOL.version), 'title, catalogue id SV-04, version');
-ok(await page.locator('#side a[href="hacim-denklemleri.php"]').count() === 1, 'listed in the sidebar');
+ok(await page.locator('#side a[href="volume-equations.php"]').count() === 1, 'listed in the sidebar');
 await page.click('#sample'); await page.waitForSelector('#dsinfo');
 ok((await page.textContent('#dsinfo')).includes(`${trees.length} trees`), `sample: ${trees.length} trees`);
 await page.click('#to2'); await page.waitForSelector('#ftab');
@@ -65,7 +65,7 @@ const sets = await page.evaluate(async () => { const C = await import('/assets/l
 ok(sets.length === 1 && sets[0].form === 'volume.ln' && sets[0].origin === 'fitted' && sets[0].transform.correction === 'baskerville' && Math.abs(sets[0].transform.value - E.ln.s) < 1e-15 && sets[0].valid.D && sets[0].valid.H, 'set saved: log form, Baskerville SEE, validity range');
 ok(Math.abs(VOL.predict(sets[0], trees[0].D, trees[0].H) - E.ln.pred[0]) < 1e-12, 'the saved set predicts the fitted volume');
 // hand-off to Model Evaluation
-await page.click('#ev-send'); await page.waitForURL(/model-degerlendirme/); await page.waitForSelector('#obs');
+await page.click('#ev-send'); await page.waitForURL(/model-evaluation/); await page.waitForSelector('#obs');
 ok((await page.textContent('#status')).includes('handed over by another tool') && (await page.locator('#obs option:checked').textContent()).trim() === 'V_obs_m3', 'Model Evaluation opens with the handed-over table and the observed column chosen');
 await shot('volume-2-eval');
 // the volumes sent by Stem Section Volume (a package and a stem-volume record written into the store)

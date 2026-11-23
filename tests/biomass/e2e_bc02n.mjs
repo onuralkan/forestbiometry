@@ -12,7 +12,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const NS = await import('../../assets/lab/biomass/nsur.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=en';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biomass-carbon.php?lang=en';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -81,7 +81,7 @@ const tepe = stored.find(s => s.component === 'tepe');
 ok(tepe && Math.abs(tepe.params.a / ENG.beta[4] - 1) < 1e-6 && Math.abs(tepe.params.c / ENG.beta[6] - 1) < 1e-6 && tepe.valid.H, 'crown set: a, b, c = NSUR coefficients; height range kept');
 // apply the sets: the component sum is the NSUR total
 const byComp = Object.fromEntries(stored.map(s => [s.component, s]));
-await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('#syscard');
+await page.goto(BASE + '/biomass-carbon.php?lang=en'); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('#syscard');
 ok((await page.textContent('#syscard > summary')).includes('additive component system from your own data (Parresol 1999, 2001)'), 'English');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();

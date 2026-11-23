@@ -1,4 +1,4 @@
-// Browser test for the Stem Taper page (govde-profili.php; SV-02, TOOLS_SPEC TP04).
+// Browser test for the Stem Taper page (stem-taper.php; SV-02, TOOLS_SPEC TP04).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/taper/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 // Values on screen are compared with the engine (assets/lab/taper/calc.js, fit.js) run in Node on the same sample.
 import { createRequire } from 'node:module';
@@ -15,7 +15,7 @@ const TP = await import('../../assets/lab/taper/calc.js');
 const FIT = await import('../../assets/lab/taper/fit.js');
 const BK = await import('../../assets/lab/taper/bucking.js');
 const { blankSet } = await import('../../assets/lab/core/coef.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/govde-profili.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/stem-taper.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const num = s => Number(String(s).trim().replace(',', '.'));

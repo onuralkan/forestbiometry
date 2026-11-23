@@ -1,4 +1,4 @@
-// Browser test for the site index tool (bonitet.php). Playwright, Chromium.
+// Browser test for the site index tool (site-index.php). Playwright, Chromium.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/siteindex/e2e.mjs http://127.0.0.1:8092 [screenshot-dir]
 // Every number on screen is checked against the engine (assets/lab/siteindex/calc.js, itself checked against SciPy in
 // test_si01.mjs) and, for H0, against the Plot & Stand tool's own functions. Coefficients here are TEST values.
@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const SI = await import('../../assets/lab/siteindex/calc.js');
 const ST = await import('../../assets/lab/stand/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/bonitet.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/site-index.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const near = (a, b, tol, m) => ok(Math.abs(a - b) <= tol, `${m}: got ${a} expected ${b}`);
@@ -25,7 +25,7 @@ const fillC = async (id, v) => { await page.fill(id, v); await page.locator(id).
 
 // 0. listed under its category
 await page.goto(BASE + '/');
-ok((await page.locator('#side .b-cat', { hasText: 'Site quality and productivity' }).count()) === 1 && (await page.locator('#side a[href="bonitet.php"]').count()) === 1, 'sidebar: "Site quality and productivity" with Site Index');
+ok((await page.locator('#side .b-cat', { hasText: 'Site quality and productivity' }).count()) === 1 && (await page.locator('#side a[href="site-index.php"]').count()) === 1, 'sidebar: "Site quality and productivity" with Site Index');
 await page.goto(URL); await page.waitForSelector('.coefcard');
 ok((await page.locator('h1').textContent()).includes('Site Index') && (await page.locator('#cf-none').count()) === 1 && (await page.locator('#to2').isDisabled()), 'no built-in coefficients; cannot continue without a set (K1)');
 ok((await page.locator('#cf-form option').count()) === 3, 'three forms offered (no GADA)');

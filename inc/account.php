@@ -4,7 +4,7 @@
 // calculations stay in the browser and raw data (tables, files, a run record's embedded input data) are never sent or
 // kept; the server keeps the account (ORCID iD, name, status, usage counts) and, for approved accounts, the analysis
 // results the owner saves (run records without input data) and the interpretations asked for, until the owner deletes
-// them or the account is inactive for 24 months. api/library.php and hesap.php serve them, only to their owner.
+// them or the account is inactive for 24 months. api/library.php and account.php serve them, only to their owner.
 //
 // Private files live OUTSIDE the web root (never in the repository, never touched by the deploy script):
 //   <private>/config.php   returns the settings array (template: scripts/private-config.example.php)
@@ -62,7 +62,7 @@ function fb_db(): PDO {
     $db->exec('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)');
     $cols = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');
     if (!in_array('last_seen', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN last_seen TEXT');
-    // administration panel (yonetim.php, 22 Nov 2026): reason shown to the user, end of a temporary block, private
+    // administration panel (administration.php, 22 Nov 2026): reason shown to the user, end of a temporary block, private
     // administrator note, personal monthly / daily quota (NULL = site default), extra interpretations for one month
     foreach (['reason TEXT', 'until TEXT', 'note TEXT', 'q_month INTEGER', 'q_day INTEGER', 'extra INTEGER', 'extra_month TEXT'] as $col)
         if (!in_array(strtok($col, ' '), $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN ' . $col);
@@ -78,7 +78,7 @@ function fb_db(): PDO {
 }
 
 /* ---------------- site settings (administration panel) ---------------- */
-/** Site settings the administrator can change in yonetim.php; config.php gives the defaults. */
+/** Site settings the administrator can change in administration.php; config.php gives the defaults. */
 const FB_SETTINGS = ['monthly_quota', 'daily_quota', 'per_minute', 'signup', 'ai_enabled', 'ai_off_message', 'announcement',
     'site_cap', 'site_cap_tokens', 'price_in', 'price_out', 'tools_off'];
 function fb_settings(): array {
@@ -89,7 +89,7 @@ function fb_settings(): array {
         'signup' => 'approval', 'ai_enabled' => 1, 'ai_off_message' => '', 'announcement' => '',
         // site-wide monthly caps (0 = none) and the administrator's prices per million tokens (USD; '' = no estimate; none built in)
         'site_cap' => 0, 'site_cap_tokens' => 0, 'price_in' => '', 'price_out' => '',
-        // tools whose interpretation is switched off (comma-separated tool ids; yonetim.php → Settings)
+        // tools whose interpretation is switched off (comma-separated tool ids; administration.php → Settings)
         'tools_off' => ''];
     foreach (fb_db()->query('SELECT k, v FROM settings')->fetchAll() as $r)
         if (array_key_exists($r['k'], $s)) $s[$r['k']] = is_int($s[$r['k']]) ? (int)$r['v'] : (string)$r['v'];
@@ -103,7 +103,7 @@ function fb_set_setting(string $k, $v): void {
 /** Tool ids whose interpretation the administrator switched off. */
 function fb_tools_off(): array { return array_values(array_filter(explode(',', fb_settings()['tools_off']), 'strlen')); }
 
-/** One line of the call log (yonetim.php → Usage). outcome: ok | upstream | refusal | empty | off | cap | rate | daily | quota. */
+/** One line of the call log (administration.php → Usage). outcome: ok | upstream | refusal | empty | off | cap | rate | daily | quota. */
 function fb_log_call(string $orcid, string $tool, string $outcome, int $in = 0, int $out = 0, int $ms = 0, ?string $model = null, ?string $detail = null): void {
     fb_db()->prepare('INSERT INTO calls (at, orcid, tool, outcome, tok_in, tok_out, ms, model, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
         ->execute([gmdate('c'), $orcid, $tool, $outcome, $in, $out, $ms, $model, $detail === null ? null : mb_substr($detail, 0, 300)]);
@@ -250,7 +250,7 @@ function fb_csrf(): string { fb_session(true); return $_SESSION['csrf']; }
 function fb_csrf_ok(?string $t): bool { return fb_session() && is_string($t) && hash_equals($_SESSION['csrf'] ?? '', $t); }
 
 /**
- * Signs an ORCID account in, creating it on its first visit by the site's sign-up mode (yonetim.php): 'approval' →
+ * Signs an ORCID account in, creating it on its first visit by the site's sign-up mode (administration.php): 'approval' →
  * pending, 'auto' → approved, 'closed' → no new account (→ false). The administrator is approved at once, always.
  */
 function fb_sign_in(string $orcid, string $name): bool {

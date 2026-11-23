@@ -1185,7 +1185,7 @@ async function saveRecord(rec, payload, to) {
     j = await r.json();
   } catch (e) { j = { error: 'network' }; }
   to.b.disabled = false;
-  if (j && j.id) say(`${esc(T('saved'))} <a href="hesap.php?tab=results&amp;id=${esc(j.id)}">${esc(T('open'))}</a>`, 'ok');
+  if (j && j.id) say(`${esc(T('saved'))} <a href="account.php?tab=results&amp;id=${esc(j.id)}">${esc(T('open'))}</a>`, 'ok');
   else say(esc(T(j && T(j.error) !== j.error ? j.error : 'other')), 'err');
   return j;
 }
@@ -3247,7 +3247,7 @@ function infoRows() {
 async function sendToEval() {
   const rows = predTable(), text = rows.map(r => r.map(v => v == null ? '' : String(v)).join('\t')).join('\n');
   await put('handoff:model-degerlendirme', { name: ('volume-equations') + '.tsv', text, obs: 'V_obs_m3', models: rows[0].slice(5), role: 'training', created: new Date().toISOString() });
-  await flush(); location.href = 'model-degerlendirme.php';
+  await flush(); location.href = 'model-evaluation.php';
 }
 
 /* ---------------- shell ---------------- */

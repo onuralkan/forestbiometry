@@ -1,4 +1,4 @@
-// Tree measurement page (agac-olcumu.php; TM-01 height, TM-02 diameter and basal area, TM-03 bark, TM-04 crown, TM-05
+// Tree measurement page (tree-measurement.php; TM-01 height, TM-02 diameter and basal area, TM-03 bark, TM-04 crown, TM-05
 // age and increment, TM-06 form factors). All arithmetic lives in height.js, diameter.js, bark.js, crown.js, form.js and
 // age.js; results update as the fields change.
 import * as Ht from './height.js';

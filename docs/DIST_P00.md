@@ -1,7 +1,7 @@
 # P00: Review of the current diameter distribution tool and change map
 
 Date: 10 Nov 2026. Specification: `docs/DIST_SPEC.md`. No code was changed in this stage.
-Version reviewed: `cap-dagilimi` 1.0.0 (`assets/lab/weibull/`, `cap-dagilimi.php`), tests `tests/weibull/` (368 unit, 28 browser).
+Version reviewed: `cap-dagilimi` 1.0.0 (`assets/lab/weibull/`, `diameter-distribution.php`), tests `tests/weibull/` (368 unit, 28 browser).
 
 ## 1. Relevant files
 
@@ -82,7 +82,7 @@ assets/lab/dist/recover/*.js    recovery from summaries (Weibull M2–M10, Parre
 assets/lab/dist/gof.js          KS, AD, CvM, ln L, AIC/BIC, class errors
 assets/lab/dist/observe.js      measurement threshold, likelihood of classed data
 assets/lab/dist/ui.js, i18n.js  interface
-cap-dagilimi-2.php              development page not listed in the menu (noindex); replaces cap-dagilimi.php after P15
+cap-dagilimi-2.php              development page not listed in the menu (noindex); replaces diameter-distribution.php after P15
 tests/dist/test_*.mjs, e2e.mjs  unit and browser tests
 tests/ref/make_dist_*.py        SciPy references (first file: specification Section 8 table)
 ```

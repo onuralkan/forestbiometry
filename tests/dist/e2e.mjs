@@ -11,7 +11,7 @@ const W = await import('../../legacy/weibull/calc.js');
 const XLSX = require(path.join(root, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const E0 = await import('../../assets/lab/dist/index.js');
 const F = await import('../../assets/lab/dist/fit/weibull.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/cap-dagilimi.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/diameter-distribution.php';
 let pass = 0, fail = 0;
 const fmt4 = v => String(Math.round(v * 1e4) / 1e4);
 const fmt6 = v => String(Math.round(v * 1e6) / 1e6);
@@ -30,9 +30,9 @@ const navState = () => page.evaluate(() => ({ bar: document.querySelector('.navl
 
 // 0. the engine version is the published tool: listed, indexed; the old development address redirects
 await page.goto(BASE + '/?lang=en');
-ok((await page.locator('a[href*="cap-dagilimi-2"]').count()) === 0 && (await page.locator('a[href*="cap-dagilimi.php"]').count()) > 0, 'tool listed under its published address');
+ok((await page.locator('a[href*="cap-dagilimi-2"]').count()) === 0 && (await page.locator('a[href*="diameter-distribution.php"]').count()) > 0, 'tool listed under its published address');
 await page.goto(BASE + '/cap-dagilimi-2.php?lang=en');
-ok(page.url().endsWith('/cap-dagilimi.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
+ok(page.url().endsWith('/diameter-distribution.php?lang=en'), 'old development address redirects (query kept): ' + page.url());
 await page.goto(URL + '?lang=en');
 ok((await page.locator('meta[name="robots"]').count()) === 0 || !(await page.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'indexed (no noindex)');
 ok((await page.locator('#devnote').count()) === 0 && (await page.locator('.b-meta .b-ver').textContent()).trim() === 'version ' + E0.TOOL.version, 'version in the page header, no release-notes banner');
@@ -410,7 +410,7 @@ await page.click('#tab-params');
 await page.waitForSelector('#panel .srcs');
 { const src = await page.evaluate(() => ({ m: [...document.querySelectorAll('#panel .srcs li[data-src]')].map(x => x.dataset.src), r: [...document.querySelectorAll('#panel .srcs li[data-ref]')].map(x => x.dataset.ref), t: document.querySelector('#panel .srcs').textContent }));
   const ms = await page.evaluate(() => [...new Set([...document.querySelectorAll('#panel table.ptab tbody tr')].map(tr => tr.dataset.method))]);
-  ok(src.m.join() === ms.join() && src.r.includes('R6') && src.r.includes('DUBEY') && src.r.includes('R10') && !src.t.includes('METHODS') && (await page.locator('#panel .srcs a[href="kaynakca.php"]').count()) === 1 && src.t.includes('d > a') && src.t.includes('read'), 'sources: every method with support and references, link to the References; reading status: ' + src.r.join());
+  ok(src.m.join() === ms.join() && src.r.includes('R6') && src.r.includes('DUBEY') && src.r.includes('R10') && !src.t.includes('METHODS') && (await page.locator('#panel .srcs a[href="references.php"]').count()) === 1 && src.t.includes('d > a') && src.t.includes('read'), 'sources: every method with support and references, link to the References; reading status: ' + src.r.join());
   ok((await page.locator('.pstates').count()) === 1 && (await page.locator('.pstates').textContent()).includes('results computed'), 'computed and failed results counted apart');
   const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#x-xlsx')]), wb = XLSX.read(await readFile(await dx.path()));
   const bs = XLSX.utils.sheet_to_json(wb.Sheets.Bootstrap, { header: 1 }), ks = XLSX.utils.sheet_to_json(wb.Sheets.Sources, { header: 1 });

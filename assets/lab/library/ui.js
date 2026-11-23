@@ -1,4 +1,4 @@
-// Account → Saved results → one result (hesap.php): draws the saved run record as tables and charts (library/view.js)
+// Account → Saved results → one result (account.php): draws the saved run record as tables and charts (library/view.js)
 // and checks its seal. The record comes in the page (#res-data); nothing is fetched.
 import { viewOf, inputsView } from './view.js';
 import { verifyRecord } from '../core/record.js';

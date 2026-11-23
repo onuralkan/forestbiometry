@@ -11,7 +11,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const SUR = await import('../../assets/lab/biomass/sur.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biyokutle-karbon.php?lang=en';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/biomass-carbon.php?lang=en';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -67,7 +67,7 @@ await page.selectOption(`select[data-ms="X"][data-mc="${comps[0]}"]`, byComp.gov
 await page.selectOption('select[data-ts="X"]', byComp['Total tree']);
 await page.waitForSelector('#calc:not([disabled])'); await page.click('#calc'); await page.waitForSelector('#addnote');
 ok(/: -?0([.,]0+)? %/.test(await page.textContent('#addnote')), 'applied: total equation − component sum = 0 % (additive by construction): ' + await page.textContent('#addnote'));
-await page.goto(BASE + '/biyokutle-karbon.php?lang=en'); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('#syscard');
+await page.goto(BASE + '/biomass-carbon.php?lang=en'); await page.waitForSelector('#steps'); await page.click('[data-go="2"]'); await page.waitForSelector('#syscard');
 ok((await page.textContent('#syscard > summary')).includes('additive component system'), 'English');
 ok(errors.length === 0, 'no page errors: ' + errors.join(' | '));
 await browser.close();

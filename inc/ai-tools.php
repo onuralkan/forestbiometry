@@ -1,6 +1,6 @@
 <?php
 // The tools that offer the AI interpretation (api/interpret.php) and what the model has to know about each one's result
-// object. The administration panel (yonetim.php → Settings) lists them with an on/off switch each (22 Nov 2026).
+// object. The administration panel (administration.php → Settings) lists them with an on/off switch each (22 Nov 2026).
 // A tool joins by adding its id here and calling mountInterpret() on its result view (PROJECT.md §3).
 declare(strict_types=1);
 

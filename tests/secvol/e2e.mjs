@@ -1,4 +1,4 @@
-// Browser test for the stem section volume tool (seksiyon-hacmi.php). Playwright, Chromium.
+// Browser test for the stem section volume tool (section-volume.php). Playwright, Chromium.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/secvol/e2e.mjs http://127.0.0.1:8092 [screenshot-dir]
 // Data: trees on exact cone profiles d(h) = D0(1 − h/H), so every number on screen is checked against the engine
 // (itself checked against SciPy in tests/secvol/test_sv01.mjs) and, for the top piece, against the cone formula.
@@ -8,7 +8,7 @@ import path from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const V = await import('../../assets/lab/secvol/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/seksiyon-hacmi.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/section-volume.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const near = (a, b, tol, m) => ok(Math.abs(a - b) <= tol, `${m}: got ${a} expected ${b}`);
@@ -32,7 +32,7 @@ const engine = (s) => TREES.map(([p, t, D0, H, st, hs]) => { const d = cone(D0, 
 
 // 0. the tool is listed under its category
 await page.goto(BASE + '/');
-ok((await page.locator('#side .b-cat', { hasText: 'Stem volume and taper' }).count()) === 1 && (await page.locator('#side a[href="seksiyon-hacmi.php"]').count()) === 1, 'sidebar: "Stem volume and taper" with Section Volume');
+ok((await page.locator('#side .b-cat', { hasText: 'Stem volume and taper' }).count()) === 1 && (await page.locator('#side a[href="section-volume.php"]').count()) === 1, 'sidebar: "Stem volume and taper" with Section Volume');
 await page.goto(URL);
 ok((await page.locator('h1').textContent()).includes('Stem Section Volume') && (await page.locator('text=1.0.0-beta.2').count()) >= 1, 'page title and version 1.0.0-beta.2');
 

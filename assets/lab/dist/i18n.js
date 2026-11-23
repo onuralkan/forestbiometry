@@ -400,7 +400,7 @@ const en = {
   'src.refs': 'references', 'src.link': 'link', 'src.st.B': 'read', 'src.st.D': 'cited; not read, equations verified independently with SciPy/mpmath',
   'src.thr.none': 'raw diameters, no threshold (untruncated data assumed)', 'src.thr.trunc': p => `measurement threshold ${p.L} ≤ d ≤ ${p.U} cm, conditional distribution`, 'src.thr.cls': 'class frequencies; class probability F(upper) − F(lower)', 'src.thr.sum': 'summary values (no raw data)',
   'src.boot': 'parametric bootstrap (with re-estimation) and percentile intervals; the seed is in the result record.',
-  'src.note': 'Source status: "read" means the source itself was examined; the others are cited and the formulas are verified against independent numerical references. Formulas and assumptions are in the tool\'s guide section; the full entries of the sources are in the <a href="kaynakca.php">References</a>.',
+  'src.note': 'Source status: "read" means the source itself was examined; the others are cited and the formulas are verified against independent numerical references. Formulas and assumptions are in the tool\'s guide section; the full entries of the sources are in the <a href="references.php">References</a>.',
   'sup.weibull': 'd > a; location a fixed (0 or the user\'s value), not estimated', 'sup.exponential': 'd > a; location a fixed (0 or the user\'s value), not estimated',
   'sup.normal': 'all real numbers; the probability of negative diameters is reported', 'sup.lognormal': 'd > 0', 'sup.gamma': 'd > 0', 'sup.loglogistic': 'd > 0',
   'sup.beta': 'L < d < U; L and U from the user, never from the data', 'sup.johnsonsb': 'ξ < d < ξ + λ; ξ and λ from the user (Parresol recovery: ξ from the user, λ recovered)',

@@ -1,5 +1,5 @@
 // Browser test for the reproducibility layer (DI-07): run-record downloads of the tools and the Record Verifier page
-// (kayit-dogrulayici.php). Records are checked in Node with node:crypto (independent SHA-256) and the record module.
+// (record-verifier.php). Records are checked in Node with node:crypto (independent SHA-256) and the record module.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/record/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 import { createRequire } from 'node:module';
 import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
@@ -28,14 +28,14 @@ const fileOf = rel => readFile(path.join(ROOT, rel));
 const sealOk = async o => (await R.verifyRecord(o)).seal === true;
 
 // 1. Growth Function Fitter: sample data, record without and with the data
-await page.goto(BASE + '/buyume-islevi.php');
+await page.goto(BASE + '/growth-functions.php');
 await page.evaluate(() => { try { localStorage.removeItem('recEmbed'); } catch (e) {} });
 await page.reload();
 await page.click('#sample'); await page.waitForSelector('#dread');
 await page.click('#to2'); await page.click('#calc'); await page.waitForSelector('#ctab');
 ok(await page.locator('[data-rec-embed]').count() === 1 && !(await page.isChecked('[data-rec-embed]')), 'growth: data option next to the JSON button, off by default');
 const g1 = await grab('#x-json'), csv = await fileOf('assets/lab/growth/ornek/ornek-buyume.csv');
-ok(g1.obj.format === 'run-record/1' && g1.obj.tool.id === 'buyume-islevi' && g1.obj.tool.page === 'buyume-islevi.php' && g1.obj.tool.ids.includes('SQ-03'), 'growth: envelope with tool, page and catalogue id');
+ok(g1.obj.format === 'run-record/1' && g1.obj.tool.id === 'buyume-islevi' && g1.obj.tool.page === 'growth-functions.php' && g1.obj.tool.ids.includes('SQ-03'), 'growth: envelope with tool, page and catalogue id');
 ok(g1.obj.build && g1.obj.build.commit === null && g1.obj.build.site === 'https://forestbiometry.online/', 'growth: no commit in development (no deploy-commit.txt), canonical site');
 ok(g1.obj.inputs.length === 1 && g1.obj.inputs[0].sha256 === sha(csv) && g1.obj.inputs[0].bytes === csv.length && !g1.obj.inputs[0].data, 'growth: input fingerprint = SHA-256 of the sample file, no data');
 ok(Array.isArray(g1.obj.fits) && g1.obj.fits.length === 6 && g1.obj.settings && g1.obj.settings.columns.t && g1.obj.settings.decimal, 'growth: old payload kept (fits), settings with column names added');
@@ -48,26 +48,26 @@ await page.uncheck('[data-rec-embed]');
 
 // 2. the five tools that had no JSON download
 async function viaTab(url, steps, json = '#x-json') { await page.goto(BASE + url); await steps(); return grab(json); }
-const hd = await viaTab('/boy-cap.php', async () => {
+const hd = await viaTab('/height-diameter.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#ptab', { timeout: 60000 }); await page.click('#tab-export');
 });
 ok(hd.obj.tool.version === '1.1.1' && hd.obj.tool.ids.includes('SM-01') && hd.obj.fits.length === 6 && hd.obj.settings.columns.d && hd.obj.crossValidation && hd.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/hd/ornek/ornek-boy-cap.csv')) && await sealOk(hd.obj), 'height–diameter 1.1.0: record with fits, CV, input fingerprint');
-const ev = await viaTab('/model-degerlendirme.php', async () => {
+const ev = await viaTab('/model-evaluation.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');
 });
 ok(ev.obj.tool.version === '1.2.0-beta.3' && ev.obj.models.length > 0 && ev.obj.models[0].overall && ev.obj.models[0].inference && ev.obj.models[0].inference.ci && ev.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/eval/ornek/ornek-tahminler.csv')) && await sealOk(ev.obj), 'model evaluation 1.2.0-beta.1: record with measures, bias interval and input fingerprint');
-const rk = await viaTab('/nispi-siralama.php', async () => {
+const rk = await viaTab('/relative-ranking.php', async () => {
   await page.click('#sample'); await page.waitForSelector('#impbox .fname'); await page.click('#to2');
   await page.click('#calc'); await page.waitForSelector('#panel table'); await page.click('#tab-export');
 });
 ok(rk.obj.tool.version === '1.2.0' && rk.obj.ranks.length > 0 && rk.obj.inputs[0].format === 'xlsx' && rk.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/rank/ornek/ornek-olcutler.xlsx')) && await sealOk(rk.obj), 'relative ranking 1.1.0: record, XLSX input fingerprinted as bytes');
-const sp = await viaTab('/ornekleme.php', async () => {
+const sp = await viaTab('/sampling-planner.php', async () => {
   await page.check('input[name="src"][value="pilot"]'); await page.click('#sample'); await page.waitForSelector('#plstats'); await page.check('#confirm'); await page.waitForSelector('#x-json');
 });
 ok(sp.obj.tool.version === '1.1.0' && sp.obj.plan && sp.obj.plan.n > 0 && sp.obj.pilot && sp.obj.inputs[0].sha256 === sha(await fileOf('assets/lab/sampling/ornek/ornek-pilot.csv')) && await sealOk(sp.obj), 'sampling planner 1.1.0: record with plan, pilot statistics and input fingerprint');
-const st = await viaTab('/ornek-alan.php', async () => {
+const st = await viaTab('/plot-stand-metrics.php', async () => {
   await page.click('#sample'); await page.waitForSelector('.note.ok'); await page.check('#scope'); await page.click('#to2');
   await page.check('input[name="ec"][value="empty"]'); await page.click('#calc'); await page.waitForSelector('table.units'); await page.click('#tab-export');
 });
@@ -75,8 +75,8 @@ const standDs = JSON.parse(await fileOf('assets/lab/stand/ornek/ornek-veri.json'
 ok(st.obj.tool.version === '1.3.0' && st.obj.units.length > 0 && st.obj.inputs[0].kind === 'dataset' && st.obj.inputs[0].sha256 === sha(Buffer.from(R.canonical(standDs))) && await sealOk(st.obj), 'plot & stand 1.2.0: record; data package fingerprinted in canonical form');
 
 // 3. Record Verifier
-await page.goto(BASE + '/kayit-dogrulayici.php');
-ok((await page.locator('.b-head').getAttribute('data-ids')).includes('DI-07') && await page.locator('.b-side a[href="kayit-dogrulayici.php"]').count() === 1, 'verifier: DI-07 page in the sidebar');
+await page.goto(BASE + '/record-verifier.php');
+ok((await page.locator('.b-head').getAttribute('data-ids')).includes('DI-07') && await page.locator('.b-side a[href="record-verifier.php"]').count() === 1, 'verifier: DI-07 page in the sidebar');
 ok(await page.locator('#nonote').count() === 1, 'verifier: empty state');
 await page.setInputFiles('#recfile', g1.p);
 await page.waitForSelector('#seal');
@@ -118,7 +118,7 @@ ok(await page.locator('#chklist li[data-match="yes"]').count() === 1, 'verifier:
 await page.reload(); await page.waitForSelector('#incard');
 ok((await page.textContent('h1')).includes('Record Verifier') && (await page.textContent('#incard')).includes('Open a run record'), 'verifier: English');
 const phone = await browser.newPage({ viewport: { width: 390, height: 800 } });
-await phone.goto(BASE + '/kayit-dogrulayici.php'); await phone.setInputFiles('#recfile', g2.p); await phone.waitForSelector('#intab');
+await phone.goto(BASE + '/record-verifier.php'); await phone.setInputFiles('#recfile', g2.p); await phone.waitForSelector('#intab');
 ok(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'verifier: no horizontal page scroll on a phone');
 if (SHOTS) await phone.screenshot({ path: path.join(SHOTS, 'di07-3-telefon.png'), fullPage: true });
 

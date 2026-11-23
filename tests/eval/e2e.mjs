@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const XLSX = require(path.join(root, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const E = await import(path.join(root, 'assets/lab/eval/calc.js'));
 const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null;
-const URL = BASE + '/model-degerlendirme.php';
+const URL = BASE + '/model-evaluation.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];

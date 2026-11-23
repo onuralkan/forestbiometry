@@ -227,7 +227,7 @@ function infoRows() {
 async function sendToEval() {
   const rows = predTable(), text = rows.map(r => r.map(v => v == null ? '' : String(v)).join('\t')).join('\n');
   await put('handoff:model-degerlendirme', { name: ('volume-equations') + '.tsv', text, obs: 'V_obs_m3', models: rows[0].slice(5), role: 'training', created: new Date().toISOString() });
-  await flush(); location.href = 'model-degerlendirme.php';
+  await flush(); location.href = 'model-evaluation.php';
 }
 
 /* ---------------- shell ---------------- */

@@ -1,4 +1,4 @@
-// Browser test for the Coefficient Library page (katsayi-kutuphanesi.php; DI-02).
+// Browser test for the Coefficient Library page (coefficient-library.php; DI-02).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/coeflib/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 // Sets are made in Node with the same schema code and stored in the page's browser storage; coefficient values are
 // arbitrary test numbers.
@@ -13,7 +13,7 @@ const XLSX = require(path.join(ROOT, 'assets/vendor/sheetjs/xlsx.mini.min.js'));
 const L = await import('../../assets/lab/coeflib/calc.js');
 const { blankSet } = await import('../../assets/lab/core/coef.js');
 const SI = await import('../../assets/lab/siteindex/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/katsayi-kutuphanesi.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/coefficient-library.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];

@@ -1,4 +1,4 @@
-// Browser test for the Tree Measurement page (agac-olcumu.php; TM-01 to TM-06).
+// Browser test for the Tree Measurement page (tree-measurement.php; TM-01 to TM-06).
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/tree/e2e.mjs http://127.0.0.1:8092 [shots-dir]
 // Values on screen are compared with the engines (assets/lab/tree/*.js) run in Node on the same inputs.
 import { createRequire } from 'node:module';
@@ -17,7 +17,7 @@ const Ag = await import('../../assets/lab/tree/age.js');
 const Bk = await import('../../assets/lab/tree/bark.js');
 const Cr = await import('../../assets/lab/tree/crown.js');
 const { TOOL } = await import('../../assets/lab/tree/calc.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/agac-olcumu.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/tree-measurement.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const num = s => Number(String(s).trim().replace(',', '.'));

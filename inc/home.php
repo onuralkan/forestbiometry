@@ -7,30 +7,30 @@ require_once __DIR__ . '/guide/cards.php';
 /** One-line caption (≤ 90 characters) of each tool's card, keyed by the tool's page. A new tool adds its line here. */
 function home_captions(): array {
     return [
-        'veri-denetcisi.php' => 'Format errors and suspect measurements; logged fixes and approval',
-        'katsayi-kutuphanesi.php' => 'Every tool\'s coefficient sets with their sources',
-        'kayit-dogrulayici.php' => 'Seal, version and input fingerprints of a run record',
-        'veri-yoneticisi.php' => 'Approved packages, the active one, plot × period overview',
-        'pano.php' => 'Filtered panels with curves from run records',
-        'rapor.php' => 'Printable report from a package and records; PDF and HTML',
-        'ornek-alan.php' => 'N and G per hectare, diameter classes, design-based estimate',
-        'model-degerlendirme.php' => 'Bias, MAE, RMSE, prediction R²; residual plots',
-        'cap-dagilimi.php' => 'Weibull and seven more; fitting and recovery',
-        'boy-cap.php' => 'Six nonlinear models, cross-validation',
-        'ornekleme.php' => 'Number of plots for a target error',
-        'nispi-siralama.php' => 'Overall rank from fit criteria, radar chart',
-        'seksiyon-hacmi.php' => 'Huber, Smalian, Newton, Hohenadl; tree and per-hectare volume',
-        'bonitet.php' => 'Difference equations with your coefficients, site classes',
-        'mescere-yapisi.php' => 'Diameter structure, density, spatial pattern, competition',
-        'govde-profili.php' => 'Max–Burkhart and Kozak; merchantable volume, bucking',
-        'hacim-denklemleri.php' => 'Constant form factor, combined variable, logarithmic and local equations',
-        'dogrusal-olmayan-regresyon.php' => 'Ready-made forms or a free formula; weights, intervals, AIC',
-        'karma-modeller.php' => 'Linear and nonlinear; ML/REML, calibration of a new plot',
-        'denklem-sistemleri.php' => 'Your own formulas; shared coefficients, OLS, SUR, iterated SUR',
-        'tomruk-olcumu.php' => 'Scribner, Doyle, International; Smalian, Huber, Newton',
-        'biyokutle-karbon.php' => 'Component biomass, carbon and CO₂ with your coefficients',
-        'buyume-islevi.php' => 'Six growth functions; increments and culmination',
-        'agac-olcumu.php' => 'Height with a clinometer, diameter and basal area, bark, crown, form factor',
+        'data-checker.php' => 'Format errors and suspect measurements; logged fixes and approval',
+        'coefficient-library.php' => 'Every tool\'s coefficient sets with their sources',
+        'record-verifier.php' => 'Seal, version and input fingerprints of a run record',
+        'data-manager.php' => 'Approved packages, the active one, plot × period overview',
+        'data-visualization.php' => 'Filtered panels with curves from run records',
+        'report-generator.php' => 'Printable report from a package and records; PDF and HTML',
+        'plot-stand-metrics.php' => 'N and G per hectare, diameter classes, design-based estimate',
+        'model-evaluation.php' => 'Bias, MAE, RMSE, prediction R²; residual plots',
+        'diameter-distribution.php' => 'Weibull and seven more; fitting and recovery',
+        'height-diameter.php' => 'Six nonlinear models, cross-validation',
+        'sampling-planner.php' => 'Number of plots for a target error',
+        'relative-ranking.php' => 'Overall rank from fit criteria, radar chart',
+        'section-volume.php' => 'Huber, Smalian, Newton, Hohenadl; tree and per-hectare volume',
+        'site-index.php' => 'Difference equations with your coefficients, site classes',
+        'stand-structure.php' => 'Diameter structure, density, spatial pattern, competition',
+        'stem-taper.php' => 'Max–Burkhart and Kozak; merchantable volume, bucking',
+        'volume-equations.php' => 'Constant form factor, combined variable, logarithmic and local equations',
+        'nonlinear-regression.php' => 'Ready-made forms or a free formula; weights, intervals, AIC',
+        'mixed-models.php' => 'Linear and nonlinear; ML/REML, calibration of a new plot',
+        'equation-systems.php' => 'Your own formulas; shared coefficients, OLS, SUR, iterated SUR',
+        'log-scaling.php' => 'Scribner, Doyle, International; Smalian, Huber, Newton',
+        'biomass-carbon.php' => 'Component biomass, carbon and CO₂ with your coefficients',
+        'growth-functions.php' => 'Six growth functions; increments and culmination',
+        'tree-measurement.php' => 'Height with a clinometer, diameter and basal area, bark, crown, form factor',
     ];
 }
 
@@ -93,14 +93,14 @@ function home_tasks(): array {
 function home_picks(): array {
     $g = [
         ['Stands and distributions', [
-            'ornek-alan.php' => 'From tree lists of fixed-area plots: stems and basal area per hectare, diameter classes, design-based estimate.',
-            'cap-dagilimi.php' => 'Fits Weibull and seven more distributions to measured diameters; parameter recovery and stand models.']],
+            'plot-stand-metrics.php' => 'From tree lists of fixed-area plots: stems and basal area per hectare, diameter classes, design-based estimate.',
+            'diameter-distribution.php' => 'Fits Weibull and seven more distributions to measured diameters; parameter recovery and stand models.']],
         ['Volume and site productivity', [
-            'seksiyon-hacmi.php' => 'Stem volume from measured section diameters by Huber, Smalian, Newton and Hohenadl; tree and per-hectare totals.',
-            'bonitet.php' => 'Site index from top height and age, with a coefficient set you enter with its source or coefficients estimated from your data.']],
+            'section-volume.php' => 'Stem volume from measured section diameters by Huber, Smalian, Newton and Hohenadl; tree and per-hectare totals.',
+            'site-index.php' => 'Site index from top height and age, with a coefficient set you enter with its source or coefficients estimated from your data.']],
         ['Modelling and evaluation', [
-            'boy-cap.php' => 'Fits and compares six nonlinear models on measured heights and diameters; cross-validation, predictions for missing heights.',
-            'model-degerlendirme.php' => 'Bias, MAE, RMSE and prediction R² from observed and predicted values; intervals and residual plots.']],
+            'height-diameter.php' => 'Fits and compares six nonlinear models on measured heights and diameters; cross-validation, predictions for missing heights.',
+            'model-evaluation.php' => 'Bias, MAE, RMSE and prediction R² from observed and predicted values; intervals and residual plots.']],
     ];
     $byFile = []; foreach (site_tools() as $t) $byFile[$t['file']] = $t;
     return array_map(function ($x) use ($byFile) {

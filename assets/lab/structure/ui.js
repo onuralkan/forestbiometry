@@ -90,7 +90,7 @@ function renderStep1() {
   const el = $('step1');
   let h = `<div id="tblbox"></div><div id="mapbox"></div><div class="card"><h2>${T('src.h')}</h2>`;
   h += approved ? `<div class="srcbox"><b>${T('src.approved')}</b><p class="small">${dsInfo(approved)}</p><button type="button" class="btn" id="useapp">${T('src.use')}</button></div>`
-    : `<p class="note">${T('src.none')} <a href="veri-denetcisi.php">${T('src.checker')}</a></p>`;
+    : `<p class="note">${T('src.none')} <a href="data-checker.php">${T('src.checker')}</a></p>`;
   h += `<div class="srcrow"><button type="button" class="btn ghost" id="sample">${T('src.sample')}</button></div><p class="muted small">${T('src.sample.note')}</p>`;
   if (st.ds) h += `<p class="note ok" id="dsinfo"><b>${T('src.current')}:</b> ${dsInfo(st.ds, st.dsSrc && st.dsSrc.name)}</p>`;
   h += `</div><div class="nav"><button type="button" class="btn ghost" id="reset">${T('reset')}</button><button type="button" class="btn" id="to2"${st.ds ? '' : ' disabled'}>${T('next')}</button>${st.ds ? '' : `<span class="muted small">${T('need.ds')}</span>`}</div>`;

@@ -4043,7 +4043,7 @@ const en = {
   'src.refs': 'references', 'src.link': 'link', 'src.st.B': 'read', 'src.st.D': 'cited; not read, equations verified independently with SciPy/mpmath',
   'src.thr.none': 'raw diameters, no threshold (untruncated data assumed)', 'src.thr.trunc': p => `measurement threshold ${p.L} ≤ d ≤ ${p.U} cm, conditional distribution`, 'src.thr.cls': 'class frequencies; class probability F(upper) − F(lower)', 'src.thr.sum': 'summary values (no raw data)',
   'src.boot': 'parametric bootstrap (with re-estimation) and percentile intervals; the seed is in the result record.',
-  'src.note': 'Source status: "read" means the source itself was examined; the others are cited and the formulas are verified against independent numerical references. Formulas and assumptions are in the tool\'s guide section; the full entries of the sources are in the <a href="kaynakca.php">References</a>.',
+  'src.note': 'Source status: "read" means the source itself was examined; the others are cited and the formulas are verified against independent numerical references. Formulas and assumptions are in the tool\'s guide section; the full entries of the sources are in the <a href="references.php">References</a>.',
   'sup.weibull': 'd > a; location a fixed (0 or the user\'s value), not estimated', 'sup.exponential': 'd > a; location a fixed (0 or the user\'s value), not estimated',
   'sup.normal': 'all real numbers; the probability of negative diameters is reported', 'sup.lognormal': 'd > 0', 'sup.gamma': 'd > 0', 'sup.loglogistic': 'd > 0',
   'sup.beta': 'L < d < U; L and U from the user, never from the data', 'sup.johnsonsb': 'ξ < d < ξ + λ; ξ and λ from the user (Parresol recovery: ξ from the user, λ recovered)',
@@ -6356,7 +6356,7 @@ const en = {
   'm.naslund': 'Näslund', 'm.michailoff': 'Michailoff', 'm.curtis': 'Curtis', 'm.power': 'Power (Stoffels & van Soest)', 'm.richards': 'Chapman–Richards', 'm.weibull': 'Weibull (Yang et al.)',
   'm.short.power': 'Power', 'm.short.weibull': 'Weibull',
   'src.naslund': 'Näslund (1936)', 'src.michailoff': 'Michailoff (1943)', 'src.curtis': 'Curtis (1967)', 'src.power': 'Stoffels & van Soest (1953)', 'src.richards': 'Richards (1959)', 'src.weibull': 'Yang, Kozak & Smith (1978)',
-  'src.note': 'The parametrisations are those of Mehtätalo\'s lmfor R package (HDmodels); full references on the References page of the site (kaynakca.php). Parameters are for d in cm and h in m; they cannot be mixed with coefficients fitted in other units.',
+  'src.note': 'The parametrisations are those of Mehtätalo\'s lmfor R package (HDmodels); full references on the References page of the site (references.php). Parameters are for d in cm and h in m; they cannot be mixed with coefficients fitted in other units.',
   'p.model': 'Model', 'p.formula': 'Form', 'p.status': 'Status', 'p.param': 'Parameter', 'p.est': 'Estimate', 'p.se': 'Std. error', 'p.ci': '95% confidence interval (parameter)', 'p.iter': 'Iterations',
   'p.asym': 'Asymptote bh + a (m)', 'p.n': 'n', 'p.p': 'p', 'p.src': 'Source',
   's.ok': 'converged', 's.toofew': 'too few data', 's.nostart': 'no starting value', 's.noconverge': 'did not converge', 's.diverged': 'diverged', 's.invalid': 'undefined at start',
@@ -6496,7 +6496,7 @@ const { viewOf, inputsView } = __fb_r("library/view.js");
 const { verifyRecord } = __fb_r("core/record.js");
 const { svgForDownload } = __fb_r("core/chart.js");
 const { download } = __fb_r("core/export.js");
-// Account → Saved results → one result (hesap.php): draws the saved run record as tables and charts (library/view.js)
+// Account → Saved results → one result (account.php): draws the saved run record as tables and charts (library/view.js)
 // and checks its seal. The record comes in the page (#res-data); nothing is fetched.
 
 

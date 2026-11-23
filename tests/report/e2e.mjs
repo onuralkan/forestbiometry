@@ -1,4 +1,4 @@
-// Browser test for the Report Generator (rapor.php; DI-05). Package: the sample package of Plot & Stand Metrics (made
+// Browser test for the Report Generator (report-generator.php; DI-05). Package: the sample package of Plot & Stand Metrics (made
 // up). Records: a Diameter Distribution record made in Node with the engine and its own reference list, a
 // Height–Diameter record with arbitrary test coefficients.
 // Usage: php -S 127.0.0.1:8092 in the site folder, then node tests/report/e2e.mjs http://127.0.0.1:8092 [shots-dir]
@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
 const D = await import('../../assets/lab/dist/index.js');
 const SRC = await import('../../assets/lab/dist/sources.js');
 const { seal, sha256JSON } = await import('../../assets/lab/core/record.js');
-const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/rapor.php';
+const BASE = process.argv[2] || 'http://127.0.0.1:8092', SHOTS = process.argv[3] || null, URL = BASE + '/report-generator.php';
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const errors = [];
@@ -28,9 +28,9 @@ const settle = () => page.waitForTimeout(400);           // the preview follows 
 const sample = JSON.parse(await readFile(path.join(ROOT, 'assets/lab/stand/ornek/ornek-veri.json'), 'utf8')), sha = await sha256JSON(sample);
 const d24 = sample.trees.filter(t => t.period === '2024').map(t => t.dbh), wr = D.runMethod('weibull.ml', { d: d24, plot: D.POOL, period: '2024' });
 const refs = SRC.refsOf(['weibull.ml']);
-const distRec = await seal({ format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.0', ids: ['SS-03'], page: 'cap-dagilimi.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:00:00Z', lang: 'en',
+const distRec = await seal({ format: 'run-record/1', tool: { id: 'cap-dagilimi', version: '2.2.0', ids: ['SS-03'], page: 'diameter-distribution.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:00:00Z', lang: 'en',
   inputs: [{ role: 'data', kind: 'file', name: 'agaclar.csv', bytes: 10, sha256: 'ab'.repeat(32) }], settings: { unit: 'cm' }, results: [wr], sources: { methods: {}, references: Object.fromEntries(refs.map(k => [k, SRC.REFS[k]])) } });
-const hdRec = await seal({ format: 'run-record/1', tool: { id: 'boy-cap', version: '1.1.0', ids: ['SM-01'], page: 'boy-cap.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:05:00Z', lang: 'en',
+const hdRec = await seal({ format: 'run-record/1', tool: { id: 'boy-cap', version: '1.1.0', ids: ['SM-01'], page: 'height-diameter.php' }, build: { commit: null, site: null }, created: '2026-11-16T12:05:00Z', lang: 'en',
   inputs: [{ role: 'dataset', kind: 'dataset', sha256: sha }], settings: { breastHeight: 1.3, model: 'naslund' }, fits: [{ id: 'naslund', status: 'ok', theta: [1.9, 0.2], n: 12, rmse: 1.5 }] });
 for (const [n, o] of [['dist.json', distRec], ['hd.json', hdRec], ['bozuk.json', null]]) await writeFile(path.join(tmp, n), o ? JSON.stringify(o) : '{x');
 

@@ -294,7 +294,7 @@ function infoRows() {
 async function sendToEval() {
   const rows = predTable(), text = rows.map(r => r.map(v => v == null ? '' : String(v)).join('\t')).join('\n');
   await put('handoff:model-degerlendirme', { name: ('nonlinear-regression') + '.tsv', text, obs: 'y_obs', models: rows[0].slice(2), role: 'training', created: new Date().toISOString() });
-  await flush(); location.href = 'model-degerlendirme.php';
+  await flush(); location.href = 'model-evaluation.php';
 }
 
 /* ---------------- shell ---------------- */

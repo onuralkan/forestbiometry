@@ -47,13 +47,13 @@ says "PDF from the user", the source is requested before moving to the stage.
 
 | ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| DI-01 | Data import and validation | live | `veri-denetcisi.php` | Forestry Data Validator |
-| DI-02 | Coefficient and equation library | live | `katsayi-kutuphanesi.php` | Library core `core/coef.js`, `core/coef-ui.js`. DI-02/a1 (16 Nov 2026, user decision: central management): the sets of all tools on a single page (`assets/lab/coeflib/`), filtering/search, details, editing with the same editor, copy, delete, sets with identical coefficients and problematic sets, backup to a single file and restore with preview; 1.0.0-beta.1, released (16 Nov 2026, user decision). No built-in set (P2) |
-| DI-03 | Project and inventory data manager | live | `veri-yoneticisi.php` | In the browser (P1); the plot–tree–measurement hierarchy with `forest-dataset/1`. DI-03/a1 (16 Nov 2026, user decision: multiple data packages + an active package; only the metadata is edited): Inventory Data Manager 1.0.0-beta.1 (`forest-project/1`, PROJECT §4b): project information, plot × period summary, active package (`dataset:approved`, tools unchanged), import/export and backup with preview, copy, delete; Data Validator 1.2.0 adds approvals to the list; released (16 Nov 2026, user decision). Next: merging periods (the groundwork for SI-09), reopening a package in the Validator. |
-| DI-04 | Visualization dashboard | live | `pano.php` | DI-04/a1 (16 Nov 2026, user decision: package + run records; ready-made panels + filters): Visualization Dashboard 1.0.0-beta.1: summary, diameter distribution, species composition, N/ha and G/ha per plot, height–diameter, tree map; period, stratum, species, plot filters; densities from Diameter Distribution records, curves from Height–Diameter records (METHODS §21). Released (16 Nov 2026, user decision). Next: the records of the other tools (site index, stand structure), a free chart builder. |
-| DI-05 | Report generator | live | `rapor.php` | P7. DI-05/a1 (16 Nov 2026, user decisions: printable HTML; package + run records; selectable sections + title and notes): Report Generator 1.0.0-beta.1: report information, report language TR/EN, data package summary and plot × period table, dashboard charts (filtered, with record curves), settings and result tables of the run records, sources (platform and tool citations, sources in the records, user coefficient sources), reproducibility appendix; print/PDF from the browser and standalone HTML. Released (16 Nov 2026, user decision). |
+| DI-01 | Data import and validation | live | `data-checker.php` | Forestry Data Validator |
+| DI-02 | Coefficient and equation library | live | `coefficient-library.php` | Library core `core/coef.js`, `core/coef-ui.js`. DI-02/a1 (16 Nov 2026, user decision: central management): the sets of all tools on a single page (`assets/lab/coeflib/`), filtering/search, details, editing with the same editor, copy, delete, sets with identical coefficients and problematic sets, backup to a single file and restore with preview; 1.0.0-beta.1, released (16 Nov 2026, user decision). No built-in set (P2) |
+| DI-03 | Project and inventory data manager | live | `data-manager.php` | In the browser (P1); the plot–tree–measurement hierarchy with `forest-dataset/1`. DI-03/a1 (16 Nov 2026, user decision: multiple data packages + an active package; only the metadata is edited): Inventory Data Manager 1.0.0-beta.1 (`forest-project/1`, PROJECT §4b): project information, plot × period summary, active package (`dataset:approved`, tools unchanged), import/export and backup with preview, copy, delete; Data Validator 1.2.0 adds approvals to the list; released (16 Nov 2026, user decision). Next: merging periods (the groundwork for SI-09), reopening a package in the Validator. |
+| DI-04 | Visualization dashboard | live | `data-visualization.php` | DI-04/a1 (16 Nov 2026, user decision: package + run records; ready-made panels + filters): Visualization Dashboard 1.0.0-beta.1: summary, diameter distribution, species composition, N/ha and G/ha per plot, height–diameter, tree map; period, stratum, species, plot filters; densities from Diameter Distribution records, curves from Height–Diameter records (METHODS §21). Released (16 Nov 2026, user decision). Next: the records of the other tools (site index, stand structure), a free chart builder. |
+| DI-05 | Report generator | live | `report-generator.php` | P7. DI-05/a1 (16 Nov 2026, user decisions: printable HTML; package + run records; selectable sections + title and notes): Report Generator 1.0.0-beta.1: report information, report language TR/EN, data package summary and plot × period table, dashboard charts (filtered, with record curves), settings and result tables of the run records, sources (platform and tool citations, sources in the records, user coefficient sources), reproducibility appendix; print/PDF from the browser and standalone HTML. Released (16 Nov 2026, user decision). |
 | DI-06 | API and scripting interface | out of scope | – | P1; instead, engines that run in Node and the planned "also give the R code" button. |
-| DI-07 | Reproducibility layer | live | `kayit-dogrulayici.php` | DI-07/a1 (16 Nov 2026, user decision: shared record + verifier; input by default as a fingerprint only, embedding the data optional): the JSON download of all tools is `run-record/1` (PROJECT §4c, METHODS §20): tool, version, catalogue ids, released commit, settings, input SHA-256s, RFC 8785 + SHA-256 seal; a record download for the five tools that had no JSON (height–diameter SM-01, model evaluation and relative ranking SM-06, sampling SI-01, plot SI-03). Record Verifier 1.0.0-beta.1; released (16 Nov 2026, user decision). Next: reopening a record in its tool, repeating and comparing the calculation; Zenodo DOI. |
+| DI-07 | Reproducibility layer | live | `record-verifier.php` | DI-07/a1 (16 Nov 2026, user decision: shared record + verifier; input by default as a fingerprint only, embedding the data optional): the JSON download of all tools is `run-record/1` (PROJECT §4c, METHODS §20): tool, version, catalogue ids, released commit, settings, input SHA-256s, RFC 8785 + SHA-256 seal; a record download for the five tools that had no JSON (height–diameter SM-01, model evaluation and relative ranking SM-06, sampling SI-01, plot SI-03). Record Verifier 1.0.0-beta.1; released (16 Nov 2026, user decision). Next: reopening a record in its tool, repeating and comparing the calculation; Zenodo DOI. |
 
 ### TM — Tree measurement
 
@@ -61,29 +61,29 @@ Decisions (17 Nov 2026, user): (1) work on the TM tools starts after a mensurati
 
 | ID | Tool | Status | Note and source |
 |---|---|---|---|
-| TM-01 | Height calculator (clinometer, tangent, sine, slope correction) | live | Page `agac-olcumu.php` (released 17 Nov 2026, user decision). TM-01/a1 (17 Nov 2026): height core `assets/lab/tree/height.js`; Hamilton 1975 and Graves 1906 [B] (METHODS §23). Page "Tree Measurement" together with TM-02, TM-04, TM-06 |
-| TM-02 | Diameter and basal area (circumference ↔ diameter, irregular stem) | live | Page `agac-olcumu.php` (released 17 Nov 2026, user decision). TM-02/a1 (17 Nov 2026): `assets/lab/tree/diameter.js`; Hamilton 1975 and Graves 1906 [B] (METHODS §23) |
+| TM-01 | Height calculator (clinometer, tangent, sine, slope correction) | live | Page `tree-measurement.php` (released 17 Nov 2026, user decision). TM-01/a1 (17 Nov 2026): height core `assets/lab/tree/height.js`; Hamilton 1975 and Graves 1906 [B] (METHODS §23). Page "Tree Measurement" together with TM-02, TM-04, TM-06 |
+| TM-02 | Diameter and basal area (circumference ↔ diameter, irregular stem) | live | Page `tree-measurement.php` (released 17 Nov 2026, user decision). TM-02/a1 (17 Nov 2026): `assets/lab/tree/diameter.js`; Hamilton 1975 and Graves 1906 [B] (METHODS §23) |
 | TM-03 | Bark thickness and under-bark diameter | live | TM-03/a1 (17 Nov 2026): `assets/lab/tree/bark.js`; Hamilton 1975, Graves 1906, van Laar and Akça 2007 4.1.6 [B] (METHODS §23). "Bark" tab on the Tree Measurement page (user decision: a tab instead of a separate page; 1.0.0-beta.3); coefficients from the user (K1), tool `bark` in the coefficient library |
 | TM-04 | Crown metrics | live | TM-04/a1 (17 Nov 2026): `assets/lab/tree/crown.js`; van Laar and Akça 2007 4.1.7, Kershaw et al. 2016 §5.5 and §8.6.1, Hamilton 1975 §8 [B] (METHODS §23). "Crown" tab on the Tree Measurement page (1.0.0-beta.4) |
 | TM-05 | Tree age and diameter increment (ring and increment-core data) | live | TM-05/a1 (17 Nov 2026): `assets/lab/tree/age.js`; Graves 1906 chapters XV–XVI and van Laar and Akça 2007 4.1.1 [B] (METHODS §23). "Age and increment" tab on the Tree Measurement page (user decision; 1.0.0-beta.2), released (17 Nov 2026, user decision) |
-| TM-06 | Form factor and form quotient | live | Page `agac-olcumu.php` (released 17 Nov 2026, user decision). Section Volume already gives the form factor and the Hohenadl form quotients (Heger 1965 [B]). TM-06/a1 (17 Nov 2026): `assets/lab/tree/form.js`; Graves 1906 [B] chapter XIII (METHODS §23; an arithmetic error was found in the book's form exponent example) |
+| TM-06 | Form factor and form quotient | live | Page `tree-measurement.php` (released 17 Nov 2026, user decision). Section Volume already gives the form factor and the Hohenadl form quotients (Heger 1965 [B]). TM-06/a1 (17 Nov 2026): `assets/lab/tree/form.js`; Graves 1906 [B] chapter XIII (METHODS §23; an arithmetic error was found in the book's form exponent example) |
 
 ### SV — Stem volume and taper
 
 | ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| SV-01 | Section volume (Huber, Smalian, Newton, Hohenadl) | live | `seksiyon-hacmi.php` | Huber/Smalian/Newton definition exception [D]; Hohenadl Heger (1965) [B] |
-| SV-02 | Taper equations (Max and Burkhart, Kozak, variable-exponent) | live | `govde-profili.php` | TOOLS_SPEC TP01–TP02. SV-02/a1 (16 Nov 2026): Max and Burkhart (1976) Model 4 core [B] (`assets/lab/taper/calc.js`). SV-02/a2 (16 Nov 2026): Kozak (2004) Model 02 [B]. SV-02/a3 (16 Nov 2026): fitting from stem measurements (TP02). Page (TP04) 16 Nov 2026, 1.0.0-beta.1; usable volume up to a top diameter is also on the page (the basis of SV-03) |
-| SV-03 | Merchantable volume (taper integral, top-diameter and log-length limits) | live | `govde-profili.php` | TP01–TP03. Top-diameter limit with the SV-02 page; SV-03/a1 (17 Nov 2026, 1.0.0-beta.3): log-length limit, Kershaw et al. 2016 §6.4.1, §7.4.1, §7.4.3 [B] |
-| SV-04 | Volume equations | live | `hacim-denklemleri.php` | TOOLS_SPEC SV04; SV-04/a1 (17 Nov 2026, 1.0.0-beta.1): Kershaw et al. 2016 §6.2 [B] (6.22, 6.23, 6.24–6.25, local, 6.29); weighting Parresol 1999 [B]; coefficients from the user's data |
-| SV-05 | Log scaling rules (Doyle, Scribner, International ¼″, cubic) | live | `tomruk-olcumu.php` | SV-05/a1 (17 Nov 2026, 1.0.0-beta.1): Kershaw et al. 2016 §7.3, §7.4.1, Table 6.1 [B]; board feet labelled (P5 exception, user decision) and m³ |
-| SV-06 | Product bucking (assortment) optimization | live | `govde-profili.php` | TP03. SV-06/a1 (16 Nov 2026): priority order and dynamic programming core (`assets/lab/taper/bucking.js`); Grondin (1998) and Bennemann et al. (2025) [B]; Pnevmaticos and Mann (1972) cited [D]. Page: bucking section in Taper (`govde-profili.php`, 1.0.0-beta.2; 16 Nov 2026); released (16 Nov 2026, user decision) |
+| SV-01 | Section volume (Huber, Smalian, Newton, Hohenadl) | live | `section-volume.php` | Huber/Smalian/Newton definition exception [D]; Hohenadl Heger (1965) [B] |
+| SV-02 | Taper equations (Max and Burkhart, Kozak, variable-exponent) | live | `stem-taper.php` | TOOLS_SPEC TP01–TP02. SV-02/a1 (16 Nov 2026): Max and Burkhart (1976) Model 4 core [B] (`assets/lab/taper/calc.js`). SV-02/a2 (16 Nov 2026): Kozak (2004) Model 02 [B]. SV-02/a3 (16 Nov 2026): fitting from stem measurements (TP02). Page (TP04) 16 Nov 2026, 1.0.0-beta.1; usable volume up to a top diameter is also on the page (the basis of SV-03) |
+| SV-03 | Merchantable volume (taper integral, top-diameter and log-length limits) | live | `stem-taper.php` | TP01–TP03. Top-diameter limit with the SV-02 page; SV-03/a1 (17 Nov 2026, 1.0.0-beta.3): log-length limit, Kershaw et al. 2016 §6.4.1, §7.4.1, §7.4.3 [B] |
+| SV-04 | Volume equations | live | `volume-equations.php` | TOOLS_SPEC SV04; SV-04/a1 (17 Nov 2026, 1.0.0-beta.1): Kershaw et al. 2016 §6.2 [B] (6.22, 6.23, 6.24–6.25, local, 6.29); weighting Parresol 1999 [B]; coefficients from the user's data |
+| SV-05 | Log scaling rules (Doyle, Scribner, International ¼″, cubic) | live | `log-scaling.php` | SV-05/a1 (17 Nov 2026, 1.0.0-beta.1): Kershaw et al. 2016 §7.3, §7.4.1, Table 6.1 [B]; board feet labelled (P5 exception, user decision) and m³ |
+| SV-06 | Product bucking (assortment) optimization | live | `stem-taper.php` | TP03. SV-06/a1 (16 Nov 2026): priority order and dynamic programming core (`assets/lab/taper/bucking.js`); Grondin (1998) and Bennemann et al. (2025) [B]; Pnevmaticos and Mann (1972) cited [D]. Page: bucking section in Taper (`stem-taper.php`, 1.0.0-beta.2; 16 Nov 2026); released (16 Nov 2026, user decision) |
 
 ### BC — Biomass and carbon
 
 | ID | Tool | Status | Note and source |
 |---|---|---|---|
-| BC-01 | Allometric biomass | live | TOOLS_SPEC BC01–BC02. BC-01/a1 = BC01 (16 Nov 2026): core `assets/lab/biomass/calc.js`; forms definition exception [D] (user decision); Baskerville correction on the ln scale [A] (Chave et al. 2014, Baia et al. 2025); for log₁₀, Sprugel 1983 awaited; Snowdon and a user factor as values. Page `biyokutle-karbon.php` with BC02 (17 Nov 2026, 1.0.0-beta.1) |
+| BC-01 | Allometric biomass | live | TOOLS_SPEC BC01–BC02. BC-01/a1 = BC01 (16 Nov 2026): core `assets/lab/biomass/calc.js`; forms definition exception [D] (user decision); Baskerville correction on the ln scale [A] (Chave et al. 2014, Baia et al. 2025); for log₁₀, Sprugel 1983 awaited; Snowdon and a user factor as values. Page `biomass-carbon.php` with BC02 (17 Nov 2026, 1.0.0-beta.1) |
 | BC-02 | Biomass components (stem, branches, foliage, roots; additive systems) | live | BC-02/a1 (17 Nov 2026, 1.0.0-beta.4, live): linear additive system, restricted (weighted) SUR, Parresol 1999 [B]; BC-02/a2 (17 Nov 2026, 1.0.0-beta.5): nonlinear additive system, power forms, NSUR weighted or on the ln scale, confidence and prediction intervals, Parresol 2001 [B]. The biomass part of SM-04 |
 | BC-03 | Biomass expansion factor (BEF) | live | TOOLS_SPEC BC03; factors from the user. Volume conversion core in BC01: IPCC 2006 Volume 4 Chapter 2 Equation 2.8b [B]. BC-03/a1 = BC03 (17 Nov 2026, 1.0.0-beta.2): volumes from Section Volume via a `forest-derived/1` record (the package does not change), the two approaches in separate rows |
 | BC-04 | Carbon stock and CO₂ equivalent | live | K9: CO₂ = C × 44/12 (IPCC 2006 §2.2.3 [B]), carbon fraction from the user. Core in BC01 |
@@ -94,30 +94,30 @@ Decisions (17 Nov 2026, user): (1) work on the TM tools starts after a mensurati
 
 | ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| SS-01 | Stand summary (N/ha, G/ha, Dq, top height) | live | `ornek-alan.php` | Plot and Stand |
-| SS-02 | Stand density indices (Reineke SDI, relative density, CCF, Curtis RD) | live | `mescere-yapisi.php` | SDI and RD ready (Reineke 1933, Curtis 1982 [B]); relative spacing definition exception; for CCF, Krajicek et al. (1961): the original article could not be found; Kershaw et al. 2016 §8.9.4 and van Laar and Akça 2007 (pp. 156–157) read [B], CCF added on 17 Nov 2026 (`structure/ccf.js`, Stand Structure 1.0.0-beta.3; coefficients from the user, tool `ccf` in the coefficient library; METHODS §16) |
-| SS-03 | Diameter distribution (Weibull, gamma, Johnson SB…; parameter recovery) | live | `cap-dagilimi.php` | Diameter Distribution Lab 2.2.0 |
-| SS-04 | Diversity indices (Shannon, Simpson, species richness) | live | `mescere-yapisi.php` | Statistical definition |
-| SS-05 | Structural diversity indices (Gini, mingling, differentiation) | live | `mescere-yapisi.php` | Gini definition; M, T, U Pommerening (2002): uploaded, awaiting verification |
-| SS-06 | Spatial pattern analysis (Ripley K/L, pair correlation, Clark–Evans) | live | `mescere-yapisi.php` | Clark–Evans and Donnelly ready (uploaded, awaiting verification); source for Ripley K/L and the pair correlation function: PDF from the user |
-| SS-07 | Competition indices (Hegyi; distance-dependent and distance-independent) | live | `mescere-yapisi.php` | SS-07/a1 calculation ready (`structure/competition.js`); Hegyi (1974) temporary exception, PDF from the user |
+| SS-01 | Stand summary (N/ha, G/ha, Dq, top height) | live | `plot-stand-metrics.php` | Plot and Stand |
+| SS-02 | Stand density indices (Reineke SDI, relative density, CCF, Curtis RD) | live | `stand-structure.php` | SDI and RD ready (Reineke 1933, Curtis 1982 [B]); relative spacing definition exception; for CCF, Krajicek et al. (1961): the original article could not be found; Kershaw et al. 2016 §8.9.4 and van Laar and Akça 2007 (pp. 156–157) read [B], CCF added on 17 Nov 2026 (`structure/ccf.js`, Stand Structure 1.0.0-beta.3; coefficients from the user, tool `ccf` in the coefficient library; METHODS §16) |
+| SS-03 | Diameter distribution (Weibull, gamma, Johnson SB…; parameter recovery) | live | `diameter-distribution.php` | Diameter Distribution Lab 2.2.0 |
+| SS-04 | Diversity indices (Shannon, Simpson, species richness) | live | `stand-structure.php` | Statistical definition |
+| SS-05 | Structural diversity indices (Gini, mingling, differentiation) | live | `stand-structure.php` | Gini definition; M, T, U Pommerening (2002): uploaded, awaiting verification |
+| SS-06 | Spatial pattern analysis (Ripley K/L, pair correlation, Clark–Evans) | live | `stand-structure.php` | Clark–Evans and Donnelly ready (uploaded, awaiting verification); source for Ripley K/L and the pair correlation function: PDF from the user |
+| SS-07 | Competition indices (Hegyi; distance-dependent and distance-independent) | live | `stand-structure.php` | SS-07/a1 calculation ready (`structure/competition.js`); Hegyi (1974) temporary exception, PDF from the user |
 
 ### SQ — Site quality and productivity
 
 | ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| SQ-01 | Site index | live | `bonitet.php` | Hernández-Cuevas et al. (2018) [B]; curve library from the user (P2) |
-| SQ-02 | Site index curve building (ADA/GADA fitting) | live (ADA) | `bonitet.php` | For GADA, Cieszewski and Bailey (2000): PDF from the user |
-| SQ-03 | Growth function fitting (Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular, Weibull) | live | `buyume-islevi.php` | CR and Schumacher [B] (Hernández-Cuevas et al. 2018); the others [A] (Fekedulegn et al. 1999 + `growthmodels`); Korf awaiting a source |
+| SQ-01 | Site index | live | `site-index.php` | Hernández-Cuevas et al. (2018) [B]; curve library from the user (P2) |
+| SQ-02 | Site index curve building (ADA/GADA fitting) | live (ADA) | `site-index.php` | For GADA, Cieszewski and Bailey (2000): PDF from the user |
+| SQ-03 | Growth function fitting (Chapman–Richards, Schumacher, Gompertz, logistic, monomolecular, Weibull) | live | `growth-functions.php` | CR and Schumacher [B] (Hernández-Cuevas et al. 2018); the others [A] (Fekedulegn et al. 1999 + `growthmodels`); Korf awaiting a source |
 | SQ-04 | Productivity from environmental data | out of scope | – | P4 |
 
 ### SI — Sampling and inventory
 
 | ID | Tool | Status | Page | Note and source |
 |---|---|---|---|---|
-| SI-01 | Sample size | live | `ornekleme.php` | Inventory Sampling Planner |
+| SI-01 | Sample size | live | `sampling-planner.php` | Inventory Sampling Planner |
 | SI-02 | Sampling design generator (random, systematic, stratified, cluster) | removed (P8) | – | |
-| SI-03 | Fixed-area plot estimation | live | `ornek-alan.php` | expansion factors, per-hectare values |
+| SI-03 | Fixed-area plot estimation | live | `plot-stand-metrics.php` | expansion factors, per-hectare values |
 | SI-04 | Angle count (Bitterlich) | removed (P8) | – | |
 | SI-05 | Edge-effect correction (mirage, walkthrough) | removed (P8) | – | |
 | SI-06 | Line-intersect sampling (coarse woody debris) | removed (P8) | – | |
@@ -142,12 +142,12 @@ Decisions (17 Nov 2026, user): (1) work on the TM tools starts after a mensurati
 
 | ID | Tool | Status | Page | Note |
 |---|---|---|---|---|
-| SM-01 | Height–diameter models | live | `boy-cap.php` | fixed-effects version |
-| SM-02 | Nonlinear regression (NLS, weighted) | live | `dogrusal-olmayan-regresyon.php` | SM-02/a1 (17 Nov 2026, 1.0.0-beta.1): ready-made forms and free formula (user decision; `core/expr.js`), weighted NLS, intervals, comparison by AIC, saving to the library; Parresol 2001 [B] |
-| SM-03 | Mixed-effects models | live | `karma-modeller.php` | SM-03/a1 (17 Nov 2026, 1.0.0-beta.1): linear and nonlinear mixed models (Pinheiro and Bates 2000, Lindstrom and Bates 1990 [B]), ML/REML, diagonal/general covariance, varPower, AIC/BIC/LRT, calibration for a new group [A], saving to the library; verified against nlme 3.1-168 [P] |
-| SM-04 | Simultaneous and compatible systems (SUR, additive biomass) | live | `denklem-sistemleri.php` | SM-04/a1 (17 Nov 2026, 1.0.0-beta.1): linear and nonlinear SUR with the user's formulas, iterated SUR, compatible systems with shared coefficients (Henningsen and Hamann 2007, Parresol 2001 [B]); verified against systemfit 1.1-30 [P]; 2SLS/3SLS out of scope |
+| SM-01 | Height–diameter models | live | `height-diameter.php` | fixed-effects version |
+| SM-02 | Nonlinear regression (NLS, weighted) | live | `nonlinear-regression.php` | SM-02/a1 (17 Nov 2026, 1.0.0-beta.1): ready-made forms and free formula (user decision; `core/expr.js`), weighted NLS, intervals, comparison by AIC, saving to the library; Parresol 2001 [B] |
+| SM-03 | Mixed-effects models | live | `mixed-models.php` | SM-03/a1 (17 Nov 2026, 1.0.0-beta.1): linear and nonlinear mixed models (Pinheiro and Bates 2000, Lindstrom and Bates 1990 [B]), ML/REML, diagonal/general covariance, varPower, AIC/BIC/LRT, calibration for a new group [A], saving to the library; verified against nlme 3.1-168 [P] |
+| SM-04 | Simultaneous and compatible systems (SUR, additive biomass) | live | `equation-systems.php` | SM-04/a1 (17 Nov 2026, 1.0.0-beta.1): linear and nonlinear SUR with the user's formulas, iterated SUR, compatible systems with shared coefficients (Henningsen and Hamann 2007, Parresol 2001 [B]); verified against systemfit 1.1-30 [P]; 2SLS/3SLS out of scope |
 | SM-05 | Mortality and survival models | out of scope | – | P8 addendum (17 Nov 2026, user decision) |
-| SM-06 | Model evaluation | live | `model-degerlendirme.php`, `nispi-siralama.php` | Relative Ranking was placed under SM-06 in the catalogue on 19 Nov 2026 (user decision; a separate page, right next to Model Performance in the index), for ranking models |
+| SM-06 | Model evaluation | live | `model-evaluation.php`, `relative-ranking.php` | Relative Ranking was placed under SM-06 in the catalogue on 19 Nov 2026 (user decision; a separate page, right next to Model Performance in the index), for ranking models |
 | SM-07 | Uncertainty quantification (bootstrap, Monte Carlo, Bayesian) | removed (P8) | – | bootstrap exists in diameter distribution and site index |
 
 ### ML — Machine learning and spatial prediction
@@ -184,7 +184,7 @@ Decisions (17 Nov 2026, user): (1) work on the TM tools starts after a mensurati
 | TOOLS_SPEC SS01 | SS-02, SS-04, SS-05 (`assets/lab/structure/calc.js`) |
 | TOOLS_SPEC SS02 | SS-05, SS-06 (`assets/lab/structure/spatial.js`) |
 | TOOLS_SPEC SS03 | SS-07 |
-| TOOLS_SPEC SS04 | SS-02, SS-04…SS-07 page (`mescere-yapisi.php`) |
+| TOOLS_SPEC SS04 | SS-02, SS-04…SS-07 page (`stand-structure.php`) |
 | TOOLS_SPEC BC01–BC03 (BC04) | BC-01…BC-04 (BC-06) |
 | TOOLS_SPEC TP01–TP04 (TP05) | SV-02, SV-03, SV-06 |
 

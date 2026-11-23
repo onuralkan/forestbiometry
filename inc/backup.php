@@ -5,7 +5,7 @@
 // It writes a consistent copy of <private>/fb.sqlite to <private>/backups/fb-YYYY-MM-DD.sqlite.gz, keeps the newest 30
 // copies, and applies the retention rule (accounts not seen for 24 months are deleted). Not reachable over the web
 // (inc/.htaccess denies the folder, and the script refuses to run outside the command line unless included by
-// hesap.php for the administrator's download).
+// account.php for the administrator's download).
 declare(strict_types=1);
 require_once __DIR__ . '/account.php';
 

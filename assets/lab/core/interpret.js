@@ -1,8 +1,8 @@
-// AI interpretation of a tool's result (21 Nov 2026, user decision; server side: api/interpret.php, accounts: hesap.php).
+// AI interpretation of a tool's result (21 Nov 2026, user decision; server side: api/interpret.php, accounts: account.php).
 // A tool puts interpretSlot() where the card should go and calls mountInterpret(slot, tool, getSummary) after drawing.
 // getSummary() returns the same object the tool writes into its JSON run record (settings and result tables, no row
 // data); it is sent only when the user presses the button. Without the service on the server the card stays hidden.
-// The server keeps every interpretation in the account (hesap.php → Interpretations; 22 Nov 2026, user decision), with
+// The server keeps every interpretation in the account (account.php → Interpretations; 22 Nov 2026, user decision), with
 // the key of its summary, so that a result saved with "Save to my account" (core/record-ui.js) links to it.
 import { esc } from './i18n.js';
 
@@ -40,19 +40,19 @@ export async function mountInterpret(el, tool, getSummary) {
   let body;
   if (!st.signedIn) body = `<p>Sign in with ORCID to ask for an AI interpretation of these results (accounts are approved by the site's author).</p>
     <p class="b-actions"><a class="btn ghost" href="auth/orcid.php?back=${encodeURIComponent(back)}" id="ai-signin">Sign in with ORCID</a></p>`;
-  else if (st.status === 'pending') body = '<p id="ai-pending">Your account is waiting for approval; the interpretation works once it is approved. <a href="hesap.php">Account</a></p>';
-  else if (st.status !== 'approved') body = `<p id="ai-blocked">Your account cannot use the interpretation service${st.reason ? `: ${esc(st.reason)}` : '.'}${st.until ? ` (until ${esc(st.until.slice(0, 10))})` : ''} <a href="hesap.php">Account</a></p>`;
+  else if (st.status === 'pending') body = '<p id="ai-pending">Your account is waiting for approval; the interpretation works once it is approved. <a href="account.php">Account</a></p>';
+  else if (st.status !== 'approved') body = `<p id="ai-blocked">Your account cannot use the interpretation service${st.reason ? `: ${esc(st.reason)}` : '.'}${st.until ? ` (until ${esc(st.until.slice(0, 10))})` : ''} <a href="account.php">Account</a></p>`;
   else if (!st.service || (st.toolsOff || []).includes(tool.id)) body = `<p class="note warn" id="ai-off">The interpretation service is paused${st.serviceMessage ? `: ${esc(st.serviceMessage)}` : '.'}</p>`;
   else body = `<p class="b-actions"><button type="button" class="btn" id="ai-go"${left ? '' : ' disabled'}>${prev ? 'Interpret again' : 'Interpret these results'}</button>
       <span class="muted small" id="ai-left">${leftText(st)}</span></p>`;
   slot.innerHTML = `<section class="card ai-card" aria-labelledby="ai-h"><h3 id="ai-h">AI interpretation</h3>
-    <p class="muted small">Written by Anthropic's Claude from the summary of these results (settings and result tables, no row data), sent only when you press the button. A language model can be wrong: check the text against the numbers. <a href="gizlilik.php">Privacy</a></p>
+    <p class="muted small">Written by Anthropic's Claude from the summary of these results (settings and result tables, no row data), sent only when you press the button. A language model can be wrong: check the text against the numbers. <a href="privacy.php">Privacy</a></p>
     ${note}${body}<div id="ai-out" aria-live="polite"></div></section>`;
   slot.hidden = false;
   const out = slot.querySelector('#ai-out');
   const show = r => {
     out.innerHTML = `<div class="ai-text">${textToHtml(r.text)}</div><p class="muted small">${esc(r.model)} · ${esc(new Date(r.at).toLocaleString('en-GB'))}${r.truncated ? ' · cut short at the length limit' : ''}
-      · ${r.saved ? `<a href="hesap.php?tab=interpretations&amp;id=${esc(r.id)}" id="ai-saved">saved to My interpretations</a> · ` : r.saved === false ? '<span id="ai-saved">not saved: your account\'s storage is full</span> · ' : ''}<button type="button" class="linkbtn" id="ai-copy">Copy text</button></p>`;
+      · ${r.saved ? `<a href="account.php?tab=interpretations&amp;id=${esc(r.id)}" id="ai-saved">saved to My interpretations</a> · ` : r.saved === false ? '<span id="ai-saved">not saved: your account\'s storage is full</span> · ' : ''}<button type="button" class="linkbtn" id="ai-copy">Copy text</button></p>`;
     out.querySelector('#ai-copy').addEventListener('click', () => navigator.clipboard && navigator.clipboard.writeText(r.text));
   };
   if (prev) show(prev);
