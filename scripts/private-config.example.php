@@ -20,7 +20,12 @@ return [
     'per_minute'        => 3,       // at most this many requests per account per minute
     'max_request_bytes' => 60000,   // largest result summary accepted
     'max_output_tokens' => 3000,
+    // Elsevier API key (dev.elsevier.com) for the literature box of the tool pages, shown to the administrator only
+    // (inc/literature.php). Empty: no box. The institution token is optional (Scopus access from outside the campus).
+    'elsevier_key'        => '',
+    'elsevier_insttoken'  => '',
     // Test servers only: never true on the live site.
     'anthropic_mock'    => false,
     'orcid_mock'        => false,
+    'elsevier_mock'     => false,
 ];

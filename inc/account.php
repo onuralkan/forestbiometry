@@ -42,6 +42,7 @@ function fb_config(): ?array {
         'orcid_client_id' => '', 'orcid_client_secret' => '', 'orcid_base' => 'https://orcid.org', 'orcid_mock' => false,
         'admin_orcid' => '', 'monthly_quota' => 30, 'per_minute' => 3, 'max_request_bytes' => 60000, 'max_output_tokens' => 3000,
         'max_results' => 200, 'max_storage_bytes' => 20000000, 'max_record_bytes' => 2000000,
+        'elsevier_key' => '', 'elsevier_insttoken' => '', 'elsevier_mock' => false,   // literature box (inc/literature.php)
     ];
     return $c;
 }

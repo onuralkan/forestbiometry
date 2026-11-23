@@ -356,7 +356,28 @@ function site_modules_html(array $entries): string {
 
 function site_bottom(string $script = ''): void {
     $c = site_ctx();
-    ?>
+    // literature box (23 Nov 2026, user decision): tool pages, administrator only, Elsevier key configured (inc/literature.php)
+    $lit = null;
+    if (fb_config() && ($cu = site_current_tool()) && ($u = fb_user()) && !empty($u['admin'])) {
+        require_once __DIR__ . '/literature.php';
+        if (fb_lit_on() && isset(FB_LIT_DEFAULT[site_tool_id($cu)])) $lit = site_tool_id($cu);
+    }
+    if ($lit !== null): ?>
+<details class="card litbox" id="fb-lit" data-tool="<?= h($lit) ?>" data-csrf="<?= h(fb_csrf()) ?>">
+  <summary><b>Literature from Scopus</b> <span class="muted small">administrator only · not shown to visitors</span></summary>
+  <div class="lit-bar">
+    <span class="radios"><label><input type="radio" name="lit-sort" value="recent" checked> Most recent</label><label><input type="radio" name="lit-sort" value="cited"> Most cited</label></span>
+    <button type="button" class="btn ghost small" id="lit-refresh">Refresh</button>
+  </div>
+  <div class="lit-out"></div>
+  <details class="lit-qbox"><summary class="small">Search query <span class="muted" id="lit-custom" hidden>(edited)</span></summary>
+    <label class="small" for="lit-q">Scopus advanced search syntax</label>
+    <textarea id="lit-q" rows="3" spellcheck="false"></textarea>
+    <span class="lit-bar"><button type="button" class="btn small" id="lit-save">Save query</button><button type="button" class="btn ghost small" id="lit-default">Back to the default</button></span>
+  </details>
+</details>
+<script type="module" src="assets/lab/core/literature.js?v=<?= site_ver('assets/lab/core/literature.js') ?>"></script>
+<?php endif; ?>
 </main>
 </div>
 <footer class="b-foot">

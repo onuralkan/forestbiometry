@@ -23,7 +23,7 @@ const errors = [];
 
 const ADMIN = '0000-0001-5798-3421', USER = '0000-0002-1825-0097';
 const priv = await mkdtemp(path.join(os.tmpdir(), 'fb-private-'));
-await writeFile(path.join(priv, 'config.php'), `<?php return ['anthropic_mock' => true, 'orcid_mock' => true, 'admin_orcid' => '${ADMIN}', 'monthly_quota' => 2, 'per_minute' => 10, 'max_results' => 3];\n`);
+await writeFile(path.join(priv, 'config.php'), `<?php return ['anthropic_mock' => true, 'orcid_mock' => true, 'admin_orcid' => '${ADMIN}', 'monthly_quota' => 2, 'per_minute' => 10, 'max_results' => 3, 'elsevier_mock' => true];\n`);
 const port = await new Promise(r => { const srv = net.createServer(); srv.listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => r(p)); }); }), BASE = `http://127.0.0.1:${port}`;
 const php = spawn('php', ['-S', `127.0.0.1:${port}`], { cwd: root, env: { ...process.env, FB_PRIVATE: priv }, stdio: 'ignore' });
 for (let i = 0; i < 50; i++) { try { await fetch(BASE + '/account.php'); break; } catch (e) { await new Promise(r => setTimeout(r, 100)); } }
@@ -287,6 +287,30 @@ try {
     await page.goto(BASE + '/administration.php?view=accounts'); await page.click('#adm-bulk button[type="submit"]'); await page.waitForSelector('#adm-done');
     ok((await page.textContent('#adm-done')).includes('Select at least one'), 'bulk without a selection: nothing changes');
     await signOut(); }
+  // 5d. literature box on the tool pages (23 Nov 2026): administrator only, Scopus mocked, loaded on opening, query editable
+  { await signIn(USER, 'Test Researcher'); await page.goto(BASE + '/diameter-distribution.php');
+    ok(await page.locator('#fb-lit').count() === 0 && (await page.evaluate(async () => (await fetch('api/literature.php?tool=cap-dagilimi')).status)) === 404, 'an ordinary account: no literature box, the endpoint answers 404');
+    await signOut(); await signIn(ADMIN, 'Site Author');
+    await page.goto(BASE + '/'); ok(await page.locator('#fb-lit').count() === 0, 'administrator, home page: no box (tool pages only)');
+    await page.goto(BASE + '/diameter-distribution.php');
+    ok(await page.locator('#fb-lit').count() === 1 && !(await page.locator('#fb-lit').evaluate(d => d.open)) && (await page.locator('#fb-lit .lit-list').count()) === 0, 'administrator, tool page: the box, closed, nothing fetched yet');
+    await page.click('#fb-lit > summary'); await page.waitForSelector('#fb-lit .lit-list');
+    const t1 = await page.textContent('#fb-lit .lit-out');
+    ok(t1.includes('Mock result for TITLE-ABS-KEY("diameter distribution"') && t1.includes('Mock Journal · 2026') && t1.includes('doi:10.0000/mock.1') && t1.includes('Data from Scopus'), 'most recent list with the tool\'s default query, DOI link and attribution');
+    await page.check('input[name="lit-sort"][value="cited"]'); await page.waitForFunction(() => document.querySelector('#fb-lit .lit-out').textContent.includes('Cited by 500'));
+    ok((await page.textContent('#lit-meta')).includes('most cited'), 'most cited list');
+    await page.reload(); await page.click('#fb-lit > summary'); await page.waitForSelector('#lit-meta');
+    ok((await page.textContent('#lit-meta')).includes('cached'), 'a second view comes from the cache (no new Scopus call)');
+    await page.click('.lit-qbox > summary'); await page.fill('#lit-q', 'TITLE(weibull)'); await page.click('#lit-save');
+    await page.waitForFunction(() => document.querySelector('#fb-lit .lit-out').textContent.includes('Mock result for TITLE(weibull)'));
+    ok(await page.isVisible('#lit-custom'), 'edited query saved and used, marked as edited');
+    await page.click('#lit-default'); await page.waitForFunction(() => document.querySelector('#fb-lit .lit-out').textContent.includes('Mock result for TITLE-ABS-KEY'));
+    ok(!(await page.isVisible('#lit-custom')), 'back to the default query');
+    ok((await page.evaluate(async () => (await fetch('api/literature.php', { method: 'POST', body: JSON.stringify({ tool: 'cap-dagilimi', query: 'x' }) })).status)) === 403, 'saving a query needs the form token');
+    await page.goto(BASE + '/stem-taper.php'); await page.click('#fb-lit > summary'); await page.waitForSelector('#fb-lit .lit-list');
+    ok((await page.textContent('#fb-lit .lit-out')).includes('taper equation'), 'each tool has its own query');
+    await page.goto(BASE + '/administration.php?view=audit'); ok((await page.textContent('#adm-audit')).includes('literature-query'), 'query changes in the audit log');
+    await signOut(); }
   await signIn(USER, 'Test Researcher');
 
   // 6. deleting the account removes it; signing in again starts as pending
@@ -299,7 +323,7 @@ try {
   // 7. the suite's server has no private settings: no account link, no card, the API says not configured
   const p0 = await ctx.newPage(); p0.on('pageerror', e => errors.push(e.message));
   await p0.goto(BASE0 + '/account.php');
-  ok(await p0.locator('#acctlink').count() === 0 && await p0.isVisible('#acc-off'), 'without the service: no account link, the Account page says so');
+  ok(await p0.locator('#acctlink').count() === 0 && await p0.isVisible('#acc-off') && (await p0.evaluate(async () => (await fetch('api/literature.php?tool=cap-dagilimi')).status)) === 404, 'without the service: no account link, the Account page says so');
   ok((await p0.evaluate(async () => (await fetch('api/interpret.php')).json())).configured === false && (await p0.evaluate(async () => (await fetch('api/interpret.php', { method: 'POST', body: '{}' })).status)) === 503, 'without the service: the API says not configured (GET) and refuses requests (POST 503)');
   await p0.goto(BASE0 + '/privacy.php'); ok((await p0.textContent('h1')).trim() === 'Privacy' && await p0.locator('footer a[href="privacy.php"]').count() === 1, 'privacy notice linked from the footer');
 } finally {

@@ -704,3 +704,9 @@ body[data-acct="approved"] .rec-save { display: inline-flex; } body[data-acct="a
 .rv-keys { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 2px 0 8px; } .rv-keys span { display: inline-flex; align-items: center; gap: 6px; }
 .rv-unit { margin: 10px 0; } .rv-unit > summary, .rv-rest > summary { cursor: pointer; padding: 6px 0; } .rv-rest { margin: 14px 0; }
 .res-view td code { white-space: normal; overflow-wrap: anywhere; }
+/* literature box of the tool pages, administrator only (inc/site.php, core/literature.js) */
+.litbox { margin: 18px 0; } .litbox > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.lit-bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 10px 0; }
+.lit-list { margin: 6px 0; padding-left: 1.4em; display: grid; gap: 10px; } .lit-list li { min-width: 0; } .lit-list li > span { display: block; overflow-wrap: anywhere; }
+.lit-t { font-weight: 600; } .lit-qbox { margin-top: 10px; } .lit-qbox > summary { cursor: pointer; }
+.lit-qbox textarea { width: 100%; font-family: var(--mono, ui-monospace, monospace); font-size: .85rem; margin-top: 4px; }
