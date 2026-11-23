@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use these tools, please cite them as below, and cite the original sources of the methods you use (each tool lists them)."
 type: software
-title: "Forest Biometrics Tools (Ormancılık Biyometrisi Araçları)"
+title: "Forest Biometrics Tools"
 abstract: >-
   Browser-based tools for forest inventory and biometrics data: forest data checking, plot and stand metrics,
   model evaluation, diameter distributions (eight families and two optional ones, direct fitting, measurement
