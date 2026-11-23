@@ -114,7 +114,7 @@ await page.click('#tab-params');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]);
 const js = JSON.parse(await readFile(await dl.path(), 'utf8'));
 const r0 = js.results[0];
-ok(js.tool.version === '2.3.0-beta.2' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
+ok(js.tool.version === '2.3.0-beta.3' && js.results.length === 44 && r0.contract === 'dist-result/1' && r0.data.plot === 'A' && r0.data.period === '2019' && r0.data.n === 12 && r0.data.unit === 'cm', 'JSON: 4 units × 11 results with plot, period, n, unit');
 ok(r0.params.b === ml0.b && r0.params.c === ml0.c && r0.fixed.a.origin === 'zero' && r0.free.join() === 'b,c' && r0.estimator === 'ml' && r0.convergence.solver === 'bisection' && r0.objective.name === 'logLik' && r0.fit.aic > 0 && js.settings.methods['weibull.mom'].varDivisor === 'n' && js.results[4].settings.p === 0.24 && js.results[4].targets.quantile === 'type7' && js.results[2].targets.varDivisor === 'n', 'JSON: full-precision parameters, fixed/free, estimator, solver, objective');
 ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid' && r.params === null && r.problems[0].code === 'constant'), 'JSON: failed fits carry a status and a reason, no parameters');
 // Excel report and CSV files (all units)
@@ -129,7 +129,7 @@ ok(js.results.filter(r => r.data.plot === 'C').every(r => r.status === 'invalid'
   ok(fits.filter(r => r[0] === 'C').every(r => r[8] === 'invalid' && r[11] == null && String(r[9]).includes('equal')), 'Excel: plot C rows carry no parameters, the reason in words');
   const pars = XLSX.utils.sheet_to_json(wb.Sheets.Parameters, { header: 1 });
   ok(pars.some(r => r[0] === 'A' && r[4] === 'gamma.ml' && r[6] === 'theta' && r[7] === E0.runMethod('gamma.ml', { d: d1 }).params.theta), 'Excel parameters: gamma θ exact');
-  ok(info.some(r => r[0] === 'Tool' && r[1] === 'cap-dagilimi 2.3.0-beta.2') && info.some(r => r[0] === 'Source rows left out' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
+  ok(info.some(r => r[0] === 'Tool' && r[1] === 'cap-dagilimi 2.3.0-beta.3') && info.some(r => r[0] === 'Source rows left out' && String(r[1]).includes('36')), 'Excel info: tool version, rows left out');
   const units = XLSX.utils.sheet_to_json(wb.Sheets.Plots, { header: 1 });
   ok(units.length === 5 && units[1][0] === 'A' && units[1][2] === 12, 'Excel units: one row per plot × period');
   const [dc] = await Promise.all([page.waitForEvent('download'), page.click('#x-fits')]), csv = await readFile(await dc.path(), 'utf8');
@@ -259,7 +259,7 @@ ok(wr.every(r => r.s === 'ok' && r.c[2] === '20' && r.c[1] === 'a = 5 (user)'), 
 { const [dr] = await Promise.all([page.waitForEvent('download'), page.click('#w-r')]), rs = await readFile(await dr.path(), 'utf8');
   ok(/\.R$/.test(dr.suggestedFilename()) && rs.includes('a <- 5') && rs.includes('report("m2"') && rs.includes('fb_out(res)'), 'Weibull recovery R code: the user location and the chosen methods'); }
 { const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#w-json')]); const j = JSON.parse(await readFile(await dl.path(), 'utf8'));
-  ok(j.tool.version === '2.3.0-beta.2' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
+  ok(j.tool.version === '2.3.0-beta.3' && j.results.length === 4 && j.results.every(r => r.kind === 'recover' && r.targets.origin === 'predicted' && r.fixed.a.policy === 'user' && r.params.c > 2.4999999999 && r.params.c < 2.5000000001) && j.summary.origin === 'predicted', 'JSON: origin "predicted", location policy, full-precision parameters'); }
 { const [dx] = await Promise.all([page.waitForEvent('download'), page.click('#w-xlsx')]), rows = XLSX.utils.sheet_to_json(XLSX.read(await readFile(await dx.path())).Sheets.Recovery, { header: 1 });
   ok(rows.length === 5 && rows.slice(1).every(r => r[4] === 'ok' && r[7] === 5 && Math.abs(r[11] - 2.5) < 1e-9) && rows.slice(1).every(r => /origin = predicted/.test(r[r.length - 1])), 'Weibull recovery Excel: a = 5, c = 2.5, origin of the targets'); }
 for (const m of ['weibull.m2', 'weibull.m3']) await page.uncheck(`[data-wm="${m}"]`);
@@ -417,12 +417,12 @@ await page.waitForSelector('#panel .srcs');
   ok(bs.length > 4 && bs.slice(1).every(r => r[7] === 20261111 && r[3] === 'weibull.ml') && bs.some(r => r[6] === 'gof' && typeof r[17] === 'number') && bs.some(r => r[6] === 'ci' && typeof r[20] === 'number'), 'Excel: bootstrap sheet with seed, numbers as numbers');
   ok(ks.some(r => r[0] === 'weibull.ml' && String(r[5]).includes('R6')) && !JSON.stringify(ks).includes('METHODS') && ks.some(r => r[0] === 'bootstrap') && ks.some(r => r[0] === 'R9' && String(r[1]).includes('goodness_of_fit')), 'Excel: sources sheet (methods and references, no methods-document sections)');
   const [dj] = await Promise.all([page.waitForEvent('download'), page.click('#x-json')]), jj = JSON.parse(await readFile(await dj.path(), 'utf8'));
-  ok(jj.tool.version === '2.3.0-beta.2' && jj.bootstrap.length === 2 && jj.bootstrap.every(b => b.result.seed === 20261111 && b.method === 'weibull.ml') && jj.sources.methods['weibull.ml'].section === 'P05' && jj.settings.dataType === 'raw' && jj.settings.threshold === null, 'JSON: version, settings, bootstrap runs with seed, sources');
+  ok(jj.tool.version === '2.3.0-beta.3' && jj.bootstrap.length === 2 && jj.bootstrap.every(b => b.result.seed === 20261111 && b.method === 'weibull.ml') && jj.sources.methods['weibull.ml'].section === 'P05' && jj.settings.dataType === 'raw' && jj.settings.threshold === null, 'JSON: version, settings, bootstrap runs with seed, sources');
   await page.click('#tab-charts'); await page.waitForSelector('#ch-q svg');
   const [dsv] = await Promise.all([page.waitForEvent('download'), page.click('#ch-q [data-svg]')]), svg = await readFile(await dsv.path(), 'utf8');
   const mt = svg.match(/<metadata>([^<]*)<\/metadata>/), meta = mt && JSON.parse(mt[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
   const fq = meta && meta.fits[0], jr = fq && jj.results.find(r => r.method === fq.method && JSON.stringify(r.fixed) === JSON.stringify(fq.fixed));
-  ok(meta && meta.tool.version === '2.3.0-beta.2' && meta.settings.methods['weibull.mom'].varDivisor === 'n' && meta.fits.length === 1 && jr && JSON.stringify(fq.params) === JSON.stringify(jr.params), 'SVG: version, settings and full-precision parameters in the file');
+  ok(meta && meta.tool.version === '2.3.0-beta.3' && meta.settings.methods['weibull.mom'].varDivisor === 'n' && meta.fits.length === 1 && jr && JSON.stringify(fq.params) === JSON.stringify(jr.params), 'SVG: version, settings and full-precision parameters in the file');
   await page.click('#tab-params'); }
 
 // 2k. grouped data (class frequencies): grouped ML, counts vs per-hectare frequencies
@@ -524,6 +524,34 @@ await page.waitForSelector('#panel .srcs');
   await q.setViewportSize({ width: 390, height: 844 }); await q.click('#stt-train');
   ok(await q.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'stand model tab: no horizontal scroll on a phone');
   await c6.close(); }
+
+// 2v. P26: comparison of stand-model methods (Poudel and Cao 2013): repeated fit/validation splits, AD/KS/mLogL/EI, ranks
+{ const c9 = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } }), q = await c9.newPage(); q.on('pageerror', e => errors.push(e.message));
+  const E = await import('../../assets/lab/dist/index.js'), { tableFromText } = await import('../../assets/lab/core/table.js');
+  const XS = E.stand.extractStandUnits(tableFromText(await readFile(path.join(root, 'assets/lab/dist/ornek/ornek-mescere.csv'), 'utf8'), { delim: ',' }), { dcol: 2, pcol: 0, percol: 1, decimal: '.', unit: 'cm', cols: { N: 3, H: 4, A: 5 } });
+  await q.goto(URL + '?lang=en'); await q.click('#wf-stand'); await q.waitForSelector('#st-train'); await q.click('#st-sample'); await q.waitForSelector('#st-ncol');
+  ok(await q.evaluate(() => [...document.querySelectorAll('#st-set option')].some(o => o.value === 'prm.weibull.m10')), 'method 10 offered as a stand-model response set');
+  await q.click('#stt-compare'); await q.waitForSelector('#cmp-go');
+  ok((await q.locator('[data-cset]').count()) === 10, 'ten methods offered for the comparison');
+  for (const s of ['prm.weibull.m3', 'prm.weibull.m4', 'prm.weibull.m5', 'prm.weibull.m6', 'prm.weibull.m7', 'prm.weibull.m8', 'prm.weibull.m9', 'prm.weibull.m10']) await q.uncheck(`[data-cset="${s}"]`);
+  await q.uncheck('[data-cfit="cdfr"]'); await q.uncheck('[data-cfit="mcdfr"]'); await q.check('[data-cfit="nls"]');
+  await q.fill('#cmp-reps', '2'); await q.locator('#cmp-reps').dispatchEvent('change'); await q.fill('#cmp-seed', '3'); await q.locator('#cmp-seed').dispatchEvent('change');
+  await q.click('#cmp-go'); await q.waitForSelector('#cmp-table', { timeout: 120000 });
+  const cf = [];
+  for (const fit of ['sur', 'nls']) for (const set of ['ppm.weibull', 'prm.weibull.m2']) cf.push({ id: fit + '|' + set, label: '', cfg: { set, terms: E.stand.TERMS, fit, width: 2, ppmLoc: set === 'ppm.weibull' ? 'half-dmin' : undefined, loc: 'half-dmin', eliminate: true, alpha: 0.05, back: 'median' } });
+  const ref = E.standcmp.compareStand(XS.units, cf, { reps: 2, share: 0.5, seed: 3, width: 2 });
+  const rows = await q.evaluate(() => [...document.querySelectorAll('#cmp-table tbody tr')].map(tr => ({ id: tr.dataset.id, c: [...tr.children].map(x => x.textContent.trim()) })));
+  ok(rows.length === 4 && rows.every(r => { const m = ref.methods.find(x => x.id === r.id); return m && r.c[2].startsWith(fmt4(m.stats.ks.mean)) && Math.abs(parseFloat(String(r.c[6])) - ref.ranks.overall[r.id]) < 6e-4; }),
+    'mean KS and overall rank per method = engine: ' + JSON.stringify(rows.map(r => [r.id, r.c[2], r.c[6]])));
+  ok((await q.locator('#cmp-radar svg').count()) === 1 && (await q.locator('#cmp-sum').textContent()).includes(String(ref.commonUnits)), 'radar chart drawn; common validation units stated');
+  await q.check('[data-cex="sur|ppm.weibull"]'); await q.waitForTimeout(200);
+  const ex = E.standcmp.summarise(ref, { exclude: ['sur|ppm.weibull'] }), r2 = await q.evaluate(() => Object.fromEntries([...document.querySelectorAll('#cmp-table tbody tr')].map(tr => [tr.dataset.id, tr.children[6].textContent.trim()])));
+  ok(r2['sur|ppm.weibull'] === '–' && Math.abs(parseFloat(String(r2['nls|prm.weibull.m2'])) - ex.ranks.overall['nls|prm.weibull.m2']) < 6e-4 && Math.abs(parseFloat(String(r2['nls|prm.weibull.m2'])) - ref.ranks.overall['nls|prm.weibull.m2']) > 1e-3, 'excluding a method recomputes the ranks without refitting');
+  const [dl] = await Promise.all([q.waitForEvent('download'), q.click('#cmp-csv')]), csvT = await readFile(await dl.path(), 'utf8');
+  ok(csvT.split('\n')[0].includes('ad_mean') && csvT.includes('prm.weibull.m2') && csvT.split('\n').filter(l => l.trim()).length >= 5, 'comparison table as CSV');
+  await q.setViewportSize({ width: 390, height: 844 });
+  ok(await q.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'comparison tab: no horizontal scroll on a phone');
+  await c9.close(); }
 
 // 2o. P18: L-moments, QME and MGE are optional (unchecked by default); options from the interface; † on the self-criterion
 { const c7 = await browser.newContext({ viewport: { width: 1280, height: 900 } }), q = await c7.newPage(); q.on('pageerror', e => errors.push(e.message));

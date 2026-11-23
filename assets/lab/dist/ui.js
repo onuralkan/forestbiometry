@@ -8,7 +8,7 @@ import { download, downloadJSON, downloadCSV, xlsxBlob, loadXLSX } from '../core
 import { downloadRecord, recordOption } from '../core/record-ui.js';
 import * as REP from './report.js';
 import * as SRC from './sources.js';
-import { plotChart, scatterChart, svgForDownload } from '../core/chart.js';
+import { plotChart, scatterChart, svgForDownload, radarChart } from '../core/chart.js';
 import { renderImport, readImport } from '../core/importer.js';
 import { cellText } from '../core/table.js';
 import { detectDecimal, defaultDecimal } from '../core/num.js';
@@ -1003,7 +1003,8 @@ function standDecimal() {
 }
 function standCfg() {
   const q = S.st, n = t => num(t);
-  return { set: q.set, terms: stTerms(), fit: q.fit, back: q.back, loc: q.loc, a: n(q.a), ppmLoc: q.set === 'ppm.weibull' ? q.ppmLoc : undefined, width: n(q.width), xi: q.xi === '' ? NaN : n(q.xi), hColumn: q.hcol != null ? String(S.src.headers[q.hcol]) : null };
+  return { set: q.set, terms: stTerms(), fit: q.fit, back: q.back, loc: q.loc, a: n(q.a), ppmLoc: q.set === 'ppm.weibull' ? q.ppmLoc : undefined, width: n(q.width), xi: q.xi === '' ? NaN : n(q.xi), hColumn: q.hcol != null ? String(S.src.headers[q.hcol]) : null,
+    eliminate: !!q.elim && q.fit !== 'logols', alpha: 0.05 };
 }
 function standUnits() {
   const q = S.st;
@@ -1024,11 +1025,80 @@ function standProblems() {
 let standJob = null;
 function renderStand() {
   const el = $('standwf'), q = S.st; guessStandCols();
-  const tabs = `<div class="tabs rectabs" role="tablist" aria-label="${esc(T('st.tabs'))}">${['train', 'predict'].map(t => `<button type="button" role="tab" id="stt-${t}" data-stt="${t}" aria-selected="${q.tab === t}" aria-controls="st-${t}">${T('st.tab.' + t)}</button>`).join('')}</div>`;
+  const tabs = `<div class="tabs rectabs" role="tablist" aria-label="${esc(T('st.tabs'))}">${['train', 'predict', 'compare'].map(t => `<button type="button" role="tab" id="stt-${t}" data-stt="${t}" aria-selected="${q.tab === t}" aria-controls="st-${t}">${T('st.tab.' + t)}</button>`).join('')}</div>`;
   el.innerHTML = `<div class="card"><h2>${T('st.h')}</h2><p class="muted">${T('st.sub')}</p><details class="more"><summary>${T('more')}</summary><ul class="small muted"><li>${T('st.n.form')}</li><li>${T('st.n.ppm')}</li><li>${T('st.n.fit')}</li><li>${T('st.n.cv')}</li></ul></details></div>`
-    + tabs + `<div id="st-train" role="tabpanel" aria-labelledby="stt-train"${q.tab === 'train' ? '' : ' hidden'}></div><div id="st-predict" role="tabpanel" aria-labelledby="stt-predict"${q.tab === 'predict' ? '' : ' hidden'}></div>`;
+    + tabs + `<div id="st-train" role="tabpanel" aria-labelledby="stt-train"${q.tab === 'train' ? '' : ' hidden'}></div><div id="st-predict" role="tabpanel" aria-labelledby="stt-predict"${q.tab === 'predict' ? '' : ' hidden'}></div><div id="st-compare" role="tabpanel" aria-labelledby="stt-compare"${q.tab === 'compare' ? '' : ' hidden'}></div>`;
   el.querySelectorAll('[data-stt]').forEach(b => b.addEventListener('click', () => { q.tab = b.dataset.stt; save(); renderStand(); $('stt-' + q.tab).focus(); }));
-  if (q.tab === 'train') standTrain($('st-train')); else standPredict($('st-predict'));
+  if (q.tab === 'train') standTrain($('st-train')); else if (q.tab === 'compare') standCompare($('st-compare')); else standPredict($('st-predict'));
+}
+/* ---------------- comparison of methods (stage P26; Poudel and Cao 2013) ---------------- */
+const CMP_SETS = ['ppm.weibull', 'prm.weibull.m2', 'prm.weibull.m3', 'prm.weibull.m4', 'prm.weibull.m5', 'prm.weibull.m6', 'prm.weibull.m7', 'prm.weibull.m8', 'prm.weibull.m9', 'prm.weibull.m10'];
+const CMP_FITS = ['sur', 'cdfr', 'mcdfr', 'nls', 'logols'];
+const cmpDefaults = () => ({ sets: Object.fromEntries(CMP_SETS.map(s => [s, true])), fits: { sur: true, cdfr: true, mcdfr: true, nls: false, logols: false }, reps: '10', share: '0.5', seed: '1', width: '2', elim: true, exclude: [], rowSet: 'common', res: null });
+const cmpLabel = (set, fit) => `${T('st.cmp.fit.' + fit)} · ${T('st.cmp.m.' + set)}`;
+function cmpConfigs() {
+  const c = S.st.cmp, terms = stTerms(), w = num(c.width), out = [];
+  for (const fit of CMP_FITS) if (c.fits[fit]) for (const set of CMP_SETS) if (c.sets[set])
+    out.push({ id: fit + '|' + set, label: cmpLabel(set, fit), cfg: { set, terms, fit, width: w, ppmLoc: set === 'ppm.weibull' ? 'half-dmin' : undefined, loc: 'half-dmin', eliminate: !!c.elim && fit !== 'logols', alpha: 0.05, back: 'median' } });
+  return out;
+}
+function standCompare(el) {
+  const q = S.st; if (!q.cmp) q.cmp = cmpDefaults(); const c = q.cmp;
+  let h = `<div class="card"><h3>${T('st.cmp.h')}</h3><p class="muted small">${T('st.cmp.sub')}</p>`;
+  const pr = standProblems(); if (q.ncol == null) pr.push(T('st.cmp.needN'));
+  h += `<p class="small"><b>${T('st.cmp.methods')}</b></p><div class="radios col">${CMP_SETS.map(s => `<label><input type="checkbox" data-cset="${s}"${c.sets[s] ? ' checked' : ''}> ${esc(T('st.cmp.m.' + s))}</label>`).join('')}</div>
+    <p class="small"><b>${T('st.cmp.fits')}</b> ${CMP_FITS.map(f => `<label class="chk"><input type="checkbox" data-cfit="${f}"${c.fits[f] ? ' checked' : ''}> ${T('st.cmp.fit.' + f)}</label>`).join(' ')}</p>
+    <p class="small"><b>${T('st.terms')}</b> ${stTerms().map(t => T('st.term.' + t)).join(', ') || '–'} <span class="muted">${T('st.cmp.terms')}</span></p>
+    <p class="small"><label class="chk"><input type="checkbox" id="cmp-elim"${c.elim ? ' checked' : ''}> ${T('st.elim')}</label></p>
+    <div class="lims"><label>${T('st.cmp.reps')} <input type="text" inputmode="numeric" size="4" id="cmp-reps" value="${esc(c.reps)}"></label><label>${T('st.cmp.share')} <input type="text" inputmode="decimal" size="4" id="cmp-share" value="${esc(c.share)}"></label>
+      <label>${T('st.cmp.seed')} <input type="text" inputmode="numeric" size="6" id="cmp-seed" value="${esc(c.seed)}"></label><label>${T('st.cmp.width')} <input type="text" inputmode="decimal" size="4" id="cmp-width" value="${esc(c.width)}"></label></div>
+    <p class="muted small">${T('st.cmp.note')}</p></div>`;
+  const nCfg = cmpConfigs().length, reps = Math.round(num(c.reps)), share = num(c.share);
+  if (!nCfg) pr.push(T('st.cmp.none')); if (!(reps >= 1 && reps <= 100)) pr.push(T('st.cmp.badreps')); if (!(share > 0 && share < 1)) pr.push(T('st.cmp.badshare')); if (!(num(c.width) > 0)) pr.push(T('st.need.width'));
+  h += `<div class="nav"><button type="button" class="btn" id="cmp-go"${pr.length ? ' disabled' : ''}>${T('st.cmp.go', { n: nCfg, r: reps || 0 })}</button>${pr.length ? `<span class="muted small">${pr.map(esc).join(' ')}</span>` : ''}
+    <span id="cmp-busy" hidden><span class="small" id="cmp-prog"></span> <button type="button" class="btn ghost small" id="cmp-cancel">${T('bt.cancel')}</button></span></div><div id="cmp-out"></div>`;
+  el.innerHTML = h;
+  const re = () => { save(); standCompare(el); };
+  el.querySelectorAll('[data-cset]').forEach(x => x.addEventListener('change', () => { c.sets[x.dataset.cset] = x.checked; re(); }));
+  el.querySelectorAll('[data-cfit]').forEach(x => x.addEventListener('change', () => { c.fits[x.dataset.cfit] = x.checked; re(); }));
+  $('cmp-elim').addEventListener('change', e => { c.elim = e.target.checked; re(); });
+  for (const k of ['reps', 'share', 'seed', 'width']) $('cmp-' + k).addEventListener('change', e => { c[k] = e.target.value; re(); });
+  $('cmp-go').addEventListener('click', () => {
+    const X = standUnits(), units = X.units.map(u => ({ id: u.id, plot: u.plot, period: u.period, d: u.d, x: u.x }));
+    if (standJob) standJob.terminate();
+    const w = new Worker(new URL('./stand-worker.js', import.meta.url), { type: 'module' }); standJob = w;
+    $('cmp-go').disabled = true; $('cmp-busy').hidden = false; $('cmp-out').innerHTML = '';
+    const end = () => { standJob = null; w.terminate(); if ($('cmp-busy')) { $('cmp-busy').hidden = true; $('cmp-go').disabled = false; } };
+    w.onmessage = e => { const r = e.data; if (r.type === 'progress') { $('cmp-prog') && ($('cmp-prog').textContent = T('st.cmp.prog', { d: r.done, t: r.total })); return; }
+      end(); if (r.type === 'error') { status(T('bt.err', { m: r.message }), 'err'); return; }
+      c.res = r.cmp; c.exclude = []; save(); drawCompare(); };
+    w.onerror = e => { end(); status(T('bt.err', { m: e.message || 'worker' }), 'err'); };
+    w.postMessage({ kind: 'compare', units, configs: cmpConfigs(), opts: { reps, share, seed: Math.round(num(c.seed)) || 1, width: num(c.width) } });
+  });
+  $('cmp-cancel').addEventListener('click', () => { if (standJob) { standJob.terminate(); standJob = null; } $('cmp-busy').hidden = true; $('cmp-go').disabled = false; status(T('st.cancelled')); });
+  if (c.res) drawCompare();
+}
+function drawCompare() {
+  const c = S.st.cmp, out = $('cmp-out'); if (!out || !c.res) return;
+  const r = D.standcmp.summarise(c.res, { exclude: c.exclude, rowSet: c.rowSet }), rk = r.ranks, st = rk.stats;
+  const cell = s => s.mean == null ? '–' : `${f(s.mean, s.mean >= 100 ? 2 : 4)}${s.sd != null ? ` <span class="muted small">(${f(s.sd, s.sd >= 100 ? 2 : 3)})</span>` : ''}`;
+  const fails = m => Object.entries(m.failed).map(([k, v]) => `${v} ${esc(T('st.cmp.f.' + k) || k)}`).join(LIST_SEP);
+  let h = `<div class="card"><h3>${T('st.cmp.res.h')}</h3><p class="small" id="cmp-sum">${T('st.cmp.res.sum', { r: r.settings.reps, s: r.settings.share, seed: r.settings.seed, v: r.settings.valUnits, c: r.commonUnits ?? '–' })}</p>
+    <div class="radios">${['common', 'own'].map(v => `<label><input type="radio" name="cmp-rows" value="${v}"${c.rowSet === v ? ' checked' : ''}> ${T('st.cmp.rows.' + v)}</label>`).join('')}</div>
+    <div class="tscroll"><table class="grid" id="cmp-table"><thead><tr><th>${T('st.cmp.col.m')}</th><th>AD</th><th>KS</th><th>mLogL</th><th>EI</th><th>${T('st.cmp.col.units')}</th><th>${T('st.cmp.col.rank')}</th><th>${T('st.cmp.col.ex')}</th></tr></thead><tbody>
+    ${r.methods.map(m => `<tr data-id="${esc(m.id)}"><th>${esc(m.label)}${Object.keys(m.failed).length ? `<br><span class="muted small">${T('st.cmp.left')}: ${fails(m)}</span>` : ''}</th>${['ad', 'ks', 'mlogl', 'ei'].map(k => `<td class="num">${cell(m.stats[k])}${rk.R[k] && rk.R[k][m.id] != null ? `<br><span class="small">R ${f(rk.R[k][m.id], 3)}</span>` : ''}</td>`).join('')}
+      <td class="num">${m.units}</td><td class="num"><b>${rk.overall[m.id] != null ? f(rk.overall[m.id], 3) : '–'}</b></td><td><input type="checkbox" data-cex="${esc(m.id)}"${c.exclude.includes(m.id) ? ' checked' : ''} aria-label="${esc(T('st.cmp.col.ex'))}"></td></tr>`).join('')}</tbody></table></div>
+    <p class="muted small">${T('st.cmp.res.note', { s: st.map(k => k.toUpperCase().replace('MLOGL', 'mLogL')).join(', ') })}</p></div>`;
+  const ranked = rk.ranked.filter(id => rk.overall[id] != null);
+  if (ranked.length >= 2) h += `<div class="card"><figure class="chartbox" id="cmp-radar">${radarChart({ title: T('st.cmp.radar'), axes: st.map(k => ({ ad: 'AD', ks: 'KS', mlogl: 'mLogL', ei: 'EI' })[k] + ' ' + T('st.cmp.rank')), series: ranked.map(id => ({ name: r.methods.find(m => m.id === id).label, values: st.map(k => rk.R[k][id]) })), rmin: 1, rmax: ranked.length, fmt: v => f(v, 1) })}</figure></div>`;
+  h += `<div class="exports"><button type="button" class="btn ghost" id="cmp-csv">${T('st.cmp.csv')}</button><button type="button" class="btn ghost" id="cmp-reps-csv">${T('st.cmp.repcsv')}</button></div>`;
+  out.innerHTML = h;
+  out.querySelectorAll('input[name="cmp-rows"]').forEach(x => x.addEventListener('change', () => { c.rowSet = x.value; save(); drawCompare(); }));
+  out.querySelectorAll('[data-cex]').forEach(x => x.addEventListener('change', () => { const id = x.dataset.cex; c.exclude = x.checked ? [...c.exclude, id] : c.exclude.filter(v => v !== id); save(); drawCompare(); }));
+  $('cmp-csv').addEventListener('click', () => downloadCSV(fname('diameter-distribution-method-comparison', 'csv'), [['method', 'approach', 'set', 'ad_mean', 'ad_sd', 'ks_mean', 'ks_sd', 'mlogl_mean', 'mlogl_sd', 'ei_mean', 'ei_sd', 'units', 'rank_ad', 'rank_ks', 'rank_mlogl', 'rank_ei', 'overall_rank', 'excluded', 'row_set'],
+    ...r.methods.map(m => [m.label, m.id.split('|')[0], m.id.split('|')[1], ...['ad', 'ks', 'mlogl', 'ei'].flatMap(k => [m.stats[k].mean, m.stats[k].sd]), m.units, ...['ad', 'ks', 'mlogl', 'ei'].map(k => rk.R[k] ? rk.R[k][m.id] ?? null : null), rk.overall[m.id] ?? null, c.exclude.includes(m.id) ? 1 : 0, r.rowSet])]));
+  $('cmp-reps-csv').addEventListener('click', () => downloadCSV(fname('diameter-distribution-method-comparison-samples', 'csv'), [['method', 'sample', 'fit_units', 'validation_units', 'model', 'ad_mean', 'ks_mean', 'mlogl_mean', 'ei_mean'],
+    ...r.methods.flatMap(m => m.perRep.map(p => [m.label, p.rep, p.fitUnits, p.valUnits, p.status, p.ad, p.ks, p.mlogl, p.ei]))]));
 }
 function standTrain(el) {
   const q = S.st, Hd = S.src ? S.src.headers : [], opts = sel => `<option value="">${T('none')}</option>` + Hd.map((h, i) => `<option value="${i}"${sel === i ? ' selected' : ''}>${esc(h)}</option>`).join('');
@@ -1042,10 +1112,12 @@ function standTrain(el) {
   h += `<p><button type="button" class="btn ghost small" id="st-sample">${T('st.sample')}</button> <span class="muted small">${T('st.sample.note')}</span></p></div>`;
   h += `<div class="card"><h3>${T('st.model.h')}</h3>
     <label>${T('st.set')} <select id="st-set">${D.stand.SETS.map(id => `<option value="${id}"${q.set === id ? ' selected' : ''}>${esc(T('st.set.' + id))}</option>`).join('')}</select></label>
-    ${q.set.startsWith('prm.weibull') ? `<div class="radios">${['half-dmin', 'user'].map(v => `<label><input type="radio" name="st-loc" value="${v}"${q.loc === v ? ' checked' : ''}> ${T('st.loc.' + v)}</label>`).join('')}</div>${q.loc === 'user' ? `<label>a (cm) <input type="text" inputmode="decimal" size="6" id="st-a" value="${esc(q.a)}"></label>` : ''}` : ''}
+    ${q.set === 'prm.weibull.m10' ? `<p class="muted small">${T('st.m10.note')}</p>` : ''}
+    ${q.set.startsWith('prm.weibull') && q.set !== 'prm.weibull.m10' ? `<div class="radios">${['half-dmin', 'user'].map(v => `<label><input type="radio" name="st-loc" value="${v}"${q.loc === v ? ' checked' : ''}> ${T('st.loc.' + v)}</label>`).join('')}</div>${q.loc === 'user' ? `<label>a (cm) <input type="text" inputmode="decimal" size="6" id="st-a" value="${esc(q.a)}"></label>` : ''}` : ''}
     ${q.set === 'ppm.weibull' ? `<div class="radios">${['zero', 'half-dmin'].map(v => `<label><input type="radio" name="st-ppmloc" value="${v}"${q.ppmLoc === v ? ' checked' : ''}> ${T('st.ppmloc.' + v)}</label>`).join('')}</div>` : ''}
     ${q.set === 'prm.parresol' ? `<label>${T('prs.f.xi')} <input type="text" inputmode="decimal" size="6" id="st-xi" value="${esc(q.xi)}"></label>` : ''}
     <p class="small"><b>${T('st.terms')}</b> ${D.stand.TERMS.map(t => `<label class="chk"><input type="checkbox" data-term="${t}"${q.terms[t] ? ' checked' : ''}> ${T('st.term.' + t)}</label>`).join(' ')}</p>
+    <p class="small"><label class="chk"><input type="checkbox" id="st-elim"${q.elim ? ' checked' : ''}${q.fit === 'logols' ? ' disabled' : ''}> ${T('st.elim')}</label></p>
     <p class="small"><b>${T('st.fit')}</b></p><div class="radios col">${['nls', 'sur', 'logols', 'cdfr', 'mcdfr'].map(v => `<label><input type="radio" name="st-fit" value="${v}"${q.fit === v ? ' checked' : ''}> ${T('st.fit.' + v)}</label>`).join('')}</div>
     ${q.fit === 'mcdfr' ? `<label>${T('st.width')} <input type="text" inputmode="decimal" size="5" id="st-width" value="${esc(q.width)}"></label>` : ''}
     ${q.fit === 'logols' ? `<div class="radios">${['median', 'mean'].map(v => `<label><input type="radio" name="st-back" value="${v}"${q.back === v ? ' checked' : ''}> ${T('st.back.' + v)}</label>`).join('')}</div>` : ''}
@@ -1065,6 +1137,7 @@ function standTrain(el) {
   $('st-width') && $('st-width').addEventListener('change', e => { q.width = e.target.value; re(); });
   el.querySelectorAll('input[name="st-back"]').forEach(x => x.addEventListener('change', () => { q.back = x.value; re(); }));
   el.querySelectorAll('[data-term]').forEach(x => x.addEventListener('change', () => { q.terms[x.dataset.term] = x.checked; re(); }));
+  $('st-elim') && $('st-elim').addEventListener('change', e => { q.elim = e.target.checked; re(); });
   for (const k of ['a', 'xi']) $('st-' + k) && $('st-' + k).addEventListener('change', e => { q[k] = e.target.value; re(); });
   $('st-K').addEventListener('change', e => { q.K = e.target.value; re(); });
   $('st-sample').addEventListener('click', async () => {
@@ -1088,6 +1161,8 @@ function standTrain(el) {
 }
 const stKey = k => T('st.k.' + k);
 const betaHead = terms => ['β₁ (1)', ...terms.map((t, i) => `β${'₂₃₄₅'[i]} (${T('st.term.' + t)})`)];
+/** The R script reproduces models whose equations share the terms and methods 1–9 (stage P26 additions are not in it). */
+const standRok = m => m.method !== 'weibull.m10' && m.equations.every(e => D.stand.eqTerms(m, e).join() === m.terms.join());
 function drawStandTrain() {
   const q = S.st, m = q.model, out = $('st-out'); if (!out || !m) return;
   if (m.status !== 'ok') { out.innerHTML = `<p class="note err">${esc((m.problems || []).map(p => T('st.pr.' + p.code, p)).join(' '))}</p>`; return; }
@@ -1095,7 +1170,8 @@ function drawStandTrain() {
   let h = `<div class="card"><h3>${T('st.res.h')}</h3><p class="small">${T('st.res.scope', { u: sc.units, p: sc.plots })} ${Object.entries(sc.ranges).map(([k, r]) => `${T('st.var.' + k)}: ${f(r[0], 1)}–${f(r[1], 1)}`).join('; ')}.</p>`;
   if ((q.refused || []).length || m.skipped.length) h += `<p class="note warn small">${T('st.res.left', { n: (q.refused || []).length + m.skipped.length })}</p><details class="more"><summary>${T('st.res.leftlist')}</summary><ul class="small">${[...(q.refused || []).map(r => `${esc(r.plot)} / ${esc(perLabel(r.period))}: ${r.problems.map(p => esc(T('st.pr.' + p.code, { ...p, key: T('st.var.' + p.key) }))).join('; ')}`), ...m.skipped.map(r => `${esc(r.plot)} / ${esc(perLabel(r.period))}: ${esc(T('st.pr.' + r.code))}`)].map(x => `<li>${x}</li>`).join('')}</ul></details>`;
   h += `<div class="tscroll"><table class="grid sttab"><thead><tr><th>${T('st.resp')}</th>${betaHead(m.terms).map(x => `<th>${esc(x)}</th>`).join('')}<th>RMSE</th><th>${T('st.bias')}</th></tr></thead><tbody>
-    ${m.equations.map(e => `<tr data-key="${e.key}"><th>${esc(stKey(e.key))}</th>${e.beta.map((b, i) => `<td class="num">${f(b, 6)}${e.se ? `<br><span class="muted small">± ${f(e.se[i], 4)}</span>` : ''}</td>`).join('')}<td class="num">${f(e.rmse, 4)}</td><td class="num">${f(e.bias, 4)}</td></tr>`).join('')}</tbody></table></div>
+    ${m.equations.map(e => { const et = D.stand.eqTerms(m, e), col = [0, ...m.terms.map(t => et.includes(t) ? et.indexOf(t) + 1 : -1)];   // per-equation terms: '–' where an equation lacks a term
+      return `<tr data-key="${e.key}"><th>${esc(stKey(e.key))}</th>${col.map(i => i < 0 ? '<td class="num muted">–</td>' : `<td class="num">${f(e.beta[i], 6)}${e.se ? `<br><span class="muted small">± ${f(e.se[i], 4)}</span>` : ''}</td>`).join('')}<td class="num">${f(e.rmse, 4)}</td><td class="num">${f(e.bias, 4)}</td></tr>`; }).join('')}</tbody></table></div>
     ${m.cdf ? `<p class="small" id="st-cdf">${T('st.res.cdf', { s: f(m.cdf.start, 6), o: f(m.cdf.objective, 6), i: m.cdf.iter, r: m.cdf.rejected, w: m.cdf.width == null ? '' : T('st.res.width', { w: m.cdf.width }) })}${m.cdf.excludedUnits.length ? ' ' + T('st.res.oneclass', { n: m.cdf.excludedUnits.length }) : ''}${m.cdf.dmin ? ' ' + T('st.res.dminfixed') : ''}</p>` : ''}
     <p class="muted small">${T('st.res.note.' + m.fit)}${m.sur ? ' ' + T('st.res.sur', { r: m.sur.rounds, c: m.sur.corr.map((r, a) => r.slice(a + 1).map((v, b) => `${stKey(m.keys[a])}–${stKey(m.keys[a + b + 1])}: ${f(v, 3)}`)).flat().join(LIST_SEP) }) : ''}${m.hColumn ? ' ' + T('st.res.hcol', { c: esc(m.hColumn) }) : ''}</p></div>`;
   if (cv && cv.status === 'ok') {
@@ -1104,7 +1180,8 @@ function drawStandTrain() {
       <details class="more"><summary>${T('st.cv.units')}</summary><div class="tscroll tall"><table class="grid cvtab"><thead><tr><th>${T('x.plot')}</th><th>${T('x.period')}</th><th>${T('st.cv.fold')}</th><th>n</th><th>−ln L</th><th>KS D</th><th>${T('t.status')}</th></tr></thead><tbody>
       ${cv.units.map(u => `<tr data-status="${u.status}"><td>${esc(u.plot)}</td><td>${esc(perLabel(u.period))}</td><td class="num">${u.fold + 1}</td><td class="num">${u.n ?? '–'}</td><td class="num">${u.status === 'ok' ? f(u.nll, 3) : '–'}</td><td class="num">${u.status === 'ok' ? f(u.ks, 4) : '–'}</td><td class="small">${esc(T('st.cv.st.' + u.status))}</td></tr>`).join('')}</tbody></table></div></details></div>`;
   }
-  h += `<div class="exports"><button type="button" class="btn" id="st-json">${T('st.dl')}</button><button type="button" class="btn ghost" id="st-cvcsv"${cv ? '' : ' disabled'}>${T('st.dlcv')}</button><button type="button" class="btn ghost" id="st-go">${T('st.topredict')}</button><button type="button" class="btn ghost" id="st-r">${T('ex.r')}</button></div><p class="muted small">${T('ex.r.stand')}</p>`;
+  h += `<div class="exports"><button type="button" class="btn" id="st-json">${T('st.dl')}</button><button type="button" class="btn ghost" id="st-cvcsv"${cv ? '' : ' disabled'}>${T('st.dlcv')}</button><button type="button" class="btn ghost" id="st-go">${T('st.topredict')}</button><button type="button" class="btn ghost" id="st-r"${standRok(m) ? '' : ' disabled'}>${T('ex.r')}</button></div><p class="muted small">${standRok(m) ? T('ex.r.stand') : T('ex.r.stand.no')}</p>`;
+  if (m.elimination) h = h.replace('<div class="exports">', `<p class="small" id="st-elimsteps">${m.elimination.steps.length ? T('st.elim.steps', { s: m.elimination.steps.map(x => `${stKey(x.key)}: ${T('st.term.' + x.term)} (p = ${f(x.p, 3)})`).join(LIST_SEP) }) : T('st.elim.none')}</p><div class="exports">`);
   out.innerHTML = h;
   $('st-json').addEventListener('click', () => downloadJSON(`cap-dagilimi-mescere-modeli-${stamp()}.json`, m));
   $('st-cvcsv').addEventListener('click', () => downloadCSV(fname('diameter-distribution-stand-validation', 'csv'),
@@ -1112,7 +1189,7 @@ function drawStandTrain() {
   $('st-go').addEventListener('click', () => { S.st.tab = 'predict'; S.st.src = 'trained'; save(); renderStand(); });
   $('st-r').addEventListener('click', () => {
     const imp = S.imp, file = imp && imp.kind !== 'dataset' && imp.kind !== 'paste' ? imp.name : null;
-    const x = Object.fromEntries(['N', 'H', 'A'].map(k => [k, num(q.x[k])])), withX = q.src === 'trained' && q.pdone && D.stand.needs(m.terms).every(k => x[k] > 0);
+    const x = Object.fromEntries(['N', 'H', 'A'].map(k => [k, num(q.x[k])])), withX = q.src === 'trained' && q.pdone && D.stand.modelNeeds(m).every(k => x[k] > 0);
     download(fname('diameter-distribution-stand-model', 'R'), buildStandR({ imp, src: S.src, decimal: standDecimal(), unit: S.unit, dcol: S.dcol, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval,
       cols: { N: q.ncol, H: q.hcol, A: q.acol } }, standCfg(), m, withX ? x : null, withX ? D.stand.predict(m, x) : null, { lang, created: new Date().toISOString(), version: D.TOOL.version, fileName: file }, q.cv && q.cv.status === 'ok' ? q.cv : null), 'text/plain;charset=utf-8');
     if (!file) download(csvName(imp), tableCsv(S.src, cellText, standDecimal()), 'text/csv;charset=utf-8');
@@ -1126,8 +1203,8 @@ function standPredict(el) {
     ${q.src === 'imported' ? `<p><input type="file" accept=".json,application/json" id="st-file" aria-label="${esc(T('st.p.file'))}"></p>` : ''}
     ${m ? `<p class="small" id="st-msum">${T('st.p.sum', { s: esc(T('st.set.' + m.set)), f: esc(T('st.fit.' + m.fit)), u: m.scope.units, p: m.scope.plots, v: esc(m.tool) })}</p>` : `<p class="note">${T('st.p.none')}</p>`}</div>`;
   if (m) {
-    const need = D.stand.needs(m.terms);
-    h += `<div class="card"><h3>${T('st.p.x')}</h3><div class="lims">${need.map(k => `<label>${T('st.var.' + k)} <input type="text" inputmode="decimal" size="8" id="st-x-${k}" value="${esc(q.x[k])}"></label>`).join('')}</div>
+    const need = D.stand.modelNeeds(m);
+    h += `<div class="card"><h3>${T('st.p.x')}</h3><div class="lims">${need.map(k => `<label>${T('st.var.' + k)} <input type="text" inputmode="decimal" size="8" id="st-x-${k}" value="${esc(q.x[k])}"></label>`).join('')}${m.method === 'weibull.m10' ? `<label>${T('st.var.n')} <input type="text" inputmode="numeric" size="6" id="st-x-n" value="${esc(q.x.n ?? '')}"></label>` : ''}</div>
       <p class="muted small">${T('st.p.range', { r: need.map(k => `${T('st.var.' + k)} ${f(m.scope.ranges[k][0], 1)}–${f(m.scope.ranges[k][1], 1)}`).join('; ') })}</p>
       <div class="nav"><button type="button" class="btn" id="st-pred">${T('st.p.btn')}</button></div><div id="st-pout"></div></div>`;
   }
@@ -1136,13 +1213,13 @@ function standPredict(el) {
   $('st-file') && $('st-file').addEventListener('change', async e => { const file = e.target.files[0]; if (!file) return; let obj = null; try { obj = JSON.parse(await file.text()); } catch (err) { status(T('st.p.bad', { p: 'JSON' }), 'err'); return; }
     const im = D.stand.importModel(obj); if (im.problems) { status(T('st.p.bad', { p: im.problems.map(p => p.code).join(', ') }), 'err'); return; }
     q.imported = im.model; q.pdone = false; status(T('st.p.loaded')); save(); standPredict(el); });
-  for (const k of ['N', 'H', 'A']) $('st-x-' + k) && $('st-x-' + k).addEventListener('change', e => { q.x[k] = e.target.value; q.pdone = false; save(); });
+  for (const k of ['N', 'H', 'A', 'n']) $('st-x-' + k) && $('st-x-' + k).addEventListener('change', e => { q.x[k] = e.target.value; q.pdone = false; save(); });
   $('st-pred') && $('st-pred').addEventListener('click', () => { q.pdone = true; save(); drawStandPred(); });
   if (q.pdone && m) drawStandPred();
 }
 function drawStandPred() {
   const q = S.st, m = standModel(), out = $('st-pout'); if (!out || !m) return;
-  const x = Object.fromEntries(['N', 'H', 'A'].map(k => [k, num(q.x[k])])), p = D.stand.predict(m, x), fam = D.family(m.family);
+  const x = { ...Object.fromEntries(['N', 'H', 'A'].map(k => [k, num(q.x[k])])), n: q.x.n != null && q.x.n !== '' ? Math.round(num(q.x.n)) : undefined }, p = D.stand.predict(m, x), fam = D.family(m.family);
   let h = `<div class="tscroll"><table class="grid stptab"><thead><tr><th>${T('st.resp')}</th><th>${T('st.p.pred')}</th></tr></thead><tbody>${p.responses ? Object.entries(p.responses).map(([k, v]) => `<tr data-key="${k}"><th>${esc(stKey(k))}</th><td class="num">${f(v, 4)}</td></tr>`).join('') : ''}</tbody></table></div>`;
   if (p.outside && p.outside.length) h += `<p class="note warn small" id="st-outside">${T('st.p.outside', { k: p.outside.map(k => T('st.var.' + k)).join(', ') })}</p>`;
   if (p.status !== 'ok') h += `<p class="note err" id="st-pbad">${T('st.p.fail')}: ${esc([...p.problems.map(q2 => T('st.pr.' + q2.code, { ...q2, lo: q2.lo ? stKey(q2.lo) : '', hi: q2.hi ? stKey(q2.hi) : '', keys: (q2.keys || []).map(k => T('st.var.' + k)).join(', ') })), ...(p.recovery ? notesOf(p.recovery) : [])].join(' '))}</p>`;

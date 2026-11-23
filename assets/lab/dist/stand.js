@@ -13,12 +13,17 @@ import * as D from './index.js';
 import { levenbergMarquardt, covariance, solve, inverse } from '../core/nls.js';
 import { parseNumber } from '../core/num.js';
 import { cellText } from '../core/table.js';
+import { tCdf } from '../core/stats.js';
 
 export const SCHEMA = 'dist-stand-model/1';
 export const TERMS = ['RS', 'lnN', 'lnH', 'invA'];
 const TERM_NEEDS = { RS: ['N', 'H'], lnN: ['N'], lnH: ['H'], invA: ['A'] };
 /** Stand variables a set of terms needs (N trees/ha, H stand height in m, A age in years). */
 export const needs = terms => [...new Set(terms.flatMap(t => TERM_NEEDS[t]))].sort((a, b) => 'NHA'.indexOf(a) - 'NHA'.indexOf(b));
+/** Terms of one equation of a model (per-equation terms since stage P26; older models share model.terms). */
+export const eqTerms = (model, e) => e.terms || model.terms;
+/** Stand variables a whole model needs (union over its equations). */
+export const modelNeeds = model => needs([...new Set((model.equations || []).flatMap(e => eqTerms(model, e)).concat(model.equations ? [] : model.terms))]);
 /** Row of the design matrix: [1, RS, ln N, ln H, 1/A] restricted to the chosen terms. */
 export function design(x, terms) {
   const v = { RS: Math.sqrt(10000 / x.N) / x.H, lnN: Math.log(x.N), lnH: Math.log(x.H), invA: 1 / x.A };
@@ -36,13 +41,13 @@ const Q = { q25: 0.25, q31: 0.31, q50: 0.5, q63: 0.63, q95: 0.95 };
 export function responseSet(id, opts = {}) {
   if (id === 'ppm.weibull') return { id, approach: 'ppm', family: 'weibull', keys: opts.ppmLoc === 'half-dmin' ? ['b', 'c', 'dmin'] : ['b', 'c'] };
   if (id === 'prm.parresol') return { id, approach: 'prm', family: 'johnsonsb', method: 'johnsonsb.parresol', keys: ['mean', 'median', 'dq'] };
-  const m = /^prm\.weibull\.(m[2-9])$/.exec(id);
-  if (m) { const meth = D.method('weibull.' + m[1]), keys = meth.needs.slice();
-    if ((opts.loc ?? 'half-dmin') === 'half-dmin' && !keys.includes('dmin')) keys.push('dmin');
-    return { id, approach: 'prm', family: 'weibull', method: meth.id, keys }; }
+  const m = /^prm\.weibull\.(m[2-9]|m10)$/.exec(id);
+  if (m) { const meth = D.method('weibull.' + m[1]), keys = meth.needs.filter(k => k !== 'n');   // M10: n is the plot's tree count, not a response
+    if (m[1] !== 'm10' && (opts.loc ?? 'half-dmin') === 'half-dmin' && !keys.includes('dmin')) keys.push('dmin');
+    return { id, approach: 'prm', family: 'weibull', method: meth.id, keys, m10: m[1] === 'm10' }; }
   throw new D.DistError('stand.set', { id });
 }
-export const SETS = ['ppm.weibull', 'prm.weibull.m2', 'prm.weibull.m3', 'prm.weibull.m4', 'prm.weibull.m5', 'prm.weibull.m6', 'prm.weibull.m7', 'prm.weibull.m8', 'prm.weibull.m9', 'prm.parresol'];
+export const SETS = ['ppm.weibull', 'prm.weibull.m2', 'prm.weibull.m3', 'prm.weibull.m4', 'prm.weibull.m5', 'prm.weibull.m6', 'prm.weibull.m7', 'prm.weibull.m8', 'prm.weibull.m9', 'prm.weibull.m10', 'prm.parresol'];
 
 /** Training targets of one unit (diameters d, cm). Moment variance with divisor n; percentiles type 7. null = not computable. */
 export function targets(d, set, opts = {}) {
@@ -73,7 +78,7 @@ export function extractStandUnits(tbl, spec) {
       else if (vals.size > 1) why.push({ code: 'stand.var.varies', key: k, values: [...vals].slice(0, 3) });
       else { const v = [...vals][0]; if (!(v > 0)) why.push({ code: 'stand.var.nonpos', key: k, value: v }); else x[k] = v; }
     }
-    if (why.length) refused.push({ plot: u.plot, period: u.period, problems: why }); else out.push({ id: u.id, plot: u.plot, period: u.period, d: u.d, x });
+    if (why.length) refused.push({ plot: u.plot, period: u.period, problems: why }); else out.push({ id: u.id, plot: u.plot, period: u.period, d: u.d, x: { ...x, n: u.d.length } });   // n: trees measured on the plot (M10)
   }
   return { units: out, refused, acc: X.acc };
 }
@@ -124,11 +129,12 @@ function cholesky(A) {
  */
 export function fitSUR(xs, Y, terms, opts = {}) {
   const K = Y[0].length, n = Y.length, maxRounds = opts.maxRounds ?? 100;
-  const eqs = Array.from({ length: K }, (_, k) => fitNLS(xs, Y.map(r => r[k]), terms));
+  const TK = Array.isArray(terms[0]) ? terms : Array.from({ length: K }, () => terms);   // per-equation terms (stage P26)
+  const eqs = Array.from({ length: K }, (_, k) => fitNLS(xs, Y.map(r => r[k]), TK[k]));
   if (eqs.some(e => e.status !== 'ok')) return { status: 'noconverge', stage: 'nls', eqs };
-  const p = eqs[0].beta.length, M = expModel(terms);
+  const P = eqs.map(e => e.beta.length), off = P.map((_, k) => P.slice(0, k).reduce((a, v) => a + v, 0)), Ms = TK.map(expModel);
   let beta = eqs.map(e => e.beta.slice()), rounds = 0, Sigma = null, last = null;
-  const resid = B => Y.map((y, i) => y.map((yk, k) => yk - M.f(B[k], xs[i])));
+  const resid = B => Y.map((y, i) => y.map((yk, k) => yk - Ms[k].f(B[k], xs[i])));
   const cov = R => Array.from({ length: K }, (_, a) => Array.from({ length: K }, (_, b) => R.reduce((s, r) => s + r[a] * r[b], 0) / n));
   while (rounds < maxRounds) {
     rounds++;
@@ -137,9 +143,9 @@ export function fitSUR(xs, Y, terms, opts = {}) {
     // stacked problem: observation (i, k) → target Σ_l W_kl y_il, mean Σ_l W_kl f_l(x_i)
     const obs = [], tgt = [];
     for (let i = 0; i < n; i++) for (let k = 0; k < K; k++) { obs.push({ i, k }); tgt.push(W[k].reduce((s, w, l) => s + w * Y[i][l], 0)); }
-    const split = th => Array.from({ length: K }, (_, k) => th.slice(k * p, (k + 1) * p));
-    const SM = { f: (th, o) => { const B = split(th); return W[o.k].reduce((s, w, l) => s + (w ? w * M.f(B[l], xs[o.i]) : 0), 0); },
-      grad: (th, o) => { const B = split(th), g = Array(K * p).fill(0); W[o.k].forEach((w, l) => { if (!w) return; const gl = M.grad(B[l], xs[o.i]); for (let j = 0; j < p; j++) g[l * p + j] = w * gl[j]; }); return g; } };
+    const split = th => Array.from({ length: K }, (_, k) => th.slice(off[k], off[k] + P[k])), tot = off[K - 1] + P[K - 1];
+    const SM = { f: (th, o) => { const B = split(th); return W[o.k].reduce((s, w, l) => s + (w ? w * Ms[l].f(B[l], xs[o.i]) : 0), 0); },
+      grad: (th, o) => { const B = split(th), g = Array(tot).fill(0); W[o.k].forEach((w, l) => { if (!w) return; const gl = Ms[l].grad(B[l], xs[o.i]); for (let j = 0; j < P[l]; j++) g[off[l] + j] = w * gl[j]; }); return g; } };
     const r = levenbergMarquardt(SM, obs, tgt, beta.flat(), { maxIter: 1000, xtol: 1e-12, ftol: 1e-15, gtol: 1e-10 });
     if (r.status !== 'ok') return { status: r.status, stage: 'sur', rounds };
     const nb = split(r.theta), change = Math.max(...nb.flat().map((v, j) => Math.abs(v - beta.flat()[j]) / Math.max(Math.abs(beta.flat()[j]), 1e-8)));
@@ -148,7 +154,7 @@ export function fitSUR(xs, Y, terms, opts = {}) {
     if (change < 1e-10) break;
   }
   const R = resid(beta), S = cov(R), corr = S.map((r, a) => r.map((v, b) => v / Math.sqrt(S[a][a] * S[b][b])));
-  return { status: 'ok', beta, Sigma: S, corr, rounds, n, p, sse: S.map((r, k) => r[k] * n), objective: last ? last.sse : null };
+  return { status: 'ok', beta, Sigma: S, corr, rounds, n, p: P, sse: S.map((r, k) => r[k] * n), objective: last ? last.sse : null };
 }
 
 /* ---------------- training ---------------- */
@@ -157,6 +163,29 @@ export function fitSUR(xs, Y, terms, opts = {}) {
  * loc: 'half-dmin'|'user' and a (PRM Weibull), xi (Parresol), back: 'median'|'mean' (log-OLS) }.
  * Returns the model (coefficients per response, training scope) and the unit list with their targets.
  */
+/**
+ * Backward elimination (stage P26; Poudel and Cao 2013: "removing insignificant variables (at the 5% level)"), per
+ * response: fit the response by NLS with the candidate terms, drop the term (never the intercept) with the largest
+ * two-sided p-value of t = β/SE (Student's t, df = n − p, asymptotic NLS standard errors) if it exceeds alpha, refit,
+ * repeat. rows: [{ u, t }] (training units with targets). → { termsBy: { key: [terms] }, steps: [{ key, term, p }] }.
+ */
+export function eliminate(rows, keys, terms, alpha = 0.05) {
+  const termsBy = {}, steps = [], xs = rows.map(r => r.u.x);
+  for (const k of keys) {
+    let tk = terms.slice();
+    for (;;) {
+      if (!tk.length) break;
+      const e = fitNLS(xs, rows.map(r => r.t[k]), tk); if (e.status !== 'ok' || !e.se) break;
+      const df = e.n - e.p, pv = tk.map((t, j) => { const z = Math.abs(e.beta[j + 1] / e.se[j + 1]); return Number.isFinite(z) ? 2 * (1 - tCdf(z, df)) : 1; });
+      let w = 0; pv.forEach((v, j) => { if (v > pv[w]) w = j; });
+      if (!(pv[w] > alpha)) break;
+      steps.push({ key: k, term: tk[w], p: pv[w] }); tk = tk.filter((_, j) => j !== w);
+    }
+    termsBy[k] = tk;
+  }
+  return { termsBy, steps, alpha };
+}
+
 export function train(units, cfg) {
   if (cfg.fit === 'cdfr' || cfg.fit === 'mcdfr') return trainCDF(units, cfg);
   const set = responseSet(cfg.set, cfg), terms = cfg.terms.slice(), nv = needs(terms);
@@ -175,21 +204,25 @@ export function train(units, cfg) {
   if (plots.size < 2 || rows.length <= p) return { ...base, status: 'invalid', problems: [{ code: 'stand.few', units: rows.length, plots: plots.size, p }] };
   if (set.family === 'johnsonsb' && !(Number.isFinite(cfg.xi) && cfg.xi >= 0)) return { ...base, status: 'invalid', problems: [{ code: 'stand.xi' }] };
   const xs = rows.map(r => r.u.x), Y = rows.map(r => set.keys.map(k => r.t[k]));
+  // terms per equation: the user's per-response choice, or backward elimination on these training units, else shared
+  let TB = cfg.termsBy ? Object.fromEntries(set.keys.map(k => [k, (cfg.termsBy[k] || terms).filter(t => terms.includes(t))])) : null;
+  if (cfg.eliminate) { const el = eliminate(rows, set.keys, terms, cfg.alpha ?? 0.05); TB = el.termsBy; base.elimination = { alpha: el.alpha, steps: el.steps }; }
+  const tk = k => TB ? TB[k] : terms;
   let eq;
-  if (cfg.fit === 'sur') { const s = fitSUR(xs, Y, terms, { iterate: cfg.iterate !== false }); if (s.status !== 'ok') return { ...base, status: s.status, problems: [{ code: 'stand.fit', stage: s.stage }] };
-    eq = set.keys.map((k, j) => ({ key: k, beta: s.beta[j], sigma2: s.Sigma[j][j] })); base.sur = { Sigma: s.Sigma, corr: s.corr, rounds: s.rounds, iterate: cfg.iterate !== false }; }
+  if (cfg.fit === 'sur') { const s = fitSUR(xs, Y, set.keys.map(tk), { iterate: cfg.iterate !== false }); if (s.status !== 'ok') return { ...base, status: s.status, problems: [{ code: 'stand.fit', stage: s.stage }] };
+    eq = set.keys.map((k, j) => ({ key: k, terms: tk(k), beta: s.beta[j], sigma2: s.Sigma[j][j] })); base.sur = { Sigma: s.Sigma, corr: s.corr, rounds: s.rounds, iterate: cfg.iterate !== false }; }
   else {
     eq = [];
-    for (const [j, k] of set.keys.entries()) { const y = Y.map(r => r[j]), e = cfg.fit === 'logols' ? fitLogOLS(xs, y, terms) : fitNLS(xs, y, terms);
+    for (const [j, k] of set.keys.entries()) { const y = Y.map(r => r[j]), e = cfg.fit === 'logols' ? fitLogOLS(xs, y, tk(k)) : fitNLS(xs, y, tk(k));
       if (e.status !== 'ok') return { ...base, status: e.status, problems: [{ code: 'stand.fit', key: k }] };
-      eq.push({ key: k, beta: e.beta, se: e.se ?? null, sigma2: e.sigma2 ?? null, s2Log: e.s2Log ?? null, iter: e.iter ?? null }); }
+      eq.push({ key: k, terms: tk(k), beta: e.beta, se: e.se ?? null, sigma2: e.sigma2 ?? null, s2Log: e.s2Log ?? null, iter: e.iter ?? null }); }
   }
   // fit statistics on the training data (original scale)
   for (const [j, e] of eq.entries()) { const pr = xs.map(x => predictKey({ ...base, equations: eq }, e, x)), res = Y.map((r, i) => r[j] - pr[i]);
     e.rmse = Math.sqrt(res.reduce((s, v) => s + v * v, 0) / res.length); e.bias = res.reduce((s, v) => s + v, 0) / res.length; }
   return { ...base, status: 'ok', equations: eq, trainingUnits: rows.map(r => ({ plot: r.u.plot, period: r.u.period, x: r.u.x, targets: r.t })) };
 }
-const predictKey = (model, e, x) => { const z = design(x, model.terms), m = dot(e.beta, z); return model.fit === 'logols' && model.options.back === 'mean' ? Math.exp(m + e.s2Log / 2) : Math.exp(m); };
+const predictKey = (model, e, x) => { const z = design(x, eqTerms(model, e)), m = dot(e.beta, z); return model.fit === 'logols' && model.options.back === 'mean' ? Math.exp(m + e.s2Log / 2) : Math.exp(m); };
 
 /* ---------------- prediction ---------------- */
 const ORDER = ['q25', 'q31', 'q50', 'q63', 'q95'];
@@ -200,8 +233,9 @@ const ORDER = ['q25', 'q31', 'q50', 'q63', 'q95'];
  */
 export function predict(model, x) {
   if (!model || model.status !== 'ok') throw new D.DistError('stand.model');
-  const nv = needs(model.terms), miss = nv.filter(k => !(x[k] > 0));
+  const nv = modelNeeds(model), miss = nv.filter(k => !(x[k] > 0));
   if (miss.length) return { status: 'invalid', problems: [{ code: 'stand.x.missing', keys: miss }], responses: null, params: null };
+  if (model.method === 'weibull.m10' && !(Number.isInteger(x.n) && x.n >= 2)) return { status: 'invalid', problems: [{ code: 'stand.n' }], responses: null, params: null };
   const responses = Object.fromEntries(model.equations.map(e => [e.key, predictKey(model, e, x)]));
   const outside = nv.filter(k => x[k] < model.scope.ranges[k][0] || x[k] > model.scope.ranges[k][1]);
   const problems = [];
@@ -214,7 +248,7 @@ export function predict(model, x) {
       const params = { a: model.options.ppmLoc === 'half-dmin' ? 0.5 * responses.dmin : model.options.a, b: responses.b, c: responses.c };
       result = { status: 'ok', params };
     } else if (model.family === 'weibull') {
-      const s = { ...responses, origin: 'predicted' }; if ('variance' in s) s.varDivisor = 'n';
+      const s = { ...responses, origin: 'predicted', ...(model.method === 'weibull.m10' ? { n: x.n } : {}) }; if ('variance' in s) s.varDivisor = 'n';
       const o = model.options.loc === 'user' ? { loc: 'user', a: model.options.aUser } : { loc: 'half-dmin' };
       const r = D.runMethod(model.method, { type: 'summary', summary: s }, o); result = r.status === 'ok' ? { status: 'ok', params: r.params, recovery: r } : { status: r.status, recovery: r };
     } else {
@@ -265,7 +299,7 @@ export function importModel(obj) {
   else {
     if (!Array.isArray(obj.terms) || obj.terms.some(t => !TERMS.includes(t))) p.push({ code: 'stand.import.terms' });
     if (!SETS.includes(obj.set)) p.push({ code: 'stand.import.set' });
-    if (!Array.isArray(obj.equations) || obj.equations.some(e => !Array.isArray(e.beta) || e.beta.length !== 1 + (obj.terms || []).length || e.beta.some(v => !Number.isFinite(v)))) p.push({ code: 'stand.import.coef' });
+    if (!Array.isArray(obj.equations) || obj.equations.some(e => (e.terms && (!Array.isArray(e.terms) || e.terms.some(t => !TERMS.includes(t)))) || !Array.isArray(e.beta) || e.beta.length !== 1 + (e.terms || obj.terms || []).length || e.beta.some(v => !Number.isFinite(v)))) p.push({ code: 'stand.import.coef' });
     if (!obj.scope || !obj.scope.ranges) p.push({ code: 'stand.import.scope' });
     if (obj.status !== 'ok') p.push({ code: 'stand.import.status' });
   }
@@ -310,11 +344,13 @@ function trainCDF(units, cfg) {
   const fit = cfg.fit, width = cfg.width ?? 2, start = train(units, { ...cfg, fit: 'nls' });
   if (start.status !== 'ok') return { ...start, fit, problems: [...(start.problems || []), { code: 'stand.cdf.start' }] };
   if (start.family !== 'weibull') return { ...start, fit, status: 'invalid', problems: [{ code: 'stand.cdf.family' }] };
-  const keys = start.keys, free = keys.filter(k => k !== 'dmin'), p = 1 + start.terms.length;
+  // held fixed at their NLS fit: Dmin; for M10 also D50 (Poudel and Cao 2013, Appendix: d0 and d50 from fixed equations)
+  const keys = start.keys, fixedKeys = ['dmin', ...(start.method === 'weibull.m10' ? ['q50'] : [])], free = keys.filter(k => !fixedKeys.includes(k));
+  const P = free.map(k => start.equations.find(e => e.key === k).beta.length), off = P.map((_, i) => P.slice(0, i).reduce((a, v) => a + v, 0));
   const used = units.filter(u => start.trainingUnits.some(t => t.plot === u.plot && t.period === u.period));
   const { rows, excluded } = cdfRows(used, fit, width);
   const inc = [...new Set(rows.map(r => r.i))], fam = D.family('weibull');
-  const asModel = th => ({ ...start, equations: start.equations.map(e => free.includes(e.key) ? { ...e, beta: th.slice(free.indexOf(e.key) * p, (free.indexOf(e.key) + 1) * p) } : e) });
+  const asModel = th => ({ ...start, equations: start.equations.map(e => { const i = free.indexOf(e.key); return i >= 0 ? { ...e, beta: th.slice(off[i], off[i] + P[i]) } : e; }) });
   // θᵢ(β) for every unit, cached per β (LM evaluates many observations at one β); failures counted by state
   let cacheKey = null, cache = null;
   const thetas = th => { const k = th.join(','); if (k === cacheKey) return cache; const m = asModel(th), fails = {};
@@ -324,7 +360,7 @@ function trainCDF(units, cfg) {
   const resid = th => { const { ps, fails } = thetas(th); if (Object.keys(fails).length) return null; return rows.map((r, o) => sw[o] * (r.y - fam.cdf(r.x, ps[r.i]))); };
   const th0 = free.flatMap(k => start.equations.find(e => e.key === k).beta);
   const s0 = thetas(th0), base = { ...start, fit, cdf: { width: fit === 'mcdfr' ? width : null, weights: fit === 'cdfr' ? '1/n_i' : '1/(m_i - 1)', position: fit === 'cdfr' ? '(j - 0.5)/n_i, equal diameters consecutive' : 'class upper bound, last class excluded from the objective only',
-    dmin: keys.includes('dmin') ? 'NLS, held fixed' : null, rootPolicy: 'a unique recovery solution is required; failures and several solutions make β infeasible', excludedUnits: excluded, start: null, objective: null, iter: null, failuresAtStart: s0.fails, rejected: 0 } };
+    dmin: keys.includes('dmin') ? 'NLS, held fixed' : null, fixedKeys: fixedKeys.filter(k => keys.includes(k)), rootPolicy: 'a unique recovery solution is required; failures and several solutions make β infeasible', excludedUnits: excluded, start: null, objective: null, iter: null, failuresAtStart: s0.fails, rejected: 0 } };
   if (Object.keys(s0.fails).length) return { ...base, status: 'invalid', problems: [{ code: 'stand.cdf.startfail', fails: s0.fails }] };
   base.cdf.start = cdfObjective(used, s0.ps, fit, width).value;
   const r = lmVector(resid, th0, base.cdf);
