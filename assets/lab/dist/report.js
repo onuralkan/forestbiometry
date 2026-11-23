@@ -147,11 +147,11 @@ export function sourceRows(ids, h, extra = []) {
  * definition) and the class basal area with its conversion to numbers of trees. classesFor(u) → { cl, problems };
  * perHa = 10000/area or null. Units with class frequencies (no raw diameters) are left out.
  */
-export function basalRows(units, h, classesFor, perHa) {
+export function basalRows(units, h, classesFor, perHaFor) {
   const { T } = h, out = [[T('x.plot'), T('x.period'), T('ba.x.kind'), T('ba.x.what'), 'lower_cm', 'upper_cm', 'p', T('ba.x.d'), 'n', T('ba.x.b'), T('ba.x.share'), T('ba.x.gobs'), T('ba.x.fobs'), T('ba.x.fmid'), T('ba.x.unit')]];
   for (const u of units) {
     if (!u.d || basalCheck(u.d).length) continue;
-    const pl = unitPlot(u) ?? h.poolLabel, pc = basalPercentiles(u.d), unit = perHa ? 'm2/ha' : 'm2 (plot)';
+    const perHa = typeof perHaFor === 'function' ? perHaFor(u) : perHaFor, pl = unitPlot(u) ?? h.poolLabel, pc = basalPercentiles(u.d), unit = perHa ? 'm2/ha' : 'm2 (plot)';
     pc.probs.forEach((p, i) => out.push([pl, u.period, T('ba.x.pct'), pc.def, null, null, p, pc.d[i], null, null, null, null, null, null, null]));
     const c = classesFor(u); if (c.problems.length) continue;
     const t = baClassTable(c.cl, u.d, perHa), r = (what, x, lo, hi) => [pl, u.period, T('ba.x.cls'), what, lo, hi, null, null, x.n, x.b, x.share, x.gObs, x.fObs, x.fMid ?? null, unit];

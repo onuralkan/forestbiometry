@@ -39,7 +39,7 @@ function blank() {
     fns: { mean: '', median: '', dq: '', dg: '', origin: 'measured', from: null, unit: 0, done: false },
     wb: { methods: {}, mean: '', v: '', div: 'n', n: '', dq: '', q31: '', q63: '', q50: '', q95: '', loc: 'half-dmin', dmin: '', a: '', origin: 'measured', from: null, unit: 0, done: false },
     mode: 'each', dtype: 'raw', lcol: null, ucol: null, ncol: null, countType: 'count', outside: 'zero',
-    cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '' }, clsFit: null, histScale: 'density', diagFit: null, cmpSort: 'aic', boot: { fit: null, B: '199', seed: '20261111', round: 'auto', step: '', scheme: 'parametric', level: '0.95' },
+    cls: { mode: 'auto', start: '', width: '', edges: '', openLast: false, area: '', acol: null }, clsFit: null, histScale: 'density', diagFit: null, cmpSort: 'aic', boot: { fit: null, B: '199', seed: '20261111', round: 'auto', step: '', scheme: 'parametric', level: '0.95' },
     st: { tab: 'train', ncol: null, hcol: null, acol: null, set: 'ppm.weibull', terms: { RS: true, lnN: true, lnH: true, invA: true }, fit: 'nls', width: '2', ppmLoc: 'zero', back: 'median', loc: 'half-dmin', a: '0', xi: '', K: '5', done: false, model: null, cv: null, src: 'trained', imported: null, x: { N: '', H: '', A: '' }, pdone: false },
     trunc: { mode: 'none', L: '', U: '', nScope: 'observed' }, methods: null, mopt: {}, bText: { L: '', U: '', xi: '', lambda: '' }, aText: '', selPlot: null, selPer: null, nav: null, hidden: [] };
 }
@@ -376,7 +376,7 @@ function exportRaw(kind) {
   return loadXLSX(BASE).then(XLSX => download(fname('diameter-distribution', 'xlsx'), xlsxBlob(XLSX, [
     { name: T('sheet.info'), rows: REP.infoRows(settingsInfo(), T), widths: [34, 110] }, { name: T('sheet.fits'), rows: REP.fitRows(R.units, h) },
     { name: T('sheet.params'), rows: REP.paramRows(R.units, h) }, { name: T('sheet.units'), rows: REP.unitRows(R.units, h) },
-    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.ba'), rows: REP.basalRows(R.units, h, u => classesFor(u), perHaOf()) }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) },
+    { name: T('sheet.cls'), rows: REP.classRows(R.units, h, (u, r) => tableFor(u, r)) }, { name: T('sheet.ba'), rows: REP.basalRows(R.units, h, u => classesFor(u), u => perHaFor(u)) }, { name: T('sheet.ha'), rows: haRows() }, { name: T('sheet.cmp'), rows: REP.compareRows(R.units, h, (u, r) => classErr(u, r)) },
     { name: T('sheet.boot'), rows: REP.bootRows(bootRecords(), h) }, { name: T('sheet.src'), rows: REP.sourceRows(R.units.flatMap(x => x.results.map(r => r.method)), h, bootRecords().length ? ['R9'] : []), widths: [22, 34, 16, 14, 14, 12, 26] }])), () => status(T('ex.fail'), 'err'));
 }
 /** R script of a recovery card (stage 2): the card's summary, options and results. */
@@ -635,11 +635,28 @@ function classesFor(u) {
   return { cl, problems: D.classes.checkClasses(cl) };
 }
 const perHaOf = () => { if (R.grouped && R.countType === 'perha') return 1; const a = num(String(S.cls.area ?? '').trim()); return a > 0 ? 10000 / a : null; };
+const commonArea = () => { const a = num(String(S.cls.area ?? '').trim()); return a > 0 ? a : null; };
+/** Plots of one period with their diameters and areas (stage P25): raw data with a plot column only; else null. */
+function haPlots(period) {
+  if (R.grouped || S.pcol == null) return null;
+  const X = D.extractUnits(S.src, { dcol: S.dcol, unit: S.unit, decimal: S.decimal, pcol: S.pcol, percol: S.percol, fcol: S.fcol, fval: S.fval, mode: 'each', acol: S.cls.acol });
+  const us = X.units.filter(u => u.period === period), ca = commonArea();
+  const pa = D.hatable.plotAreas(us.flatMap(u => (ca != null ? [ca] : (u.areas || [NaN])).map(a => ({ plot: u.plot, area: a }))), ca);
+  return { plots: us.map(u => ({ plot: u.plot, d: u.d, area: pa.areas.get(u.plot) })), problems: pa.problems, source: ca != null ? 'common' : S.cls.acol != null ? 'column' : null };
+}
+/** Trees per hectare per tree of the unit: a plot's own area; for all plots together the plots' total area of that period. */
+function perHaFor(u) {
+  if (R.grouped && R.countType === 'perha') return 1;
+  if (S.pcol == null || R.grouped) return perHaOf();
+  if (u.plot !== D.POOL) { if (commonArea() != null) return perHaOf(); const a = (u.areas || []).find(v => v > 0); return S.cls.acol != null && a ? 10000 / a : null; }
+  const h = haPlots(u.period); if (!h || h.problems.length || !h.plots.length) return null;
+  return 10000 / h.plots.reduce((s, p) => s + p.area, 0);
+}
 function tableFor(u, r) {
   const { cl, problems } = classesFor(u); if (problems.length) return { problems };
   const obs = R.grouped ? { counts: cl.map(c => c.n), below: 0, above: 0, gap: 0 } : D.classes.countRaw(cl, u.d);
   const n = R.grouped ? u.desc.n : u.d.length, G = R.grouped && S.outside === 'unrecorded' && r ? D.trunc.truncated(D.family(r.family), r.params, { lower: cl[0].lo, upper: cl[cl.length - 1].hi === Infinity ? null : cl[cl.length - 1].hi }) : r ? obsDist(r) : null;
-  const perHa = R.grouped && R.countType === 'perha' ? null : perHaOf();
+  const perHa = R.grouped && R.countType === 'perha' ? null : perHaFor(u);
   return { cl, t: r ? D.classes.classTable(G, r.params, cl, obs.counts, { n, perHa, below: obs.below, above: obs.above, gap: obs.gap }) : null, obs, n, perHa };
 }
 function tabClasses(p) {
@@ -651,8 +668,8 @@ function tabClasses(p) {
       ${c.mode === 'edges' ? `<label>${T('cl.edges')} <input type="text" size="34" id="cl-edges" value="${esc(c.edges)}" placeholder="4 8 12 16 20 26 32 40 ∞"></label>` : ''}
       ${c.mode !== 'edges' ? `<label class="small"><input type="checkbox" id="cl-open"${c.openLast ? ' checked' : ''}> ${T('cl.open')}</label>` : ''}</div>
     <p class="muted small">${T('cl.note')}</p></div>`;
-  if (!(R.grouped && R.countType === 'perha')) h += `<div class="lims"><label>${T('cl.area')} <input type="text" inputmode="decimal" size="8" id="cl-area" value="${esc(c.area)}"></label><span class="muted small">${T('cl.area.note')}</span></div>`;
-  h += basalHtml(u);
+  if (!(R.grouped && R.countType === 'perha')) h += `<div class="lims"><label>${T('cl.area')} <input type="text" inputmode="decimal" size="8" id="cl-area" value="${esc(c.area)}"></label>${!R.grouped && S.pcol != null ? `<label>${T('cl.acol')} <select id="cl-acol"><option value="">${T('cl.acol.none')}</option>${S.src.headers.map((hd, i) => `<option value="${i}"${c.acol === i ? ' selected' : ''}>${esc(String(hd))}</option>`).join('')}</select></label>` : ''}<span class="muted small">${T('cl.area.note')}</span></div>`;
+  h += basalHtml(u) + haHtml(u);
   if (!okR.length) { p.innerHTML = h + `<p class="note warn">${T('p.nofit')}</p>`; bindClsCtl(p); bindBar(); return; }
   if (!okR.some(r => kOf(r) === S.clsFit)) S.clsFit = kOf(okR[0]);
   const r = okR.find(x => kOf(x) === S.clsFit), T0 = tableFor(u, r);
@@ -672,7 +689,7 @@ function tabClasses(p) {
 function basalHtml(u) {
   if (R.grouped) return `<div class="card bacard"><h3>${T('ba.h')}</h3><p class="muted small">${T('ba.grouped')}</p></div>`;
   const pr = D.basal.checkBasal(u.d); if (pr.length) return `<div class="card bacard"><h3>${T('ba.h')}</h3><p class="note warn small">${esc(T('pr.' + pr[0].code, pr[0]))}</p></div>`;
-  const e = D.basal.baEcdf(u.d), pc = D.basal.baPercentiles(u.d), k = perHaOf(), unit = T(k ? 'ba.u.ha' : 'ba.u.plot');
+  const e = D.basal.baEcdf(u.d), pc = D.basal.baPercentiles(u.d), k = perHaFor(u), unit = T(k ? 'ba.u.ha' : 'ba.u.plot');
   const step = F => { const pts = [[e.x[0], 0]]; e.x.forEach((x, i) => { pts.push([x, i ? F[i - 1] : 0], [x, F[i]]); }); pts.push([e.x[e.x.length - 1] + (e.x[e.x.length - 1] - e.x[0]) * 0.02, 1]); return pts; };
   const xmin = e.x[0], xmax = e.x[e.x.length - 1] + (e.x[e.x.length - 1] - e.x[0]) * 0.02 || xmin + 1;
   let h = `<div class="card bacard"><h3>${T('ba.h')}</h3><p class="muted small">${T('ba.sub')}</p>
@@ -692,8 +709,39 @@ function basalHtml(u) {
   }
   return h + `</div>`;
 }
+/** Per-hectare stand tables of every period for the Excel file (stage P25); only with a plot column and a plot area. */
+function haRows() {
+  const out = [[T('x.period'), T('ha.cls'), 'lower_cm', 'upper_cm', T('ha.mean'), T('ha.se'), 'plots', 'area_source']];
+  if (R.grouped || S.pcol == null) return out;
+  for (const per of [...new Set(R.units.map(u => u.period))]) {
+    const u = R.units.find(x => x.period === per), hp = haPlots(per), c = classesFor(u);
+    if (!hp || !hp.source || hp.problems.length || c.problems.length) continue;
+    const t = D.hatable.haTable(hp.plots, c.cl); if (t.problems.length) continue;
+    t.rows.forEach(r => out.push([per, `[${r.lo}, ${r.hi === Infinity ? '∞' : r.hi})`, r.lo, r.hi === Infinity ? null : r.hi, r.mean, r.se, t.m, hp.source]));
+    out.push([per, T('ha.outside'), null, null, t.outside.mean, t.outside.se, t.m, hp.source], [per, T('cl.total'), null, null, t.total.mean, t.total.se, t.m, hp.source]);
+  }
+  return out;
+}
+/** Per-hectare stand table of the unit's period (stage P25): mean N/ha over the plots and its standard error, per class. */
+function haHtml(u) {
+  if (R.grouped || S.pcol == null) return '';
+  const hp = haPlots(u.period), { cl, problems } = classesFor(u), f = v => v == null ? '–' : fmtNum(v, 1);
+  let h = `<div class="card" id="ha-card"><h3>${T('ha.h', { per: u.period ?? '' })}</h3><p class="muted small">${T('ha.note')}</p>`;
+  if (!hp.source) return h + `<p class="note" id="ha-need">${T('ha.need')}</p></div>`;
+  if (hp.problems.length || problems.length) { const q = hp.problems[0] || problems[0]; return h + `<p class="note err" id="ha-err">${esc(T('pr.' + q.code, { ...q, plots: (q.plots || []).slice(0, 8).join(', ') }))}</p></div>`; }
+  const t = D.hatable.haTable(hp.plots, cl);
+  if (t.problems.length) return h + `<p class="note err">${esc(T('pr.' + t.problems[0].code, { ...t.problems[0], plots: (t.problems[0].plots || []).join(', ') }))}</p></div>`;
+  const lab = (lo, hi) => `[${fmtNum(lo, 2)}, ${hi === Infinity ? '∞' : fmtNum(hi, 2)})`;
+  h += `<p class="small">${T('ha.m', { m: t.m, src: T('ha.src.' + hp.source) })}</p><div class="tscroll"><table class="grid" id="ha-table"><thead><tr><th>${T('ha.cls')}</th><th>${T('ha.mean')}</th><th>${T('ha.se')}</th></tr></thead><tbody>
+    ${t.rows.map(r => `<tr><td>${lab(r.lo, r.hi)}</td><td class="num">${f(r.mean)}</td><td class="num">${f(r.se)}</td></tr>`).join('')}
+    ${t.outside.mean > 0 ? `<tr><td>${T('ha.outside')}</td><td class="num">${f(t.outside.mean)}</td><td class="num">${f(t.outside.se)}</td></tr>` : ''}
+    <tr class="tot"><th>${T('cl.total')}</th><td class="num">${f(t.total.mean)}</td><td class="num">${f(t.total.se)}</td></tr></tbody></table></div>
+    ${t.m < 2 ? `<p class="muted small">${T('ha.one')}</p>` : ''}</div>`;
+  return h;
+}
 function bindClsCtl(p) {
   const re = () => { save(); tabClasses(p); };
+  $('cl-acol') && $('cl-acol').addEventListener('change', e => { S.cls.acol = e.target.value === '' ? null : +e.target.value; re(); });
   p.querySelectorAll('input[name="clmode"]').forEach(x => x.addEventListener('change', () => { S.cls.mode = x.value; re(); }));
   for (const k of ['start', 'width', 'edges', 'area']) $('cl-' + k) && $('cl-' + k).addEventListener('change', e => { S.cls[k] = e.target.value; re(); });
   $('cl-open') && $('cl-open').addEventListener('change', e => { S.cls.openLast = e.target.checked; re(); });

@@ -116,6 +116,7 @@ jobs:
           node tests/dist/test_p20.mjs
           node tests/dist/test_p23.mjs
           node tests/dist/test_p24.mjs
+          node tests/dist/test_p25.mjs
   browser:
     # Every browser test (tests/*/e2e*.mjs, scripts/e2e.sh) against the PHP built-in server: first with the bundled
     # files the server gets (FB_BUNDLE=1), then with the module sources. Nothing is uploaded unless both pass.

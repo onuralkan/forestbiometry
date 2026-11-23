@@ -890,6 +890,14 @@ Source: ForestFit, `fitWeibull` help page (R package by M. Teimouri, version 2.4
 - **Validation:** `tests/dist/test_p24.mjs` (18) against ForestFit 2.4.3: two simulated samples (a = 5 and 10) and a sample with true a = 0: ℓ not below the package's, a within 0.01 cm, b and c within 10⁻³ (relative; the package stops at Nelder–Mead's default tolerance), a profile maximum inside (0, Dmin) with c > 1; the tool's sample data, where the package's optimum is a = −1.33: a = 0 and the two-parameter result; a sample with c < 1, where the package stops at a = Dmin: `boundary`.
 
 
+### P25: Per-hectare stand table, descriptive (23 Nov 2026; 2.3.0-beta.2)
+User decision (23 Nov 2026; DIST_SPEC decision 11): the number of trees per hectare by class over the plots of a period, in the Classes tab and the Excel sheet "Per hectare" (`dist/hatable.js`). Raw diameters with a plot column only.
+- The estimation unit is the plot, as in Plot & Stand Metrics (§6, design-based estimate): y_ik = n_ik · 10000 / A_i (trees of plot i in class k, plot area A_i in m²; 0 where the plot has no tree in the class), ȳ_k = Σ y_ik / m, SE(ȳ_k) = s_k / √m with s_k² = Σ (y_ik − ȳ_k)² / (m − 1) (simple random sampling, Cochran 1977 §2 **[B]**, no finite population correction; one plot: no SE). Trees below, above or between the classes in their own row; the class means add up to the total. Plots of different sizes are not pooled as one area (the mean of the plots' values, not Σn / ΣA). Plots without any tree are not in the data and are not counted (stated on screen).
+- **Plot area:** one area for every plot (the existing "Plot area" field) or a column holding each plot's area (m²; the same on every row of a plot, otherwise an error naming the plots; a plot without a positive area: error).
+- **All plots together** (the pooled unit): the per-hectare factor of the class table, the error index EI and the basal area table is 10000 / (sum of the plot areas of the period); before 2.3.0-beta.2 it was 10000 / (one plot's area), which overstated N/ha by the number of plots.
+- No distribution is fitted to these numbers (DIST_SPEC decision 3 stays: no hectare-weighted fitting).
+- **Validation:** `tests/ref/make_dist_p25.py` (NumPy, from the definition: `numpy.digitize`, `std(ddof = 1)/√m`), five plots of 250–1000 m²; `tests/dist/test_p25.mjs` (9): means and SE to 1e-9, outside and total rows, the sum, the difference from the pooled ratio, one plot, area conflicts and missing areas. `tests/dist/e2e.mjs` §2u: a pasted table with an area column (A 400 m², B 200 m²: 12.5 and 75/ha, total 87.5 ± 12.5) and with a common area; §2j: the pooled table of three 400 m² plots gives 208.3/ha (was 625).
+
 ## 13. Shared infrastructure of the new tools (TOOLS_SPEC T01, 12 Nov 2026)
 Shared parts of the section volume, site index, stand structure, biomass and taper tools (`docs/TOOLS_SPEC.md`). Contains no scientific computation; the data rules are tested with hand-built cases.
 

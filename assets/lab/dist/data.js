@@ -28,6 +28,8 @@ export function extractUnits(tbl, spec) {
     const key = plot + '\u0001' + (period ?? '\u0002');
     if (!map.has(key)) map.set(key, { id: key, plot, period, d: [], rows: [] });
     const u = map.get(key); u.d.push(d); u.rows.push(tbl.rowNumbers[i]); acc.read++;
+    if (spec.acol != null) { const ac = r[spec.acol], av = ac == null ? { status: 'empty' } : ac.t === 'n' ? parseNumber(ac.v, spec.decimal) : parseNumber(cellText(ac), spec.decimal);
+      (u.areas || (u.areas = [])).push(av.status === 'ok' ? av.value : NaN); }   // plot area column (m², per-hectare table, stage P25)
     plots.add(plot); periods.add(period);
   });
   const units = [...map.values()].sort((a, b) => (a.plot === b.plot ? 0 : a.plot === POOL ? -1 : b.plot === POOL ? 1 : natural(a.plot, b.plot)) || perSort(a.period, b.period));
